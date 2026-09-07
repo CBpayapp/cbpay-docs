@@ -317,3 +317,12 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 400 | `invalid_period` | The Index period is not `YYYY-Q1` through `YYYY-Q4` — use a closed-quarter value |
 | 429 | `too_many_attempts` | Public fraud verification is rate-limited — retry after a short delay |
 | 502 | `generation_failed` | Fraud report generation failed after the charge path — the fee is refunded; retry with a new idempotency key |
+
+
+{/* admin-platform-corridor-errors */}
+
+## Corridor lifecycle
+
+| HTTP | Code | Meaning and fix |
+|---|---|---|
+| 409 | `corridor_disabled` | The selected corridor is administratively disabled. Use another enabled method or contact the organization operator. |

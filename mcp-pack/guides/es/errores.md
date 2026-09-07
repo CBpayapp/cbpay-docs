@@ -316,3 +316,9 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 400 | `invalid_period` | El período del Index no es `YYYY-Q1` a `YYYY-Q4` — usa un trimestre cerrado |
 | 429 | `too_many_attempts` | La verificación pública de fraude está rate-limited — espera y reintenta |
 | 502 | `generation_failed` | Falló la generación después del cargo — el fee se reembolsa; usa una nueva idempotency key |
+
+## Ciclo de vida del corredor
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 409 | `corridor_disabled` | El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización. |

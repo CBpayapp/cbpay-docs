@@ -17858,13 +17858,13 @@ paths:
       summary: Real-time event stream (SSE)
       description: |-
         Opens a `text/event-stream` connection that delivers every event of the account in real time — the same events that travel by webhook, without exposing a public endpoint.
-        
+
         Each event carries `id:` (monotonic cursor), `event:` (the event type) and `data:` (JSON with the same `event_id` as the webhook, so both channels cross-reference).
-        
+
         Reconnect with the `Last-Event-ID` header (or `?last_event_id=`) and the server replays what you missed before resuming live delivery. Native `EventSource` cannot send an `Authorization` header: use `fetch` with `ReadableStream`.
-        
+
         Scope follows the credential: an account credential receives its own events; an org-admin credential with `ops:read` receives the organization-wide channel and can narrow it with `?account_id=`.
-        
+
         The connection sends `: ping` every 20s, revalidates the session every 60s (a revoked session closes the stream with the `unauthorized` control event) and closes after 30 minutes with a `reconnect` control event.
       parameters:
       - name: Last-Event-ID
