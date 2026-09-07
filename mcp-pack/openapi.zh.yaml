@@ -17138,13 +17138,13 @@ paths:
       summary: 实时事件流（SSE）
       description: |-
         打开 `text/event-stream` 连接，实时推送账户的全部事件——与 webhook 推送的是同一批事件，但你无需对外暴露任何公开端点。
-        
+
         每条事件包含 `id:`（单调游标）、`event:`（事件类型）和 `data:`（JSON，其 `event_id` 与 webhook 完全一致，便于两个通道相互对照）。
-        
+
         使用 `Last-Event-ID` 请求头（或 `?last_event_id=`）重连，服务端会先重放你错过的事件，再继续实时推送。浏览器原生 `EventSource` 无法发送 `Authorization` 请求头：请使用 `fetch` 配合 `ReadableStream`。
-        
+
         可见范围由凭证决定：账户凭证只接收自己的事件；具备 `ops:read` 的组织管理员凭证接收全组织通道，并可用 `?account_id=` 缩小范围。
-        
+
         连接每 20 秒发送 `: ping`，每 60 秒重新校验会话（会话被吊销时以 `unauthorized` 控制事件关闭流），并在 30 分钟后以 `reconnect` 控制事件关闭。
       parameters:
       - name: Last-Event-ID
