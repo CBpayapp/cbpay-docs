@@ -314,3 +314,9 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 503 | `recovery_pending` | 欺诈报告仍在完成中；使用相同凭证轮询报告，状态变为 `ready` 后再重试 PDF |
 | 429 | `too_many_attempts` | 公开欺诈验证被限流；稍后重试 |
 | 502 | `generation_failed` | 费用路径之后生成失败；费用已退回，使用新的幂等键重试 |
+
+## 走廊生命周期
+
+| HTTP | 代码 | 含义与处理 |
+|---|---|---|
+| 409 | `corridor_disabled` | 所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。 |

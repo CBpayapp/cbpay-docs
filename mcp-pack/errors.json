@@ -1,5 +1,5 @@
 {
-  "count": 213,
+  "count": 214,
   "errors": [
     {
       "category": {
@@ -2981,6 +2981,20 @@
         "en": "Fraud report generation failed after the charge path — the fee is refunded; retry with a new idempotency key",
         "es": "Falló la generación después del cargo — el fee se reembolsa; usa una nueva idempotency key",
         "zh": "费用路径之后生成失败；费用已退回，使用新的幂等键重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "corridor_disabled",
+      "http": 409,
+      "meaning": {
+        "en": "The selected corridor is administratively disabled. Use another enabled method or contact the organization operator.",
+        "es": "El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización.",
+        "zh": "所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。"
       }
     }
   ]
