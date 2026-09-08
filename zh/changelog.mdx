@@ -22,6 +22,8 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
+- **最终银行恢复语义**：记录 `400 idempotency_key_mismatch`、不会终结 claim 的提供商 `401`/`403`、基于 `ProviderID` 的所有权验证、无需再次调用提供商的完成重放、稳定恢复锁，以及公共/平台 body key 不转发。
+
 - **欺诈与身份报告**：新增 `POST/GET /v1/qscore/fraud/reports`、认证 detail/PDF、四个 purpose、幂等计费与失败退款、签名 `risk_fraud_score_ready` webhook、best-effort 邮件和 `/verify/qscore-fraud/{code}` 公开验证。
 - **Qscore Index**：新增 `/v1/qscore/index` 和 `/v1/qscore/index/account` 的季度快照、国家/行业筛选以及至少五个主体的匿名桶。
 

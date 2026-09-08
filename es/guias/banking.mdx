@@ -88,6 +88,21 @@ Respuesta `201`:
 Si tu cuenta ya tiene perfil bancario — `409 banking_customer_exists`.
 
 <Note>
+**Idempotencia durable.** La plataforma deriva un claim determinista en el
+core para esta cuenta/perfil. La primera solicitud exitosa responde `201`.
+Repetir la misma solicitud responde `200` con `idempotency_hit: true`, sin
+crear un segundo perfil ni cobrar dos veces el fee del perfil. Un payload
+distinto para la misma cuenta responde `409 idempotency_conflict`; un claim
+fallido previamente responde `409 idempotency_failed`. Si el header
+`Idempotency-Key` y el campo `idempotency_key` del body difieren, responde
+`409 idempotency_key_mismatch`; una clave ausente o malformada responde
+`400 invalid_idempotency_key`. Si el resultado upstream/core es ambiguo, la
+API responde `503 banking_recovery_pending`; no reintentes con una clave nueva.
+Operaciones debe reconciliar primero el claim durable.
+</Note>
+
+
+<Note>
 **Revisión de solicitudes.** Si tu organización activó la revisión de solicitudes banking, esta llamada puede responder **`202 Accepted`** con `{"status":"in_review","kind":"banking_application","review_id":"…"}` en vez de `201` — el perfil se crea solo cuando compliance aprueba la revisión. El fee del perfil banking se cobra al retener la solicitud y **se reembolsa automáticamente si se rechaza**. Sigue el resultado con el webhook `txn_review_status_changed` o en [Revisiones de operaciones](/es/guias/revisiones-operaciones).
 </Note>
 
@@ -550,6 +565,8 @@ fallback.
 | 402 | `insufficient_funds` | Saldo insuficiente: con comisión por riel el chequeo es `saldo ≥ monto + comisión` en la **moneda de la operación** (`BANK_USD`/`BANK_EUR`); con el fallback legacy es tu saldo USDT |
 | 403 | `account_blocked` | La cuenta no está activa; contacta al equipo de CBPay |
 | 409 | `banking_customer_exists` | Tu cuenta ya tiene perfil bancario (`GET /v1/banking/customer`) |
+| 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y no crees un segundo perfil |
+| 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 409 | `no_banking_customer` | Crea primero tu perfil (`POST /v1/banking/customer`) |
 | 409 | `banking_account_limit` | Las cuentas persona tienen máximo 1 cuenta bancaria |
 | 403 | `company_required` | Los usuarios de terceros solo están disponibles para cuentas empresa |
@@ -598,3 +615,7 @@ Suscríbete a `banking_operation_status_changed`: se dispara en `completed`
 consultar `GET /v1/banking/operations/{id}`.
 </Accordion>
 </AccordionGroup>
+
+## Reglas finales de recuperación de claims de cuentas
+
+Para `kind: banking_account`, la conciliación del claim y la recuperación del reembolso usan el tipo `banking_account` y requieren el identificador de la cuenta en el proveedor. La conciliación valida la titularidad frente al proveedor antes de cerrar el espejo local. Repetir un claim completado devuelve HTTP `200` con `idempotency_hit: true` y no vuelve a llamar al proveedor. Un desacuerdo entre el header y el body de idempotencia en la operación core de cuenta devuelve HTTP `400 idempotency_key_mismatch`.

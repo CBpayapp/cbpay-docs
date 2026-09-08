@@ -84,6 +84,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 |---|---|---|
 | 403 | `global_treasury_access_disabled` | La organización no tiene habilitada la visibilidad de tesorería global en su panel admin; pide a un administrador de plataforma que habilite `global_treasury_read` en los settings de la organización |
 | 400 | `invalid_value` | Un setting de la organización se envió con el tipo incorrecto (ej. `global_treasury_read` debe ser booleano, no un string) |
+| 409 | `approval_in_progress` | Otro administrador está aplicando este ajuste; espera a que termine antes de intentarlo de nuevo |
 
 ### Validación (400)
 
@@ -146,6 +147,9 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 409 | `no_screening` | Rescreen/monitoreo AML sin un screening previo |
 | 409 | `no_banking_customer` | Operación banking sin perfil bancario creado (`POST /v1/banking/customer` primero) |
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
+| 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
+| 422 | `claim_identity_missing` | El claim bancario no tiene la identidad del customer necesaria para reconciliar la titularidad — entrega una identidad válida antes de reintentar |
+| 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 422 | `currency_not_supported` | Sin tasa FX para esa moneda |
 | 422 | `core_rejected` | El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` |
 | 422 | `recipient_unavailable` | La cuenta destino no puede recibir |

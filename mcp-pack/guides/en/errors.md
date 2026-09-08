@@ -84,6 +84,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 |---|---|---|
 | 403 | `global_treasury_access_disabled` | The organization has not enabled global treasury visibility for its admin panel; ask a platform administrator to enable `global_treasury_read` in the organization settings |
 | 400 | `invalid_value` | An organization setting was sent with the wrong type (e.g. `global_treasury_read` must be a boolean, not a string) |
+| 409 | `approval_in_progress` | Another admin is currently applying this adjustment; wait for that action to finish before trying again |
 
 ### Validation (400)
 
@@ -146,6 +147,9 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 409 | `no_screening` | AML rescreen/monitoring without a prior screening |
 | 409 | `no_banking_customer` | Banking operation without a banking profile (`POST /v1/banking/customer` first) |
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
+| 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
+| 422 | `claim_identity_missing` | The banking claim has no customer identity required to reconcile ownership — provide a valid customer identity before retrying |
+| 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | `core_rejected` | The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` |
 | 422 | `recipient_unavailable` | The destination account cannot receive |

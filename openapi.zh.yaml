@@ -13544,8 +13544,10 @@ paths:
       - 银行服务
       operationId: createBankingCustomer
       summary: 创建我的银行档案
-      description: 开通账户的银行档案(每个账户一次)。省略的 `type`/`name`/`email` 从 CBPay 账户自动填充。按固定 `banking_customer` 费用从
+      description: >-
+        开通账户的银行档案(每个账户一次)。省略的 `type`/`name`/`email` 从 CBPay 账户自动填充。按固定 `banking_customer` 费用从
         你的结算资产(默认 USDT)计费;若通道拒绝则退款。
+        平台会为该账户/档案在核心生成确定性的幂等 claim。首次成功请求返回 `201`。重复相同请求返回 `200`，并带有 `idempotency_hit: true` 及原 customer，不会创建第二个档案或再次收取档案费用。相同账户修改 payload 会返回 `409 idempotency_conflict`；之前失败的 claim 返回 `409 idempotency_failed`。如果 `Idempotency-Key` 请求头与 body 中的 `idempotency_key` 不一致，返回 `409 idempotency_key_mismatch`；缺失或格式错误的密钥返回 `400 invalid_idempotency_key`。如果上游结果不明确，返回 `503 banking_recovery_pending`；不要使用新密钥重试。
       requestBody:
         required: true
         content:
@@ -13592,6 +13594,17 @@ paths:
                 created_at: '2026-07-07T12:00:00Z'
                 banking_fee: '5.000000'
                 banking_fee_asset: USDT
+        '200':
+          description: 相同幂等请求的重放（返回原银行档案）。
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              example:
+                idempotency_hit: true
+                customer_id: 9f2b1c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
+                status: draft
         '202':
           description: 申请已被挂起等待审核（组织已启用申请审核）。只有在合规团队批准审核后才会创建资源；开户/发卡费用在挂起时收取，若审核被拒绝将自动退还。请通过
             `txn_review_status_changed` webhook 或 `GET /v1/me/txn-reviews` 跟踪结果。
@@ -13610,14 +13623,45 @@ paths:
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '409':
-          description: 该账户已有银行档案(banking_customer_exists)。
+          description: 账户已有档案，或确定性的创建 claim 与不同 payload 冲突。
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+              examples:
+                customer_exists:
+                  summary: 银行档案已存在
+                  value:
+                    error: banking_customer_exists
+                    message: this account already has a banking customer
+                idempotency_conflict:
+                  summary: 相同账户使用不同 payload
+                  value:
+                    error: idempotency_conflict
+                    message: idempotency key was used with a different payload
+                idempotency_failed:
+                  summary: 之前的幂等创建失败
+                  value:
+                    error: idempotency_failed
+                    message: the previous idempotent creation failed; use a new key
+                idempotency_key_mismatch:
+                  summary: 请求头与 body 中的幂等密钥不一致
+                  value:
+                    error: idempotency_key_mismatch
+                    message: Idempotency-Key header does not match idempotency_key in the body
+        '400':
+          description: 幂等密钥缺失或格式错误。
+          content:
+            application/json:
+              schema: *id012
               example:
-                error: banking_customer_exists
-                message: this account already has a banking customer
+                error: invalid_idempotency_key
+                message: idempotency key is required and must be valid
+        '503':
+          description: The platform could not reconcile an ambiguous banking customer creation.
+          content:
+            application/json:
+              example:
+                error: banking_recovery_pending
+                message: customer creation outcome is ambiguous; operations must reconcile the claim before retrying
         '502':
           description: 银行通道错误;所有费用已退款(banking_request_failed)。
           content:

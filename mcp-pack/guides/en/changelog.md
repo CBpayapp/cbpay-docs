@@ -25,6 +25,8 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 
 **Added**
 
+- **Final banking recovery semantics**: documented `400 idempotency_key_mismatch`, non-terminal provider `401`/`403`, `ProviderID` ownership checks, provider-free completed replays, stable recovery locks, and the non-forwarded public/platform body key.
+
 - **Fraud and identity reports**: `POST/GET /v1/qscore/fraud/reports`, authenticated detail and PDF downloads, the four closed purposes, idempotent charging with automatic refund on generation failure, signed `risk_fraud_score_ready` webhook, best-effort email and public authenticity verification at `/verify/qscore-fraud/{code}`.
 - **Qscore Index**: public and authenticated quarterly snapshots at `/v1/qscore/index` and `/v1/qscore/index/account`, with country/industry filters and anonymous buckets of at least five subjects.
 
