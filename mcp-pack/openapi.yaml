@@ -14151,7 +14151,7 @@ paths:
         Opens the account's banking profile (once per account). Omitted `type`/`name`/`email`
         autofill from the CBPay account. Billed as the fixed `banking_customer` fee from your settlement
         asset (USDT by default); refunded if the corridor rejects.
-        The platform derives a deterministic core idempotency claim for this account/profile. The first successful request returns `201`. Repeating the same request returns `200` with the original customer and `idempotency_hit: true`; it never creates a second profile or charges a second profile fee. A payload change for the same account returns `409 idempotency_conflict`; a previously failed claim returns `409 idempotency_failed`. If the `Idempotency-Key` header and body `idempotency_key` differ, the API returns `409 idempotency_key_mismatch`; a missing or malformed key returns `400 invalid_idempotency_key`. If the upstream outcome is ambiguous, the response is `503 banking_recovery_pending`; do not retry with a new key.
+        The platform derives a deterministic core idempotency claim for this account/profile. Repeating the same request returns the original customer with `idempotency_hit: true` and never creates a second profile or charges a second profile fee. A payload change for the same account returns `409 idempotency_conflict`. If the upstream outcome is ambiguous, the response is `503 banking_recovery_pending`; do not retry with a new key.
       requestBody:
         required: true
         content:
@@ -14198,17 +14198,6 @@ paths:
                 created_at: '2026-07-07T12:00:00Z'
                 banking_fee: '5.000000'
                 banking_fee_asset: USDT
-        '200':
-          description: Identical idempotent replay (the original banking profile is returned).
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-              example:
-                idempotency_hit: true
-                customer_id: 9f2b1c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
-                status: draft
         '202':
           description: Application held for review (the organization has application review enabled). The resource is
             created only when compliance approves the review; the issuance/profile fee is charged when the application
@@ -14243,23 +14232,6 @@ paths:
                   value:
                     error: idempotency_conflict
                     message: idempotency key was used with a different payload
-                idempotency_failed:
-                  summary: A previous idempotent creation failed
-                  value:
-                    error: idempotency_failed
-                    message: the previous idempotent creation failed; use a new key
-                idempotency_key_mismatch:
-                  summary: Header and body idempotency keys differ
-                  value:
-                    error: idempotency_key_mismatch
-                    message: Idempotency-Key header does not match idempotency_key in the body
-        '400':
-          description: The idempotency key is missing or malformed.
-          content:
-            application/json:
-              example:
-                error: invalid_idempotency_key
-                message: idempotency key is required and must be valid
         '503':
           description: The platform could not reconcile an ambiguous banking customer creation.
           content:

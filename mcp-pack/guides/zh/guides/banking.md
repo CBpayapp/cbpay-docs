@@ -70,13 +70,10 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/customer \
 
 > **注**
 **持久幂等性。** 平台会为该账户/档案在核心生成确定性的 claim。首次成功
-请求返回 `201`。重复相同请求返回 `200` 并带有 `idempotency_hit: true`，
+请求返回 `201`。重复相同请求返回 `201` 并带有 `idempotency_hit: true`，
 不会创建第二个档案，也不会重复收取档案费用。相同账户使用不同 payload
-会返回 `409 idempotency_conflict`；之前失败的 claim 会返回
-`409 idempotency_failed`。如果 `Idempotency-Key` 请求头和 body 中的
-`idempotency_key` 不一致，会返回 `409 idempotency_key_mismatch`；缺失或
-格式错误的密钥会返回 `400 invalid_idempotency_key`。如果上游/核心结果不明确，
-API 返回 `503 banking_recovery_pending`；不要使用新密钥重试。运营人员必须先核对
+会返回 `409 idempotency_conflict`。如果上游/核心结果不明确，API 返回
+`503 banking_recovery_pending`；不要使用新密钥重试。运营人员必须先核对
 持久 claim。
 > **注**
 **申请审核。** 如果您的组织启用了银行申请审核，此请求可能返回 **`202 Accepted`**（`{"status":"in_review","kind":"banking_application","review_id":"…"}`）而不是 `201`——只有在合规团队批准审核后才会创建银行资料。银行资料费用在申请挂起时收取，**如果被拒绝则自动退还**。通过 webhook `txn_review_status_changed` 或[交易审核](https://docs.cbpayapp.com/zh/guides/transaction-reviews)跟踪结果。
@@ -491,19 +488,31 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 订阅 `banking_operation_status_changed`：它在 `completed` / `failed` 时触发，
 最终状态时附带 `receipt_url`。你也可以轮询
 `GET /v1/banking/operations/{id}`。
-## 最终恢复与幂等行为
+## Banking creation claims and recovery
 
-创建账户时，如果 `Idempotency-Key` header 与 body 中的
-`idempotency_key` 不一致，系统会在调用提供商之前返回 HTTP `400
-idempotency_key_mismatch`。公共和平台 customer 创建 payload 不会把 body
-中的 `idempotency_key` 转发到 core；平台使用已认证的请求上下文和自己的
-持久化 claim。
+Creation claims are durable records, not permission to send a second provider
+request. The platform stores `banking_creation_claims` with `kind`,
+`idempotency_key`, `request_hash`, status, attempts and refund state. Migration
+105 creates this table and its single-flight lock; migration 106 stores
+transaction-firewall fee-refund recovery. Migration 074 persists the resolved
+core provider on customer idempotency claims.
 
-在不明确结果的恢复过程中，提供商认证错误（`401` 或 `403`）不能证明
-资源不存在，也不会把 claim 标记为终态。claim 仍可恢复。账户恢复会在
-完成本地镜像前，将提供商账户 customer 的 `ProviderID` 与原始 claim
-记录的 customer 身份进行比较。提供商所有权验证是强制步骤。
+### Recovery rules
 
-已完成 claim 的管理员对账支持安全重放：返回 HTTP `200` 和
-`idempotency_hit: true`，不会再次调用提供商。恢复锁在重试之间保持稳定，
-因此 retry 不会创建第二个账户、费用 claim 或退款。
+- A completed account recovery compares the provider account ownership with
+  the claimed customer's `ProviderID`.
+- A terminal provider authentication response (`401` or `403`) does not by
+  itself prove that the creation failed; the claim remains recoverable.
+- Reusing the same idempotency key with a different request hash is rejected.
+- A completed claim can be replayed with HTTP `200` and `idempotency_hit: true`;
+  recovery does not call the provider again.
+- `POST /v1/org/banking/creation-claims/refund` retries a pending fee refund
+  for `kind=customer` or `kind=account`.
+- `POST /v1/org/txn-firewall/fee-refunds/{resourceID}/retry` retries the
+  durable firewall-fee refund. A completed refund replays as HTTP `200`.
+
+The core admin route
+`POST /v1/ops/banking/account-creations/reconcile` verifies the provider
+account and finalizes the local mirror. The org-admin routes list claims,
+reconcile customer claims, and retry refunds. These operations are locked so
+concurrent reconciliation cannot originate duplicate money movement.

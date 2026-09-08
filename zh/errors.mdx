@@ -149,7 +149,6 @@ description: "错误格式与完整的错误码目录"
 | 409 | `no_banking_customer` | 在没有银行账户资料的情况下发起银行操作（请先 `POST /v1/banking/customer`） |
 | 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
 | 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
-| 422 | `claim_identity_missing` | 银行 claim 缺少核对所有权所需的 customer 身份——请提供有效身份后再重试 |
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
 | 422 | `currency_not_supported` | 该货币没有汇率 |
 | 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 |
@@ -328,3 +327,12 @@ description: "错误格式与完整的错误码目录"
 | HTTP | 代码 | 含义与处理 |
 |---|---|---|
 | 409 | `corridor_disabled` | 所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。 |
+
+## Banking 创建恢复错误
+
+| 代码 | HTTP | 含义与处理 |
+|---|---:|---|
+| `claim_identity_mismatch` | 422 | 提供商客户身份与原始 banking 请求不匹配。停止恢复并检查 claim。 |
+| `claim_not_pending` | 409 | claim 已不再处于待处理状态。读取最终结果，不要重复恢复。 |
+| `claim_customer_owned_elsewhere` | 409 | 提供商客户已归属于其他账户。停止并检查所有权。 |
+| `banking_recovery_pending` | 503 | 提供商结果仍不明确。使用管理员恢复路由，不要再次发起创建请求。 |
