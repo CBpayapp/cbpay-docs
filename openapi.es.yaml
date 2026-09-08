@@ -13977,7 +13977,7 @@ paths:
         Abre el perfil bancario de la cuenta (una vez por cuenta). Si omites `type`/`name`/`email`,
         se completan desde tu cuenta CBPay. Se cobra la comisión fija `banking_customer` desde tu settlement
         asset (USDT por defecto); se reembolsa si el corredor rechaza.
-        La plataforma deriva un claim de idempotencia determinista en el core para esta cuenta/perfil. La primera solicitud exitosa responde `201`. Repetir la misma solicitud responde `200` con el customer original y `idempotency_hit: true`, sin crear otro perfil ni cobrar otro fee. Cambiar el payload para la misma cuenta responde `409 idempotency_conflict`; un claim fallido previamente responde `409 idempotency_failed`. Si el header `Idempotency-Key` y el campo `idempotency_key` del body difieren, responde `409 idempotency_key_mismatch`; una clave ausente o malformada responde `400 invalid_idempotency_key`. Si el resultado upstream es ambiguo, responde `503 banking_recovery_pending`; no reintentes con una clave nueva.
+        La plataforma deriva un claim de idempotencia determinista en el core para esta cuenta/perfil. Repetir la misma solicitud devuelve el customer original con `idempotency_hit: true`, sin crear otro perfil ni cobrar otro fee. Cambiar el payload para la misma cuenta responde `409 idempotency_conflict`. Si el resultado upstream es ambiguo, responde `503 banking_recovery_pending`; no reintentes con una clave nueva.
       requestBody:
         required: true
         content:
@@ -14024,17 +14024,6 @@ paths:
                 created_at: '2026-07-07T12:00:00Z'
                 banking_fee: '5.000000'
                 banking_fee_asset: USDT
-        '200':
-          description: Replay idempotente idéntico (se devuelve el perfil bancario original).
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-              example:
-                idempotency_hit: true
-                customer_id: 9f2b1c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
-                status: draft
         '202':
           description: Solicitud retenida para revisión (la organización tiene la revisión de solicitudes activada).
             El recurso se crea solo cuando compliance aprueba la revisión; la comisión de emisión/apertura se cobra al
@@ -14069,23 +14058,6 @@ paths:
                   value:
                     error: idempotency_conflict
                     message: idempotency key was used with a different payload
-                idempotency_failed:
-                  summary: Un claim idempotente anterior falló
-                  value:
-                    error: idempotency_failed
-                    message: the previous idempotent creation failed; use a new key
-                idempotency_key_mismatch:
-                  summary: El header y el body tienen claves distintas
-                  value:
-                    error: idempotency_key_mismatch
-                    message: Idempotency-Key header does not match idempotency_key in the body
-        '400':
-          description: La clave de idempotencia falta o tiene un formato inválido.
-          content:
-            application/json:
-              example:
-                error: invalid_idempotency_key
-                message: idempotency key is required and must be valid
         '503':
           description: The platform could not reconcile an ambiguous banking customer creation.
           content:

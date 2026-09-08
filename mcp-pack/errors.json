@@ -1,5 +1,5 @@
 {
-  "count": 217,
+  "count": 223,
   "errors": [
     {
       "category": {
@@ -1455,20 +1455,6 @@
         "en": "The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation",
         "es": "El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación",
         "zh": "同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对"
-      }
-    },
-    {
-      "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
-      },
-      "code": "claim_identity_missing",
-      "http": 422,
-      "meaning": {
-        "en": "The banking claim has no customer identity required to reconcile ownership — provide a valid customer identity before retrying",
-        "es": "El claim bancario no tiene la identidad del customer necesaria para reconciliar la titularidad — entrega una identidad válida antes de reintentar",
-        "zh": "银行 claim 缺少核对所有权所需的 customer 身份——请提供有效身份后再重试"
       }
     },
     {
@@ -3037,6 +3023,96 @@
         "en": "The selected corridor is administratively disabled. Use another enabled method or contact the organization operator.",
         "es": "El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización.",
         "zh": "所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)"
+      },
+      "code": "idempotency_key_mismatch",
+      "http": null,
+      "meaning": {
+        "en": "400 — Fix: Header/body keys differ or the same key is reused with a different request hash. Correct the request or use a new key.",
+        "es": "400 — Fix: Header/body keys differ or the same key is reused with a different request hash. Correct the request or use a new key."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)"
+      },
+      "code": "idempotency_failed",
+      "http": null,
+      "meaning": {
+        "en": "409 — Fix: The claim is terminally failed. Start a new operation with a new key after reviewing the failure.",
+        "es": "409 — Fix: The claim is terminally failed. Start a new operation with a new key after reviewing the failure."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "claim_not_pending",
+      "http": null,
+      "meaning": {
+        "en": "409 — Fix: The requested human recovery is no longer pending. Read the claim and use the terminal result.",
+        "es": "409 — Fix: The requested human recovery is no longer pending. Read the claim and use the terminal result.",
+        "zh": "409 — Fix: claim 已不再处于待处理状态。读取最终结果，不要重复恢复。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "claim_customer_owned_elsewhere",
+      "http": null,
+      "meaning": {
+        "en": "409 — Fix: The provider customer is already linked to another account. Stop and investigate ownership.",
+        "es": "409 — Fix: The provider customer is already linked to another account. Stop and investigate ownership.",
+        "zh": "409 — Fix: 提供商客户已归属于其他账户。停止并检查所有权。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)"
+      },
+      "code": "banking_customer_creation_in_progress",
+      "http": null,
+      "meaning": {
+        "en": "409 — Fix: A lock is held by another banking operation. Retry the read/recovery flow later.",
+        "es": "409 — Fix: A lock is held by another banking operation. Retry the read/recovery flow later."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)"
+      },
+      "code": "banking_invalid_response",
+      "http": null,
+      "meaning": {
+        "en": "422 — Fix: Provider account ownership did not match the claimed customer's `ProviderID`.",
+        "es": "422 — Fix: Provider account ownership did not match the claimed customer's `ProviderID`."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "claim_identity_mismatch",
+      "http": null,
+      "meaning": {
+        "en": "422 — Fix: The provider customer identity does not match the original banking request. Stop recovery and review the claim.",
+        "es": "422 — Fix: La identidad del cliente del proveedor no coincide con la solicitud banking original. Detén la recuperación y revisa el claim.",
+        "zh": "422 — Fix: 提供商客户身份与原始 banking 请求不匹配。停止恢复并检查 claim。"
       }
     }
   ]

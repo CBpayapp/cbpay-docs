@@ -88,15 +88,11 @@ If your account already has a banking profile —
 > **Note**
 **Durable idempotency.** The platform derives a deterministic core claim for
 this account/profile. The first successful request returns `201`. Repeating
-the same request returns `200` with `idempotency_hit: true` and never creates
+the same request returns `201` with `idempotency_hit: true` and never creates
 a second profile or charges the profile fee twice. A different payload for
-the same account returns `409 idempotency_conflict`; a previously failed claim
-returns `409 idempotency_failed`. If the `Idempotency-Key` header and body
-`idempotency_key` differ, the API returns `409 idempotency_key_mismatch`; a
-missing or malformed key returns `400 invalid_idempotency_key`. If the
-upstream/core outcome is ambiguous, the API returns
-`503 banking_recovery_pending`; do not retry with a new key. Operations must
-reconcile the durable claim first.
+the same account returns `409 idempotency_conflict`. If the upstream/core
+outcome is ambiguous, the API returns `503 banking_recovery_pending`; do not
+retry with a new key. Operations must reconcile the durable claim first.
 > **Note**
 **Application review.** If your organization enabled banking application review, this request can answer **`202 Accepted`** with `{"status":"in_review","kind":"banking_application","review_id":"…"}` instead of `201` — the profile is created only when compliance approves the review. The banking profile fee is charged when the application is held and **refunded automatically if it is rejected**. Track the result with the webhook `txn_review_status_changed` or in [Transaction reviews](https://docs.cbpayapp.com/en/guides/transaction-reviews).
 Check the state at any time:
@@ -578,26 +574,31 @@ verification of the third party.
 Subscribe to `banking_operation_status_changed`: it fires on `completed` /
 `failed` and includes the `receipt_url` once final. You can also poll
 `GET /v1/banking/operations/{id}`.
-## Final account-claim recovery rules
+## Banking creation claims and recovery
 
-For `kind: banking_account`, claim reconciliation and fee-refund recovery use the `banking_account` kind and require the provider account identifier. Reconciliation validates provider ownership before finalizing the local mirror. Replaying a completed claim returns HTTP `200` with `idempotency_hit: true` and does not call the provider again. A header/body idempotency-key mismatch on the core account operation returns HTTP `400 idempotency_key_mismatch`.
+Creation claims are durable records, not permission to send a second provider
+request. The platform stores `banking_creation_claims` with `kind`,
+`idempotency_key`, `request_hash`, status, attempts and refund state. Migration
+105 creates this table and its single-flight lock; migration 106 stores
+transaction-firewall fee-refund recovery. Migration 074 persists the resolved
+core provider on customer idempotency claims.
 
-## Final recovery and idempotency behavior
+### Recovery rules
 
-For account creation, a mismatch between the `Idempotency-Key` header and the
-`idempotency_key` body field is rejected before any provider call with HTTP
-`400 idempotency_key_mismatch`. The public and platform customer-create
-payloads do not forward the body `idempotency_key` to the core; the platform
-uses the authenticated request context and its own durable claim.
+- A completed account recovery compares the provider account ownership with
+  the claimed customer's `ProviderID`.
+- A terminal provider authentication response (`401` or `403`) does not by
+  itself prove that the creation failed; the claim remains recoverable.
+- Reusing the same idempotency key with a different request hash is rejected.
+- A completed claim can be replayed with HTTP `200` and `idempotency_hit: true`;
+  recovery does not call the provider again.
+- `POST /v1/org/banking/creation-claims/refund` retries a pending fee refund
+  for `kind=customer` or `kind=account`.
+- `POST /v1/org/txn-firewall/fee-refunds/{resourceID}/retry` retries the
+  durable firewall-fee refund. A completed refund replays as HTTP `200`.
 
-Provider authentication failures (`401` or `403`) during an ambiguous
-recovery are not treated as proof that the resource does not exist and do not
-terminalize the claim. The claim remains recoverable. Account recovery
-compares the provider account's customer `ProviderID` with the customer
-identity recorded in the original claim before finalizing the local mirror.
-Provider ownership validation is mandatory.
-
-Completed admin claim reconciliation is replay-safe: it returns HTTP `200`
-with `idempotency_hit: true` and does not call the provider again. Recovery
-locks are stable across retries, so a retry cannot create a second account,
-fee claim, or refund.
+The core admin route
+`POST /v1/ops/banking/account-creations/reconcile` verifies the provider
+account and finalizes the local mirror. The org-admin routes list claims,
+reconcile customer claims, and retry refunds. These operations are locked so
+concurrent reconciliation cannot originate duplicate money movement.

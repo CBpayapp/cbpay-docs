@@ -87,14 +87,11 @@ Si tu cuenta ya tiene perfil bancario — `409 banking_customer_exists`.
 > **Nota**
 **Idempotencia durable.** La plataforma deriva un claim determinista en el
 core para esta cuenta/perfil. La primera solicitud exitosa responde `201`.
-Repetir la misma solicitud responde `200` con `idempotency_hit: true`, sin
+Repetir la misma solicitud responde `201` con `idempotency_hit: true`, sin
 crear un segundo perfil ni cobrar dos veces el fee del perfil. Un payload
-distinto para la misma cuenta responde `409 idempotency_conflict`; un claim
-fallido previamente responde `409 idempotency_failed`. Si el header
-`Idempotency-Key` y el campo `idempotency_key` del body difieren, responde
-`409 idempotency_key_mismatch`; una clave ausente o malformada responde
-`400 invalid_idempotency_key`. Si el resultado upstream/core es ambiguo, la
-API responde `503 banking_recovery_pending`; no reintentes con una clave nueva.
+distinto para la misma cuenta responde `409 idempotency_conflict`. Si el
+resultado upstream/core es ambiguo, la API responde
+`503 banking_recovery_pending`; no reintentes con una clave nueva.
 Operaciones debe reconciliar primero el claim durable.
 > **Nota**
 **Revisión de solicitudes.** Si tu organización activó la revisión de solicitudes banking, esta llamada puede responder **`202 Accepted`** con `{"status":"in_review","kind":"banking_application","review_id":"…"}` en vez de `201` — el perfil se crea solo cuando compliance aprueba la revisión. El fee del perfil banking se cobra al retener la solicitud y **se reembolsa automáticamente si se rechaza**. Sigue el resultado con el webhook `txn_review_status_changed` o en [Revisiones de operaciones](https://docs.cbpayapp.com/es/guias/revisiones-operaciones).
@@ -579,6 +576,31 @@ registro además exige el `verification_id` de una verificación KYC/KYB
 Suscríbete a `banking_operation_status_changed`: se dispara en `completed`
 / `failed` e incluye el `receipt_url` una vez final. También puedes
 consultar `GET /v1/banking/operations/{id}`.
-## Reglas finales de recuperación de claims de cuentas
+## Banking creation claims and recovery
 
-Para `kind: banking_account`, la conciliación del claim y la recuperación del reembolso usan el tipo `banking_account` y requieren el identificador de la cuenta en el proveedor. La conciliación valida la titularidad frente al proveedor antes de cerrar el espejo local. Repetir un claim completado devuelve HTTP `200` con `idempotency_hit: true` y no vuelve a llamar al proveedor. Un desacuerdo entre el header y el body de idempotencia en la operación core de cuenta devuelve HTTP `400 idempotency_key_mismatch`.
+Creation claims are durable records, not permission to send a second provider
+request. The platform stores `banking_creation_claims` with `kind`,
+`idempotency_key`, `request_hash`, status, attempts and refund state. Migration
+105 creates this table and its single-flight lock; migration 106 stores
+transaction-firewall fee-refund recovery. Migration 074 persists the resolved
+core provider on customer idempotency claims.
+
+### Recovery rules
+
+- A completed account recovery compares the provider account ownership with
+  the claimed customer's `ProviderID`.
+- A terminal provider authentication response (`401` or `403`) does not by
+  itself prove that the creation failed; the claim remains recoverable.
+- Reusing the same idempotency key with a different request hash is rejected.
+- A completed claim can be replayed with HTTP `200` and `idempotency_hit: true`;
+  recovery does not call the provider again.
+- `POST /v1/org/banking/creation-claims/refund` retries a pending fee refund
+  for `kind=customer` or `kind=account`.
+- `POST /v1/org/txn-firewall/fee-refunds/{resourceID}/retry` retries the
+  durable firewall-fee refund. A completed refund replays as HTTP `200`.
+
+The core admin route
+`POST /v1/ops/banking/account-creations/reconcile` verifies the provider
+account and finalizes the local mirror. The org-admin routes list claims,
+reconcile customer claims, and retry refunds. These operations are locked so
+concurrent reconciliation cannot originate duplicate money movement.

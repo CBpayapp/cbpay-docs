@@ -148,7 +148,6 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 409 | `no_banking_customer` | Operación banking sin perfil bancario creado (`POST /v1/banking/customer` primero) |
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
-| 422 | `claim_identity_missing` | El claim bancario no tiene la identidad del customer necesaria para reconciliar la titularidad — entrega una identidad válida antes de reintentar |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 422 | `currency_not_supported` | Sin tasa FX para esa moneda |
 | 422 | `core_rejected` | El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` |
@@ -326,3 +325,25 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | HTTP | Código | Significado y solución |
 |---|---|---|
 | 409 | `corridor_disabled` | El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización. |
+
+## Banking creation recovery errors
+
+| Code | HTTP | Meaning and action |
+|---|---:|---|
+| `idempotency_key_mismatch` | 400 | Header/body keys differ or the same key is reused with a different request hash. Correct the request or use a new key. |
+| `idempotency_conflict` | 409 | The same key is already claimed with a conflicting payload. Do not resend with a new payload. |
+| `idempotency_failed` | 409 | The claim is terminally failed. Start a new operation with a new key after reviewing the failure. |
+| `claim_not_pending` | 409 | The requested human recovery is no longer pending. Read the claim and use the terminal result. |
+| `claim_customer_owned_elsewhere` | 409 | The provider customer is already linked to another account. Stop and investigate ownership. |
+| `banking_customer_creation_in_progress` | 409 | A lock is held by another banking operation. Retry the read/recovery flow later. |
+| `banking_recovery_pending` | 503 | The result or refund remains ambiguous. Do not originate a second provider request; use the recovery endpoint. |
+| `banking_invalid_response` | 422 | Provider account ownership did not match the claimed customer's `ProviderID`. |
+
+## Errores de recuperación de creaciones banking
+
+| Código | HTTP | Significado y acción |
+|---|---:|---|
+| `claim_identity_mismatch` | 422 | La identidad del cliente del proveedor no coincide con la solicitud banking original. Detén la recuperación y revisa el claim. |
+| `claim_not_pending` | 409 | El claim ya no está pendiente. Lee el resultado terminal en vez de repetir la recuperación. |
+| `claim_customer_owned_elsewhere` | 409 | El cliente del proveedor pertenece a otra cuenta. Detén el proceso y revisa la titularidad. |
+| `banking_recovery_pending` | 503 | El resultado del proveedor sigue ambiguo. Usa la ruta administrativa; no origines otra creación. |
