@@ -1,5 +1,5 @@
 {
-  "count": 214,
+  "count": 217,
   "errors": [
     {
       "category": {
@@ -545,6 +545,20 @@
         "en": "An organization setting was sent with the wrong type (e.g. `global_treasury_read` must be a boolean, not a string)",
         "es": "Un setting de la organización se envió con el tipo incorrecto (ej. `global_treasury_read` debe ser booleano, no un string)",
         "zh": "组织设置的值类型有误（例如 `global_treasury_read` 必须是布尔值，而不是字符串）"
+      }
+    },
+    {
+      "category": {
+        "en": "Organization admin panel",
+        "es": "Panel de administración de organización",
+        "zh": "组织管理面板"
+      },
+      "code": "approval_in_progress",
+      "http": 409,
+      "meaning": {
+        "en": "Another admin is currently applying this adjustment; wait for that action to finish before trying again",
+        "es": "Otro administrador está aplicando este ajuste; espera a que termine antes de intentarlo de nuevo",
+        "zh": "另一位管理员正在处理此 adjustment；请等待当前操作完成后再重试"
       }
     },
     {
@@ -1435,6 +1449,48 @@
         "es": "Dinero y estado (402 / 404 / 409 / 422)",
         "zh": "资金与状态（402 / 404 / 409 / 422）"
       },
+      "code": "idempotency_conflict",
+      "http": 409,
+      "meaning": {
+        "en": "The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation",
+        "es": "El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación",
+        "zh": "同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422)",
+        "zh": "资金与状态（402 / 404 / 409 / 422）"
+      },
+      "code": "claim_identity_missing",
+      "http": 422,
+      "meaning": {
+        "en": "The banking claim has no customer identity required to reconcile ownership — provide a valid customer identity before retrying",
+        "es": "El claim bancario no tiene la identidad del customer necesaria para reconciliar la titularidad — entrega una identidad válida antes de reintentar",
+        "zh": "银行 claim 缺少核对所有权所需的 customer 身份——请提供有效身份后再重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422)",
+        "zh": "资金与状态（402 / 404 / 409 / 422）"
+      },
+      "code": "banking_recovery_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key",
+        "es": "El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva",
+        "zh": "customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422)",
+        "zh": "资金与状态（402 / 404 / 409 / 422）"
+      },
       "code": "currency_not_supported",
       "http": 422,
       "meaning": {
@@ -1539,20 +1595,6 @@
         "en": "The segregated wallet has no native gas (TRX/ETH) for the network fee; fund the address and retry",
         "es": "La wallet segregada no tiene gas nativo (TRX/ETH) para el fee de red; fondea la dirección y reintenta",
         "zh": "独立钱包没有支付网络费所需的原生 gas（TRX/ETH）；请为该地址充值后重试"
-      }
-    },
-    {
-      "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
-      },
-      "code": "idempotency_conflict",
-      "http": 409,
-      "meaning": {
-        "en": "Another wallet creation/send with the same key is still in flight; retry with the same key",
-        "es": "Otra creación/envío de wallet con la misma clave sigue en curso; reintenta con la misma clave",
-        "zh": "使用相同幂等键的另一次钱包创建/转出仍在进行中；请使用同一个键重试"
       }
     },
     {

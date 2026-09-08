@@ -86,6 +86,18 @@ If your account already has a banking profile —
 `409 banking_customer_exists`.
 
 > **Note**
+**Durable idempotency.** The platform derives a deterministic core claim for
+this account/profile. The first successful request returns `201`. Repeating
+the same request returns `200` with `idempotency_hit: true` and never creates
+a second profile or charges the profile fee twice. A different payload for
+the same account returns `409 idempotency_conflict`; a previously failed claim
+returns `409 idempotency_failed`. If the `Idempotency-Key` header and body
+`idempotency_key` differ, the API returns `409 idempotency_key_mismatch`; a
+missing or malformed key returns `400 invalid_idempotency_key`. If the
+upstream/core outcome is ambiguous, the API returns
+`503 banking_recovery_pending`; do not retry with a new key. Operations must
+reconcile the durable claim first.
+> **Note**
 **Application review.** If your organization enabled banking application review, this request can answer **`202 Accepted`** with `{"status":"in_review","kind":"banking_application","review_id":"…"}` instead of `201` — the profile is created only when compliance approves the review. The banking profile fee is charged when the application is held and **refunded automatically if it is rejected**. Track the result with the webhook `txn_review_status_changed` or in [Transaction reviews](https://docs.cbpayapp.com/en/guides/transaction-reviews).
 Check the state at any time:
 
@@ -521,6 +533,8 @@ does *not* fall back to the legacy fee.
 | 402 | `insufficient_funds` | Not enough balance: with a per-rail fee the check is `balance ≥ amount + fee` in the **operation currency** (`BANK_USD`/`BANK_EUR`); with the legacy fallback it is your USDT balance |
 | 403 | `account_blocked` | The account is not active; contact the CBPay team |
 | 409 | `banking_customer_exists` | Your account already has a banking profile (`GET /v1/banking/customer`) |
+| 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and do not create a second profile |
+| 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
 | 409 | `no_banking_customer` | Create your profile first (`POST /v1/banking/customer`) |
 | 409 | `banking_account_limit` | Person accounts can hold at most 1 bank account |
 | 403 | `company_required` | Third-party users are available for company accounts only |
@@ -564,3 +578,26 @@ verification of the third party.
 Subscribe to `banking_operation_status_changed`: it fires on `completed` /
 `failed` and includes the `receipt_url` once final. You can also poll
 `GET /v1/banking/operations/{id}`.
+## Final account-claim recovery rules
+
+For `kind: banking_account`, claim reconciliation and fee-refund recovery use the `banking_account` kind and require the provider account identifier. Reconciliation validates provider ownership before finalizing the local mirror. Replaying a completed claim returns HTTP `200` with `idempotency_hit: true` and does not call the provider again. A header/body idempotency-key mismatch on the core account operation returns HTTP `400 idempotency_key_mismatch`.
+
+## Final recovery and idempotency behavior
+
+For account creation, a mismatch between the `Idempotency-Key` header and the
+`idempotency_key` body field is rejected before any provider call with HTTP
+`400 idempotency_key_mismatch`. The public and platform customer-create
+payloads do not forward the body `idempotency_key` to the core; the platform
+uses the authenticated request context and its own durable claim.
+
+Provider authentication failures (`401` or `403`) during an ambiguous
+recovery are not treated as proof that the resource does not exist and do not
+terminalize the claim. The claim remains recoverable. Account recovery
+compares the provider account's customer `ProviderID` with the customer
+identity recorded in the original claim before finalizing the local mirror.
+Provider ownership validation is mandatory.
+
+Completed admin claim reconciliation is replay-safe: it returns HTTP `200`
+with `idempotency_hit: true` and does not call the provider again. Recovery
+locks are stable across retries, so a retry cannot create a second account,
+fee claim, or refund.

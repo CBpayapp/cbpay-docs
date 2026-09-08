@@ -84,6 +84,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 |---|---|---|
 | 403 | `global_treasury_access_disabled` | 该组织尚未在其管理面板启用全局资金总览；请联系平台管理员在组织设置中启用 `global_treasury_read` |
 | 400 | `invalid_value` | 组织设置的值类型有误（例如 `global_treasury_read` 必须是布尔值，而不是字符串） |
+| 409 | `approval_in_progress` | 另一位管理员正在处理此 adjustment；请等待当前操作完成后再重试 |
 
 ### 校验（400）
 
@@ -146,6 +147,9 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 409 | `no_screening` | 在没有先行筛查的情况下发起 AML 重新筛查/监控 |
 | 409 | `no_banking_customer` | 在没有银行账户资料的情况下发起银行操作（请先 `POST /v1/banking/customer`） |
 | 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
+| 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
+| 422 | `claim_identity_missing` | 银行 claim 缺少核对所有权所需的 customer 身份——请提供有效身份后再重试 |
+| 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
 | 422 | `currency_not_supported` | 该货币没有汇率 |
 | 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 |
 | 422 | `recipient_unavailable` | 目标账户无法接收 |
