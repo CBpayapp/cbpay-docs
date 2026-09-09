@@ -104,6 +104,7 @@
                     "group": "Cobrar (money in)",
                     "pages": [
                       "es/guias/payins",
+                      "es/guias/bob-virtual-accounts",
                       "es/guias/checkout",
                       "es/guias/stored-cards-subscriptions",
                       "es/guias/qr-pos",
@@ -227,6 +228,7 @@
                     "group": "Money in",
                     "pages": [
                       "en/guides/payins",
+                      "en/guides/bob-virtual-accounts",
                       "en/guides/checkout",
                       "en/guides/stored-cards-subscriptions",
                       "en/guides/qr-pos",
@@ -349,6 +351,7 @@
                     "group": "收款（Money in）",
                     "pages": [
                       "zh/guides/payins",
+                      "zh/guides/bob-virtual-accounts",
                       "zh/guides/checkout",
                       "zh/guides/stored-cards-subscriptions",
                       "zh/guides/qr-pos",

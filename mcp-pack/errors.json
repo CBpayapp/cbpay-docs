@@ -1,5 +1,5 @@
 {
-  "count": 223,
+  "count": 225,
   "errors": [
     {
       "category": {
@@ -699,6 +699,20 @@
         "en": "Missing `country`/`currency`",
         "es": "Faltan `country`/`currency`",
         "zh": "缺少 `country`/`currency`"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "payin_corridor_unsupported",
+      "http": 400,
+      "meaning": {
+        "en": "The requested country/currency/method has no active payin provider — re-read `GET /v1/payins/methods`",
+        "es": "El país/moneda/método no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods`",
+        "zh": "请求的国家/币种/方法没有启用的 payin provider——重新读取 `GET /v1/payins/methods`"
       }
     },
     {
@@ -2869,6 +2883,20 @@
         "en": "The processor returned an unexpected response; retry with the **same** idempotency key",
         "es": "El procesador devolvió una respuesta inesperada; reintenta con la **misma** clave de idempotencia",
         "zh": "处理方返回了意外响应；请使用**相同的**幂等键重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "deposit_account_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The dedicated receiving account could not be provisioned; read the account list before retrying",
+        "es": "No se pudo aprovisionar la cuenta receptora; lee el listado antes de reintentar",
+        "zh": "专属收款账户 provisioning 失败；重试前先读取账户列表"
       }
     },
     {
