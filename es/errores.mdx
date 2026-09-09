@@ -99,6 +99,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_role` | Rol de miembro inválido |
 | `unknown_org` | Slug de organización incorrecto (usa `cbpay`) |
 | `invalid_request` | Faltan `country`/`currency` |
+| `payin_corridor_unsupported` | El país/moneda/método no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods` |
 | `idempotency_key_required` | Falta la clave de idempotencia |
 | `reserved_idempotency_key` | La clave usa un prefijo reservado del sistema (`payin-convert:` o `checkout-swap:`, propios de las auto-conversiones) — usa otra clave |
 | `beneficiary_required` | Falta el beneficiario del payout |
@@ -296,6 +297,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 502 | `rates_unavailable` | Tasas FX temporalmente no disponibles |
 | 502 | `core_unavailable` | Procesador temporalmente no disponible |
 | 502 | `core_invalid_response` | El procesador devolvió una respuesta inesperada; reintenta con la **misma** clave de idempotencia |
+| 502 | `deposit_account_failed` | No se pudo aprovisionar la cuenta receptora; lee el listado antes de reintentar |
 | 502 | `compliance_unavailable` | Screening AML temporalmente no disponible |
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible |
 | 503 | `org_credential_missing` | Servicio en configuración; contacta al soporte de CBPay |

@@ -19,7 +19,7 @@ flowchart LR
     hosted["托管支付页面<br/>（CL：fintoc）"] --> pay
     card["3-D Secure 银行卡支付<br/>（BO：card）"] --> pay
     announced["预告转账<br/>（CL、PE、MX、PY、US）"] --> pay
-    clabe["专属 CLABE / CVU 账户<br/>（MX、AR）"] --> pay
+    clabe["专属收款账户<br/>（BO、MX、AR）"] --> pay
     pay --> conv["按您的 payin_rate 进行<br/>外汇折算 − 固定费用"]
     conv --> credit(("USDT 入账<br/>到您的余额"))
     credit --> wh["Webhook payin_credited"]
@@ -55,7 +55,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 | 智利 | CLP | 托管支付页面（`fintoc`）、预告银行转账 |
 | 秘鲁 | PEN | 预告银行转账 |
 | 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账 |
-| 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`） |
+| 玻利维亚 | BOB / USD | 专属 BOB 账户（`bank_transfer`）、收款二维码、银行卡支付页面（`card`） |
 | 巴拉圭 | PYG | 预告银行转账 |
 | 巴西 | BRL | 动态 PIX 二维码 |
 | 阿根廷 | ARS | 专属 CVU 账户 |
@@ -209,6 +209,11 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 （`POST /v1/payins`，`method: "bank_transfer"`、`country: "MX"`）。
 
 #### 玻利维亚
+
+**专属 BOB 收款账户**：固定账户流程请参阅
+[BOB 虚拟账户指南](https://docs.cbpayapp.com/zh/guides/bob-virtual-accounts)。每个账户返回一个
+稳定的 `instrument`；付款人向该号码转入 BOB，系统通过轮询检测到账。
+此流程不需要公告或付款人参考号。
 
 **收款二维码**（本地互操作标准）：您生成二维码，客户用其银行 App
 扫码支付。

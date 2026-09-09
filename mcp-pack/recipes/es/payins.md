@@ -21,7 +21,7 @@ flowchart LR
     hosted["Página de pago hosted<br/>(CL: fintoc)"] --> pago
     card["Pago con tarjeta 3-D Secure<br/>(BO: card)"] --> pago
     anunciada["Transferencia anunciada<br/>(CL, PE, MX, PY, US)"] --> pago
-    clabe["Cuenta dedicada CLABE / CVU<br/>(MX, AR)"] --> pago
+    clabe["Cuenta receptora dedicada<br/>(BO, MX, AR)"] --> pago
     pago --> conv["Conversión FX a tu<br/>payin_rate − fee fijo"]
     conv --> credito(("Abono USDT<br/>a tu saldo"))
     credito --> wh["Webhook payin_credited"]
@@ -59,7 +59,7 @@ Corredores y modalidades de cobro:
 | Chile | CLP | Página de pago hosted (`fintoc`), transferencia anunciada |
 | Perú | PEN | Transferencia anunciada |
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
-| Bolivia | BOB / USD | QR de cobro, página de pago con tarjeta (`card`) |
+| Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`) |
 | Paraguay | PYG | Transferencia anunciada |
 | Brasil | BRL | QR PIX dinámico |
 | Argentina | ARS | Cuenta CVU dedicada |
@@ -223,6 +223,11 @@ También puedes usar la **transferencia anunciada** puntual
 (`POST /v1/payins` con `method: "bank_transfer"`, `country: "MX"`).
 
 #### Bolivia
+
+**Cuenta receptora BOB dedicada**: para el flujo de cuenta fija, usa la
+[guía de cuentas virtuales BOB](https://docs.cbpayapp.com/es/guias/bob-virtual-accounts). Devuelve un
+`instrument` estable por cuenta; el pagador transfiere BOB a ese número y el
+abono se detecta por polling. No requiere anuncio ni referencia del pagador.
 
 **QR de cobro** (estándar interoperable local): generas el QR y tu cliente
 lo escanea con su app bancaria.

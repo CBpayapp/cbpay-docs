@@ -9,6 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.72 - 9 de septiembre de 2026
+
+### v2.72
+
+**Agregado**
+
+- **Cuentas virtuales de depósito BOB**: el catálogo de payins documenta el
+  flujo `BO/BOB/bank_transfer` con cuenta receptora dedicada, creación/listado,
+  conciliación por polling, `payin_credited`, errores y el contrato
+  provider-agnostic del payout BOB.
+
 ## v2.71 · 3 versiones - 6 de septiembre de 2026
 
 ### v2.71

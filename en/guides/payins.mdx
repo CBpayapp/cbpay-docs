@@ -22,7 +22,7 @@ flowchart LR
     hosted["Hosted payment page<br/>(CL: fintoc)"] --> pay
     card["3-D Secure card payment<br/>(BO: card)"] --> pay
     announced["Announced transfer<br/>(CL, PE, MX, PY, US)"] --> pay
-    clabe["Dedicated CLABE / CVU account<br/>(MX, AR)"] --> pay
+    clabe["Dedicated receiving account<br/>(BO, MX, AR)"] --> pay
     pay --> conv["FX conversion at your<br/>payin_rate − fixed fee"]
     conv --> credit(("USDT credit<br/>to your balance"))
     credit --> wh["Webhook payin_credited"]
@@ -60,7 +60,7 @@ Collection corridors and modes:
 | Chile | CLP | Hosted payment page (`fintoc`), announced bank transfer |
 | Peru | PEN | Announced bank transfer |
 | Mexico | MXN | Dedicated CLABE account, announced bank transfer |
-| Bolivia | BOB / USD | Collection QR, card payment page (`card`) |
+| Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`) |
 | Paraguay | PYG | Announced bank transfer |
 | Brazil | BRL | Dynamic PIX QR |
 | Argentina | ARS | Dedicated CVU account |
@@ -228,6 +228,12 @@ You can also use a one-off **announced bank transfer**
 
 </Tab>
 <Tab title="Bolivia">
+
+**Dedicated BOB receiving account**: for the fixed-account flow, use the
+[BOB virtual accounts guide](/en/guides/bob-virtual-accounts). It returns one
+stable `instrument` per account; the payer transfers BOB to that number and
+the credit is detected by polling. No announcement or payer reference is
+required.
 
 **Collection QR** (the local interoperable standard): you generate the QR
 and your customer scans it with their banking app.

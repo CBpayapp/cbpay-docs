@@ -8,6 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.72 - September 9, 2026
+
+### v2.72
+
+**Added**
+
+- **BOB virtual deposit accounts**: the payin catalog now documents the
+  `BO/BOB/bank_transfer` dedicated receiving-account flow, including account
+  creation/listing, polling-based reconciliation, `payin_credited`, errors and
+  the provider-agnostic BOB payout contract.
+
 ## v2.71 · 3 versions - September 6, 2026
 
 ### v2.71

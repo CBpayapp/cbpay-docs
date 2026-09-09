@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.69"
+  version: "2.72"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -13292,13 +13292,90 @@ paths:
               example:
                 error: core_unavailable
                 message: could not request the OTP
+  /v1/corridor-variants:
+    get:
+      tags:
+      - 收款(Payins)
+      operationId: listCorridorVariants
+      summary: 列出组织走廊版本
+      description: 返回组织未来操作的 routing 选择。
+      responses:
+        '200':
+          description: 已保存的 routing 选择。
+          content:
+            application/json:
+              example:
+                variants:
+                - org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                  direction: payout
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  variant: v2
+                  source_account: '7014227171'
+                  updated_by: admin:…
+                  updated_at: '2026-09-09T20:00:00Z'
+        '403':
+          description: 需要组织管理员权限。
+        '503':
+          description: rail_variants_unavailable
+    put:
+      tags:
+      - 收款(Payins)
+      operationId: updateCorridorVariant
+      summary: 设置组织走廊版本
+      description: 为未来操作选择实现；已有操作保留其已保存的 routing。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [direction, country, currency, method, variant, reason]
+              properties:
+                direction: {type: string, enum: [payin, payout]}
+                country: {type: string, enum: [BO]}
+                currency: {type: string, enum: [BOB]}
+                method: {type: string, enum: [bank_transfer, qr]}
+                variant: {type: string, enum: [legacy, v2]}
+                source_account: {type: string}
+                reason: {type: string}
+            example:
+              direction: payout
+              country: BO
+              currency: BOB
+              method: bank_transfer
+              variant: v2
+              source_account: '7014227171'
+              reason: Move the BOB payout source to the configured account
+      responses:
+        '200':
+          description: 版本已保存并写入审计。
+          content:
+            application/json:
+              example:
+                org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                direction: payout
+                country: BO
+                currency: BOB
+                method: bank_transfer
+                variant: v2
+                source_account: '7014227171'
+                updated_by: admin:…
+                updated_at: '2026-09-09T20:00:00Z'
+        '400':
+          description: invalid_rail_variant
+        '403':
+          description: 需要组织管理员权限。
+        '503':
+          description: rail_variants_unavailable
   /v1/payins/deposit-accounts:
     post:
       tags:
       - 收款(Payins)
       operationId: createDepositAccount
       summary: 创建专属充值账户
-      description: 在支持的通道(例如墨西哥 CLABE 或阿根廷 CVU)为你的账户开通固定充值目的地。到达该目的地的每笔转账都会自动入账,已扣除 payin 费用。创建免费。
+      description: 在支持的通道(例如玻利维亚 BOB 账户、墨西哥 CLABE 或阿根廷 CVU)为你的账户开通固定充值目的地。到达该目的地的每笔转账都会自动入账,已扣除 payin 费用。创建免费。
       requestBody:
         required: true
         content:
@@ -13315,6 +13392,12 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
+                alias:
+                  type: string
+                  description: 收款账户的可选显示别名。
+                reference_id:
+                  type: string
+                  description: 保存在内部工具记录中的可选客户参考号。
             examples:
               mx_clabe:
                 summary: 墨西哥 — 专属 CLABE(MXN)
@@ -13326,6 +13409,13 @@ paths:
                 value:
                   country: AR
                   currency: ARS
+              bo_bob:
+                summary: 玻利维亚 — 专属 BOB 收款账户
+                value:
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  alias: Operations BOB
       responses:
         '201':
           description: 充值账户已创建并绑定到调用账户。

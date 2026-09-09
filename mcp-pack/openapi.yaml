@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.69"
+  version: "2.72"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -13887,6 +13887,83 @@ paths:
               example:
                 error: core_unavailable
                 message: could not request the OTP
+  /v1/corridor-variants:
+    get:
+      tags:
+      - Payins
+      operationId: listCorridorVariants
+      summary: List organization corridor variants
+      description: Returns organization-scoped routing choices for future corridor operations.
+      responses:
+        '200':
+          description: Stored routing choices.
+          content:
+            application/json:
+              example:
+                variants:
+                - org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                  direction: payout
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  variant: v2
+                  source_account: '7014227171'
+                  updated_by: admin:…
+                  updated_at: '2026-09-09T20:00:00Z'
+        '403':
+          description: Organization admin permission required.
+        '503':
+          description: rail_variants_unavailable
+    put:
+      tags:
+      - Payins
+      operationId: updateCorridorVariant
+      summary: Set an organization corridor variant
+      description: Selects the implementation for future corridor operations; existing operations keep their persisted routing choice.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [direction, country, currency, method, variant, reason]
+              properties:
+                direction: {type: string, enum: [payin, payout]}
+                country: {type: string, enum: [BO]}
+                currency: {type: string, enum: [BOB]}
+                method: {type: string, enum: [bank_transfer, qr]}
+                variant: {type: string, enum: [legacy, v2]}
+                source_account: {type: string}
+                reason: {type: string}
+            example:
+              direction: payout
+              country: BO
+              currency: BOB
+              method: bank_transfer
+              variant: v2
+              source_account: '7014227171'
+              reason: Move the BOB payout source to the configured account
+      responses:
+        '200':
+          description: Variant saved and audited.
+          content:
+            application/json:
+              example:
+                org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                direction: payout
+                country: BO
+                currency: BOB
+                method: bank_transfer
+                variant: v2
+                source_account: '7014227171'
+                updated_by: admin:…
+                updated_at: '2026-09-09T20:00:00Z'
+        '400':
+          description: invalid_rail_variant
+        '403':
+          description: Organization admin permission required.
+        '503':
+          description: rail_variants_unavailable
   /v1/payins/deposit-accounts:
     post:
       tags:
@@ -13894,8 +13971,9 @@ paths:
       operationId: createDepositAccount
       summary: Create a dedicated deposit account
       description: Provisions a fixed deposit destination bound to your account in corridors that support
-        it (e.g. a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically,
-        net of the payin fee. Creation is free.
+        it (e.g. a Bolivian BOB account, a Mexican CLABE or an Argentine CVU). Every transfer arriving to
+        it is credited automatically, net of the payin fee. Creation is free. An account is limited to one
+        active destination per country/currency/method.
       requestBody:
         required: true
         content:
@@ -13912,6 +13990,12 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
+                alias:
+                  type: string
+                  description: Optional display alias for the receiving account.
+                reference_id:
+                  type: string
+                  description: Optional client reference echoed into the internal instrument record.
             examples:
               mx_clabe:
                 summary: Mexico — dedicated CLABE (MXN)
@@ -13923,6 +14007,13 @@ paths:
                 value:
                   country: AR
                   currency: ARS
+              bo_bob:
+                summary: Bolivia — dedicated BOB receiving account
+                value:
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  alias: Operations BOB
       responses:
         '201':
           description: Deposit account created and bound to the calling account.
