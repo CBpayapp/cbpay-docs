@@ -9,13 +9,41 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.72 · 1 versión - 10 de septiembre de 2026
+## v2.73 · 1 versión - 10 de septiembre de 2026
 
-### v2.72
+### v2.73
 
 **Agregado**
 
-- **Superficie de solicitudes de vIBAN EUR**: las cuentas pueden solicitar y listar los propósitos `funding_usdt` (por defecto) y `banking_eur` (opcional), con idempotencia durable, aprobación manual y filtros de fecha. El contrato público todavía no promete onboarding del proveedor, fees ni el flujo completo EUR→USDT / BANK_EUR.
+- **vIBAN EUR**: las cuentas pueden solicitar un vIBAN durable de
+  `funding_usdt` o `banking_eur` con idempotencia, aprobación manual, consulta
+  de estado, listado con fechas y ownership. Los ingresos terminales entran
+  ahora al camino financiero según el propósito.
+- **Returns y recalls**: `returned`, `recalled` y `reversed` se reconcilian de
+  forma idempotente. Los chargebacks/refunds de fondeo y los reverse entries
+  de Banking EUR son append-only; un completion posterior no resucita una
+  operación devuelta.
+
+## v2.72 · 1 versión - 9 de septiembre de 2026
+
+### v2.72
+
+**Cambiado**
+
+- **Múltiples CLABEs para empresas**: las cuentas empresa pueden
+  crear múltiples destinos `MX`/`MXN`/`bank_transfer`. Cada destino
+  sigue ligado a la misma cuenta y acredita por instrumento de
+  destino. La creación es idempotente: una clave nueva responde
+  `201`, un replay completado responde `200` con
+  `idempotency_hit: true` y un replay en vuelo puede responder
+  `409 idempotency_conflict`. Las cuentas persona y los corredores
+  legados conservan un destino por corredor; el listado ahora es
+  paginado.
+
+**Cuentas virtuales de depósito BOB**: el catálogo de payins documenta el
+  flujo `BO/BOB/bank_transfer` con cuenta receptora dedicada, creación/listado,
+  conciliación por polling, `payin_credited`, errores y el contrato
+  provider-agnostic del payout BOB.
 
 ## v2.71 · 3 versiones - 6 de septiembre de 2026
 

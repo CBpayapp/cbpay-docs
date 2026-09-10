@@ -324,10 +324,14 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 ```json banking_operation_status_changed
 {
   "account_id": "ae8c…",
-  "customer_id": "9f2b…",
   "operation_id": "7e8a…",
-  "type": "withdraw",
-  "status": "completed"
+  "status": "completed",
+  "direction": "in",
+  "amount": "80.00",
+  "currency": "EUR",
+  "payment_rail": "SEPA_INSTANT",
+  "purpose": "banking_eur",
+  "reference": "CJ-DEP-001"
 }
 ```
 
@@ -751,9 +755,9 @@ HMAC 必须基于**原始请求体**（收到的字节原样）计算，而不�
 - 记录 `X-Webhook-Delivery-ID` 以便追溯。
 - 关键状态不要只依赖 webhook：您随时可以通过 API 查询对象（`GET /v1/payouts/{id}` 等）。
 
-### `banking_virtual_iban_inbound`
+## `banking_virtual_iban_inbound`
 
-当发送到虚拟 IBAN 的 EUR 入金被规范化到 owner account 时发送。负载包含
-`iban`、`amount`、`currency`、`status`、`reference`、`payment_rail`
-（`SEPA_INSTANT`）和稳定的 `provider_event_id`。按 delivery event ID 去重，
-并使用其他资金事件相同的幂等处理。
+This event reports an inbound EUR transfer received by an owned virtual IBAN.
+The event is normalized before delivery; consumers should deduplicate by the
+event ID and fetch the banking operation or virtual account when they need the
+latest state. The event does not expose an upstream provider identity.

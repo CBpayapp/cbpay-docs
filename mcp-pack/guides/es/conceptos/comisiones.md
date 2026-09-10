@@ -234,10 +234,17 @@ equivalente a tu `payin_rate` menos el fijo.
 
 | `risk_fraud_score` | Fee fijo por cada informe de fraude e identidad; se reembolsa si falla la generación |
 
-## Servicios del rollout vIBAN EUR
+## EUR banking fee services
 
-El catálogo del backend también contiene `banking_virtual_iban`,
-`banking_funding`, `banking_transfer_sepa_instant` y `banking_return`.
-Su tratamiento percent/fijo exacto todavía no está confirmado por el
-onboarding del partner. No configures ni publiques valores antes de aprobar el
-contrato de pricing productivo.
+The following service identifiers are present in the product configuration:
+
+| Service | Scope |
+|---|---|
+| `banking_funding` | Funding through an EUR virtual IBAN; charged only when configured |
+| `banking_return` | A banking return or recall; charged only when configured |
+| `banking_transfer_sepa_instant` | SEPA Instant transfer; charged only when configured |
+| `banking_virtual_iban` | Virtual IBAN lifecycle service; charged only when configured |
+
+Amounts, payer, settlement timing and provider onboarding terms remain
+configuration-dependent. No fee is implied when the organization has no
+matching configuration.

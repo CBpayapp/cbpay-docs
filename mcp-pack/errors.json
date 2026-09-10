@@ -1,6 +1,34 @@
 {
-  "count": 225,
+  "count": 232,
   "errors": [
+    {
+      "category": {
+        "en": "",
+        "es": "",
+        "zh": ""
+      },
+      "code": "payin_corridor_unsupported",
+      "http": null,
+      "meaning": {
+        "en": "The requested country/currency/method has no active payin provider — re-read `GET /v1/payins/methods`",
+        "es": "El corredor solicitado no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods`",
+        "zh": "请求的国家/币种/方式没有可用的 payin provider — 重新读取 `GET /v1/payins/methods`"
+      }
+    },
+    {
+      "category": {
+        "en": "",
+        "es": "",
+        "zh": ""
+      },
+      "code": "deposit_account_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The dedicated receiving account could not be provisioned; read the account list before retrying",
+        "es": "No se pudo aprovisionar la cuenta receptora dedicada; lee la lista antes de reintentar",
+        "zh": "无法配置专属收款账户；重试前先读取账户列表"
+      }
+    },
     {
       "category": {
         "en": "Authentication and permissions",
@@ -1981,20 +2009,6 @@
         "es": "Dinero y estado (402 / 404 / 409 / 422)",
         "zh": "资金与状态（402 / 404 / 409 / 422）"
       },
-      "code": "deposit_account_not_recoverable",
-      "http": 422,
-      "meaning": {
-        "en": "The pending destination is not an MX/MXN/bank_transfer instrument that can be recovered",
-        "es": "El destino pendiente no es un instrumento MX/MXN/bank_transfer recuperable",
-        "zh": "待处理目的地不是可恢复的 MX/MXN/bank_transfer 工具"
-      }
-    },
-    {
-      "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
-      },
       "code": "export_rejected",
       "http": 422,
       "meaning": {
@@ -3141,6 +3155,90 @@
         "en": "422 — Fix: The provider customer identity does not match the original banking request. Stop recovery and review the claim.",
         "es": "422 — Fix: La identidad del cliente del proveedor no coincide con la solicitud banking original. Detén la recuperación y revisa el claim.",
         "zh": "422 — Fix: 提供商客户身份与原始 banking 请求不匹配。停止恢复并检查 claim。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "banking_customer_incomplete",
+      "http": null,
+      "meaning": {
+        "en": "The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key.",
+        "es": "The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key.",
+        "zh": "The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "provider_rejected",
+      "http": null,
+      "meaning": {
+        "en": "The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state.",
+        "es": "The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state.",
+        "zh": "The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "customer_id_required",
+      "http": null,
+      "meaning": {
+        "en": "A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource.",
+        "es": "A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource.",
+        "zh": "A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "iban_required",
+      "http": null,
+      "meaning": {
+        "en": "The operation requires the IBAN associated with the owned virtual account.",
+        "es": "The operation requires the IBAN associated with the owned virtual account.",
+        "zh": "The operation requires the IBAN associated with the owned virtual account."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "operation_in_progress",
+      "http": null,
+      "meaning": {
+        "en": "The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key.",
+        "es": "The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key.",
+        "zh": "The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "ownership_required",
+      "http": null,
+      "meaning": {
+        "en": "The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID.",
+        "es": "The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID.",
+        "zh": "The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID."
       }
     }
   ]
