@@ -99,7 +99,6 @@ description: "错误格式与完整的错误码目录"
 | `invalid_role` | 成员角色无效 |
 | `unknown_org` | 组织 slug 错误（应使用 `cbpay`） |
 | `invalid_request` | 缺少 `country`/`currency` |
-| `payin_corridor_unsupported` | 请求的国家/币种/方法没有启用的 payin provider——重新读取 `GET /v1/payins/methods` |
 | `idempotency_key_required` | 缺少幂等键 |
 | `reserved_idempotency_key` | 幂等键使用了系统保留前缀（`payin-convert:` 或 `checkout-swap:`，属于自动转换）——请改用其他键 |
 | `beneficiary_required` | 缺少付款收款人信息 |
@@ -189,7 +188,8 @@ description: "错误格式与完整的错误码目录"
 | 422 | `nothing_received` | [QR Crypto POS](/zh/guides/qr-pos) 收款未收到任何链上支付：无可退款 |
 | 422 | `refund_exceeds_received` | 退款超过 [QR Crypto POS](/zh/guides/qr-pos) 收款已收金额减去已退金额 |
 | 400 | `to_address_required` | [QR Crypto POS](/zh/guides/qr-pos) 退款（及加密货币提现）必须显式提供目标地址 |
-| 422 | `deposit_account_limit_reached` | 每个账户每条走廊只有一个入金账户（随账户自动创建）；不可更改或删除 |
+| 422 | `deposit_account_limit_reached` | 个人账户以及未支持或 legacy 通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除 |
+| 409 | `deposit_account_conflict` | core 返回的充值目的地已分配给其他组织——先完成对账再重试 |
 | 422 | `export_rejected` | 处理方拒绝了该独立钱包的私钥导出 |
 | 422 | `stored_card_corridor_mismatch` | 该[已保存卡片](/zh/guides/stored-cards-subscriptions)属于与本次收款不同的国家/货币走廊 |
 | 409 | `subscription_state` | 该[订阅](/zh/guides/stored-cards-subscriptions)当前状态不允许该操作（例如暂停已取消的计划） |
@@ -295,7 +295,6 @@ description: "错误格式与完整的错误码目录"
 | 502 | `rates_unavailable` | 汇率暂时不可用 |
 | 502 | `core_unavailable` | 处理方暂时不可用 |
 | 502 | `core_invalid_response` | 处理方返回了意外响应；请使用**相同的**幂等键重试 |
-| 502 | `deposit_account_failed` | 专属收款账户 provisioning 失败；重试前先读取账户列表 |
 | 502 | `compliance_unavailable` | AML 筛查暂时不可用 |
 | 503 | `verifications_unavailable` | 身份验证暂时不可用 |
 | 503 | `org_credential_missing` | 服务正在配置中；请联系 CBPay 支持 |

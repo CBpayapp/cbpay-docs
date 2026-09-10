@@ -13713,92 +13713,32 @@ paths:
               example:
                 error: core_unavailable
                 message: could not request the OTP
-  /v1/corridor-variants:
-    get:
-      tags:
-      - Payins
-      operationId: listCorridorVariants
-      summary: Listar variantes de corredores de la organización
-      description: Devuelve las elecciones de routing de la organización para operaciones futuras.
-      responses:
-        '200':
-          description: Elecciones de routing guardadas.
-          content:
-            application/json:
-              example:
-                variants:
-                - org_id: 30981c34-5baa-4339-af89-4503c55136a3
-                  direction: payout
-                  country: BO
-                  currency: BOB
-                  method: bank_transfer
-                  variant: v2
-                  source_account: '7014227171'
-                  updated_by: admin:…
-                  updated_at: '2026-09-09T20:00:00Z'
-        '403':
-          description: Se requiere permiso de administrador de organización.
-        '503':
-          description: rail_variants_unavailable
-    put:
-      tags:
-      - Payins
-      operationId: updateCorridorVariant
-      summary: Configurar una variante de corredor
-      description: Selecciona la implementación para operaciones futuras; las operaciones existentes conservan su routing persistido.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [direction, country, currency, method, variant, reason]
-              properties:
-                direction: {type: string, enum: [payin, payout]}
-                country: {type: string, enum: [BO]}
-                currency: {type: string, enum: [BOB]}
-                method: {type: string, enum: [bank_transfer, qr]}
-                variant: {type: string, enum: [legacy, v2]}
-                source_account: {type: string}
-                reason: {type: string}
-            example:
-              direction: payout
-              country: BO
-              currency: BOB
-              method: bank_transfer
-              variant: v2
-              source_account: '7014227171'
-              reason: Mover el origen del payout BOB a la cuenta configurada
-      responses:
-        '200':
-          description: Variante guardada y auditada.
-          content:
-            application/json:
-              example:
-                org_id: 30981c34-5baa-4339-af89-4503c55136a3
-                direction: payout
-                country: BO
-                currency: BOB
-                method: bank_transfer
-                variant: v2
-                source_account: '7014227171'
-                updated_by: admin:…
-                updated_at: '2026-09-09T20:00:00Z'
-        '400':
-          description: invalid_rail_variant
-        '403':
-          description: Se requiere permiso de administrador de organización.
-        '503':
-          description: rail_variants_unavailable
   /v1/payins/deposit-accounts:
     post:
       tags:
       - Payins
       operationId: createDepositAccount
       summary: Crear una cuenta de depósito dedicada
-      description: Aprovisiona un destino de depósito fijo ligado a tu cuenta en los corredores que lo
-        soportan (ej. una cuenta BOB boliviana, una CLABE mexicana o una CVU argentina). Cada transferencia
-        que llega a él se acredita automáticamente, neta de la comisión de payin. La creación es gratuita.
+      description: >-
+        Aprovisiona un destino de depósito fijo ligado a la cuenta en los corredores que lo
+        soportan (por ejemplo, una CLABE mexicana o una CVU argentina). Crear es gratis y los
+        abonos entrantes se acreditan automáticamente, netos de la comisión normal de payin.
+        Las cuentas empresa pueden crear múltiples CLABEs `MX`/`MXN`/`bank_transfer`. Las
+        cuentas persona y los corredores no soportados o legados conservan un destino por corredor.
+
+        Para crear en empresa dentro del corredor MX/MXN/bank_transfer, envía una clave de
+        idempotencia en el header `Idempotency-Key` o en `idempotency_key`. Una clave nueva
+        responde `201`; repetir la misma clave completada responde `200` con el instrumento
+        original e `idempotency_hit: true`. Un replay concurrente en vuelo puede responder
+        `409 idempotency_conflict`.
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        description: Alternativa al campo `idempotency_key` para crear CLABEs de empresa.
+        schema:
+          type: string
+          minLength: 1
       requestBody:
         required: true
         content:
@@ -13815,38 +13755,32 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
-                alias:
+                idempotency_key:
                   type: string
-                  description: Alias opcional visible para la cuenta receptora.
-                reference_id:
-                  type: string
-                  description: Referencia opcional del cliente conservada en el instrumento interno.
+                  minLength: 1
+                  description: Obligatoria para empresa MX/MXN/bank_transfer; alternativa al header.
             examples:
-              mx_clabe:
-                summary: México — CLABE dedicada (MXN)
+              mx_company_clabe:
+                summary: Empresa — CLABE de México
                 value:
                   country: MX
                   currency: MXN
-              ar_cvu:
-                summary: Argentina — CVU dedicada (ARS)
+                  method: bank_transfer
+                  idempotency_key: company-clabe-001
+              ar_person_cvu:
+                summary: Persona o corredor legado — CVU de Argentina
                 value:
                   country: AR
                   currency: ARS
-              bo_bob:
-                summary: Bolivia — cuenta receptora BOB dedicada
-                value:
-                  country: BO
-                  currency: BOB
                   method: bank_transfer
-                  alias: Operations BOB
       responses:
-        '201':
-          description: Cuenta de depósito creada y ligada a la cuenta que llama.
+        '200':
+          description: Replay idempotente de una creación de CLABE empresa ya completada.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositInstrument'
-              example: &id013
+              example:
                 instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 country: MX
@@ -13855,48 +13789,120 @@ paths:
                 instrument: '734180000151000006'
                 details:
                   clabe: '734180000151000006'
-                  status: active
                 status: active
-                created_at: '2026-07-07T12:00:00Z'
+                created_at: '2026-09-09T12:00:00Z'
+                idempotency_hit: true
+        '201':
+          description: Cuenta de depósito creada y ligada a la cuenta que llama.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositInstrument'
+              example:
+                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
+                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                country: MX
+                currency: MXN
+                method: bank_transfer
+                instrument: '734180000151000006'
+                details:
+                  clabe: '734180000151000006'
+                status: active
+                created_at: '2026-09-09T12:00:00Z'
+        '400':
+          description: Falta la clave de idempotencia para crear una CLABE empresa MX/MXN/bank_transfer.
+          content:
+            application/json:
+              schema: *id012
+              example:
+                error: idempotency_key_required
+                message: provide idempotency_key (body or Idempotency-Key header)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Cuenta no activa (account_blocked).
+          description: La cuenta no está activa (account_blocked).
           content:
             application/json:
               schema: *id012
               example:
                 error: account_blocked
                 message: account is not active
-        '502':
-          description: Core no disponible (core_unavailable).
+        '409':
+          description: Conflicto de idempotencia o destino ya asignado a otra organización.
+          content:
+            application/json:
+              schema: *id012
+              examples:
+                in_flight:
+                  value:
+                    error: idempotency_conflict
+                    message: a deposit account with this idempotency key is being provisioned; retry shortly
+                provider_conflict:
+                  value:
+                    error: deposit_account_conflict
+                    message: the provider returned a deposit account already assigned to another organization
+        '422':
+          description: Una cuenta persona o un corredor legado/no soportado ya tiene su destino único.
           content:
             application/json:
               schema: *id012
               example:
-                error: core_unavailable
-                message: could not create the deposit account
+                error: deposit_account_limit_reached
+                message: accounts hold one deposit account per corridor (created automatically with the account); it cannot be changed or deleted
+        '502':
+          description: El core no está disponible o devolvió una respuesta inesperada.
+          content:
+            application/json:
+              schema: *id012
+              examples:
+                core_unavailable:
+                  value:
+                    error: core_unavailable
+                    message: could not create the deposit account
+                core_invalid_response:
+                  value:
+                    error: core_invalid_response
+                    message: core did not return a deposit account identifier
     get:
       tags:
       - Payins
       operationId: listDepositAccounts
       summary: Listar mis cuentas de depósito
-      description: Lista los destinos de depósito dedicados ligados a la cuenta que llama.
+      description: Lista los destinos de depósito ligados a la cuenta que llama. La respuesta es paginada.
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: page_size
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
       responses:
         '200':
-          description: Cuentas de depósito de la cuenta que llama.
+          description: Cuentas de depósito paginadas de la cuenta que llama.
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
                   deposit_accounts:
                     type: array
                     items:
                       $ref: '#/components/schemas/DepositInstrument'
               example:
-                deposit_accounts:
-                - *id013
+                page: 1
+                page_size: 50
+                deposit_accounts: []
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/payins/deposit-instructions:
@@ -22527,6 +22533,9 @@ components:
         created_at:
           type: string
           format: date-time
+        idempotency_hit:
+          type: boolean
+          description: Presente como true cuando una creación de CLABE empresa se repite con la misma clave de idempotencia.
     DepositInstructions:
       type: object
       description: |

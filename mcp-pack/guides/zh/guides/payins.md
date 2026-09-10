@@ -19,7 +19,7 @@ flowchart LR
     hosted["托管支付页面<br/>（CL：fintoc）"] --> pay
     card["3-D Secure 银行卡支付<br/>（BO：card）"] --> pay
     announced["预告转账<br/>（CL、PE、MX、PY、US）"] --> pay
-    clabe["专属收款账户<br/>（BO、MX、AR）"] --> pay
+    clabe["专属 CLABE / CVU 账户<br/>（MX、AR）"] --> pay
     pay --> conv["按您的 payin_rate 进行<br/>外汇折算 − 固定费用"]
     conv --> credit(("USDT 入账<br/>到您的余额"))
     credit --> wh["Webhook payin_credited"]
@@ -55,7 +55,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 | 智利 | CLP | 托管支付页面（`fintoc`）、预告银行转账 |
 | 秘鲁 | PEN | 预告银行转账 |
 | 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账 |
-| 玻利维亚 | BOB / USD | 专属 BOB 账户（`bank_transfer`）、收款二维码、银行卡支付页面（`card`） |
+| 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`） |
 | 巴拉圭 | PYG | 预告银行转账 |
 | 巴西 | BRL | 动态 PIX 二维码 |
 | 阿根廷 | ARS | 专属 CVU 账户 |
@@ -204,16 +204,32 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 
 `instrument` 就是您分享给付款人的 CLABE。创建免费；每笔存款按常规入金
 费用计费。使用 `GET /v1/payins/deposit-accounts` 列出您的账户。
+**企业账户与多个 CLABE。** 企业账户可以创建多个
+`MX`/`MXN`/`bank_transfer` 充值账户。每个 CLABE 都是独立且不可变的
+充值目的地，但所有目的地仍绑定到同一个 CBPay 账户；入账会根据
+目的地账户归属。个人账户仍然遵循每个通道一个充值账户的规则，
+其他通道和 legacy 通道也一样。
+
+创建企业 CLABE 时，请在 body 或 header 中发送幂等键：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-clabe-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer","idempotency_key":"company-clabe-001"}'
+```
+
+新 key 返回 `201` 并创建新的 CLABE。使用相同 key 重试会返回
+`200`、原始充值账户以及 `idempotency_hit: true`；如果原请求仍在
+处理中，并发重试可能返回 `409 idempotency_conflict`。创建免费；
+后续 payin 继续按正常入金费用计费。使用
+`GET /v1/payins/deposit-accounts?page=1&page_size=50` 分页查询目的地。
 
 您也可以使用一次性的**预告银行转账**
 （`POST /v1/payins`，`method: "bank_transfer"`、`country: "MX"`）。
 
 #### 玻利维亚
-
-**专属 BOB 收款账户**：固定账户流程请参阅
-[BOB 虚拟账户指南](https://docs.cbpayapp.com/zh/guides/bob-virtual-accounts)。每个账户返回一个
-稳定的 `instrument`；付款人向该号码转入 BOB，系统通过轮询检测到账。
-此流程不需要公告或付款人参考号。
 
 **收款二维码**（本地互操作标准）：您生成二维码，客户用其银行 App
 扫码支付。

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds four independent\nvirtual balances — USDT (the operating currency), USDC, BTC and GOLD\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the four balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-09 23:02 UTC",
-    "_content_sha256": "1e410651a7e25a624c7ac4a5ff0c8099ec21537a1fb05138b65c28815735b661"
+    "_generated_at": "2026-09-10 00:21 UTC",
+    "_content_sha256": "568eac1cc7282bf8b9ae207c0eab00d32b7b3dbcd35da5a7e63e7205df5a0b96"
   },
   "auth": {
     "type": "bearer",
@@ -12575,112 +12575,6 @@
           ]
         },
         {
-          "name": "List organization corridor variants",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/corridor-variants",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "corridor-variants"
-              ]
-            },
-            "description": "Returns organization-scoped routing choices for future corridor operations."
-          },
-          "response": [
-            {
-              "name": "200 Stored routing choices.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/corridor-variants",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "corridor-variants"
-                  ]
-                }
-              },
-              "status": "Stored routing choices.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"variants\": [\n    {\n      \"org_id\": \"30981c34-5baa-4339-af89-4503c55136a3\",\n      \"direction\": \"payout\",\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"method\": \"bank_transfer\",\n      \"variant\": \"v2\",\n      \"source_account\": \"7014227171\",\n      \"updated_by\": \"admin:…\",\n      \"updated_at\": \"2026-09-09T20:00:00Z\"\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Set an organization corridor variant",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/corridor-variants",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "corridor-variants"
-              ]
-            },
-            "description": "Selects the implementation for future corridor operations; existing operations keep their persisted routing choice.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"7014227171\",\n  \"reason\": \"Move the BOB payout source to the configured account\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Variant saved and audited.",
-              "originalRequest": {
-                "method": "PUT",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/corridor-variants",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "corridor-variants"
-                  ]
-                }
-              },
-              "status": "Variant saved and audited.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"org_id\": \"30981c34-5baa-4339-af89-4503c55136a3\",\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"7014227171\",\n  \"updated_by\": \"admin:…\",\n  \"updated_at\": \"2026-09-09T20:00:00Z\"\n}"
-            }
-          ]
-        },
-        {
           "name": "List my deposit accounts",
           "request": {
             "method": "GET",
@@ -12694,13 +12588,27 @@
                 "v1",
                 "payins",
                 "deposit-accounts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
               ]
             },
-            "description": "Lists the dedicated deposit destinations bound to the calling account."
+            "description": "Lists the dedicated deposit destinations bound to the calling account. The result is paginated."
           },
           "response": [
             {
-              "name": "200 Deposit accounts of the calling account.",
+              "name": "200 Paged deposit accounts of the calling account.",
               "originalRequest": {
                 "method": "GET",
                 "url": {
@@ -12712,10 +12620,24 @@
                     "v1",
                     "payins",
                     "deposit-accounts"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
                   ]
                 }
               },
-              "status": "Deposit accounts of the calling account.",
+              "status": "Paged deposit accounts of the calling account.",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12724,18 +12646,23 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"deposit_accounts\": [\n    {\n      \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"instrument\": \"734180000151000006\",\n      \"details\": {\n        \"clabe\": \"734180000151000006\",\n        \"status\": \"active\"\n      },\n      \"status\": \"active\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"deposit_accounts\": []\n}"
             }
           ]
         },
         {
-          "name": "Create a dedicated deposit account — Mexico — dedicated CLABE (MXN)",
+          "name": "Create a dedicated deposit account — Company — Mexico CLABE",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -12749,10 +12676,10 @@
                 "deposit-accounts"
               ]
             },
-            "description": "Provisions a fixed deposit destination bound to your account in corridors that support it (e.g. a Bolivian BOB account, a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically, net of the payin fee. Creation is free. An account is limited to one active destination per country/currency/method.",
+            "description": "Provisions a fixed deposit destination bound to your account in corridors that support it (for example, a Mexican CLABE or an Argentine CVU). Creation is free and incoming transfers are credited automatically, net of the normal payin fee. Company accounts can create multiple `MX`/`MXN`/`bank_transfer` CLABEs. Person accounts and unsupported or legacy corridors keep one destination per corridor.\nFor company creation in the MX/MXN/bank_transfer corridor, send an idempotency key in the `Idempotency-Key` header or `idempotency_key` body field. A new key returns `201`; replaying the same completed key returns `200` with the original instrument and `idempotency_hit: true`. A concurrent in-flight replay can return `409 idempotency_conflict`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"MX\",\n  \"currency\": \"MXN\"\n}",
+              "raw": "{\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"idempotency_key\": \"company-clabe-001\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -12762,7 +12689,7 @@
           },
           "response": [
             {
-              "name": "201 Deposit account created and bound to the calling account.",
+              "name": "200 Idempotent replay of a completed company CLABE creation.",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12777,8 +12704,8 @@
                   ]
                 }
               },
-              "status": "Deposit account created and bound to the calling account.",
-              "code": 201,
+              "status": "Idempotent replay of a completed company CLABE creation.",
+              "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
                 {
@@ -12786,18 +12713,23 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-09-09T12:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
         {
-          "name": "Create a dedicated deposit account — Argentina — dedicated CVU (ARS)",
+          "name": "Create a dedicated deposit account — Person or legacy corridor — Argentina CVU",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -12811,10 +12743,10 @@
                 "deposit-accounts"
               ]
             },
-            "description": "Provisions a fixed deposit destination bound to your account in corridors that support it (e.g. a Bolivian BOB account, a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically, net of the payin fee. Creation is free. An account is limited to one active destination per country/currency/method.",
+            "description": "Provisions a fixed deposit destination bound to your account in corridors that support it (for example, a Mexican CLABE or an Argentine CVU). Creation is free and incoming transfers are credited automatically, net of the normal payin fee. Company accounts can create multiple `MX`/`MXN`/`bank_transfer` CLABEs. Person accounts and unsupported or legacy corridors keep one destination per corridor.\nFor company creation in the MX/MXN/bank_transfer corridor, send an idempotency key in the `Idempotency-Key` header or `idempotency_key` body field. A new key returns `201`; replaying the same completed key returns `200` with the original instrument and `idempotency_hit: true`. A concurrent in-flight replay can return `409 idempotency_conflict`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"AR\",\n  \"currency\": \"ARS\"\n}",
+              "raw": "{\n  \"country\": \"AR\",\n  \"currency\": \"ARS\",\n  \"method\": \"bank_transfer\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -12824,7 +12756,7 @@
           },
           "response": [
             {
-              "name": "201 Deposit account created and bound to the calling account.",
+              "name": "200 Idempotent replay of a completed company CLABE creation.",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12839,8 +12771,8 @@
                   ]
                 }
               },
-              "status": "Deposit account created and bound to the calling account.",
-              "code": 201,
+              "status": "Idempotent replay of a completed company CLABE creation.",
+              "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
                 {
@@ -12848,69 +12780,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Create a dedicated deposit account — Bolivia — dedicated BOB receiving account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/payins/deposit-accounts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "payins",
-                "deposit-accounts"
-              ]
-            },
-            "description": "Provisions a fixed deposit destination bound to your account in corridors that support it (e.g. a Bolivian BOB account, a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically, net of the payin fee. Creation is free. An account is limited to one active destination per country/currency/method.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"alias\": \"Operations BOB\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "201 Deposit account created and bound to the calling account.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/payins/deposit-accounts",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "payins",
-                    "deposit-accounts"
-                  ]
-                }
-              },
-              "status": "Deposit account created and bound to the calling account.",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-09-09T12:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },

@@ -98,7 +98,6 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_role` | Invalid member role |
 | `unknown_org` | Wrong organization slug (use `cbpay`) |
 | `invalid_request` | Missing `country`/`currency` |
-| `payin_corridor_unsupported` | The requested country/currency/method has no active payin provider — re-read `GET /v1/payins/methods` |
 | `idempotency_key_required` | Missing idempotency key |
 | `reserved_idempotency_key` | The key uses a system-reserved prefix (`payin-convert:` or `checkout-swap:`, owned by auto-conversions) — pick another key |
 | `beneficiary_required` | Missing payout beneficiary |
@@ -188,7 +187,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 422 | `nothing_received` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) charge has not received any on-chain payment: there is nothing to refund |
 | 422 | `refund_exceeds_received` | The refund exceeds what the [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) charge received minus prior refunds |
 | 400 | `to_address_required` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) refund (and crypto withdrawals) require an explicit destination address |
-| 422 | `deposit_account_limit_reached` | Accounts hold one deposit account per corridor (created automatically with the account); it cannot be changed or deleted |
+| 422 | `deposit_account_limit_reached` | Person accounts and unsupported or legacy corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted |
+| 409 | `deposit_account_conflict` | The core returned a deposit destination already assigned to another organization — reconcile before retrying |
 | 422 | `export_rejected` | The processor rejected the segregated wallet key export |
 | 422 | `stored_card_corridor_mismatch` | The [saved card](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) belongs to a different country/currency corridor than the charge |
 | 409 | `subscription_state` | The [subscription](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) is not in a state that allows that action (e.g. pausing a canceled plan) |
@@ -296,7 +296,6 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 502 | `rates_unavailable` | FX rates temporarily unavailable |
 | 502 | `core_unavailable` | Processor temporarily unavailable |
 | 502 | `core_invalid_response` | The processor returned an unexpected response; retry with the **same** idempotency key |
-| 502 | `deposit_account_failed` | The dedicated receiving account could not be provisioned; read the account list before retrying |
 | 502 | `compliance_unavailable` | AML screening temporarily unavailable |
 | 503 | `verifications_unavailable` | Identity verification temporarily unavailable |
 | 503 | `org_credential_missing` | Service being configured; contact CBPay support |

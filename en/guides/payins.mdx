@@ -22,7 +22,7 @@ flowchart LR
     hosted["Hosted payment page<br/>(CL: fintoc)"] --> pay
     card["3-D Secure card payment<br/>(BO: card)"] --> pay
     announced["Announced transfer<br/>(CL, PE, MX, PY, US)"] --> pay
-    clabe["Dedicated receiving account<br/>(BO, MX, AR)"] --> pay
+    clabe["Dedicated CLABE / CVU account<br/>(MX, AR)"] --> pay
     pay --> conv["FX conversion at your<br/>payin_rate − fixed fee"]
     conv --> credit(("USDT credit<br/>to your balance"))
     credit --> wh["Webhook payin_credited"]
@@ -60,7 +60,7 @@ Collection corridors and modes:
 | Chile | CLP | Hosted payment page (`fintoc`), announced bank transfer |
 | Peru | PEN | Announced bank transfer |
 | Mexico | MXN | Dedicated CLABE account, announced bank transfer |
-| Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`) |
+| Bolivia | BOB / USD | Collection QR, card payment page (`card`) |
 | Paraguay | PYG | Announced bank transfer |
 | Brazil | BRL | Dynamic PIX QR |
 | Argentina | ARS | Dedicated CVU account |
@@ -222,18 +222,35 @@ Response `201`:
 `instrument` is the CLABE you share with your payers. Creation is free;
 each deposit pays the regular payin fee. List your accounts with
 `GET /v1/payins/deposit-accounts`.
+**Company accounts and multiple CLABEs.** A company account can create
+multiple `MX`/`MXN`/`bank_transfer` deposit accounts. Each CLABE is a
+separate immutable destination, but every destination remains bound to
+the same CBPay account; incoming transfers are credited by the
+destination instrument. Person accounts keep one deposit account per
+corridor, and the same one-per-corridor rule applies to other or legacy
+corridors.
+
+For a company CLABE, send an idempotency key in the body or header:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-clabe-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer","idempotency_key":"company-clabe-001"}'
+```
+
+A new key returns `201` and a new CLABE. Replaying the same key returns
+`200` with the original instrument and `idempotency_hit: true`; a
+concurrent in-flight replay can return `409 idempotency_conflict`.
+Creation is free; subsequent payins keep the normal payin fee. List
+destinations with `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 
 You can also use a one-off **announced bank transfer**
 (`POST /v1/payins` with `method: "bank_transfer"`, `country: "MX"`).
 
 </Tab>
 <Tab title="Bolivia">
-
-**Dedicated BOB receiving account**: for the fixed-account flow, use the
-[BOB virtual accounts guide](/en/guides/bob-virtual-accounts). It returns one
-stable `instrument` per account; the payer transfers BOB to that number and
-the credit is detected by polling. No announcement or payer reference is
-required.
 
 **Collection QR** (the local interoperable standard): you generate the QR
 and your customer scans it with their banking app.

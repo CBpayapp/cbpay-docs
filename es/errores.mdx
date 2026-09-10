@@ -99,7 +99,6 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_role` | Rol de miembro inválido |
 | `unknown_org` | Slug de organización incorrecto (usa `cbpay`) |
 | `invalid_request` | Faltan `country`/`currency` |
-| `payin_corridor_unsupported` | El país/moneda/método no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods` |
 | `idempotency_key_required` | Falta la clave de idempotencia |
 | `reserved_idempotency_key` | La clave usa un prefijo reservado del sistema (`payin-convert:` o `checkout-swap:`, propios de las auto-conversiones) — usa otra clave |
 | `beneficiary_required` | Falta el beneficiario del payout |
@@ -189,7 +188,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 422 | `nothing_received` | El cobro [QR Crypto POS](/es/guias/qr-pos) no ha recibido ningún pago on-chain: no hay nada que devolver |
 | 422 | `refund_exceeds_received` | La devolución supera lo recibido menos lo ya devuelto del cobro [QR Crypto POS](/es/guias/qr-pos) |
 | 400 | `to_address_required` | La devolución [QR Crypto POS](/es/guias/qr-pos) (y el retiro crypto) exige la dirección destino explícita |
-| 422 | `deposit_account_limit_reached` | Las cuentas tienen una cuenta de depósito por corredor (creada automáticamente con la cuenta); no se puede cambiar ni eliminar |
+| 422 | `deposit_account_limit_reached` | Las cuentas persona y los corredores no soportados o legados conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar |
+| 409 | `deposit_account_conflict` | El core devolvió un destino de depósito ya asignado a otra organización — reconcilia antes de reintentar |
 | 422 | `export_rejected` | El procesador rechazó el export de la llave de la wallet segregada |
 | 422 | `stored_card_corridor_mismatch` | La [tarjeta guardada](/es/guias/stored-cards-subscriptions) pertenece a otro corredor país/moneda distinto del cobro |
 | 409 | `subscription_state` | La [suscripción](/es/guias/stored-cards-subscriptions) no está en un estado que permita esa acción (ej. pausar un plan cancelado) |
@@ -297,7 +297,6 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 502 | `rates_unavailable` | Tasas FX temporalmente no disponibles |
 | 502 | `core_unavailable` | Procesador temporalmente no disponible |
 | 502 | `core_invalid_response` | El procesador devolvió una respuesta inesperada; reintenta con la **misma** clave de idempotencia |
-| 502 | `deposit_account_failed` | No se pudo aprovisionar la cuenta receptora; lee el listado antes de reintentar |
 | 502 | `compliance_unavailable` | Screening AML temporalmente no disponible |
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible |
 | 503 | `org_credential_missing` | Servicio en configuración; contacta al soporte de CBPay |

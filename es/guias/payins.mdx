@@ -22,7 +22,7 @@ flowchart LR
     hosted["Página de pago hosted<br/>(CL: fintoc)"] --> pago
     card["Pago con tarjeta 3-D Secure<br/>(BO: card)"] --> pago
     anunciada["Transferencia anunciada<br/>(CL, PE, MX, PY, US)"] --> pago
-    clabe["Cuenta receptora dedicada<br/>(BO, MX, AR)"] --> pago
+    clabe["Cuenta dedicada CLABE / CVU<br/>(MX, AR)"] --> pago
     pago --> conv["Conversión FX a tu<br/>payin_rate − fee fijo"]
     conv --> credito(("Abono USDT<br/>a tu saldo"))
     credito --> wh["Webhook payin_credited"]
@@ -60,7 +60,7 @@ Corredores y modalidades de cobro:
 | Chile | CLP | Página de pago hosted (`fintoc`), transferencia anunciada |
 | Perú | PEN | Transferencia anunciada |
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
-| Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`) |
+| Bolivia | BOB / USD | QR de cobro, página de pago con tarjeta (`card`) |
 | Paraguay | PYG | Transferencia anunciada |
 | Brasil | BRL | QR PIX dinámico |
 | Argentina | ARS | Cuenta CVU dedicada |
@@ -224,17 +224,37 @@ Respuesta `201`:
 `instrument` es la CLABE que compartes con tus pagadores. La creación es
 gratis; cada depósito paga la comisión de payin normal. Lista tus cuentas
 con `GET /v1/payins/deposit-accounts`.
+**Cuentas empresa y múltiples CLABEs.** Una cuenta empresa puede crear
+múltiples cuentas de depósito `MX`/`MXN`/`bank_transfer`. Cada CLABE
+es un destino separado e inmutable, pero todos los destinos siguen
+ligados a la misma cuenta CBPay; las transferencias entrantes se
+acreditan según el instrumento de destino. Las cuentas persona
+conservan una cuenta por corredor, igual que los corredores
+alternativos o legados.
+
+Para crear una CLABE de empresa, envía una clave de idempotencia en el
+body o en el header:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-clabe-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer","idempotency_key":"company-clabe-001"}'
+```
+
+Una clave nueva responde `201` y crea una CLABE nueva. Repetir la
+misma clave responde `200` con el instrumento original y
+`idempotency_hit: true`; una repetición concurrente mientras sigue
+en vuelo puede responder `409 idempotency_conflict`. Crear es gratis;
+los payins posteriores conservan la comisión normal. Lista los
+destinos con `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 
 También puedes usar la **transferencia anunciada** puntual
 (`POST /v1/payins` con `method: "bank_transfer"`, `country: "MX"`).
 
 </Tab>
 <Tab title="Bolivia">
-
-**Cuenta receptora BOB dedicada**: para el flujo de cuenta fija, usa la
-[guía de cuentas virtuales BOB](/es/guias/bob-virtual-accounts). Devuelve un
-`instrument` estable por cuenta; el pagador transfiere BOB a ese número y el
-abono se detecta por polling. No requiere anuncio ni referencia del pagador.
 
 **QR de cobro** (estándar interoperable local): generas el QR y tu cliente
 lo escanea con su app bancaria.
