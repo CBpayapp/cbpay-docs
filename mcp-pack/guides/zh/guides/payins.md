@@ -229,17 +229,18 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 您也可以使用一次性的**预告银行转账**
 （`POST /v1/payins`，`method: "bank_transfer"`、`country: "MX"`）。
 
-### 恢复存在歧义的企业 CLABE claim
+### 恢复存在歧义的充值账户 claim
 
-如果企业 CLABE 请求在核心服务开始配置后超时，请不要盲目创建新的 key。
+如果充值账户请求在核心服务开始配置后超时，请不要盲目创建新的 key。
 使用相同的账户范围凭证，通过以下核心路由查询持久化 claim：
 
 ```http
 GET /v1/payins/deposit-accounts/idempotency?idempotency_key=<key>
 ```
 
-响应为 `200`，状态可以是 `pending`、`completed` 或 `not_found`。
-`completed` 会包含已恢复的收款目的地；`pending` 表示原操作仍未解决。
+响应为 `200`，状态可以是 `pending` 或 `not_found`，也可以返回已完成的
+claim。已完成 claim 的目的地带有 `status: active` 和
+`idempotency_status: completed`；`pending` 表示原操作仍未解决。
 缺少查询 key 时返回 `400 invalid_payload`。平台 reconciliation 会重放
 原始 key，绝不会再次创建外部目的地：
 
@@ -249,7 +250,10 @@ POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
 
 该操作需要带有 `ops:write` 的组织管理员凭证。如果 claim 不是
 MX/MXN/bank_transfer 工具，恢复会返回 `422 deposit_account_not_recoverable`。
-并发恢复会返回 `409 idempotency_conflict`。
+并发恢复会返回 `409 idempotency_conflict`。平台管理员 adoption 是独立的
+最后恢复路径，不是幂等 replay：如果 instrument 已不再处于可恢复的
+pending 状态，会返回相同的 `422`；需要重放已核验的原始 fence 时，请使用
+`reconcile`。
 
 #### 玻利维亚
 

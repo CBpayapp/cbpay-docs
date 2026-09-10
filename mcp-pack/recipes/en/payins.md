@@ -243,9 +243,9 @@ destinations with `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 You can also use a one-off **announced bank transfer**
 (`POST /v1/payins` with `method: "bank_transfer"`, `country: "MX"`).
 
-### Recovering an ambiguous company CLABE claim
+### Recovering an ambiguous deposit-account claim
 
-If a company CLABE request timed out after the core had started provisioning,
+If a deposit-account request timed out after the core had started provisioning,
 do not create a new key blindly. Query the durable claim with the core route
 below using the same account-scoped credential:
 
@@ -253,11 +253,12 @@ below using the same account-scoped credential:
 GET /v1/payins/deposit-accounts/idempotency?idempotency_key=<key>
 ```
 
-The response is `200` with `status: pending`, `completed`, or `not_found`.
-`completed` includes the recovered destination; `pending` means the original
-operation is still unresolved. A missing query key returns
-`400 invalid_payload`. The platform reconciliation action replays the
-original key and never originates a second external destination:
+The response is `200` with `status: pending`, `not_found`, or a completed
+claim whose recovered destination has `status: active` and
+`idempotency_status: completed`. `pending` means the original operation is
+still unresolved. A missing query key returns `400 invalid_payload`. The
+platform reconciliation action replays the original key and never originates
+a second external destination:
 
 ```http
 POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
@@ -266,7 +267,10 @@ POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
 It requires an org-admin credential with `ops:write`. If the claim is not an
 MX/MXN/bank-transfer instrument, recovery is rejected with
 `422 deposit_account_not_recoverable`. A concurrent recovery returns
-`409 idempotency_conflict`.
+`409 idempotency_conflict`. The platform-admin adoption endpoint is a
+separate last-resort path, not an idempotent replay: if the local instrument
+is no longer pending and recoverable it returns the same `422`; use
+`reconcile` for a verified replay of the original fence.
 
 #### Bolivia
 

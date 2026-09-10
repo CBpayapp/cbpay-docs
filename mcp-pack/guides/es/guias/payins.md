@@ -247,9 +247,9 @@ destinos con `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 También puedes usar la **transferencia anunciada** puntual
 (`POST /v1/payins` con `method: "bank_transfer"`, `country: "MX"`).
 
-### Recuperar un claim ambiguo de CLABE empresarial
+### Recuperar un claim ambiguo de cuenta de depósito
 
-Si una solicitud de CLABE empresarial agotó el tiempo después de iniciar la
+Si una solicitud de cuenta de depósito agotó el tiempo después de iniciar la
 provisión, no crees una key nueva a ciegas. Consulta el claim durable con la
 ruta del core usando la misma credencial con scope de cuenta:
 
@@ -257,9 +257,10 @@ ruta del core usando la misma credencial con scope de cuenta:
 GET /v1/payins/deposit-accounts/idempotency?idempotency_key=<key>
 ```
 
-La respuesta es `200` con `status: pending`, `completed` o `not_found`.
-`completed` incluye el destino recuperado; `pending` significa que la
-operación original aún no está resuelta. Si falta la key de consulta responde
+La respuesta es `200` con `status: pending`, `not_found` o un claim completado
+cuyo destino recuperado lleva `status: active` e
+`idempotency_status: completed`. `pending` significa que la operación original
+aún no está resuelta. Si falta la key de consulta responde
 `400 invalid_payload`. La reconciliación de plataforma repite la key original
 y nunca origina otro destino externo:
 
@@ -270,7 +271,10 @@ POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
 Requiere credencial org-admin con `ops:write`. Si el claim no corresponde a un
 instrumento MX/MXN/bank_transfer, la recuperación responde
 `422 deposit_account_not_recoverable`. Una recuperación concurrente responde
-`409 idempotency_conflict`.
+`409 idempotency_conflict`. La adopción del platform-admin es una ruta separada
+de último recurso, no un replay idempotente: si el instrumento ya no está
+pending y es recuperable, responde el mismo `422`; para repetir el fence
+verificado usa `reconcile`.
 
 #### Bolivia
 
