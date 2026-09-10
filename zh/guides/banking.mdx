@@ -549,3 +549,149 @@ The core admin route
 account and finalizes the local mirror. The org-admin routes list claims,
 reconcile customer claims, and retry refunds. These operations are locked so
 concurrent reconciliation cannot originate duplicate money movement.
+
+## EUR 虚拟 IBAN
+
+平台可以为已验证且处于 active 状态的账户申请虚拟 IBAN。虚拟 IBAN 是
+收款寻址和路由工具，并不是供应商的独立余额。账户 API 暴露持久化申请和状态。下文记录已验证的入金行为；provider onboarding 和 returns 仍是单独的 acceptance gate。
+
+支持两个用途：
+
+| 用途 | 默认 | 含义 |
+|---|---:|---|
+| `funding_usdt` | 是 | 与 USDT 入金产品关联的 EUR 地址。 |
+| `banking_eur` | 否 | Banking EUR 地址；账户还必须启用 Banking 产品。 |
+
+使用幂等键申请默认入金地址：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-funding-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"funding_usdt"}'
+```
+
+申请会进入人工审批队列：
+
+```json
+{
+  "virtual_iban": {
+    "id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "owner_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "manager_account_id": "",
+    "purpose": "funding_usdt",
+    "currency": "EUR",
+    "iban": "",
+    "iban_country": "",
+    "status": "pending_approval",
+    "client_order": "platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001",
+    "order_reference": "",
+    "created_at": "2026-09-10T12:00:00Z",
+    "updated_at": "2026-09-10T12:00:00Z"
+  },
+  "status": "pending_approval"
+}
+```
+
+显式申请 `banking_eur`：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-eur-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"banking_eur"}'
+```
+
+使用必填日期窗口查询账户的申请：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50&from=2026-09-01&to=2026-09-11&purpose=funding_usdt" \
+  -H "Authorization: Bearer <token>"
+```
+
+列表形状为 `{page, page_size, virtual_ibans}`。支持的状态是
+`pending_approval`、`pending`、`active`、`rejected`、`failed`、`disabled`
+和 `closed`。账户读取在已有 IBAN 时显示完整值；组织管理员读取会将其掩码。
+
+<Warning>
+生产 onboarding（主机、证书/mTLS、限额、商业费用和启用日期）尚未成为
+公开合同。不要从 blueprint 示例推断这些信息。
+</Warning>
+
+### 错误
+
+| HTTP | 代码 | 处理 |
+|---:|---|---|
+| 400 | `invalid_json` | 发送 JSON 对象。 |
+| 400 | `invalid_purpose` | 使用 `funding_usdt` 或 `banking_eur`。 |
+| 400 | `idempotency_key_required` | 发送 `Idempotency-Key` 或 `idempotency_key`。 |
+| 403 | `verification_required` / 产品权限错误 | 完成验证并启用所需产品。 |
+| 409 | `virtual_iban_conflict` | 复用原申请，不要创建第二个分配。 |
+| 503 | `banking_recovery_pending` | 先对持久化申请做 reconcile，再重试。 |
+
+### 常见问题
+
+<AccordionGroup>
+<Accordion title="申请虚拟 IBAN 会创建 BANK_EUR 余额吗？">
+不会。用途会记录在申请中，但虚拟 IBAN 不是供应商的独立余额。只有在
+Banking EUR 账本流程启用后，才会记录对应的资金处理。
+</Accordion>
+<Accordion title="超时后可以重试吗？">
+使用相同幂等键重试。新的键会创建新的申请，不能用来猜测一次不明确的
+供应商请求结果。
+</Accordion>
+<Accordion title="为什么状态是 pending_approval？">
+每个分配都需要组织运营人员在调用银行通道前进行人工审批。
+</Accordion>
+</AccordionGroup>
+
+## 已验证的入金处理
+
+当银行 provider 发送终态入金事件时，core 将其规范化为
+`banking_virtual_iban_inbound`。平台解析 owner vIBAN 并使用其用途：
+
+- `funding_usdt` 创建 EUR 的 `banking_funding` payin，应用 EUR→USDT 标记
+  汇率和配置的 fee/spread，然后进入 payin firewall 与 credit 链。
+- `banking_eur` 创建 `BANK_EUR` 的 Banking 入账镜像，使用 Banking ledger
+  路径，发送 KYT/operation status，并排队发送 Banking receipt email。
+
+只有 `completed`、`success`、`settled`、`credited` 或 `succeeded` 等终态
+才会产生资金效果。pending/unknown 状态保持可对账，不会增加余额。
+
+<Note>
+Returns/recalls、provider statement 对账以及生产 fees/onboarding 合同仍是
+单独的 acceptance work，不能从此事件推断。
+</Note>
+
+## EUR 入金可追溯性
+
+EUR 虚拟 IBAN 入金会在 banking 镜像、对账单和 analytics 中保留通道与产品
+用途。operation detail 在银行通道提供时可包含
+`payment_rail: "SEPA_INSTANT"`、`purpose`（`funding_usdt` 或
+`banking_eur`）和虚拟 IBAN reference。终态 `funding_usdt` 进入 payin
+credit 链；终态 `banking_eur` 记录为 `BANK_EUR` operation 并生成 receipt。
+
+## 第三方虚拟 IBAN
+
+企业账户可以为已接受邀请并完成已批准 KYC/KYB 的自有第三方申请
+`banking_eur` vIBAN。第三方是余额 owner，企业管理关系：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-0000-4000-8000-000000000001/virtual-ibans   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: third-party-viban-2026-001"   -H "Content-Type: application/json"   -d '{}'
+```
+
+申请用途固定为 `banking_eur`，并遵循账户申请相同的人工审批和状态周期。
+
+### BANK_EUR 余额
+
+对于 `banking_eur` 申请，显式查询已对账余额：
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
+```
+
+响应包含 `asset: "BANK_EUR"`、`available`、`held`、`purpose` 和 `source`。
+对 `funding_usdt` 会返回 `409 balance_not_available`，因为该用途进入
+USDT credit 链，而不会持有 `BANK_EUR`。

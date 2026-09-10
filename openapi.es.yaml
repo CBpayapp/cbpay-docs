@@ -10435,6 +10435,9 @@ paths:
                   - crypto_withdrawal_status_changed
                   - banking_customer_status_changed
                   - banking_operation_status_changed
+                  - banking_virtual_iban_inbound
+                  - banking_virtual_iban_inbound
+                  - banking_virtual_iban_inbound
                   - aml_screening_updated
                   - kyc_verification_status_changed
                   - kyb_verification_status_changed
@@ -13719,26 +13722,9 @@ paths:
       - Payins
       operationId: createDepositAccount
       summary: Crear una cuenta de depósito dedicada
-      description: >-
-        Aprovisiona un destino de depósito fijo ligado a la cuenta en los corredores que lo
-        soportan (por ejemplo, una CLABE mexicana o una CVU argentina). Crear es gratis y los
-        abonos entrantes se acreditan automáticamente, netos de la comisión normal de payin.
-        Las cuentas empresa pueden crear múltiples CLABEs `MX`/`MXN`/`bank_transfer`. Las
-        cuentas persona y los corredores no soportados o legados conservan un destino por corredor.
-
-        Para crear en empresa dentro del corredor MX/MXN/bank_transfer, envía una clave de
-        idempotencia en el header `Idempotency-Key` o en `idempotency_key`. Una clave nueva
-        responde `201`; repetir la misma clave completada responde `200` con el instrumento
-        original e `idempotency_hit: true`. Un replay concurrente en vuelo puede responder
-        `409 idempotency_conflict`.
-      parameters:
-      - name: Idempotency-Key
-        in: header
-        required: false
-        description: Alternativa al campo `idempotency_key` para crear CLABEs de empresa.
-        schema:
-          type: string
-          minLength: 1
+      description: Aprovisiona un destino de depósito fijo ligado a tu cuenta en los corredores que lo
+        soportan (ej. una CLABE mexicana o una CVU argentina). Cada transferencia que llega a él se acredita
+        automáticamente, neta de la comisión de payin. La creación es gratuita.
       requestBody:
         required: true
         content:
@@ -13755,51 +13741,25 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
-                idempotency_key:
-                  type: string
-                  minLength: 1
-                  description: Obligatoria para empresa MX/MXN/bank_transfer; alternativa al header.
             examples:
-              mx_company_clabe:
-                summary: Empresa — CLABE de México
+              mx_clabe:
+                summary: México — CLABE dedicada (MXN)
                 value:
                   country: MX
                   currency: MXN
-                  method: bank_transfer
-                  idempotency_key: company-clabe-001
-              ar_person_cvu:
-                summary: Persona o corredor legado — CVU de Argentina
+              ar_cvu:
+                summary: Argentina — CVU dedicada (ARS)
                 value:
                   country: AR
                   currency: ARS
-                  method: bank_transfer
-                  idempotency_key: ar-cvu-001
       responses:
-        '200':
-          description: Replay idempotente de una creación de CLABE empresa ya completada.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DepositInstrument'
-              example:
-                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                instrument: '734180000151000006'
-                details:
-                  clabe: '734180000151000006'
-                status: active
-                created_at: '2026-09-09T12:00:00Z'
-                idempotency_hit: true
         '201':
           description: Cuenta de depósito creada y ligada a la cuenta que llama.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositInstrument'
-              example:
+              example: &id013
                 instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 country: MX
@@ -13808,102 +13768,48 @@ paths:
                 instrument: '734180000151000006'
                 details:
                   clabe: '734180000151000006'
+                  status: active
                 status: active
-                created_at: '2026-09-09T12:00:00Z'
-        '400':
-          description: Falta la clave de idempotencia para crear una CLABE empresa MX/MXN/bank_transfer.
-          content:
-            application/json:
-              schema: *id012
-              example:
-                error: idempotency_key_required
-                message: provide idempotency_key (body or Idempotency-Key header)
+                created_at: '2026-07-07T12:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: La cuenta no está activa (account_blocked).
+          description: Cuenta no activa (account_blocked).
           content:
             application/json:
               schema: *id012
               example:
                 error: account_blocked
                 message: account is not active
-        '409':
-          description: Conflicto de idempotencia o destino ya asignado a otra organización.
-          content:
-            application/json:
-              schema: *id012
-              examples:
-                in_flight:
-                  value:
-                    error: idempotency_conflict
-                    message: a deposit account with this idempotency key is being provisioned; retry shortly
-                provider_conflict:
-                  value:
-                    error: deposit_account_conflict
-                    message: the provider returned a deposit account already assigned to another organization
-        '422':
-          description: Una cuenta persona o un corredor legado/no soportado ya tiene su destino único.
+        '502':
+          description: Core no disponible (core_unavailable).
           content:
             application/json:
               schema: *id012
               example:
-                error: deposit_account_limit_reached
-                message: accounts hold one deposit account per corridor (created automatically with the account); it cannot be changed or deleted
-        '502':
-          description: El core no está disponible o devolvió una respuesta inesperada.
-          content:
-            application/json:
-              schema: *id012
-              examples:
-                core_unavailable:
-                  value:
-                    error: core_unavailable
-                    message: could not create the deposit account
-                core_invalid_response:
-                  value:
-                    error: core_invalid_response
-                    message: core did not return a deposit account identifier
+                error: core_unavailable
+                message: could not create the deposit account
     get:
       tags:
       - Payins
       operationId: listDepositAccounts
       summary: Listar mis cuentas de depósito
-      description: Lista los destinos de depósito ligados a la cuenta que llama. La respuesta es paginada.
-      parameters:
-      - name: page
-        in: query
-        schema:
-          type: integer
-          minimum: 1
-          default: 1
-      - name: page_size
-        in: query
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 200
-          default: 50
+      description: Lista los destinos de depósito dedicados ligados a la cuenta que llama.
       responses:
         '200':
-          description: Cuentas de depósito paginadas de la cuenta que llama.
+          description: Cuentas de depósito de la cuenta que llama.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  page:
-                    type: integer
-                  page_size:
-                    type: integer
                   deposit_accounts:
                     type: array
                     items:
                       $ref: '#/components/schemas/DepositInstrument'
               example:
-                page: 1
-                page_size: 50
-                deposit_accounts: []
+                deposit_accounts:
+                - *id013
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/payins/deposit-instructions:
@@ -20858,85 +20764,247 @@ paths:
                 throttled:
                   value: {"error":"too_many_attempts","message":"too many verification attempts; wait a moment and retry"}
 
-  /v1/corridor-variants:
-    get:
-      tags:
-      - Payins
-      operationId: listCorridorVariants
-      summary: Listar variantes de corredores de la organización
-      description: Devuelve las elecciones de routing de la organización para operaciones futuras.
-      responses:
-        '200':
-          description: Elecciones de routing guardadas.
-          content:
-            application/json:
-              example:
-                variants:
-                - org_id: 30981c34-5baa-4339-af89-4503c55136a3
-                  direction: payout
-                  country: BO
-                  currency: BOB
-                  method: bank_transfer
-                  variant: v2
-                  source_account: '7014227171'
-                  updated_by: admin:…
-                  updated_at: '2026-09-09T20:00:00Z'
-        '403':
-          description: Se requiere permiso de administrador de organización.
-        '503':
-          description: rail_variants_unavailable
-    put:
-      tags:
-      - Payins
-      operationId: updateCorridorVariant
-      summary: Configurar una variante de corredor
-      description: Selecciona la implementación para operaciones futuras; las operaciones existentes conservan su routing persistido.
+
+  /v1/banking/virtual-ibans:
+    post:
+      tags: [Banca]
+      operationId: createVirtualIBAN
+      summary: Solicitar un IBAN virtual EUR
+      description: Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banca product. The allocation enters manual approval and does not by itself create a provider balance.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [direction, country, currency, method, variant, reason]
               properties:
-                direction: {type: string, enum: [payin, payout]}
-                country: {type: string, enum: [BO]}
-                currency: {type: string, enum: [BOB]}
-                method: {type: string, enum: [bank_transfer, qr]}
-                variant: {type: string, enum: [legacy, v2]}
-                source_account: {type: string}
-                reason: {type: string}
-            example:
-              direction: payout
-              country: BO
-              currency: BOB
-              method: bank_transfer
-              variant: v2
-              source_account: '7014227171'
-              reason: Mover el origen del payout BOB a la cuenta configurada
+                purpose: {type: string, enum: [funding_usdt, banking_eur], default: funding_usdt}
+                idempotency_key: {type: string}
+              additionalProperties: false
+            examples:
+              funding:
+                value:
+                  purpose: funding_usdt
+                  idempotency_key: viban-funding-2026-001
       responses:
-        '200':
-          description: Variante guardada y auditada.
+        '202':
+          description: Solicitud durable en cola de aprobación manual.
           content:
             application/json:
-              example:
-                org_id: 30981c34-5baa-4339-af89-4503c55136a3
-                direction: payout
-                country: BO
-                currency: BOB
-                method: bank_transfer
-                variant: v2
-                source_account: '7014227171'
-                updated_by: admin:…
-                updated_at: '2026-09-09T20:00:00Z'
+              examples:
+                pending:
+                  value:
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                      owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                      manager_account_id: ''
+                      purpose: funding_usdt
+                      currency: EUR
+                      iban: ''
+                      iban_country: ''
+                      status: pending_approval
+                      client_order: platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001
+                      order_reference: ''
+                      created_at: '2026-09-10T12:00:00Z'
+                      updated_at: '2026-09-10T12:00:00Z'
+                    status: pending_approval
+        '200':
+          description: Idempotent replay of the same request.
+          content:
+            application/json:
+              examples:
+                replay:
+                  value:
+                    idempotency_hit: true
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                      purpose: funding_usdt
+                      currency: EUR
+                      iban: DE890000000000000000
+                      iban_country: DE
+                      status: active
         '400':
-          description: invalid_rail_variant
+          description: invalid_json, invalid_purpose or idempotency_key_required.
         '403':
-          description: Se requiere permiso de administrador de organización.
+          description: Account verification or product service gate failed.
+        '409':
+          description: virtual_iban_conflict.
         '503':
-          description: rail_variants_unavailable
+          description: banking_recovery_pending.
+    get:
+      tags: [Banca]
+      operationId: listVirtualIBANs
+      summary: Listar solicitudes de vIBAN de la cuenta
+      description: Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters.
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: purpose, in: query, schema: {type: string, enum: [funding_usdt, banking_eur]}}
+        - {name: status, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Solicitudes de vIBAN paginadas.
+          content:
+            application/json:
+              examples:
+                list:
+                  value:
+                    page: 1
+                    page_size: 50
+                    virtual_ibans:
+                      - id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                        owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                        manager_account_id: ''
+                        purpose: funding_usdt
+                        currency: EUR
+                        iban: DE890000000000000000
+                        iban_country: DE
+                        status: active
+                        client_order: platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001
+                        order_reference: provider-order-001
+                        created_at: '2026-09-10T12:00:00Z'
+                        updated_at: '2026-09-10T12:01:00Z'
+        '400':
+          description: invalid_range.
+        '403':
+          description: Account or service permission denied.
+        '503':
+          description: Banca is unavailable.
 
+  /v1/banking/virtual-ibans/{virtualIBANID}:
+    get:
+      tags: [Banking]
+      operationId: getVirtualIBAN
+      summary: Get one virtual IBAN request
+      parameters:
+        - {name: virtualIBANID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Account-owned virtual IBAN, with the full IBAN when assigned.
+          content:
+            application/json:
+              examples:
+                detail:
+                  value:
+                    id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                    owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    purpose: funding_usdt
+                    currency: EUR
+                    iban: DE890000000000000000
+                    iban_country: DE
+                    status: active
+                    client_order: platform:virtual-iban:org:account:funding_usdt:key-001
+                    order_reference: provider-order-001
+        '404':
+          description: not_found.
+        '503':
+          description: Banking recovery or provider unavailable.
+  /v1/banking/third-parties/{thirdPartyID}/virtual-ibans:
+    post:
+      tags: [Banking]
+      operationId: createThirdPartyVirtualIBAN
+      summary: Request a Banking EUR virtual IBAN for a third party
+      description: Company accounts can request a `banking_eur` virtual IBAN for an owned, verified third party. The third party owns the Banking EUR balance; the company is the manager of the relationship.
+      parameters:
+        - {name: thirdPartyID, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              request:
+                value:
+                  idempotency_key: third-party-viban-2026-001
+      responses:
+        '202':
+          description: Third-party request queued for approval.
+          content:
+            application/json:
+              examples:
+                pending:
+                  value:
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000002
+                      owner_account_id: 8a0c9d3e-2b7d-4bad-9bdd-2b0d7b3dcb6e
+                      manager_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                      purpose: banking_eur
+                      currency: EUR
+                      iban: ''
+                      status: pending_approval
+        '400':
+          description: invalid_json or idempotency_key_required.
+        '403':
+          description: company_required, verification_required or service_disabled.
+        '404':
+          description: not_found.
+        '503':
+          description: banking_recovery_pending.
+    get:
+      tags: [Banking]
+      operationId: listThirdPartyVirtualIBANs
+      summary: List a third party's Banking EUR virtual IBANs
+      parameters:
+        - {name: thirdPartyID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: status, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Paginated third-party virtual IBANs.
+          content:
+            application/json:
+              examples:
+                list:
+                  value:
+                    page: 1
+                    page_size: 50
+                    virtual_ibans:
+                      - id: 2f8c1d4e-1111-4b22-8a33-000000000002
+                        owner_account_id: 8a0c9d3e-2b7d-4bad-9bdd-2b0d7b3dcb6e
+                        manager_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                        purpose: banking_eur
+                        currency: EUR
+                        iban: DE890000000000000000
+                        iban_country: DE
+                        status: active
+        '400':
+          description: invalid_range.
+        '404':
+          description: not_found.
 
+  /v1/banking/virtual-ibans/{virtualIBANID}/balance:
+    get:
+      tags: [Banking]
+      operationId: getVirtualIBANBalance
+      summary: Get a Banking EUR virtual IBAN balance
+      description: Returns the reconciled platform ledger balance for a `banking_eur` virtual IBAN. A `funding_usdt` virtual IBAN does not hold BANK_EUR.
+      parameters:
+        - {name: virtualIBANID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Reconciled BANK_EUR balance.
+          content:
+            application/json:
+              examples:
+                balance:
+                  value:
+                    virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                    currency: EUR
+                    asset: BANK_EUR
+                    available: '80.00'
+                    held: '0.00'
+                    purpose: banking_eur
+                    source: platform_ledger_reconciled_to_banking_provider
+        '404':
+          description: not_found.
+        '409':
+          description: balance_not_available for funding_usdt.
+        '503':
+          description: Banking ledger unavailable.
 components:
   securitySchemes:
     bearerAuth:
@@ -22613,9 +22681,6 @@ components:
         created_at:
           type: string
           format: date-time
-        idempotency_hit:
-          type: boolean
-          description: Presente como true cuando una creación de CLABE empresa se repite con la misma clave de idempotencia.
     DepositInstructions:
       type: object
       description: |
@@ -23196,6 +23261,27 @@ webhooks:
       responses:
         '200':
           description: Responde cualquier 2xx para confirmar la recepción.
+  banking_virtual_iban_inbound:
+    post:
+      summary: EUR virtual IBAN inbound
+      description: Emitted when an inbound banking event addressed to a virtual IBAN is normalized for the owning account. The payload carries the IBAN, amount, currency, reference, payment rail and provider event identifier.
+      requestBody:
+        content:
+          application/json:
+            example:
+              account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+              event_id: provider-event-001
+              client_customer_id: core-customer-001
+              iban: DE890000000000000000
+              amount: '80.00'
+              currency: EUR
+              status: completed
+              reference: CJ-DEP-001
+              payment_rail: SEPA_INSTANT
+              provider_event_id: provider-event-001
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge.
   card_transaction:
     post:
       summary: Transacción de tarjeta

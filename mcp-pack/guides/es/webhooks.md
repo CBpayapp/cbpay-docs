@@ -771,3 +771,11 @@ referencia sin un GET extra.
 - Registra el `X-Webhook-Delivery-ID` para trazabilidad.
 - No dependas solo de webhooks para estados críticos: puedes consultar el
   objeto por API en cualquier momento (`GET /v1/payouts/{id}`, etc.).
+
+### `banking_virtual_iban_inbound`
+
+Se emite cuando un ingreso EUR dirigido a un vIBAN se normaliza para la cuenta
+dueña. Incluye `iban`, `amount`, `currency`, `status`, `reference`,
+`payment_rail` (`SEPA_INSTANT`) y `provider_event_id` estable. Deduplica por el
+ID de entrega y procesa con la misma idempotencia de los demás eventos de
+dinero.

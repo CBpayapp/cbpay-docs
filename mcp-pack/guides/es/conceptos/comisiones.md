@@ -233,3 +233,11 @@ equivalente a tu `payin_rate` menos el fijo.
 ## Score de fraude e identidad
 
 | `risk_fraud_score` | Fee fijo por cada informe de fraude e identidad; se reembolsa si falla la generación |
+
+## Servicios del rollout vIBAN EUR
+
+El catálogo del backend también contiene `banking_virtual_iban`,
+`banking_funding`, `banking_transfer_sepa_instant` y `banking_return`.
+Su tratamiento percent/fijo exacto todavía no está confirmado por el
+onboarding del partner. No configures ni publiques valores antes de aprobar el
+contrato de pricing productivo.
