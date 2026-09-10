@@ -190,6 +190,7 @@ description: "错误格式与完整的错误码目录"
 | 422 | `merchant_disabled` | [QR Crypto POS](/zh/guides/qr-pos) 商户已停用；先重新启用再生成收款 |
 | 422 | `nothing_received` | [QR Crypto POS](/zh/guides/qr-pos) 收款未收到任何链上支付：无可退款 |
 | 422 | `refund_exceeds_received` | 退款超过 [QR Crypto POS](/zh/guides/qr-pos) 收款已收金额减去已退金额 |
+| 503 | `refund_recovery_pending` | 退款关联暂时不可用；请使用相同的幂等键重试，不要发起第二笔提现 |
 | 400 | `to_address_required` | [QR Crypto POS](/zh/guides/qr-pos) 退款（及加密货币提现）必须显式提供目标地址 |
 | 422 | `deposit_account_limit_reached` | 个人账户以及未支持或 legacy 通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除 |
 | 409 | `deposit_account_conflict` | core 返回的充值目的地已分配给其他组织——先完成对账再重试 |

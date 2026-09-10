@@ -1,5 +1,5 @@
 {
-  "count": 233,
+  "count": 234,
   "errors": [
     {
       "category": {
@@ -1973,6 +1973,20 @@
         "en": "The refund exceeds what the QR Crypto POS charge received minus prior refunds",
         "es": "La devolución supera lo recibido menos lo ya devuelto del cobro QR Crypto POS",
         "zh": "退款超过 QR Crypto POS 收款已收金额减去已退金额"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422)",
+        "zh": "资金与状态（402 / 404 / 409 / 422）"
+      },
+      "code": "refund_recovery_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The refund linkage is temporarily unavailable; retry with the same idempotency key and do not originate a second withdrawal",
+        "es": "El vínculo de la devolución está temporalmente no disponible; reintenta con la misma clave de idempotencia y no origines otro retiro",
+        "zh": "退款关联暂时不可用；请使用相同的幂等键重试，不要发起第二笔提现"
       }
     },
     {
