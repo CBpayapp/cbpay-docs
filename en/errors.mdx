@@ -190,6 +190,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 422 | `merchant_disabled` | The [QR Crypto POS](/en/guides/qr-pos) merchant is disabled; re-enable it before charging |
 | 422 | `nothing_received` | The [QR Crypto POS](/en/guides/qr-pos) charge has not received any on-chain payment: there is nothing to refund |
 | 422 | `refund_exceeds_received` | The refund exceeds what the [QR Crypto POS](/en/guides/qr-pos) charge received minus prior refunds |
+| 503 | `refund_recovery_pending` | The refund linkage is temporarily unavailable; retry with the same idempotency key and do not originate a second withdrawal |
 | 400 | `to_address_required` | The [QR Crypto POS](/en/guides/qr-pos) refund (and crypto withdrawals) require an explicit destination address |
 | 422 | `deposit_account_limit_reached` | Person accounts and unsupported or legacy corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted |
 | 409 | `deposit_account_conflict` | The core returned a deposit destination already assigned to another organization — reconcile before retrying |

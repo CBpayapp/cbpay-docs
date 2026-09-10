@@ -189,6 +189,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 422 | `merchant_disabled` | El merchant [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos) está deshabilitado; reactívalo antes de generar cobros |
 | 422 | `nothing_received` | El cobro [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos) no ha recibido ningún pago on-chain: no hay nada que devolver |
 | 422 | `refund_exceeds_received` | La devolución supera lo recibido menos lo ya devuelto del cobro [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos) |
+| 503 | `refund_recovery_pending` | El vínculo de la devolución está temporalmente no disponible; reintenta con la misma clave de idempotencia y no origines otro retiro |
 | 400 | `to_address_required` | La devolución [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos) (y el retiro crypto) exige la dirección destino explícita |
 | 422 | `deposit_account_limit_reached` | Las cuentas persona y los corredores no soportados o legados conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar |
 | 409 | `deposit_account_conflict` | El core devolvió un destino de depósito ya asignado a otra organización — reconcilia antes de reintentar |
