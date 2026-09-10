@@ -28,12 +28,24 @@ con anticipación y quedan marcados como **Breaking**.
 
 ### v2.72
 
+- **Contrato de recovery**: se agregaron la ruta durable de estado de
+  idempotencia del core y la reconciliación org-ops para claims ambiguos de
+  cuentas de depósito. El recovery es fail-closed con
+  `deposit_account_not_recoverable`, `idempotency_conflict` y fence de lease.
+  La adopción del platform-admin es una acción separada de último recurso, no
+  un replay idempotente; usa la reconciliación para repetir un fence core
+  verificado.
+
 **Cambiado**
 
 - **Múltiples CLABEs para empresas**: las cuentas empresa pueden
   crear múltiples destinos `MX`/`MXN`/`bank_transfer`. Cada destino
   sigue ligado a la misma cuenta y acredita por instrumento de
-  destino. La creación es idempotente: una clave nueva responde
+
+  destino. La creación empresa exige una clave de idempotencia: una
+  clave nueva responde `201`, un replay completado responde `200` con
+
+destino. La creación es idempotente: una clave nueva responde
   `201`, un replay completado responde `200` con
   `idempotency_hit: true` y un replay en vuelo puede responder
   `409 idempotency_conflict`. Las cuentas persona y los corredores

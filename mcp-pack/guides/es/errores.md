@@ -192,6 +192,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 400 | `to_address_required` | La devolución [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos) (y el retiro crypto) exige la dirección destino explícita |
 | 422 | `deposit_account_limit_reached` | Las cuentas persona y los corredores no soportados o legados conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar |
 | 409 | `deposit_account_conflict` | El core devolvió un destino de depósito ya asignado a otra organización — reconcilia antes de reintentar |
+
+| 422 | `deposit_account_not_recoverable` | El destino pendiente no es un instrumento MX/MXN/bank_transfer recuperable |
 | 422 | `export_rejected` | El procesador rechazó el export de la llave de la wallet segregada |
 | 422 | `stored_card_corridor_mismatch` | La [tarjeta guardada](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions) pertenece a otro corredor país/moneda distinto del cobro |
 | 409 | `subscription_state` | La [suscripción](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions) no está en un estado que permita esa acción (ej. pausar un plan cancelado) |
@@ -352,7 +354,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | `claim_customer_owned_elsewhere` | 409 | El cliente del proveedor pertenece a otra cuenta. Detén el proceso y revisa la titularidad. |
 | `banking_recovery_pending` | 503 | El resultado del proveedor sigue ambiguo. Usa la ruta administrativa; no origines otra creación. |
 
-## Clear Junction and EUR banking errors
+## Errores de Banking EUR y vIBAN
 
 | Code | Meaning and action |
 |---|---|

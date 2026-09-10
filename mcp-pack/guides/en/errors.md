@@ -192,6 +192,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 400 | `to_address_required` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) refund (and crypto withdrawals) require an explicit destination address |
 | 422 | `deposit_account_limit_reached` | Person accounts and unsupported or legacy corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted |
 | 409 | `deposit_account_conflict` | The core returned a deposit destination already assigned to another organization — reconcile before retrying |
+
+| 422 | `deposit_account_not_recoverable` | The pending destination is not an MX/MXN/bank_transfer instrument that can be recovered |
 | 422 | `export_rejected` | The processor rejected the segregated wallet key export |
 | 422 | `stored_card_corridor_mismatch` | The [saved card](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) belongs to a different country/currency corridor than the charge |
 | 409 | `subscription_state` | The [subscription](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) is not in a state that allows that action (e.g. pausing a canceled plan) |
@@ -352,7 +354,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | `claim_customer_owned_elsewhere` | 409 | The provider customer is already owned by another account. Stop and investigate ownership. |
 | `banking_recovery_pending` | 503 | The provider result remains ambiguous. Use the admin recovery route; do not originate a second create request. |
 
-## Clear Junction and EUR banking errors
+## EUR banking and virtual IBAN errors
 
 | Code | Meaning and action |
 |---|---|

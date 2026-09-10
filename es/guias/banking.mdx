@@ -646,7 +646,10 @@ concurrent reconciliation cannot originate duplicate money movement.
 
 La plataforma puede solicitar un IBAN virtual para una cuenta activa y
 verificada. Un vIBAN es un instrumento de direccionamiento y ruteo; no es un
-saldo separado del proveedor. La superficie de cuenta expone la solicitud durable y su estado. El comportamiento de ingresos verificado aparece abajo; el onboarding del proveedor y los returns siguen siendo acceptance gates separados.
+saldo separado del proveedor. La superficie de cuenta expone la solicitud
+durable y su estado. El procesamiento de ingresos y returns/recalls está
+implementado para ambos propósitos; el onboarding de customers del proveedor y
+la activación productiva quedan fuera del contrato público provider-agnostic.
 
 Hay dos propósitos:
 
@@ -710,9 +713,10 @@ y `closed`. La cuenta ve el IBAN completo cuando fue asignado; la lectura de
 organización lo muestra enmascarado.
 
 <Warning>
-El onboarding de producción (host, certificados/mTLS, límites, fees
-comerciales y fecha de activación) todavía no forma parte del contrato público.
-No se debe inferir desde los ejemplos del blueprint.
+El corredor bancario puede requerir aprobación de operaciones y un customer
+verificado antes de activar un vIBAN EUR. Host productivo, certificados/mTLS,
+límites, fees comerciales y activación son configuración y no forman parte de
+este contrato provider-agnostic. Nunca los infieras desde ejemplos.
 </Warning>
 
 ### Errores
@@ -760,9 +764,16 @@ Solo estados terminales (`completed`, `success`, `settled`, `credited` o
 `succeeded`) aplican el efecto financiero. Los estados pending/unknown quedan
 reconciliables y no acreditan saldo.
 
+`failed` y `rejected` son resultados terminales negativos. No crean un crédito;
+un payin de fondeo aún no acreditado queda failed sin un loop de refund.
+
 <Note>
-Returns/recalls, conciliación de statement y el contrato final de fees/onboarding
-productivo siguen siendo acceptance work separado.
+Returns/recalls se procesan como eventos terminales `returned`, `recalled` o
+`reversed`. Un return antes del crédito impide que un replay posterior acredite.
+Un payin `funding_usdt` ya acreditado crea el camino determinista de
+chargeback/refund; una operación `banking_eur` ledgerizada recibe un reverse
+append-only. Un evento de completion posterior no puede resucitar una operación
+devuelta.
 </Note>
 
 ## Trazabilidad del ingreso EUR
