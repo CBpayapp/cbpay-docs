@@ -604,3 +604,150 @@ The core admin route
 account and finalizes the local mirror. The org-admin routes list claims,
 reconcile customer claims, and retry refunds. These operations are locked so
 concurrent reconciliation cannot originate duplicate money movement.
+
+## vIBAN EUR
+
+La plataforma puede solicitar un IBAN virtual para una cuenta activa y
+verificada. Un vIBAN es un instrumento de direccionamiento y ruteo; no es un
+saldo separado del proveedor. La superficie de cuenta expone la solicitud durable y su estado. El comportamiento de ingresos verificado aparece abajo; el onboarding del proveedor y los returns siguen siendo acceptance gates separados.
+
+Hay dos propósitos:
+
+| Propósito | Por defecto | Significado |
+|---|---:|---|
+| `funding_usdt` | Sí | Dirección EUR asociada al producto de fondeo USDT. |
+| `banking_eur` | No | Dirección de Banking EUR; la cuenta debe tener habilitado Banking. |
+
+Solicita la dirección de fondeo con una clave idempotente:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-funding-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"funding_usdt"}'
+```
+
+La solicitud entra a la cola de aprobación manual:
+
+```json
+{
+  "virtual_iban": {
+    "id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "owner_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "manager_account_id": "",
+    "purpose": "funding_usdt",
+    "currency": "EUR",
+    "iban": "",
+    "iban_country": "",
+    "status": "pending_approval",
+    "client_order": "platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001",
+    "order_reference": "",
+    "created_at": "2026-09-10T12:00:00Z",
+    "updated_at": "2026-09-10T12:00:00Z"
+  },
+  "status": "pending_approval"
+}
+```
+
+`banking_eur` se solicita explícitamente:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-eur-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"banking_eur"}'
+```
+
+Lista las solicitudes de la cuenta con ventana de fechas obligatoria:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50&from=2026-09-01&to=2026-09-11&purpose=funding_usdt" \
+  -H "Authorization: Bearer <token>"
+```
+
+La lista responde `{page, page_size, virtual_ibans}`. Los estados soportados
+son `pending_approval`, `pending`, `active`, `rejected`, `failed`, `disabled`
+y `closed`. La cuenta ve el IBAN completo cuando fue asignado; la lectura de
+organización lo muestra enmascarado.
+
+> **Importante**
+El onboarding de producción (host, certificados/mTLS, límites, fees
+comerciales y fecha de activación) todavía no forma parte del contrato público.
+No se debe inferir desde los ejemplos del blueprint.
+### Errores
+
+| HTTP | Código | Acción |
+|---:|---|---|
+| 400 | `invalid_json` | Envía un objeto JSON. |
+| 400 | `invalid_purpose` | Usa `funding_usdt` o `banking_eur`. |
+| 400 | `idempotency_key_required` | Envía `Idempotency-Key` o `idempotency_key`. |
+| 403 | `verification_required` / error de servicio | Completa la verificación y habilita el producto requerido. |
+| 409 | `virtual_iban_conflict` | Reutiliza la solicitud original; no crees otra asignación. |
+| 503 | `banking_recovery_pending` | Reconcilia la solicitud durable antes de reintentar. |
+
+### Preguntas frecuentes
+
+#### ¿Solicitar un vIBAN crea un saldo BANK_EUR?
+No. El propósito queda guardado en la solicitud, pero el vIBAN no es un saldo
+independiente del proveedor. El tratamiento financiero se documentará cuando
+el flujo de Banking EUR esté habilitado.
+#### ¿Puedo reintentar después de un timeout?
+Reintenta con la misma clave idempotente. Una clave nueva crea otra solicitud
+y no debe usarse para adivinar el resultado de una llamada ambigua.
+#### ¿Por qué el estado es pending_approval?
+Cada asignación requiere aprobación manual de operaciones de la organización
+antes de llamar al riel bancario.
+## Procesamiento de ingresos verificado
+
+Cuando el proveedor bancario envía un ingreso terminal, el core lo normaliza
+como `banking_virtual_iban_inbound`. La plataforma resuelve el vIBAN dueño y
+aplica su propósito:
+
+- `funding_usdt` crea un payin `banking_funding` en EUR, aplica la tasa marcada
+  EUR→USDT y el fee/spread configurado, y sigue el firewall y la cadena de
+  crédito de payin.
+- `banking_eur` crea un espejo Banking en `BANK_EUR`, usa el camino del ledger,
+  emite KYT/estado de operación y encola el comprobante por email.
+
+Solo estados terminales (`completed`, `success`, `settled`, `credited` o
+`succeeded`) aplican el efecto financiero. Los estados pending/unknown quedan
+reconciliables y no acreditan saldo.
+
+> **Nota**
+Returns/recalls, conciliación de statement y el contrato final de fees/onboarding
+productivo siguen siendo acceptance work separado.
+## Trazabilidad del ingreso EUR
+
+Los ingresos por vIBAN EUR conservan el riel y el propósito en el espejo
+banking, la cartola y analytics. El detalle puede exponer
+`payment_rail: "SEPA_INSTANT"`, `purpose` (`funding_usdt` o `banking_eur`) y la
+referencia del vIBAN cuando el riel la informa. Un evento terminal
+`funding_usdt` entra a la cadena normal de crédito de payin; un evento terminal
+`banking_eur` queda como operación `BANK_EUR` y comprobante.
+
+## vIBAN para terceros
+
+Las cuentas empresa pueden solicitar un vIBAN `banking_eur` para un tercero
+propio después de que acepte la invitación y complete KYC/KYB aprobado. El
+tercero es el dueño del saldo; la empresa administra la relación:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-0000-4000-8000-000000000001/virtual-ibans   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: third-party-viban-2026-001"   -H "Content-Type: application/json"   -d '{}'
+```
+
+La solicitud queda como `banking_eur` y sigue la misma aprobación manual y
+ciclo de estados de la solicitud de cuenta.
+
+### Saldo BANK_EUR
+
+Para una solicitud `banking_eur`, consulta el saldo conciliado:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
+```
+
+La respuesta lleva `asset: "BANK_EUR"`, `available`, `held`, `purpose` y
+`source`. Para `funding_usdt` responde `409 balance_not_available`, porque ese
+propósito entra a la cadena de crédito USDT y no mantiene `BANK_EUR`.

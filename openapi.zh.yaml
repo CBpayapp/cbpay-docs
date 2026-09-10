@@ -10050,6 +10050,9 @@ paths:
                   - crypto_withdrawal_status_changed
                   - banking_customer_status_changed
                   - banking_operation_status_changed
+                  - banking_virtual_iban_inbound
+                  - banking_virtual_iban_inbound
+                  - banking_virtual_iban_inbound
                   - aml_screening_updated
                   - kyc_verification_status_changed
                   - kyb_verification_status_changed
@@ -13298,24 +13301,7 @@ paths:
       - 收款(Payins)
       operationId: createDepositAccount
       summary: 创建专属充值账户
-      description: >-
-        在支持的通道（例如墨西哥 CLABE 或阿根廷 CVU）为账户开通固定充值目的地。
-        创建免费，到账会自动入账并扣除正常 payin 费用。企业账户可以创建多个
-        `MX`/`MXN`/`bank_transfer` CLABE；个人账户以及未支持或 legacy 通道仍然每个通道
-        只有一个目的地。
-
-        对于企业的 MX/MXN/bank_transfer 创建，请在 `Idempotency-Key` header 或
-        `idempotency_key` body 字段中发送幂等键。新 key 返回 `201`；相同的已完成 key
-        重试返回 `200`、原始账户和 `idempotency_hit: true`。并发的处理中重试可能返回
-        `409 idempotency_conflict`。
-      parameters:
-      - name: Idempotency-Key
-        in: header
-        required: false
-        description: 创建企业 CLABE 时 `idempotency_key` body 字段的替代方式。
-        schema:
-          type: string
-          minLength: 1
+      description: 在支持的通道(例如墨西哥 CLABE 或阿根廷 CVU)为你的账户开通固定充值目的地。到达该目的地的每笔转账都会自动入账,已扣除 payin 费用。创建免费。
       requestBody:
         required: true
         content:
@@ -13332,51 +13318,25 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
-                idempotency_key:
-                  type: string
-                  minLength: 1
-                  description: 企业 MX/MXN/bank_transfer 创建必填；也可使用 header。
             examples:
-              mx_company_clabe:
-                summary: 企业 — 墨西哥 CLABE
+              mx_clabe:
+                summary: 墨西哥 — 专属 CLABE(MXN)
                 value:
                   country: MX
                   currency: MXN
-                  method: bank_transfer
-                  idempotency_key: company-clabe-001
-              ar_person_cvu:
-                summary: 个人或 legacy 通道 — 阿根廷 CVU
+              ar_cvu:
+                summary: 阿根廷 — 专属 CVU(ARS)
                 value:
                   country: AR
                   currency: ARS
-                  method: bank_transfer
-                  idempotency_key: ar-cvu-001
       responses:
-        '200':
-          description: 已完成企业 CLABE 创建的幂等重放。
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DepositInstrument'
-              example:
-                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                instrument: '734180000151000006'
-                details:
-                  clabe: '734180000151000006'
-                status: active
-                created_at: '2026-09-09T12:00:00Z'
-                idempotency_hit: true
         '201':
-          description: 已创建并绑定到调用账户的充值账户。
+          description: 充值账户已创建并绑定到调用账户。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositInstrument'
-              example:
+              example: &id013
                 instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 country: MX
@@ -13385,16 +13345,9 @@ paths:
                 instrument: '734180000151000006'
                 details:
                   clabe: '734180000151000006'
+                  status: active
                 status: active
-                created_at: '2026-09-09T12:00:00Z'
-        '400':
-          description: 企业 MX/MXN/bank_transfer 创建缺少幂等键。
-          content:
-            application/json:
-              schema: *id012
-              example:
-                error: idempotency_key_required
-                message: provide idempotency_key (body or Idempotency-Key header)
+                created_at: '2026-07-07T12:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -13405,82 +13358,35 @@ paths:
               example:
                 error: account_blocked
                 message: account is not active
-        '409':
-          description: 幂等冲突或目的地已分配给其他组织。
-          content:
-            application/json:
-              schema: *id012
-              examples:
-                in_flight:
-                  value:
-                    error: idempotency_conflict
-                    message: a deposit account with this idempotency key is being provisioned; retry shortly
-                provider_conflict:
-                  value:
-                    error: deposit_account_conflict
-                    message: the provider returned a deposit account already assigned to another organization
-        '422':
-          description: 个人账户或 legacy/不支持的通道已经有唯一目的地。
+        '502':
+          description: 核心不可用(core_unavailable)。
           content:
             application/json:
               schema: *id012
               example:
-                error: deposit_account_limit_reached
-                message: accounts hold one deposit account per corridor (created automatically with the account); it cannot be changed or deleted
-        '502':
-          description: core 不可用或返回了意外响应。
-          content:
-            application/json:
-              schema: *id012
-              examples:
-                core_unavailable:
-                  value:
-                    error: core_unavailable
-                    message: could not create the deposit account
-                core_invalid_response:
-                  value:
-                    error: core_invalid_response
-                    message: core did not return a deposit account identifier
+                error: core_unavailable
+                message: could not create the deposit account
     get:
       tags:
       - 收款(Payins)
       operationId: listDepositAccounts
       summary: 列出我的充值账户
-      description: 列出绑定到调用账户的专属充值目的地。响应支持分页。
-      parameters:
-      - name: page
-        in: query
-        schema:
-          type: integer
-          minimum: 1
-          default: 1
-      - name: page_size
-        in: query
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 200
-          default: 50
+      description: 列出绑定到调用账户的专属充值目的地。
       responses:
         '200':
-          description: 调用账户的分页充值账户列表。
+          description: 调用账户的充值账户。
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  page:
-                    type: integer
-                  page_size:
-                    type: integer
                   deposit_accounts:
                     type: array
                     items:
                       $ref: '#/components/schemas/DepositInstrument'
               example:
-                page: 1
-                page_size: 50
-                deposit_accounts: []
+                deposit_accounts:
+                - *id013
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/payins/deposit-instructions:
@@ -20164,85 +20070,247 @@ paths:
                 throttled:
                   value: {"error":"too_many_attempts","message":"too many verification attempts; wait a moment and retry"}
 
-  /v1/corridor-variants:
-    get:
-      tags:
-      - 收款(Payins)
-      operationId: listCorridorVariants
-      summary: 列出组织走廊版本
-      description: 返回组织未来操作的 routing 选择。
-      responses:
-        '200':
-          description: 已保存的 routing 选择。
-          content:
-            application/json:
-              example:
-                variants:
-                - org_id: 30981c34-5baa-4339-af89-4503c55136a3
-                  direction: payout
-                  country: BO
-                  currency: BOB
-                  method: bank_transfer
-                  variant: v2
-                  source_account: '7014227171'
-                  updated_by: admin:…
-                  updated_at: '2026-09-09T20:00:00Z'
-        '403':
-          description: 需要组织管理员权限。
-        '503':
-          description: rail_variants_unavailable
-    put:
-      tags:
-      - 收款(Payins)
-      operationId: updateCorridorVariant
-      summary: 设置组织走廊版本
-      description: 为未来操作选择实现；已有操作保留其已保存的 routing。
+
+  /v1/banking/virtual-ibans:
+    post:
+      tags: [银行服务]
+      operationId: createVirtualIBAN
+      summary: 申请 EUR 虚拟 IBAN
+      description: Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the 银行服务 product. The allocation enters manual approval and does not by itself create a provider balance.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [direction, country, currency, method, variant, reason]
               properties:
-                direction: {type: string, enum: [payin, payout]}
-                country: {type: string, enum: [BO]}
-                currency: {type: string, enum: [BOB]}
-                method: {type: string, enum: [bank_transfer, qr]}
-                variant: {type: string, enum: [legacy, v2]}
-                source_account: {type: string}
-                reason: {type: string}
-            example:
-              direction: payout
-              country: BO
-              currency: BOB
-              method: bank_transfer
-              variant: v2
-              source_account: '7014227171'
-              reason: Move the BOB payout source to the configured account
+                purpose: {type: string, enum: [funding_usdt, banking_eur], default: funding_usdt}
+                idempotency_key: {type: string}
+              additionalProperties: false
+            examples:
+              funding:
+                value:
+                  purpose: funding_usdt
+                  idempotency_key: viban-funding-2026-001
       responses:
-        '200':
-          description: 版本已保存并写入审计。
+        '202':
+          description: 持久化申请进入人工审批队列。
           content:
             application/json:
-              example:
-                org_id: 30981c34-5baa-4339-af89-4503c55136a3
-                direction: payout
-                country: BO
-                currency: BOB
-                method: bank_transfer
-                variant: v2
-                source_account: '7014227171'
-                updated_by: admin:…
-                updated_at: '2026-09-09T20:00:00Z'
+              examples:
+                pending:
+                  value:
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                      owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                      manager_account_id: ''
+                      purpose: funding_usdt
+                      currency: EUR
+                      iban: ''
+                      iban_country: ''
+                      status: pending_approval
+                      client_order: platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001
+                      order_reference: ''
+                      created_at: '2026-09-10T12:00:00Z'
+                      updated_at: '2026-09-10T12:00:00Z'
+                    status: pending_approval
+        '200':
+          description: Idempotent replay of the same request.
+          content:
+            application/json:
+              examples:
+                replay:
+                  value:
+                    idempotency_hit: true
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                      purpose: funding_usdt
+                      currency: EUR
+                      iban: DE890000000000000000
+                      iban_country: DE
+                      status: active
         '400':
-          description: invalid_rail_variant
+          description: invalid_json, invalid_purpose or idempotency_key_required.
         '403':
-          description: 需要组织管理员权限。
+          description: Account verification or product service gate failed.
+        '409':
+          description: virtual_iban_conflict.
         '503':
-          description: rail_variants_unavailable
+          description: banking_recovery_pending.
+    get:
+      tags: [银行服务]
+      operationId: listVirtualIBANs
+      summary: 列出账户的虚拟 IBAN 申请
+      description: Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters.
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: purpose, in: query, schema: {type: string, enum: [funding_usdt, banking_eur]}}
+        - {name: status, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: 分页虚拟 IBAN 申请。
+          content:
+            application/json:
+              examples:
+                list:
+                  value:
+                    page: 1
+                    page_size: 50
+                    virtual_ibans:
+                      - id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                        owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                        manager_account_id: ''
+                        purpose: funding_usdt
+                        currency: EUR
+                        iban: DE890000000000000000
+                        iban_country: DE
+                        status: active
+                        client_order: platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001
+                        order_reference: provider-order-001
+                        created_at: '2026-09-10T12:00:00Z'
+                        updated_at: '2026-09-10T12:01:00Z'
+        '400':
+          description: invalid_range.
+        '403':
+          description: Account or service permission denied.
+        '503':
+          description: 银行服务 is unavailable.
 
+  /v1/banking/virtual-ibans/{virtualIBANID}:
+    get:
+      tags: [Banking]
+      operationId: getVirtualIBAN
+      summary: Get one virtual IBAN request
+      parameters:
+        - {name: virtualIBANID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Account-owned virtual IBAN, with the full IBAN when assigned.
+          content:
+            application/json:
+              examples:
+                detail:
+                  value:
+                    id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                    owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    purpose: funding_usdt
+                    currency: EUR
+                    iban: DE890000000000000000
+                    iban_country: DE
+                    status: active
+                    client_order: platform:virtual-iban:org:account:funding_usdt:key-001
+                    order_reference: provider-order-001
+        '404':
+          description: not_found.
+        '503':
+          description: Banking recovery or provider unavailable.
+  /v1/banking/third-parties/{thirdPartyID}/virtual-ibans:
+    post:
+      tags: [Banking]
+      operationId: createThirdPartyVirtualIBAN
+      summary: Request a Banking EUR virtual IBAN for a third party
+      description: Company accounts can request a `banking_eur` virtual IBAN for an owned, verified third party. The third party owns the Banking EUR balance; the company is the manager of the relationship.
+      parameters:
+        - {name: thirdPartyID, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              request:
+                value:
+                  idempotency_key: third-party-viban-2026-001
+      responses:
+        '202':
+          description: Third-party request queued for approval.
+          content:
+            application/json:
+              examples:
+                pending:
+                  value:
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000002
+                      owner_account_id: 8a0c9d3e-2b7d-4bad-9bdd-2b0d7b3dcb6e
+                      manager_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                      purpose: banking_eur
+                      currency: EUR
+                      iban: ''
+                      status: pending_approval
+        '400':
+          description: invalid_json or idempotency_key_required.
+        '403':
+          description: company_required, verification_required or service_disabled.
+        '404':
+          description: not_found.
+        '503':
+          description: banking_recovery_pending.
+    get:
+      tags: [Banking]
+      operationId: listThirdPartyVirtualIBANs
+      summary: List a third party's Banking EUR virtual IBANs
+      parameters:
+        - {name: thirdPartyID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: status, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Paginated third-party virtual IBANs.
+          content:
+            application/json:
+              examples:
+                list:
+                  value:
+                    page: 1
+                    page_size: 50
+                    virtual_ibans:
+                      - id: 2f8c1d4e-1111-4b22-8a33-000000000002
+                        owner_account_id: 8a0c9d3e-2b7d-4bad-9bdd-2b0d7b3dcb6e
+                        manager_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                        purpose: banking_eur
+                        currency: EUR
+                        iban: DE890000000000000000
+                        iban_country: DE
+                        status: active
+        '400':
+          description: invalid_range.
+        '404':
+          description: not_found.
 
+  /v1/banking/virtual-ibans/{virtualIBANID}/balance:
+    get:
+      tags: [Banking]
+      operationId: getVirtualIBANBalance
+      summary: Get a Banking EUR virtual IBAN balance
+      description: Returns the reconciled platform ledger balance for a `banking_eur` virtual IBAN. A `funding_usdt` virtual IBAN does not hold BANK_EUR.
+      parameters:
+        - {name: virtualIBANID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Reconciled BANK_EUR balance.
+          content:
+            application/json:
+              examples:
+                balance:
+                  value:
+                    virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                    currency: EUR
+                    asset: BANK_EUR
+                    available: '80.00'
+                    held: '0.00'
+                    purpose: banking_eur
+                    source: platform_ledger_reconciled_to_banking_provider
+        '404':
+          description: not_found.
+        '409':
+          description: balance_not_available for funding_usdt.
+        '503':
+          description: Banking ledger unavailable.
 components:
   securitySchemes:
     bearerAuth:
@@ -21951,9 +22019,6 @@ components:
         created_at:
           type: string
           format: date-time
-        idempotency_hit:
-          type: boolean
-          description: 使用相同幂等键重放企业 CLABE 创建时为 true。
 webhooks:
   payin_credited:
     post:
@@ -22419,6 +22484,27 @@ webhooks:
       responses:
         '200':
           description: 返回任意 2xx 以确认。
+  banking_virtual_iban_inbound:
+    post:
+      summary: EUR virtual IBAN inbound
+      description: Emitted when an inbound banking event addressed to a virtual IBAN is normalized for the owning account. The payload carries the IBAN, amount, currency, reference, payment rail and provider event identifier.
+      requestBody:
+        content:
+          application/json:
+            example:
+              account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+              event_id: provider-event-001
+              client_customer_id: core-customer-001
+              iban: DE890000000000000000
+              amount: '80.00'
+              currency: EUR
+              status: completed
+              reference: CJ-DEP-001
+              payment_rail: SEPA_INSTANT
+              provider_event_id: provider-event-001
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge.
   card_transaction:
     post:
       summary: 卡片交易

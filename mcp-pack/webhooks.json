@@ -1,5 +1,5 @@
 {
-  "count": 44,
+  "count": 45,
   "events": [
     {
       "description": {
@@ -111,6 +111,31 @@
         "en": "Bank payment status changed",
         "es": "Cambió el estado de un pago bancario",
         "zh": "银行付款状态已变更"
+      }
+    },
+    {
+      "description": {
+        "en": "Emitted when an inbound banking event addressed to a virtual IBAN is normalized for the owning account. The payload carries the IBAN, amount, currency, reference, payment rail and provider event identifier.",
+        "es": "Emitted when an inbound banking event addressed to a virtual IBAN is normalized for the owning account. The payload carries the IBAN, amount, currency, reference, payment rail and provider event identifier.",
+        "zh": "Emitted when an inbound banking event addressed to a virtual IBAN is normalized for the owning account. The payload carries the IBAN, amount, currency, reference, payment rail and provider event identifier."
+      },
+      "event": "banking_virtual_iban_inbound",
+      "payload_example": {
+        "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "amount": "80.00",
+        "client_customer_id": "core-customer-001",
+        "currency": "EUR",
+        "event_id": "provider-event-001",
+        "iban": "DE890000000000000000",
+        "payment_rail": "SEPA_INSTANT",
+        "provider_event_id": "provider-event-001",
+        "reference": "CJ-DEP-001",
+        "status": "completed"
+      },
+      "summary": {
+        "en": "EUR virtual IBAN inbound",
+        "es": "EUR virtual IBAN inbound",
+        "zh": "EUR virtual IBAN inbound"
       }
     },
     {
