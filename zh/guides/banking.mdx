@@ -553,7 +553,9 @@ concurrent reconciliation cannot originate duplicate money movement.
 ## EUR 虚拟 IBAN
 
 平台可以为已验证且处于 active 状态的账户申请虚拟 IBAN。虚拟 IBAN 是
-收款寻址和路由工具，并不是供应商的独立余额。账户 API 暴露持久化申请和状态。下文记录已验证的入金行为；provider onboarding 和 returns 仍是单独的 acceptance gate。
+收款寻址和路由工具，并不是供应商的独立余额。账户 API 暴露持久化申请和
+状态。下文记录两个用途已经实现的入金和 returns/recalls；provider customer
+onboarding 与生产启用信息不属于公开的 provider-agnostic 合同。
 
 支持两个用途：
 
@@ -616,8 +618,9 @@ curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50
 和 `closed`。账户读取在已有 IBAN 时显示完整值；组织管理员读取会将其掩码。
 
 <Warning>
-生产 onboarding（主机、证书/mTLS、限额、商业费用和启用日期）尚未成为
-公开合同。不要从 blueprint 示例推断这些信息。
+银行通道可能要求运营审批和已验证 customer，之后 EUR 虚拟 IBAN 才会 active。
+生产主机、证书/mTLS、限额、商业费用和启用信息属于配置，不是本
+provider-agnostic 合同的一部分。不要从示例推断这些信息。
 </Warning>
 
 ### 错误
@@ -660,9 +663,15 @@ Banking EUR 账本流程启用后，才会记录对应的资金处理。
 只有 `completed`、`success`、`settled`、`credited` 或 `succeeded` 等终态
 才会产生资金效果。pending/unknown 状态保持可对账，不会增加余额。
 
+`failed` 和 `rejected` 是负面的终态，不会创建 credit；尚未 credited 的
+funding payin 会标记为 failed，且不会进入重复 refund loop。
+
 <Note>
-Returns/recalls、provider statement 对账以及生产 fees/onboarding 合同仍是
-单独的 acceptance work，不能从此事件推断。
+Returns/recalls 作为终态 `returned`、`recalled` 或 `reversed` 处理。credit
+前发生 return 时，后续 completion replay 不会入账；已 credited 的
+`funding_usdt` payin 会进入确定性的 chargeback/refund 路径；已 ledger 化的
+`banking_eur` operation 会追加 reverse entry。后续 completion 事件不能复活
+已经 returned 的 operation。
 </Note>
 
 ## EUR 入金可追溯性

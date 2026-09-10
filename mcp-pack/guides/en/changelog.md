@@ -27,12 +27,23 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 
 ### v2.72
 
+- **Recovery contract**: added the durable core idempotency status route and
+  the org-ops reconciliation path for ambiguous deposit-account claims.
+  Platform recovery is fail-closed with
+  `deposit_account_not_recoverable`, `idempotency_conflict`, and a recovery
+  lease fence. Platform-admin adoption is a separate last-resort action, not
+  an idempotent replay; use reconciliation for a verified core-fence replay.
+
 **Changed**
 
 - **Multiple company CLABEs**: company accounts can create multiple
   `MX`/`MXN`/`bank_transfer` deposit destinations. Each destination
   stays bound to the same account and credits by destination
-  instrument. Company creation is idempotent: a new key returns
+
+  instrument. Company creation requires an idempotency key: a new key
+  returns `201`, a completed replay returns `200` with
+
+instrument. Company creation is idempotent: a new key returns
   `201`, a completed replay returns `200` with
   `idempotency_hit: true`, and an in-flight replay can return
   `409 idempotency_conflict`. Person accounts and legacy corridors

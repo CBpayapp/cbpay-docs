@@ -192,6 +192,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 400 | `to_address_required` | [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 退款（及加密货币提现）必须显式提供目标地址 |
 | 422 | `deposit_account_limit_reached` | 个人账户以及未支持或 legacy 通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除 |
 | 409 | `deposit_account_conflict` | core 返回的充值目的地已分配给其他组织——先完成对账再重试 |
+
+| 422 | `deposit_account_not_recoverable` | 待处理目的地不是可恢复的 MX/MXN/bank_transfer 工具 |
 | 422 | `export_rejected` | 处理方拒绝了该独立钱包的私钥导出 |
 | 422 | `stored_card_corridor_mismatch` | 该[已保存卡片](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)属于与本次收款不同的国家/货币走廊 |
 | 409 | `subscription_state` | 该[订阅](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)当前状态不允许该操作（例如暂停已取消的计划） |
@@ -337,7 +339,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `claim_customer_owned_elsewhere` | 409 | 提供商客户已归属于其他账户。停止并检查所有权。 |
 | `banking_recovery_pending` | 503 | 提供商结果仍不明确。使用管理员恢复路由，不要再次发起创建请求。 |
 
-## Clear Junction and EUR banking errors
+## EUR Banking 与虚拟 IBAN 错误
 
 | Code | Meaning and action |
 |---|---|

@@ -637,7 +637,10 @@ concurrent reconciliation cannot originate duplicate money movement.
 
 The platform can request a virtual IBAN for an active, verified account. A
 virtual IBAN is an addressing and routing instrument; it is not a separate
-provider balance. The account surface exposes the durable request and its status. The verified inbound behavior is described below; provider onboarding and returns remain separate acceptance gates.
+provider balance. The account surface exposes the durable request and its
+status. Inbound processing and returns/recalls are implemented for both
+purposes below; provider customer-onboarding and production activation details
+remain outside the public contract.
 
 Two purposes are supported:
 
@@ -701,9 +704,11 @@ The list shape is `{page, page_size, virtual_ibans}`. Supported statuses are
 assigned; the organization-admin read surface masks it.
 
 <Warning>
-Clear Junction onboarding details (production host, certificate/mTLS policy,
-limits, commercial fees and activation date) are not part of the public
-contract yet. Do not derive them from the blueprint examples.
+The banking corridor may require operations approval and a verified customer
+profile before an EUR virtual IBAN can become active. Production host,
+certificate/mTLS, limits, commercial fees and activation details are
+configuration concerns and are not part of this provider-agnostic contract.
+Never infer them from examples.
 </Warning>
 
 ### Errors
@@ -752,10 +757,16 @@ Only terminal statuses (`completed`, `success`, `settled`, `credited` or
 `succeeded`) apply the financial effect. Pending or unknown statuses remain
 reconcilable and do not credit a balance.
 
+`failed` and `rejected` are terminal negative outcomes. They do not create a
+credit; an uncredited funding payin is marked failed without a refund loop.
+
 <Note>
-Returns/recalls, provider statement reconciliation and the final production
-fee/onboarding contract remain separate acceptance work. They are not inferred
-from this event.
+Returns and recalls are handled as terminal `returned`, `recalled` or
+`reversed` events. A return before credit prevents a later completion replay
+from crediting. A credited `funding_usdt` payin creates the deterministic
+chargeback/refund path; a ledgered `banking_eur` operation receives an
+append-only reverse entry. A later completion event cannot resurrect a returned
+operation.
 </Note>
 
 ## EUR inbound traceability
