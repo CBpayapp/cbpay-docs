@@ -59,7 +59,7 @@ Corredores y modalidades de cobro:
 | Chile | CLP | Página de pago hosted (`fintoc`), transferencia anunciada |
 | Perú | PEN | Transferencia anunciada |
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
-| Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`) |
+| Bolivia | BOB / USD | QR de cobro, página de pago con tarjeta (`card`) |
 | Paraguay | PYG | Transferencia anunciada |
 | Brasil | BRL | QR PIX dinámico |
 | Argentina | ARS | Cuenta CVU dedicada |
@@ -247,12 +247,32 @@ destinos con `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 También puedes usar la **transferencia anunciada** puntual
 (`POST /v1/payins` con `method: "bank_transfer"`, `country: "MX"`).
 
-#### Bolivia
+### Recuperar un claim ambiguo de CLABE empresarial
 
-**Cuenta receptora BOB dedicada**: para el flujo de cuenta fija, usa la
-[guía de cuentas virtuales BOB](https://docs.cbpayapp.com/es/guias/bob-virtual-accounts). Devuelve un
-`instrument` estable por cuenta; el pagador transfiere BOB a ese número y el
-abono se detecta por polling. No requiere anuncio ni referencia del pagador.
+Si una solicitud de CLABE empresarial agotó el tiempo después de iniciar la
+provisión, no crees una key nueva a ciegas. Consulta el claim durable con la
+ruta del core usando la misma credencial con scope de cuenta:
+
+```http
+GET /v1/payins/deposit-accounts/idempotency?idempotency_key=<key>
+```
+
+La respuesta es `200` con `status: pending`, `completed` o `not_found`.
+`completed` incluye el destino recuperado; `pending` significa que la
+operación original aún no está resuelta. Si falta la key de consulta responde
+`400 invalid_payload`. La reconciliación de plataforma repite la key original
+y nunca origina otro destino externo:
+
+```http
+POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
+```
+
+Requiere credencial org-admin con `ops:write`. Si el claim no corresponde a un
+instrumento MX/MXN/bank_transfer, la recuperación responde
+`422 deposit_account_not_recoverable`. Una recuperación concurrente responde
+`409 idempotency_conflict`.
+
+#### Bolivia
 
 **QR de cobro** (estándar interoperable local): generas el QR y tu cliente
 lo escanea con su app bancaria.

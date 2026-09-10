@@ -19,9 +19,6 @@ source_url: https://docs.cbpayapp.com/zh/errors
 
 > **注**
 **已脱敏的错误信息。** 错误的 `message` 绝不会暴露供应商名称、基础设施细节、URL、上游原始响应体（JSON/HTML）或内部配置——无论是 API 响应、webhook 还是持久化的状态字段都不会。来自支付处理方的业务性拒绝会保留可操作的失败原因（例如某份文件或账户为何被拒绝）；基础设施故障会被替换为固定的通用信息 `"the payment provider could not process the request"`——请使用相同的 `idempotency_key` 重试这些操作。
-| `payin_corridor_unsupported` | 请求的国家/币种/方式没有可用的 payin provider — 重新读取 `GET /v1/payins/methods` |
-| 502 | `deposit_account_failed` | 无法配置专属收款账户；重试前先读取账户列表 |
-
 ## 按类别划分的错误码
 
 ### 身份认证与权限
@@ -192,6 +189,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 400 | `to_address_required` | [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 退款（及加密货币提现）必须显式提供目标地址 |
 | 422 | `deposit_account_limit_reached` | 个人账户以及未支持或 legacy 通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除 |
 | 409 | `deposit_account_conflict` | core 返回的充值目的地已分配给其他组织——先完成对账再重试 |
+| 422 | `deposit_account_not_recoverable` | 待处理目的地不是可恢复的 MX/MXN/bank_transfer 工具 |
 | 422 | `export_rejected` | 处理方拒绝了该独立钱包的私钥导出 |
 | 422 | `stored_card_corridor_mismatch` | 该[已保存卡片](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)属于与本次收款不同的国家/货币走廊 |
 | 409 | `subscription_state` | 该[订阅](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)当前状态不允许该操作（例如暂停已取消的计划） |

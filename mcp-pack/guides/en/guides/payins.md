@@ -21,7 +21,7 @@ flowchart LR
     hosted["Hosted payment page<br/>(CL: fintoc)"] --> pay
     card["3-D Secure card payment<br/>(BO: card)"] --> pay
     announced["Announced transfer<br/>(CL, PE, MX, PY, US)"] --> pay
-    clabe["Dedicated receiving account<br/>(BO, MX, AR)"] --> pay
+    clabe["Dedicated CLABE / CVU account<br/>(MX, AR)"] --> pay
     pay --> conv["FX conversion at your<br/>payin_rate − fixed fee"]
     conv --> credit(("USDT credit<br/>to your balance"))
     credit --> wh["Webhook payin_credited"]
@@ -59,7 +59,7 @@ Collection corridors and modes:
 | Chile | CLP | Hosted payment page (`fintoc`), announced bank transfer |
 | Peru | PEN | Announced bank transfer |
 | Mexico | MXN | Dedicated CLABE account, announced bank transfer |
-| Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`) |
+| Bolivia | BOB / USD | Collection QR, card payment page (`card`) |
 | Paraguay | PYG | Announced bank transfer |
 | Brazil | BRL | Dynamic PIX QR |
 | Argentina | ARS | Dedicated CVU account |
@@ -243,13 +243,32 @@ destinations with `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 You can also use a one-off **announced bank transfer**
 (`POST /v1/payins` with `method: "bank_transfer"`, `country: "MX"`).
 
-#### Bolivia
+### Recovering an ambiguous company CLABE claim
 
-**Dedicated BOB receiving account**: for the fixed-account flow, use the
-[BOB virtual accounts guide](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts). It returns one
-stable `instrument` per account; the payer transfers BOB to that number and
-the credit is detected by polling. No announcement or payer reference is
-required.
+If a company CLABE request timed out after the core had started provisioning,
+do not create a new key blindly. Query the durable claim with the core route
+below using the same account-scoped credential:
+
+```http
+GET /v1/payins/deposit-accounts/idempotency?idempotency_key=<key>
+```
+
+The response is `200` with `status: pending`, `completed`, or `not_found`.
+`completed` includes the recovered destination; `pending` means the original
+operation is still unresolved. A missing query key returns
+`400 invalid_payload`. The platform reconciliation action replays the
+original key and never originates a second external destination:
+
+```http
+POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
+```
+
+It requires an org-admin credential with `ops:write`. If the claim is not an
+MX/MXN/bank-transfer instrument, recovery is rejected with
+`422 deposit_account_not_recoverable`. A concurrent recovery returns
+`409 idempotency_conflict`.
+
+#### Bolivia
 
 **Collection QR** (the local interoperable standard): you generate the QR
 and your customer scans it with their banking app.
