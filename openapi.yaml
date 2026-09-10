@@ -13947,6 +13947,7 @@ paths:
                   country: AR
                   currency: ARS
                   method: bank_transfer
+                  idempotency_key: ar-cvu-001
       responses:
         '200':
           description: Idempotent replay of a completed company CLABE creation.
@@ -21084,6 +21085,7 @@ paths:
           description: Organization admin permission required.
         '503':
           description: rail_variants_unavailable
+
 
 components:
   securitySchemes:

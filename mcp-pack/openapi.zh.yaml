@@ -13350,6 +13350,7 @@ paths:
                   country: AR
                   currency: ARS
                   method: bank_transfer
+                  idempotency_key: ar-cvu-001
       responses:
         '200':
           description: 已完成企业 CLABE 创建的幂等重放。
@@ -20240,6 +20241,7 @@ paths:
           description: 需要组织管理员权限。
         '503':
           description: rail_variants_unavailable
+
 
 components:
   securitySchemes:

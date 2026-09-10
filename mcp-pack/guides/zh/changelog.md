@@ -12,15 +12,19 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 ### v2.72
 
-- **Recovery contract**：新增核心幂等状态路由和组织运营对企业 CLABE 歧义 claim 的 reconciliation 路由。Recovery 采用 fail-closed，并使用 `deposit_account_not_recoverable`、`idempotency_conflict` 与 recovery lease fence。
+- **Recovery contract**：新增核心幂等状态路由和组织运营对充值账户
+  歧义 claim 的 reconciliation 路由。Recovery 采用 fail-closed，并使用
+  `deposit_account_not_recoverable`、`idempotency_conflict` 与 recovery
+  lease fence。平台管理员 adoption 是独立的最后恢复操作，不是幂等
+  replay；要重放已核验的 core fence，请使用 reconciliation。
 
 **变更**
 
 - **企业多个 CLABE**：企业账户可以创建多个
   `MX`/`MXN`/`bank_transfer` 充值目的地。每个目的地仍绑定同一
-  账户，并按目的地入账。创建支持幂等：新 key 返回 `201`，完成后
-  重放返回 `200` 并带 `idempotency_hit: true`，处理中重放可能
-  返回 `409 idempotency_conflict`。个人账户和 legacy 通道仍然
+  账户，并按目的地入账。企业创建必须提供幂等 key：新 key 返回
+  `201`，完成后重放返回 `200` 并带 `idempotency_hit: true`，处理中重放
+  可能返回 `409 idempotency_conflict`。个人账户和 legacy 通道仍然
   每个通道一个目的地；列表现在支持分页。
 
 ## v2.71 · 3 个版本 - 2026年9月6日
