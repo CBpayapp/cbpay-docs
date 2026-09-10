@@ -20163,6 +20163,84 @@ paths:
                 throttled:
                   value: {"error":"too_many_attempts","message":"too many verification attempts; wait a moment and retry"}
 
+  /v1/corridor-variants:
+    get:
+      tags:
+      - 收款(Payins)
+      operationId: listCorridorVariants
+      summary: 列出组织走廊版本
+      description: 返回组织未来操作的 routing 选择。
+      responses:
+        '200':
+          description: 已保存的 routing 选择。
+          content:
+            application/json:
+              example:
+                variants:
+                - org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                  direction: payout
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  variant: v2
+                  source_account: '7014227171'
+                  updated_by: admin:…
+                  updated_at: '2026-09-09T20:00:00Z'
+        '403':
+          description: 需要组织管理员权限。
+        '503':
+          description: rail_variants_unavailable
+    put:
+      tags:
+      - 收款(Payins)
+      operationId: updateCorridorVariant
+      summary: 设置组织走廊版本
+      description: 为未来操作选择实现；已有操作保留其已保存的 routing。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [direction, country, currency, method, variant, reason]
+              properties:
+                direction: {type: string, enum: [payin, payout]}
+                country: {type: string, enum: [BO]}
+                currency: {type: string, enum: [BOB]}
+                method: {type: string, enum: [bank_transfer, qr]}
+                variant: {type: string, enum: [legacy, v2]}
+                source_account: {type: string}
+                reason: {type: string}
+            example:
+              direction: payout
+              country: BO
+              currency: BOB
+              method: bank_transfer
+              variant: v2
+              source_account: '7014227171'
+              reason: Move the BOB payout source to the configured account
+      responses:
+        '200':
+          description: 版本已保存并写入审计。
+          content:
+            application/json:
+              example:
+                org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                direction: payout
+                country: BO
+                currency: BOB
+                method: bank_transfer
+                variant: v2
+                source_account: '7014227171'
+                updated_by: admin:…
+                updated_at: '2026-09-09T20:00:00Z'
+        '400':
+          description: invalid_rail_variant
+        '403':
+          description: 需要组织管理员权限。
+        '503':
+          description: rail_variants_unavailable
+
 components:
   securitySchemes:
     bearerAuth:

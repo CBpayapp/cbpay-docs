@@ -20,6 +20,12 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   返回 `409 idempotency_conflict`。个人账户和 legacy 通道仍然
   每个通道一个目的地；列表现在支持分页。
 
+
+
+**BOB 虚拟收款账户**：payin 目录现在记录
+  `BO/BOB/bank_transfer` 专属收款账户流程，包括创建/列表、轮询对账、
+  `payin_credited`、错误和 provider-agnostic 的 BOB payout 合同。
+
 </Update>
 
 <Update label="2026年9月6日" description="v2.71 · 3 个版本">

@@ -1,6 +1,34 @@
 {
-  "count": 224,
+  "count": 226,
   "errors": [
+    {
+      "category": {
+        "en": "",
+        "es": "",
+        "zh": ""
+      },
+      "code": "payin_corridor_unsupported",
+      "http": null,
+      "meaning": {
+        "en": "The requested country/currency/method has no active payin provider — re-read `GET /v1/payins/methods`",
+        "es": "El corredor solicitado no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods`",
+        "zh": "请求的国家/币种/方式没有可用的 payin provider — 重新读取 `GET /v1/payins/methods`"
+      }
+    },
+    {
+      "category": {
+        "en": "",
+        "es": "",
+        "zh": ""
+      },
+      "code": "deposit_account_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The dedicated receiving account could not be provisioned; read the account list before retrying",
+        "es": "No se pudo aprovisionar la cuenta receptora dedicada; lee la lista antes de reintentar",
+        "zh": "无法配置专属收款账户；重试前先读取账户列表"
+      }
+    },
     {
       "category": {
         "en": "Authentication and permissions",

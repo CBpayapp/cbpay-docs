@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds four independent\nvirtual balances — USDT (the operating currency), USDC, BTC and GOLD\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the four balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-10 00:21 UTC",
-    "_content_sha256": "568eac1cc7282bf8b9ae207c0eab00d32b7b3dbcd35da5a7e63e7205df5a0b96"
+    "_generated_at": "2026-09-10 01:07 UTC",
+    "_content_sha256": "b84ed853198d494bb2a195f38ab1b6594f185288b356eb8be1c6f7b401bfba6e"
   },
   "auth": {
     "type": "bearer",
@@ -12869,6 +12869,112 @@
                 }
               ],
               "body": "{\n  \"deposit_instructions\": {\n    \"id\": \"9f0c1a2b-3d4e-4f5a-8b9c-1a2b3c4d5e6f\",\n    \"country\": \"CL\",\n    \"currency\": \"CLP\",\n    \"method\": \"bank_transfer\",\n    \"purpose\": \"payin\",\n    \"revision\": 3,\n    \"active\": true,\n    \"reference_required\": true,\n    \"bank_name\": \"Bank of Example\",\n    \"account_number\": \"0001112223\",\n    \"account_type\": \"checking\",\n    \"holder_name\": \"Example Org SpA\",\n    \"created_at\": \"2026-07-15T14:02:00Z\",\n    \"qr_payload\": \"Bank: Bank of Example\\nAccount type: checking\\nAccount number: 0001112223\\nHolder: Example Org SpA\",\n    \"qr_png_base64\": \"iVBORw0KGgoAAAANSU...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List organization corridor variants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/corridor-variants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "corridor-variants"
+              ]
+            },
+            "description": "Returns organization-scoped routing choices for future corridor operations."
+          },
+          "response": [
+            {
+              "name": "200 Stored routing choices.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/corridor-variants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "corridor-variants"
+                  ]
+                }
+              },
+              "status": "Stored routing choices.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"variants\": [\n    {\n      \"org_id\": \"30981c34-5baa-4339-af89-4503c55136a3\",\n      \"direction\": \"payout\",\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"method\": \"bank_transfer\",\n      \"variant\": \"v2\",\n      \"source_account\": \"7014227171\",\n      \"updated_by\": \"admin:…\",\n      \"updated_at\": \"2026-09-09T20:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Set an organization corridor variant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/corridor-variants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "corridor-variants"
+              ]
+            },
+            "description": "Selects the implementation for future corridor operations; existing operations keep their persisted routing choice.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"7014227171\",\n  \"reason\": \"Move the BOB payout source to the configured account\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Variant saved and audited.",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/corridor-variants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "corridor-variants"
+                  ]
+                }
+              },
+              "status": "Variant saved and audited.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"org_id\": \"30981c34-5baa-4339-af89-4503c55136a3\",\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"7014227171\",\n  \"updated_by\": \"admin:…\",\n  \"updated_at\": \"2026-09-09T20:00:00Z\"\n}"
             }
           ]
         }
