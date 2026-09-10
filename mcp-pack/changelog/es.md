@@ -25,6 +25,11 @@ con anticipación y quedan marcados como **Breaking**.
   legados conservan un destino por corredor; el listado ahora es
   paginado.
 
+**Cuentas virtuales de depósito BOB**: el catálogo de payins documenta el
+  flujo `BO/BOB/bank_transfer` con cuenta receptora dedicada, creación/listado,
+  conciliación por polling, `payin_credited`, errores y el contrato
+  provider-agnostic del payout BOB.
+
 ## v2.71 · 3 versiones - 6 de septiembre de 2026
 
 ### v2.71

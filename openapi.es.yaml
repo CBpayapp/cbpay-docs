@@ -20857,6 +20857,84 @@ paths:
                 throttled:
                   value: {"error":"too_many_attempts","message":"too many verification attempts; wait a moment and retry"}
 
+  /v1/corridor-variants:
+    get:
+      tags:
+      - Payins
+      operationId: listCorridorVariants
+      summary: Listar variantes de corredores de la organización
+      description: Devuelve las elecciones de routing de la organización para operaciones futuras.
+      responses:
+        '200':
+          description: Elecciones de routing guardadas.
+          content:
+            application/json:
+              example:
+                variants:
+                - org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                  direction: payout
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  variant: v2
+                  source_account: '7014227171'
+                  updated_by: admin:…
+                  updated_at: '2026-09-09T20:00:00Z'
+        '403':
+          description: Se requiere permiso de administrador de organización.
+        '503':
+          description: rail_variants_unavailable
+    put:
+      tags:
+      - Payins
+      operationId: updateCorridorVariant
+      summary: Configurar una variante de corredor
+      description: Selecciona la implementación para operaciones futuras; las operaciones existentes conservan su routing persistido.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [direction, country, currency, method, variant, reason]
+              properties:
+                direction: {type: string, enum: [payin, payout]}
+                country: {type: string, enum: [BO]}
+                currency: {type: string, enum: [BOB]}
+                method: {type: string, enum: [bank_transfer, qr]}
+                variant: {type: string, enum: [legacy, v2]}
+                source_account: {type: string}
+                reason: {type: string}
+            example:
+              direction: payout
+              country: BO
+              currency: BOB
+              method: bank_transfer
+              variant: v2
+              source_account: '7014227171'
+              reason: Mover el origen del payout BOB a la cuenta configurada
+      responses:
+        '200':
+          description: Variante guardada y auditada.
+          content:
+            application/json:
+              example:
+                org_id: 30981c34-5baa-4339-af89-4503c55136a3
+                direction: payout
+                country: BO
+                currency: BOB
+                method: bank_transfer
+                variant: v2
+                source_account: '7014227171'
+                updated_by: admin:…
+                updated_at: '2026-09-09T20:00:00Z'
+        '400':
+          description: invalid_rail_variant
+        '403':
+          description: Se requiere permiso de administrador de organización.
+        '503':
+          description: rail_variants_unavailable
+
 components:
   securitySchemes:
     bearerAuth:

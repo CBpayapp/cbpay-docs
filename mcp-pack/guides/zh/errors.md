@@ -19,6 +19,9 @@ source_url: https://docs.cbpayapp.com/zh/errors
 
 > **注**
 **已脱敏的错误信息。** 错误的 `message` 绝不会暴露供应商名称、基础设施细节、URL、上游原始响应体（JSON/HTML）或内部配置——无论是 API 响应、webhook 还是持久化的状态字段都不会。来自支付处理方的业务性拒绝会保留可操作的失败原因（例如某份文件或账户为何被拒绝）；基础设施故障会被替换为固定的通用信息 `"the payment provider could not process the request"`——请使用相同的 `idempotency_key` 重试这些操作。
+| `payin_corridor_unsupported` | 请求的国家/币种/方式没有可用的 payin provider — 重新读取 `GET /v1/payins/methods` |
+| 502 | `deposit_account_failed` | 无法配置专属收款账户；重试前先读取账户列表 |
+
 ## 按类别划分的错误码
 
 ### 身份认证与权限

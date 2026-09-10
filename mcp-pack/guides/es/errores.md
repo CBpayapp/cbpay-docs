@@ -19,6 +19,9 @@ Todos los errores comparten el mismo formato:
 
 > **Nota**
 **Mensajes de error saneados.** El `message` de un error nunca expone nombres de proveedores, detalles de infraestructura, URLs, bodies crudos del proveedor (JSON/HTML) ni configuración interna — ni en respuestas de la API, ni en webhooks, ni en los campos de estado persistidos. Los rechazos de negocio del procesador conservan su motivo accionable (por ejemplo, por qué se rechazó un documento o una cuenta); las fallas de infraestructura se reemplazan por el mensaje genérico fijo `"the payment provider could not process the request"` — reintenta esas operaciones con la misma `idempotency_key`.
+| `payin_corridor_unsupported` | El corredor solicitado no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods` |
+| 502 | `deposit_account_failed` | No se pudo aprovisionar la cuenta receptora dedicada; lee la lista antes de reintentar |
+
 ## Códigos por categoría
 
 ### Autenticación y permisos

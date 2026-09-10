@@ -24,6 +24,11 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   keep the one-per-corridor rule; deposit-account listing is now
   paginated.
 
+**BOB virtual deposit accounts**: the payin catalog now documents the
+  `BO/BOB/bank_transfer` dedicated receiving-account flow, including account
+  creation/listing, polling-based reconciliation, `payin_credited`, errors and
+  the provider-agnostic BOB payout contract.
+
 ## v2.71 · 3 versions - September 6, 2026
 
 ### v2.71
