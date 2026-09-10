@@ -8,16 +8,21 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-<Update label="9 de septiembre de 2026" description="v2.72">
+<Update label="9 de septiembre de 2026" description="v2.72 · 1 versión">
 
 ### v2.72
 
-**Agregado**
+**Cambiado**
 
-- **Cuentas virtuales de depósito BOB**: el catálogo de payins documenta el
-  flujo `BO/BOB/bank_transfer` con cuenta receptora dedicada, creación/listado,
-  conciliación por polling, `payin_credited`, errores y el contrato
-  provider-agnostic del payout BOB.
+- **Múltiples CLABEs para empresas**: las cuentas empresa pueden
+  crear múltiples destinos `MX`/`MXN`/`bank_transfer`. Cada destino
+  sigue ligado a la misma cuenta y acredita por instrumento de
+  destino. La creación es idempotente: una clave nueva responde
+  `201`, un replay completado responde `200` con
+  `idempotency_hit: true` y un replay en vuelo puede responder
+  `409 idempotency_conflict`. Las cuentas persona y los corredores
+  legados conservan un destino por corredor; el listado ahora es
+  paginado.
 
 </Update>
 

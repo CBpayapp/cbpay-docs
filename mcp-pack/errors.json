@@ -1,5 +1,5 @@
 {
-  "count": 225,
+  "count": 224,
   "errors": [
     {
       "category": {
@@ -699,20 +699,6 @@
         "en": "Missing `country`/`currency`",
         "es": "Faltan `country`/`currency`",
         "zh": "缺少 `country`/`currency`"
-      }
-    },
-    {
-      "category": {
-        "en": "Validation (400)",
-        "es": "Validación (400)",
-        "zh": "校验（400）"
-      },
-      "code": "payin_corridor_unsupported",
-      "http": 400,
-      "meaning": {
-        "en": "The requested country/currency/method has no active payin provider — re-read `GET /v1/payins/methods`",
-        "es": "El país/moneda/método no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods`",
-        "zh": "请求的国家/币种/方法没有启用的 payin provider——重新读取 `GET /v1/payins/methods`"
       }
     },
     {
@@ -1970,9 +1956,23 @@
       "code": "deposit_account_limit_reached",
       "http": 422,
       "meaning": {
-        "en": "Accounts hold one deposit account per corridor (created automatically with the account); it cannot be changed or deleted",
-        "es": "Las cuentas tienen una cuenta de depósito por corredor (creada automáticamente con la cuenta); no se puede cambiar ni eliminar",
-        "zh": "每个账户每条走廊只有一个入金账户（随账户自动创建）；不可更改或删除"
+        "en": "Person accounts and unsupported or legacy corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted",
+        "es": "Las cuentas persona y los corredores no soportados o legados conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar",
+        "zh": "个人账户以及未支持或 legacy 通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422)",
+        "zh": "资金与状态（402 / 404 / 409 / 422）"
+      },
+      "code": "deposit_account_conflict",
+      "http": 409,
+      "meaning": {
+        "en": "The core returned a deposit destination already assigned to another organization — reconcile before retrying",
+        "es": "El core devolvió un destino de depósito ya asignado a otra organización — reconcilia antes de reintentar",
+        "zh": "core 返回的充值目的地已分配给其他组织——先完成对账再重试"
       }
     },
     {
@@ -2883,20 +2883,6 @@
         "en": "The processor returned an unexpected response; retry with the **same** idempotency key",
         "es": "El procesador devolvió una respuesta inesperada; reintenta con la **misma** clave de idempotencia",
         "zh": "处理方返回了意外响应；请使用**相同的**幂等键重试"
-      }
-    },
-    {
-      "category": {
-        "en": "Service (5xx)",
-        "es": "Servicio (5xx)",
-        "zh": "服务端（5xx）"
-      },
-      "code": "deposit_account_failed",
-      "http": 502,
-      "meaning": {
-        "en": "The dedicated receiving account could not be provisioned; read the account list before retrying",
-        "es": "No se pudo aprovisionar la cuenta receptora; lee el listado antes de reintentar",
-        "zh": "专属收款账户 provisioning 失败；重试前先读取账户列表"
       }
     },
     {
