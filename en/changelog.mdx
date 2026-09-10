@@ -11,6 +11,8 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 
 ### v2.72
 
+- **Recovery contract**: added the durable core idempotency status route and the org-ops reconciliation path for ambiguous company CLABE claims. Platform recovery is fail-closed with `deposit_account_not_recoverable`, `idempotency_conflict`, and a recovery lease fence.
+
 **Changed**
 
 - **Multiple company CLABEs**: company accounts can create multiple
@@ -22,13 +24,6 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   `409 idempotency_conflict`. Person accounts and legacy corridors
   keep the one-per-corridor rule; deposit-account listing is now
   paginated.
-
-
-
-**BOB virtual deposit accounts**: the payin catalog now documents the
-  `BO/BOB/bank_transfer` dedicated receiving-account flow, including account
-  creation/listing, polling-based reconciliation, `payin_credited`, errors and
-  the provider-agnostic BOB payout contract.
 
 </Update>
 

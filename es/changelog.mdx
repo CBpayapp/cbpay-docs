@@ -12,6 +12,8 @@ con anticipación y quedan marcados como **Breaking**.
 
 ### v2.72
 
+- **Contrato de recovery**: se agregaron la ruta durable de estado de idempotencia del core y la reconciliación org-ops para claims ambiguos de CLABE empresarial. El recovery es fail-closed con `deposit_account_not_recoverable`, `idempotency_conflict` y fence de lease.
+
 **Cambiado**
 
 - **Múltiples CLABEs para empresas**: las cuentas empresa pueden
@@ -23,13 +25,6 @@ con anticipación y quedan marcados como **Breaking**.
   `409 idempotency_conflict`. Las cuentas persona y los corredores
   legados conservan un destino por corredor; el listado ahora es
   paginado.
-
-
-
-**Cuentas virtuales de depósito BOB**: el catálogo de payins documenta el
-  flujo `BO/BOB/bank_transfer` con cuenta receptora dedicada, creación/listado,
-  conciliación por polling, `payin_credited`, errores y el contrato
-  provider-agnostic del payout BOB.
 
 </Update>
 
