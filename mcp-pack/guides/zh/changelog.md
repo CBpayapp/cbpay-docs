@@ -8,23 +8,35 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.72 · 1 个版本 · 2 个版本 - 2026年9月10日
+## v2.73 · 1 个版本 - 2026年9月10日
 
-### v2.72 · 1 个版本
-
-### v2.72
+### v2.73
 
 **新增**
 
-- **EUR 虚拟 IBAN 申请接口**：账户可以申请并列出 `funding_usdt`（默认）和 `banking_eur`（可选）两种用途，支持持久化幂等、人工审批和日期窗口。公开合同暂不承诺 provider onboarding、费用或完整 EUR→USDT / BANK_EUR 结算流程。
+- **EUR 虚拟 IBAN**：账户可以用幂等键申请持久化的
+  `funding_usdt` 或 `banking_eur` vIBAN，支持人工批准、状态查询、日期
+  列表和 ownership 校验。终态入金现在按用途进入对应资金路径。
+- **Returns 和 recalls**：`returned`、`recalled` 和 `reversed` 幂等对账。
+  Funding chargeback/refund 与 Banking EUR reverse entry 均为 append-only；
+  后续 completion 不会复活已 returned 的 operation。
 
-### v2.72 · 1 个版本
+## v2.72 · 1 个版本 - 2026年9月9日
 
 ### v2.72
 
-**新增**
+**变更**
 
-- **EUR 虚拟 IBAN 申请接口**：账户可以申请并列出 `funding_usdt`（默认）和 `banking_eur`（可选）两种用途，支持持久化幂等、人工审批和日期窗口。公开合同暂不承诺 provider onboarding、费用或完整 EUR→USDT / BANK_EUR 结算流程。
+- **企业多个 CLABE**：企业账户可以创建多个
+  `MX`/`MXN`/`bank_transfer` 充值目的地。每个目的地仍绑定同一
+  账户，并按目的地入账。创建支持幂等：新 key 返回 `201`，完成后
+  重放返回 `200` 并带 `idempotency_hit: true`，处理中重放可能
+  返回 `409 idempotency_conflict`。个人账户和 legacy 通道仍然
+  每个通道一个目的地；列表现在支持分页。
+
+**BOB 虚拟收款账户**：payin 目录现在记录
+  `BO/BOB/bank_transfer` 专属收款账户流程，包括创建/列表、轮询对账、
+  `payin_credited`、错误和 provider-agnostic 的 BOB payout 合同。
 
 ## v2.71 · 3 个版本 - 2026年9月6日
 
@@ -824,7 +836,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `dedicated_instrument`，但 API 中并不存在。真实值为
   `amount_single_candidate` 与 `dedicated_clabe`；spec 中新增了
   `charge_link` 与 `manual_assign`（管理员手工路由存款）。
-
 ## v2.15 · 1 个版本 - 2026年7月26日
 
 ### v2.15
@@ -842,7 +853,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   收取两笔金额相同的真实款项，请为每个预告发送不同的密钥。
   复用已用于**其他**收款方式（QR、checkout、卡支付）的密钥，
   现在会返回 `409 idempotency_conflict`，而不是返回与请求不符的对象。
-
 ## v2.14 · 6 个版本 - 2026年7月25日
 
 ### v2.14

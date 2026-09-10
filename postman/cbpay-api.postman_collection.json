@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds four independent\nvirtual balances — USDT (the operating currency), USDC, BTC and GOLD\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the four balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-10 05:06 UTC",
-    "_content_sha256": "c43e057de19a12757d84bc6dff1035d63e9ce098032a283062593ac0127526a0"
+    "_generated_at": "2026-09-10 12:40 UTC",
+    "_content_sha256": "1ce8262d94769e0a717f93b7a0d6f3ca8f8952c1f77627fcd470d34f00335a51"
   },
   "auth": {
     "type": "bearer",
@@ -24624,6 +24624,117 @@
                 }
               ],
               "body": "{\n  \"status\": \"revoked\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Corridors",
+      "item": [
+        {
+          "name": "List organization rail variants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/corridor-variants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "corridor-variants"
+              ]
+            },
+            "description": "Returns the organization-scoped payout variant configuration. The current selector supports BO/BOB bank_transfer with legacy or v2. Payin routing uses corridor controls."
+          },
+          "response": [
+            {
+              "name": "200 Current variants",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/corridor-variants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "corridor-variants"
+                  ]
+                }
+              },
+              "status": "Current variants",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"variants\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update an organization rail variant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/corridor-variants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "corridor-variants"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"configured-source\",\n  \"reason\": \"Controlled rail migration\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Updated variant",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/corridor-variants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "corridor-variants"
+                  ]
+                }
+              },
+              "status": "Updated variant",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"org_id\": \"org_123\",\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"configured-source\"\n}"
             }
           ]
         }

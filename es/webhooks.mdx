@@ -333,10 +333,14 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
 ```json banking_operation_status_changed
 {
   "account_id": "ae8c…",
-  "customer_id": "9f2b…",
   "operation_id": "7e8a…",
-  "type": "withdraw",
-  "status": "completed"
+  "status": "completed",
+  "direction": "in",
+  "amount": "80.00",
+  "currency": "EUR",
+  "payment_rail": "SEPA_INSTANT",
+  "purpose": "banking_eur",
+  "reference": "CJ-DEP-001"
 }
 ```
 
@@ -783,10 +787,9 @@ referencia sin un GET extra.
 - No dependas solo de webhooks para estados críticos: puedes consultar el
   objeto por API en cualquier momento (`GET /v1/payouts/{id}`, etc.).
 
-### `banking_virtual_iban_inbound`
+## `banking_virtual_iban_inbound`
 
-Se emite cuando un ingreso EUR dirigido a un vIBAN se normaliza para la cuenta
-dueña. Incluye `iban`, `amount`, `currency`, `status`, `reference`,
-`payment_rail` (`SEPA_INSTANT`) y `provider_event_id` estable. Deduplica por el
-ID de entrega y procesa con la misma idempotencia de los demás eventos de
-dinero.
+This event reports an inbound EUR transfer received by an owned virtual IBAN.
+The event is normalized before delivery; consumers should deduplicate by the
+event ID and fetch the banking operation or virtual account when they need the
+latest state. The event does not expose an upstream provider identity.

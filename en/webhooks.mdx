@@ -333,10 +333,14 @@ with its `third_party_id` — the same id as `GET /v1/banking/third-parties/{id}
 ```json banking_operation_status_changed
 {
   "account_id": "ae8c…",
-  "customer_id": "9f2b…",
   "operation_id": "7e8a…",
-  "type": "withdraw",
-  "status": "completed"
+  "status": "completed",
+  "direction": "in",
+  "amount": "80.00",
+  "currency": "EUR",
+  "payment_rail": "SEPA_INSTANT",
+  "purpose": "banking_eur",
+  "reference": "CJ-DEP-001"
 }
 ```
 
@@ -782,25 +786,9 @@ without an extra GET.
 - Don't rely solely on webhooks for critical states: you can always query
   the object by API (`GET /v1/payouts/{id}`, etc.).
 
-### `banking_virtual_iban_inbound`
+## `banking_virtual_iban_inbound`
 
-This event is emitted when an inbound EUR payment addressed to a virtual IBAN
-has been normalized for the owning account. It includes `iban`, `amount`,
-`currency`, `status`, `reference`, `payment_rail` (`SEPA_INSTANT`) and the
-stable `provider_event_id`. Deduplicate by the delivery event ID and use the
-same idempotent handling as other money events.
-
-```json
-{
-  "event_type": "banking_virtual_iban_inbound",
-  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "client_customer_id": "core-customer-001",
-  "iban": "DE890000000000000000",
-  "amount": "80.00",
-  "currency": "EUR",
-  "status": "completed",
-  "reference": "CJ-DEP-001",
-  "payment_rail": "SEPA_INSTANT",
-  "provider_event_id": "provider-event-001"
-}
-```
+This event reports an inbound EUR transfer received by an owned virtual IBAN.
+The event is normalized before delivery; consumers should deduplicate by the
+event ID and fetch the banking operation or virtual account when they need the
+latest state. The event does not expose an upstream provider identity.

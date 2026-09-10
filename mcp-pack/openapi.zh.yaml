@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.72"
+  version: "2.73"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -20311,6 +20311,98 @@ paths:
           description: balance_not_available for funding_usdt.
         '503':
           description: Banking ledger unavailable.
+  /v1/corridor-variants:
+    get:
+      tags: [Corridors]
+      operationId: listCorridorVariants
+      summary: List organization rail variants
+      description: Returns the organization-scoped payout variant configuration. The current selector supports BO/BOB bank_transfer with legacy or v2. Payin routing uses corridor controls.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current variants
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [variants]
+                properties:
+                  variants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrgRailVariant'
+              example:
+                variants: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          description: Routing configuration unavailable
+          content:
+            application/json:
+              example:
+                error: rail_variants_unavailable
+                message: rail routing configuration is temporarily unavailable
+    put:
+      tags: [Corridors]
+      operationId: updateCorridorVariant
+      summary: Update an organization rail variant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgRailVariantRequest'
+            example:
+              direction: payout
+              country: BO
+              currency: BOB
+              method: bank_transfer
+              variant: v2
+              source_account: "configured-source"
+              reason: Controlled rail migration
+      responses:
+        '200':
+          description: Updated variant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgRailVariant'
+              example:
+                org_id: "org_123"
+                direction: payout
+                country: BO
+                currency: BOB
+                method: bank_transfer
+                variant: v2
+                source_account: "configured-source"
+        '400':
+          description: Invalid variant request
+          content:
+            application/json:
+              examples:
+                invalid_variant:
+                  value:
+                    error: invalid_rail_variant
+                    message: variant must be legacy or v2
+        '403':
+          description: Source routing requires platform administration
+          content:
+            application/json:
+              example:
+                error: rail_source_admin_required
+                message: source account routing is platform-admin controlled
+        '503':
+          description: Selected source account unavailable
+          content:
+            application/json:
+              example:
+                error: rail_source_unavailable
+                message: the selected source account is not configured for this organization
 components:
   securitySchemes:
     bearerAuth:
@@ -20432,6 +20524,27 @@ components:
             error: unauthorized
             message: invalid or missing credentials
   schemas:
+    OrgRailVariant:
+      type: object
+      properties:
+        org_id: {type: string}
+        direction: {type: string}
+        country: {type: string}
+        currency: {type: string}
+        method: {type: string}
+        variant: {type: string, enum: [legacy, v2]}
+        source_account: {type: string}
+    OrgRailVariantRequest:
+      type: object
+      required: [direction, country, currency, method, variant, reason]
+      properties:
+        direction: {type: string, enum: [payout]}
+        country: {type: string, example: BO}
+        currency: {type: string, example: BOB}
+        method: {type: string, example: bank_transfer}
+        variant: {type: string, enum: [legacy, v2]}
+        source_account: {type: string}
+        reason: {type: string}
     DepositInstructions:
       type: object
       description: |
@@ -22477,10 +22590,14 @@ webhooks:
           application/json:
             example:
               account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-              customer_id: 9f2b1c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
               operation_id: 7e8a9b0c-1d2e-3f4a-5b6c-7d8e9f0a1b2c
-              type: withdraw
               status: completed
+              direction: in
+              amount: '80.00'
+              currency: EUR
+              payment_rail: SEPA_INSTANT
+              purpose: banking_eur
+              reference: CJ-DEP-001
       responses:
         '200':
           description: 返回任意 2xx 以确认。

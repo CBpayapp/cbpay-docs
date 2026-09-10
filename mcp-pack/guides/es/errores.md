@@ -19,6 +19,9 @@ Todos los errores comparten el mismo formato:
 
 > **Nota**
 **Mensajes de error saneados.** El `message` de un error nunca expone nombres de proveedores, detalles de infraestructura, URLs, bodies crudos del proveedor (JSON/HTML) ni configuración interna — ni en respuestas de la API, ni en webhooks, ni en los campos de estado persistidos. Los rechazos de negocio del procesador conservan su motivo accionable (por ejemplo, por qué se rechazó un documento o una cuenta); las fallas de infraestructura se reemplazan por el mensaje genérico fijo `"the payment provider could not process the request"` — reintenta esas operaciones con la misma `idempotency_key`.
+| `payin_corridor_unsupported` | El corredor solicitado no tiene un proveedor de payin activo — vuelve a leer `GET /v1/payins/methods` |
+| 502 | `deposit_account_failed` | No se pudo aprovisionar la cuenta receptora dedicada; lee la lista antes de reintentar |
+
 ## Códigos por categoría
 
 ### Autenticación y permisos
@@ -189,7 +192,6 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 400 | `to_address_required` | La devolución [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos) (y el retiro crypto) exige la dirección destino explícita |
 | 422 | `deposit_account_limit_reached` | Las cuentas persona y los corredores no soportados o legados conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar |
 | 409 | `deposit_account_conflict` | El core devolvió un destino de depósito ya asignado a otra organización — reconcilia antes de reintentar |
-| 422 | `deposit_account_not_recoverable` | El destino pendiente no es un instrumento MX/MXN/bank_transfer recuperable |
 | 422 | `export_rejected` | El procesador rechazó el export de la llave de la wallet segregada |
 | 422 | `stored_card_corridor_mismatch` | La [tarjeta guardada](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions) pertenece a otro corredor país/moneda distinto del cobro |
 | 409 | `subscription_state` | La [suscripción](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions) no está en un estado que permita esa acción (ej. pausar un plan cancelado) |
@@ -349,3 +351,14 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | `claim_not_pending` | 409 | El claim ya no está pendiente. Lee el resultado terminal en vez de repetir la recuperación. |
 | `claim_customer_owned_elsewhere` | 409 | El cliente del proveedor pertenece a otra cuenta. Detén el proceso y revisa la titularidad. |
 | `banking_recovery_pending` | 503 | El resultado del proveedor sigue ambiguo. Usa la ruta administrativa; no origines otra creación. |
+
+## Clear Junction and EUR banking errors
+
+| Code | Meaning and action |
+|---|---|
+| `banking_customer_incomplete` | The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key. |
+| `provider_rejected` | The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state. |
+| `customer_id_required` | A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource. |
+| `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
+| `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
+| `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |

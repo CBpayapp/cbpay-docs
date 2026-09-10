@@ -8,13 +8,41 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.72 · 1 version - September 10, 2026
+## v2.73 · 1 version - September 10, 2026
 
-### v2.72
+### v2.73
 
 **Added**
 
-- **EUR virtual IBAN request surface**: account-level requests and lists now expose the two verified purposes `funding_usdt` (default) and `banking_eur` (optional), with durable idempotency, manual approval status and date-window filters. The public contract does not yet promise provider onboarding, fees or the full EUR-to-USDT / BANK_EUR settlement flow.
+- **EUR virtual IBANs**: account clients can request a durable
+  `funding_usdt` or `banking_eur` virtual IBAN with idempotency, manual
+  approval, status polling, date-filtered listing and ownership checks.
+  Terminal inbound events now enter the purpose-specific financial path.
+- **Returns and recalls**: `returned`, `recalled` and `reversed` events are
+  reconciled idempotently. Funding chargebacks/refunds and Banking EUR reverse
+  entries are append-only; a later completion cannot resurrect a returned
+  operation.
+
+## v2.72 · 1 version - September 9, 2026
+
+### v2.72
+
+**Changed**
+
+- **Multiple company CLABEs**: company accounts can create multiple
+  `MX`/`MXN`/`bank_transfer` deposit destinations. Each destination
+  stays bound to the same account and credits by destination
+  instrument. Company creation is idempotent: a new key returns
+  `201`, a completed replay returns `200` with
+  `idempotency_hit: true`, and an in-flight replay can return
+  `409 idempotency_conflict`. Person accounts and legacy corridors
+  keep the one-per-corridor rule; deposit-account listing is now
+  paginated.
+
+**BOB virtual deposit accounts**: the payin catalog now documents the
+  `BO/BOB/bank_transfer` dedicated receiving-account flow, including account
+  creation/listing, polling-based reconciliation, `payin_credited`, errors and
+  the provider-agnostic BOB payout contract.
 
 ## v2.71 · 3 versions - September 6, 2026
 

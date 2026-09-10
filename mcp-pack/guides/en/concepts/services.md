@@ -87,3 +87,9 @@ Services are enabled by your organization according to the commercial
 agreement. If you need a product activated (for example `banking` or
 `cards`), contact your CBPay administrator — the change is immediate, no
 redeploy needed.
+## EUR banking service flags
+
+The platform exposes `eur_funding` for EUR-to-USDT funding and
+`virtual_iban` for optional EUR banking balances and SEPA Instant. Both are
+separate from the general banking capability and must be enabled explicitly
+when the organization uses them.

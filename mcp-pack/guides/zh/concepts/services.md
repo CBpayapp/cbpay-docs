@@ -85,3 +85,9 @@ flowchart LR
 服务由您的组织根据商业协议启用。如果您需要开通某个产品（例如
 `banking` 或 `cards`），请联系您的 CBPay 管理员 — 变更即时生效，
 无需重新部署。
+## EUR banking service flags
+
+The platform exposes `eur_funding` for EUR-to-USDT funding and
+`virtual_iban` for optional EUR banking balances and SEPA Instant. Both are
+separate from the general banking capability and must be enabled explicitly
+when the organization uses them.
