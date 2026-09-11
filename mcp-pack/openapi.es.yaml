@@ -1111,7 +1111,9 @@ paths:
         obligatoria en la glosa). Re-POST del
         mismo país+moneda+método devuelve la MISMA materialización; elegir un método nunca
         bloquea los demás mientras nadie pague. Sin credenciales; rate limit por IP.
-        El cobro pull (`collect: true`) no lo ofrece ningún corredor actualmente.
+        El cobro pull (`collect: true`) está disponible cuando el corredor lo
+        expone; el collect final screenea al pagador antes del cobro y puede
+        responder `202 in_review`.
       parameters:
       - name: token
         in: path
@@ -1281,9 +1283,8 @@ paths:
         `otp_reference` que debe acompañar el `POST /pay/{token}/collect` final. La
         opción pull debe materializarse primero; el monto SIEMPRE es el congelado ahí.
         Rate limit estricto por IP (cada llamada es un SMS/push real al pagador).
-        **Actualmente no hay ningún corredor de cobro pull disponible** (se retiró
-        Venezuela `c2p` / `debito_inmediato`): las llamadas responden que el corredor
-        no está soportado.
+        El collect final hace screening antes del cargo; un hold PEP/firewall
+        responde `202 in_review` y el approve libera la review sin cobrar.
       parameters:
       - name: token
         in: path
@@ -1367,14 +1368,15 @@ paths:
         checkout — banco, documento, teléfono o cuenta, y el OTP (generado en la app
         bancaria del pagador, o solicitado vía `POST /pay/{token}/collect/otp`
         devolviendo su `otp_reference`). El monto SIEMPRE es el
-        congelado en la materialización — el pagador nunca lo envía. Si el rail
-        confirma síncrono, el link se liquida en la misma llamada (`paid: true`); un
+        congelado en la materialización — el pagador nunca lo envía. La plataforma
+        screenea al pagador antes de llamar al core/proveedor. Un hold PEP o de
+        firewall responde `202 in_review` sin cobrar; el approve solo libera la
+        review y el cliente reintenta el mismo request con el mismo contexto de
+        idempotencia. Un timeout o 5xx deja el payin `pending` para reconciliación
+        por webhook y nunca se reenvía automáticamente. Un pagador solo documental
+        se screenea como `document_value`/`idNumber`, separado de `name`. Un
         rechazo NO mata el link — el pagador puede corregir los datos o elegir otro
-        método. Reintentar con los mismos datos jamás cobra dos veces. Rate limit
-        estricto por IP. **Actualmente no hay ningún corredor de cobro pull
-        disponible** (se retiró Venezuela `c2p` / `debito_inmediato`): la cotización
-        no lista ninguna opción `collect: true` y las llamadas responden que el
-        corredor no está soportado.
+        método. Rate limit estricto por IP.
       parameters:
       - name: token
         in: path
@@ -1388,7 +1390,7 @@ paths:
           application/json:
             examples:
               pull_collection:
-                summary: Forma histórica — actualmente no hay ningún corredor pull disponible
+                summary: Request de cobro pull
                 value:
                   country: VE
                   currency: VES
@@ -1416,6 +1418,24 @@ paths:
                     status: failed
                     status_code: '05'
                     status_message: the document does not match the C2P registration
+        '202':
+          description: El cobro quedó retenido por compliance antes de llamar al core.
+            El approve solo libera la review; reintenta el mismo collect con el mismo contexto.
+          content:
+            application/json:
+              examples:
+                review_hold:
+                  summary: Hold antes del cobro
+                  value:
+                    paid: false
+                    status: in_review
+                    review_id: 9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f
+                ambiguous_pending:
+                  summary: Timeout o 5xx; reconciliar por webhook
+                  value:
+                    paid: false
+                    status: pending
+                    payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
         '404':
           description: Token inválido o link de cobro desconocido.
           content:
@@ -1427,9 +1447,17 @@ paths:
           description: El link ya fue pagado por otro método.
           content:
             application/json:
-              example:
-                error: already_paid
-                message: this payment link was already paid
+              examples:
+                already_paid:
+                  summary: El link ya estaba pagado
+                  value:
+                    error: already_paid
+                    message: this payment link was already paid
+                checkout_not_pending:
+                  summary: El intento collect ya no está pendiente
+                  value:
+                    error: checkout_not_pending
+                    message: this payment attempt is no longer available
         '410':
           description: El link expiró sin pago.
           content:
@@ -13479,12 +13507,16 @@ paths:
       operationId: payinCollect
       summary: Cobro activo (pull)
       deprecated: true
-      description: 'Cobra al pagador directamente en los corredores que soportan cobros pull.
-        **Actualmente no hay ningún corredor de cobro pull disponible** (se retiró Venezuela
-        `c2p` / `debito_inmediato`): las llamadas responden que el corredor no está soportado.
-        Síncrono: si el cobro se aprueba, el depósito se convierte a tu `payin_rate`
-        vigente y se acredita en la misma llamada, neto de la comisión de payin. Si el pagador rechaza,
-        `paid` es false, el payin queda marcado como failed y no se cobra nada.'
+      description: >-
+        Cobra al pagador directamente en los corredores que soportan cobros pull.
+        La plataforma exige una clave de idempotencia y screenea al pagador antes
+        de llamar al core/proveedor. Un hold PEP/firewall responde `202 in_review`
+        sin cobrar; el approve solo libera la review y el cliente reintenta con
+        el mismo contexto de idempotencia. Un timeout o 5xx deja el payin pending
+        para reconciliación por webhook y nunca se reenvía automáticamente. Un
+        pagador solo documental se screenea como `document_value`/`idNumber`,
+        separado de `name`. Si el cobro se aprueba síncrono, el depósito se
+        convierte a tu `payin_rate` vigente y se acredita neto de la comisión.
       requestBody:
         required: true
         content:
@@ -13645,8 +13677,8 @@ paths:
       summary: Solicitar un OTP de cobro
       deprecated: true
       description: Solicita la contraseña de un solo uso que algunos métodos pull necesitan antes del
-        cobro. Sin costo. **Actualmente no hay ningún corredor de cobro pull
-        disponible** (se retiró Venezuela `c2p` / `debito_inmediato`).
+        cobro. Sin costo. La opción pull debe materializarse primero y el collect
+        final queda sujeto al screening previo al cobro.
       requestBody:
         required: true
         content:

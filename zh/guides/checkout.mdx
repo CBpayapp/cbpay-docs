@@ -154,11 +154,26 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   `crypto:<chain>:<asset>`（如 `crypto:tron:usdt`），不带国家。对同一
   组合重复 POST 返回**同一个**物化结果。
 - `POST {checkout_url}/collect/otp` / `POST {checkout_url}/collect`——
-  拉取式收款端点。**当前没有任何可用的拉取式通道**（委内瑞拉 `c2p` /
-  `debito_inmediato` 已下线）：报价中不再列出 `collect: true` 选项，
-  调用这些端点会返回该通道不受支持。
+  拉取式收款端点。该方式必须先物化；金额始终使用物化时冻结的金额，
+  不由付款人提供。
 
 如果你想在同一链接上渲染自己的支付页面，这些端点会很有用。
+
+### Collect 暂留与安全重试
+
+平台会在调用 core/通道前对付款人执行 screening。PEP 或防火墙暂留会在
+不扣款的情况下返回 `202`、`status: "in_review"` 和 `review_id`。管理员
+批准只会释放审核；使用相同的 `idempotency_key` 重试同一个 collect 请求
+才能执行扣款。托管 checkout 会根据链接及不变的付款人/扣款数据派生稳定
+的内部密钥，因此安全重试是相同请求，而不是新链接。
+
+如果 core/通道超时或返回 5xx，payin 会保持 `pending`，由 payin webhook
+进行对账。平台绝不会自动重新发送扣款。如果另一次尝试已经决定该 payin，
+端点会返回 `409 checkout_not_pending`；读取链接状态，不要创建第二个链接。
+
+只有证件的付款人会作为独立身份被 screening：`document_value` 发送为
+`idNumber`，`name` 保持为空。证件不会复制到姓名字段，只有证件的
+screening 不符合仅按姓名的 PEP 快速通道。
 
 ## 链接规则
 
@@ -199,6 +214,7 @@ fintoc）支付的收款仍立即入账，与以往相同。详见
 | 400 | `country_required` | 法币方式缺少 `?country=XX` |
 | 400 | `currency_required` | 该国家以多种币种提供此方式；缺少 `?currency=YYY` |
 | 409 | `already_paid` | 链接已通过其他方式支付 |
+| 409 | `checkout_not_pending` | collect 尝试已不能再接受付款人数据，因为另一次尝试已决定该 payin；读取状态，不要创建第二个链接 |
 | 410 | `checkout_expired` | 链接到期未支付 |
 | 422 | `method_unavailable` | 该方式对此链接或国家不可用 |
 | 422 | `country_unavailable` | 该国家没有可用的支付方式 |

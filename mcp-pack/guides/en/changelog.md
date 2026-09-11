@@ -8,6 +8,19 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.74 · 1 version - September 11, 2026
+
+### v2.74
+
+**Changed**
+
+- **Collect and hosted checkout compliance holds** now happen before the
+  payer charge. Approval releases the review only; retry the same collect
+  request with the same idempotency context. Ambiguous timeout/5xx results
+  remain pending for webhook reconciliation and are never resent automatically.
+  Added the `checkout_not_pending` conflict and documented separate
+  document-only payer screening (`document_value`/`idNumber`, not `name`).
+
 ## v2.73 · 1 version - September 10, 2026
 
 ### v2.73

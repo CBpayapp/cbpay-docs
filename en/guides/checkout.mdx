@@ -178,13 +178,33 @@ as `POST /v1/swaps`). The aggregate state travels in `conversion_status`:
   `crypto:<chain>:<asset>` (e.g. `crypto:tron:usdt`) without a country.
   Re-POSTing the same combination returns the SAME materialization.
 - `POST {checkout_url}/collect/otp` / `POST {checkout_url}/collect` —
-  the pull-collection endpoints. **No pull corridor is currently
-  available** (Venezuela `c2p` / `debito_inmediato` was retired): the
-  quote lists no `collect: true` option and these calls answer that the
-  corridor is not supported.
+  the pull-collection endpoints. The option must be materialized first; the
+  amount is always the frozen materialization amount and never comes from the
+  payer.
 
 Useful if you prefer to render your own payment page on top of the same
 link.
+
+### Collect holds and safe retries
+
+The platform screens the payer before calling the core/provider. A PEP or
+firewall hold returns `202` with `status: "in_review"` and `review_id`; the
+payer has not been charged. An admin approval only releases the review. Retry
+the same collect request with the same `idempotency_key` to execute the
+charge. Hosted checkout derives a stable internal key from the link and the
+unchanged payer/charge data, so retry the identical request rather than
+creating a new link.
+
+If the core/provider call times out or returns 5xx, the payin remains
+`pending` and is reconciled by the payin webhook. The platform never resends
+the charge automatically. If another attempt has already decided the payin,
+the endpoint returns `409 checkout_not_pending`; read the link state instead
+of creating a second link.
+
+A payer who supplies only a document is screened as a separate identity:
+`document_value` is sent as `idNumber`, while `name` remains empty. The
+document is never copied into `name`, and document-only screening does not
+qualify for the name-only PEP fast lane.
 
 ## Link rules
 
@@ -230,6 +250,7 @@ Link-specific errors (seen by whoever opens the page):
 | 400 | `country_required` | Fiat method without `?country=XX` |
 | 400 | `currency_required` | The country offers the method in several currencies; `?currency=YYY` is missing |
 | 409 | `already_paid` | The link was already paid through another method |
+| 409 | `checkout_not_pending` | A collect attempt can no longer accept payer data because another attempt decided the payin; read the link state and do not create a second link |
 | 410 | `checkout_expired` | The link expired unpaid |
 | 422 | `method_unavailable` | That method is not available for this link or country |
 | 422 | `country_unavailable` | That country has no available payment methods |

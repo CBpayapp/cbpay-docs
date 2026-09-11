@@ -175,6 +175,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 400 | `amount_too_small` | El monto del swap no alcanza la unidad mínima de la moneda destino |
 | 400 | `swap_asset_disabled` | Una de las monedas del swap está deshabilitada para tu organización |
 | 409 | `already_paid` | El [link de cobro universal](https://docs.cbpayapp.com/es/guias/checkout) ya se pagó por otro método |
+| 409 | `checkout_not_pending` | Un intento de collect del checkout ya no acepta datos porque otro intento decidió el payin; lee el estado y no crees otro link |
 | 410 | `checkout_expired` | El link de cobro universal venció sin pago |
 | 422 | `method_unavailable` | El método elegido en el link de cobro no está disponible para ese link o país |
 | 400 | `country_required` | Materialización fiat del link de cobro sin `?country=XX` |

@@ -1020,7 +1020,9 @@ paths:
         入账自动路由到该链接。若无法签发专属账户，payload 会降级为传统方式（商户账户 +
         转账附言中必填 `reference`）。对同一
         国家+币种+方式重复 POST 返回相同的结果；在无人支付前，选择某个方式不会锁定其他方式。
-        无需凭证；按 IP 限流。拉取式收款（`collect: true`）目前没有任何通道提供。
+        无需凭证；按 IP 限流。拉取式收款（`collect: true`）在所选走廊提供时
+        可用；最终 collect 会在扣款前执行 screening，并可能返回
+        `202 in_review`。
       parameters:
       - name: token
         in: path
@@ -1186,8 +1188,8 @@ paths:
         `requires_otp_request: true`）。触发向付款人发送 OTP，并返回
         必须随最终 `POST /pay/{token}/collect` 一起提交的 `otp_reference`。必须先生成该拉取式
         支付选项；金额始终是那时冻结的金额。按 IP 严格限流（每次调用都是发给付款人的真实短信/推送）。
-        **目前没有任何可用的拉取式收款通道**（委内瑞拉 `c2p` / `debito_inmediato`
-        已下线）：调用会返回该通道不受支持。
+        最终 collect 会在扣款前执行 screening；PEP/防火墙暂留返回
+        `202 in_review`，批准只释放审核而不会扣款。
       parameters:
       - name: token
         in: path
@@ -1269,10 +1271,12 @@ paths:
         使用付款人在结账页面填写的数据执行已生成的拉取式选项的扣款 — 银行、证件号、电话或账户，以及 OTP（由付款人在其银行
         App 中生成，或通过 `POST /pay/{token}/collect/otp` 请求并回传其 `otp_reference`）。
         金额始终是生成支付选项时冻结的金额 — 付款人从不发送金额。若通道同步确认，链接在同一次调用
-        中完成结算（`paid: true`）；被拒绝不会终结链接 — 付款人可以修正数据或改用其他方式。用相同
-        数据重试绝不会重复扣款。按 IP 严格限流。**目前没有任何可用的拉取式收款通道**
-        （委内瑞拉 `c2p` / `debito_inmediato` 已下线）：报价中不再列出 `collect: true`
-        选项，调用会返回该通道不受支持。
+        中完成结算（`paid: true`）；平台会在调用 core/通道前对付款人执行
+        screening。PEP 或防火墙暂留返回 `202 in_review` 且不会扣款；批准只释放
+        审核，客户端使用相同的幂等上下文重试。超时或 5xx 会让 payin 保持
+        `pending` 并等待 webhook 对账，绝不会自动重发。只有证件的付款人以
+        `document_value`/`idNumber` 被 screening，与 `name` 分开。被拒绝不会
+        终结链接 — 付款人可以修正数据或改用其他方式。按 IP 严格限流。
       parameters:
       - name: token
         in: path
@@ -1286,7 +1290,7 @@ paths:
           application/json:
             examples:
               pull_collection:
-                summary: 历史形态 — 目前没有任何可用的拉取式通道
+                summary: 拉取式收款请求
                 value:
                   country: VE
                   currency: VES
@@ -1314,6 +1318,23 @@ paths:
                     status: failed
                     status_code: '05'
                     status_message: the document does not match the C2P registration
+        '202':
+          description: 扣款在调用 core 前被合规审核暂留。批准只释放审核；使用相同幂等上下文重试。
+          content:
+            application/json:
+              examples:
+                review_hold:
+                  summary: 扣款前暂留
+                  value:
+                    paid: false
+                    status: in_review
+                    review_id: 9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f
+                ambiguous_pending:
+                  summary: Timeout 或 5xx；通过 webhook 对账
+                  value:
+                    paid: false
+                    status: pending
+                    payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
         '404':
           description: 令牌无效或收款链接不存在。
           content:
@@ -1325,9 +1346,17 @@ paths:
           description: 该链接已通过其他方式支付。
           content:
             application/json:
-              example:
-                error: already_paid
-                message: this payment link was already paid
+              examples:
+                already_paid:
+                  summary: 链接已支付
+                  value:
+                    error: already_paid
+                    message: this payment link was already paid
+                checkout_not_pending:
+                  summary: Hosted collect 已不再 pending
+                  value:
+                    error: checkout_not_pending
+                    message: this payment attempt is no longer available
         '410':
           description: 该链接已过期且未支付。
           content:
@@ -13066,8 +13095,14 @@ paths:
       operationId: payinCollect
       summary: 主动收款(pull)
       deprecated: true
-      description: 在支持 pull 收款的通道直接向付款人扣款。**目前没有任何可用的拉取式收款通道**(委内瑞拉 `c2p` / `debito_inmediato` 已下线):调用会返回该通道不受支持。同步执行:若扣款获批,存款按你当前的 `payin_rate`
-        转换并在同一调用中入账,已扣除 payin 费用。若付款人拒绝,`paid` 为 false,payin 标记为 failed 且不产生任何扣款。
+      description: >-
+        在支持 pull 收款的通道直接向付款人扣款。平台要求幂等键，并在调用
+        core/通道前对付款人执行 screening。PEP/防火墙暂留返回
+        `202 in_review` 且不会扣款；批准只释放审核，客户端使用相同的幂等
+        上下文重试。超时或 5xx 会让 payin 保持 pending 并等待 webhook 对账，
+        绝不会自动重发。只有证件的付款人以 `document_value`/`idNumber`
+        被 screening，与 `name` 分开。同步获批时，存款按当前 `payin_rate`
+        转换并在同一调用入账，扣除 payin 费用。拒绝时 `paid` 为 false。
       requestBody:
         required: true
         content:
@@ -13085,7 +13120,7 @@ paths:
                   type: string
                 method:
                   type: string
-                  description: 拉取式通道的收款方式(目前没有任何可用通道)。
+                  description: 已配置拉取式走廊的收款方式。
                 amount:
                   type: string
                   description: 本地金额,正数十进制字符串。
@@ -13225,7 +13260,7 @@ paths:
       operationId: payinCollectOtp
       summary: 请求收款 OTP
       deprecated: true
-      description: 请求部分 pull 方式在扣款前所需的一次性密码。免费。**目前没有任何可用的拉取式收款通道**(委内瑞拉 `c2p` / `debito_inmediato` 已下线)。
+      description: 请求部分 pull 方式在扣款前所需的一次性密码。免费。支付选项必须先生成，最终 collect 会在扣款前执行 screening。
       requestBody:
         required: true
         content:

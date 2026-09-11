@@ -7,6 +7,20 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+<Update label="2026年9月11日" description="v2.74 · 1 个版本">
+
+### v2.74
+
+**变更**
+
+- **Collect 与托管 checkout 的合规暂留**现在在付款人扣款前发生。批准只
+  释放审核；使用相同的幂等上下文重试同一个 collect 请求。不明确的
+  timeout/5xx 会保持 pending 并等待 webhook 对账，绝不会自动重发。
+  新增 `checkout_not_pending` 冲突说明，并记录只有证件的付款人应作为
+  独立身份 screening（`document_value`/`idNumber`，而非 `name`）。
+
+</Update>
+
 <Update label="2026年9月10日" description="v2.73 · 1 个版本">
 
 ### v2.73

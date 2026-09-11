@@ -9,6 +9,20 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.74 · 1 versión - 11 de septiembre de 2026
+
+### v2.74
+
+**Cambiado**
+
+- **Holds de compliance en collect y checkout hosted** ahora ocurren antes del
+  cargo al pagador. Aprobar solo libera la review; reintenta el mismo request
+  de collect con el mismo contexto de idempotencia. Un timeout/5xx ambiguo
+  queda pending para reconciliación por webhook y jamás se reenvía
+  automáticamente. Se agrega el conflicto `checkout_not_pending` y se
+  documenta el screening separado del pagador solo documental
+  (`document_value`/`idNumber`, no `name`).
+
 ## v2.73 · 1 versión - 10 de septiembre de 2026
 
 ### v2.73
