@@ -176,13 +176,31 @@ motor de conversiones de tu cuenta (mismos spreads y límites que
   `crypto:tron:usdt`) sin país. Re-POST de la misma combinación devuelve
   la MISMA materialización.
 - `POST {checkout_url}/collect/otp` / `POST {checkout_url}/collect` —
-  los endpoints de cobro pull. **Actualmente no hay ningún corredor pull
-  disponible** (se retiró Venezuela `c2p` / `debito_inmediato`): la
-  cotización no lista ninguna opción `collect: true` y estas llamadas
-  responden que el corredor no está soportado.
+  los endpoints de cobro pull. La opción debe materializarse primero; el
+  monto siempre es el de esa materialización y nunca lo envía el pagador.
 
 Útil si prefieres renderizar tu propia página de pago sobre el mismo
 link.
+
+### Holds de collect y retries seguros
+
+La plataforma screenea al pagador antes de llamar al core/proveedor. Un hold
+PEP o de firewall responde `202` con `status: "in_review"` y `review_id`; el
+pagador no ha sido cobrado. El approve admin solo libera la review. Reintenta
+el mismo request de collect con la misma `idempotency_key` para ejecutar el
+cargo. Checkout hosted deriva una clave interna estable del link y de los
+mismos datos del pagador/cobro, así que el retry seguro es el request idéntico,
+no un link nuevo.
+
+Si el core/proveedor agota el tiempo o responde 5xx, el payin queda `pending`
+y se reconcilia por el webhook del payin. La plataforma jamás reenvía el cargo
+automáticamente. Si otro intento ya decidió el payin, responde
+`409 checkout_not_pending`; lee el estado del link en vez de crear otro.
+
+Un pagador que solo entrega documento se screenea como identidad separada:
+`document_value` viaja como `idNumber` y `name` queda vacío. El documento
+nunca se copia al nombre, y el screening solo documental no califica para la
+vía rápida PEP basada solo en nombre.
 
 ## Reglas del link
 
@@ -226,6 +244,7 @@ Errores propios del link (los ve quien abre la página):
 | 400 | `country_required` | Método fiat sin `?country=XX` |
 | 400 | `currency_required` | El país ofrece el método en varias monedas; falta `?currency=YYY` |
 | 409 | `already_paid` | El link ya se pagó por otro método |
+| 409 | `checkout_not_pending` | Un intento de collect ya no acepta datos porque otro intento decidió el payin; lee el estado y no crees otro link |
 | 410 | `checkout_expired` | El link venció sin pago |
 | 422 | `method_unavailable` | Ese método no está disponible para este link o país |
 | 422 | `country_unavailable` | Ese país no tiene métodos de pago disponibles |

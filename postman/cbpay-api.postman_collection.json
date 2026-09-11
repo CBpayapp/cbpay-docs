@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds four independent\nvirtual balances — USDT (the operating currency), USDC, BTC and GOLD\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the four balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-10 12:40 UTC",
-    "_content_sha256": "1ce8262d94769e0a717f93b7a0d6f3ca8f8952c1f77627fcd470d34f00335a51"
+    "_generated_at": "2026-09-11 06:28 UTC",
+    "_content_sha256": "123859430d6a03a61a158ee1583f118b9d4f9acac47bb0940af8e34300bd2761"
   },
   "auth": {
     "type": "bearer",
@@ -6113,7 +6113,7 @@
                 }
               ]
             },
-            "description": "Creates (lazily) the payment option the payer picked on a universal checkout link and returns its instructions — the payment URL for card/hosted methods, the QR for QR methods, the announce reference for bank transfers, or an exclusive crypto deposit address with the exact quoted amount plus a scannable QR (`qr_payload` + `qr_png_base64` — always the raw address for BTC/TRON/ETH, readable by external wallets and exchanges; BIP-21/EIP-681 URIs are rejected by apps like Binance). Fiat methods require `?country=XX`; the local amount is quoted and FROZEN at this moment. When the country offers the method in more than one currency (see `options[]` of the quote — e.g. QR in BOB and USD, or card corridors) it also requires `&currency=YYY`; each currency is an independent materialization. Bank transfers in Mexico issue a dedicated CLABE exclusive to the link (`destination` with `dedicated: true`): the payer transfers the exact amount with NO reference — the deposit routes to the link automatically. If the dedicated account cannot be issued, the payload degrades to the classic path (merchant account + mandatory `reference` in the transfer description). Re-POSTing the same country+currency+method returns the SAME materialization; picking a method never blocks the others while nobody has paid. No credentials; rate limited per IP. Pull collection (`collect: true`) is not offered by any corridor at this time.",
+            "description": "Creates (lazily) the payment option the payer picked on a universal checkout link and returns its instructions — the payment URL for card/hosted methods, the QR for QR methods, the announce reference for bank transfers, or an exclusive crypto deposit address with the exact quoted amount plus a scannable QR (`qr_payload` + `qr_png_base64` — always the raw address for BTC/TRON/ETH, readable by external wallets and exchanges; BIP-21/EIP-681 URIs are rejected by apps like Binance). Fiat methods require `?country=XX`; the local amount is quoted and FROZEN at this moment. When the country offers the method in more than one currency (see `options[]` of the quote — e.g. QR in BOB and USD, or card corridors) it also requires `&currency=YYY`; each currency is an independent materialization. Bank transfers in Mexico issue a dedicated CLABE exclusive to the link (`destination` with `dedicated: true`): the payer transfers the exact amount with NO reference — the deposit routes to the link automatically. If the dedicated account cannot be issued, the payload degrades to the classic path (merchant account + mandatory `reference` in the transfer description). Re-POSTing the same country+currency+method returns the SAME materialization; picking a method never blocks the others while nobody has paid. No credentials; rate limited per IP. Pull collection (`collect: true`) is available when the selected corridor exposes it; the final collect call screens the payer before charging and may return `202 in_review`.",
             "auth": {
               "type": "noauth"
             }
@@ -6201,7 +6201,7 @@
                 }
               ]
             },
-            "description": "For pull methods whose rail sends the payer a one-time key on demand (`requires_otp_request: true` in the materialization). Triggers the OTP delivery to the payer and returns the `otp_reference` that must accompany the final `POST /pay/{token}/collect`. The pull option must be materialized first; the amount is ALWAYS the one frozen there. Strictly rate limited per IP (each call is a real SMS/push to the payer). **No pull collection corridor is currently available** (Venezuela `c2p` / `debito_inmediato` was retired): calls answer that the corridor is not supported.",
+            "description": "For pull methods whose rail sends the payer a one-time key on demand (`requires_otp_request: true` in the materialization). Triggers the OTP delivery to the payer and returns the `otp_reference` that must accompany the final `POST /pay/{token}/collect`. The pull option must be materialized first; the amount is ALWAYS the one frozen there. Strictly rate limited per IP (each call is a real SMS/push to the payer). The final collect call performs screening before the charge; a PEP/firewall hold returns `202 in_review` and approval releases the review without charging.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"VE\",\n  \"currency\": \"VES\",\n  \"method\": \"debito_inmediato\",\n  \"payer_document\": \"V12345678\",\n  \"payer_bank\": \"0102\",\n  \"payer_account\": \"01020123456789012345\"\n}",
@@ -6279,7 +6279,7 @@
                 }
               ]
             },
-            "description": "Runs the pull charge of a materialized collect option with the data the payer typed on the checkout page — bank, document, phone or account, and the OTP (generated in the payer's banking app, or requested via `POST /pay/{token}/collect/otp`, sending back its `otp_reference`). The amount is ALWAYS the one frozen at materialization — the payer never sends it. If the rail confirms synchronously the link is settled in the same call (`paid: true`); a rejection does NOT kill the link — the payer can fix the data or pick another method. Retrying with the same data never charges twice. Strictly rate limited per IP. **No pull collection corridor is currently available** (Venezuela `c2p` / `debito_inmediato` was retired): the quote lists no `collect: true` option and calls answer that the corridor is not supported.",
+            "description": "Runs the pull charge of a materialized collect option with the data the payer typed on the checkout page — bank, document, phone or account, and the OTP (generated in the payer's banking app, or requested via `POST /pay/{token}/collect/otp`, sending back its `otp_reference`). The amount is ALWAYS the one frozen at materialization — the payer never sends it. The platform screens the payer before calling the core/provider. A PEP or firewall hold returns `202 in_review` without charging the payer; approval only releases the review and the client must retry the same request with the same idempotency context. A timeout or 5xx leaves the payin `pending` for webhook reconciliation and is never resent automatically. A document-only payer is screened as `document_value`/`idNumber`, separately from `name`. A rejection does NOT kill the link — the payer can fix the data or pick another method. Strictly rate limited per IP.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"VE\",\n  \"currency\": \"VES\",\n  \"method\": \"c2p\",\n  \"payer_document\": \"V12345678\",\n  \"payer_phone\": \"04141234567\",\n  \"payer_bank\": \"0102\",\n  \"otp\": \"123456\"\n}",
@@ -12469,7 +12469,7 @@
                 "collect"
               ]
             },
-            "description": "Charges the payer directly in corridors that support pull collections. **No pull collection corridor is currently available** (Venezuela `c2p` / `debito_inmediato` was retired): calls answer that the corridor is not supported. Synchronous: if the charge is approved the deposit converts at your current `payin_rate` and is credited in the same call, net of the payin fee. If the payer declines, `paid` is false, the payin is marked failed and nothing is charged.",
+            "description": "Charges the payer directly in corridors that support pull collections. The platform requires an idempotency key and screens the payer before calling the core/provider. A PEP/firewall hold returns `202 in_review` without charging; approval only releases the review and the client must retry with the same idempotency context. A timeout or 5xx leaves the payin pending for webhook reconciliation and is never resent automatically. A document-only payer is screened as `document_value`/`idNumber`, separate from `name`. Synchronous approval credits the deposit at the marked `payin_rate`, net of the payin fee.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"method\": \"c2p\",\n  \"amount\": \"1200.00\",\n  \"description\": \"Order 5512\",\n  \"payer_document\": \"V12345678\",\n  \"payer_phone\": \"04141234567\",\n  \"payer_bank\": \"0102\",\n  \"otp\": \"12345678\",\n  \"idempotency_key\": \"collect-2026-07-07-a\"\n}",
@@ -12532,7 +12532,7 @@
                 "otp"
               ]
             },
-            "description": "Requests the one-time password some pull methods need before the charge. Free of charge. **No pull collection corridor is currently available** (Venezuela `c2p` / `debito_inmediato` was retired).",
+            "description": "Requests the one-time password some pull methods need before the charge. Free of charge. The pull option must be materialized first and the final collect call remains subject to pre-charge screening.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"method\": \"debito_inmediato\",\n  \"amount\": \"1200.00\",\n  \"payer_document\": \"V12345678\",\n  \"payer_phone\": \"04141234567\",\n  \"payer_bank\": \"0102\",\n  \"payer_account\": \"01020123456789012345\"\n}",

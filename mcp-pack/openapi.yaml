@@ -1134,7 +1134,9 @@ paths:
         `reference` in the transfer description). Re-POSTing the same
         country+currency+method returns the SAME materialization; picking a method never
         blocks the others while nobody has paid. No credentials; rate limited per IP.
-        Pull collection (`collect: true`) is not offered by any corridor at this time.
+        Pull collection (`collect: true`) is available when the selected
+        corridor exposes it; the final collect call screens the payer before
+        charging and may return `202 in_review`.
       parameters:
       - name: token
         in: path
@@ -1304,9 +1306,9 @@ paths:
         to the payer and returns the `otp_reference` that
         must accompany the final `POST /pay/{token}/collect`. The pull option must be
         materialized first; the amount is ALWAYS the one frozen there. Strictly rate
-        limited per IP (each call is a real SMS/push to the payer). **No pull collection
-        corridor is currently available** (Venezuela `c2p` / `debito_inmediato` was
-        retired): calls answer that the corridor is not supported.
+        limited per IP (each call is a real SMS/push to the payer). The final collect
+        call performs screening before the charge; a PEP/firewall hold returns
+        `202 in_review` and approval releases the review without charging.
       parameters:
       - name: token
         in: path
@@ -1386,16 +1388,18 @@ paths:
       deprecated: true
       description: >-
         Runs the pull charge of a materialized collect option with the data the payer
-        typed on the checkout page — bank,
-        document, phone or account, and the OTP (generated in the payer's banking app,
-        or requested via `POST /pay/{token}/collect/otp`, sending
-        back its `otp_reference`). The amount is ALWAYS the one frozen at materialization —
-        the payer never sends it. If the rail confirms synchronously the link is settled in
-        the same call (`paid: true`); a rejection does NOT kill the link — the payer can fix
-        the data or pick another method. Retrying with the same data never charges twice.
-        Strictly rate limited per IP. **No pull collection corridor is currently
-        available** (Venezuela `c2p` / `debito_inmediato` was retired): the quote lists
-        no `collect: true` option and calls answer that the corridor is not supported.
+        typed on the checkout page — bank, document, phone or account, and the OTP
+        (generated in the payer's banking app, or requested via
+        `POST /pay/{token}/collect/otp`, sending back its `otp_reference`). The amount
+        is ALWAYS the one frozen at materialization — the payer never sends it.
+        The platform screens the payer before calling the core/provider. A PEP or
+        firewall hold returns `202 in_review` without charging the payer; approval
+        only releases the review and the client must retry the same request with the
+        same idempotency context. A timeout or 5xx leaves the payin `pending` for
+        webhook reconciliation and is never resent automatically. A document-only
+        payer is screened as `document_value`/`idNumber`, separately from `name`.
+        A rejection does NOT kill the link — the payer can fix the data or pick
+        another method. Strictly rate limited per IP.
       parameters:
       - name: token
         in: path
@@ -1409,7 +1413,7 @@ paths:
           application/json:
             examples:
               pull_collection:
-                summary: Historical shape — no pull corridor is currently available
+                summary: Pull collection request
                 value:
                   country: VE
                   currency: VES
@@ -1437,6 +1441,24 @@ paths:
                     status: failed
                     status_code: '05'
                     status_message: the document does not match the C2P registration
+        '202':
+          description: The charge is held for compliance review before it is sent to the core/provider.
+            Approval releases the review only; retry the same collect request with the same idempotency context.
+          content:
+            application/json:
+              examples:
+                review_hold:
+                  summary: Held before the payer is charged
+                  value:
+                    paid: false
+                    status: in_review
+                    review_id: 9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f
+                ambiguous_pending:
+                  summary: Timeout or 5xx; reconcile by webhook
+                  value:
+                    paid: false
+                    status: pending
+                    payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
         '404':
           description: Invalid token or unknown payment link.
           content:
@@ -1448,9 +1470,17 @@ paths:
           description: The link was already paid via another method.
           content:
             application/json:
-              example:
-                error: already_paid
-                message: this payment link was already paid
+              examples:
+                already_paid:
+                  summary: The link was already paid
+                  value:
+                    error: already_paid
+                    message: this payment link was already paid
+                checkout_not_pending:
+                  summary: The hosted collect attempt is no longer pending
+                  value:
+                    error: checkout_not_pending
+                    message: this payment attempt is no longer available
         '410':
           description: The link expired without payment.
           content:
@@ -13653,12 +13683,16 @@ paths:
       operationId: payinCollect
       summary: Active collection (pull)
       deprecated: true
-      description: 'Charges the payer directly in corridors that support pull collections.
-        **No pull collection corridor is currently available** (Venezuela `c2p` /
-        `debito_inmediato` was retired): calls answer that the corridor is not supported.
-        Synchronous: if the charge is approved the deposit converts at your
-        current `payin_rate` and is credited in the same call, net of the payin fee. If the payer declines,
-        `paid` is false, the payin is marked failed and nothing is charged.'
+      description: >-
+        Charges the payer directly in corridors that support pull collections.
+        The platform requires an idempotency key and screens the payer before
+        calling the core/provider. A PEP/firewall hold returns `202 in_review`
+        without charging; approval only releases the review and the client must
+        retry with the same idempotency context. A timeout or 5xx leaves the
+        payin pending for webhook reconciliation and is never resent automatically.
+        A document-only payer is screened as `document_value`/`idNumber`, separate
+        from `name`. Synchronous approval credits the deposit at the marked
+        `payin_rate`, net of the payin fee.
       requestBody:
         required: true
         content:
@@ -13676,8 +13710,7 @@ paths:
                   type: string
                 method:
                   type: string
-                  description: Collection method of the pull corridor (none currently
-                    available).
+                  description: Collection method of the configured pull corridor.
                 amount:
                   type: string
                   description: Local amount as a positive decimal string.
@@ -13819,8 +13852,8 @@ paths:
       summary: Request a collection OTP
       deprecated: true
       description: Requests the one-time password some pull methods need before the charge.
-        Free of charge. **No pull collection corridor is currently available**
-        (Venezuela `c2p` / `debito_inmediato` was retired).
+        Free of charge. The pull option must be materialized first and the final
+        collect call remains subject to pre-charge screening.
       requestBody:
         required: true
         content:
