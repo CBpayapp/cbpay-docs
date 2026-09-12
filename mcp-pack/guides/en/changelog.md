@@ -8,7 +8,20 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.75 · 1 version - September 12, 2026
+## v2.76 · 2 versions - September 12, 2026
+
+### v2.76
+
+**Changed**
+
+- **Payout technical screening queue**: when beneficiary screening is
+  temporarily unavailable but the queue is available, `POST /v1/payouts`
+  returns `202` with `status: pending_compliance`,
+  `status_code: compliance_pending`, `compliance_pending: true` and
+  `funds_debited: false`. No hold, ledger entry, core dispatch or receipt is
+  created while it waits. Replaying the same idempotency key returns the same
+  payout. `process` continues normally, a valid `hold` enters the firewall,
+  and `rejected` ends the queued payout as `failed` without a debit.
 
 ### v2.75
 

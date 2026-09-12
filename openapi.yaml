@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.74"
+  version: "2.76"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3299,7 +3299,9 @@ paths:
 
 
         Requires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key
-        returns the original payout (`200` with `idempotency_hit: true`).'
+        returns the original payout (`200` with `idempotency_hit: true`).
+
+        If technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3743,39 +3745,72 @@ paths:
                   idempotency_key: cl-btc-0192
       responses:
         '202':
-          description: Payout accepted and dispatching.
+          description: Payout accepted. It may be dispatched after a successful compliance screening, or it may wait in the technical screening queue before any debit or core dispatch.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payout'
-              example: &id005
-                payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                idempotency_key: invoice-8841
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                local_amount: '1500.00'
-                fx_rate: '17.50'
-                usdt_amount: '85.714286'
-                fee: '0.300000'
-                total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
-                settlement_rate: '1'
-                beneficiary: &id004
-                  name: Maria Lopez
-                  account_type: clabe
-                  account_number: 012180001234567895
-                description: Invoice 8841
-                status: processing
-                status_code: ''
-                status_message: ''
-                bank_reference: ''
-                created_at: '2026-07-07T12:00:00Z'
-                updated_at: '2026-07-07T12:00:00Z'
+              examples:
+                processing:
+                  summary: A payout waiting in the technical screening queue before any debit or core dispatch.
+                  value: &id005
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: &id004
+                      name: Maria Lopez
+                      account_type: clabe
+                      account_number: 012180001234567895
+                    description: Invoice 8841
+                    status: processing
+                    status_code: ''
+                    status_message: ''
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:00Z'
+                pending_compliance:
+                  summary: The payout was accepted and is either dispatching after screening or waiting in the technical screening queue.
+                  description: Technical screening is pending before any debit or core dispatch.
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: *id004
+                    description: Invoice 8841
+                    status: pending_compliance
+                    status_code: compliance_pending
+                    status_message: ''
+                    funds_debited: false
+                    compliance_pending: true
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:00Z'
         '200':
-          description: Idempotency replay of an existing payout.
+          description: Idempotency replay of an existing payout....
           content:
             application/json:
               schema:
@@ -22435,13 +22470,22 @@ components:
           type: string
           enum:
           - pending
+          - pending_compliance
           - processing
           - completed
           - failed
+          description: '`pending_compliance` means technical beneficiary screening is queued before any debit or core dispatch.'
         status_code:
           type: string
+          description: '`compliance_pending` accompanies `pending_compliance`.'
         status_message:
           type: string
+        funds_debited:
+          type: boolean
+          description: 'False while `status` is `pending_compliance`.'
+        compliance_pending:
+          type: boolean
+          description: 'True while technical screening is queued before any debit or core dispatch.'
         bank_reference:
           type: string
           description: Bank/rail transaction reference (e.g. the bank's transfer id, which the beneficiary can use to cross-check the payment with their bank). On US ACH/wire/SWIFT it is the CBF reference returned immediately at create; on other corridors it stays empty until the rail reports it.

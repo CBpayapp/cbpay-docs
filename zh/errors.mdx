@@ -128,7 +128,7 @@ description: "错误格式与完整的错误码目录"
 | `invalid_settlement_hours` | `settlement_hours` 仅支持 `payin_card` 费用服务，且必须是非负整数（`0` = 立即入账）— 参见[费用](/zh/concepts/fees) |
 | `invalid_country` | 国家/地区代码格式错误或缺失——ISO 3166-1 alpha-2（例如 `GET /v1/aml/catalogs/cities?country=`）；也用于有效但不支持的国家/地区过滤条件（例如在银行目录查询中传入非 `US` 的 `country`） |
 
-### 资金与状态（402 / 404 / 409 / 422）
+### 资金与状态（402 / 404 / 409 / 422 / 429）
 
 | HTTP | `error` | 含义 |
 |---|---|---|
@@ -155,6 +155,11 @@ description: "错误格式与完整的错误码目录"
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
 | 422 | `currency_not_supported` | 该货币没有汇率 |
 | 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 |
+| 400 | `invalid_payload` | 对于 `method: "card"`，`expires_at` 必须是 RFC3339，至少提前 15 分钟且不超过 48 小时 |
+| 429 | `too_many_open_card_sessions` | 账户已有 50 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |
+| 503 | `card_recovery_pending` | 平台正在核对一笔结果不明确的银行卡收款。请使用**相同**幂等键重试；不要生成新键或第二笔收款 |
+| 503 | `card_reuse_unavailable` | 平台无法核对现有的开放银行卡收款。请使用**相同**幂等键重试原始请求；不要创建第二笔收款 |
+| 503 | `core_reuse_unavailable` | core 未返回完整且可恢复的银行卡会话。请使用**相同**幂等键重试原始请求 |
 | 422 | `recipient_unavailable` | 目标账户无法接收 |
 | 422 | `recipient_ambiguous` | 多个账户共用该 `to_phone` 号码（请使用 `to_account_id` 或 `to_email`） |
 | 422 | `contact_not_linked` | 该联系人没有可转账的已关联 CBPay 账户 |
@@ -185,6 +190,7 @@ description: "错误格式与完整的错误码目录"
 | 422 | `collect_rejected` | 通道拒绝了链接的拉取式扣款（OTP 无效或数据错误）；链接保持待支付 |
 | 422 | `settlement_asset_disabled` | 收款链接的 `settlement_asset` 已被您的组织禁用 |
 | 422 | `checkout_amount_mismatch` | CBPay 转账不足以覆盖收款链接的当前应付额；错误消息附带最新金额 |
+| 503 | `checkout_recovery_pending` | 所选 checkout 支付选项正在核对。请重试相同的物化请求；不要创建第二个支付选项 |
 | 422 | `stored_card_revoked` | [已保存的卡片](/zh/guides/stored-cards-subscriptions)已被撤销；不再接受扣款 |
 | 422 | `verification_required` | [QR Crypto POS](/zh/guides/qr-pos)：用商户已批准的第三方 KYC/KYB 的 `verification_id` 注册商户 |
 | 422 | `merchant_disabled` | [QR Crypto POS](/zh/guides/qr-pos) 商户已停用；先重新启用再生成收款 |
@@ -205,6 +211,8 @@ description: "错误格式与完整的错误码目录"
 | 422 | `refund_exceeds_payin` | [退款](/zh/guides/refunds)超过该收款的剩余可退金额；余额未变动 |
 | 422 | `settlement_pending` | 该收款的余额仍在[结算](/zh/concepts/fees#银行卡收款结算延迟)排期中，释放（到达 `settle_at` 或由组织管理员释放）前无法[退款](/zh/guides/refunds) |
 | 400 | `invalid_amount` | [退款](/zh/guides/refunds)的 `amount` 必须是以收款币种表示的正十进制数 |
+| 503 | `refund_event_pending` | 退款结果已保存，但最终事件仍在持久化。请使用**相同**幂等键重试；不要发送第二笔退款 |
+| 503 | `payin_event_pending` | 收款已入账，但最终事件仍在核对中。请使用**相同**幂等键重试；不要创建新的收款 |
 
 ### 合规（403 / 503）
 
@@ -212,7 +220,7 @@ description: "错误格式与完整的错误码目录"
 |---|---|---|
 | 403 | `compliance_hold` | 该操作已被平台的合规控制拦截。这不是请求错误：请携带时间戳联系支持团队 — 根据政策，不会披露具体原因 |
 | 403 | `geo_restricted` | 该服务或操作不适用于发起方或交易对手所在的司法辖区 |
-| 503 | `compliance_check_unavailable` | 合规检查暂时无法执行；操作**未**发出 — 请使用**相同的**幂等键重试 |
+| 503 | `compliance_check_unavailable` | 合规校验无法完成，且 payout 无法写入 pending 队列；请使用**相同**幂等键重试。该 payout 队列可用时，`POST /v1/payouts` 会返回 `202 pending_compliance`。其他校验和安全错误仍使用各自代码 |
 | 422 | `travel_rule_required` | 超过 Travel Rule 阈值的链上提现缺少受益人数据 — 补充 `travel_address` 或 `wallet_type: "self_hosted"` + `beneficiary_name`（[加密货币指南](/zh/guides/crypto)） |
 | 422 | `travel_rule_beneficiary_required` | 适用 Travel Rule 的提现缺少 `beneficiary_name` |
 | 422 | `travel_rule_address_mismatch` | 您的 `to_address` 与收款机构批准的付款地址不一致 — 省略它或使用交换返回的地址 |

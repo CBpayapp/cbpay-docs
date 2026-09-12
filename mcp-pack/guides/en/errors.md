@@ -127,7 +127,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_settlement_hours` | `settlement_hours` is only accepted on the `payin_card` fee service and must be a non-negative integer (`0` = immediate credit) — see [fees](https://docs.cbpayapp.com/en/concepts/fees) |
 | `invalid_country` | Malformed or missing country code — ISO 3166-1 alpha-2 (e.g. `GET /v1/aml/catalogs/cities?country=`); also a valid but unsupported country filter (e.g. a non-`US` `country` on the bank directory lookup) |
 
-### Money and state (402 / 404 / 409 / 422)
+### Money and state (402 / 404 / 409 / 422 / 429)
 
 | HTTP | `error` | Meaning |
 |---|---|---|
@@ -154,6 +154,11 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | `core_rejected` | The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` |
+| 400 | `invalid_payload` | For `method: "card"`, `expires_at` must be RFC3339, at least 15 minutes ahead and no more than 48 hours ahead |
+| 429 | `too_many_open_card_sessions` | The account has 50 open card sessions and no unused, zero-attempt pending session can be evicted — complete or wait for an existing session to expire before creating another |
+| 503 | `card_recovery_pending` | The platform is reconciling an ambiguous card request. Retry with the **same** idempotency key; do not create a new key or a second charge |
+| 503 | `card_reuse_unavailable` | The platform could not verify an existing open card payment. Retry the original request with the **same** idempotency key; do not create a second charge |
+| 503 | `core_reuse_unavailable` | The core did not return a complete recoverable card session. Retry the original request with the **same** idempotency key |
 | 422 | `recipient_unavailable` | The destination account cannot receive |
 | 422 | `recipient_ambiguous` | More than one account shares the `to_phone` number (use `to_account_id` or `to_email`) |
 | 422 | `contact_not_linked` | The contact has no linked CBPay account to transfer to |
@@ -184,6 +189,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 422 | `collect_rejected` | The rail rejected the link's pull charge (invalid OTP or wrong data); the link stays pending |
 | 422 | `settlement_asset_disabled` | The checkout link's `settlement_asset` is disabled for your organization |
 | 422 | `checkout_amount_mismatch` | The CBPay transfer does not cover the checkout link's current due; the message carries the updated amount |
+| 503 | `checkout_recovery_pending` | The selected checkout payment option is being reconciled. Retry the same materialization request; do not create a second payment option |
 | 422 | `stored_card_revoked` | The [saved card](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) is revoked; it no longer accepts charges |
 | 422 | `verification_required` | [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos): register the merchant with the `verification_id` of their approved third-party KYC/KYB |
 | 422 | `merchant_disabled` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) merchant is disabled; re-enable it before charging |
@@ -204,6 +210,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 422 | `refund_exceeds_payin` | The [refund](https://docs.cbpayapp.com/en/guides/refunds) exceeds what is left to refund on the payin; your balance was not touched |
 | 422 | `settlement_pending` | The payin's balance is still scheduled for [settlement](https://docs.cbpayapp.com/en/concepts/fees#card-payin-settlement-delay) and cannot be [refunded](https://docs.cbpayapp.com/en/guides/refunds) until it is released (at `settle_at` or by an org-admin release) |
 | 400 | `invalid_amount` | The [refund](https://docs.cbpayapp.com/en/guides/refunds) `amount` must be a positive decimal in the payin currency |
+| 503 | `refund_event_pending` | The refund result is stored, but its final event is still being persisted. Retry with the **same** idempotency key; do not send a new refund |
+| 503 | `payin_event_pending` | The payin is credited, but its final event is still being reconciled. Retry with the **same** idempotency key; do not create a new payin |
 
 ### Compliance (403 / 503)
 
@@ -211,7 +219,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 |---|---|---|
 | 403 | `compliance_hold` | The operation was held by the platform's compliance controls. It is not a request error: contact support with the timestamp — by policy the exact reason is not disclosed |
 | 403 | `geo_restricted` | The service or the operation is not available for the origin or counterparty jurisdiction |
-| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated; the operation did NOT go out — retry with the **same** idempotency key |
+| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in its pending queue; retry with the **same** idempotency key. When that payout queue is available, `POST /v1/payouts` returns `202 pending_compliance` instead. Other validation and security errors keep their own codes |
 | 422 | `travel_rule_required` | On-chain withdrawal above the Travel Rule threshold without beneficiary data — add `travel_address` or `wallet_type: "self_hosted"` + `beneficiary_name` ([crypto guide](https://docs.cbpayapp.com/en/guides/crypto)) |
 | 422 | `travel_rule_beneficiary_required` | `beneficiary_name` is missing on a withdrawal subject to the Travel Rule |
 | 422 | `travel_rule_address_mismatch` | Your `to_address` does not match the payment address approved by the receiving institution — omit it or use the one from the exchange |

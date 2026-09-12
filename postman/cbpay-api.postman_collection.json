@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds four independent\nvirtual balances — USDT (the operating currency), USDC, BTC and GOLD\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the four balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-11 06:28 UTC",
-    "_content_sha256": "123859430d6a03a61a158ee1583f118b9d4f9acac47bb0940af8e34300bd2761"
+    "_generated_at": "2026-09-12 05:04 UTC",
+    "_content_sha256": "2be0a942e959fa0bae7e60043e964151929694c879d948bf2c226beed9f29da3"
   },
   "auth": {
     "type": "bearer",
@@ -9361,7 +9361,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"payouts\": [\n    {\n      \"payout_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"idempotency_key\": \"invoice-8841\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"local_amount\": \"1500.00\",\n      \"fx_rate\": \"17.50\",\n      \"usdt_amount\": \"85.714286\",\n      \"fee\": \"0.300000\",\n      \"total_debit\": \"86.014286\",\n      \"settlement_asset\": \"USDT\",\n      \"settlement_amount\": \"86.014286\",\n      \"settlement_rate\": \"1\",\n      \"beneficiary\": {\n        \"name\": \"Maria Lopez\",\n        \"account_type\": \"clabe\",\n        \"account_number\": \"012180001234567895\"\n      },\n      \"description\": \"Invoice 8841\",\n      \"status\": \"processing\",\n      \"status_code\": \"\",\n      \"status_message\": \"\",\n      \"bank_reference\": \"\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"payouts\": [\n    {\n      \"payout_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"idempotency_key\": \"invoice-8841\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"local_amount\": \"1500.00\",\n      \"fx_rate\": \"17.50\",\n      \"usdt_amount\": \"85.714286\",\n      \"fee\": \"0.300000\",\n      \"total_debit\": \"86.014286\",\n      \"settlement_asset\": \"USDT\",\n      \"settlement_amount\": \"86.014286\",\n      \"settlement_rate\": \"1\",\n      \"beneficiary\": {\n        \"name\": \"Maria Lopez\",\n        \"account_type\": \"clabe\",\n        \"account_number\": \"012180001234567895\"\n      },\n      \"description\": \"Invoice 8841\",\n      \"status\": \"processing\",\n      \"status_code\": \"\",\n      \"status_message\": \"\",\n      \"funds_debited\": true,\n      \"compliance_pending\": false,\n      \"bank_reference\": \"\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -9390,7 +9390,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"100000\",\n  \"beneficiary\": {\n    \"name\": \"Pedro Soto Fuentes\",\n    \"tax_id\": \"12.345.678-5\",\n    \"bank_code\": \"012\",\n    \"account_type\": \"checking\",\n    \"account_number\": \"123456789\"\n  },\n  \"description\": \"Supplier payment\",\n  \"idempotency_key\": \"cl-prov-0091\"\n}",
@@ -9403,7 +9403,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9417,7 +9417,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9455,7 +9455,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"PE\",\n  \"currency\": \"PEN\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"1000.00\",\n  \"beneficiary\": {\n    \"name\": \"Rosa Alvarez Diaz\",\n    \"account_number\": \"00219300123456789012\"\n  },\n  \"idempotency_key\": \"pe-cci-3310\"\n}",
@@ -9468,7 +9468,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9482,7 +9482,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9520,7 +9520,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"PE\",\n  \"currency\": \"PEN\",\n  \"method\": \"yape\",\n  \"amount\": \"150.00\",\n  \"beneficiary\": {\n    \"name\": \"Luis Ramos Vega\",\n    \"phone\": \"51987654321\"\n  },\n  \"idempotency_key\": \"pe-yape-8874\"\n}",
@@ -9533,7 +9533,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9547,7 +9547,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9585,7 +9585,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"1500.00\",\n  \"beneficiary\": {\n    \"name\": \"Maria Lopez\",\n    \"account_type\": \"clabe\",\n    \"account_number\": \"012180001234567895\"\n  },\n  \"idempotency_key\": \"mx-clabe-8841\"\n}",
@@ -9598,7 +9598,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9612,7 +9612,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9650,7 +9650,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"800.00\",\n  \"beneficiary\": {\n    \"name\": \"Jorge Herrera\",\n    \"account_type\": \"debit_card\",\n    \"account_number\": \"4152313412341234\",\n    \"bank_code\": \"40012\"\n  },\n  \"idempotency_key\": \"mx-card-1102\"\n}",
@@ -9663,7 +9663,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9677,7 +9677,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9715,7 +9715,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"VE\",\n  \"currency\": \"VES\",\n  \"method\": \"pago_movil\",\n  \"amount\": \"2000.00\",\n  \"beneficiary\": {\n    \"name\": \"Carmen Delgado\",\n    \"phone\": \"04141234567\",\n    \"bank_code\": \"0102\",\n    \"document_value\": \"V12345678\"\n  },\n  \"idempotency_key\": \"ve-pm-5567\"\n}",
@@ -9728,7 +9728,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9742,7 +9742,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9780,7 +9780,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"VE\",\n  \"currency\": \"VES\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"5000.00\",\n  \"beneficiary\": {\n    \"name\": \"Carmen Delgado\",\n    \"account_number\": \"01020123456789012345\",\n    \"document_value\": \"V87654321\"\n  },\n  \"idempotency_key\": \"ve-bank-7810\"\n}",
@@ -9793,7 +9793,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9807,7 +9807,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9845,7 +9845,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"1382.00\",\n  \"beneficiary\": {\n    \"name\": \"Juan Quispe Mamani\",\n    \"tax_id\": \"4567890\",\n    \"bank_code\": \"1016\",\n    \"account_number\": \"1234567890\"\n  },\n  \"idempotency_key\": \"bo-ach-2204\"\n}",
@@ -9858,7 +9858,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9872,7 +9872,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9910,7 +9910,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"BR\",\n  \"currency\": \"BRL\",\n  \"method\": \"pix\",\n  \"amount\": \"350.00\",\n  \"beneficiary\": {\n    \"name\": \"João da Silva\",\n    \"tax_id\": \"123.456.789-69\",\n    \"pix_key_type\": \"cpf\",\n    \"pix_key\": \"12345678909\"\n  },\n  \"idempotency_key\": \"br-pix-3321\"\n}",
@@ -9923,7 +9923,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -9937,7 +9937,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -9975,7 +9975,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"EC\",\n  \"currency\": \"USD\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"250.00\",\n  \"beneficiary\": {\n    \"name\": \"Carlos Andrade Vera\",\n    \"document_value\": \"1712345678\",\n    \"account_number\": \"2203456789\",\n    \"sender_name\": \"Ana Torres Silva\",\n    \"sender_document_value\": \"V23456789\",\n    \"sender_country\": \"US\"\n  },\n  \"idempotency_key\": \"ec-bank-4471\"\n}",
@@ -9988,7 +9988,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10002,7 +10002,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10040,7 +10040,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"EC\",\n  \"currency\": \"USD\",\n  \"method\": \"deuna\",\n  \"amount\": \"80.00\",\n  \"beneficiary\": {\n    \"name\": \"Lucia Paredes Mora\",\n    \"document_value\": \"0923456781\",\n    \"phone\": \"0998765432\",\n    \"sender_name\": \"Ana Torres Silva\"\n  },\n  \"idempotency_key\": \"ec-deuna-5520\"\n}",
@@ -10053,7 +10053,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10067,7 +10067,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10105,7 +10105,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"EC\",\n  \"currency\": \"USD\",\n  \"method\": \"cash_pickup\",\n  \"amount\": \"120.00\",\n  \"beneficiary\": {\n    \"name\": \"Miguel Zambrano Loor\",\n    \"document_value\": \"1309876543\",\n    \"sender_name\": \"Ana Torres Silva\"\n  },\n  \"idempotency_key\": \"ec-cash-6612\"\n}",
@@ -10118,7 +10118,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10132,7 +10132,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10170,7 +10170,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"EC\",\n  \"currency\": \"USD\",\n  \"method\": \"cnb\",\n  \"amount\": \"60.00\",\n  \"beneficiary\": {\n    \"name\": \"Rosa Cedeño Vera\",\n    \"document_value\": \"0801234567\",\n    \"sender_name\": \"Ana Torres Silva\"\n  },\n  \"idempotency_key\": \"ec-cnb-7703\"\n}",
@@ -10183,7 +10183,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10197,7 +10197,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10235,7 +10235,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"PY\",\n  \"currency\": \"PYG\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"500000\",\n  \"beneficiary\": {\n    \"name\": \"Sofia Benitez\",\n    \"tax_id\": \"4123456\",\n    \"bank_code\": \"0011\",\n    \"account_number\": \"600123456\"\n  },\n  \"idempotency_key\": \"py-bank-9917\"\n}",
@@ -10248,7 +10248,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10262,7 +10262,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10300,7 +10300,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"AR\",\n  \"currency\": \"ARS\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"50000.00\",\n  \"beneficiary\": {\n    \"name\": \"Julieta Fernandez\",\n    \"tax_id\": \"27-23456789-1\",\n    \"account_number\": \"2850590940090418135201\"\n  },\n  \"idempotency_key\": \"ar-ars-3311\"\n}",
@@ -10313,7 +10313,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10327,7 +10327,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10365,7 +10365,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"AR\",\n  \"currency\": \"USD\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"100.00\",\n  \"beneficiary\": {\n    \"name\": \"Julieta Fernandez\",\n    \"tax_id\": \"27-23456789-1\",\n    \"account_number\": \"2850590940090418135201\"\n  },\n  \"idempotency_key\": \"ar-usd-3312\"\n}",
@@ -10378,7 +10378,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10392,7 +10392,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10430,7 +10430,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"ach\",\n  \"amount\": \"250.00\",\n  \"beneficiary\": {\n    \"name\": \"John Carter\",\n    \"email\": \"john.carter@example.com\",\n    \"account_number\": \"123456789012\",\n    \"account_type\": \"CHECKING\",\n    \"country_code\": \"US\",\n    \"address\": \"1200 Brickell Ave\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"postal_code\": \"33131\",\n    \"bank_name\": \"Example Bank\",\n    \"bank_code\": \"021000089\",\n    \"bank_address\": \"500 Main Street\",\n    \"bank_city\": \"New York\",\n    \"bank_state\": \"NY\",\n    \"bank_postal_code\": \"10001\",\n    \"bank_country\": \"US\"\n  },\n  \"description\": \"Invoice 2210\",\n  \"idempotency_key\": \"us-ach-2210\"\n}",
@@ -10443,7 +10443,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10457,7 +10457,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10495,7 +10495,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"ach\",\n  \"amount\": \"480.00\",\n  \"beneficiary\": {\n    \"name\": \"Anna Schmidt\",\n    \"email\": \"anna.schmidt@example.com\",\n    \"account_number\": \"123456789012\",\n    \"account_type\": \"CHECKING\",\n    \"country_code\": \"DE\",\n    \"address\": \"Friedrichstrasse 100\",\n    \"city\": \"Berlin\",\n    \"postal_code\": \"10117\",\n    \"bank_name\": \"Example Bank\",\n    \"bank_code\": \"021000089\",\n    \"bank_address\": \"500 Main Street\",\n    \"bank_city\": \"New York\",\n    \"bank_state\": \"NY\",\n    \"bank_postal_code\": \"10001\",\n    \"bank_country\": \"US\"\n  },\n  \"description\": \"Invoice 2215\",\n  \"idempotency_key\": \"us-ach-2215\"\n}",
@@ -10508,7 +10508,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10522,7 +10522,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10560,7 +10560,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"wire\",\n  \"amount\": \"1000.00\",\n  \"beneficiary\": {\n    \"name\": \"John Carter\",\n    \"email\": \"john.carter@example.com\",\n    \"account_number\": \"123456789012\",\n    \"country_code\": \"US\",\n    \"address\": \"1200 Brickell Ave\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"postal_code\": \"33131\",\n    \"bank_name\": \"Example Bank\",\n    \"bank_code\": \"021000089\",\n    \"bank_address\": \"500 Main Street\",\n    \"bank_city\": \"New York\",\n    \"bank_state\": \"NY\",\n    \"bank_postal_code\": \"10001\",\n    \"bank_country\": \"US\",\n    \"bank_phone\": \"+12125550100\"\n  },\n  \"description\": \"Invoice 2211\",\n  \"idempotency_key\": \"us-wire-2211\"\n}",
@@ -10573,7 +10573,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10587,7 +10587,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10625,7 +10625,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"swift\",\n  \"amount\": \"1000.00\",\n  \"beneficiary\": {\n    \"name\": \"John Carter\",\n    \"email\": \"john.carter@example.com\",\n    \"account_number\": \"123456789012\",\n    \"country_code\": \"US\",\n    \"address\": \"1200 Brickell Ave\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"postal_code\": \"33131\",\n    \"bank_name\": \"Example Bank\",\n    \"bank_code\": \"CHASUS33XXX\",\n    \"bank_country\": \"US\"\n  },\n  \"description\": \"Invoice 2212\",\n  \"idempotency_key\": \"us-swift-2212\"\n}",
@@ -10638,7 +10638,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10652,7 +10652,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -10690,7 +10690,7 @@
                 "payouts"
               ]
             },
-            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).",
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"100000\",\n  \"beneficiary\": {\n    \"name\": \"Pedro Soto Fuentes\",\n    \"tax_id\": \"12.345.678-5\",\n    \"bank_code\": \"012\",\n    \"account_type\": \"checking\",\n    \"account_number\": \"123456789\"\n  },\n  \"settlement_asset\": \"BTC\",\n  \"idempotency_key\": \"cl-btc-0192\"\n}",
@@ -10703,7 +10703,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotency replay of an existing payout.",
+              "name": "200 Idempotency replay of an existing payout....",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -10717,7 +10717,7 @@
                   ]
                 }
               },
-              "status": "Idempotency replay of an existing payout.",
+              "status": "Idempotency replay of an existing payout....",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -11344,6 +11344,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11356,7 +11361,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"qr\",\n  \"amount\": \"700.00\",\n  \"description\": \"App top-up\",\n  \"expires_in\": 3600\n}",
@@ -11404,6 +11409,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11416,7 +11426,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"BR\",\n  \"currency\": \"BRL\",\n  \"method\": \"qr\",\n  \"amount\": \"120.00\",\n  \"description\": \"Order 7719\",\n  \"expires_in\": 1800\n}",
@@ -11464,6 +11474,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11476,7 +11491,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"500000\",\n  \"payer_document\": \"17438319-7\",\n  \"idempotency_key\": \"topup-9912\"\n}",
@@ -11524,6 +11539,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11536,7 +11556,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"PY\",\n  \"currency\": \"PYG\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"596000\"\n}",
@@ -11584,6 +11604,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11596,7 +11621,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"1250.00\",\n  \"payer_name\": \"Acme Holdings LLC\",\n  \"idempotency_key\": \"invoice-1042\"\n}",
@@ -11644,6 +11669,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11656,7 +11686,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"fintoc\",\n  \"amount\": \"150000\",\n  \"description\": \"Top-up order 8841\",\n  \"idempotency_key\": \"topup-8841\"\n}",
@@ -11704,6 +11734,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11716,10 +11751,10 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"card\",\n  \"amount\": \"700.00\",\n  \"description\": \"App top-up\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\"\n  },\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"idempotency_key\": \"topup-7719\"\n}",
+              "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"card\",\n  \"amount\": \"700.00\",\n  \"description\": \"App top-up\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\"\n  },\n  \"payer_reference\": \"customer-7719\",\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"idempotency_key\": \"topup-7719\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -11764,6 +11799,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11776,7 +11816,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"card\",\n  \"amount\": \"49.90\",\n  \"description\": \"Pro plan\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\"\n  },\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"save_card\": true,\n  \"payer_reference\": \"customer-7719\",\n  \"idempotency_key\": \"pro-plan-7719\"\n}",
@@ -11824,6 +11864,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11836,7 +11881,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"method\": \"checkout\",\n  \"amount\": \"50\",\n  \"settlement_asset\": \"USDT\",\n  \"description\": \"Order 8841\",\n  \"country\": \"CL\",\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"expires_in\": 86400,\n  \"idempotency_key\": \"order-8841\"\n}",
@@ -11884,6 +11929,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
               }
             ],
             "url": {
@@ -11896,7 +11946,7 @@
                 "payins"
               ]
             },
-            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
+            "description": "Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"method\": \"checkout\",\n  \"amount\": \"0.001\",\n  \"settlement_asset\": \"BTC\",\n  \"description\": \"Invoice 2210\",\n  \"idempotency_key\": \"invoice-2210\"\n}",

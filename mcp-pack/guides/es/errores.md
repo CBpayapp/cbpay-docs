@@ -127,7 +127,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_settlement_hours` | `settlement_hours` solo se acepta en el servicio de comisión `payin_card` y debe ser un entero no negativo (`0` = acreditación inmediata) — ver [comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones) |
 | `invalid_country` | Código de país mal formado o ausente — ISO 3166-1 alpha-2 (ej. `GET /v1/aml/catalogs/cities?country=`); también un filtro de país válido pero no soportado (ej. un `country` distinto de `US` en el lookup del directorio bancario) |
 
-### Dinero y estado (402 / 404 / 409 / 422)
+### Dinero y estado (402 / 404 / 409 / 422 / 429)
 
 | HTTP | `error` | Significado |
 |---|---|---|
@@ -154,6 +154,11 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 422 | `currency_not_supported` | Sin tasa FX para esa moneda |
 | 422 | `core_rejected` | El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` |
+| 400 | `invalid_payload` | En `method: "card"`, `expires_at` debe ser RFC3339, quedar al menos 15 minutos hacia adelante y no superar 48 horas |
+| 429 | `too_many_open_card_sessions` | La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o espera que venza una sesión existente antes de crear otra |
+| 503 | `card_recovery_pending` | La plataforma está reconciliando un cobro con tarjeta ambiguo. Reintenta con la **misma** clave de idempotencia; no generes una nueva ni un segundo cobro |
+| 503 | `card_reuse_unavailable` | La plataforma no pudo verificar un cobro con tarjeta abierto existente. Reintenta la solicitud original con la **misma** clave de idempotencia; no crees un segundo cobro |
+| 503 | `core_reuse_unavailable` | El core no devolvió una sesión de tarjeta completa y recuperable. Reintenta la solicitud original con la **misma** clave de idempotencia |
 | 422 | `recipient_unavailable` | La cuenta destino no puede recibir |
 | 422 | `recipient_ambiguous` | Más de una cuenta comparte el teléfono de `to_phone` (usa `to_account_id` o `to_email`) |
 | 422 | `contact_not_linked` | El contacto no tiene cuenta CBPay asociada para transferirle |
@@ -185,6 +190,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 422 | `collect_rejected` | El rail rechazó el cobro pull del link (OTP inválida o datos incorrectos); el link sigue pendiente |
 | 422 | `settlement_asset_disabled` | El `settlement_asset` del link de cobro está deshabilitado para tu organización |
 | 422 | `checkout_amount_mismatch` | La transferencia CBPay no cubre el monto vigente del link de cobro; el mensaje trae el monto actualizado |
+| 503 | `checkout_recovery_pending` | La opción de pago elegida en el checkout está en reconciliación. Reintenta la misma solicitud de materialización; no crees una segunda opción de pago |
 | 422 | `stored_card_revoked` | La [tarjeta guardada](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions) está revocada; no acepta más cobros |
 | 422 | `verification_required` | [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos): registra al merchant con el `verification_id` de su KYC/KYB de terceros aprobado |
 | 422 | `merchant_disabled` | El merchant [QR Crypto POS](https://docs.cbpayapp.com/es/guias/qr-pos) está deshabilitado; reactívalo antes de generar cobros |
@@ -205,6 +211,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 422 | `refund_exceeds_payin` | La [devolución](https://docs.cbpayapp.com/es/guias/devoluciones) supera lo que queda por devolver del cobro; tu saldo no se tocó |
 | 422 | `settlement_pending` | El saldo del cobro sigue programado para [settlement](https://docs.cbpayapp.com/es/conceptos/comisiones#settlement-de-payins-con-tarjeta) y no se puede [devolver](https://docs.cbpayapp.com/es/guias/devoluciones) hasta liberarse (a `settle_at` o por liberación del admin de la organización) |
 | 400 | `invalid_amount` | El `amount` de la [devolución](https://docs.cbpayapp.com/es/guias/devoluciones) debe ser un decimal positivo en la moneda del cobro |
+| 503 | `refund_event_pending` | El resultado de la devolución quedó guardado, pero todavía se está persistiendo su evento final. Reintenta con la **misma** clave de idempotencia; no envíes otra devolución |
+| 503 | `payin_event_pending` | El payin quedó acreditado, pero su evento final todavía se está reconciliando. Reintenta con la **misma** clave de idempotencia; no crees un nuevo payin |
 
 ### Cumplimiento (403 / 503)
 
@@ -212,7 +220,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 |---|---|---|
 | 403 | `compliance_hold` | La operación fue retenida por los controles de cumplimiento de la plataforma. No es un error de tu request: contacta a soporte con el timestamp — por política no se informa la razón exacta |
 | 403 | `geo_restricted` | El servicio o la operación no están disponibles para la jurisdicción de origen o de la contraparte |
-| 503 | `compliance_check_unavailable` | La verificación de cumplimiento no se pudo evaluar; la operación NO salió — reintenta con la **misma** clave de idempotencia |
+| 503 | `compliance_check_unavailable` | No se pudo evaluar compliance y el payout no pudo guardarse en su cola pendiente; reintenta con la **misma** idempotency key. Cuando la cola está disponible, `POST /v1/payouts` devuelve `202 pending_compliance`. Los demás errores de validación y seguridad conservan sus códigos |
 | 422 | `travel_rule_required` | Retiro on-chain sobre el umbral Travel Rule sin datos del beneficiario — agrega `travel_address` o `wallet_type: "self_hosted"` + `beneficiary_name` ([guía crypto](https://docs.cbpayapp.com/es/guias/crypto)) |
 | 422 | `travel_rule_beneficiary_required` | Falta `beneficiary_name` en un retiro sujeto a Travel Rule |
 | 422 | `travel_rule_address_mismatch` | Tu `to_address` no coincide con la dirección de pago aprobada por la institución receptora — omítela o usa la del intercambio |

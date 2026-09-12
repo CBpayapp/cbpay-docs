@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.74"
+  version: "2.76"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -3106,7 +3106,9 @@ paths:
         BTC/GOLD 的执行价格不可用,请求返回 `503 pricing_unavailable`;波动性资产还有单笔限额(`422 settlement_limit_exceeded`)。
 
 
-        必须提供幂等键(请求体字段或 `Idempotency-Key` 请求头)。使用相同键重试会返回原始 payout(`200` 且 `idempotency_hit: true`)。'
+        必须提供幂等键(请求体字段或 `Idempotency-Key` 请求头)。使用相同键重试会返回原始 payout(`200` 且 `idempotency_hit: true`)。
+
+        如果收款人技术筛查暂时不可用且 pending 队列可用，响应为 `202 pending_compliance`，不会先扣款或调用 core。'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3527,37 +3529,70 @@ paths:
                   idempotency_key: cl-btc-0192
       responses:
         '202':
-          description: payout 已受理并派发中。
+          description: Payout 已接受：筛查成功后派发，或在扣款和调用 core 之前等待技术筛查队列。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payout'
-              example: &id005
-                payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                idempotency_key: invoice-8841
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                local_amount: '1500.00'
-                fx_rate: '17.50'
-                usdt_amount: '85.714286'
-                fee: '0.300000'
-                total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
-                settlement_rate: '1'
-                beneficiary: &id004
-                  name: Maria Lopez
-                  account_type: clabe
-                  account_number: 012180001234567895
-                description: 发票 8841
-                status: processing
-                status_code: ''
-                status_message: ''
-                bank_reference: ''
-                created_at: '2026-07-07T12:00:00Z'
-                updated_at: '2026-07-07T12:00:00Z'
+              examples:
+                processing:
+                  summary: 在任何扣款或调用 core 之前等待技术筛查队列的 payout。
+                  value: &id005
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: &id004
+                      name: Maria Lopez
+                      account_type: clabe
+                      account_number: 012180001234567895
+                    description: Invoice 8841
+                    status: processing
+                    status_code: ''
+                    status_message: ''
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:00Z'
+                pending_compliance:
+                  summary: Payout 已接受：筛查后派发，或在技术队列中等待。
+                  description: 技术筛查在任何扣款或调用 core 之前等待。
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: *id004
+                    description: Invoice 8841
+                    status: pending_compliance
+                    status_code: compliance_pending
+                    status_message: ''
+                    funds_debited: false
+                    compliance_pending: true
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:00Z'
         '200':
           description: 既有 payout 的幂等重放。
           content:
@@ -21664,13 +21699,22 @@ components:
           type: string
           enum:
           - pending
+          - pending_compliance
           - processing
           - completed
           - failed
+          description: '`pending_compliance` 表示收款人技术筛查在任何扣款或调用 core 之前等待。'
         status_code:
           type: string
+          description: '`compliance_pending` 会随 `pending_compliance` 返回。'
         status_message:
           type: string
+        funds_debited:
+          type: boolean
+          description: '`status` 为 `pending_compliance` 时为 false。'
+        compliance_pending:
+          type: boolean
+          description: '技术筛查在任何扣款或调用 core 之前等待时为 true。'
         bank_reference:
           type: string
           description: 银行/支付渠道的交易参考号(受益人可用它与银行核对付款)。US ACH/wire/SWIFT 在创建时立即返回 CBF 参考号；其他通道在渠道报告之前为空。
