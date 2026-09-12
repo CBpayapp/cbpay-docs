@@ -362,3 +362,9 @@ description: "错误格式与完整的错误码目录"
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## 仅限平台的对账代码
+
+`core_transfer_mismatch`（`409`）是平台管理员内部对账代码，不属于客户
+账户 API。如果行政恢复响应中出现该代码，请停止恢复流程，对账 core 交易
+ID 与平台提现记录；不要使用新提现重试。

@@ -373,3 +373,11 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## Platform-only reconciliation code
+
+`core_transfer_mismatch` (`409`) is an internal platform-admin
+reconciliation code and is not part of the client account API. If it appears
+in an administrative recovery response, stop and reconcile the core
+transaction ID with the platform withdrawal record; do not retry with a new
+withdrawal.
