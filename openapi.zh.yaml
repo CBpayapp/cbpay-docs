@@ -26,7 +26,8 @@ security:
 - bearerAuth: []
 tags:
 - name: 凭证
-  description: 每笔操作的品牌化 PDF 凭证,附带公开的签名 QR 真伪校验、每个响应/webhook 中的 receipt_url,以及最终状态时的自动邮件发送。
+  description: 每笔操作的品牌化 PDF 凭证,附带公开的签名 QR 真伪校验、最终状态响应/webhook 中的 receipt_url,
+    以及最终状态时的自动邮件发送。扣款前处于 pending 的 payout 不会暴露 receipt_url。
 - name: 身份认证
   description: 注册与登录账户成员。会话有效期 24 小时。
 - name: 账户
@@ -3108,7 +3109,9 @@ paths:
 
         必须提供幂等键(请求体字段或 `Idempotency-Key` 请求头)。使用相同键重试会返回原始 payout(`200` 且 `idempotency_hit: true`)。
 
-        如果收款人技术筛查暂时不可用且 pending 队列可用，响应为 `202 pending_compliance`，不会先扣款或调用 core。'
+        如果收款人技术筛查暂时不可用且技术筛查队列可用，响应为 `202`，资源为
+        `status: pending`、`status_code: compliance_pending`、`compliance_pending: true`、
+        `funds_debited: false`，不会先扣款或调用 core。'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3565,7 +3568,7 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
-                pending_compliance:
+                technical_screening_pending:
                   summary: Payout 已接受：筛查后派发，或在技术队列中等待。
                   description: 技术筛查在任何扣款或调用 core 之前等待。
                   value:
@@ -3585,7 +3588,7 @@ paths:
                     settlement_rate: '1'
                     beneficiary: *id004
                     description: Invoice 8841
-                    status: pending_compliance
+                    status: pending
                     status_code: compliance_pending
                     status_message: ''
                     funds_debited: false
@@ -21699,19 +21702,18 @@ components:
           type: string
           enum:
           - pending
-          - pending_compliance
           - processing
           - completed
           - failed
-          description: '`pending_compliance` 表示收款人技术筛查在任何扣款或调用 core 之前等待。'
+          description: '`pending` 且 `compliance_pending: true` 表示收款人技术筛查在任何扣款或调用 core 之前等待。'
         status_code:
           type: string
-          description: '`compliance_pending` 会随 `pending_compliance` 返回。'
+          description: '`compliance_pending` 会随 pending 技术筛查状态返回。'
         status_message:
           type: string
         funds_debited:
           type: boolean
-          description: '`status` 为 `pending_compliance` 时为 false。'
+          description: '`status` 为 `pending` 且 `compliance_pending` 为 true 时为 false。'
         compliance_pending:
           type: boolean
           description: '技术筛查在任何扣款或调用 core 之前等待时为 true。'
@@ -21727,6 +21729,10 @@ components:
         idempotency_hit:
           type: boolean
           description: 当响应为幂等重放时为 true。
+        receipt_url:
+          type: string
+          format: uri
+          description: 仅在存在凭证时返回，通常在扣款并进入最终状态后出现。payout 在扣款前等待技术筛查时省略。
     Payin:
       type: object
       properties:

@@ -1,6 +1,6 @@
 ---
 title: "电子回单"
-description: "每笔操作的品牌化 PDF，附带二维码真伪校验、每个响应中的 receipt_url 以及自动邮件送达"
+description: "每笔操作的品牌化 PDF，附带二维码真伪校验、最终状态响应中的 receipt_url 以及自动邮件送达"
 slug: zh/guides/receipts
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/receipts
@@ -9,7 +9,9 @@ source_url: https://docs.cbpayapp.com/zh/guides/receipts
 
 你账户上的每笔操作 — 出款、入款、转账、加密货币充值与提现、兑换和银行卡消费 — 都有一份可下载的**品牌化 PDF 回单**：包含 logo、配色、操作状态，以及一个**带二维码的签名校验码**，任何人都可以公开查验以确认文档的真实性。
 
-无需自行构建：每笔操作的响应和 webhook 都包含可直接下载的 `receipt_url`，当操作到达最终状态时，回单还会**自动通过邮件**发送给账户所有者（可选择退订）。
+无需自行构建：最终状态的响应和 webhook 都包含可直接下载的
+`receipt_url`。扣款前处于技术筛查 pending 的 payout 不会暴露
+`receipt_url`；当操作到达最终状态时，回单还会**自动通过邮件**发送给账户所有者（可选择退订）。
 
 ```mermaid
 sequenceDiagram
@@ -17,7 +19,7 @@ sequenceDiagram
     participant API as CBPay API
     participant T as 第三方（回单接收者）
     C->>API: POST /v1/payouts
-    API-->>C: 201，包含 receipt_url
+    API-->>C: 202，资源（扣款/最终状态前不含 receipt_url）
     Note over API: 操作到达最终状态
     API-->>C: Webhook payout_status_changed（包含 receipt_url）
     API-->>C: 向账户所有者发送附带 PDF 的邮件
@@ -30,7 +32,10 @@ sequenceDiagram
 
 ## 下载回单
 
-每个提供 `GET /{id}` 的交易类资源都有其 `GET .../receipt`。PDF 默认英语；传入 `?lang=es` 或 `?lang=zh` 可获取西班牙语或中文。付款人页面也可能持久化 `cbpay_pay_locale`。
+每个提供 `GET /{id}` 的交易类资源在凭证存在后都有其 `GET .../receipt`。
+扣款前处于技术筛查 pending 的 payout 尚无凭证。PDF 默认英语；传入
+`?lang=es` 或 `?lang=zh` 可获取西班牙语或中文。付款人页面也可能持久化
+`cbpay_pay_locale`。
 
 | 操作 | 端点 |
 |---|---|
@@ -59,7 +64,7 @@ curl "https://api.qbank.cl/platform/v1/payouts/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dc
 出款回单包含**银行参考号**一栏 — 即收款银行分配的交易号 — 在银行确认付款后即会显示。出款在途期间该行不会出现：待状态变为 `completed` 后重新下载即可看到。
 ## 响应和 webhook 中的 `receipt_url`
 
-切勿手动拼接 URL：每个出款、入款、转账、提现、充值、兑换和银行卡交易的响应都包含 `receipt_url`，最终状态的 webhook（`payout_status_changed`、`payin_credited`、`transfer_received`、`crypto_deposit_credited`、`crypto_withdrawal_status_changed`、`card_transaction`）的载荷中也会携带它。
+切勿手动拼接 URL：出款、入款、转账、提现、充值、兑换和银行卡交易的最终状态响应都包含 `receipt_url`，最终状态的 webhook（`payout_status_changed`、`payin_credited`、`transfer_received`、`crypto_deposit_credited`、`crypto_withdrawal_status_changed`、`card_transaction`）的载荷中也会携带它。
 
 ```json
 {

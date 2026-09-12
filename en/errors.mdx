@@ -220,7 +220,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 |---|---|---|
 | 403 | `compliance_hold` | The operation was held by the platform's compliance controls. It is not a request error: contact support with the timestamp — by policy the exact reason is not disclosed |
 | 403 | `geo_restricted` | The service or the operation is not available for the origin or counterparty jurisdiction |
-| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in its pending queue; retry with the **same** idempotency key. When that payout queue is available, `POST /v1/payouts` returns `202 pending_compliance` instead. Other validation and security errors keep their own codes |
+| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in the technical screening queue; retry with the **same** idempotency key. When that queue is available, `POST /v1/payouts` returns `202` with `status: pending` instead. Other validation and security errors keep their own codes |
 | 422 | `travel_rule_required` | On-chain withdrawal above the Travel Rule threshold without beneficiary data — add `travel_address` or `wallet_type: "self_hosted"` + `beneficiary_name` ([crypto guide](/en/guides/crypto)) |
 | 422 | `travel_rule_beneficiary_required` | `beneficiary_name` is missing on a withdrawal subject to the Travel Rule |
 | 422 | `travel_rule_address_mismatch` | Your `to_address` does not match the payment address approved by the receiving institution — omit it or use the one from the exchange |
@@ -377,11 +377,3 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
-
-## Platform-only reconciliation code
-
-`core_transfer_mismatch` (`409`) is an internal platform-admin
-reconciliation code and is not part of the client account API. If it appears
-in an administrative recovery response, stop and reconcile the core
-transaction ID with the platform withdrawal record; do not retry with a new
-withdrawal.

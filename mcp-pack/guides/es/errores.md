@@ -220,7 +220,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 |---|---|---|
 | 403 | `compliance_hold` | La operación fue retenida por los controles de cumplimiento de la plataforma. No es un error de tu request: contacta a soporte con el timestamp — por política no se informa la razón exacta |
 | 403 | `geo_restricted` | El servicio o la operación no están disponibles para la jurisdicción de origen o de la contraparte |
-| 503 | `compliance_check_unavailable` | No se pudo evaluar compliance y el payout no pudo guardarse en su cola pendiente; reintenta con la **misma** idempotency key. Cuando la cola está disponible, `POST /v1/payouts` devuelve `202 pending_compliance`. Los demás errores de validación y seguridad conservan sus códigos |
+| 503 | `compliance_check_unavailable` | No se pudo evaluar compliance y el payout no pudo guardarse en su cola técnica de screening; reintenta con la **misma** idempotency key. Cuando la cola está disponible, `POST /v1/payouts` devuelve `202` con `status: pending`. Los demás errores de validación y seguridad conservan sus códigos |
 | 422 | `travel_rule_required` | Retiro on-chain sobre el umbral Travel Rule sin datos del beneficiario — agrega `travel_address` o `wallet_type: "self_hosted"` + `beneficiary_name` ([guía crypto](https://docs.cbpayapp.com/es/guias/crypto)) |
 | 422 | `travel_rule_beneficiary_required` | Falta `beneficiary_name` en un retiro sujeto a Travel Rule |
 | 422 | `travel_rule_address_mismatch` | Tu `to_address` no coincide con la dirección de pago aprobada por la institución receptora — omítela o usa la del intercambio |
@@ -374,11 +374,3 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
-
-## Código de conciliación exclusivo de plataforma
-
-`core_transfer_mismatch` (`409`) es un código interno de conciliación para
-administradores de plataforma y no forma parte de la API de cuentas cliente.
-Si aparece en una respuesta administrativa de recuperación, detente y
-reconcilia el ID de transacción del core con el registro del retiro de
-plataforma; no reintentes con un retiro nuevo.

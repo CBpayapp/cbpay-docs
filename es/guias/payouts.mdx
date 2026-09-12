@@ -221,15 +221,15 @@ assets volátiles tienen un límite por operación
 ### El screening técnico puede quedar pendiente
 
 CBPay screenea al beneficiario antes de debitar tu saldo o llamar al core. Si
-el servicio de screening está temporalmente no disponible **y la cola
-`pending_compliance` está disponible**, el payout se persiste y el create
-responde `202 Accepted` con `status: "pending_compliance"`:
+el servicio de screening está temporalmente no disponible **y la cola técnica
+de screening está disponible**, el payout se persiste y el create responde
+`202 Accepted` con el recurso en `status: "pending"`:
 
 ```json
 {
   "payout_id": "0d4f…",
   "idempotency_key": "invoice-8841",
-  "status": "pending_compliance",
+  "status": "pending",
   "status_code": "compliance_pending",
   "status_message": "",
   "funds_debited": false,
@@ -290,9 +290,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Estado | Significado | ¿Tu saldo? |
 |---|---|---|
 | `processing` | Aceptado y ejecutándose en el riel local | Débito retenido en `held` |
-| `pending_compliance` | El screening técnico del beneficiario espera antes de cualquier débito o despacho | **Sin débito**; `funds_debited: false` |
+| `pending` | El screening técnico del beneficiario espera antes de cualquier débito o despacho | **Sin débito**; `funds_debited: false` |
 | `completed` | El dinero llegó al beneficiario | Hold consumido — final |
-| `failed` | El corredor lo rechazó o falló | **Reembolso automático completo** (monto + comisión) | | El dinero llegó al beneficiario | Hold consumido — final |
 | `failed` | El corredor lo rechazó o falló | **Reembolso automático completo** (monto + comisión) |
 
 ## Consulta e historial
@@ -1284,7 +1283,7 @@ Pagar un QR de cobro (Bolivia, PIX de Brasil) ahora tiene su propia guía:
 | 422 | `currency_not_supported` | No hay tasa FX para esa moneda |
 | 422 | (payout con `status: failed`) | El corredor rechazó los datos; el débito ya fue reembolsado — corrige `beneficiary` y reintenta con clave nueva |
 | 503 | `channel_unavailable` | El canal de pago está temporalmente no disponible; reintenta más tarde con la MISMA `idempotency_key` |
-| 503 | `compliance_check_unavailable` | No se pudo evaluar compliance ni dejar el payout en la cola pendiente; reintenta con la **misma** idempotency key. Si la cola está disponible, el create devuelve `202 pending_compliance` |
+| 503 | `compliance_check_unavailable` | No se pudo evaluar compliance ni dejar el payout en la cola técnica de screening; reintenta con la **misma** idempotency key. Si la cola está disponible, el create devuelve `202` con `status: pending` |
 
 ## Rechazo inmediato vs fallo posterior
 
@@ -1333,11 +1332,11 @@ Sí — fija un default por cuenta (`PUT /v1/settlement`) o sobreescribe por
 payout con `settlement_asset` (USDC, BTC, GOLD). Los reembolsos devuelven
 el monto liquidado exacto, jamás se re-cotizan.
 </Accordion>
-<Accordion title="¿Qué significa `pending_compliance`?">
+<Accordion title="¿Qué significa `status: pending` con `compliance_pending: true`?">
 El screening del beneficiario no está disponible temporalmente, pero CBPay
-persistió el payout en su cola técnica de compliance. No se debitó saldo, no
+persistió el payout en su cola técnica de screening. No se debitó saldo, no
 existe hold ni asiento en el ledger, no se llamó al core y todavía no hay
-comprobante. El replay con la misma idempotency key devuelve el mismo recurso.
+`receipt_url`. El replay con la misma idempotency key devuelve el mismo recurso.
 Espera el evento `payout_status_changed` o consulta el payout: continuará con
 `process`, entrará al firewall con un `hold` válido o terminará `failed` sin
 débito si el resultado es `rejected`.
