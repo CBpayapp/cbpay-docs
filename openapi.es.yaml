@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.74"
+  version: "2.76"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -3279,7 +3279,9 @@ paths:
 
 
         Requiere una llave de idempotencia (campo del body o header `Idempotency-Key`). Reintentar con
-        la misma llave devuelve el payout original (`200` con `idempotency_hit: true`).'
+        la misma llave devuelve el payout original (`200` con `idempotency_hit: true`).
+
+        Si el screening técnico del beneficiario está temporalmente no disponible y la cola pendiente está disponible, la respuesta es `202 pending_compliance` antes de cualquier débito o despacho al core.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3723,37 +3725,70 @@ paths:
                   idempotency_key: cl-btc-0192
       responses:
         '202':
-          description: Payout aceptado y en despacho.
+          description: Payout aceptado. Puede despacharse después de un screening de compliance exitoso o esperar en la cola técnica antes de cualquier débito o despacho al core.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payout'
-              example: &id005
-                payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                idempotency_key: invoice-8841
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                local_amount: '1500.00'
-                fx_rate: '17.50'
-                usdt_amount: '85.714286'
-                fee: '0.300000'
-                total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
-                settlement_rate: '1'
-                beneficiary: &id004
-                  name: Maria Lopez
-                  account_type: clabe
-                  account_number: 012180001234567895
-                description: Invoice 8841
-                status: processing
-                status_code: ''
-                status_message: ''
-                bank_reference: ''
-                created_at: '2026-07-07T12:00:00Z'
-                updated_at: '2026-07-07T12:00:00Z'
+              examples:
+                processing:
+                  summary: Payout que espera en la cola técnica de screening antes de cualquier débito o despacho al core.
+                  value: &id005
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: &id004
+                      name: Maria Lopez
+                      account_type: clabe
+                      account_number: 012180001234567895
+                    description: Invoice 8841
+                    status: processing
+                    status_code: ''
+                    status_message: ''
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:00Z'
+                pending_compliance:
+                  summary: 'El payout fue aceptado: se despacha después del screening o espera en la cola técnica.'
+                  description: El screening técnico espera antes de cualquier débito o despacho al core.
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: *id004
+                    description: Invoice 8841
+                    status: pending_compliance
+                    status_code: compliance_pending
+                    status_message: ''
+                    funds_debited: false
+                    compliance_pending: true
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:00Z'
         '200':
           description: Respuesta idempotente de un payout existente.
           content:
@@ -22280,13 +22315,22 @@ components:
           type: string
           enum:
           - pending
+          - pending_compliance
           - processing
           - completed
           - failed
+          description: '`pending_compliance` significa que el screening técnico del beneficiario espera antes de cualquier débito o despacho al core.'
         status_code:
           type: string
+          description: '`compliance_pending` acompaña a `pending_compliance`.'
         status_message:
           type: string
+        funds_debited:
+          type: boolean
+          description: 'Falso mientras el `status` sea `pending_compliance`.'
+        compliance_pending:
+          type: boolean
+          description: 'Verdadero mientras el screening técnico espera antes de cualquier débito o despacho al core.'
         bank_reference:
           type: string
           description: Referencia de la transaccion en el banco/rail (ej. el id de transferencia del banco, con el que el beneficiario cruza el pago con su banco). En US ACH/wire/SWIFT es la referencia CBF que vuelve al crear; en el resto de corredores queda vacia hasta que el rail la reporta.

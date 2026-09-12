@@ -8,7 +8,19 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.75 · 1 个版本 - 2026年9月12日
+## v2.76 · 2 versions - 2026年9月12日
+
+### v2.76
+
+**变更**
+
+- **Payout 技术筛查队列**：当收款人筛查暂时不可用但队列可用时，
+  `POST /v1/payouts` 返回 `202`，并带有
+  `status: pending_compliance`、`status_code: compliance_pending`、
+  `compliance_pending: true` 与 `funds_debited: false`。等待期间不会创建
+  hold、账本分录、core 派发或回执。相同幂等键 replay 返回同一个 payout。
+  `process` 继续正常流程，有效 `hold` 进入防火墙，`rejected` 在不扣款的
+  情况下将队列中的 payout 结束为 `failed`。
 
 ### v2.75
 

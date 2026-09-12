@@ -146,6 +146,10 @@ Response `202 Accepted`:
   "settlement_amount": "86.014286",
   "settlement_rate": "1",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": "",
   "created_at": "2026-07-06T20:00:00Z"
 }
@@ -192,6 +196,10 @@ all recorded on the response:
   "settlement_amount": "0.00096795",
   "settlement_rate": "109029.34070000",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -201,6 +209,39 @@ balance — never re-quoted. If the BTC/GOLD execution price is unavailable
 at that moment you get `503 pricing_unavailable`, and volatile assets have
 a per-operation limit (`422 settlement_limit_exceeded`; check it in
 `GET /v1/settlement`).
+
+### Technical screening can be pending
+
+CBPay screens the beneficiary before it debits your balance or calls the core.
+If the screening service is temporarily unavailable **and the pending queue is
+available**, the payout is persisted and the create call returns `202 Accepted`
+with `status: "pending_compliance"`:
+
+```json
+{
+  "payout_id": "0d4f…",
+  "idempotency_key": "invoice-8841",
+  "status": "pending_compliance",
+  "status_code": "compliance_pending",
+  "status_message": "",
+  "funds_debited": false,
+  "compliance_pending": true,
+  "created_at": "2026-07-06T20:00:00Z",
+  "updated_at": "2026-07-06T20:00:00Z"
+}
+```
+
+While it is pending there is **no debit, hold, ledger entry, core dispatch or
+`receipt_url`**. Replaying with the same idempotency key returns the same payout
+with `idempotency_hit: true`; it never creates a second operation. When the
+screening worker receives `process`, the existing payout enters the normal debit
+and dispatch flow. A valid `hold` goes to the transactional firewall. A later
+`rejected` result ends the queued payout as `failed` with no debit.
+
+The technical `compliance_check_unavailable` response remains applicable when
+the payout cannot be placed in the pending queue, and to flows that do not have
+this queue. It does not replace the existing validation, security or
+`compliance_hold` contracts.
 
 ## 3. Receive the final state
 
@@ -241,7 +282,9 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Status | Meaning | Your balance |
 |---|---|---|
 | `processing` | Accepted and executing on the local rail | Debit held in `held` |
+| `pending_compliance` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
 | `completed` | The money reached the beneficiary | Hold consumed — final |
+| `failed` | The corridor rejected it or it failed | **Full automatic refund** (amount + fee) | | The money reached the beneficiary | Hold consumed — final |
 | `failed` | The corridor rejected it or it failed | **Full automatic refund** (amount + fee) |
 
 ## Reads and history
@@ -349,6 +392,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fee": "0.300000",
   "total_debit": "108.327528",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -467,6 +514,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fee": "0.300000",
   "total_debit": "86.014286",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -570,6 +621,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fee": "0.300000",
   "total_debit": "200.300000",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -611,6 +666,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fee": "0.300000",
   "total_debit": "68.526121",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -1175,7 +1234,7 @@ Paying a collection QR (Bolivia, Brazil PIX) now has its own guide:
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | (payout with `status: failed`) | The corridor rejected the data; the debit was already refunded — fix `beneficiary` and retry with a new key |
 | 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the SAME `idempotency_key` |
-| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated; the payout was NOT created — retry with the SAME `idempotency_key` |
+| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in the pending queue; retry with the **same** idempotency key. When the pending queue is available, payout creation returns `202 pending_compliance` instead |
 
 ## Immediate rejection vs later failure
 
@@ -1218,6 +1277,14 @@ operation. Your agreed spread is already inside the rate.
 Yes — set a per-account default (`PUT /v1/settlement`) or override per
 payout with `settlement_asset` (USDC, BTC, GOLD). Refunds return the exact
 settled amount, never re-quoted.
+#### What does `pending_compliance` mean?
+The beneficiary screening is temporarily unavailable, but CBPay persisted the
+payout in its technical compliance queue. No balance was debited, no hold or
+ledger entry exists, the core was not called and there is no receipt yet.
+Replay with the same idempotency key returns the same resource. Wait for the
+`payout_status_changed` event or poll the payout; it will continue after
+`process`, enter the firewall for a valid `hold`, or become `failed` without a
+debit if the result is `rejected`.
 #### What does compliance_hold (403) mean?
 The beneficiary failed the compliance screening: the payout was **not**
 created and your `idempotency_key` was not consumed. Review the beneficiary

@@ -1,5 +1,5 @@
 {
-  "count": 234,
+  "count": 241,
   "errors": [
     {
       "category": {
@@ -1221,9 +1221,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "insufficient_funds",
       "http": 402,
@@ -1235,9 +1235,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "not_found",
       "http": 404,
@@ -1249,9 +1249,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "country_not_found",
       "http": 404,
@@ -1263,9 +1263,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "bank_not_found",
       "http": 404,
@@ -1277,9 +1277,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "postal_code_not_found",
       "http": 404,
@@ -1291,9 +1291,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "recipient_not_found",
       "http": 404,
@@ -1305,9 +1305,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "verification_not_found",
       "http": 404,
@@ -1319,9 +1319,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "duplicate",
       "http": 409,
@@ -1333,9 +1333,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "verification_required",
       "http": 403,
@@ -1347,9 +1347,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "verification_not_approved",
       "http": 422,
@@ -1361,9 +1361,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "verification_kind_mismatch",
       "http": 422,
@@ -1375,9 +1375,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "verification_invalid",
       "http": 422,
@@ -1389,9 +1389,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "company_account_required",
       "http": 403,
@@ -1403,9 +1403,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "already_verified",
       "http": 409,
@@ -1417,9 +1417,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "identity_locked",
       "http": 409,
@@ -1431,9 +1431,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "no_screening",
       "http": 409,
@@ -1445,9 +1445,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "no_banking_customer",
       "http": 409,
@@ -1459,9 +1459,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "banking_customer_exists",
       "http": 409,
@@ -1473,9 +1473,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "idempotency_conflict",
       "http": 409,
@@ -1487,9 +1487,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "banking_recovery_pending",
       "http": 503,
@@ -1501,9 +1501,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "currency_not_supported",
       "http": 422,
@@ -1515,9 +1515,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "core_rejected",
       "http": 422,
@@ -1529,9 +1529,65 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "too_many_open_card_sessions",
+      "http": 429,
+      "meaning": {
+        "en": "The account has 50 open card sessions and no unused, zero-attempt pending session can be evicted — complete or wait for an existing session to expire before creating another",
+        "es": "La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o espera que venza una sesión existente antes de crear otra",
+        "zh": "账户已有 50 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "card_recovery_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The platform is reconciling an ambiguous card request. Retry with the **same** idempotency key; do not create a new key or a second charge",
+        "es": "La plataforma está reconciliando un cobro con tarjeta ambiguo. Reintenta con la **misma** clave de idempotencia; no generes una nueva ni un segundo cobro",
+        "zh": "平台正在核对一笔结果不明确的银行卡收款。请使用**相同**幂等键重试；不要生成新键或第二笔收款"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "card_reuse_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The platform could not verify an existing open card payment. Retry the original request with the **same** idempotency key; do not create a second charge",
+        "es": "La plataforma no pudo verificar un cobro con tarjeta abierto existente. Reintenta la solicitud original con la **misma** clave de idempotencia; no crees un segundo cobro",
+        "zh": "平台无法核对现有的开放银行卡收款。请使用**相同**幂等键重试原始请求；不要创建第二笔收款"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "core_reuse_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The core did not return a complete recoverable card session. Retry the original request with the **same** idempotency key",
+        "es": "El core no devolvió una sesión de tarjeta completa y recuperable. Reintenta la solicitud original con la **misma** clave de idempotencia",
+        "zh": "core 未返回完整且可恢复的银行卡会话。请使用**相同**幂等键重试原始请求"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "recipient_unavailable",
       "http": 422,
@@ -1543,9 +1599,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "recipient_ambiguous",
       "http": 422,
@@ -1557,9 +1613,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "contact_not_linked",
       "http": 422,
@@ -1571,9 +1627,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "no_saved_destination",
       "http": 422,
@@ -1585,9 +1641,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "wallet_limit_reached",
       "http": 422,
@@ -1599,9 +1655,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "insufficient_gas",
       "http": 422,
@@ -1613,9 +1669,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "card_limit_reached",
       "http": 409,
@@ -1627,9 +1683,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "card_cancelled",
       "http": 409,
@@ -1641,9 +1697,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "card_not_pending",
       "http": 409,
@@ -1655,9 +1711,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "cardholder_kyc_pending",
       "http": 409,
@@ -1669,9 +1725,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "invalid_occupation",
       "http": 400,
@@ -1683,9 +1739,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "invalid_kind_of_business",
       "http": 400,
@@ -1697,9 +1753,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "invalid_settlement_asset",
       "http": 400,
@@ -1711,9 +1767,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "settlement_asset_disabled",
       "http": 400,
@@ -1725,9 +1781,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "settlement_limit_exceeded",
       "http": 422,
@@ -1739,9 +1795,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "settlement_daily_limit_exceeded",
       "http": 422,
@@ -1753,9 +1809,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "invalid_pair",
       "http": 400,
@@ -1767,9 +1823,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "amount_too_small",
       "http": 400,
@@ -1781,9 +1837,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "swap_asset_disabled",
       "http": 400,
@@ -1795,9 +1851,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "already_paid",
       "http": 409,
@@ -1809,9 +1865,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "checkout_expired",
       "http": 410,
@@ -1823,9 +1879,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "method_unavailable",
       "http": 422,
@@ -1837,9 +1893,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "country_required",
       "http": 400,
@@ -1851,9 +1907,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "currency_required",
       "http": 400,
@@ -1865,9 +1921,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "country_unavailable",
       "http": 422,
@@ -1879,9 +1935,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "collect_otp_failed",
       "http": 422,
@@ -1893,9 +1949,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "collect_rejected",
       "http": 422,
@@ -1907,9 +1963,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "checkout_amount_mismatch",
       "http": 422,
@@ -1921,9 +1977,23 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "checkout_recovery_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The selected checkout payment option is being reconciled. Retry the same materialization request; do not create a second payment option",
+        "es": "La opción de pago elegida en el checkout está en reconciliación. Reintenta la misma solicitud de materialización; no crees una segunda opción de pago",
+        "zh": "所选 checkout 支付选项正在核对。请重试相同的物化请求；不要创建第二个支付选项"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "stored_card_revoked",
       "http": 422,
@@ -1935,9 +2005,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "merchant_disabled",
       "http": 422,
@@ -1949,9 +2019,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "nothing_received",
       "http": 422,
@@ -1963,9 +2033,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "refund_exceeds_received",
       "http": 422,
@@ -1977,9 +2047,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "refund_recovery_pending",
       "http": 503,
@@ -1991,9 +2061,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "deposit_account_limit_reached",
       "http": 422,
@@ -2005,9 +2075,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "deposit_account_conflict",
       "http": 409,
@@ -2019,9 +2089,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "deposit_account_not_recoverable",
       "http": 422,
@@ -2033,9 +2103,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "export_rejected",
       "http": 422,
@@ -2047,9 +2117,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "stored_card_corridor_mismatch",
       "http": 422,
@@ -2061,9 +2131,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "subscription_state",
       "http": 409,
@@ -2075,9 +2145,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "email_required",
       "http": 409,
@@ -2089,9 +2159,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "payin_not_refundable",
       "http": 422,
@@ -2103,9 +2173,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "refund_not_supported",
       "http": 422,
@@ -2117,9 +2187,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "refund_exceeds_payin",
       "http": 422,
@@ -2131,9 +2201,9 @@
     },
     {
       "category": {
-        "en": "Money and state (402 / 404 / 409 / 422)",
-        "es": "Dinero y estado (402 / 404 / 409 / 422)",
-        "zh": "资金与状态（402 / 404 / 409 / 422）"
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
       "code": "settlement_pending",
       "http": 422,
@@ -2141,6 +2211,34 @@
         "en": "The payin's balance is still scheduled for settlement and cannot be refunded until it is released (at `settle_at` or by an org-admin release)",
         "es": "El saldo del cobro sigue programado para settlement y no se puede devolver hasta liberarse (a `settle_at` o por liberación del admin de la organización)",
         "zh": "该收款的余额仍在结算排期中，释放（到达 `settle_at` 或由组织管理员释放）前无法退款"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "refund_event_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The refund result is stored, but its final event is still being persisted. Retry with the **same** idempotency key; do not send a new refund",
+        "es": "El resultado de la devolución quedó guardado, pero todavía se está persistiendo su evento final. Reintenta con la **misma** clave de idempotencia; no envíes otra devolución",
+        "zh": "退款结果已保存，但最终事件仍在持久化。请使用**相同**幂等键重试；不要发送第二笔退款"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "payin_event_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The payin is credited, but its final event is still being reconciled. Retry with the **same** idempotency key; do not create a new payin",
+        "es": "El payin quedó acreditado, pero su evento final todavía se está reconciliando. Reintenta con la **misma** clave de idempotencia; no crees un nuevo payin",
+        "zh": "收款已入账，但最终事件仍在核对中。请使用**相同**幂等键重试；不要创建新的收款"
       }
     },
     {
@@ -2180,9 +2278,9 @@
       "code": "compliance_check_unavailable",
       "http": 503,
       "meaning": {
-        "en": "The compliance check could not be evaluated; the operation did NOT go out — retry with the **same** idempotency key",
-        "es": "La verificación de cumplimiento no se pudo evaluar; la operación NO salió — reintenta con la **misma** clave de idempotencia",
-        "zh": "合规检查暂时无法执行；操作**未**发出 — 请使用**相同的**幂等键重试"
+        "en": "The compliance check could not be evaluated and the payout could not be placed in its pending queue; retry with the **same** idempotency key. When that payout queue is available, `POST /v1/payouts` returns `202 pending_compliance` instead. Other validation and security errors keep their own codes",
+        "es": "No se pudo evaluar compliance y el payout no pudo guardarse en su cola pendiente; reintenta con la **misma** idempotency key. Cuando la cola está disponible, `POST /v1/payouts` devuelve `202 pending_compliance`. Los demás errores de validación y seguridad conservan sus códigos",
+        "zh": "合规校验无法完成，且 payout 无法写入 pending 队列；请使用**相同**幂等键重试。该 payout 队列可用时，`POST /v1/payouts` 会返回 `202 pending_compliance`。其他校验和安全错误仍使用各自代码"
       }
     },
     {

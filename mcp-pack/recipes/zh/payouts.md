@@ -142,6 +142,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "settlement_amount": "86.014286",
   "settlement_rate": "1",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": "",
   "created_at": "2026-07-06T20:00:00Z"
 }
@@ -183,6 +187,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "settlement_amount": "0.00096795",
   "settlement_rate": "109029.34070000",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -191,6 +199,36 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 绝不重新报价。如果当时 BTC/GOLD 的执行价格不可用，您会收到
 `503 pricing_unavailable`；波动性资产还有单笔操作限额
 （`422 settlement_limit_exceeded`；可在 `GET /v1/settlement` 中查询）。
+
+### 技术筛查可能处于 pending
+
+CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂时不可用，**但
+`pending_compliance` 队列可用**，payout 会先持久化，创建请求返回
+`202 Accepted`，资源状态为 `pending_compliance`：
+
+```json
+{
+  "payout_id": "0d4f…",
+  "idempotency_key": "invoice-8841",
+  "status": "pending_compliance",
+  "status_code": "compliance_pending",
+  "status_message": "",
+  "funds_debited": false,
+  "compliance_pending": true,
+  "created_at": "2026-07-06T20:00:00Z",
+  "updated_at": "2026-07-06T20:00:00Z"
+}
+```
+
+等待期间**不会扣款、创建 hold 或账本分录，也不会调用 core，更不会生成
+`receipt_url`**。使用相同幂等键 replay 会返回同一个 payout，并带有
+`idempotency_hit: true`；绝不会创建第二笔。worker 收到 `process` 后，
+原 payout 才进入正常扣款和派发流程。有效的 `hold` 会进入交易防火墙；
+之后如果结果是 `rejected`，该 payout 会在不扣款的情况下变为 `failed`。
+
+当 payout 无法写入 pending 队列，或流程本身没有该队列时，仍使用
+`compliance_check_unavailable` 等现有技术错误。现有的校验、安全和
+`compliance_hold` 合约不变。
 
 ## 3. 接收最终状态
 
@@ -230,8 +268,10 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 
 | 状态 | 含义 | 您的余额 |
 |---|---|---|
-| `processing` | 已受理，正在本地通道执行 | 扣款冻结在 `held` 中 |
+| `processing` | 已接受并在本地通道执行 | 扣款冻结在 `held` |
+| `pending_compliance` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
 | `completed` | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |
+| `failed` | 通道拒绝或执行失败 | **自动全额退款**（金额 + 费用） | | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |
 | `failed` | 通道拒绝或执行失败 | **自动全额退款**（金额 + 费用） |
 
 ## 查询与历史记录
@@ -338,6 +378,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fee": "0.300000",
   "total_debit": "108.327528",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -455,6 +499,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fee": "0.300000",
   "total_debit": "86.014286",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -558,6 +606,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fee": "0.300000",
   "total_debit": "200.300000",
   "status": "processing",
+  "status_code": "",
+  "status_message": "",
+  "funds_debited": true,
+  "compliance_pending": false,
   "bank_reference": ""
 }
 ```
@@ -1124,7 +1176,7 @@ curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-22
 | 422 | `currency_not_supported` | 该货币没有可用的外汇汇率 |
 | 422 | （出金处于 `status: failed`） | 通道拒绝了该数据；扣款已退回 —— 修正 `beneficiary` 后使用新的键重试 |
 | 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的** `idempotency_key` 重试 |
-| 503 | `compliance_check_unavailable` | 合规校验暂时无法完成；该出金未被创建 —— 请使用**相同的** `idempotency_key` 重试 |
+| 503 | `compliance_check_unavailable` | 无法完成合规校验，也无法将 payout 写入 pending 队列；请使用**相同**幂等键重试。pending 队列可用时，创建请求改为返回 `202 pending_compliance` |
 
 ## 立即拒绝与后续失败
 
@@ -1164,6 +1216,12 @@ webhook 或 `GET` 等待最终状态 —— 它一定会到达，失败时会自
 可以 —— 设置账户级默认值（`PUT /v1/settlement`）或按笔用
 `settlement_asset` 覆盖（USDC、BTC、GOLD）。退款返回精确的结算金额，
 绝不重新报价。
+#### `pending_compliance` 是什么意思？
+收款人筛查暂时不可用，但 CBPay 已将 payout 持久化到技术合规队列。
+没有扣款、hold 或账本分录，core 尚未被调用，也没有回执。使用相同
+幂等键 replay 会返回同一个资源。等待 `payout_status_changed` 或查询
+payout；结果为 `process` 时继续，`hold` 时进入防火墙，`rejected` 时
+在不扣款的情况下变为 `failed`。
 #### compliance_hold（403）是什么意思？
 受益人未通过合规筛查：payout **未被**创建，你的 `idempotency_key` 也未
 被消耗。请核对受益人信息或联系你的 CBPay 团队。
