@@ -1,5 +1,5 @@
 {
-  "content_sha256": "723863c27c99fb1f79d280a745391dc9a4c930490884edd4734cca8d04e96149",
+  "content_sha256": "49512b261a492e67db1d0e500d5e163e9f76e38a3708bff8278e4113bb194dda",
   "counts": {
     "chunks": 3362,
     "errors": 241,
@@ -28,15 +28,15 @@
     },
     "chunks/en.jsonl": {
       "bytes": 1182884,
-      "sha256": "4a7fbe2bad0ea76aa8368466c096878230a92a89f996ed998c7d4f79b990eace"
+      "sha256": "53e943251606c71503f909232144905e3b35e83d25efc6e47171e3e508f28c67"
     },
     "chunks/es.jsonl": {
       "bytes": 1215978,
-      "sha256": "ebca722f32ae1cec42e254153004e69faf07b1addf587dc736a5c76000573718"
+      "sha256": "59d03e5e53d0b71633b035ff1b22c2efe21eb7b3b1191134cf35e50ce43c391a"
     },
     "chunks/zh.jsonl": {
       "bytes": 1145382,
-      "sha256": "b26b84c75909da764f2cfde2a0062c16112ef93ca9649637b814854b1751c0e2"
+      "sha256": "987ccde5d146d5086f9f7d7afe9b1572a17e7d97c9be7d47b5f78930c082bd6a"
     },
     "errors.json": {
       "bytes": 134538,
@@ -240,7 +240,7 @@
     },
     "guides/en/postman.md": {
       "bytes": 1252,
-      "sha256": "b5b5920c4d254cb6341b331f2006d21e8d2ba343dd2d24ea12ba39a22e5c6d48"
+      "sha256": "391fc439b7d302120faa89da0a5746ace89d88411ce15475008901eaa7fb5592"
     },
     "guides/en/quickstart.md": {
       "bytes": 7310,
@@ -468,7 +468,7 @@
     },
     "guides/es/postman.md": {
       "bytes": 1309,
-      "sha256": "6d3a6e13a4ddc4a10b382385db53b1cecbf42c1e4a62c406ea8d098f76a91166"
+      "sha256": "31c630295503063346d0b24c620910bff36163c4aadb828a1ec166e4e4b1e3f6"
     },
     "guides/es/seguridad-2fa.md": {
       "bytes": 9750,
@@ -672,7 +672,7 @@
     },
     "guides/zh/postman.md": {
       "bytes": 1202,
-      "sha256": "5d78d38b5e3a9e02054df9a7096caec4800d0b402528edd1c7a310a0631ccb08"
+      "sha256": "25fe999ea9c8a85b5f04a13ddbd1ca8f8ab828f48d915e35ed502b510c7acb00"
     },
     "guides/zh/quickstart.md": {
       "bytes": 7407,
@@ -799,7 +799,7 @@
       "sha256": "9adf4e94e0a6cccebdc7ffd54a8f77e3f32cdf378e5b329412b6a7362374d8af"
     }
   },
-  "generated_at": "2026-09-12T12:22:29Z",
+  "generated_at": "2026-09-12T11:52:09Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
