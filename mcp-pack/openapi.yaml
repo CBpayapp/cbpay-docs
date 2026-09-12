@@ -3304,7 +3304,10 @@ paths:
 
         If technical beneficiary screening is temporarily unavailable and the technical screening queue is available,
         the response is `202` with a payout resource in `status: pending`, `status_code: compliance_pending`,
-        `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch.'
+        `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch. After screening
+        returns `process`, the same resource can remain `pending` with `compliance_dispatch_pending`,
+        `compliance_dispatching` or `core_unreachable` while `funds_debited` is true; keep the same
+        idempotency key and wait for reconciliation.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3748,7 +3751,7 @@ paths:
                   idempotency_key: cl-btc-0192
       responses:
         '202':
-          description: Payout accepted. It may be dispatched after a successful compliance screening, or it may wait in the technical screening queue before any debit or core dispatch.
+          description: Payout accepted. It may be dispatched after a successful compliance screening, or it may wait in the technical screening queue before any debit or core dispatch. After screening passes, the same payout can remain `pending` with `status_code` `compliance_dispatch_pending`, `compliance_dispatching` or `core_unreachable` while `funds_debited` is true and reconciliation continues; this is not a second payout.
           content:
             application/json:
               schema:
@@ -3812,6 +3815,35 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
+                screening_verified_pending_dispatch:
+                  summary: Screening passed and the debit is durable while core dispatch is pending.
+                  description: The same payout remains pending; keep the original idempotency key and wait for the status webhook.
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: *id004
+                    description: Invoice 8841
+                    status: pending
+                    status_code: compliance_dispatch_pending
+                    status_message: compliance verified; dispatch pending
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    receipt_url: https://api.qbank.cl/platform/v1/payouts/7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f/receipt
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:05Z'
         '200':
           description: Idempotency replay of an existing payout....
           content:
@@ -22476,18 +22508,18 @@ components:
           - processing
           - completed
           - failed
-          description: '`pending` with `compliance_pending: true` means technical beneficiary screening is queued before any debit or core dispatch.'
+          description: '`pending` with `compliance_pending: true` means technical beneficiary screening is queued before any debit or core dispatch. After screening passes, `pending` can use `compliance_dispatch_pending`, `compliance_dispatching` or `core_unreachable` while the debit remains held.'
         status_code:
           type: string
-          description: '`compliance_pending` accompanies the pending technical-screening state.'
+          description: 'Normalized state detail. `compliance_pending` is pre-debit; `compliance_dispatch_pending`, `compliance_dispatching` and `core_unreachable` are durable post-screening transition codes.'
         status_message:
           type: string
         funds_debited:
           type: boolean
-          description: 'False while `status` is `pending` and `compliance_pending` is true.'
+          description: 'False before a pending technical-screening payout is debited. True after screening passes and the debit/hold exists, including pending dispatch transitions.'
         compliance_pending:
           type: boolean
-          description: 'True while technical screening is queued before any debit or core dispatch.'
+          description: 'True only while technical screening is queued before any debit or core dispatch; false after the screening process result is accepted.'
         bank_reference:
           type: string
           description: Bank/rail transaction reference (e.g. the bank's transfer id, which the beneficiary can use to cross-check the payment with their bank). On US ACH/wire/SWIFT it is the CBF reference returned immediately at create; on other corridors it stays empty until the rail reports it.

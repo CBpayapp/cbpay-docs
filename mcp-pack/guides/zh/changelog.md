@@ -8,7 +8,17 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.76 · 2 versions - 2026年9月12日
+## v2.77 · 3 versions - 2026年9月12日
+
+### v2.77
+
+**变更**
+
+- **Payout 合规转换现在持久化且明确**：技术筛查返回 `process` 后，同一个
+  payout 仍可在 `pending` 中使用 `compliance_dispatch_pending`、
+  `compliance_dispatching` 或 `core_unreachable`，此时
+  `funds_debited: true`。筛查通过前该字段保持 `false`；请保留原幂等键并
+  等待 `payout_status_changed`，不要创建第二笔 payout。
 
 ### v2.76
 

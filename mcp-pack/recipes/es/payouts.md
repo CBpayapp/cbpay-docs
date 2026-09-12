@@ -239,6 +239,22 @@ Cuando el worker recibe `process`, el payout existente sigue el flujo normal de
 débito y despacho. Un `hold` válido entra al firewall transaccional. Un
 `rejected` posterior termina el payout en `failed` sin débito.
 
+Después de aceptar `process`, el mismo payout puede permanecer en
+`status: "pending"` mientras se reconcilian el débito y el despacho. La API y el
+webhook `payout_status_changed` exponen estos códigos de transición durables:
+
+- `compliance_dispatch_pending`: el screening pasó, existe el débito/hold y
+  `funds_debited: true`, pero el despacho al core aún no terminó.
+- `compliance_dispatching`: el claim de despacho está en curso.
+- `core_unreachable`: el despacho o la liquidación local es ambiguo y espera
+  conciliación; no crees un segundo payout.
+
+Estas transiciones no son una operación nueva. Conserva la misma
+`idempotency_key`, lee el payout y espera el siguiente evento de estado. Cuando
+el payout termina, `completed` consume el hold y `failed` devuelve el débito
+exacto. Los eventos finales usan el camino durable e incluyen los campos
+normales del comprobante.
+
 La respuesta técnica `compliance_check_unavailable` sigue aplicando cuando el
 payout no se puede dejar en la cola pendiente y en los flujos que no tienen
 esta cola. No reemplaza los contratos actuales de validación, seguridad ni
@@ -283,7 +299,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Estado | Significado | ¿Tu saldo? |
 |---|---|---|
 | `processing` | Aceptado y ejecutándose en el riel local | Débito retenido en `held` |
-| `pending` | El screening técnico del beneficiario espera antes de cualquier débito o despacho | **Sin débito**; `funds_debited: false` |
+| `pending` + `compliance_pending: true` | El screening técnico del beneficiario espera antes de cualquier débito o despacho | **Sin débito**; `funds_debited: false` |
+| `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening aprobado; débito existente mientras espera despacho o conciliación | `funds_debited: true`; débito retenido |
 | `completed` | El dinero llegó al beneficiario | Hold consumido — final |
 | `failed` | El corredor lo rechazó o falló | **Reembolso automático completo** (monto + comisión) |
 

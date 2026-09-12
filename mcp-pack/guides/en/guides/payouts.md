@@ -238,6 +238,22 @@ screening worker receives `process`, the existing payout enters the normal debit
 and dispatch flow. A valid `hold` goes to the transactional firewall. A later
 `rejected` result ends the queued payout as `failed` with no debit.
 
+After `process` is accepted, the same payout can remain `status: "pending"`
+while the debit and dispatch are reconciled. The API and
+`payout_status_changed` webhook expose these durable transition codes:
+
+- `compliance_dispatch_pending`: screening passed, the debit/hold exists and
+  `funds_debited: true`, but the core dispatch has not completed.
+- `compliance_dispatching`: the dispatch claim is in progress.
+- `core_unreachable`: the dispatch or local settlement is ambiguous and is
+  waiting for reconciliation; do not create a second payout.
+
+These transitions are not a new payout operation. Keep the same
+`idempotency_key`, read the payout, and wait for the next status event. Once the
+payout is final, `completed` consumes the hold and `failed` refunds the exact
+debit. Final status events use the durable event path and include the normal
+receipt fields.
+
 The technical `compliance_check_unavailable` response remains applicable when
 the payout cannot be placed in the pending queue, and to flows that do not have
 this queue. It does not replace the existing validation, security or
@@ -282,7 +298,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Status | Meaning | Your balance |
 |---|---|---|
 | `processing` | Accepted and executing on the local rail | Debit held in `held` |
-| `pending` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
+| `pending` + `compliance_pending: true` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
+| `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening passed; debit exists while dispatch or reconciliation is pending | `funds_debited: true`; debit remains held |
 | `completed` | The money reached the beneficiary | Hold consumed — final |
 | `failed` | The corridor rejected it or it failed | **Full automatic refund** (amount + fee) |
 

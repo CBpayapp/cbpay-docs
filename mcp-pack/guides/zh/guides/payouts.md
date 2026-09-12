@@ -226,6 +226,20 @@ CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂�
 原 payout 才进入正常扣款和派发流程。有效的 `hold` 会进入交易防火墙；
 之后如果结果是 `rejected`，该 payout 会在不扣款的情况下变为 `failed`。
 
+收到 `process` 后，同一个 payout 仍可能保持 `status: "pending"`，同时
+持久化协调扣款和派发。API 与 `payout_status_changed` webhook 会暴露以下
+持久化转换码：
+
+- `compliance_dispatch_pending`：筛查通过，扣款/hold 已存在，因此
+  `funds_debited: true`；core 派发尚未完成。
+- `compliance_dispatching`：派发声明已取得，正在执行。
+- `core_unreachable`：派发或本地结算结果不明确，等待协调；不要创建第二笔
+  payout。
+
+这些转换不是新操作。保留相同的 `idempotency_key`，重新读取 payout 并
+等待下一个状态事件。payout 进入终态后，`completed` 消耗 hold，
+`failed` 退回精确扣款；终态事件使用持久化路径并携带正常的回执字段。
+
 当 payout 无法写入 pending 队列，或流程本身没有该队列时，仍使用
 `compliance_check_unavailable` 等现有技术错误。现有的校验、安全和
 `compliance_hold` 合约不变。
@@ -269,7 +283,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | 状态 | 含义 | 您的余额 |
 |---|---|---|
 | `processing` | 已接受并在本地通道执行 | 扣款冻结在 `held` |
-| `pending` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
+| `pending` + `compliance_pending: true` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
+| `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | 筛查通过；扣款已存在，等待派发或协调 | `funds_debited: true`；扣款仍在 `held` |
 | `completed` | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |
 | `failed` | 通道拒绝或执行失败 | **自动全额退款**（金额 + 费用） |
 

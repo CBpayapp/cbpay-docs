@@ -247,9 +247,25 @@ Al llegar el `settle_at`, el worker de settlement acredita el saldo y emite
 ```
 
 Mientras espera el screening técnico del beneficiario, un payload de
-`payout_status_changed` puede llevar `status: "pending"`, `status_code:
-"compliance_pending"`, `compliance_pending: true` y `funds_debited: false`.
-No incluye `receipt_url` porque todavía no existe débito ni comprobante.
+`payout_status_changed` puede llevar `status: "pending"`,
+`status_code: "compliance_pending"`, `compliance_pending: true` y
+`funds_debited: false`. No incluye `receipt_url` porque todavía no existe
+débito ni comprobante.
+
+Después de que el screening devuelve `process`, el mismo payout puede emitir
+eventos de transición durables mientras sigue en `pending`:
+
+- `status_code: "compliance_dispatch_pending"` significa que existe el
+  débito/hold y `funds_debited: true`, pero el despacho al core no terminó.
+- `status_code: "compliance_dispatching"` significa que el claim de despacho
+  está activo.
+- `status_code: "core_unreachable"` significa que el despacho o la liquidación
+  local es ambigua y espera conciliación; no crees un segundo payout.
+
+Usa `X-Webhook-Event-ID` para deduplicar cada delivery, pero no asumas un solo
+evento por payout: la plataforma persiste estas revisiones de estado y después
+emite el evento terminal `completed` o `failed`. Los eventos terminales llevan
+los campos normales del comprobante; un payout fallido devuelve el débito exacto.
 
 ```json txn_review_status_changed
 {
