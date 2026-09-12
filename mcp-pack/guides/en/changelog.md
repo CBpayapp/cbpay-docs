@@ -20,6 +20,12 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   remain pending for webhook reconciliation and are never resent automatically.
   Added the `checkout_not_pending` conflict and documented separate
   document-only payer screening (`document_value`/`idNumber`, not `name`).
+- **Transactional screening now distinguishes recognized AML categories from
+  fuzzy candidates**: a recognized category remains actionable with either
+  `target=true` or `target=false`. When `target=false` and the AML category is
+  unrecognized, the result is non-actionable and does not create a false hold
+  or error. Legacy responses without `target`, as well as incomplete or
+  malformed responses, remain fail-closed.
 
 ## v2.73 · 1 version - September 10, 2026
 

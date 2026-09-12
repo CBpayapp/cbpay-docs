@@ -21,6 +21,12 @@ con anticipación y quedan marcados como **Breaking**.
   automáticamente. Se agrega el conflicto `checkout_not_pending` y se
   documenta el screening separado del pagador solo documental
   (`document_value`/`idNumber`, no `name`).
+- **El screening transaccional distingue ahora las categorías AML reconocidas
+  de los candidatos fuzzy**: una categoría reconocida sigue siendo accionable
+  con `target=true` o `target=false`. Cuando `target=false` y la categoría AML
+  no es reconocida, el resultado no es accionable y no genera un hold falso ni
+  un error. Las respuestas legacy sin `target`, al igual que las respuestas
+  incompletas o malformadas, mantienen el comportamiento fail-closed.
 
 </Update>
 
