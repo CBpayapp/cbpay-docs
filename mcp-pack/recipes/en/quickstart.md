@@ -176,7 +176,9 @@ arrives via [webhook](https://docs.cbpayapp.com/en/webhooks) (`payout_status_cha
   "fx_rate": "950.25",
   "usdt_amount": "52.618258",
   "fee": "0.500000",
-  "total_debit": "53.118258"
+  "total_debit": "53.118258",
+  "status_code": "",
+  "status_message": ""
 }
 ```
 
@@ -211,7 +213,8 @@ Minutes later you will receive the closure of the step-5 payout:
   "local_amount": "50000",
   "usdt_amount": "52.618258",
   "total_debit": "53.118258",
-  "status_code": ""
+  "status_code": "",
+  "status_message": ""
 }
 ```
 

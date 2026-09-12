@@ -217,6 +217,7 @@ Subscribe to the `payout_status_changed` event ([webhooks](https://docs.cbpayapp
   "total_debit": "86.014286",
   "status": "completed",
   "status_code": "",
+  "status_message": "",
   "bank_reference": "00761123456"
 }
 ```
@@ -224,6 +225,9 @@ Subscribe to the `payout_status_changed` event ([webhooks](https://docs.cbpayapp
 - **`completed`**: the money arrived; the hold is consumed.
 - **`failed`**: the full debit is refunded automatically (`payout_refund`
   in your ledger).
+
+`status_message` is the optional, normalized detail accompanying
+`status_code`; it can be empty when the core has no additional message.
 
 You can also query at any time:
 

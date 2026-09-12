@@ -8,6 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.75 · 1 version - September 12, 2026
+
+### v2.75
+
+**Changed**
+
+- **Payout status webhooks** now include the optional `status_message`
+  alongside `status` and `status_code`. The value is normalized and scrubbed,
+  may be empty when no additional detail is available, and never exposes an
+  upstream provider identity.
+
 ## v2.74 · 1 version - September 11, 2026
 
 ### v2.74

@@ -9,6 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.75 · 1 versión - 12 de septiembre de 2026
+
+### v2.75
+
+**Cambiado**
+
+- **Los webhooks de estado de payout** ahora incluyen el
+  `status_message` opcional junto a `status` y `status_code`. El valor está
+  normalizado y depurado, puede venir vacío si no hay detalle adicional y
+  nunca expone la identidad de un proveedor upstream.
+
 ## v2.74 · 1 versión - 11 de septiembre de 2026
 
 ### v2.74

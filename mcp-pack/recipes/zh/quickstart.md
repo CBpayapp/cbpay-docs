@@ -171,7 +171,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "fx_rate": "950.25",
   "usdt_amount": "52.618258",
   "fee": "0.500000",
-  "total_debit": "53.118258"
+  "total_debit": "53.118258",
+  "status_code": "",
+  "status_message": ""
 }
 ```
 
@@ -206,7 +208,8 @@ curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \
   "local_amount": "50000",
   "usdt_amount": "52.618258",
   "total_debit": "53.118258",
-  "status_code": ""
+  "status_code": "",
+  "status_message": ""
 }
 ```
 
