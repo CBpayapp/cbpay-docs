@@ -374,3 +374,11 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## Código de conciliación exclusivo de plataforma
+
+`core_transfer_mismatch` (`409`) es un código interno de conciliación para
+administradores de plataforma y no forma parte de la API de cuentas cliente.
+Si aparece en una respuesta administrativa de recuperación, detente y
+reconcilia el ID de transacción del core con el registro del retiro de
+plataforma; no reintentes con un retiro nuevo.
