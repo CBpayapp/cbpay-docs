@@ -3111,7 +3111,9 @@ paths:
 
         如果收款人技术筛查暂时不可用且技术筛查队列可用，响应为 `202`，资源为
         `status: pending`、`status_code: compliance_pending`、`compliance_pending: true`、
-        `funds_debited: false`，不会先扣款或调用 core。'
+        `funds_debited: false`，不会先扣款或调用 core。筛查返回 `process` 后，同一个资源仍可
+        在 `pending` 中使用 `compliance_dispatch_pending`、`compliance_dispatching` 或
+        `core_unreachable`，此时 `funds_debited` 为 true；保留相同幂等键并等待协调。'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3532,7 +3534,7 @@ paths:
                   idempotency_key: cl-btc-0192
       responses:
         '202':
-          description: Payout 已接受：筛查成功后派发，或在扣款和调用 core 之前等待技术筛查队列。
+          description: Payout 已接受：筛查成功后派发，或在扣款和调用 core 之前等待技术筛查队列。筛查通过后，同一个 payout 仍可在 `pending` 中使用 `compliance_dispatch_pending`、`compliance_dispatching` 或 `core_unreachable`，此时 `funds_debited` 为 `true` 并继续协调；这不是第二笔 payout。
           content:
             application/json:
               schema:
@@ -3568,6 +3570,35 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
+                screening_verified_pending_dispatch:
+                  summary: 筛查通过，扣款已持久化，等待 core 派发。
+                  description: 同一个 payout 仍为 pending；保留原幂等键并等待状态 webhook。
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: *id004
+                    description: Invoice 8841
+                    status: pending
+                    status_code: compliance_dispatch_pending
+                    status_message: compliance verified; dispatch pending
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    receipt_url: https://api.qbank.cl/platform/v1/payouts/7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f/receipt
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:05Z'
                 technical_screening_pending:
                   summary: Payout 已接受：筛查后派发，或在技术队列中等待。
                   description: 技术筛查在任何扣款或调用 core 之前等待。
@@ -21705,18 +21736,18 @@ components:
           - processing
           - completed
           - failed
-          description: '`pending` 且 `compliance_pending: true` 表示收款人技术筛查在任何扣款或调用 core 之前等待。'
+          description: '`pending` 且 `compliance_pending: true` 表示收款人技术筛查在任何扣款或调用 core 之前等待。筛查通过后，`pending` 也可使用 `compliance_dispatch_pending`、`compliance_dispatching` 或 `core_unreachable`，此时扣款仍被持有。'
         status_code:
           type: string
-          description: '`compliance_pending` 会随 pending 技术筛查状态返回。'
+          description: '规范化状态详情。`compliance_pending` 表示扣款前状态；`compliance_dispatch_pending`、`compliance_dispatching` 和 `core_unreachable` 表示筛查后的持久化转换。'
         status_message:
           type: string
         funds_debited:
           type: boolean
-          description: '`status` 为 `pending` 且 `compliance_pending` 为 true 时为 false。'
+          description: '技术筛查 pending 且尚未扣款时为 false。筛查通过并存在扣款/hold 后为 true，包括派发转换期间。'
         compliance_pending:
           type: boolean
-          description: '技术筛查在任何扣款或调用 core 之前等待时为 true。'
+          description: '仅当技术筛查在任何扣款或调用 core 之前等待时为 true；接受 process 结果后为 false。'
         bank_reference:
           type: string
           description: 银行/支付渠道的交易参考号(受益人可用它与银行核对付款)。US ACH/wire/SWIFT 在创建时立即返回 CBF 参考号；其他通道在渠道报告之前为空。

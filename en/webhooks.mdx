@@ -247,9 +247,23 @@ emits `payin_credited` (the existing flow, unchanged).
 ```
 
 While technical beneficiary screening is pending, a `payout_status_changed`
-payload may instead carry `status: "pending"`, `status_code:
-"compliance_pending"`, `compliance_pending: true` and `funds_debited: false`.
-It does not include `receipt_url` because no debit or receipt exists yet.
+payload may carry `status: "pending"`, `status_code: "compliance_pending"`,
+`compliance_pending: true` and `funds_debited: false`. It does not include
+`receipt_url` because no debit or receipt exists yet.
+
+After screening returns `process`, the same payout may emit additional durable
+transition events while it is still `pending`:
+
+- `status_code: "compliance_dispatch_pending"` means the debit/hold exists and
+  `funds_debited: true`, but core dispatch has not completed.
+- `status_code: "compliance_dispatching"` means the dispatch claim is active.
+- `status_code: "core_unreachable"` means dispatch or local settlement is
+  ambiguous and reconciliation is pending; do not create a second payout.
+
+Use `X-Webhook-Event-ID` to deduplicate each delivery, but do not assume one
+event per payout: the platform persists these status revisions and later emits
+the terminal `completed` or `failed` event. Terminal events carry the normal
+receipt fields; a failed payout refunds the exact debit.
 
 ```json txn_review_status_changed
 {

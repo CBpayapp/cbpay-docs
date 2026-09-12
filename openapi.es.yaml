@@ -3285,7 +3285,9 @@ paths:
         Si el screening técnico del beneficiario está temporalmente no disponible y la cola técnica de screening
         está disponible, la respuesta es `202` con un recurso en `status: pending`, `status_code:
         compliance_pending`, `compliance_pending: true` y `funds_debited: false`, antes de cualquier débito o
-        despacho al core.'
+        despacho al core. Después de que el screening devuelve `process`, el mismo recurso puede seguir en
+        `pending` con `compliance_dispatch_pending`, `compliance_dispatching` o `core_unreachable` mientras
+        `funds_debited` es true; conserva la misma clave de idempotencia y espera la conciliación.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3729,7 +3731,7 @@ paths:
                   idempotency_key: cl-btc-0192
       responses:
         '202':
-          description: Payout aceptado. Puede despacharse después de un screening de compliance exitoso o esperar en la cola técnica antes de cualquier débito o despacho al core.
+          description: Payout aceptado. Puede despacharse después de un screening de compliance exitoso o esperar en la cola técnica antes de cualquier débito o despacho al core. Después del screening, el mismo payout puede seguir en `pending` con `status_code` `compliance_dispatch_pending`, `compliance_dispatching` o `core_unreachable` mientras `funds_debited` es `true` y continúa la conciliación; no es un segundo payout.
           content:
             application/json:
               schema:
@@ -3765,6 +3767,35 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
+                screening_verified_pending_dispatch:
+                  summary: El screening pasó y el débito quedó durable mientras espera el despacho al core.
+                  description: El mismo payout sigue pendiente; conserva la clave de idempotencia original y espera el webhook de estado.
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: *id004
+                    description: Invoice 8841
+                    status: pending
+                    status_code: compliance_dispatch_pending
+                    status_message: compliance verified; dispatch pending
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    receipt_url: https://api.qbank.cl/platform/v1/payouts/7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f/receipt
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:05Z'
                 technical_screening_pending:
                   summary: 'El payout fue aceptado: se despacha después del screening o espera en la cola técnica.'
                   description: El screening técnico espera antes de cualquier débito o despacho al core.
@@ -22322,18 +22353,18 @@ components:
           - processing
           - completed
           - failed
-          description: '`pending` con `compliance_pending: true` significa que el screening técnico del beneficiario espera antes de cualquier débito o despacho al core.'
+          description: '`pending` con `compliance_pending: true` significa que el screening técnico del beneficiario espera antes de cualquier débito o despacho al core. Después del screening, `pending` también puede usar `compliance_dispatch_pending`, `compliance_dispatching` o `core_unreachable` mientras el débito permanece retenido.'
         status_code:
           type: string
-          description: '`compliance_pending` acompaña al estado pending de screening técnico.'
+          description: 'Detalle del estado normalizado. `compliance_pending` es pre-débito; `compliance_dispatch_pending`, `compliance_dispatching` y `core_unreachable` son códigos durables de transición después del screening.'
         status_message:
           type: string
         funds_debited:
           type: boolean
-          description: 'Falso mientras `status` sea `pending` y `compliance_pending` sea true.'
+          description: 'Falso antes de debitar un payout pendiente de screening. Verdadero después de que el screening pasa y existe el débito/hold, incluso durante las transiciones de despacho.'
         compliance_pending:
           type: boolean
-          description: 'Verdadero mientras el screening técnico espera antes de cualquier débito o despacho al core.'
+          description: 'Verdadero solo mientras el screening técnico espera antes de cualquier débito o despacho al core; pasa a falso cuando se acepta el resultado process.'
         bank_reference:
           type: string
           description: Referencia de la transaccion en el banco/rail (ej. el id de transferencia del banco, con el que el beneficiario cruza el pago con su banco). En US ACH/wire/SWIFT es la referencia CBF que vuelve al crear; en el resto de corredores queda vacia hasta que el rail la reporta.

@@ -239,6 +239,19 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 `compliance_pending: true` 和 `funds_debited: false`。此时不会包含
 `receipt_url`，因为尚未扣款且尚无回单。
 
+筛查返回 `process` 后，同一个 payout 仍可能在 `pending` 状态下发送
+持久化的转换事件：
+
+- `status_code: "compliance_dispatch_pending"`：筛查已通过，扣款/hold
+  已存在，因此 `funds_debited: true`，但 core 派发尚未完成。
+- `status_code: "compliance_dispatching"`：派发声明正在执行。
+- `status_code: "core_unreachable"`：派发或本地结算结果不明确，等待协调；
+  不要创建第二笔 payout。
+
+使用 `X-Webhook-Event-ID` 对每个投递去重，但不要假设一个 payout 只有
+一个事件：平台会持久化这些状态修订，随后发送终态 `completed` 或
+`failed` 事件。终态事件携带正常回单字段；失败的 payout 会退回精确扣款。
+
 ```json txn_review_status_changed
 {
   "account_id": "ae8c…",

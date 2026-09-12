@@ -8,7 +8,19 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-<Update label="12 de septiembre de 2026" description="v2.76 · 2 versions">
+<Update label="12 de septiembre de 2026" description="v2.77 · 3 versions">
+
+### v2.77
+
+**Cambiado**
+
+- **Las transiciones de compliance del payout son durables y explícitas**:
+  después de que el screening técnico devuelve `process`, el mismo payout puede
+  seguir en `pending` con `compliance_dispatch_pending`,
+  `compliance_dispatching` o `core_unreachable` mientras
+  `funds_debited: true`. Antes de aprobar el screening,
+  `funds_debited` sigue en `false`; conserva la misma clave de idempotencia y
+  espera `payout_status_changed` en vez de crear otro payout.
 
 ### v2.76
 
