@@ -18,6 +18,11 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   timeout/5xx 会保持 pending 并等待 webhook 对账，绝不会自动重发。
   新增 `checkout_not_pending` 冲突说明，并记录只有证件的付款人应作为
   独立身份 screening（`document_value`/`idNumber`，而非 `name`）。
+- **交易筛查现在区分已识别的 AML 类别与模糊候选结果**：已识别的类别在
+  `target=true` 或 `target=false` 时仍可触发行动。当 `target=false` 且 AML
+  类别未被识别时，结果不可触发行动，也不会产生错误的暂留或错误响应。
+  缺少 `target` 的旧版响应，以及不完整或格式错误的响应，仍然采用
+  fail-closed 行为。
 
 </Update>
 
