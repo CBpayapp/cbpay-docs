@@ -1,6 +1,6 @@
 ---
 title: "Receipts"
-description: "Branded PDF per operation, with a QR authenticity check, receipt_url on every response and automatic email delivery"
+description: "Branded PDF per operation, with a QR authenticity check, receipt_url on final-state responses and automatic email delivery"
 slug: en/guides/receipts
 lang: en
 source_url: https://docs.cbpayapp.com/en/guides/receipts
@@ -13,10 +13,11 @@ deposits and withdrawals, swaps and card purchases — has a downloadable
 verification code with a QR** that anyone can check publicly to confirm the
 document is authentic.
 
-There is nothing to build: every response and webhook of an operation
-includes its `receipt_url` ready to download, and when the operation reaches
-a final state the receipt is also **emailed automatically** to the account
-owner (with opt-out).
+There is nothing to build: final-state responses and webhooks include the
+operation's `receipt_url` ready to download. A payout that is still pending
+technical screening before debit does not expose `receipt_url`; when the
+operation reaches a final state the receipt is also **emailed automatically**
+to the account owner (with opt-out).
 
 ```mermaid
 sequenceDiagram
@@ -24,7 +25,7 @@ sequenceDiagram
     participant API as CBPay API
     participant T as Third party (receipt recipient)
     C->>API: POST /v1/payouts
-    API-->>C: 201 with receipt_url
+    API-->>C: 202 resource (receipt_url only after debit/final state)
     Note over API: The operation reaches a final state
     API-->>C: Webhook payout_status_changed (includes receipt_url)
     API-->>C: Email to the account owner with the PDF attached
@@ -37,7 +38,9 @@ sequenceDiagram
 
 ## Downloading a receipt
 
-Every transactional resource with `GET /{id}` has its `GET .../receipt`.
+Every transactional resource with `GET /{id}` has its `GET .../receipt` once
+the receipt exists; a payout pending technical screening before debit has no
+receipt yet.
 The PDF defaults to English; pass `?lang=es` or `?lang=zh` for Spanish or Chinese. Payer pages may also persist `cbpay_pay_locale`.
 
 | Operation | Endpoint |
@@ -73,9 +76,9 @@ payment. While the payout is in transit the line simply does not appear:
 download the receipt again once it is `completed`.
 ## `receipt_url` in responses and webhooks
 
-Never build the URLs by hand: every payout, payin, transfer, withdrawal,
-deposit, swap and card transaction response includes `receipt_url`, and the
-final-state webhooks (`payout_status_changed`, `payin_credited`,
+Never build the URLs by hand: final-state responses for payouts, payins,
+transfers, withdrawals, deposits, swaps and card transactions include
+`receipt_url`, and the final-state webhooks (`payout_status_changed`, `payin_credited`,
 `transfer_received`, `crypto_deposit_credited`,
 `crypto_withdrawal_status_changed`, `card_transaction`) carry it in the
 payload too.

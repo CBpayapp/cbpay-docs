@@ -38,7 +38,8 @@ security:
 tags:
 - name: Comprobantes
   description: Comprobante PDF brandeado por operacion, con verificacion publica de autenticidad (QR firmado),
-    receipt_url en cada respuesta/webhook y envio automatico por email en estados finales.
+    receipt_url en respuestas/webhooks de estado final y envio automatico por email en estados finales.
+    Un payout pendiente antes del debito no expone receipt_url.
 - name: Autenticación
   description: Registra e inicia sesión de los miembros de la cuenta. Las sesiones duran 24 horas.
 - name: Cuenta
@@ -3281,7 +3282,10 @@ paths:
         Requiere una llave de idempotencia (campo del body o header `Idempotency-Key`). Reintentar con
         la misma llave devuelve el payout original (`200` con `idempotency_hit: true`).
 
-        Si el screening técnico del beneficiario está temporalmente no disponible y la cola pendiente está disponible, la respuesta es `202 pending_compliance` antes de cualquier débito o despacho al core.'
+        Si el screening técnico del beneficiario está temporalmente no disponible y la cola técnica de screening
+        está disponible, la respuesta es `202` con un recurso en `status: pending`, `status_code:
+        compliance_pending`, `compliance_pending: true` y `funds_debited: false`, antes de cualquier débito o
+        despacho al core.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3761,7 +3765,7 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
-                pending_compliance:
+                technical_screening_pending:
                   summary: 'El payout fue aceptado: se despacha después del screening o espera en la cola técnica.'
                   description: El screening técnico espera antes de cualquier débito o despacho al core.
                   value:
@@ -3781,7 +3785,7 @@ paths:
                     settlement_rate: '1'
                     beneficiary: *id004
                     description: Invoice 8841
-                    status: pending_compliance
+                    status: pending
                     status_code: compliance_pending
                     status_message: ''
                     funds_debited: false
@@ -22315,19 +22319,18 @@ components:
           type: string
           enum:
           - pending
-          - pending_compliance
           - processing
           - completed
           - failed
-          description: '`pending_compliance` significa que el screening técnico del beneficiario espera antes de cualquier débito o despacho al core.'
+          description: '`pending` con `compliance_pending: true` significa que el screening técnico del beneficiario espera antes de cualquier débito o despacho al core.'
         status_code:
           type: string
-          description: '`compliance_pending` acompaña a `pending_compliance`.'
+          description: '`compliance_pending` acompaña al estado pending de screening técnico.'
         status_message:
           type: string
         funds_debited:
           type: boolean
-          description: 'Falso mientras el `status` sea `pending_compliance`.'
+          description: 'Falso mientras `status` sea `pending` y `compliance_pending` sea true.'
         compliance_pending:
           type: boolean
           description: 'Verdadero mientras el screening técnico espera antes de cualquier débito o despacho al core.'
@@ -22343,6 +22346,11 @@ components:
         idempotency_hit:
           type: boolean
           description: Presente (true) cuando la respuesta es una repetición idempotente.
+        receipt_url:
+          type: string
+          format: uri
+          description: Presente solo cuando existe un comprobante, normalmente después del débito y del estado
+            final. Se omite mientras el payout espera screening técnico antes del débito.
     Payin:
       type: object
       properties:

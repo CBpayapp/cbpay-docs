@@ -238,9 +238,15 @@ emits `payin_credited` (the existing flow, unchanged).
   "status_code": "",
   "status_message": "",
   "bank_reference": "00761123456",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
   "idempotency_key": "payroll-2026-07-001"
 }
 ```
+
+While technical beneficiary screening is pending, a `payout_status_changed`
+payload may instead carry `status: "pending"`, `status_code:
+"compliance_pending"`, `compliance_pending: true` and `funds_debited: false`.
+It does not include `receipt_url` because no debit or receipt exists yet.
 
 ```json txn_review_status_changed
 {
@@ -685,9 +691,10 @@ engine data.
 }
 ```
 
-In `payout_status_changed` and `crypto_withdrawal_status_changed`, `status`
-can be `completed` or `failed` (with `failed`, the debit has already been
-refunded by the time you receive the event).
+In `payout_status_changed`, a technical-screening update can be `pending`
+before any debit. Final updates are `completed` or `failed` (with `failed`,
+the debit has already been refunded by the time you receive the event).
+`crypto_withdrawal_status_changed` uses `completed` or `failed`.
 
 For `payout_status_changed`, `status_code` and `status_message` are the
 normalized outcome reported by the core. `status_message` may be empty when

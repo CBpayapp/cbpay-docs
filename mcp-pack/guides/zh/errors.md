@@ -219,7 +219,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 |---|---|---|
 | 403 | `compliance_hold` | 该操作已被平台的合规控制拦截。这不是请求错误：请携带时间戳联系支持团队 — 根据政策，不会披露具体原因 |
 | 403 | `geo_restricted` | 该服务或操作不适用于发起方或交易对手所在的司法辖区 |
-| 503 | `compliance_check_unavailable` | 合规校验无法完成，且 payout 无法写入 pending 队列；请使用**相同**幂等键重试。该 payout 队列可用时，`POST /v1/payouts` 会返回 `202 pending_compliance`。其他校验和安全错误仍使用各自代码 |
+| 503 | `compliance_check_unavailable` | 合规校验无法完成，且 payout 无法写入技术筛查队列；请使用**相同**幂等键重试。队列可用时，`POST /v1/payouts` 会返回 `202` 且资源为 `status: pending`。其他校验和安全错误仍使用各自代码 |
 | 422 | `travel_rule_required` | 超过 Travel Rule 阈值的链上提现缺少受益人数据 — 补充 `travel_address` 或 `wallet_type: "self_hosted"` + `beneficiary_name`（[加密货币指南](https://docs.cbpayapp.com/zh/guides/crypto)） |
 | 422 | `travel_rule_beneficiary_required` | 适用 Travel Rule 的提现缺少 `beneficiary_name` |
 | 422 | `travel_rule_address_mismatch` | 您的 `to_address` 与收款机构批准的付款地址不一致 — 省略它或使用交换返回的地址 |
@@ -358,9 +358,3 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
-
-## 仅限平台的对账代码
-
-`core_transfer_mismatch`（`409`）是平台管理员内部对账代码，不属于客户
-账户 API。如果行政恢复响应中出现该代码，请停止恢复流程，对账 core 交易
-ID 与平台提现记录；不要使用新提现重试。

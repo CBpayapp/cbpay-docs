@@ -232,9 +232,15 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
   "status_code": "",
   "status_message": "",
   "bank_reference": "00761123456",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
   "idempotency_key": "payroll-2026-07-001"
 }
 ```
+
+在收款人技术筛查等待期间，`payout_status_changed` 负载可能携带
+`status: "pending"`、`status_code: "compliance_pending"`、
+`compliance_pending: true` 和 `funds_debited: false`。此时不会包含
+`receipt_url`，因为尚未扣款且尚无回单。
 
 ```json txn_review_status_changed
 {
@@ -676,7 +682,9 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 
 </CodeGroup>
 
-在 `payout_status_changed` 和 `crypto_withdrawal_status_changed` 中，`status` 可以为 `completed` 或 `failed`（若为 `failed`，在您收到该事件时扣款已完成退还）。
+在 `payout_status_changed` 中，技术筛查更新在任何扣款前可以为 `pending`。
+最终更新为 `completed` 或 `failed`（若为 `failed`，在您收到该事件时扣款已完成退还）。
+`crypto_withdrawal_status_changed` 使用 `completed` 或 `failed`。
 
 对于 `payout_status_changed`，`status_code` 和 `status_message` 是核心报告的规范化结果。
 当通道没有提供更多细节时，`status_message` 可以为空；平台会在投递前清理它，

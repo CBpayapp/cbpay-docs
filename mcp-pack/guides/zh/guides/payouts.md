@@ -203,14 +203,14 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ### 技术筛查可能处于 pending
 
 CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂时不可用，**但
-`pending_compliance` 队列可用**，payout 会先持久化，创建请求返回
-`202 Accepted`，资源状态为 `pending_compliance`：
+技术筛查队列可用**，payout 会先持久化，创建请求返回 `202 Accepted`，
+资源状态为 `pending`：
 
 ```json
 {
   "payout_id": "0d4f…",
   "idempotency_key": "invoice-8841",
-  "status": "pending_compliance",
+  "status": "pending",
   "status_code": "compliance_pending",
   "status_message": "",
   "funds_debited": false,
@@ -269,9 +269,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | 状态 | 含义 | 您的余额 |
 |---|---|---|
 | `processing` | 已接受并在本地通道执行 | 扣款冻结在 `held` |
-| `pending_compliance` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
+| `pending` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
 | `completed` | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |
-| `failed` | 通道拒绝或执行失败 | **自动全额退款**（金额 + 费用） | | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |
 | `failed` | 通道拒绝或执行失败 | **自动全额退款**（金额 + 费用） |
 
 ## 查询与历史记录
@@ -1176,7 +1175,7 @@ curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-22
 | 422 | `currency_not_supported` | 该货币没有可用的外汇汇率 |
 | 422 | （出金处于 `status: failed`） | 通道拒绝了该数据；扣款已退回 —— 修正 `beneficiary` 后使用新的键重试 |
 | 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的** `idempotency_key` 重试 |
-| 503 | `compliance_check_unavailable` | 无法完成合规校验，也无法将 payout 写入 pending 队列；请使用**相同**幂等键重试。pending 队列可用时，创建请求改为返回 `202 pending_compliance` |
+| 503 | `compliance_check_unavailable` | 无法完成合规校验，也无法将 payout 写入技术筛查队列；请使用**相同**幂等键重试。队列可用时，创建请求返回 `202` 且资源为 `status: pending` |
 
 ## 立即拒绝与后续失败
 
@@ -1216,9 +1215,9 @@ webhook 或 `GET` 等待最终状态 —— 它一定会到达，失败时会自
 可以 —— 设置账户级默认值（`PUT /v1/settlement`）或按笔用
 `settlement_asset` 覆盖（USDC、BTC、GOLD）。退款返回精确的结算金额，
 绝不重新报价。
-#### `pending_compliance` 是什么意思？
-收款人筛查暂时不可用，但 CBPay 已将 payout 持久化到技术合规队列。
-没有扣款、hold 或账本分录，core 尚未被调用，也没有回执。使用相同
+#### `status: pending` 且 `compliance_pending: true` 是什么意思？
+收款人筛查暂时不可用，但 CBPay 已将 payout 持久化到技术筛查队列。
+没有扣款、hold 或账本分录，core 尚未被调用，也没有 `receipt_url`。使用相同
 幂等键 replay 会返回同一个资源。等待 `payout_status_changed` 或查询
 payout；结果为 `process` 时继续，`hold` 时进入防火墙，`rejected` 时
 在不扣款的情况下变为 `failed`。

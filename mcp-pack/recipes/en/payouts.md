@@ -213,15 +213,15 @@ a per-operation limit (`422 settlement_limit_exceeded`; check it in
 ### Technical screening can be pending
 
 CBPay screens the beneficiary before it debits your balance or calls the core.
-If the screening service is temporarily unavailable **and the pending queue is
-available**, the payout is persisted and the create call returns `202 Accepted`
-with `status: "pending_compliance"`:
+If the screening service is temporarily unavailable **and the technical
+screening queue is available**, the payout is persisted and the create call
+returns `202 Accepted` with the payout resource in `status: "pending"`:
 
 ```json
 {
   "payout_id": "0d4f…",
   "idempotency_key": "invoice-8841",
-  "status": "pending_compliance",
+  "status": "pending",
   "status_code": "compliance_pending",
   "status_message": "",
   "funds_debited": false,
@@ -282,9 +282,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Status | Meaning | Your balance |
 |---|---|---|
 | `processing` | Accepted and executing on the local rail | Debit held in `held` |
-| `pending_compliance` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
+| `pending` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
 | `completed` | The money reached the beneficiary | Hold consumed — final |
-| `failed` | The corridor rejected it or it failed | **Full automatic refund** (amount + fee) | | The money reached the beneficiary | Hold consumed — final |
 | `failed` | The corridor rejected it or it failed | **Full automatic refund** (amount + fee) |
 
 ## Reads and history
@@ -1234,7 +1233,7 @@ Paying a collection QR (Bolivia, Brazil PIX) now has its own guide:
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | (payout with `status: failed`) | The corridor rejected the data; the debit was already refunded — fix `beneficiary` and retry with a new key |
 | 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the SAME `idempotency_key` |
-| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in the pending queue; retry with the **same** idempotency key. When the pending queue is available, payout creation returns `202 pending_compliance` instead |
+| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in the technical screening queue; retry with the **same** idempotency key. When that queue is available, payout creation returns `202` with `status: pending` instead |
 
 ## Immediate rejection vs later failure
 
@@ -1277,10 +1276,10 @@ operation. Your agreed spread is already inside the rate.
 Yes — set a per-account default (`PUT /v1/settlement`) or override per
 payout with `settlement_asset` (USDC, BTC, GOLD). Refunds return the exact
 settled amount, never re-quoted.
-#### What does `pending_compliance` mean?
+#### What does `status: pending` with `compliance_pending: true` mean?
 The beneficiary screening is temporarily unavailable, but CBPay persisted the
-payout in its technical compliance queue. No balance was debited, no hold or
-ledger entry exists, the core was not called and there is no receipt yet.
+payout in its technical screening queue. No balance was debited, no hold or
+ledger entry exists, the core was not called and there is no `receipt_url` yet.
 Replay with the same idempotency key returns the same resource. Wait for the
 `payout_status_changed` event or poll the payout; it will continue after
 `process`, enter the firewall for a valid `hold`, or become `failed` without a

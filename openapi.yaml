@@ -36,7 +36,8 @@ security:
 tags:
 - name: Receipts
   description: Branded PDF receipt per operation, with a public signed-QR authenticity check, receipt_url
-    on every response/webhook and automatic email delivery on final states.
+    on final-state responses/webhooks and automatic email delivery on final states. A pending payout before
+    debit does not expose receipt_url.
 - name: Authentication
   description: Register and log in account members. Sessions last 24 hours.
 - name: Account
@@ -3301,7 +3302,9 @@ paths:
         Requires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key
         returns the original payout (`200` with `idempotency_hit: true`).
 
-        If technical beneficiary screening is temporarily unavailable and the pending queue is available, the response is `202 pending_compliance` before any debit or core dispatch.'
+        If technical beneficiary screening is temporarily unavailable and the technical screening queue is available,
+        the response is `202` with a payout resource in `status: pending`, `status_code: compliance_pending`,
+        `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -3781,7 +3784,7 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
-                pending_compliance:
+                technical_screening_pending:
                   summary: The payout was accepted and is either dispatching after screening or waiting in the technical screening queue.
                   description: Technical screening is pending before any debit or core dispatch.
                   value:
@@ -3801,7 +3804,7 @@ paths:
                     settlement_rate: '1'
                     beneficiary: *id004
                     description: Invoice 8841
-                    status: pending_compliance
+                    status: pending
                     status_code: compliance_pending
                     status_message: ''
                     funds_debited: false
@@ -22470,19 +22473,18 @@ components:
           type: string
           enum:
           - pending
-          - pending_compliance
           - processing
           - completed
           - failed
-          description: '`pending_compliance` means technical beneficiary screening is queued before any debit or core dispatch.'
+          description: '`pending` with `compliance_pending: true` means technical beneficiary screening is queued before any debit or core dispatch.'
         status_code:
           type: string
-          description: '`compliance_pending` accompanies `pending_compliance`.'
+          description: '`compliance_pending` accompanies the pending technical-screening state.'
         status_message:
           type: string
         funds_debited:
           type: boolean
-          description: 'False while `status` is `pending_compliance`.'
+          description: 'False while `status` is `pending` and `compliance_pending` is true.'
         compliance_pending:
           type: boolean
           description: 'True while technical screening is queued before any debit or core dispatch.'
@@ -22498,6 +22500,11 @@ components:
         idempotency_hit:
           type: boolean
           description: Present (true) when the response is an idempotent replay.
+        receipt_url:
+          type: string
+          format: uri
+          description: Present only when a receipt exists, normally after debit and a final-state transition.
+            Omitted while the payout is pending technical screening before debit.
     Payin:
       type: object
       properties:

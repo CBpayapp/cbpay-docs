@@ -241,9 +241,15 @@ Al llegar el `settle_at`, el worker de settlement acredita el saldo y emite
   "status_code": "",
   "status_message": "",
   "bank_reference": "00761123456",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
   "idempotency_key": "payroll-2026-07-001"
 }
 ```
+
+Mientras espera el screening técnico del beneficiario, un payload de
+`payout_status_changed` puede llevar `status: "pending"`, `status_code:
+"compliance_pending"`, `compliance_pending: true` y `funds_debited: false`.
+No incluye `receipt_url` porque todavía no existe débito ni comprobante.
 
 ```json txn_review_status_changed
 {
@@ -690,9 +696,11 @@ antiguas sin datos del motor.
 
 </CodeGroup>
 
-En `payout_status_changed` y `crypto_withdrawal_status_changed`, `status`
-puede ser `completed` o `failed` (con `failed` el débito ya fue
-reembolsado cuando recibes el evento).
+En `payout_status_changed`, una actualización de screening técnico puede ser
+`pending` antes de cualquier débito. Las actualizaciones finales son
+`completed` o `failed` (con `failed` el débito ya fue reembolsado cuando
+recibes el evento). `crypto_withdrawal_status_changed` usa `completed` o
+`failed`.
 
 En `payout_status_changed`, `status_code` y `status_message` son el resultado
 normalizado que reporta el core. `status_message` puede venir vacío cuando el

@@ -17,13 +17,13 @@ con anticipación y quedan marcados como **Breaking**.
 
 - **Cola de screening técnico de payouts**: cuando el screening del
   beneficiario está temporalmente no disponible pero la cola sí está
-  disponible, `POST /v1/payouts` devuelve `202` con
-  `status: pending_compliance`, `status_code: compliance_pending`,
-  `compliance_pending: true` y `funds_debited: false`. Mientras espera no hay
-  hold, asiento en el ledger, despacho al core ni comprobante. El replay con
-  la misma idempotency key devuelve el mismo payout. `process` continúa el
-  flujo normal, un `hold` válido entra al firewall y `rejected` termina el
-  payout encolado como `failed` sin débito.
+  disponible, `POST /v1/payouts` devuelve `202` con `status: pending`,
+  `status_code: compliance_pending`, `compliance_pending: true` y
+  `funds_debited: false`. Mientras espera no hay hold, asiento en el ledger,
+  despacho al core ni `receipt_url`. El replay con la misma idempotency key
+  devuelve el mismo payout. `process` continúa el flujo normal, un `hold`
+  válido entra al firewall y `rejected` termina el payout encolado como
+  `failed` sin débito.
 
 ### v2.75
 

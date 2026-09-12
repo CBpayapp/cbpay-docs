@@ -1,6 +1,6 @@
 ---
 title: "Comprobantes"
-description: "PDF brandeado por operación, con QR de verificación de autenticidad, receipt_url en cada respuesta y envío automático por email"
+description: "PDF brandeado por operación, con QR de verificación de autenticidad, receipt_url en respuestas finales y envío automático por email"
 slug: es/guias/comprobantes
 lang: es
 source_url: https://docs.cbpayapp.com/es/guias/comprobantes
@@ -14,8 +14,9 @@ operación y un **código de verificación firmado con QR** que cualquier
 persona puede consultar públicamente para confirmar que el documento es
 auténtico.
 
-No necesitas construir nada: toda respuesta y webhook de una operación
-incluye su `receipt_url` listo para descargar, y al llegar a estado final el
+No necesitas construir nada: las respuestas y webhooks de estado final incluyen
+el `receipt_url` listo para descargar. Un payout pendiente del screening
+técnico antes del débito no expone `receipt_url`; al llegar a estado final el
 comprobante también se envía **automáticamente por email** al dueño de la
 cuenta (con opt-out).
 
@@ -25,7 +26,7 @@ sequenceDiagram
     participant API as CBPay API
     participant T as Tercero (quien recibe el comprobante)
     C->>API: POST /v1/payouts
-    API-->>C: 201 con receipt_url
+    API-->>C: 202 recurso (receipt_url solo después del débito/estado final)
     Note over API: La operación llega a estado final
     API-->>C: Webhook payout_status_changed (incluye receipt_url)
     API-->>C: Email al dueño de la cuenta con el PDF adjunto
@@ -38,7 +39,9 @@ sequenceDiagram
 
 ## Descargar un comprobante
 
-Todo recurso transaccional con `GET /{id}` tiene su `GET .../receipt`. El
+Todo recurso transaccional con `GET /{id}` tiene su `GET .../receipt` cuando el
+comprobante existe; un payout pendiente del screening técnico antes del débito
+aún no tiene comprobante. El
 PDF sale en inglés por defecto; pasa `?lang=es` o `?lang=zh` para español o chino. Las páginas del pagador también pueden persistir `cbpay_pay_locale`.
 
 | Operación | Endpoint |
@@ -74,8 +77,8 @@ confirma el pago. Mientras el payout está en tránsito la línea simplemente
 no aparece: vuelve a descargarlo cuando quede `completed`.
 ## `receipt_url` en respuestas y webhooks
 
-No construyas las URLs a mano: toda respuesta de payout, payin,
-transferencia, retiro, depósito, swap y transacción de tarjeta incluye
+No construyas las URLs a mano: las respuestas finales de payout, payin,
+transferencia, retiro, depósito, swap y transacción de tarjeta incluyen
 `receipt_url`, y los webhooks de estados finales
 (`payout_status_changed`, `payin_credited`, `transfer_received`,
 `crypto_deposit_credited`, `crypto_withdrawal_status_changed`,
