@@ -218,6 +218,7 @@ Suscríbete al evento `payout_status_changed` ([webhooks](https://docs.cbpayapp.
   "total_debit": "86.014286",
   "status": "completed",
   "status_code": "",
+  "status_message": "",
   "bank_reference": "00761123456"
 }
 ```
@@ -225,6 +226,9 @@ Suscríbete al evento `payout_status_changed` ([webhooks](https://docs.cbpayapp.
 - **`completed`**: el dinero llegó; el hold se consume.
 - **`failed`**: se reembolsa el débito completo automáticamente
   (`payout_refund` en tu ledger).
+
+`status_message` es el detalle opcional y normalizado que acompaña a
+`status_code`; puede venir vacío cuando el core no tiene un mensaje adicional.
 
 También puedes consultar en cualquier momento:
 

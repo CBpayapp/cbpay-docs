@@ -236,6 +236,7 @@ Al llegar el `settle_at`, el worker de settlement acredita el saldo y emite
   "total_debit": "86.014286",
   "status": "completed",
   "status_code": "",
+  "status_message": "",
   "bank_reference": "00761123456",
   "idempotency_key": "payroll-2026-07-001"
 }
@@ -687,6 +688,11 @@ antiguas sin datos del motor.
 En `payout_status_changed` y `crypto_withdrawal_status_changed`, `status`
 puede ser `completed` o `failed` (con `failed` el débito ya fue
 reembolsado cuando recibes el evento).
+
+En `payout_status_changed`, `status_code` y `status_message` son el resultado
+normalizado que reporta el core. `status_message` puede venir vacío cuando el
+riel no entrega detalle adicional; se depura antes de la entrega y nunca
+contiene la identidad de un proveedor upstream.
 
 ## Formato de entrega
 

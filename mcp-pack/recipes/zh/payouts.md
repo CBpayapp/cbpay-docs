@@ -207,6 +207,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "total_debit": "86.014286",
   "status": "completed",
   "status_code": "",
+  "status_message": "",
   "bank_reference": "00761123456"
 }
 ```
@@ -214,6 +215,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - **`completed`**：资金已到账；冻结金额被消耗。
 - **`failed`**：全部扣款自动退回（在您的账本中记为
   `payout_refund`）。
+
+`status_message` 是与 `status_code` 一起返回的可选规范化详情；
+核心没有额外消息时该字段可以为空。
 
 您也可以随时查询：
 

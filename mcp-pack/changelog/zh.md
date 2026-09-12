@@ -8,6 +8,16 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.75 · 1 个版本 - 2026年9月12日
+
+### v2.75
+
+**变更**
+
+- **Payout 状态 webhook** 现在会在 `status` 和 `status_code` 旁边返回可选的
+  `status_message`。该值已规范化并清理；没有额外详情时可以为空，且不会暴露
+  上游服务商身份。
+
 ## v2.74 · 1 个版本 - 2026年9月11日
 
 ### v2.74

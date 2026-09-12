@@ -625,6 +625,7 @@
         "payout_id": "7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f",
         "status": "completed",
         "status_code": "",
+        "status_message": "",
         "total_debit": "86.014286",
         "usdt_amount": "85.714286"
       },

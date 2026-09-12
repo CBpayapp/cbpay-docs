@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.73"
+  version: "2.74"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -996,12 +996,20 @@ paths:
                 error: too_many_attempts
                 message: too many requests; wait a moment and retry
         '503':
-          description: 报价暂时不可用。
+          description: >-
+            报价暂时不可用，或所选支付选项正在核对（`checkout_recovery_pending`）。
+            请重试相同的物化请求，不要创建第二个选项。
           content:
             application/json:
-              example:
-                error: pricing_unavailable
-                message: pricing is temporarily unavailable; retry in a moment
+              examples:
+                pricing_unavailable:
+                  value:
+                    error: pricing_unavailable
+                    message: pricing is temporarily unavailable; retry in a moment
+                checkout_recovery_pending:
+                  value:
+                    error: checkout_recovery_pending
+                    message: the payment option is being reconciled
   /pay/{token}/methods/{method}:
     post:
       security: []
@@ -4073,7 +4081,21 @@ paths:
         `method: "checkout"` 响应携带一个公开的 `checkout_url` —— 以您选择的虚拟余额计价的通用收款链接(`settlement_asset`:USDT、USDC、BTC
         或 GOLD)。付款人可选择任何有可用 payin 走廊的国家(本地金额实时报价)、四个加密货币选项之一(带可扫描二维码的专属充值地址),或通过商户的
         CBPay 二维码/别名从 CBPay 应用即时付款;每笔付款自动兑换为结算资产(以相同资产付款则不兑换)。最先完成支付的方式生效。创建收款免费;存款入账时收取
-        payin 费用。'
+        payin 费用。未发送 `stored_card_id` 时，开放的 `pending`/`challenge`
+        银行卡会话可按同一账户、国家、币种、金额和 `payer_reference` 复用
+        （缺少时回退到 `customer.email`），返回 HTTP 200、`session_reused: true`
+        和原有的 `payment_url`。会话默认 60 分钟，显式过期时间最多 48 小时。
+        每个账户最多 50 个开放会话；无法驱逐零尝试的 `pending` 会话时返回
+        `429 too_many_open_card_sessions`。'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        description: >-
+          JSON `idempotency_key` 的替代方式。当 body 未提供该键时，
+          `method: "card"` 必须使用此 header。body 与 header 不要发送不同的值。
+        schema:
+          type: string
       requestBody:
         required: true
         content:
@@ -4121,11 +4143,47 @@ paths:
                 idempotency_key:
                   type: string
                   description: >-
-                    可选幂等键(`bank_transfer`、`fintoc`、`card` 与 `checkout` 方式;也接受 `Idempotency-Key` 请求头)。使用相同键重试会返回原始 payin,HTTP 200 且带 `idempotency_hit: true` —— 托管方式返回同一个 `payment_url`/`checkout_url`,预告银行转账返回同一个 `reference` —— 而不会开启第二笔收款。对预告转账而言,这直接决定资金能否入账:两笔金额相同、且没有付款人身份的存活预告无法区分,到账存款会停留在 `unassigned`。若省略该键,我们仍会把完全相同的重试(同一账户、货币、金额与付款人证件号)合并到原始预告;当您确实需要针对同一金额与同一付款人创建两笔独立收款时,请发送不同的键。
+                    对于 `method: "card"`，该键为必填：在 body 中发送，或使用
+                    `Idempotency-Key` 请求头。`bank_transfer`、`fintoc` 与
+                    `checkout` 可选。使用相同键重试会返回原始 payin、HTTP 200
+                    和 `idempotency_hit: true` —— 托管方式返回同一个
+                    `payment_url`/`checkout_url`，预告银行转账返回同一个
+                    `reference` —— 而不会开启第二笔收款。对预告转账而言，这直接决定
+                    资金能否入账：两笔金额相同且没有付款人身份的存活预告无法区分，
+                    到账存款会停留在 `unassigned`。若省略该键，我们仍会把完全相同的
+                    重试（同一账户、货币、金额与付款人证件号）合并到原始预告；当您确实
+                    需要针对同一金额与同一付款人创建两笔独立收款时，请发送不同的键。
                 customer:
                   type: object
-                  description: 银行卡收银台的可选账单预填(`card` 方式)—— `email`、`first_name`、`last_name`、`address`、`city`、`country`(纯文本,每个字段最多
-                    120 个字符)。付款人可在页面上补充或更正。
+                  description: 银行卡收银台的可选账单预填(`card` 方式)。付款人可在页面上补充或更正。
+                  properties:
+                    first_name:
+                      type: string
+                      maxLength: 120
+                    last_name:
+                      type: string
+                      maxLength: 120
+                    email:
+                      type: string
+                      maxLength: 120
+                    phone_number:
+                      type: string
+                      maxLength: 120
+                    address1:
+                      type: string
+                      maxLength: 120
+                    locality:
+                      type: string
+                      maxLength: 120
+                    administrative_area:
+                      type: string
+                      maxLength: 120
+                    postal_code:
+                      type: string
+                      maxLength: 120
+                    country:
+                      type: string
+                      maxLength: 120
                 success_url:
                   type: string
                   description: 可选的公共 https URL(`card` 与 `checkout` 方式),支付获批后将付款人重定向至此。
@@ -4135,7 +4193,8 @@ paths:
                 expires_at:
                   type: string
                   format: date-time
-                  description: 银行卡支付会话的可选 RFC3339 过期时间(`card` 方式,至少提前 15 分钟;默认 24 小时)。
+                  description: 银行卡支付会话的可选 RFC3339 过期时间(`card` 方式)；
+                    至少提前 15 分钟，创建后最多 48 小时；默认 60 分钟。
                 settlement_asset:
                   type: string
                   enum:
@@ -4155,13 +4214,16 @@ paths:
                 payer_reference:
                   type: string
                   maxLength: 120
-                  description: 仅 card 方式 — 你自己的付款人标识（例如你的客户 ID）。已保存的卡片以此引用为范围，
-                    便于列出并扣款正确客户的卡片。纯文本，最多 120 个字符。
+                  description: 仅 card 方式 — 付款人的纯文本自定义标识（最多 120 个字符）。
+                    这是复用开放 `pending`/`challenge` 会话的首选身份；缺少时使用
+                    `customer.email`。该值用于限定调用账户内的已保存卡片 discovery 与扣款；
+                    另一个账户中的相同邮箱或引用无法发现或使用该凭证。
                 stored_card_id:
                   type: string
                   format: uuid
                   description: 仅 card 方式 — 使用之前保存的卡支付（见 GET /v1/stored-cards）。托管页面跳过卡片
-                    录入并显示已保存的卡；3-D Secure 照常运行。与 `save_card` 互斥。未知或已撤销的卡返回 404。随凭证保存的账单信息会在托管页面自动应用（脱敏摘要 + 编辑链接 — 付款人无需重新输入）。
+                    录入并显示已保存的卡；3-D Secure 照常运行。与 `save_card` 互斥。未知、已撤销或属于其他账户的卡返回 404。
+                    随凭证保存的账单信息会在托管页面自动应用（脱敏摘要 + 编辑链接 — 付款人无需重新输入）。
                 payer_name:
                   type: string
                   maxLength: 140
@@ -4245,6 +4307,7 @@ paths:
                     email: payer@example.com
                     first_name: Ana
                     last_name: Rojas
+                  payer_reference: customer-7719
                   success_url: https://your-app.com/payment/ok
                   failure_url: https://your-app.com/payment/error
                   idempotency_key: topup-7719
@@ -4403,8 +4466,9 @@ paths:
                     receipt_url: https://api.qbank.cl/platform/v1/payins/d0135ed5-8e9c-4f8b-a522-8ec100470426/receipt
         '200':
           description: >-
-            已公告转账（`bank_transfer`）的幂等重放：返回原始公告及其相同的 `reference`。
-            当未携带幂等键的请求与一个无法区分的活跃公告（相同账户、币种、金额和付款人）匹配时，也会返回此响应。
+            已公告转账（`bank_transfer`）的幂等重放，或开放银行卡会话（`card`）的复用。
+            会话复用返回原有的 `payment_url` 与 `session_reused: true`，不会创建第二笔
+            charge 或第二个会话。
           content:
             application/json:
               schema:
@@ -4421,17 +4485,60 @@ paths:
                     type: string
                   idempotency_hit:
                     type: boolean
-              example:
-                payin_id: 4f81c1d0-aaaa-bbbb-cccc-ddddeeeeffff
-                status: pending
-                reference: CBJ6T3W9M2K5
-                note: include the reference in the transfer description so the deposit is credited
-                  automatically
-                payer_source: declared
-                payer_document: 17438319-7
-                idempotency_hit: true
+              examples:
+                bank_transfer:
+                  value:
+                    payin_id: 4f81c1d0-aaaa-bbbb-cccc-ddddeeeeffff
+                    status: pending
+                    reference: CBJ6T3W9M2K5
+                    note: include the reference in the transfer description so the deposit is credited
+                      automatically
+                    payer_source: declared
+                    payer_document: 17438319-7
+                    idempotency_hit: true
+                card_session_reused:
+                  summary: 复用开放银行卡会话
+                  value:
+                    payin_id: b41c9a70-1111-2222-3333-444455556666
+                    status: pending
+                    reference: b41c9a70-1111-2222-3333-444455556666
+                    payment_url: https://api.qbank.cl/pay/cards/9f3XkT2m…
+                    expires_at: '2026-09-10T20:30:00Z'
+                    session_reused: true
         '400':
           $ref: '#/components/responses/BadRequest'
+        '503':
+          description: >-
+            平台正在核对不明确的银行卡操作（`card_recovery_pending`），或 core
+            未返回完整可恢复会话（`core_reuse_unavailable`）。请使用相同的
+            `idempotency_key` 重试；不要为同一笔付款创建新键。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                recovery:
+                  value:
+                    error: card_recovery_pending
+                    message: the card payment is being reconciled
+                incomplete:
+                  value:
+                    error: core_reuse_unavailable
+                    message: the core returned an incomplete card charge
+                reuse_unavailable:
+                  value:
+                    error: card_reuse_unavailable
+                    message: could not verify an existing card payment
+        '429':
+          description: 账户已有 50 个开放银行卡会话，且无法驱逐零尝试的
+            `pending` 会话（`too_many_open_card_sessions`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: too_many_open_card_sessions
+                message: too many open card payment sessions
         '409':
           description: >-
             `idempotency_conflict` — 该幂等键已用于其他收款方式（QR、checkout、卡支付）。
@@ -22404,6 +22511,7 @@ webhooks:
                 total_debit: *id017
                 status: *id017
                 status_code: *id017
+                status_message: *id017
                 bank_reference: *id017
                 idempotency_key: *id017
             example:
@@ -22416,6 +22524,7 @@ webhooks:
               total_debit: '86.014286'
               status: completed
               status_code: ''
+              status_message: ''
               bank_reference: '00761123456'
               idempotency_key: payroll-2026-07-001
       responses:

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.73"
+  version: "2.74"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -1103,12 +1103,21 @@ paths:
                 error: rate_limited
                 message: too many requests
         '503':
-          description: Pricing temporarily unavailable.
+          description: >-
+            Pricing temporarily unavailable, or the selected checkout payment
+            option is being reconciled (`checkout_recovery_pending`). Retry the
+            same materialization request; do not create a second option.
           content:
             application/json:
-              example:
-                error: pricing_unavailable
-                message: pricing is temporarily unavailable; retry in a moment
+              examples:
+                pricing_unavailable:
+                  value:
+                    error: pricing_unavailable
+                    message: pricing is temporarily unavailable; retry in a moment
+                checkout_recovery_pending:
+                  value:
+                    error: checkout_recovery_pending
+                    message: the payment option is being reconciled
   /pay/{token}/methods/{method}:
     post:
       security: []
@@ -4308,7 +4317,13 @@ paths:
         With `method: "card"` the response carries a hosted `payment_url` for a 3-D Secure
         card checkout branded with your organization — Bolivia (BOB) and international cards in
         USD (`country: "US"`, Visa, Mastercard, American Express, Discover and Diners issued
-        anywhere); card data never touches your integration.
+        anywhere); card data never touches your integration. When `stored_card_id` is absent,
+        an open pending/challenge card session can be reused for the same account, country,
+        currency, amount and `payer_reference` (falling back to `customer.email`), returning
+        HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions
+        default to 60 minutes and accept explicit expiries up to 48 hours. The account cap
+        is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the
+        response is `429 too_many_open_card_sessions`.
         With `method: "checkout"` the response carries a public `checkout_url` — a branded universal
         checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC,
         BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any
@@ -4316,6 +4331,16 @@ paths:
         the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset
         unless paid in the same asset. The first method that completes the payment wins. Charging is
         free; the payin fee applies when the deposit is credited.'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        description: >-
+          Alternative to the JSON `idempotency_key`. It is required for
+          `method: "card"` when the body does not contain the key. Do not send
+          different values in the body and header.
+        schema:
+          type: string
       requestBody:
         required: true
         content:
@@ -4372,9 +4397,10 @@ paths:
                 idempotency_key:
                   type: string
                   description: >-
-                    Optional idempotency key (`bank_transfer`, `fintoc`, `card` and `checkout`
-                    methods; also accepted as the `Idempotency-Key` header). A retry with the same
-                    key returns the original payin with HTTP 200 and `idempotency_hit: true` — the
+                    For `method: "card"`, this key is required; send it in the body or as the
+                    `Idempotency-Key` header. It is optional for `bank_transfer`, `fintoc` and
+                    `checkout` methods. A retry with the same key returns the original payin with
+                    HTTP 200 and `idempotency_hit: true` — the
                     same `payment_url`/`checkout_url` for hosted methods, or the SAME `reference`
                     for an announced bank transfer — instead of opening a second charge. On
                     announced transfers this decides whether the money can be credited: two live
@@ -4385,9 +4411,36 @@ paths:
                     separate charges for the same amount and payer.
                 customer:
                   type: object
-                  description: Optional billing prefill for the card checkout (`card` method) — `email`,
-                    `first_name`, `last_name`, `address`, `city`, `country` (plain text, max 120 chars
-                    per field). The payer can complete or correct them on the page.
+                  description: Optional billing prefill for the card checkout (`card` method). The payer
+                    can complete or correct it on the page.
+                  properties:
+                    first_name:
+                      type: string
+                      maxLength: 120
+                    last_name:
+                      type: string
+                      maxLength: 120
+                    email:
+                      type: string
+                      maxLength: 120
+                    phone_number:
+                      type: string
+                      maxLength: 120
+                    address1:
+                      type: string
+                      maxLength: 120
+                    locality:
+                      type: string
+                      maxLength: 120
+                    administrative_area:
+                      type: string
+                      maxLength: 120
+                    postal_code:
+                      type: string
+                      maxLength: 120
+                    country:
+                      type: string
+                      maxLength: 120
                 success_url:
                   type: string
                   description: Optional public https URL (`card` and `checkout` methods) the payer is
@@ -4399,8 +4452,8 @@ paths:
                 expires_at:
                   type: string
                   format: date-time
-                  description: Optional RFC3339 expiry for the card payment session (`card` method, at
-                    least 15 minutes ahead; default 24 hours).
+                  description: Optional RFC3339 expiry for the card payment session (`card` method);
+                    at least 15 minutes ahead and no more than 48 hours from creation. Default 60 minutes.
                 settlement_asset:
                   type: string
                   enum:
@@ -4423,16 +4476,20 @@ paths:
                 payer_reference:
                   type: string
                   maxLength: 120
-                  description: Card method only — your own identifier for the payer (e.g. your customer
-                    ID). Stored cards are scoped to this reference so you can list and charge the right
-                    customer's cards. Plain text, max 120 chars.
+                  description: Card method only — your own plain-text identifier for the payer (max 120
+                    chars). It is the preferred identity for reusing an open pending/challenge card
+                    session; when absent, `customer.email` is used as the fallback. It scopes
+                    stored-card discovery and charges within the calling account; the same email or
+                    reference in another account cannot discover or use the credential.
                 stored_card_id:
                   type: string
                   format: uuid
                   description: Card method only — pay with a previously saved card (see GET
                     /v1/stored-cards). The hosted page skips card entry and shows the saved card;
                     3-D Secure still runs. Mutually exclusive with `save_card`. Unknown or revoked
-                    card responds 404. The billing details saved with the credential are applied automatically on the hosted page (masked summary with an edit link — the payer retypes nothing).
+                    card, including a credential from another account, responds 404. The billing
+                    details saved with the credential are applied automatically on the hosted page
+                    (masked summary with an edit link — the payer retypes nothing).
                 payer_name:
                   type: string
                   maxLength: 140
@@ -4519,6 +4576,7 @@ paths:
                     email: payer@example.com
                     first_name: Ana
                     last_name: Rojas
+                  payer_reference: customer-7719
                   success_url: https://your-app.com/payment/ok
                   failure_url: https://your-app.com/payment/error
                   idempotency_key: topup-7719
@@ -4677,10 +4735,9 @@ paths:
                     receipt_url: https://api.qbank.cl/platform/v1/payins/d0135ed5-8e9c-4f8b-a522-8ec100470426/receipt
         '200':
           description: >-
-            Idempotent replay of an announced transfer (`bank_transfer`): the ORIGINAL
-            announcement, with the same `reference`. Also returned when a POST without an
-            idempotency key matches a live announcement that is indistinguishable (same
-            account, currency, amount and payer).
+            Idempotent replay of an announced transfer (`bank_transfer`), or reuse of an
+            open card session (`card`). Card reuse returns the existing `payment_url` and
+            `session_reused: true`; it is not a second charge or session.
           content:
             application/json:
               schema:
@@ -4697,17 +4754,61 @@ paths:
                     type: string
                   idempotency_hit:
                     type: boolean
-              example:
-                payin_id: 4f81c1d0-aaaa-bbbb-cccc-ddddeeeeffff
-                status: pending
-                reference: CBJ6T3W9M2K5
-                note: include the reference in the transfer description so the deposit is credited
-                  automatically
-                payer_source: declared
-                payer_document: 17438319-7
-                idempotency_hit: true
+              examples:
+                bank_transfer:
+                  value:
+                    payin_id: 4f81c1d0-aaaa-bbbb-cccc-ddddeeeeffff
+                    status: pending
+                    reference: CBJ6T3W9M2K5
+                    note: include the reference in the transfer description so the deposit is credited
+                      automatically
+                    payer_source: declared
+                    payer_document: 17438319-7
+                    idempotency_hit: true
+                card_session_reused:
+                  summary: Existing open card session
+                  value:
+                    payin_id: b41c9a70-1111-2222-3333-444455556666
+                    status: pending
+                    reference: b41c9a70-1111-2222-3333-444455556666
+                    payment_url: https://api.qbank.cl/pay/cards/9f3XkT2m…
+                    expires_at: '2026-09-10T20:30:00Z'
+                    session_reused: true
         '400':
           $ref: '#/components/responses/BadRequest'
+        '503':
+          description: >-
+            `card_recovery_pending` while the platform reconciles an ambiguous
+            card operation, or `core_reuse_unavailable` when the core did not
+            return a complete recoverable session. Retry with the same
+            `idempotency_key`; never create a new key for the same payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                recovery:
+                  value:
+                    error: card_recovery_pending
+                    message: the card payment is being reconciled
+                incomplete:
+                  value:
+                    error: core_reuse_unavailable
+                    message: the core returned an incomplete card charge
+                reuse_unavailable:
+                  value:
+                    error: card_reuse_unavailable
+                    message: could not verify an existing card payment
+        '429':
+          description: The account has 50 open card sessions and no unused, zero-attempt
+            pending session could be evicted (`too_many_open_card_sessions`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: too_many_open_card_sessions
+                message: too many open card payment sessions
         '409':
           description: >-
             `idempotency_conflict` — this idempotency key was already used with a different
@@ -23317,6 +23418,7 @@ webhooks:
                 total_debit: *id017
                 status: *id017
                 status_code: *id017
+                status_message: *id017
                 bank_reference: *id017
                 idempotency_key: *id017
             example:
@@ -23329,6 +23431,7 @@ webhooks:
               total_debit: '86.014286'
               status: completed
               status_code: ''
+              status_message: ''
               bank_reference: '00761123456'
               idempotency_key: payroll-2026-07-001
       responses:
