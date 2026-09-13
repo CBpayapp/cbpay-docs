@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.78"
+  version: "2.79"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -23208,7 +23208,7 @@ webhooks:
   member_security_event:
     post:
       summary: 账户安全事件
-      description: '账户的安全事实（登录、修改密码、新增或移除验证因素、会话被吊销）。字段与 `GET /v1/me/security/events` 一致。'
+      description: '账户的安全事实（登录、修改密码、新增或移除验证因素、会话被吊销）。账户范围的投递会隐藏 `ip` 和 `user_agent`；组织范围的管理员视图保留取证用的 `user_agent` 以及解析后的操作者 IP 字段（`actor_ip`、`actor_ip_source`），这些字段不属于公开 webhook 合约。'
       requestBody:
         content:
           application/json:
@@ -23221,8 +23221,6 @@ webhooks:
                 account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
                 event_type: password_changed
                 member_id: 1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                ip: 200.1.2.3
-                user_agent: Mozilla/5.0
       responses:
         '200':
           description: '已接收。'

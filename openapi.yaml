@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.78"
+  version: "2.79"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -24145,7 +24145,7 @@ webhooks:
   member_security_event:
     post:
       summary: Account security event
-      description: 'A security fact of the account (sign-in, password change, factor added or removed, session revoked). Same fields as `GET /v1/me/security/events`.'
+      description: 'A security fact of the account (sign-in, password change, factor added or removed, session revoked). Account-scoped deliveries redact `ip` and `user_agent`; organization-wide admin views retain forensic `user_agent` and the resolved actor IP fields `actor_ip` and `actor_ip_source`, which are not part of this public webhook contract.'
       requestBody:
         content:
           application/json:
@@ -24158,8 +24158,6 @@ webhooks:
                 account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
                 event_type: password_changed
                 member_id: 1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                ip: 200.1.2.3
-                user_agent: Mozilla/5.0
       responses:
         '200':
           description: 'Received.'

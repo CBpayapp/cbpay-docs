@@ -7,7 +7,14 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月13日" description="v2.78 · 1 个版本">
+<Update label="2026年9月13日" description="v2.79 · 2 个版本">
+
+### v2.79
+**变更**
+
+- **成员安全事件**：账户范围的 webhook 传送会 redact `ip` 和
+  `user_agent`；组织范围的管理员视图保留取证用的 `user_agent` 以及
+  actor provenance 字段。
 
 ### v2.78
 
