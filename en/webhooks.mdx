@@ -242,6 +242,9 @@ emits `payin_credited` (the existing flow, unchanged).
   "status_message": "",
   "bank_reference": "00761123456",
   "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
+  "funds_debited": true,
+  "compliance_pending": false,
+  "predebit_failure": false,
   "idempotency_key": "payroll-2026-07-001"
 }
 ```
@@ -720,6 +723,15 @@ normalized outcome reported by the core. `status_message` may be empty when
 the rail provides no additional detail; it is scrubbed before delivery and
 never contains an upstream provider identity.
 
+### Pre-debit terminal failures
+
+If screening fails before the debit path, the event can be terminal
+`status: "failed"` with `predebit_failure: true` and
+`funds_debited: false`; `receipt_url` is omitted. A post-debit failure is
+different: its exact debit is refunded before the terminal event. The platform
+can also persist non-terminal transition revisions, so one payout may produce
+more than one `payout_status_changed` delivery; deduplicate by
+`X-Webhook-Event-ID` and do not create a second payout.
 ## Delivery format
 
 Every delivery is a JSON `POST` with these headers:

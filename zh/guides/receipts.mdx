@@ -141,6 +141,7 @@ curl -X PATCH "https://api.qbank.cl/platform/v1/me" \
 | HTTP | 代码 | 原因与解决方案 |
 |---|---|---|
 | 404 | `not_found` | 该 ID 不存在或不属于你的账户。请在产品列表中核对 ID。 |
+| 409 | `receipt_not_available` | payout 仍在等待技术筛查，或筛查在扣款前失败。请等待最终财务状态；目前尚无回执。 |
 | 429 | `too_many_attempts` | 来自你的 IP 的公开校验次数过多。稍等片刻后重试。 |
 | 500 | `receipt_render_failed` | 渲染 PDF 时出现临时错误。重试下载即可。 |
 

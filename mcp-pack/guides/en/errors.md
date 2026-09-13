@@ -139,6 +139,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 404 | `recipient_not_found` | Transfer destination does not exist |
 | 404 | `verification_not_found` | The account has no submitted verification yet (`GET /v1/me/verification/report` before onboarding) |
 | 409 | `duplicate` | The resource already exists |
+| 409 | `receipt_not_available` | A payout receipt is not available while technical screening is pending or after a pre-debit screening failure; wait for a final financial state |
 | 403 | `verification_required` | Your account has not approved its identity verification yet (person=KYC, company=KYB); until then you can only fund — request your link at `POST /v1/me/verification/link` |
 | 422 | `verification_required` | The operation requires the `verification_id` of an approved third-party verification (third-party banking registration, designated card) |
 | 422 | `verification_not_approved` | The referenced verification is not approved yet |
@@ -157,6 +158,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 400 | `invalid_payload` | For `method: "card"`, `expires_at` must be RFC3339, at least 15 minutes ahead and no more than 48 hours ahead |
 | 429 | `too_many_open_card_sessions` | The account has 50 open card sessions and no unused, zero-attempt pending session can be evicted — complete or wait for an existing session to expire before creating another |
 | 503 | `card_recovery_pending` | The platform is reconciling an ambiguous card request. Retry with the **same** idempotency key; do not create a new key or a second charge |
+| 409 | `core_charge_terminal` | The underlying card charge already has a final status, so the platform will not credit it again — read the current payin/charge state and do not create a second charge |
 | 503 | `card_reuse_unavailable` | The platform could not verify an existing open card payment. Retry the original request with the **same** idempotency key; do not create a second charge |
 | 503 | `core_reuse_unavailable` | The core did not return a complete recoverable card session. Retry the original request with the **same** idempotency key |
 | 422 | `recipient_unavailable` | The destination account cannot receive |

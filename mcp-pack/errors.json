@@ -1,5 +1,5 @@
 {
-  "count": 241,
+  "count": 243,
   "errors": [
     {
       "category": {
@@ -1337,6 +1337,20 @@
         "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
         "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
+      "code": "receipt_not_available",
+      "http": 409,
+      "meaning": {
+        "en": "A payout receipt is not available while technical screening is pending or after a pre-debit screening failure; wait for a final financial state",
+        "es": "El comprobante del payout no está disponible mientras espera el screening técnico o después de un fallo antes del débito; espera un estado financiero final",
+        "zh": "技术筛查等待期间或扣款前筛查失败后，payout 暂无回执；请等待最终财务状态"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
       "code": "verification_required",
       "http": 403,
       "meaning": {
@@ -1553,6 +1567,20 @@
         "en": "The platform is reconciling an ambiguous card request. Retry with the **same** idempotency key; do not create a new key or a second charge",
         "es": "La plataforma está reconciliando un cobro con tarjeta ambiguo. Reintenta con la **misma** clave de idempotencia; no generes una nueva ni un segundo cobro",
         "zh": "平台正在核对一笔结果不明确的银行卡收款。请使用**相同**幂等键重试；不要生成新键或第二笔收款"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "core_charge_terminal",
+      "http": 409,
+      "meaning": {
+        "en": "The underlying card charge already has a final status, so the platform will not credit it again — read the current payin/charge state and do not create a second charge",
+        "es": "El cobro de tarjeta subyacente ya tiene un estado final, por lo que la plataforma no lo volverá a acreditar — lee el estado actual del payin/cobro y no crees un segundo cobro",
+        "zh": "底层银行卡扣款已经处于最终状态，因此平台不会再次入账 —— 读取当前 payin/扣款状态，切勿创建第二笔扣款"
       }
     },
     {

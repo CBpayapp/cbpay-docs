@@ -239,6 +239,9 @@ Al llegar el `settle_at`, el worker de settlement acredita el saldo y emite
   "status_message": "",
   "bank_reference": "00761123456",
   "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
+  "funds_debited": true,
+  "compliance_pending": false,
+  "predebit_failure": false,
   "idempotency_key": "payroll-2026-07-001"
 }
 ```
@@ -718,6 +721,16 @@ normalizado que reporta el core. `status_message` puede venir vacío cuando el
 riel no entrega detalle adicional; se depura antes de la entrega y nunca
 contiene la identidad de un proveedor upstream.
 
+### Fallos terminales antes del débito
+
+Si el screening falla antes del camino de débito, el evento puede ser terminal
+con `status: "failed"`, `predebit_failure: true` y
+`funds_debited: false`; se omite `receipt_url`. Un fallo posterior al débito
+es distinto: el débito exacto se reembolsa antes del evento terminal. La
+plataforma también puede persistir revisiones de transición no terminales,
+por lo que un payout puede producir más de una entrega
+`payout_status_changed`; deduplica por `X-Webhook-Event-ID` y no crees otro
+payout.
 ## Formato de entrega
 
 Cada entrega es un `POST` JSON con estos headers:

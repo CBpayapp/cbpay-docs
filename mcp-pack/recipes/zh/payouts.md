@@ -215,6 +215,7 @@ CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂�
   "status_message": "",
   "funds_debited": false,
   "compliance_pending": true,
+  "predebit_failure": false,
   "created_at": "2026-07-06T20:00:00Z",
   "updated_at": "2026-07-06T20:00:00Z"
 }
@@ -244,6 +245,13 @@ CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂�
 `compliance_check_unavailable` 等现有技术错误。现有的校验、安全和
 `compliance_hold` 合约不变。
 
+### 扣款前失败不是退款
+
+如果筛查或硬性合规控制在扣款路径开始前失败，同一 payout 可以以
+`failed` 结束，并带有 `predebit_failure: true` 和
+`funds_debited: false`。响应及其 `payout_status_changed` 事件不包含
+`receipt_url`，因为没有可撤销的扣款、hold 或回执。这不同于扣款后的
+`failed` payout，后者会在终态事件前退回准确的扣款金额。
 ## 3. 接收最终状态
 
 订阅 `payout_status_changed` 事件（[webhooks](https://docs.cbpayapp.com/zh/webhooks)）：
@@ -286,7 +294,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | `pending` + `compliance_pending: true` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
 | `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | 筛查通过；扣款已存在，等待派发或协调 | `funds_debited: true`；扣款仍在 `held` |
 | `completed` | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |
-| `failed` | 通道拒绝或执行失败 | **自动全额退款**（金额 + 费用） |
+| `failed`（扣款后） | 通道拒绝或在扣款后执行失败 | **全额自动退款**（金额 + 手续费） |
+| `failed` + `predebit_failure: true` | 筛查或硬性合规控制在扣款前失败 | **未扣款**；`funds_debited: false`，无回执 |
 
 ## 查询与历史记录
 

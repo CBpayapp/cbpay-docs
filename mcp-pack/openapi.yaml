@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.76"
+  version: "2.78"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -142,6 +142,15 @@ paths:
           $ref: '#/components/responses/ReceiptPDF'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: Payout receipt is not available while technical screening is pending or after a pre-debit screening failure (`receipt_not_available`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: receipt_not_available
+                message: this payout has no financial receipt yet
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/payins/{payinID}/receipt:
@@ -3307,7 +3316,9 @@ paths:
         `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch. After screening
         returns `process`, the same resource can remain `pending` with `compliance_dispatch_pending`,
         `compliance_dispatching` or `core_unreachable` while `funds_debited` is true; keep the same
-        idempotency key and wait for reconciliation.'
+        idempotency key and wait for reconciliation. A terminal screening failure before the debit
+        path can return `failed` with `predebit_failure: true` and `funds_debited: false`; it has no
+        `receipt_url`.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -22517,6 +22528,9 @@ components:
         funds_debited:
           type: boolean
           description: 'False before a pending technical-screening payout is debited. True after screening passes and the debit/hold exists, including pending dispatch transitions.'
+        predebit_failure:
+          type: boolean
+          description: 'True when screening or a hard compliance gate ended the payout before any debit. It is distinct from a failed payout whose debit was later refunded.'
         compliance_pending:
           type: boolean
           description: 'True only while technical screening is queued before any debit or core dispatch; false after the screening process result is accepted.'
@@ -23503,6 +23517,9 @@ webhooks:
                 status_code: *id017
                 status_message: *id017
                 bank_reference: *id017
+                funds_debited: *id017
+                compliance_pending: *id017
+                predebit_failure: *id017
                 idempotency_key: *id017
             example:
               payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
@@ -23516,6 +23533,9 @@ webhooks:
               status_code: ''
               status_message: ''
               bank_reference: '00761123456'
+              funds_debited: true
+              compliance_pending: false
+              predebit_failure: false
               idempotency_key: payroll-2026-07-001
       responses:
         '200':

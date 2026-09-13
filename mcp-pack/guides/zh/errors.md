@@ -139,6 +139,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 404 | `recipient_not_found` | 转账目标不存在 |
 | 404 | `verification_not_found` | 账户尚未提交任何验证（在完成入驻前调用 `GET /v1/me/verification/report`） |
 | 409 | `duplicate` | 资源已存在 |
+| 409 | `receipt_not_available` | 技术筛查等待期间或扣款前筛查失败后，payout 暂无回执；请等待最终财务状态 |
 | 403 | `verification_required` | 您的账户尚未通过身份验证（个人=KYC，企业=KYB）；在此之前只能入金——通过 `POST /v1/me/verification/link` 申请您的验证链接 |
 | 422 | `verification_required` | 该操作需要一项已通过的第三方验证的 `verification_id`（第三方银行账户登记、指定持卡人卡片） |
 | 422 | `verification_not_approved` | 所引用的验证尚未通过 |
@@ -157,6 +158,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 400 | `invalid_payload` | 对于 `method: "card"`，`expires_at` 必须是 RFC3339，至少提前 15 分钟且不超过 48 小时 |
 | 429 | `too_many_open_card_sessions` | 账户已有 50 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |
 | 503 | `card_recovery_pending` | 平台正在核对一笔结果不明确的银行卡收款。请使用**相同**幂等键重试；不要生成新键或第二笔收款 |
+| 409 | `core_charge_terminal` | 底层银行卡扣款已经处于最终状态，因此平台不会再次入账 —— 读取当前 payin/扣款状态，切勿创建第二笔扣款 |
 | 503 | `card_reuse_unavailable` | 平台无法核对现有的开放银行卡收款。请使用**相同**幂等键重试原始请求；不要创建第二笔收款 |
 | 503 | `core_reuse_unavailable` | core 未返回完整且可恢复的银行卡会话。请使用**相同**幂等键重试原始请求 |
 | 422 | `recipient_unavailable` | 目标账户无法接收 |

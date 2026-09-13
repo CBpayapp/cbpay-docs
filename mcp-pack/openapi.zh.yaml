@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.76"
+  version: "2.78"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -112,6 +112,15 @@ paths:
           $ref: '#/components/responses/ReceiptPDF'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: 技术筛查等待期间或扣款前筛查失败后，payout 回执暂不可用（`receipt_not_available`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: receipt_not_available
+                message: this payout has no financial receipt yet
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/payins/{payinID}/receipt:
@@ -21745,6 +21754,9 @@ components:
         funds_debited:
           type: boolean
           description: '技术筛查 pending 且尚未扣款时为 false。筛查通过并存在扣款/hold 后为 true，包括派发转换期间。'
+        predebit_failure:
+          type: boolean
+          description: 筛查或硬性合规控制在任何扣款前终止 payout 时为 true；不同于扣款后再退款的失败 payout。
         compliance_pending:
           type: boolean
           description: '仅当技术筛查在任何扣款或调用 core 之前等待时为 true；接受 process 结果后为 false。'
@@ -22594,6 +22606,9 @@ webhooks:
                 status_code: *id017
                 status_message: *id017
                 bank_reference: *id017
+                funds_debited: *id017
+                compliance_pending: *id017
+                predebit_failure: *id017
                 idempotency_key: *id017
             example:
               payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
@@ -22607,6 +22622,9 @@ webhooks:
               status_code: ''
               status_message: ''
               bank_reference: '00761123456'
+              funds_debited: true
+              compliance_pending: false
+              predebit_failure: false
               idempotency_key: payroll-2026-07-001
       responses:
         '200':

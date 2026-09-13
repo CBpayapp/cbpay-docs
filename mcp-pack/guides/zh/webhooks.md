@@ -230,6 +230,9 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
   "status_message": "",
   "bank_reference": "00761123456",
   "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
+  "funds_debited": true,
+  "compliance_pending": false,
+  "predebit_failure": false,
   "idempotency_key": "payroll-2026-07-001"
 }
 ```
@@ -698,6 +701,14 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 当通道没有提供更多细节时，`status_message` 可以为空；平台会在投递前清理它，
 其中不会包含上游服务商身份。
 
+### 扣款前的终态失败
+
+如果筛查在扣款路径前失败，事件可以以终态
+`status: "failed"` 发送，并带有 `predebit_failure: true` 和
+`funds_debited: false`；不包含 `receipt_url`。扣款后的失败不同：准确的
+扣款金额会在终态事件前退回。平台也可能持久化非终态的转换修订，因此同一
+payout 可能产生多次 `payout_status_changed` 投递；请按
+`X-Webhook-Event-ID` 去重，不要创建第二笔 payout。
 ## 投递格式
 
 每次投递都是一个 JSON `POST`，带有以下请求头：
