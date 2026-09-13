@@ -687,11 +687,14 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 {
   "account_id": "ae8c…",
   "member_id": "3f7b…",
-  "event_type": "password_changed",
-  "ip": "200.83.14.7",
-  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+  "event_type": "password_changed"
 }
 ```
+
+对于账户范围的订阅，`ip` 和 `user_agent` 会被有意隐藏。组织范围的安全
+视图会保留取证用的 `user_agent` 以及解析后的操作者 IP 字段
+（`actor_ip`、`actor_ip_source`）用于管理员审计；这些字段仅属于 Admin
+合约，不属于公开 webhook 合约。
 
 在 `payout_status_changed` 中，技术筛查更新在任何扣款前可以为 `pending`。
 最终更新为 `completed` 或 `failed`（若为 `failed`，在您收到该事件时扣款已完成退还）。

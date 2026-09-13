@@ -8,7 +8,14 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.78 · 1 version - September 13, 2026
+## v2.79 · 2 versions - September 13, 2026
+
+### v2.79
+**Changed**
+
+- **Member security events**: account-scoped webhook deliveries redact
+  `ip` and `user_agent`; organization-wide administrative views retain
+  forensic `user_agent` and actor provenance fields.
 
 ### v2.78
 

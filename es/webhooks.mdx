@@ -707,11 +707,15 @@ antiguas sin datos del motor.
 {
   "account_id": "ae8c…",
   "member_id": "3f7b…",
-  "event_type": "password_changed",
-  "ip": "200.83.14.7",
-  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+  "event_type": "password_changed"
 }
 ```
+
+En suscripciones con alcance de cuenta, `ip` y `user_agent` se redactan
+intencionalmente. Las vistas de seguridad de alcance organizacional conservan
+el `user_agent` forense y los campos de IP del actor (`actor_ip`,
+`actor_ip_source`) para auditoría administrativa; esos campos son exclusivos
+del contrato admin y no forman parte del webhook público.
 
 </CodeGroup>
 

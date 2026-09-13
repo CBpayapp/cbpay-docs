@@ -9,7 +9,15 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.78 · 1 versión - 13 de septiembre de 2026
+## v2.79 · 2 versiones - 13 de septiembre de 2026
+
+### v2.79
+**Cambiado**
+
+- **Eventos de seguridad de miembros**: las entregas con alcance de cuenta
+  redactan `ip` y `user_agent`; las vistas administrativas de alcance
+  organizacional conservan el `user_agent` forense y los campos de procedencia
+  del actor.
 
 ### v2.78
 

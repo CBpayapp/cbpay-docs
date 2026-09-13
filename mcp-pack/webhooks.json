@@ -476,9 +476,9 @@
     },
     {
       "description": {
-        "en": "A security fact of the account (sign-in, password change, factor added or removed, session revoked). Same fields as `GET /v1/me/security/events`.",
-        "es": "Un hecho de seguridad de la cuenta (inicio de sesión, cambio de contraseña, factor agregado o quitado, sesión revocada). Mismos campos que `GET /v1/me/security/events`.",
-        "zh": "账户的安全事实（登录、修改密码、新增或移除验证因素、会话被吊销）。字段与 `GET /v1/me/security/events` 一致。"
+        "en": "A security fact of the account (sign-in, password change, factor added or removed, session revoked). Account-scoped deliveries redact `ip` and `user_agent`; organization-wide admin views retain forensic `user_agent` and the resolved actor IP fields `actor_ip` and `actor_ip_source`, which are not part of this public webhook contract.",
+        "es": "Un hecho de seguridad de la cuenta (inicio de sesión, cambio de contraseña, factor agregado o quitado, sesión revocada). Las entregas con alcance de cuenta redactan `ip` y `user_agent`; las vistas administrativas de alcance organizacional conservan el `user_agent` forense y los campos de IP resueltos del actor (`actor_ip`, `actor_ip_source`), que no forman parte de este webhook público.",
+        "zh": "账户的安全事实（登录、修改密码、新增或移除验证因素、会话被吊销）。账户范围的投递会隐藏 `ip` 和 `user_agent`；组织范围的管理员视图保留取证用的 `user_agent` 以及解析后的操作者 IP 字段（`actor_ip`、`actor_ip_source`），这些字段不属于公开 webhook 合约。"
       },
       "event": "member_security_event",
       "payload_example": {
@@ -487,9 +487,7 @@
         "data": {
           "account_id": "c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10",
           "event_type": "password_changed",
-          "ip": "200.1.2.3",
-          "member_id": "1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-          "user_agent": "Mozilla/5.0"
+          "member_id": "1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d"
         },
         "event_id": "3c4d5e6f-7a8b-4c9d-8e0f-2a3b4c5d6e7f",
         "type": "member_security_event"

@@ -705,13 +705,16 @@ engine data.
 {
   "account_id": "ae8c…",
   "member_id": "3f7b…",
-  "event_type": "password_changed",
-  "ip": "200.83.14.7",
-  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+  "event_type": "password_changed"
 }
 ```
 
 </CodeGroup>
+
+For account-scoped subscriptions, `ip` and `user_agent` are intentionally
+redacted. Organization-wide security views retain the forensic `user_agent`
+and the resolved actor IP fields (`actor_ip`, `actor_ip_source`) for admin
+audit; those admin-only fields are not part of the public webhook contract.
 
 In `payout_status_changed`, a technical-screening update can be `pending`
 before any debit. Final updates are `completed` or `failed` (with `failed`,
