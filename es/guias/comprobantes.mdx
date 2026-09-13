@@ -176,6 +176,7 @@ curl -X PATCH "https://api.qbank.cl/platform/v1/me" \
 | HTTP | Código | Causa y solución |
 |---|---|---|
 | 404 | `not_found` | El ID no existe o no pertenece a tu cuenta. Verifica el ID en el listado del producto. |
+| 409 | `receipt_not_available` | El payout todavía espera el screening técnico, o el screening falló antes de cualquier débito. Espera un estado financiero final; todavía no existe comprobante. |
 | 429 | `too_many_attempts` | Demasiadas verificaciones públicas desde tu IP. Espera un momento y reintenta. |
 | 500 | `receipt_render_failed` | Error transitorio generando el PDF. Reintenta la descarga. |
 

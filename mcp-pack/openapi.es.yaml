@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.76"
+  version: "2.78"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -149,6 +149,15 @@ paths:
           $ref: '#/components/responses/ReceiptPDF'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: El comprobante del payout no está disponible mientras el screening técnico espera o después de un fallo del screening antes del débito (`receipt_not_available`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: receipt_not_available
+                message: this payout has no financial receipt yet
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/payins/{payinID}/receipt:
@@ -22362,6 +22371,9 @@ components:
         funds_debited:
           type: boolean
           description: 'Falso antes de debitar un payout pendiente de screening. Verdadero después de que el screening pasa y existe el débito/hold, incluso durante las transiciones de despacho.'
+        predebit_failure:
+          type: boolean
+          description: 'True cuando el screening o un control duro terminó el payout antes de cualquier débito. Es distinto de un payout fallido cuyo débito se reembolsó después.'
         compliance_pending:
           type: boolean
           description: 'Verdadero solo mientras el screening técnico espera antes de cualquier débito o despacho al core; pasa a falso cuando se acepta el resultado process.'
@@ -23351,6 +23363,9 @@ webhooks:
                 status_code: *id017
                 status_message: *id017
                 bank_reference: *id017
+                funds_debited: *id017
+                compliance_pending: *id017
+                predebit_failure: *id017
                 idempotency_key: *id017
             example:
               payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
@@ -23364,6 +23379,9 @@ webhooks:
               status_code: ''
               status_message: ''
               bank_reference: '00761123456'
+              funds_debited: true
+              compliance_pending: false
+              predebit_failure: false
               idempotency_key: payroll-2026-07-001
       responses:
         '200':

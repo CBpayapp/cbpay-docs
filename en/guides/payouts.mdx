@@ -233,6 +233,7 @@ returns `202 Accepted` with the payout resource in `status: "pending"`:
   "status_message": "",
   "funds_debited": false,
   "compliance_pending": true,
+  "predebit_failure": false,
   "created_at": "2026-07-06T20:00:00Z",
   "updated_at": "2026-07-06T20:00:00Z"
 }
@@ -266,6 +267,14 @@ the payout cannot be placed in the pending queue, and to flows that do not have
 this queue. It does not replace the existing validation, security or
 `compliance_hold` contracts.
 
+### Pre-debit failure is not a refund
+
+If screening or a hard compliance gate fails before the debit path starts, the
+same payout can finish as `failed` with `predebit_failure: true` and
+`funds_debited: false`. The response and its `payout_status_changed` event omit
+`receipt_url`, because there was no debit, hold or receipt to reverse. This is
+different from a post-debit `failed` payout, where the exact debit is refunded
+before the terminal event.
 ## 3. Receive the final state
 
 Subscribe to the `payout_status_changed` event ([webhooks](/en/webhooks)):
@@ -308,7 +317,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | `pending` + `compliance_pending: true` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
 | `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening passed; debit exists while dispatch or reconciliation is pending | `funds_debited: true`; debit remains held |
 | `completed` | The money reached the beneficiary | Hold consumed — final |
-| `failed` | The corridor rejected it or it failed | **Full automatic refund** (amount + fee) |
+| `failed` after debit | The corridor rejected it or execution failed after the debit | **Full automatic refund** (amount + fee) |
+| `failed` + `predebit_failure: true` | Screening or a hard compliance gate failed before the debit | **No debit**; `funds_debited: false`, no receipt |
 
 ## Reads and history
 

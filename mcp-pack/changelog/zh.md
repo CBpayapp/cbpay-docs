@@ -8,6 +8,24 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.78 · 1 个版本 - 2026年9月13日
+
+### v2.78
+
+**变更**
+
+- **扣款前的筛查失败会明确标记**：如果收款人筛查在扣款路径完成前失败，
+  payout 可以以 `failed` 结束，并带有 `predebit_failure: true` 和
+  `funds_debited: false`。响应和 `payout_status_changed` payload 不包含
+  `receipt_url`；这不同于扣款后的失败，后者会退回准确的扣款金额。
+- **Payout 状态修订是持久的**：同一 payout 在 `pending` 时仍可发送
+  `compliance_dispatch_pending`、`compliance_dispatching` 和
+  `core_unreachable`，并带有 `funds_debited: true`。保留原幂等键，并按
+  event ID 去重每次 webhook 投递。
+- **扣款前 payout 的回执可用性是明确的**：
+  `GET /v1/payouts/{payoutID}/receipt` 在技术筛查等待期间或扣款前筛查失败后
+  返回 `409 receipt_not_available`；这些状态没有财务回执。
+
 ## v2.77 · 3 versions - 2026年9月12日
 
 ### v2.77

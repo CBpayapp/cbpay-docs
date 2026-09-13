@@ -139,6 +139,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 404 | `recipient_not_found` | Destino de transferencia inexistente |
 | 404 | `verification_not_found` | La cuenta aún no tiene ninguna verificación enviada (`GET /v1/me/verification/report` antes del onboarding) |
 | 409 | `duplicate` | El recurso ya existe |
+| 409 | `receipt_not_available` | El comprobante del payout no está disponible mientras espera el screening técnico o después de un fallo antes del débito; espera un estado financiero final |
 | 403 | `verification_required` | Tu cuenta aún no aprobó su verificación de identidad (persona=KYC, empresa=KYB); hasta entonces solo puedes fondear — pide tu link en `POST /v1/me/verification/link` |
 | 422 | `verification_required` | La operación exige el `verification_id` de una verificación aprobada del tercero (alta banking de terceros, tarjeta designada) |
 | 422 | `verification_not_approved` | La verificación referenciada aún no está aprobada |
@@ -157,6 +158,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 400 | `invalid_payload` | En `method: "card"`, `expires_at` debe ser RFC3339, quedar al menos 15 minutos hacia adelante y no superar 48 horas |
 | 429 | `too_many_open_card_sessions` | La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o espera que venza una sesión existente antes de crear otra |
 | 503 | `card_recovery_pending` | La plataforma está reconciliando un cobro con tarjeta ambiguo. Reintenta con la **misma** clave de idempotencia; no generes una nueva ni un segundo cobro |
+| 409 | `core_charge_terminal` | El cobro de tarjeta subyacente ya tiene un estado final, por lo que la plataforma no lo volverá a acreditar — lee el estado actual del payin/cobro y no crees un segundo cobro |
 | 503 | `card_reuse_unavailable` | La plataforma no pudo verificar un cobro con tarjeta abierto existente. Reintenta la solicitud original con la **misma** clave de idempotencia; no crees un segundo cobro |
 | 503 | `core_reuse_unavailable` | El core no devolvió una sesión de tarjeta completa y recuperable. Reintenta la solicitud original con la **misma** clave de idempotencia |
 | 422 | `recipient_unavailable` | La cuenta destino no puede recibir |

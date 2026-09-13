@@ -9,6 +9,29 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.78 · 1 versión - 13 de septiembre de 2026
+
+### v2.78
+
+**Cambiado**
+
+- **Los fallos de screening antes del débito quedan explícitos**: un payout
+  que falla durante el screening del beneficiario antes de completar el camino
+  de débito puede terminar `failed` con `predebit_failure: true` y
+  `funds_debited: false`. La respuesta y el payload `payout_status_changed`
+  omiten `receipt_url`; es distinto de un fallo posterior al débito, cuyo
+  débito exacto se reembolsa.
+- **Las revisiones de estado del payout son durables**: el payout existente
+  puede emitir `compliance_dispatch_pending`, `compliance_dispatching` y
+  `core_unreachable` mientras sigue `pending`, con `funds_debited: true`.
+  Conserva la misma clave de idempotencia y deduplica cada entrega por su
+  event ID.
+- **La disponibilidad del comprobante queda explícita para payouts
+  pre-débito**: `GET /v1/payouts/{payoutID}/receipt` responde
+  `409 receipt_not_available` mientras el screening técnico espera o después
+  de un fallo de screening antes del débito; en esos estados no existe un
+  comprobante financiero.
+
 ## v2.77 · 3 versions - 12 de septiembre de 2026
 
 ### v2.77

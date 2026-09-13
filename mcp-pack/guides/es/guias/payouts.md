@@ -227,6 +227,7 @@ de screening está disponible**, el payout se persiste y el create responde
   "status_message": "",
   "funds_debited": false,
   "compliance_pending": true,
+  "predebit_failure": false,
   "created_at": "2026-07-06T20:00:00Z",
   "updated_at": "2026-07-06T20:00:00Z"
 }
@@ -260,6 +261,14 @@ payout no se puede dejar en la cola pendiente y en los flujos que no tienen
 esta cola. No reemplaza los contratos actuales de validación, seguridad ni
 `compliance_hold`.
 
+### Un fallo antes del débito no es un reembolso
+
+Si el screening o un control duro de compliance falla antes de iniciar el
+camino de débito, el mismo payout puede terminar `failed` con
+`predebit_failure: true` y `funds_debited: false`. La respuesta y su evento
+`payout_status_changed` omiten `receipt_url`, porque no hubo débito, hold ni
+comprobante que revertir. Es distinto de un `failed` posterior al débito,
+donde el débito exacto se reembolsa antes del evento terminal.
 ## 3. Recibe el estado final
 
 Suscríbete al evento `payout_status_changed` ([webhooks](https://docs.cbpayapp.com/es/webhooks)):
@@ -302,7 +311,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | `pending` + `compliance_pending: true` | El screening técnico del beneficiario espera antes de cualquier débito o despacho | **Sin débito**; `funds_debited: false` |
 | `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening aprobado; débito existente mientras espera despacho o conciliación | `funds_debited: true`; débito retenido |
 | `completed` | El dinero llegó al beneficiario | Hold consumido — final |
-| `failed` | El corredor lo rechazó o falló | **Reembolso automático completo** (monto + comisión) |
+| `failed` después del débito | El corredor lo rechazó o la ejecución falló después del débito | **Reembolso automático completo** (monto + comisión) |
+| `failed` + `predebit_failure: true` | El screening o un control duro de compliance falló antes del débito | **Sin débito**; `funds_debited: false`, sin comprobante |
 
 ## Consulta e historial
 
