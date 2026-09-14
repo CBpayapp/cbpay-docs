@@ -7,6 +7,11 @@ source_url: https://docs.cbpayapp.com/en/guides/kyc
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+## Account verification before creating payins
+
+Authenticated collection requires `kyc_status: approved` for person accounts and approved KYB for companies; until then, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), collect OTP/collect, dedicated deposit accounts, stored-card charges and subscriptions return `403 verification_required`.
+Existing public links, passive deposits, org-admin assignment and system-created instruments remain available; request `POST /v1/me/verification/link`, then retry after approval.
+
 **Identity verification** proves a person (KYC) or company (KYB) is who
 they claim to be, with real evidence: a complete form, document uploads
 validated by OCR and a **video liveness check**. It has two sides:

@@ -8,6 +8,18 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
+<Warning>
+商户账户必须先通过身份审核，才能使用认证的 `POST /v1/payins` 创建 checkout
+链接。个人账户需要 KYC 获批，企业账户需要 KYB 获批；否则 API 返回 HTTP
+`403 verification_required`。
+</Warning>
+
+<Note>
+这不会阻止公开的 `/pay/{token}` 页面，也不会阻止在关卡启用前已经创建的 checkout
+链接收款。付款人不需要登录 CBPay。
+</Note>
+
+
 创建一个**通用收款链接**：一次 `POST /v1/payins`（`method: "checkout"`）
 即可返回一个带品牌的公开 URL，付款人在页面上自行选择支付方式。收款以
 **你选择的虚拟余额**计价（`settlement_asset`：`USDT`、`USDC`、`BTC` 或

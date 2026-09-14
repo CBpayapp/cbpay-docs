@@ -7,6 +7,14 @@ source_url: https://docs.cbpayapp.com/en/guides/checkout
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Important**
+The merchant account must have approved identity before creating an
+authenticated checkout link with `POST /v1/payins`. Person accounts require
+approved KYC and company accounts require approved KYB; otherwise the API
+returns HTTP `403 verification_required`.
+> **Note**
+This does not block the public `/pay/{token}` page or payment of a checkout
+link that was created before the gate. The payer does not need a CBPay login.
 Create a **universal checkout link**: a single `POST /v1/payins` with
 `method: "checkout"` returns a branded public URL where the payer chooses
 how to pay. The charge is denominated in the **virtual balance you

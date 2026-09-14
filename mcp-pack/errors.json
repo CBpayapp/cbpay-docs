@@ -1354,9 +1354,9 @@
       "code": "verification_required",
       "http": 403,
       "meaning": {
-        "en": "Your account has not approved its identity verification yet (person=KYC, company=KYB); until then you can only fund — request your link at `POST /v1/me/verification/link`",
-        "es": "Tu cuenta aún no aprobó su verificación de identidad (persona=KYC, empresa=KYB); hasta entonces solo puedes fondear — pide tu link en `POST /v1/me/verification/link`",
-        "zh": "您的账户尚未通过身份验证（个人=KYC，企业=KYB）；在此之前只能入金——通过 `POST /v1/me/verification/link` 申请您的验证链接"
+        "en": "Your account has not approved its identity verification yet (person=KYC, company=KYB); creating authenticated payins, collect operations, dedicated deposit accounts, stored-card charges and subscriptions is blocked until approval — request your link at `POST /v1/me/verification/link`; passive deposits and reads remain available",
+        "es": "Tu cuenta aún no aprobó su verificación de identidad (persona=KYC, empresa=KYB); hasta entonces se bloquean la creación autenticada de payins, collect, cuentas de depósito dedicadas, cobros con tarjeta guardada y suscripciones — pide tu link en `POST /v1/me/verification/link`; los abonos pasivos y las lecturas siguen disponibles",
+        "zh": "您的账户尚未通过身份验证（个人=KYC，企业=KYB）；获批前不能创建认证 payin、collect、专属入金账户、已保存卡扣款或订阅——请通过 `POST /v1/me/verification/link` 申请审核链接；被动入账和读取仍可用"
       }
     },
     {

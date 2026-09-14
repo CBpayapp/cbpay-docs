@@ -8,6 +8,11 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
+## 创建 payin 前的账户身份审核
+
+认证收款要求个人账户为 `kyc_status: approved`、企业账户拥有已批准的 KYB；获批前，`POST /v1/payins`（QR/card/checkout/bank_transfer/fintoc）、OTP/collect、专属入金账户、已保存卡扣款或订阅都会返回 `403 verification_required`。
+公开链接、被动入账、org-admin 分配和系统入金工具仍可用；通过 `POST /v1/me/verification/link` 申请审核，获批后重试原始创建请求。
+
 **身份验证**通过真实证据证明个人（KYC）或企业（KYB）确为其所声称的身份：完整的表单、经 OCR 校验的证件上传，以及**视频活体检测**。它包含两个方面：
 
 1. **您自己的验证（入驻）**——强制要求：在获批之前，您的账户只能**入金**（收款、加密货币充值、转入的内部转账）和读取数据。个人 ⇒ KYC；企业 ⇒ KYB。

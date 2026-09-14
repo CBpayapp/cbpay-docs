@@ -9,9 +9,22 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.82 · 2 versions - 14 de septiembre de 2026
+## v2.82 · 2 versiones - 14 de septiembre de 2026
 
 ### v2.82
+
+**Breaking**
+
+- **Identidad aprobada requerida para crear payins con la cuenta autenticada**:
+  las cuentas persona deben tener KYC aprobado y las cuentas empresa KYB
+  aprobado antes de crear payins o usar collect desde la cuenta. `POST
+  /v1/payins` (QR, card, checkout, bank_transfer y fintoc), OTP/collect,
+  creación de cuentas de depósito dedicadas, cobros con tarjeta guardada y
+  suscripciones ahora responden `403 verification_required` hasta la
+  aprobación. Los links públicos existentes, abonos pasivos ya recibidos,
+  asignación operativa de org-admin e instrumentos de depósito creados por el
+  sistema siguen disponibles.
+
 **Changed**
 
 - Las solicitudes de vIBAN de cuenta documentan los overrides opcionales de documento e incorporación (snake_case y camelCase), el autofill KYC/KYB y la respuesta `registrant_incomplete` (422).

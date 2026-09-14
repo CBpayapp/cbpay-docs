@@ -7,6 +7,11 @@ source_url: https://docs.cbpayapp.com/es/guias/kyc
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+## Verificación de la cuenta antes de crear payins
+
+La cobranza autenticada requiere `kyc_status: approved` en personas y KYB aprobado en empresas; mientras tanto, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), OTP/collect, cuentas de depósito dedicadas, cobros con tarjeta guardada y suscripciones responden `403 verification_required`.
+Los links públicos, abonos pasivos, asignación de org-admin e instrumentos del sistema siguen disponibles; solicita `POST /v1/me/verification/link` y reintenta después de aprobar.
+
 La **verificación de identidad** comprueba que una persona (KYC) o empresa
 (KYB) es quien dice ser, con evidencia real: formulario completo, subida de
 documentos validados por OCR y **prueba de vida en video**. Tiene dos caras:

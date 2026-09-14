@@ -4152,7 +4152,7 @@ paths:
       - 收款(Payins)
       operationId: createPayin
       summary: 创建 payin(充值收款)
-      description: '创建一笔法币充值。使用 `method: "qr"`(默认)会通过处理方生成主动 QR 收款——在玻利维亚为本地互通 QR,在巴西为动态 PIX QR,其 `charge`
+      description: '需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 创建一笔法币充值。使用 `method: "qr"`(默认)会通过处理方生成主动 QR 收款——在玻利维亚为本地互通 QR,在巴西为动态 PIX QR,其 `charge`
         携带 QR 图片和 "copia e cola" 载荷。使用 `method: "bank_transfer"` 会预告存款,响应携带付款人必须附上的参考号,以便到账转账被自动匹配入账——一个
         12 位字母数字短码,适配任何银行附言字段(部分通道上限 20 个字符且不允许特殊字符)。使用 `method: "fintoc"`(智利)响应携带托管 `payment_url`:付款人打开后可从任意智利银行或钱包转账;存款会被自动检测、校验并入账。使用
         `method: "card"` 响应携带一个托管 3-D Secure 银行卡收银台的 `payment_url`,页面带有您组织的品牌 —— 支持玻利维亚(BOB)与以美元结算的国际银行卡(`country: "US"`;任意国家发行的 Visa、Mastercard、American Express、Discover 与 Diners);银行卡数据绝不经过您的集成。使用
@@ -4629,7 +4629,20 @@ paths:
                 error: idempotency_conflict
                 message: this idempotency key was used with a different payin method
         '403':
-          $ref: '#/components/responses/AccountRequired'
+          description: 账户身份尚未获批，不能执行此认证操作。 Account state or credential errors may also use account_required or account_blocked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                account_required:
+                  value:
+                    error: account_required
+                    message: this endpoint requires an account credential
         '422':
           description: 核心拒绝了该收款(`core_rejected`),或预告转账通道要求登记收款账户而您的组织尚未配置(`deposit_instructions_unavailable` —— 目前为 CL、PY、US)。
           content:
@@ -12568,7 +12581,7 @@ paths:
       - 已保存卡片(Stored cards)
       operationId: chargeStoredCard
       summary: '对已保存的卡片扣款（商户发起）'
-      description: '在付款人不在场的情况下对已存卡扣款（卡组织 MIT 规范，引用原始经同意的 3-D Secure 种子交易）。`recurring: true` 用于固定周期的订阅扣款；false（默认）用于非定期扣款。需要 `idempotency_key` — 相同键的重试返回原 payin，绝不重复扣款。批准的扣款自动入账（`payin_credited` webhook）；被拒绝的扣款返回 422 且 payin 标记为 failed。'
+      description: '需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 在付款人不在场的情况下对已存卡扣款（卡组织 MIT 规范，引用原始经同意的 3-D Secure 种子交易）。`recurring: true` 用于固定周期的订阅扣款；false（默认）用于非定期扣款。需要 `idempotency_key` — 相同键的重试返回原 payin，绝不重复扣款。批准的扣款自动入账（`payin_credited` webhook）；被拒绝的扣款返回 422 且 payin 标记为 failed。'
       parameters:
       - name: storedCardID
         in: path
@@ -12603,6 +12616,15 @@ paths:
               recurring: true
               idempotency_key: sub-2026-07-cust1042
       responses:
+        '403':
+          description: 账户身份尚未获批，不能执行此认证操作。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: verification_required
+                message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
         '201':
           description: '扣款已受理：批准的扣款自动入账；查询 payin 状态。'
           content:
@@ -12677,7 +12699,7 @@ paths:
       - 订阅(Subscriptions)
       operationId: createSubscription
       summary: '创建订阅'
-      description: '对已保存卡片的循环扣款（平台为你执行排期）。除非 start_at 为将来时间（试用），首个周期在创建时同步扣款。每笔扣款都是普通卡 payin（通过 payin_credited 入账）；被拒后每天重试最多 3 次，随后订阅变为 past_due。必须提供 idempotency_key（重试返回原订阅）。需要付款人的一张有效已存卡。'
+      description: '需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 对已保存卡片的循环扣款（平台为你执行排期）。除非 start_at 为将来时间（试用），首个周期在创建时同步扣款。每笔扣款都是普通卡 payin（通过 payin_credited 入账）；被拒后每天重试最多 3 次，随后订阅变为 past_due。必须提供 idempotency_key（重试返回原订阅）。需要付款人的一张有效已存卡。'
       requestBody:
         required: true
         content:
@@ -12718,6 +12740,15 @@ paths:
               description: Monthly plan
               idempotency_key: plan-cust1042-monthly
       responses:
+        '403':
+          description: 账户身份尚未获批，不能执行此认证操作。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: verification_required
+                message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
         '201':
           description: '订阅已创建（在创建时扣款首个周期时包含 first_charge）。'
           content:
@@ -13281,6 +13312,7 @@ paths:
       summary: 主动收款(pull)
       deprecated: true
       description: >-
+        需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。
         在支持 pull 收款的通道直接向付款人扣款。平台要求幂等键，并在调用
         core/通道前对付款人执行 screening。PEP/防火墙暂留返回
         `202 in_review` 且不会扣款；批准只释放审核，客户端使用相同的幂等
@@ -13421,13 +13453,20 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: 账户未激活(account_blocked)。
+          description: 账户身份尚未获批，不能执行此认证操作。 Account state or credential errors may also use account_required or account_blocked.
           content:
             application/json:
-              schema: *id012
-              example:
-                error: account_blocked
-                message: account is not active
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
         '502':
           description: 核心不可用(core_unavailable)。
           content:
@@ -13445,7 +13484,7 @@ paths:
       operationId: payinCollectOtp
       summary: 请求收款 OTP
       deprecated: true
-      description: 请求部分 pull 方式在扣款前所需的一次性密码。免费。支付选项必须先生成，最终 collect 会在扣款前执行 screening。
+      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 请求部分 pull 方式在扣款前所需的一次性密码。免费。支付选项必须先生成，最终 collect 会在扣款前执行 screening。
       requestBody:
         required: true
         content:
@@ -13480,6 +13519,15 @@ paths:
               payer_bank: '0102'
               payer_account: 01020123456789012345
       responses:
+        '403':
+          description: 账户身份尚未获批，不能执行此认证操作。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: verification_required
+                message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
         '200':
           description: OTP 已发送给付款人。
           content:
@@ -13521,7 +13569,7 @@ paths:
       - 收款(Payins)
       operationId: createDepositAccount
       summary: 创建专属充值账户
-      description: 在支持的通道(例如墨西哥 CLABE 或阿根廷 CVU)为你的账户开通固定充值目的地。到达该目的地的每笔转账都会自动入账,已扣除 payin 费用。创建免费。
+      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 在支持的通道(例如墨西哥 CLABE 或阿根廷 CVU)为你的账户开通固定充值目的地。到达该目的地的每笔转账都会自动入账,已扣除 payin 费用。创建免费。
       requestBody:
         required: true
         content:
@@ -13571,13 +13619,20 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: 账户未激活(account_blocked)。
+          description: 账户身份尚未获批，不能执行此认证操作。 Account state or credential errors may also use account_required or account_blocked.
           content:
             application/json:
-              schema: *id012
-              example:
-                error: account_blocked
-                message: account is not active
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
         '502':
           description: 核心不可用(core_unavailable)。
           content:

@@ -8,9 +8,26 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
+<Warning>
+账户必须先通过身份审核，才能创建 `card` payin 首次支付、通过
+`POST /v1/stored-cards/{storedCardID}/charges` 扣款，或创建订阅。个人账户需要
+KYC 获批，企业账户需要 KYB 获批。未获批时，认证请求返回 HTTP
+`403 verification_required`。
+</Warning>
+
+<Note>
+该账户关卡不会阻止付款人的公开托管支付页面，也不会使已经创建的支付链接失效。
+</Note>
+
+
 `card` 方式支持**存储凭证**（卡组织 COF 规范）：付款人在首次支付时明确同意保存卡片，之后你可以让他们免输卡号一键支付，
 或在付款人不在场的情况下自行发起订阅和非定期扣款。卡号**从不存在**于你的集成或本平台：仅存储处理商的不透明引用和
 展示数据（卡组织、末四位、有效期）。
+
+**按账户隔离的 COF。** 已保存凭证属于创建它的 CBPay 账户。
+`payer_reference` 只是该账户内的客户引用，不是全局身份：另一个账户中
+使用相同邮箱或引用也无法发现、列出或扣款。使用其他账户的
+`stored_card_id` 会返回与未知凭证相同的通用 `404 not_found`。
 
 <Steps>
 <Step title="种子支付：首次支付时提供保存卡片选项">
@@ -118,6 +135,11 @@ curl -X POST https://api.qbank.cl/platform/v1/stored-cards/5f0f2c9e-…/charges 
 
 发卡行拒绝时返回 `422`，payin 标记为 `failed` 并带 `failure_reason`。使用相同 `idempotency_key` 的重试返回原
 payin，**绝不重复扣款**。
+
+如果处理方调用或本地持久化的结果不明确，平台会将 payin 保持为
+`pending`/核对状态并返回核对响应。这是 fail-closed 行为：请使用**相同**
+`idempotency_key` 重试，以恢复现有 claim；绝不要生成新键或发送第二笔 MIT
+扣款。
 
 </Step>
 </Steps>

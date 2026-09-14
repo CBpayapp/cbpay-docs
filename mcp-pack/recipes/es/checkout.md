@@ -7,6 +7,14 @@ source_url: https://docs.cbpayapp.com/es/guias/checkout
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Importante**
+La cuenta comerciante debe tener identidad aprobada antes de crear un link
+checkout autenticado con `POST /v1/payins`. Las cuentas persona requieren KYC
+aprobado y las cuentas empresa KYB aprobado; de lo contrario la API responde
+HTTP `403 verification_required`.
+> **Nota**
+Esto no bloquea la página pública `/pay/{token}` ni el pago de un link creado
+antes del gate. El pagador no necesita iniciar sesión en CBPay.
 Crea un **link de cobro universal**: un solo `POST /v1/payins` con
 `method: "checkout"` devuelve una URL pública brandeada donde el pagador
 elige cómo pagar. El cobro se denomina en el **saldo virtual que tú
