@@ -359,6 +359,7 @@ description: "错误格式与完整的错误码目录"
 | Code | Meaning and action |
 |---|---|
 | `banking_customer_incomplete` | The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key. |
+| `registrant_incomplete` | 422 | 虚拟 IBAN 申请 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段；按消息补充证件或公司注册数据，并重试相同申请。 |
 | `provider_rejected` | The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state. |
 | `customer_id_required` | A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource. |
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |

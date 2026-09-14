@@ -371,6 +371,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | Code | Meaning and action |
 |---|---|
 | `banking_customer_incomplete` | The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key. |
+| `registrant_incomplete` | 422 | Solicitud de vIBAN | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant; completa los datos de documento o incorporación indicados y reintenta la misma solicitud. |
 | `provider_rejected` | The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state. |
 | `customer_id_required` | A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource. |
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |

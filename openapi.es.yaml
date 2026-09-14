@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.81"
+  version: "2.82"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -20983,22 +20983,46 @@ paths:
       tags: [Banca]
       operationId: createVirtualIBAN
       summary: Solicitar un IBAN virtual EUR
-      description: Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banca product. The allocation enters manual approval and does not by itself create a provider balance.
+      description: >-
+        Solicita una asignación durable de IBAN virtual para la cuenta autenticada.
+        `funding_usdt` es el propósito por defecto; `banking_eur` exige el producto
+        Banca. La plataforma completa el registrant V3 desde el perfil KYC/KYB
+        aprobado. Los campos opcionales de documento e incorporación aceptan aliases
+        snake_case y camelCase. Si faltan rutas requeridas responde `422
+        registrant_incomplete` y lista las rutas faltantes en `message`.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               properties:
                 purpose: {type: string, enum: [funding_usdt, banking_eur], default: funding_usdt}
                 idempotency_key: {type: string}
-              additionalProperties: false
+                document_issued_country: {type: string, description: País ISO alpha-2 de emisión del documento}
+                documentIssuedCountry: {type: string, description: Alias camelCase}
+                document_expiration_date: {type: string, format: date, description: Vencimiento del documento; debe superar un mes desde hoy}
+                documentExpirationDate: {type: string, format: date, description: Alias camelCase}
+                incorporation_country: {type: string, description: País ISO alpha-2 de incorporación}
+                incorporationCountry: {type: string, description: Alias camelCase}
+                incorporation_date: {type: string, format: date, description: Fecha de incorporación}
+                incorporationDate: {type: string, format: date, description: Alias camelCase}
             examples:
               funding:
                 value:
                   purpose: funding_usdt
                   idempotency_key: viban-funding-2026-001
+              person_overrides:
+                value:
+                  purpose: funding_usdt
+                  document_issued_country: IT
+                  document_expiration_date: '2035-06-01'
+              company_overrides:
+                value:
+                  purpose: banking_eur
+                  incorporation_country: IT
+                  incorporation_date: '2016-12-21'
       responses:
         '202':
           description: Solicitud durable en cola de aprobación manual.
@@ -21022,7 +21046,7 @@ paths:
                       updated_at: '2026-09-10T12:00:00Z'
                     status: pending_approval
         '200':
-          description: Idempotent replay of the same request.
+          description: Replay idempotente de la misma solicitud.
           content:
             application/json:
               examples:
@@ -21037,11 +21061,18 @@ paths:
                       iban_country: DE
                       status: active
         '400':
-          description: invalid_json, invalid_purpose or idempotency_key_required.
+          description: invalid_json, invalid_purpose, idempotency_key_required o idempotency_key_mismatch.
         '403':
-          description: Account verification or product service gate failed.
+          description: Falló la verificación de la cuenta o el gate del producto.
         '409':
           description: virtual_iban_conflict.
+        '422':
+          description: registrant_incomplete.
+          content:
+            application/json:
+              example:
+                error: registrant_incomplete
+                message: 'missing registrant fields: individual.document.issuedCountryCode, individual.document.expirationDate'
         '503':
           description: banking_recovery_pending.
     get:

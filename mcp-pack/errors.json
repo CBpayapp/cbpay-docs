@@ -1,5 +1,5 @@
 {
-  "count": 243,
+  "count": 244,
   "errors": [
     {
       "category": {
@@ -3323,6 +3323,20 @@
         "en": "The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key.",
         "es": "The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key.",
         "zh": "The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "registrant_incomplete",
+      "http": null,
+      "meaning": {
+        "en": "422 — Fix: Virtual IBAN request / approval | The verified KYC/KYB profile is missing required registrant fields; provide the missing document or incorporation data named in the message and retry the same request.",
+        "es": "422 — Fix: Solicitud de vIBAN | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant; completa los datos de documento o incorporación indicados y reintenta la misma solicitud.",
+        "zh": "422 — Fix: 虚拟 IBAN 申请 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段；按消息补充证件或公司注册数据，并重试相同申请。"
       }
     },
     {
