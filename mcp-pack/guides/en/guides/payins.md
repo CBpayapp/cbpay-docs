@@ -123,6 +123,13 @@ Chilean peso has no decimals) and the payment session expires after 24
 hours by default. A retry with the same `idempotency_key` returns the same
 payin and the same URL — it never opens a second payment session.
 
+For `method: "card"`, `idempotency_key` is **required**. Send it either in
+the JSON body or as the `Idempotency-Key` header. The platform records the
+operation before contacting the core: if the response is ambiguous, retry
+with the **same** key so the original charge can be reconciled. The platform
+never creates a second core charge for that retry; do not generate a new key
+to recover the same payment.
+
 **Announced bank transfer** (manual alternative): announce the incoming
 deposit and share the reference with the sender.
 
@@ -338,6 +345,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "customer": { "email": "payer@example.com", "first_name": "Ana", "last_name": "Rojas" },
     "success_url": "https://your-app.com/payment/ok",
     "failure_url": "https://your-app.com/payment/error",
+    "payer_reference": "customer-7719",
     "idempotency_key": "topup-7719"
   }'
 ```
@@ -358,8 +366,9 @@ Response `201`:
 Share the `payment_url` (link, redirect or WebView). Flow details:
 
 - `customer` is an **optional** prefill of the billing details (`email`,
-  `first_name`, `last_name`, `address`, `city`, `administrative_area`,
-  `postal_code`, `country` — plain text, max 120 chars per field); the
+  `first_name`, `last_name`, `phone_number`, `address1`, `locality`,
+  `administrative_area`, `postal_code`, `country` — plain text, max 120 chars
+  per field); the
   payer can complete/correct them on the page. `administrative_area` is
   the billing state/region: an ISO 3166-2 code (`US-CA`) or its suffix
   (`CA`).
@@ -384,9 +393,12 @@ address — including the state/region when the country has subdivisions —
 so the payment can be captured.
 - `success_url` / `failure_url` (optional, public https) redirect the payer
   when done; without them the page shows the final result.
-- `expires_at` (optional, RFC3339, at least 15 minutes ahead) shortens the
-  session lifetime; the default is 24 hours. If it expires unpaid, the
-  payin moves to `expired` and you receive the `payin_expired` webhook.
+- `expires_at` (optional, RFC3339, at least 15 minutes ahead) sets the
+  session lifetime; the default is **60 minutes** and the maximum is
+  **48 hours**. The API validates this value before creating the session
+  and includes the effective RFC3339 expiry in successful card responses.
+  If it expires unpaid, the payin moves to `expired` and you receive the
+  `payin_expired` webhook.
 - The payer has a limited number of attempts; an issuer decline lets them
   retry with another card within the same session.
 - Approval is online: once the charge is approved your account is credited
@@ -394,6 +406,22 @@ so the payment can be captured.
   every other mode.
 - A retry with the same `idempotency_key` returns the same payin and the
   same `payment_url`; it never opens a second payment session.
+- **Open card-session reuse**: when `stored_card_id` is absent, a new
+  `method: "card"` request reuses an open `pending` or `challenge` session
+  for the same account, country, currency, amount and normalized
+  `payer_reference`. If `payer_reference` is absent, `customer.email` is the
+  fallback identity. The response is `200` with `session_reused: true`, the
+  existing `payment_url` and its `expires_at`; no second charge or hosted
+  session is created. Without a reliable payer reference or email, the
+  request creates a new session.
+- An account may have at most **50 open card sessions**. At the cap, only
+  unused `pending` sessions with zero attempts are eligible for eviction. If
+  the cap cannot be relieved, the API returns `429
+  too_many_open_card_sessions`; this is an account limit, not a provider
+  retry signal.
+- The hosted page requests the provider capture context lazily when the payer
+  focuses or clicks the card-number field, not when the page first loads. A
+  payer who abandons the page therefore does not consume a provider context.
 - If the payer already saved cards with you, the page offers them on its
   own: they type their email (first field), verify it with a code and pay
   with one of them without re-typing it — with "Remember this device" they
@@ -558,8 +586,9 @@ Response `201`:
 ```
 
 The contract is the **same** as the Bolivian card page (optional `customer`,
-`success_url`/`failure_url`, `expires_at`, limited attempts, an idempotent
-retry returns the same `payment_url`). What is specific to the international
+`success_url`/`failure_url`, `expires_at`, limited attempts, open-session
+reuse by `payer_reference` or `customer.email`, lazy capture-context loading,
+and an idempotent retry returns the same `payment_url`). What is specific to the international
 corridor:
 
 - 3-D Secure runs inside the page: if the issuer asks for a challenge, the
@@ -1028,6 +1057,9 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 | 400 | `invalid_request` | Check `method` (qr, bank_transfer, fintoc, card; collect has its own endpoint) |
 | 400 | `idempotency_key_required` | Collect requires an idempotency key (real debit against the payer) |
 | 403 | `service_disabled` | Payins is not enabled for your account — see [services](https://docs.cbpayapp.com/en/concepts/services) |
+| 429 | `too_many_open_card_sessions` | The account has 50 open card sessions and no unused, zero-attempt pending session can be evicted — complete or let an existing session expire before creating another |
+| 503 | `card_reuse_unavailable` | The platform could not verify an existing open card payment — retry the same card request with the same idempotency key; do not create a second charge |
+| 503 | `checkout_recovery_pending` | The checkout payment option is being reconciled — retry the same materialization request and do not create another option |
 | 422 | `core_rejected` | The processor rejected the charge; check the message |
 | 422 | `deposit_instructions_unavailable` | `bank_transfer` on a corridor that requires a registered destination account (today CL, PY, US) and your organization has not configured one yet — contact your CBPay operator |
 | 502 | `core_unavailable` | The charge could not be created; retry the creation (nothing was charged) |
@@ -1095,3 +1127,6 @@ multi-line text (bank, account, holder, amount, reference), and pastes it
 into their own bank's transfer form — they still confirm the transfer
 themselves. Don't build a scan-and-pay flow around it; show it next to the
 plain-text fields so the payer can always type them manually.
+## Card payin settlement timing
+
+For card payins, the `settlement_hours` setting controls when the balance becomes available after the payment is confirmed. It accepts `0` or a multiple of `24`: `0` makes the balance available immediately, while `24` is one US business day and `48` is two US business days. Business days are Monday through Friday excluding observed US federal holidays, evaluated in your organization's timezone. For example, Friday at 15:00 plus `48` hours settles Tuesday at 15:00 when no holiday intervenes; Saturday plus `48` hours also settles Tuesday. A value such as `27` is rejected with HTTP `400 invalid_settlement_hours`. The payment is confirmed as `credited` immediately; only balance availability waits for `settle_at`. Existing `settle_at` timestamps and legacy non-multiple configurations retain calendar-hour semantics.

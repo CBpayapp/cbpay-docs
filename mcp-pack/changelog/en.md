@@ -8,6 +8,20 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.81 · 1 versions - September 14, 2026
+
+### v2.81
+
+**Changed**
+
+- **Card payin settlement timing**: `payin_card` settlement now accepts `0` or
+  multiples of `24` hours. Positive values represent US business days in the
+  organization’s timezone, excluding federal holidays. For example, `48`
+  schedules two business days later; `27` is rejected with `400
+  invalid_settlement_hours`. Existing `settle_at` values and legacy
+  non-multiple configurations keep their calendar-hour behavior. This rule is
+  provider-agnostic.
+
 ## v2.80 · 3 versions - September 13, 2026
 
 ### v2.80

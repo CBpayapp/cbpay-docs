@@ -285,3 +285,6 @@ liquida el link.
 #### ¿Puedo reintentar la creación del link sin riesgo?
 Sí — reintenta `POST /v1/payins` con la **misma** `idempotency_key` y
 recibes el mismo link. Una clave nueva crea un link nuevo e independiente.
+## Plazo de liquidación de payins con tarjeta
+
+En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible el saldo después de confirmar el pago. Acepta `0` o un múltiplo de `24`: `0` deja el saldo disponible de inmediato, mientras `24` equivale a un día hábil de EE. UU. y `48` a dos. Los días hábiles son de lunes a viernes, excluyendo feriados federales observados de EE. UU., según la zona horaria de tu organización. Por ejemplo, viernes a las 15:00 más `48` horas liquida el martes a las 15:00 si no interviene un feriado; sábado más `48` horas también liquida el martes. Un valor como `27` se rechaza con HTTP `400 invalid_settlement_hours`. El pago se confirma de inmediato como `credited`; solo el saldo espera hasta `settle_at`. Los valores `settle_at` existentes y las configuraciones legadas no múltiplo mantienen la semántica de horas calendario.
