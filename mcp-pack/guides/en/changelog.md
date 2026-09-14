@@ -8,7 +8,14 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.82 · 2 versions - September 14, 2026
+## v2.83 · 3 versions - September 14, 2026
+
+### v2.83
+
+**Changed**
+
+- **KYC/KYB severe signals now route to human review**: the automatic decision engine no longer emits `rejected` for severe AML sanctions (including KYB parties), prohibited jurisdictions or explicit document-fraud/provider-rejection signals. It preserves the original codes in `auto_decision_reasons`; a provider-closed `rejected` decision remains authoritative.
+- **Self-verification status detail**: `GET /v1/me/verification` now exposes optional `pending_documents`, `changes_requested_comments`, `documents_received` and `documents_gate` fields inside `submission`.
 
 ### v2.82
 

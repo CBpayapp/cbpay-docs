@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds four independent\nvirtual balances — USDT (the operating currency), USDC, BTC and GOLD\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the four balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-14 15:53 UTC",
-    "_content_sha256": "fe674876c2de437f44f81391850915037febe2ddb851fe38505d5119a9edba80"
+    "_generated_at": "2026-09-14 16:55 UTC",
+    "_content_sha256": "7451b6fa357b10f6e4652993de1e4682c61a4d2eafa90cb1afc66872aedea4b8"
   },
   "auth": {
     "type": "bearer",
@@ -793,11 +793,11 @@
                 "verification"
               ]
             },
-            "description": "Effective verification state of the calling account — `kyc_status`, the required kind (kyc for persons, kyb for companies) plus the latest self-onboarding link and submission."
+            "description": "Effective verification state of the calling account. The submission includes optional account-safe detail from the core: pending documents, requested-change comments, documents already received and the aggregate documents gate. These fields may be omitted when the read-only core refresh is unavailable; rejection reasons are intentionally not exposed to the applicant."
           },
           "response": [
             {
-              "name": "200 Onboarding state.",
+              "name": "200 Current onboarding state.",
               "originalRequest": {
                 "method": "GET",
                 "url": {
@@ -812,7 +812,7 @@
                   ]
                 }
               },
-              "status": "Onboarding state.",
+              "status": "Current onboarding state.",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -821,7 +821,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"kyc_status\": \"pending\",\n  \"required_kind\": \"kyc\",\n  \"verified\": false,\n  \"link\": {\n    \"link_id\": \"a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d\",\n    \"kind\": \"kyc\",\n    \"url\": \"https://verify.example.com/on/usd/individual/new?invite=abc123\",\n    \"status\": \"completed\",\n    \"created_at\": \"2026-07-10T12:00:00Z\",\n    \"updated_at\": \"2026-07-10T12:30:00Z\"\n  },\n  \"submission\": {\n    \"submission_id\": \"f0e1d2c3-b4a5-4968-8776-5a4b3c2d1e0f\",\n    \"kind\": \"kyc\",\n    \"status\": \"in_review\",\n    \"liveness_pending\": false,\n    \"created_at\": \"2026-07-10T12:30:00Z\",\n    \"updated_at\": \"2026-07-10T13:00:00Z\"\n  }\n}"
+              "body": "{\n  \"kyc_status\": \"pending_review\",\n  \"required_kind\": \"kyc\",\n  \"verified\": false,\n  \"link\": {\n    \"link_id\": \"a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d\",\n    \"kind\": \"kyc\",\n    \"url\": \"https://example.invalid/onboarding\",\n    \"status\": \"completed\"\n  },\n  \"submission\": {\n    \"submission_id\": \"f0e1d2c3-e4f5-4a6b-8c9d-0e1f2a3b4c5d\",\n    \"kind\": \"kyc\",\n    \"status\": \"changes_requested\",\n    \"liveness_pending\": false,\n    \"pending_documents\": [\n      \"proofOfResidence\"\n    ],\n    \"changes_requested_comments\": \"Please upload a legible proof of residence.\",\n    \"documents_received\": [\n      \"identity\"\n    ],\n    \"documents_gate\": {\n      \"ok\": false,\n      \"matched\": 2,\n      \"total\": 10,\n      \"unresolved\": [\n        {\n          \"category\": \"bankStatement\",\n          \"effective_outcome\": \"REVIEW\"\n        }\n      ]\n    },\n    \"created_at\": \"2026-07-10T12:05:00Z\",\n    \"updated_at\": \"2026-07-11T16:00:00Z\"\n  }\n}"
             }
           ]
         },

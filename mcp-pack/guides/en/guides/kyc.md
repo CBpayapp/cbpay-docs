@@ -35,7 +35,6 @@ flowchart LR
 ```
 
 ## Your own verification (onboarding)
-
 When you register, your account starts unverified (`kyc_status: none`) and
 **can only fund and read**. Any outgoing-money action (payouts, transfers,
 withdrawals, banking, cards) answers `403 verification_required` until you
@@ -81,36 +80,52 @@ curl https://api.qbank.cl/platform/v1/me/verification \
 
 ```json
 {
-  "kyc_status": "pending",
+  "kyc_status": "pending_review",
   "required_kind": "kyc",
   "verified": false,
   "link": { "link_id": "a1b2c3d4-…", "kind": "kyc", "url": "https://…", "status": "completed" },
-  "submission": { "submission_id": "f0e1d2c3-…", "kind": "kyc", "status": "in_review", "liveness_pending": false }
+  "submission": {
+    "submission_id": "f0e1d2c3-…",
+    "kind": "kyc",
+    "status": "changes_requested",
+    "liveness_pending": false,
+    "pending_documents": ["proofOfResidence"],
+    "changes_requested_comments": "Please upload a legible proof of residence.",
+    "documents_received": ["identity"],
+    "documents_gate": {
+      "ok": false,
+      "matched": 2,
+      "total": 10,
+      "unresolved": [
+        { "category": "bankStatement", "effective_outcome": "REVIEW" }
+      ]
+    },
+    "created_at": "2026-07-10T12:05:00Z",
+    "updated_at": "2026-07-11T16:00:00Z"
+  }
 }
 ```
 
+The four optional `submission` fields are returned when available:
+`pending_documents`, `changes_requested_comments`, `documents_received` and
+`documents_gate`; `rejection_reason` is intentionally not exposed and a
+temporary core refresh failure may omit them.
+
 When compliance approves, your `kyc_status` becomes `approved`
-**automatically** and every service unlocks (you receive the
-`kyc_verification_status_changed` webhook with `self_onboarding: true`).
+**automatically**, every service unlocks, and you receive the
+`kyc_verification_status_changed` webhook with `self_onboarding: true`.
 
 > **Note**
-**Automatic decision engine:** a fully clean application (documents read
-correctly, liveness passed, no sanctions or PEP matches, no risk signals) is
-approved **in seconds without human intervention**. Applications with grey
-areas (homonym AML matches, PEP, medium risk band, high-risk country, an
-unreadable document…) go to the operator's human review queue, and severe
-cases are rejected directly. The `decision_source` field of the status webhook
-(`"auto"` / `"admin"`) tells you who decided.
+**Automatic decision engine:** a fully clean application (documents read correctly, liveness passed, no sanctions or PEP matches, no risk signals) is approved **in seconds without human intervention**. Grey areas go to the operator's human review queue. Severe AML sanctions (including a KYB party), prohibited jurisdictions, explicit document fraud/expiry and explicit provider rejection signals also go to the human queue with their reasons preserved; the engine no longer auto-rejects. The `decision_source` field of the status webhook (`"auto"` / `"admin"`) tells you who decided.
 The approval also **backfills your account profile with the verified
 identity**: `display_name` (person = first + last name; company = legal
 name), `tax_id` and `country` are taken from the verification and from then
 on are **immutable** via `PATCH /v1/me` (`409 identity_locked`) — the
 verified identity is the source of truth.
 > **Note**
-While you wait you can fund normally: payins on every method, crypto
-deposits and incoming transfers work from day one. If your verification is
-rejected (`kyc_status: rejected`), contact your operator — they may ask you
-to retry with a new link.
+While waiting you can fund normally: payins, crypto deposits and incoming
+transfers work from day one. If verification is rejected
+(`kyc_status: rejected`), contact your operator about a new link.
 ## Verifying your customers (company accounts only)
 
 A verified **company** account can verify its own end customers. Each
@@ -272,9 +287,9 @@ curl https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id} \
   -H "Authorization: Bearer <token>"
 ```
 
-The detail adds what compliance requested: `pending_documents`,
-`rejection_reason`, `changes_requested_comments`; on KYC also
-`liveness_pending` and `documents_received`; on KYB `aml_decision`.
+The detail adds `pending_documents`, `rejection_reason`,
+`changes_requested_comments`, `documents_received`, `documents_gate` and
+`aml_decision` for KYB.
 
 | Submission status | Meaning |
 |---|---|
@@ -810,11 +825,9 @@ open submission and liveness links do not charge again.
 ## FAQ
 
 #### Why can't I create payouts right after registering?
-Every account must approve its identity verification before moving money
-out (a regulatory requirement). Meanwhile you can fund (payins, crypto
-deposits, incoming transfers) and explore the API. Request your link with
-`POST /v1/me/verification/link` and complete it — approval unlocks
-everything automatically.
+Every account must approve identity verification before moving money out.
+Meanwhile you can fund and explore the API. Request your link with
+`POST /v1/me/verification/link` and complete it — approval unlocks everything.
 #### Hosted links vs data through the API — which one?
 With links, your customer completes everything in the wizard (form +
 documents + liveness) and you never handle sensitive data. With API data
@@ -822,37 +835,27 @@ you send the fields and upload documents via presign — useful if you have
 your own form — but the liveness check still needs a liveness link (it is
 a camera flow, impossible server-to-server).
 #### When is the fee billed and when not?
-It bills when CREATING a third-party link or submission (live mode). Not
-billed: your own onboarding, re-sends of an open submission (same
-external_customer_id), liveness links, queries and documents. If creation
-fails, the fee is refunded automatically.
+It bills when CREATING a third-party link or submission (live mode). Your
+onboarding, open-submission re-sends, liveness links, queries and documents
+are free; a failed creation is refunded automatically.
 #### Why can't my person account create links?
-Third-party verification is a B2B tool for integrators (company accounts).
-A person account only needs its own onboarding, which is free and lives at
-/v1/me/verification.
+Third-party verification is a B2B tool for company accounts; a person
+account only needs its free `/v1/me/verification` onboarding.
 #### Compliance asked for more documents — how do I send them?
-You will receive `more_info_required` with `pending_documents` in the
-submission detail. Upload each document with this page's presign → upload →
-confirm flow; on confirmation the submission returns to the review queue.
+You will receive `more_info_required` with `pending_documents`. Use this
+page's presign → upload → confirm flow; the submission then returns to review.
 #### Does this replace AML screening?
-No: they complement each other. Verification proves identity with evidence
-(documents, video); [AML screening](https://docs.cbpayapp.com/en/guides/aml) checks the identity
-against sanctions/PEP/adverse-media lists and can watch it continuously.
+No: they complement each other. Verification proves identity with evidence;
+[AML screening](https://docs.cbpayapp.com/en/guides/aml) checks sanctions/PEP/adverse-media lists and
+can watch the identity continuously.
 #### Can I reuse a customer's verification in other products?
-Yes — that is the design: an approved verification works as the single
-identity. Pass its `submission_id` as `verification_id` when registering a
-third-party banking user or issuing a card for a designated person: data
-and documents auto-fill. See
+Yes — an approved verification is the reusable identity. Pass its
+`submission_id` as `verification_id` when registering a banking user or
+issuing a card for a designated person; data and documents auto-fill. See
 [reusable identity](#one-verification-for-everything-reusable-identity).
 #### Do I get an email when my verification is approved or rejected?
-If the verification is for your own account (self onboarding — this does
-not apply if you are verifying a third party from a company account), you
-get an automatic email to your address when the decision lands on
-approved, rejected, or changes requested. The email uses your
-organization's branding (or CBPay's by default), never includes the
-detailed reason for a rejection for security and privacy reasons, and the
-action button takes you to the organization's site. If you are verifying a
-third party (for example your company verifying a customer or vendor), the
-third party does NOT receive this email — the notification in that case is
-still the `kyc_status_changed`/`kyb_status_changed` webhook you already
-integrated.
+If this is your own account (not a company verifying a third party), you get
+an automatic branded email when the decision is approved, rejected or
+changes-requested. It never includes detailed rejection reasons. Third
+parties do not receive this email; they receive the
+`kyc_status_changed`/`kyb_status_changed` webhook you integrated.
