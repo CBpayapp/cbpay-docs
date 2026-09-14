@@ -9,6 +9,21 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.81 · 1 versiones - 14 de septiembre de 2026
+
+### v2.81
+
+**Cambiado**
+
+- **Plazo de liquidación de payins con tarjeta**: `payin_card` ahora acepta
+  `0` o múltiplos de `24` horas. Los valores positivos representan días hábiles
+  de EE. UU. en la zona horaria de la organización, excluyendo feriados
+  federales. Por ejemplo, `48` programa la liquidación dos días hábiles
+  después; `27` se rechaza con `400 invalid_settlement_hours`. Los valores
+  `settle_at` existentes y las configuraciones legadas no múltiplo conservan
+  su comportamiento de horas calendario. La regla es independiente del
+  proveedor.
+
 ## v2.80 · 3 versiones - 13 de septiembre de 2026
 
 ### v2.80

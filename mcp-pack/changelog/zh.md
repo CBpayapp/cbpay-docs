@@ -8,6 +8,18 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.81 · 1 个版本 - 2026年9月14日
+
+### v2.81
+
+**变更**
+
+- **银行卡 payin 入账时间**：`payin_card` 的 `settlement_hours` 现在接受
+  `0` 或 `24` 的倍数。正数按组织时区的美国工作日计算，并排除联邦假日。
+  例如 `48` 表示两个工作日后入账；`27` 会返回
+  `400 invalid_settlement_hours`。已有的 `settle_at` 值和旧的非 24 倍数
+  配置继续按日历小时处理。该规则与服务商无关。
+
 ## v2.80 · 3 个版本 - 2026年9月13日
 
 ### v2.80

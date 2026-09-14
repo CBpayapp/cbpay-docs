@@ -341,6 +341,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "customer": { "email": "pagador@ejemplo.com", "first_name": "Ana", "last_name": "Rojas" },
     "success_url": "https://tu-app.com/pago/ok",
     "failure_url": "https://tu-app.com/pago/error",
+    "payer_reference": "cliente-7719",
     "idempotency_key": "recarga-7719"
   }'
 ```
@@ -358,10 +359,18 @@ Respuesta `201`:
 }
 ```
 
-Comparte la `payment_url` (link, redirección o WebView). Detalles del flujo:
+Comparte la `payment_url` (link, redirección o WebView). Para
+`method: "card"`, `idempotency_key` es **obligatoria**: envíala en el body
+JSON o como header `Idempotency-Key`. La plataforma registra la operación
+antes de llamar al core; si la respuesta es ambigua, reintenta con la
+**misma** clave para reconciliar el cobro original. Nunca crea un segundo
+cobro en el core para ese retry: no generes una clave nueva para recuperar
+el mismo pago.
+
+Detalles del flujo:
 
 - `customer` es un prefill **opcional** de los datos de facturación
-  (`email`, `first_name`, `last_name`, `address`, `city`,
+  (`email`, `first_name`, `last_name`, `phone_number`, `address1`, `locality`,
   `administrative_area`, `postal_code`, `country` — texto plano, máx 120
   caracteres por campo); el pagador puede completarlos/corregirlos en la
   página. `administrative_area` es el estado/región de facturación: un
@@ -387,16 +396,37 @@ siempre la dirección de facturación completa — incluido el estado/región
 cuando el país tiene subdivisiones — para que el pago pueda capturarse.
 - `success_url` / `failure_url` (opcionales, https públicas) redirigen al
   pagador al terminar; sin ellas la página muestra el resultado final.
-- `expires_at` (opcional, RFC3339, mínimo 15 minutos) acorta la vigencia de
-  la sesión; el default es 24 horas. Si vence sin pago, el payin pasa a
-  `expired` y recibes el webhook `payin_expired`.
+- `expires_at` (opcional, RFC3339, mínimo 15 minutos) define la vigencia de
+  la sesión; el default es **60 minutos** y el máximo es **48 horas**. La
+  API valida este valor antes de crear la sesión e incluye el vencimiento
+  RFC3339 efectivo en las respuestas exitosas de tarjeta. Si vence sin pago,
+  el payin pasa a `expired` y recibes el webhook `payin_expired`.
 - El pagador tiene un número limitado de intentos; un rechazo del emisor le
   permite reintentar con otra tarjeta dentro de la misma sesión.
 - La aprobación es en línea: al aprobarse el cargo tu cuenta se acredita en
   USDT a tu `payin_rate` y recibes `payin_credited` — igual que cualquier
   otra modalidad.
 - Un retry con la misma `idempotency_key` devuelve el mismo payin y la misma
-  `payment_url`; nunca abre una segunda sesión de pago.
+  `payment_url`; nunca abre una segunda sesión de pago. Cuando se reutiliza
+  una sesión abierta, la respuesta `200` incluye `session_reused: true`,
+  la `payment_url` existente y su `expires_at`.
+- **Reutilización de sesión de tarjeta**: cuando no envías
+  `stored_card_id`, un nuevo `method: "card"` reutiliza una sesión abierta
+  `pending` o `challenge` de la misma cuenta, país, moneda, monto y
+  `payer_reference` normalizado. Si no envías `payer_reference`, se usa
+  `customer.email` como identidad de respaldo. La respuesta es `200` con
+  `session_reused: true`, la `payment_url` existente y su `expires_at`; no
+  se crea otro cargo ni otra sesión hosted. Sin una referencia o email
+  confiable, se crea una sesión nueva.
+- Una cuenta puede tener como máximo **50 sesiones de tarjeta abiertas**.
+  Al alcanzar el límite, solo se pueden desalojar sesiones `pending` sin
+  intentos. Si no se puede liberar un cupo, la API responde
+  `429 too_many_open_card_sessions`; es un límite de la cuenta, no una señal
+  para reintentar al proveedor.
+- La página hosted solicita el capture context del proveedor de forma
+  diferida, cuando el pagador enfoca o hace clic en el campo del número de
+  tarjeta, no al cargar la página. Así una página abandonada no consume un
+  contexto del proveedor.
 - Si el pagador ya guardó tarjetas contigo, la página se las ofrece sola:
   escribe su correo (primer campo), lo verifica con un código y paga con una
   de ellas sin re-digitarla — con "Recordar este dispositivo" no repite el
@@ -561,8 +591,9 @@ Respuesta `201`:
 
 El contrato es el **mismo** que el de la página de tarjeta de Bolivia
 (`customer` opcional, `success_url`/`failure_url`, `expires_at`, intentos
-limitados, retry idempotente devuelve la misma `payment_url`). Diferencias
-propias del corredor internacional:
+limitados, reutilización de sesión abierta por `payer_reference` o
+`customer.email`, carga lazy del capture context y retry idempotente que
+devuelve la misma `payment_url`). Diferencias propias del corredor internacional:
 
 - El 3-D Secure lo ejecuta el procesador dentro de la página: si el emisor
   pide desafío, el pagador lo completa ahí mismo sin salir del checkout.
@@ -1035,6 +1066,9 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 | 400 | `invalid_request` | Revisa `method` (qr, bank_transfer, fintoc, card; collect va en su endpoint) |
 | 400 | `idempotency_key_required` | El collect exige clave de idempotencia (débito real al pagador) |
 | 403 | `service_disabled` | Payins no está habilitado para tu cuenta — ver [servicios](https://docs.cbpayapp.com/es/conceptos/servicios) |
+| 429 | `too_many_open_card_sessions` | La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o deja vencer una sesión existente antes de crear otra |
+| 503 | `card_reuse_unavailable` | La plataforma no pudo verificar un cobro con tarjeta abierto existente — reintenta la misma solicitud con la misma clave de idempotencia; no crees otro cobro |
+| 503 | `checkout_recovery_pending` | La opción de pago del checkout está en reconciliación — reintenta la misma materialización y no crees otra opción |
 | 422 | `core_rejected` | El procesador rechazó el cargo; revisa el mensaje |
 | 422 | `deposit_instructions_unavailable` | `bank_transfer` en un corredor que exige una cuenta de destino registrada (hoy CL, PY, US) y tu organización todavía no configuró una — contacta a tu operador CBPay |
 | 502 | `core_unavailable` | No se pudo crear el cargo; reintenta la creación (no se cobró nada) |
@@ -1105,3 +1139,6 @@ pega en el formulario de transferencia de SU banco — la transferencia la
 confirma él mismo. No construyas un flujo de escanear-y-pagar alrededor de
 esto; muéstralo junto a los campos en texto plano para que el pagador
 siempre pueda escribirlos a mano.
+## Plazo de liquidación de payins con tarjeta
+
+En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible el saldo después de confirmar el pago. Acepta `0` o un múltiplo de `24`: `0` deja el saldo disponible de inmediato, mientras `24` equivale a un día hábil de EE. UU. y `48` a dos. Los días hábiles son de lunes a viernes, excluyendo feriados federales observados de EE. UU., según la zona horaria de tu organización. Por ejemplo, viernes a las 15:00 más `48` horas liquida el martes a las 15:00 si no interviene un feriado; sábado más `48` horas también liquida el martes. Un valor como `27` se rechaza con HTTP `400 invalid_settlement_hours`. El pago se confirma de inmediato como `credited`; solo el saldo espera hasta `settle_at`. Los valores `settle_at` existentes y las configuraciones legadas no múltiplo mantienen la semántica de horas calendario.

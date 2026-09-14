@@ -318,6 +318,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "customer": { "email": "payer@example.com", "first_name": "Ana", "last_name": "Rojas" },
     "success_url": "https://your-app.com/payment/ok",
     "failure_url": "https://your-app.com/payment/error",
+    "payer_reference": "customer-7719",
     "idempotency_key": "topup-7719"
   }'
 ```
@@ -335,11 +336,18 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 }
 ```
 
-分享 `payment_url`（链接、重定向或 WebView）。流程细节：
+分享 `payment_url`（链接、重定向或 WebView）。对于
+`method: "card"`，`idempotency_key` **必填**：在 JSON body 中发送，
+或使用 `Idempotency-Key` 请求头。平台会在调用 core 前持久化该操作；
+如果响应不明确，请使用**相同**的键重试，让平台核对原始收款。该重试
+不会在 core 创建第二笔收款；不要为了恢复同一笔付款生成新键。
+
+流程细节：
 
 - `customer` 是账单信息的**可选**预填（`email`、`first_name`、
-  `last_name`、`address`、`city`、`administrative_area`、`postal_code`、
-  `country` —— 纯文本，每个字段最多 120 个字符）；付款人可在页面上
+  `last_name`、`phone_number`、`address1`、`locality`、
+  `administrative_area`、`postal_code`、`country` —— 纯文本，每个字段
+  最多 120 个字符）；付款人可在页面上
   补充或更正。`administrative_area` 是账单州/地区：ISO 3166-2 代码
   （`US-CA`）或其后缀（`CA`）。
 
@@ -359,14 +367,29 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 付款能够被捕获。
 - `success_url` / `failure_url`（可选，公共 https）在完成后重定向付款
   人；不提供时页面会显示最终结果。
-- `expires_at`（可选，RFC3339，至少提前 15 分钟）可缩短会话有效期；
-  默认为 24 小时。到期未付款时，该 payin 转为 `expired`，您会收到
-  `payin_expired` webhook。
+- `expires_at`（可选，RFC3339，至少提前 15 分钟）设置会话有效期；
+  默认为 **60 分钟**，最长 **48 小时**。API 会在创建会话前校验该值，
+  并在成功的银行卡响应中返回生效的 RFC3339 过期时间。到期未付款时，
+  该 payin 转为 `expired`，您会收到 `payin_expired` webhook。
 - 付款人的尝试次数有限；发卡行拒绝后，可在同一会话内换卡重试。
 - 授权是在线完成的：收款获批后，您的账户按您的 `payin_rate` 以 USDT
   入账，并收到 `payin_credited` —— 与其他所有模式相同。
 - 使用相同 `idempotency_key` 重试会返回同一个 payin 和同一个
   `payment_url`；绝不会开启第二个支付会话。
+- **银行卡会话复用**：未发送 `stored_card_id` 时，新的
+  `method: "card"` 请求会按同一账户、国家、币种、金额和规范化后的
+  `payer_reference` 复用仍处于 `pending` 或 `challenge` 的开放会话。
+  如果没有 `payer_reference`，会使用 `customer.email` 作为后备身份。
+  响应为 `200`，并带有 `session_reused: true`、原有的 `payment_url`
+  以及其 `expires_at`；不会创建第二个 charge 或托管会话。没有可靠的
+  reference 或 email 时，会创建新会话。
+- 每个账户最多有 **50 个开放银行卡会话**。达到上限时，只会驱逐没有
+  尝试过的 `pending` 会话。如果无法释放名额，API 返回
+  `429 too_many_open_card_sessions`；这是账户上限，不是应该重试处理方的
+  信号。
+- 托管页面会在付款人聚焦或点击卡号字段时才延迟请求处理方的 capture
+  context，而不是在页面初次加载时请求。放弃页面不会因此消耗处理方
+  context。
 - 如果付款人已在您这里保存过卡片，页面会主动提供：付款人输入邮箱
   （第一个字段），用验证码完成验证后即可选择已保存的卡片支付，无需
   重新输入卡号 —— 勾选"记住此设备"后 30 天内无需再次验证。详见
@@ -519,8 +542,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 ```
 
 契约与玻利维亚的银行卡页面**完全相同**（`customer` 可选、
-`success_url`/`failure_url`、`expires_at`、尝试次数受限，幂等重试返回
-同一个 `payment_url`）。国际通道特有之处：
+`success_url`/`failure_url`、`expires_at`、尝试次数受限、按
+`payer_reference` 或 `customer.email` 复用开放会话、lazy 加载 capture
+context，幂等重试返回同一个 `payment_url`）。国际通道特有之处：
 
 - 3-D Secure 在页面内完成：如果发卡行要求挑战验证，付款人可在
   checkout 内直接完成，无需离开页面。
@@ -958,6 +982,9 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 | 400 | `invalid_request` | 检查 `method`（qr、bank_transfer、fintoc、card；collect 有自己的端点） |
 | 400 | `idempotency_key_required` | Collect 需要幂等键（对付款人的真实扣款） |
 | 403 | `service_disabled` | 您的账户未启用入金服务 —— 参见[服务](https://docs.cbpayapp.com/zh/concepts/services) |
+| 429 | `too_many_open_card_sessions` | 账户已有 50 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |
+| 503 | `card_reuse_unavailable` | 平台无法核对现有的开放银行卡收款 —— 请使用相同幂等键重试原始请求；不要创建第二笔收款 |
+| 503 | `checkout_recovery_pending` | checkout 支付选项正在核对 —— 请重试相同的物化请求，不要创建第二个选项 |
 | 422 | `core_rejected` | 处理方拒绝了该收款；请检查消息 |
 | 422 | `deposit_instructions_unavailable` | `bank_transfer` 走廊要求登记收款账户（目前为 CL、PY、US），而您的组织尚未配置——请联系您的 CBPay 运营方 |
 | 502 | `core_unavailable` | 收款无法创建；请重试创建（未产生任何扣款） |
@@ -1011,3 +1038,6 @@ USDT，随后立即按真实价格转换；`conversion_status` 报告 `done` 或
 （银行、账户、持有人、金额、备注），再把它粘贴到自己银行的转账表单中——
 转账本身仍由付款人自己确认。不要围绕它构建"扫码即付"的流程；应把它和
 纯文本字段放在一起展示，让付款人始终可以手动输入。
+## 卡支付入账时间
+
+对于卡支付，`settlement_hours` 决定付款确认后余额何时可用。该字段只能是 `0` 或 `24` 的倍数：`0` 表示余额立即可用，`24` 表示一个美国工作日，`48` 表示两个美国工作日。工作日按组织时区计算，为周一至周五，并排除已调整日期的美国联邦假日。例如，周五 15:00 加 `48` 小时会在没有假日时于周二 15:00 入账；周六加 `48` 小时也会在周二入账。`27` 等值会返回 HTTP `400 invalid_settlement_hours`。付款会立即确认并变为 `credited`，只有余额等待 `settle_at`。已经计算出的 `settle_at` 和旧的非 24倍数配置继续按日历小时处理。
