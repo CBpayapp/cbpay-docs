@@ -38,6 +38,14 @@ con anticipación y quedan marcados como **Breaking**.
   `409 receipt_not_available` mientras el screening técnico espera o después
   de un fallo de screening antes del débito; en esos estados no existe un
   comprobante financiero.
+- **Las confirmaciones de payins con tarjeta vuelven a completar normalmente**:
+  las notificaciones terminales `payin_charge_status_changed` ahora cierran
+  correctamente el payin con tarjeta asociado, para que los pagos confirmados
+  sigan el flujo normal de acreditación.
+- **Los payins anunciados vencidos emiten `payin_expired` de forma confiable**:
+  el procesamiento de expiración ahora maneja anuncios que todavía no tienen
+  una cuenta asociada, permitiendo que las integraciones cierren cobros
+  impagos sin depender del polling.
 
 </Update>
 
