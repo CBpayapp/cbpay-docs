@@ -16,6 +16,11 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 - **Member security events**: account-scoped webhook deliveries redact
   `ip` and `user_agent`; organization-wide administrative views retain
   forensic `user_agent` and actor provenance fields.
+- **Webhook signature V2 documentation**: the webhook guide now documents
+  `X-Webhook-Signature-V2`, which signs
+  `timestamp.event_type.event_id.raw_body` with HMAC-SHA256 alongside the
+  legacy V1 `timestamp.raw_body` signature. V1 remains valid and continues
+  to be sent.
 
 ### v2.78
 

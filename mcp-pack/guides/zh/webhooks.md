@@ -722,25 +722,51 @@ payout 可能产生多次 `payout_status_changed` 投递；请按
 | `X-Webhook-Event-ID` | 事件的唯一 ID |
 | `X-Webhook-Delivery-ID` | 本次投递的 ID（重试时会变化） |
 | `X-Webhook-Timestamp` | Unix 时间戳（秒，UTC） |
-| `X-Webhook-Signature` | HMAC 签名（见下文） |
+| `X-Webhook-Signature` | 传统 V1 HMAC 签名（见下文） |
+| `X-Webhook-Signature-V2` | V2 HMAC 签名（见下文） |
 
 ## 验证签名
 
-```
-X-Webhook-Signature = hex( HMAC-SHA256( secret, timestamp + "." + body ) )
-```
+CBPay 会在每次平台 webhook 投递中同时发送两个签名 header。V1 仍然有效
+并会继续发送，因此采用 V2 不会造成兼容性破坏。新的集成应优先验证 V2，
+并在迁移现有接收端时保留 V1 fallback。
+
+| Header | 签名输入 |
+|---|---|
+| `X-Webhook-Signature`（V1） | `timestamp + "." + raw_body` |
+| `X-Webhook-Signature-V2` | `timestamp + "." + event_type + "." + event_id + "." + raw_body` |
+
+两种输入在适用时都使用同一请求中的 `X-Webhook-Timestamp`、
+`X-Webhook-Event` 和 `X-Webhook-Event-ID`。结果是使用订阅密钥计算的
+小写十六进制 HMAC-SHA256。V2 将事件类型和事件 ID 绑定到签名中，因此
+不要从重新序列化的 JSON payload 中读取这些值。`X-Webhook-Delivery-ID`
+用于投递追踪；请使用 `X-Webhook-Event-ID` 去重。
 
 ```javascript Node.js
 const crypto = require("crypto");
 
+function timingSafeHexEqual(provided, expected) {
+  const a = Buffer.from(provided, "hex");
+  const b = Buffer.from(expected, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 function verifyWebhook(req, secret) {
   const ts = req.headers["x-webhook-timestamp"];
-  const sig = req.headers["x-webhook-signature"];
+  const signatureV2 = req.headers["x-webhook-signature-v2"];
+  const signatureV1 = req.headers["x-webhook-signature"];
+  const useV2 = Boolean(signatureV2);
+  const provided = useV2 ? signatureV2 : signatureV1;
+  if (!ts || !provided || !req.rawBody) return false;
+
+  const prefix = useV2
+    ? `${ts}.${req.headers["x-webhook-event"]}.${req.headers["x-webhook-event-id"]}.`
+    : `${ts}.`;
   const expected = crypto
     .createHmac("sha256", secret)
-    .update(ts + "." + req.rawBody)
+    .update(Buffer.concat([Buffer.from(prefix), req.rawBody]))
     .digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+  return timingSafeHexEqual(provided, expected);
 }
 ```
 
@@ -749,11 +775,20 @@ import hashlib, hmac
 
 def verify_webhook(headers, raw_body: bytes, secret: str) -> bool:
     ts = headers["X-Webhook-Timestamp"]
-    sig = headers["X-Webhook-Signature"]
-    expected = hmac.new(
-        secret.encode(), f"{ts}.".encode() + raw_body, hashlib.sha256
-    ).hexdigest()
-    return hmac.compare_digest(sig, expected)
+    sig_v2 = headers.get("X-Webhook-Signature-V2", "").strip()
+    if sig_v2:
+        event_type = headers["X-Webhook-Event"]
+        event_id = headers["X-Webhook-Event-ID"]
+        signed = b".".join(
+            (ts.encode(), event_type.encode(), event_id.encode(), raw_body)
+        )
+        signature = sig_v2
+    else:
+        signed = ts.encode() + b"." + raw_body
+        signature = headers.get("X-Webhook-Signature", "").strip()
+
+    expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
+    return bool(signature) and hmac.compare_digest(signature.lower(), expected)
 ```
 
 > **重要**
