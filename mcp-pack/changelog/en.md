@@ -8,7 +8,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.79 · 2 versions - September 13, 2026
+## v2.80 · 3 versions - September 13, 2026
+
+### v2.80
+**Added**
+
+- **Expired checkout-link matching reason**: payins received against an
+  expired checkout link remain visible as `unassigned` with
+  `match_reason=checkout_link_expired`; the payment mirror is closed instead
+  of remaining in a retrying error state.
 
 ### v2.79
 **Changed**

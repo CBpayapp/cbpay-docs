@@ -22749,7 +22749,8 @@ components:
           description: >-
             Why the deposit could NOT be matched automatically, on `unassigned` payins —
             `no_match`, `ambiguous_amount` (two or more announcements share the amount),
-            `ambiguous_payer`, `claim_lost` (another event claimed the announcement first) or
+            `ambiguous_payer`, `claim_lost` (another event claimed the announcement first),
+            `checkout_link_expired` (the checkout link had expired) or
             `assigned_to:<payin_id>`.
         candidate_count:
           type: integer
