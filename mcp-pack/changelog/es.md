@@ -9,7 +9,15 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.79 · 2 versiones - 13 de septiembre de 2026
+## v2.80 · 3 versiones - 13 de septiembre de 2026
+
+### v2.80
+**Agregado**
+
+- **Razón de emparejamiento para checkout expirado**: los payins recibidos
+  contra un checkout expirado permanecen visibles como `unassigned` con
+  `match_reason=checkout_link_expired`; el espejo del pago se cierra en vez
+  de quedar en un estado de error que se reintenta indefinidamente.
 
 ### v2.79
 **Cambiado**

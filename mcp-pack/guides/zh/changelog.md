@@ -8,7 +8,15 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.79 · 2 个版本 - 2026年9月13日
+## v2.80 · 3 个版本 - 2026年9月13日
+
+### v2.80
+**新增**
+
+- **已过期 checkout 链接的匹配原因**：针对已过期 checkout 链接收到的
+  payin 会继续以 `unassigned` 状态显示，并带有
+  `match_reason=checkout_link_expired`；支付镜像会关闭，不会持续处于
+  可重试的错误状态。
 
 ### v2.79
 **变更**

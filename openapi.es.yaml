@@ -22592,7 +22592,8 @@ components:
           description: >-
             Por qué el depósito NO se pudo conciliar automáticamente, en payins `unassigned` —
             `no_match`, `ambiguous_amount` (dos o más anuncios comparten el monto),
-            `ambiguous_payer`, `claim_lost` (otro evento tomó el anuncio primero) o
+            `ambiguous_payer`, `claim_lost` (otro evento tomó el anuncio primero),
+            `checkout_link_expired` (el checkout link había vencido) o
             `assigned_to:<payin_id>`.
         candidate_count:
           type: integer

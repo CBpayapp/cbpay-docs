@@ -21955,7 +21955,8 @@ components:
           description: >-
             在 `unassigned` 状态下，存款无法自动匹配的原因 — `no_match`、`ambiguous_amount`
             （两个或更多预告金额相同）、`ambiguous_payer`、`claim_lost`（另一笔事件先占用了
-            该预告）或 `assigned_to:<payin_id>`。
+            该预告）、`checkout_link_expired`（checkout 链接已过期）或
+            `assigned_to:<payin_id>`。
         candidate_count:
           type: integer
           description: >-
