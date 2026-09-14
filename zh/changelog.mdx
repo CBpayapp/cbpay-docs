@@ -15,6 +15,10 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **成员安全事件**：账户范围的 webhook 传送会 redact `ip` 和
   `user_agent`；组织范围的管理员视图保留取证用的 `user_agent` 以及
   actor provenance 字段。
+- **Webhook V2 签名文档**：webhook 指南现在说明了
+  `X-Webhook-Signature-V2`。该签名使用 HMAC-SHA256 签署
+  `timestamp.event_type.event_id.raw_body`，并与传统 V1 的
+  `timestamp.raw_body` 签名同时发送。V1 仍然有效。
 
 ### v2.78
 

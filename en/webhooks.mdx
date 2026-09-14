@@ -745,27 +745,55 @@ Every delivery is a JSON `POST` with these headers:
 | `X-Webhook-Event-ID` | Unique event ID |
 | `X-Webhook-Delivery-ID` | This delivery's ID (changes across retries) |
 | `X-Webhook-Timestamp` | Unix timestamp (seconds, UTC) |
-| `X-Webhook-Signature` | HMAC signature (see below) |
+| `X-Webhook-Signature` | Legacy V1 HMAC signature (see below) |
+| `X-Webhook-Signature-V2` | V2 HMAC signature (see below) |
 
-## Verify the signature
+## Verify the signatures
 
-```
-X-Webhook-Signature = hex( HMAC-SHA256( secret, timestamp + "." + body ) )
-```
+CBPay sends both signature headers on every platform webhook delivery. V1
+remains valid and continues to be sent, so adopting V2 is not a breaking
+change. New integrations should verify V2 first and keep the V1 fallback
+while migrating existing receivers.
+
+| Header | Signed input |
+|---|---|
+| `X-Webhook-Signature` (V1) | `timestamp + "." + raw_body` |
+| `X-Webhook-Signature-V2` | `timestamp + "." + event_type + "." + event_id + "." + raw_body` |
+
+Both inputs use the `X-Webhook-Timestamp`, `X-Webhook-Event` and
+`X-Webhook-Event-ID` values from the same request where applicable. The
+result is lowercase hexadecimal HMAC-SHA256 using the subscription secret.
+V2 binds the event type and event ID to the signature, so do not take those
+values from a re-serialized JSON payload. `X-Webhook-Delivery-ID` is for
+delivery traceability; deduplicate by `X-Webhook-Event-ID`.
 
 <CodeGroup>
 
 ```javascript Node.js
 const crypto = require("crypto");
 
+function timingSafeHexEqual(provided, expected) {
+  const a = Buffer.from(provided, "hex");
+  const b = Buffer.from(expected, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 function verifyWebhook(req, secret) {
   const ts = req.headers["x-webhook-timestamp"];
-  const sig = req.headers["x-webhook-signature"];
+  const signatureV2 = req.headers["x-webhook-signature-v2"];
+  const signatureV1 = req.headers["x-webhook-signature"];
+  const useV2 = Boolean(signatureV2);
+  const provided = useV2 ? signatureV2 : signatureV1;
+  if (!ts || !provided || !req.rawBody) return false;
+
+  const prefix = useV2
+    ? `${ts}.${req.headers["x-webhook-event"]}.${req.headers["x-webhook-event-id"]}.`
+    : `${ts}.`;
   const expected = crypto
     .createHmac("sha256", secret)
-    .update(ts + "." + req.rawBody)
+    .update(Buffer.concat([Buffer.from(prefix), req.rawBody]))
     .digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+  return timingSafeHexEqual(provided, expected);
 }
 ```
 
@@ -774,11 +802,20 @@ import hashlib, hmac
 
 def verify_webhook(headers, raw_body: bytes, secret: str) -> bool:
     ts = headers["X-Webhook-Timestamp"]
-    sig = headers["X-Webhook-Signature"]
-    expected = hmac.new(
-        secret.encode(), f"{ts}.".encode() + raw_body, hashlib.sha256
-    ).hexdigest()
-    return hmac.compare_digest(sig, expected)
+    sig_v2 = headers.get("X-Webhook-Signature-V2", "").strip()
+    if sig_v2:
+        event_type = headers["X-Webhook-Event"]
+        event_id = headers["X-Webhook-Event-ID"]
+        signed = b".".join(
+            (ts.encode(), event_type.encode(), event_id.encode(), raw_body)
+        )
+        signature = sig_v2
+    else:
+        signed = ts.encode() + b"." + raw_body
+        signature = headers.get("X-Webhook-Signature", "").strip()
+
+    expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
+    return bool(signature) and hmac.compare_digest(signature.lower(), expected)
 ```
 
 </CodeGroup>

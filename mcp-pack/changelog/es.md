@@ -18,6 +18,11 @@ con anticipación y quedan marcados como **Breaking**.
   redactan `ip` y `user_agent`; las vistas administrativas de alcance
   organizacional conservan el `user_agent` forense y los campos de procedencia
   del actor.
+- **Documentación de la firma V2 de webhooks**: la guía ahora documenta
+  `X-Webhook-Signature-V2`, que firma
+  `timestamp.event_type.event_id.raw_body` con HMAC-SHA256 junto a la firma
+  V1 heredada `timestamp.raw_body`. V1 sigue siendo válida y se continúa
+  enviando.
 
 ### v2.78
 
