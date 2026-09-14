@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.82"
+  version: "2.83"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -7123,54 +7123,45 @@ paths:
       - KYC / KYB
       operationId: getMyVerification
       summary: My onboarding verification state
-      description: Effective verification state of the calling account — `kyc_status`, the required kind
-        (kyc for persons, kyb for companies) plus the latest self-onboarding link and submission.
+      description: >-
+        Effective verification state of the calling account. The submission includes
+        optional account-safe detail from the core: pending documents, requested-change
+        comments, documents already received and the aggregate documents gate. These
+        fields may be omitted when the read-only core refresh is unavailable; rejection
+        reasons are intentionally not exposed to the applicant.
       responses:
         '200':
-          description: Onboarding state.
+          description: Current onboarding state.
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  kyc_status:
-                    type: string
-                    enum:
-                    - none
-                    - pending
-                    - approved
-                    - rejected
-                  required_kind:
-                    type: string
-                    enum:
-                    - kyc
-                    - kyb
-                  verified:
-                    type: boolean
-                  link:
-                    $ref: '#/components/schemas/VerificationLink'
-                  submission:
-                    $ref: '#/components/schemas/VerificationSubmission'
               example:
-                kyc_status: pending
+                kyc_status: pending_review
                 required_kind: kyc
                 verified: false
                 link:
                   link_id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
                   kind: kyc
-                  url: https://verify.example.com/on/usd/individual/new?invite=abc123
+                  url: https://example.invalid/onboarding
                   status: completed
-                  created_at: '2026-07-10T12:00:00Z'
-                  updated_at: '2026-07-10T12:30:00Z'
                 submission:
-                  submission_id: f0e1d2c3-b4a5-4968-8776-5a4b3c2d1e0f
+                  submission_id: f0e1d2c3-e4f5-4a6b-8c9d-0e1f2a3b4c5d
                   kind: kyc
-                  status: in_review
+                  status: changes_requested
                   liveness_pending: false
-                  created_at: '2026-07-10T12:30:00Z'
-                  updated_at: '2026-07-10T13:00:00Z'
-        '403':
-          $ref: '#/components/responses/AccountRequired'
+                  pending_documents:
+                  - proofOfResidence
+                  changes_requested_comments: Please upload a legible proof of residence.
+                  documents_received:
+                  - identity
+                  documents_gate:
+                    ok: false
+                    matched: 2
+                    total: 10
+                    unresolved:
+                    - category: bankStatement
+                      effective_outcome: REVIEW
+                  created_at: '2026-07-10T12:05:00Z'
+                  updated_at: '2026-07-11T16:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/screenings/addresses:

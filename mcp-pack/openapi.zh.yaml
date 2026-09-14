@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.82"
+  version: "2.83"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -6779,53 +6779,43 @@ paths:
       - KYC / KYB
       operationId: getMyVerification
       summary: 我的入驻验证状态
-      description: 调用账户的有效验证状态——`kyc_status`、所需类型(个人为 kyc,企业为 kyb)以及最新的自助入驻链接和 submission。
+      description: >-
+        调用账户的有效验证状态。submission 会在核心服务有数据时返回面向账户且安全的可选详情：
+        待补文件、请求修改的评论、已收到的文件以及 documents_gate 汇总。如果核心服务只读刷新暂时不可用，
+        这些字段可能被省略；出于安全原因不会向申请人暴露拒绝原因。
       responses:
         '200':
-          description: 入驻状态。
+          description: 当前入驻状态。
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  kyc_status:
-                    type: string
-                    enum:
-                    - none
-                    - pending
-                    - approved
-                    - rejected
-                  required_kind:
-                    type: string
-                    enum:
-                    - kyc
-                    - kyb
-                  verified:
-                    type: boolean
-                  link:
-                    $ref: '#/components/schemas/VerificationLink'
-                  submission:
-                    $ref: '#/components/schemas/VerificationSubmission'
               example:
-                kyc_status: pending
+                kyc_status: pending_review
                 required_kind: kyc
                 verified: false
                 link:
                   link_id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
                   kind: kyc
-                  url: https://verify.example.com/on/usd/individual/new?invite=abc123
+                  url: https://example.invalid/onboarding
                   status: completed
-                  created_at: '2026-07-10T12:00:00Z'
-                  updated_at: '2026-07-10T12:30:00Z'
                 submission:
-                  submission_id: f0e1d2c3-b4a5-4968-8776-5a4b3c2d1e0f
+                  submission_id: f0e1d2c3-e4f5-4a6b-8c9d-0e1f2a3b4c5d
                   kind: kyc
-                  status: in_review
+                  status: changes_requested
                   liveness_pending: false
-                  created_at: '2026-07-10T12:30:00Z'
-                  updated_at: '2026-07-10T13:00:00Z'
-        '403':
-          $ref: '#/components/responses/AccountRequired'
+                  pending_documents:
+                  - proofOfResidence
+                  changes_requested_comments: 请上传清晰的居住证明。
+                  documents_received:
+                  - identity
+                  documents_gate:
+                    ok: false
+                    matched: 2
+                    total: 10
+                    unresolved:
+                    - category: bankStatement
+                      effective_outcome: REVIEW
+                  created_at: '2026-07-10T12:05:00Z'
+                  updated_at: '2026-07-11T16:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/screenings/addresses:

@@ -9,7 +9,14 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.82 · 2 versiones - 14 de septiembre de 2026
+## v2.83 · 3 versiones - 14 de septiembre de 2026
+
+### v2.83
+
+**Cambiado**
+
+- **Las señales KYC/KYB severas pasan a revisión humana**: el motor de decisión automática ya no emite `rejected` ante sanciones AML severas (incluidas partes KYB), países prohibidos o señales explícitas de fraude/rechazo del proveedor. Conserva los códigos originales en `auto_decision_reasons`; un `rejected` cerrado por el proveedor sigue siendo autoritativo.
+- **Detalle del estado de verificación propia**: `GET /v1/me/verification` ahora expone dentro de `submission` los campos opcionales `pending_documents`, `changes_requested_comments`, `documents_received` y `documents_gate`.
 
 ### v2.82
 
