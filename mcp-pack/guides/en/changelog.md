@@ -35,6 +35,13 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   `GET /v1/payouts/{payoutID}/receipt` returns `409 receipt_not_available`
   while technical screening is pending or after a pre-debit screening failure;
   no financial receipt exists in those states.
+- **Card payin confirmations complete normally again**: terminal
+  `payin_charge_status_changed` notifications now close the associated card
+  payin correctly, so confirmed card payments can proceed through the normal
+  credit flow.
+- **Expired announced payins emit `payin_expired` reliably**: expiry processing
+  now handles announcements that do not yet have an account association,
+  allowing integrations to close unpaid collections without polling.
 
 ## v2.77 · 3 versions - September 12, 2026
 

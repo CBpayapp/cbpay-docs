@@ -32,6 +32,11 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **扣款前 payout 的回执可用性是明确的**：
   `GET /v1/payouts/{payoutID}/receipt` 在技术筛查等待期间或扣款前筛查失败后
   返回 `409 receipt_not_available`；这些状态没有财务回执。
+- **银行卡 payin 的确认现在会正常完成**：终态的
+  `payin_charge_status_changed` 通知现在会正确关闭关联的银行卡 payin，
+  已确认的银行卡付款可以继续正常的入账流程。
+- **已公告 payin 到期时可靠发送 `payin_expired`**：到期处理现在可以处理
+  尚未关联账户的公告，让集成方无需轮询即可关闭未支付的收款。
 
 ## v2.77 · 3 versions - 2026年9月12日
 
