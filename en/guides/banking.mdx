@@ -659,6 +659,26 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
   -d '{"purpose":"funding_usdt"}'
 ```
 
+`funding_usdt` is the default purpose. The platform builds the provider
+registrant from the approved KYC/KYB profile. If a verified profile lacks a
+document issuing country or a document expiration date, an account request may
+send these optional top-level overrides (snake_case or camelCase aliases are
+accepted):
+
+```json
+{
+  "purpose": "funding_usdt",
+  "document_issued_country": "IT",
+  "document_expiration_date": "2035-06-01"
+}
+```
+
+For company accounts the equivalent optional fields are
+`incorporation_country` / `incorporationCountry` and
+`incorporation_date` / `incorporationDate`. These values are used only to
+complete the verified registrant; they do not bypass KYC/KYB.
+
+
 The request is accepted into the manual approval queue:
 
 ```json
@@ -718,6 +738,7 @@ Never infer them from examples.
 | 400 | `invalid_json` | Send a JSON object. |
 | 400 | `invalid_purpose` | Use `funding_usdt` or `banking_eur`. |
 | 400 | `idempotency_key_required` | Send `Idempotency-Key` or `idempotency_key`. |
+| 422 | `registrant_incomplete` | The verified KYC/KYB profile is missing required registrant fields. Supply the optional document or incorporation overrides named in the message, then retry with the same idempotency key. |
 | 403 | `verification_required` / service-gate error | Complete account verification and enable the required product. |
 | 409 | `virtual_iban_conflict` | Reuse the original request; do not create a second allocation. |
 | 503 | `banking_recovery_pending` | The durable request could not be checked or persisted; reconcile before retrying. |

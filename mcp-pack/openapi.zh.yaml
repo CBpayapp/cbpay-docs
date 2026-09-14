@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.81"
+  version: "2.82"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -20296,25 +20296,48 @@ paths:
       tags: [银行服务]
       operationId: createVirtualIBAN
       summary: 申请 EUR 虚拟 IBAN
-      description: Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the 银行服务 product. The allocation enters manual approval and does not by itself create a provider balance.
+      description: >-
+        为已认证账户申请一个持久化的虚拟 IBAN。`funding_usdt` 是默认用途；
+        `banking_eur` 要求启用银行服务。平台从已批准的 KYC/KYB profile 自动
+        补全 registrant V3。下列证件和公司注册字段可选，并接受 snake_case
+        与 camelCase aliases。缺少必填路径时返回 `422 registrant_incomplete`，
+        缺失路径位于 `message`。
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               properties:
                 purpose: {type: string, enum: [funding_usdt, banking_eur], default: funding_usdt}
                 idempotency_key: {type: string}
-              additionalProperties: false
+                document_issued_country: {type: string, description: 证件签发国家 ISO alpha-2 override}
+                documentIssuedCountry: {type: string, description: camelCase alias}
+                document_expiration_date: {type: string, format: date, description: 证件到期日，必须晚于一个月}
+                documentExpirationDate: {type: string, format: date, description: camelCase alias}
+                incorporation_country: {type: string, description: 公司注册国家 ISO alpha-2 override}
+                incorporationCountry: {type: string, description: camelCase alias}
+                incorporation_date: {type: string, format: date, description: 公司注册日期}
+                incorporationDate: {type: string, format: date, description: camelCase alias}
             examples:
               funding:
                 value:
                   purpose: funding_usdt
                   idempotency_key: viban-funding-2026-001
+              person_overrides:
+                value:
+                  purpose: funding_usdt
+                  document_issued_country: IT
+                  document_expiration_date: '2035-06-01'
+              company_overrides:
+                value:
+                  purpose: banking_eur
+                  incorporation_country: IT
+                  incorporation_date: '2016-12-21'
       responses:
         '202':
-          description: 持久化申请进入人工审批队列。
+          description: 已进入持久化人工审批队列。
           content:
             application/json:
               examples:
@@ -20335,7 +20358,7 @@ paths:
                       updated_at: '2026-09-10T12:00:00Z'
                     status: pending_approval
         '200':
-          description: Idempotent replay of the same request.
+          description: 同一请求的幂等 replay。
           content:
             application/json:
               examples:
@@ -20350,11 +20373,18 @@ paths:
                       iban_country: DE
                       status: active
         '400':
-          description: invalid_json, invalid_purpose or idempotency_key_required.
+          description: invalid_json、invalid_purpose、idempotency_key_required 或 idempotency_key_mismatch。
         '403':
-          description: Account verification or product service gate failed.
+          description: 账户验证或产品服务 gate 失败。
         '409':
-          description: virtual_iban_conflict.
+          description: virtual_iban_conflict。
+        '422':
+          description: registrant_incomplete。
+          content:
+            application/json:
+              example:
+                error: registrant_incomplete
+                message: 'missing registrant fields: individual.document.issuedCountryCode, individual.document.expirationDate'
         '503':
           description: banking_recovery_pending.
     get:

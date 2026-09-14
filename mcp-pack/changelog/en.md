@@ -8,7 +8,12 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.81 · 1 versions - September 14, 2026
+## v2.82 · 2 versions - September 14, 2026
+
+### v2.82
+**Changed**
+
+- Virtual IBAN account requests now document the optional document and incorporation overrides (snake_case and camelCase), KYC/KYB autofill, and the `registrant_incomplete` (422) response.
 
 ### v2.81
 

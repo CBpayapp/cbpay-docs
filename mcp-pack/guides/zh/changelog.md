@@ -8,7 +8,12 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.81 · 1 个版本 - 2026年9月14日
+## v2.82 · 2 versions - 2026年9月14日
+
+### v2.82
+**Changed**
+
+- 账户虚拟 IBAN 申请现在记录可选的证件和公司注册 override （snake_case 与 camelCase）、KYC/KYB 自动补全以及 `registrant_incomplete`（422）响应。
 
 ### v2.81
 

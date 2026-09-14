@@ -7,7 +7,12 @@ description: "History of API and documentation changes"
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-<Update label="September 14, 2026" description="v2.81 · 1 versions">
+<Update label="September 14, 2026" description="v2.82 · 2 versions">
+
+### v2.82
+**Changed**
+
+- Virtual IBAN account requests now document the optional document and incorporation overrides (snake_case and camelCase), KYC/KYB autofill, and the `registrant_incomplete` (422) response.
 
 ### v2.81
 
@@ -20,6 +25,8 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   invalid_settlement_hours`. Existing `settle_at` values and legacy
   non-multiple configurations keep their calendar-hour behavior. This rule is
   provider-agnostic.
+
+</Update>
 
 </Update>
 

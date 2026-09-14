@@ -631,6 +631,25 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
   -d '{"purpose":"funding_usdt"}'
 ```
 
+`funding_usdt` es el propósito por defecto. La plataforma construye el
+registrant desde el perfil KYC/KYB aprobado. Si el perfil verificado no trae el
+país de emisión o el vencimiento del documento, la solicitud de cuenta puede
+enviar estos overrides opcionales de nivel superior (se aceptan aliases
+snake_case o camelCase):
+
+```json
+{
+  "purpose": "funding_usdt",
+  "document_issued_country": "IT",
+  "document_expiration_date": "2035-06-01"
+}
+```
+
+Para cuentas empresa, los campos equivalentes son
+`incorporation_country` / `incorporationCountry` y
+`incorporation_date` / `incorporationDate`. Se usan solo para completar el
+registrant verificado; no saltan KYC/KYB.
+
 La solicitud entra a la cola de aprobación manual:
 
 ```json
@@ -687,6 +706,7 @@ este contrato provider-agnostic. Nunca los infieras desde ejemplos.
 | 400 | `invalid_json` | Envía un objeto JSON. |
 | 400 | `invalid_purpose` | Usa `funding_usdt` o `banking_eur`. |
 | 400 | `idempotency_key_required` | Envía `Idempotency-Key` o `idempotency_key`. |
+| 422 | `registrant_incomplete` | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant. Envía los overrides de documento o incorporación indicados en el mensaje y reintenta con la misma clave. |
 | 403 | `verification_required` / error de servicio | Completa la verificación y habilita el producto requerido. |
 | 409 | `virtual_iban_conflict` | Reutiliza la solicitud original; no crees otra asignación. |
 | 503 | `banking_recovery_pending` | Reconcilia la solicitud durable antes de reintentar. |

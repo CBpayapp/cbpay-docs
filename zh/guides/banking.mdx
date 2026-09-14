@@ -574,6 +574,23 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
   -d '{"purpose":"funding_usdt"}'
 ```
 
+`funding_usdt` 是默认用途。平台会从已批准的 KYC/KYB profile 构建
+registrant。如果 verified profile 缺少证件签发国家或证件到期日，账户申请
+可以发送以下顶层可选 override（接受 snake_case 和 camelCase aliases）：
+
+```json
+{
+  "purpose": "funding_usdt",
+  "document_issued_country": "IT",
+  "document_expiration_date": "2035-06-01"
+}
+```
+
+公司账户的等价字段为 `incorporation_country` /
+`incorporationCountry` 与 `incorporation_date` / `incorporationDate`。
+这些值只用于补全已验证 registrant，不会绕过 KYC/KYB。
+
+
 申请会进入人工审批队列：
 
 ```json
@@ -630,6 +647,7 @@ provider-agnostic 合同的一部分。不要从示例推断这些信息。
 | 400 | `invalid_json` | 发送 JSON 对象。 |
 | 400 | `invalid_purpose` | 使用 `funding_usdt` 或 `banking_eur`。 |
 | 400 | `idempotency_key_required` | 发送 `Idempotency-Key` 或 `idempotency_key`。 |
+| 422 | `registrant_incomplete` | 已验证的 KYC/KYB profile 缺少 registrant 必填字段。根据消息补充证件或公司注册 override，并使用相同幂等键重试。 |
 | 403 | `verification_required` / 产品权限错误 | 完成验证并启用所需产品。 |
 | 409 | `virtual_iban_conflict` | 复用原申请，不要创建第二个分配。 |
 | 503 | `banking_recovery_pending` | 先对持久化申请做 reconcile，再重试。 |

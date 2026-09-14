@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.81"
+  version: "2.82"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -21135,22 +21135,47 @@ paths:
       tags: [Banking]
       operationId: createVirtualIBAN
       summary: Request an EUR virtual IBAN
-      description: Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The allocation enters manual approval and does not by itself create a provider balance.
+      description: >-
+        Requests one durable virtual IBAN allocation for the authenticated
+        account. `funding_usdt` is the default purpose; `banking_eur` requires
+        the Banking product. The platform autofills the provider V3 registrant
+        from the approved KYC/KYB profile. The optional document and
+        incorporation fields below accept snake_case and camelCase aliases.
+        Missing required registrant paths return `422 registrant_incomplete`
+        with the missing paths in `message`.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               properties:
                 purpose: {type: string, enum: [funding_usdt, banking_eur], default: funding_usdt}
                 idempotency_key: {type: string}
-              additionalProperties: false
+                document_issued_country: {type: string, description: ISO alpha-2 document issuing country override}
+                documentIssuedCountry: {type: string, description: CamelCase alias}
+                document_expiration_date: {type: string, format: date, description: Document expiry override; must be more than one month in the future}
+                documentExpirationDate: {type: string, format: date, description: CamelCase alias}
+                incorporation_country: {type: string, description: ISO alpha-2 incorporation country override}
+                incorporationCountry: {type: string, description: CamelCase alias}
+                incorporation_date: {type: string, format: date, description: Incorporation date override}
+                incorporationDate: {type: string, format: date, description: CamelCase alias}
             examples:
               funding:
                 value:
                   purpose: funding_usdt
                   idempotency_key: viban-funding-2026-001
+              person_overrides:
+                value:
+                  purpose: funding_usdt
+                  document_issued_country: IT
+                  document_expiration_date: '2035-06-01'
+              company_overrides:
+                value:
+                  purpose: banking_eur
+                  incorporation_country: IT
+                  incorporation_date: '2016-12-21'
       responses:
         '202':
           description: Durable request queued for manual approval.
@@ -21189,11 +21214,18 @@ paths:
                       iban_country: DE
                       status: active
         '400':
-          description: invalid_json, invalid_purpose or idempotency_key_required.
+          description: invalid_json, invalid_purpose, idempotency_key_required or idempotency_key_mismatch.
         '403':
           description: Account verification or product service gate failed.
         '409':
           description: virtual_iban_conflict.
+        '422':
+          description: registrant_incomplete.
+          content:
+            application/json:
+              example:
+                error: registrant_incomplete
+                message: 'missing registrant fields: individual.document.issuedCountryCode, individual.document.expirationDate'
         '503':
           description: banking_recovery_pending.
     get:
