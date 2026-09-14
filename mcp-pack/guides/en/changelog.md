@@ -11,6 +11,19 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 ## v2.82 · 2 versions - September 14, 2026
 
 ### v2.82
+
+**Breaking**
+
+- **Approved identity required for account-authenticated payin creation**:
+  person accounts must have approved KYC and company accounts approved KYB
+  before creating a payin or using account-level collection. `POST
+  /v1/payins` (QR, card, checkout, bank_transfer and fintoc), collect
+  OTP/collect, dedicated deposit-account creation, stored-card charges and
+  subscriptions now return `403 verification_required` until approval.
+  Existing public payment links, passive deposits already received, org-admin
+  operational assignment and system-created deposit instruments remain
+  available.
+
 **Changed**
 
 - Virtual IBAN account requests now document the optional document and incorporation overrides (snake_case and camelCase), KYC/KYB autofill, and the `registrant_incomplete` (422) response.

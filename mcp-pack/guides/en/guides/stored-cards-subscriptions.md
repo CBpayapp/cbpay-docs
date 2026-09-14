@@ -7,6 +7,15 @@ source_url: https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Important**
+The account must have approved identity before creating the seed `card` payin,
+charging a stored card through `POST /v1/stored-cards/{storedCardID}/charges`,
+or creating a subscription. Person accounts require approved KYC and company
+accounts require approved KYB. Without approval, the authenticated request
+returns HTTP `403 verification_required`.
+> **Note**
+This account gate does not block the payer's public hosted payment page, and
+it does not invalidate a payment link that was already created.
 The `card` method supports **stored credentials** (the card brands' COF
 mandate): your payer saves their card with explicit consent on the first
 payment, and afterwards you can offer one-click payment without re-typing
@@ -14,6 +23,13 @@ the number — or charge subscriptions and unscheduled amounts yourself
 without the payer present. The card number **never exists** in your
 integration or on the platform: only an opaque processor reference plus
 display data (brand, last 4 digits, expiry) is stored.
+
+**Account-scoped COF.** A stored credential belongs to the CBPay account
+that created it. `payer_reference` is an account-local customer reference,
+not a global identity: the same email or reference in another account
+cannot discover, list or charge this credential. Using a `stored_card_id`
+from another account returns the same generic `404 not_found` as any
+unknown credential.
 
 ### Seed: offer to save the card on the first payment
 
@@ -125,6 +141,12 @@ Response `201` — an approved charge credits your balance automatically
 An issuer decline responds `422` with the payin in `failed` and a
 `failure_reason`. A retry with the same `idempotency_key` returns the
 original payin and **never charges twice**.
+
+If the provider call or the local persistence has an ambiguous outcome,
+the platform keeps the payin in `pending`/review and answers with a
+reconciliation response. This is fail-closed: retry with the **same**
+`idempotency_key` so the existing claim can be recovered; never create a
+new key or send a second MIT charge.
 
 #### Billing address on file (required for capture)
 

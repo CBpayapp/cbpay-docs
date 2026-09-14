@@ -8,6 +8,20 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
+<Warning>
+**账户身份获批后才能通过认证账户收款。** 个人账户需要已批准的 KYC，企业账户需要
+已批准的 KYB，之后才能创建 payin。此规则适用于 `POST /v1/payins`（QR、`card`、
+`checkout`、`bank_transfer` 和 `fintoc`）、`POST /v1/payins/collect/otp`、
+`POST /v1/payins/collect`、`POST /v1/payins/deposit-accounts`，以及已保存卡扣款和
+`POST /v1/subscriptions`。获批前这些请求返回 HTTP `403 verification_required`。
+</Warning>
+
+<Note>
+该关卡仅适用于认证账户创建。已经创建的公开支付链接仍可支付，已经收到的被动入账
+仍可处理，org-admin 的运营分配仍可用，系统创建的入金工具不受阻止。
+</Note>
+
+
 入金（payin）是一笔法币收款：您的客户以当地货币付款，您的账户自动获得
 USDT 入账，按**您的入金汇率**（`GET /v1/rates` 中的 `payin_rate`）折算，
 并在您的账户配置了固定入金费用时予以扣除。
@@ -689,6 +703,26 @@ SWIFT 电汇。`notes` 字段携带汇款银行正确填写表单所需的操作
 
 </Tab>
 </Tabs>
+
+## 主动扣款（pull）
+
+部分通道支持由付款人授权的 pull 扣款。账户必须先完成身份审核并获批，才能调用以下
+两个接口：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect/otp   -H "Authorization: Bearer <token>"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678" }'
+```
+
+OTP 响应会返回 `otp_reference`；在扣款接口中使用相同的
+`idempotency_key`：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: collect-2026-09-11-001"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678", "otp": "12345678", "otp_reference": "OTP-5521", "idempotency_key": "collect-2026-09-11-001" }'
+```
+
+平台会在调用 core 前筛查付款人。命中 hold 时返回 `202 in_review`，不会扣款；批准后
+使用相同请求重试。如果账户尚未获批，两个接口都会在执行 collect 通道前返回
+`403 verification_required`。请始终检查 `GET /v1/payins/methods`，因为通道可用性会变化。
 
 ## 通用收款链接（`checkout`）
 

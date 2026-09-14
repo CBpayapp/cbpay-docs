@@ -7,9 +7,19 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月14日" description="v2.82 · 2 versions">
+<Update label="2026年9月14日" description="v2.82 · 2 个版本">
 
 ### v2.82
+
+**Breaking**
+
+- **认证账户创建 payin 需要已批准的身份**：个人账户必须通过 KYC，企业账户必须
+  通过 KYB，之后才能创建 payin 或使用账户级 collect。`POST /v1/payins`
+  （QR、card、checkout、bank_transfer 和 fintoc）、collect OTP/collect、
+  创建专属入金账户、已保存卡扣款和订阅在获批前均返回
+  `403 verification_required`。已经存在的公开支付链接、已经收到的被动入账、
+  org-admin 运营分配以及系统创建的入金工具仍可用。
+
 **Changed**
 
 - 账户虚拟 IBAN 申请现在记录可选的证件和公司注册 override （snake_case 与 camelCase）、KYC/KYB 自动补全以及 `registrant_incomplete`（422）响应。

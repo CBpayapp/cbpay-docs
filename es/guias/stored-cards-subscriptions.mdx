@@ -8,6 +8,20 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="es" />
 
+<Warning>
+La cuenta debe tener identidad aprobada antes de crear el payin `card` semilla,
+cobrar una tarjeta guardada mediante
+`POST /v1/stored-cards/{storedCardID}/charges` o crear una suscripción. Las
+cuentas persona requieren KYC aprobado y las cuentas empresa KYB aprobado. Sin
+aprobación, la request autenticada responde HTTP `403 verification_required`.
+</Warning>
+
+<Note>
+Este gate de cuenta no bloquea la página pública de pago ni invalida un link
+de pago que ya se había creado.
+</Note>
+
+
 El método `card` soporta **credencial almacenada** (mandato COF de las
 marcas): tu pagador guarda su tarjeta con consentimiento explícito en el
 primer pago y después puedes ofrecerle pagar sin re-digitar el número — o
@@ -15,6 +29,13 @@ cobrarle tú suscripciones y cargos no programados sin que esté presente.
 El número de tarjeta **jamás existe** en tu integración ni en la
 plataforma: solo se guarda una referencia opaca del procesador más los
 datos de display (marca, últimos 4 dígitos, expiración).
+
+**COF acotado a la cuenta.** Una credencial guardada pertenece a la cuenta
+CBPay que la creó. `payer_reference` es una referencia de cliente local de
+esa cuenta, no una identidad global: el mismo correo o referencia en otra
+cuenta no puede descubrir, listar ni cobrar esta credencial. Usar un
+`stored_card_id` de otra cuenta responde el mismo `404 not_found` genérico
+que cualquier credencial desconocida.
 
 <Steps>
 <Step title="Semilla: ofrece guardar la tarjeta en el primer pago">
@@ -133,6 +154,12 @@ Respuesta `201` — el cobro aprobado acredita tu saldo automáticamente
 Un cobro declinado por el emisor responde `422` con el payin en `failed` y
 `failure_reason`. Un retry con la misma `idempotency_key` devuelve el payin
 original y **jamás cobra dos veces**.
+
+Si la llamada al proveedor o la persistencia local queda ambigua, la
+plataforma conserva el payin en `pending`/revisión y responde con un estado
+de reconciliación. Es fail-closed: reintenta con la **misma**
+`idempotency_key` para recuperar el claim existente; jamás generes una clave
+nueva ni envíes un segundo cobro MIT.
 
 ### Dirección de facturación en archivo (requerida para capturar)
 

@@ -7,6 +7,19 @@ source_url: https://docs.cbpayapp.com/en/guides/payins
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Important**
+**Approved identity is required before account-authenticated collection.** A
+person account needs approved KYC and a company account needs approved KYB
+before it can create a payin. This applies to `POST /v1/payins` (QR, `card`,
+`checkout`, `bank_transfer` and `fintoc`), `POST /v1/payins/collect/otp`,
+`POST /v1/payins/collect`, and `POST /v1/payins/deposit-accounts`, as well as
+stored-card charges and `POST /v1/subscriptions`. Until approval, these
+requests return HTTP `403 verification_required`.
+> **Note**
+This gate applies to authenticated account creation. Public payment pages for
+links that already exist remain payable, passive deposits already received
+remain processable, org-admin assignment remains operational, and
+system-created deposit instruments are not blocked.
 A payin is a fiat collection: your customer pays in local currency and your
 account gets credited in USDT automatically, converted at **your payin
 rate** (`payin_rate` in `GET /v1/rates`) minus the fixed payin fee when
@@ -717,6 +730,28 @@ organization has not configured them yet, the announcement responds
 [common errors](#common-errors)). You can preview both destination accounts
 without announcing with
 `GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`.
+
+## Active collection (pull)
+
+Some corridors expose a pull charge where the payer authorizes a debit. The
+account must be identity-approved before either request:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect/otp   -H "Authorization: Bearer <token>"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678" }'
+```
+
+The OTP response carries an `otp_reference`; submit it with the same
+`idempotency_key` to the charge endpoint:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: collect-2026-09-11-001"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678", "otp": "12345678", "otp_reference": "OTP-5521", "idempotency_key": "collect-2026-09-11-001" }'
+```
+
+The platform screens the payer before calling the core. A hold returns
+`202 in_review` without charging; retry the same request after approval. If
+the account is not approved, both endpoints return `403 verification_required`
+before the collect corridor is executed. Always check
+`GET /v1/payins/methods` because corridor availability can change.
 
 ## Universal checkout link (`checkout`)
 

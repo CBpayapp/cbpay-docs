@@ -140,7 +140,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 404 | `verification_not_found` | The account has no submitted verification yet (`GET /v1/me/verification/report` before onboarding) |
 | 409 | `duplicate` | The resource already exists |
 | 409 | `receipt_not_available` | A payout receipt is not available while technical screening is pending or after a pre-debit screening failure; wait for a final financial state |
-| 403 | `verification_required` | Your account has not approved its identity verification yet (person=KYC, company=KYB); until then you can only fund — request your link at `POST /v1/me/verification/link` |
+| 403 | `verification_required` | Your account has not approved its identity verification yet (person=KYC, company=KYB); creating authenticated payins, collect operations, dedicated deposit accounts, stored-card charges and subscriptions is blocked until approval — request your link at `POST /v1/me/verification/link`; passive deposits and reads remain available |
 | 422 | `verification_required` | The operation requires the `verification_id` of an approved third-party verification (third-party banking registration, designated card) |
 | 422 | `verification_not_approved` | The referenced verification is not approved yet |
 | 422 | `verification_kind_mismatch` | The verification kind does not match the product (KYC ⇒ person/INDIVIDUAL, KYB ⇒ company/COMPANY) |

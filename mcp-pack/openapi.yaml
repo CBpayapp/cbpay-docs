@@ -4387,7 +4387,7 @@ paths:
       - Payins
       operationId: createPayin
       summary: Create a payin (top-up charge)
-      description: 'Creates a fiat top-up. With `method: "qr"` (default) an active QR charge is generated
+      description: 'Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: "qr"` (default) an active QR charge is generated
         through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose
         `charge` carries the QR image and the "copia e cola" payload. With `method: "bank_transfer"` the
         deposit is announced and the response carries the reference the sender must include so the arriving
@@ -4903,7 +4903,20 @@ paths:
                 error: idempotency_conflict
                 message: this idempotency key was used with a different payin method
         '403':
-          $ref: '#/components/responses/AccountRequired'
+          description: The account identity is not approved for this authenticated operation. Account state or credential errors may also use account_required or account_blocked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                account_required:
+                  value:
+                    error: account_required
+                    message: this endpoint requires an account credential
         '422':
           description: The core rejected the charge (`core_rejected`), or the announced-transfer
             corridor requires a registered destination account and your organization has not
@@ -13153,7 +13166,7 @@ paths:
       - Stored cards
       operationId: chargeStoredCard
       summary: 'Charge a stored card (merchant-initiated)'
-      description: 'Charges the saved card WITHOUT the payer present (MIT under the card-brand mandate, citing the original consented 3-D Secure seed). Use `recurring: true` for fixed-interval subscription charges; false (default) for unscheduled charges. Requires `idempotency_key` — a retry with the same key returns the original payin and never charges twice. The approved charge credits the balance automatically (`payin_credited` webhook); a declined charge responds 422 with the payin marked failed.'
+      description: 'Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Charges the saved card WITHOUT the payer present (MIT under the card-brand mandate, citing the original consented 3-D Secure seed). Use `recurring: true` for fixed-interval subscription charges; false (default) for unscheduled charges. Requires `idempotency_key` — a retry with the same key returns the original payin and never charges twice. The approved charge credits the balance automatically (`payin_credited` webhook); a declined charge responds 422 with the payin marked failed.'
       parameters:
       - name: storedCardID
         in: path
@@ -13188,6 +13201,15 @@ paths:
               recurring: true
               idempotency_key: sub-2026-07-cust1042
       responses:
+        '403':
+          description: The account identity is not approved for this authenticated operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: verification_required
+                message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
         '201':
           description: 'Charge accepted: approved charges credit automatically; check the payin status.'
           content:
@@ -13262,7 +13284,7 @@ paths:
       - Subscriptions
       operationId: createSubscription
       summary: 'Create a subscription'
-      description: 'Recurring charges on a saved card (the platform runs the schedule for you). The first period is charged synchronously on creation unless start_at is in the future (trial). Each charge is a normal card payin (credited via payin_credited); a decline retries daily up to 3 times, then the subscription becomes past_due. idempotency_key is required (a retry returns the original subscription). Requires an active stored card of the payer.'
+      description: 'Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Recurring charges on a saved card (the platform runs the schedule for you). The first period is charged synchronously on creation unless start_at is in the future (trial). Each charge is a normal card payin (credited via payin_credited); a decline retries daily up to 3 times, then the subscription becomes past_due. idempotency_key is required (a retry returns the original subscription). Requires an active stored card of the payer.'
       requestBody:
         required: true
         content:
@@ -13303,6 +13325,15 @@ paths:
               description: Monthly plan
               idempotency_key: plan-cust1042-monthly
       responses:
+        '403':
+          description: The account identity is not approved for this authenticated operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: verification_required
+                message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
         '201':
           description: 'Subscription created (first_charge present when the first period was charged on creation).'
           content:
@@ -13866,6 +13897,7 @@ paths:
       summary: Active collection (pull)
       deprecated: true
       description: >-
+        Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin.
         Charges the payer directly in corridors that support pull collections.
         The platform requires an idempotency key and screens the payer before
         calling the core/provider. A PEP/firewall hold returns `202 in_review`
@@ -14009,13 +14041,20 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Account not active (account_blocked).
+          description: The account identity is not approved for this authenticated operation. Account state or credential errors may also use account_required or account_blocked.
           content:
             application/json:
-              schema: *id012
-              example:
-                error: account_blocked
-                message: account is not active
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
         '502':
           description: Core unavailable (core_unavailable).
           content:
@@ -14033,7 +14072,7 @@ paths:
       operationId: payinCollectOtp
       summary: Request a collection OTP
       deprecated: true
-      description: Requests the one-time password some pull methods need before the charge.
+      description: Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Requests the one-time password some pull methods need before the charge.
         Free of charge. The pull option must be materialized first and the final
         collect call remains subject to pre-charge screening.
       requestBody:
@@ -14070,6 +14109,15 @@ paths:
               payer_bank: '0102'
               payer_account: 01020123456789012345
       responses:
+        '403':
+          description: The account identity is not approved for this authenticated operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: verification_required
+                message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
         '200':
           description: OTP dispatched to the payer.
           content:
@@ -14111,7 +14159,7 @@ paths:
       - Payins
       operationId: createDepositAccount
       summary: Create a dedicated deposit account
-      description: Provisions a fixed deposit destination bound to your account in corridors that support
+      description: Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Provisions a fixed deposit destination bound to your account in corridors that support
         it (e.g. a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically,
         net of the payin fee. Creation is free.
       requestBody:
@@ -14163,13 +14211,20 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Account not active (account_blocked).
+          description: The account identity is not approved for this authenticated operation. Account state or credential errors may also use account_required or account_blocked.
           content:
             application/json:
-              schema: *id012
-              example:
-                error: account_blocked
-                message: account is not active
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
         '502':
           description: Core unavailable (core_unavailable).
           content:
