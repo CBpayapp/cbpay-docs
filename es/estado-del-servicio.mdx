@@ -138,6 +138,11 @@ incidentes con los motivos redactados en lenguaje claro. El HTML no carga
 JavaScript ni recursos externos, así que se puede embeber en un iframe sin
 riesgos.
 
+La página pública solo lista los corredores habilitados para tu organización:
+los desactivados por el operador no aparecen en las filas ni en el historial de
+incidentes, mientras que un corredor habilitado pero caído sí aparece en rojo
+y afecta el estado general.
+
 El `orgToken` es un token opaco que tu operador te comparte (los org admins
 pueden leerlo como `status_page_url` en `GET /v1/org/branding`).
 
@@ -217,6 +222,11 @@ una organización existe. El endpoint tiene rate limit por IP.
     páginas hosteadas. Pide a tu operador la URL de la página de status de
     tu organización, o léela desde <code>GET /v1/org/branding</code> si eres
     org admin.
+  </Accordion>
+  <Accordion title="¿Por qué no aparece un corredor en la página de status?">
+    Si tu operador lo desactivó mediante controles administrativos, no se
+    lista. Si está habilitado pero caído, sigue apareciendo en rojo y afecta
+    el estado general.
   </Accordion>
   <Accordion title="¿Por qué no veo qué proveedor está detrás de un incidente?">
     Por diseño la plataforma es agnóstica al proveedor: los corredores se
