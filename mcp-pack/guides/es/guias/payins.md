@@ -416,6 +416,17 @@ cuando el país tiene subdivisiones — para que el pago pueda capturarse.
   el payin pasa a `expired` y recibes el webhook `payin_expired`.
 - El pagador tiene un número limitado de intentos; un rechazo del emisor le
   permite reintentar con otra tarjeta dentro de la misma sesión.
+
+> **Nota**
+**Clasificación estable de fallas de tarjeta.** La página hosted recibe
+`failure_code` cuando falla un intento y lo traduce a un mensaje para el
+pagador en inglés, español o chino. Los valores estables son `declined`,
+`authentication_failed`, `provider_unavailable`, `invalid_data`,
+`card_unavailable`, `expired`, `needs_review` y `unknown`. El texto histórico
+`failure_reason` se conserva en la página por compatibilidad; las
+integraciones deben usar el código estable y nunca el texto libre. Un resultado
+`needs_review` es ambiguo: no envíes un pago nuevo ni inventes una clave de
+idempotencia mientras sigue la conciliación.
 - La aprobación es en línea: al aprobarse el cargo tu cuenta se acredita en
   USDT a tu `payin_rate` y recibes `payin_credited` — igual que cualquier
   otra modalidad.

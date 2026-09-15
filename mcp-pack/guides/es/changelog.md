@@ -9,7 +9,7 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.84 · 4 versiones - 14 de septiembre de 2026
+## v2.85 · 5 versiones - 14 de septiembre de 2026
 
 ### v2.84
 
@@ -113,7 +113,18 @@ con anticipación y quedan marcados como **Breaking**.
   una cuenta asociada, permitiendo que las integraciones cierren cobros
   impagos sin depender del polling.
 
-## v2.77 · 3 versions - 12 de septiembre de 2026
+## v2.85 · 5 versions - 12 de septiembre de 2026
+
+### v2.85
+
+**Cambiado**
+
+- **Clasificación de fallas en pagos hosted con tarjeta**: las páginas de pago
+  ahora exponen el enum estable `failure_code` (`declined`,
+  `authentication_failed`, `provider_unavailable`, `invalid_data`,
+  `card_unavailable`, `expired`, `needs_review`, `unknown`) y lo traducen para
+  pagadores en EN/ES/ZH. `failure_reason` se conserva por compatibilidad; un
+  resultado ambiguo `needs_review` no debe reintentarse con un pago nuevo.
 
 ### v2.77
 

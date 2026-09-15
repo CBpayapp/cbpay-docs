@@ -428,6 +428,20 @@ so the payment can be captured.
   `payin_expired` webhook.
 - The payer has a limited number of attempts; an issuer decline lets them
   retry with another card within the same session.
+
+
+<Note>
+**Stable card failure classification.** The hosted card page receives a
+machine-readable `failure_code` when a payment attempt fails and translates it
+to a payer message in English, Spanish or Chinese. The stable values are
+`declined`, `authentication_failed`, `provider_unavailable`, `invalid_data`,
+`card_unavailable`, `expired`, `needs_review` and `unknown`. The legacy
+`failure_reason` text remains available to the hosted page for compatibility;
+integrations should branch on the stable code, never on free text. A
+`needs_review` result is ambiguous: do not submit a new payment or create a
+new idempotency key while reconciliation is pending.
+</Note>
+
 - Approval is online: once the charge is approved your account is credited
   in USDT at your `payin_rate` and you receive `payin_credited` — same as
   every other mode.

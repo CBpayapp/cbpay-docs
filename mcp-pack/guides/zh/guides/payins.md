@@ -381,6 +381,14 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   并在成功的银行卡响应中返回生效的 RFC3339 过期时间。到期未付款时，
   该 payin 转为 `expired`，您会收到 `payin_expired` webhook。
 - 付款人的尝试次数有限；发卡行拒绝后，可在同一会话内换卡重试。
+
+> **注**
+**稳定的银行卡失败分类。** 托管银行卡页面在支付尝试失败时接收
+`failure_code`，并将其翻译为英文、西班牙文或中文的付款人提示。稳定值为
+`declined`、`authentication_failed`、`provider_unavailable`、`invalid_data`、
+`card_unavailable`、`expired`、`needs_review` 和 `unknown`。页面仍保留历史
+文本 `failure_reason` 以保持兼容；集成方应使用稳定代码，绝不要依赖自由文本。
+`needs_review` 表示结果不明确：对账完成前不要创建新付款或新的幂等键。
 - 授权是在线完成的：收款获批后，您的账户按您的 `payin_rate` 以 USDT
   入账，并收到 `payin_credited` —— 与其他所有模式相同。
 - 使用相同 `idempotency_key` 重试会返回同一个 payin 和同一个
