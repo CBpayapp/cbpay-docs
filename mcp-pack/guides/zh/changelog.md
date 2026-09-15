@@ -10,6 +10,16 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 ## v2.85 · 5 个版本 - 2026年9月14日
 
+### v2.85
+
+**变更**
+
+- **托管银行卡失败分类**：银行卡支付页面现在会返回稳定的 `failure_code`
+  枚举（`declined`、`authentication_failed`、`provider_unavailable`、
+  `invalid_data`、`card_unavailable`、`expired`、`needs_review`、
+  `unknown`），并为付款人翻译为 EN/ES/ZH。历史 `failure_reason`
+  保持兼容；`needs_review` 的不明确结果不得用新付款重试。
+
 ### v2.84
 
 **新增**
@@ -93,17 +103,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **已公告 payin 到期时可靠发送 `payin_expired`**：到期处理现在可以处理
   尚未关联账户的公告，让集成方无需轮询即可关闭未支付的收款。
 
-## v2.85 · 5 versions - 2026年9月12日
-
-### v2.85
-
-**变更**
-
-- **托管银行卡失败分类**：支付页面现在提供稳定的 `failure_code` 枚举
-  （`declined`、`authentication_failed`、`provider_unavailable`、
-  `invalid_data`、`card_unavailable`、`expired`、`needs_review`、
-  `unknown`），并以 EN/ES/ZH 向付款人显示翻译提示。历史字段
-  `failure_reason` 保持兼容；`needs_review` 的不明确结果不得使用新付款重试。
+## v2.77 · 3 versions - 2026年9月12日
 
 ### v2.77
 

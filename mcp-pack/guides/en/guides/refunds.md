@@ -63,7 +63,7 @@ sequenceDiagram
 
 | Status | What it means | What to do |
 |---|---|---|
-| `pending` | We asked the processor and there is no definitive answer yet. Your balance is already reserved. | Wait for the webhook. Do **not** retry with a different key: you would refund twice. |
+| `pending` | We asked the processor and there is no definitive answer yet. Your balance is already reserved. Responses include `reconciliation_required: true` while this remains unresolved. | Wait for the webhook. Do **not** retry with a different key: you would refund twice. |
 | `completed` | The processor approved it. The debit is final on your statement. | Nothing. Final status. |
 | `failed` | The processor declined it. The reserved amount went back to your balance, exactly. | Check `failure_reason` and decide whether to retry with a new key. |
 
@@ -108,7 +108,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/9f1c2b30-…/refunds \
 ```
 
 The response is `201` when the processor approves right away, `202` when
-it is still in flight and `422` when it declines.
+it is still in flight (with `reconciliation_required: true`) and `422`
+when it declines. An ambiguous provider result is persisted as the same
+refund claim and is reconciled by the provider webhook or the read-only
+sweep; it is never dispatched again by the platform.
 ### Or refund part of it
 
 Send `amount` in the **payin currency** (not in USDT). The debit is
@@ -318,6 +321,7 @@ credentials and without seeing personal data. Details in
 | 402 | `insufficient_funds` | Top up the account and retry **with the same** `idempotency_key`. |
 | 404 | `not_found` | The payin (or the refund) does not exist on your account. |
 | 409 | `idempotency_conflict` | Another refund with that key is in flight; check its status. |
+| 503 | `refund_event_pending` | The refund result is stored, but its final event is still being persisted. Retry with the **same** idempotency key; do not send a new refund. |
 | 422 | `payin_not_refundable` | The payin is not credited or has no processor reference. |
 | 422 | `settlement_pending` | The payin's balance is scheduled for settlement and is not available yet; refund it after it is released (at `settle_at`, or earlier if your org admin releases it). |
 | 422 | `refund_not_supported` | That rail cannot be refunded (QR, transfer, dedicated account, collect). POS charges are refunded through the crypto rail. |
