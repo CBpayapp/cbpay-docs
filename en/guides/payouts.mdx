@@ -275,6 +275,8 @@ same payout can finish as `failed` with `predebit_failure: true` and
 `receipt_url`, because there was no debit, hold or receipt to reverse. This is
 different from a post-debit `failed` payout, where the exact debit is refunded
 before the terminal event.
+For rate provenance and indicative FIFO quotes, see [Payout rate sources and indicative FIFO quotes](/en/guides/payout-rate-sources).
+
 ## 3. Receive the final state
 
 Subscribe to the `payout_status_changed` event ([webhooks](/en/webhooks)):

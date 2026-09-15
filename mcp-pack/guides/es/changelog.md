@@ -9,6 +9,25 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.87 · 2 versiones - 15 de septiembre de 2026
+
+### v2.87
+
+**Agregado**
+
+- **Origen de tasa FIFO**: las respuestas de payout pueden exponer
+  `rate_source`, y `GET /v1/rates?currency=&amount=` puede devolver un
+  `lot_quote` indicativo que muestra si usa lotes, spot o una mezcla.
+
+### v2.86
+
+**Corregido**
+
+- **Los fallos de autenticación 3DS devuelven `failed_attempt`**: cuando el
+  banco rechaza la autenticación, la sesión responde `failed_attempt` con
+  `failure_code: authentication_failed` (antes: 500 genérico). La página
+  hosted muestra el mensaje amable con los intentos restantes.
+
 ## v2.85 · 5 versiones - 14 de septiembre de 2026
 
 ### v2.85

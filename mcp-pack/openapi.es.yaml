@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.85"
+  version: "2.87"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2900,6 +2900,19 @@ paths:
         el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación
         desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para
         estimar antes de enviar `settlement_asset` en un payout.
+      parameters:
+      - name: currency
+        in: query
+        required: false
+        description: Moneda local para una cotización FIFO indicativa. Enviar junto con amount.
+        schema:
+          type: string
+      - name: amount
+        in: query
+        required: false
+        description: Monto positivo en moneda local para una cotización FIFO indicativa. Enviar junto con currency.
+        schema:
+          type: string
       responses:
         '200':
           description: Tasas, precios de referencia por activo y comisiones.
@@ -2950,6 +2963,29 @@ paths:
                           type: boolean
                           description: True cuando el precio está lo bastante fresco para ejecutar settlements
                             (operaciones pagadas desde ese saldo).
+                  lot_quote:
+                    type: object
+                    description: Cotización indicativa opcional contra inventario fiat FIFO. La ejecución se resuelve bajo locks del débito.
+                    properties:
+                      currency:
+                        type: string
+                      amount:
+                        type: string
+                      market_rate:
+                        type: string
+                        description: Cotización que considera inventario. Es indicativa; la ejecución puede cambiar por concurrencia.
+                      rate_source:
+                        type: string
+                        enum: [lot, blend, spot]
+                        description: "Origen: lot, blend o spot."
+                      marked_rate:
+                        type: string
+                        description: Tasa marcada opcional después de aplicar el spread de la cuenta.
+                      indicative:
+                        type: boolean
+                      error:
+                        type: string
+                        enum: [invalid_amount, currency_not_supported, quote_unavailable]
                   settlement:
                     type: object
                     description: Pricing de settlement efectivo para la cuenta que llama.
@@ -3018,6 +3054,13 @@ paths:
                     price: '107.5341'
                     updated_at: '2026-07-07T09:12:05Z'
                     settlement_grade: true
+                lot_quote:
+                  currency: CLP
+                  amount: '100000.00000000'
+                  market_rate: '13.42150000'
+                  rate_source: blend
+                  marked_rate: '13.28728500'
+                  indicative: true
                 settlement:
                   default_asset: USDT
                   assets:
@@ -3757,6 +3800,7 @@ paths:
                     method: bank_transfer
                     local_amount: '1500.00'
                     fx_rate: '17.50'
+                    rate_source: lot
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
@@ -4117,6 +4161,7 @@ paths:
                 method: bank_transfer
                 local_amount: '1500.00'
                 fx_rate: '17.50'
+                rate_source: lot
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
@@ -22437,6 +22482,10 @@ components:
         fx_rate:
           type: string
           description: La tasa de tu cuenta al momento de la ejecución (unidades locales por 1 USDT).
+        rate_source:
+          type: string
+          enum: [lot, blend, spot]
+          description: Origen de la tasa ejecutada. `lot`, `blend` o `spot`; se omite en filas históricas sin atribución.
         usdt_amount:
           type: string
         fee:

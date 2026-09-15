@@ -8,6 +8,25 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.87 · 2 versions - September 15, 2026
+
+### v2.87
+
+**Added**
+
+- **FIFO rate provenance**: payout responses can expose `rate_source`, and
+  `GET /v1/rates?currency=&amount=` can return an indicative `lot_quote`
+  showing whether the quote uses lot inventory, spot or a blend.
+
+### v2.86
+
+**Fixed**
+
+- **3DS authentication failures return `failed_attempt`**: when the bank
+  rejects authentication, the session answers `failed_attempt` with
+  `failure_code: authentication_failed` (previously: generic 500). The
+  hosted page shows the friendly message with attempts left.
+
 ## v2.85 · 5 versions - September 14, 2026
 
 ### v2.85

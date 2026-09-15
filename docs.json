@@ -115,6 +115,7 @@
                     "group": "Pagar (money out)",
                     "pages": [
                       "es/guias/payouts",
+                      "es/guias/payout-rate-sources",
                       "es/guias/qr-payout"
                     ]
                   },
@@ -239,6 +240,7 @@
                     "group": "Money out",
                     "pages": [
                       "en/guides/payouts",
+                      "en/guides/payout-rate-sources",
                       "en/guides/qr-payout"
                     ]
                   },
@@ -362,6 +364,7 @@
                     "group": "付款（Money out）",
                     "pages": [
                       "zh/guides/payouts",
+                      "zh/guides/payout-rate-sources",
                       "zh/guides/qr-payout"
                     ]
                   },

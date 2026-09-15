@@ -252,6 +252,8 @@ CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂�
 `funds_debited: false`。响应及其 `payout_status_changed` 事件不包含
 `receipt_url`，因为没有可撤销的扣款、hold 或回执。这不同于扣款后的
 `failed` payout，后者会在终态事件前退回准确的扣款金额。
+有关汇率来源和 FIFO 指示性报价，请参阅 [Payout 汇率来源与 FIFO 指示性报价](https://docs.cbpayapp.com/zh/guides/payout-rate-sources)。
+
 ## 3. 接收最终状态
 
 订阅 `payout_status_changed` 事件（[webhooks](https://docs.cbpayapp.com/zh/webhooks)）：

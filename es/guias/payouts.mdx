@@ -276,6 +276,8 @@ camino de débito, el mismo payout puede terminar `failed` con
 `payout_status_changed` omiten `receipt_url`, porque no hubo débito, hold ni
 comprobante que revertir. Es distinto de un `failed` posterior al débito,
 donde el débito exacto se reembolsa antes del evento terminal.
+Para conocer el origen de la tasa y las cotizaciones FIFO indicativas, revisa [Orígenes de tasa de payouts y cotizaciones FIFO](/es/guias/payout-rate-sources).
+
 ## 3. Recibe el estado final
 
 Suscríbete al evento `payout_status_changed` ([webhooks](/es/webhooks)):

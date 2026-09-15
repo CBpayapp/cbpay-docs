@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.85"
+  version: "2.87"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2920,6 +2920,19 @@ paths:
         price** your account would get right now if it paid an operation from that balance (`settlement_rate`,
         spread included) and whether the asset is currently `available` — use it to estimate before sending
         `settlement_asset` in a payout.
+      parameters:
+      - name: currency
+        in: query
+        required: false
+        description: Local currency for an indicative FIFO lot quote. Send with amount.
+        schema:
+          type: string
+      - name: amount
+        in: query
+        required: false
+        description: Positive local-currency amount for an indicative FIFO lot quote. Send with currency.
+        schema:
+          type: string
       responses:
         '200':
           description: Rates, reference asset prices and fees.
@@ -2970,6 +2983,29 @@ paths:
                           type: boolean
                           description: True when the price is fresh enough to execute settlements (operations
                             paid from that balance).
+                  lot_quote:
+                    type: object
+                    description: Optional indicative quote against FIFO fiat inventory. Execution is resolved under debit locks.
+                    properties:
+                      currency:
+                        type: string
+                      amount:
+                        type: string
+                      market_rate:
+                        type: string
+                        description: Inventory-aware quote. It is indicative; execution can differ under concurrency.
+                      rate_source:
+                        type: string
+                        enum: [lot, blend, spot]
+                        description: "Rate source: lot, blend or spot."
+                      marked_rate:
+                        type: string
+                        description: Optional marked rate after the account spread is applied.
+                      indicative:
+                        type: boolean
+                      error:
+                        type: string
+                        enum: [invalid_amount, currency_not_supported, quote_unavailable]
                   settlement:
                     type: object
                     description: Effective settlement pricing for the calling account.
@@ -3038,6 +3074,13 @@ paths:
                     price: '107.5341'
                     updated_at: '2026-07-07T09:12:05Z'
                     settlement_grade: true
+                lot_quote:
+                  currency: CLP
+                  amount: '100000.00000000'
+                  market_rate: '13.42150000'
+                  rate_source: blend
+                  marked_rate: '13.28728500'
+                  indicative: true
                 settlement:
                   default_asset: USDT
                   assets:
@@ -3779,6 +3822,7 @@ paths:
                     method: bank_transfer
                     local_amount: '1500.00'
                     fx_rate: '17.50'
+                    rate_source: lot
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
@@ -4139,6 +4183,7 @@ paths:
                 method: bank_transfer
                 local_amount: '1500.00'
                 fx_rate: '17.50'
+                rate_source: lot
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
@@ -22595,6 +22640,10 @@ components:
         fx_rate:
           type: string
           description: Your account's rate at execution time (local units per 1 USDT).
+        rate_source:
+          type: string
+          enum: [lot, blend, spot]
+          description: Execution rate provenance. `lot`, `blend` or `spot`; omitted for historical rows without attribution.
         usdt_amount:
           type: string
         fee:
