@@ -8,6 +8,24 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.87 · 2 个版本 - 2026年9月15日
+
+### v2.87
+
+**新增**
+
+- **FIFO 汇率来源**：payout 响应可以返回 `rate_source`，而
+  `GET /v1/rates?currency=&amount=` 可以返回 `lot_quote` 指示性报价，
+  说明使用批次库存、现货还是混合。
+
+### v2.86
+
+**修复**
+
+- **3DS 认证失败返回 `failed_attempt`**：银行拒绝认证时，会话返回带
+  `failure_code: authentication_failed` 的 `failed_attempt`（之前为通用
+  500）。托管页面显示友好消息和剩余尝试次数。
+
 ## v2.85 · 5 个版本 - 2026年9月14日
 
 ### v2.85

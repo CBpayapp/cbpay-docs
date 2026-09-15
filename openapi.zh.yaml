@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.85"
+  version: "2.87"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -2743,6 +2743,19 @@ paths:
         为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为
         1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在
         payout 传 `settlement_asset` 之前用它来估算。
+      parameters:
+      - name: currency
+        in: query
+        required: false
+        description: 用于 FIFO 指示性报价的本地货币。与 amount 一起发送。
+        schema:
+          type: string
+      - name: amount
+        in: query
+        required: false
+        description: 用于 FIFO 指示性报价的正本地金额。与 currency 一起发送。
+        schema:
+          type: string
       responses:
         '200':
           description: 汇率、参考资产价格与费用。
@@ -2792,6 +2805,29 @@ paths:
                         settlement_grade:
                           type: boolean
                           description: 当价格足够新鲜、可执行结算(从该余额支付的操作)时为 true。
+                  lot_quote:
+                    type: object
+                    description: 可选的 FIFO 法币库存指示性报价。执行在扣款锁内解析。
+                    properties:
+                      currency:
+                        type: string
+                      amount:
+                        type: string
+                      market_rate:
+                        type: string
+                        description: 考虑库存的报价。它是指示性的；并发执行可能不同。
+                      rate_source:
+                        type: string
+                        enum: [lot, blend, spot]
+                        description: "来源：lot、blend 或 spot。"
+                      marked_rate:
+                        type: string
+                        description: 应用账户 spread 后的可选 marked rate。
+                      indicative:
+                        type: boolean
+                      error:
+                        type: string
+                        enum: [invalid_amount, currency_not_supported, quote_unavailable]
                   settlement:
                     type: object
                     description: 调用账户的有效结算定价。
@@ -2857,6 +2893,13 @@ paths:
                     price: '107.5341'
                     updated_at: '2026-07-07T09:12:05Z'
                     settlement_grade: true
+                lot_quote:
+                  currency: CLP
+                  amount: '100000.00000000'
+                  market_rate: '13.42150000'
+                  rate_source: blend
+                  marked_rate: '13.28728500'
+                  indicative: true
                 settlement:
                   default_asset: USDT
                   assets:
@@ -3560,6 +3603,7 @@ paths:
                     method: bank_transfer
                     local_amount: '1500.00'
                     fx_rate: '17.50'
+                    rate_source: lot
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
@@ -3915,6 +3959,7 @@ paths:
                 method: bank_transfer
                 local_amount: '1500.00'
                 fx_rate: '17.50'
+                rate_source: lot
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
@@ -21821,6 +21866,10 @@ components:
         fx_rate:
           type: string
           description: 执行时你账户的汇率(每 1 USDT 的本地单位数)。
+        rate_source:
+          type: string
+          enum: [lot, blend, spot]
+          description: 执行汇率来源。`lot`、`blend` 或 `spot`；没有归因的历史记录会省略。
         usdt_amount:
           type: string
         fee:
