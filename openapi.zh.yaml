@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.83"
+  version: "2.84"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -3747,6 +3747,16 @@ paths:
         schema:
           type: string
         description: 按目的国筛选（ISO 3166-1 alpha-2，例如 CL、PE、MX）。
+      - name: method
+        in: query
+        schema:
+          type: string
+        description: 按通道方法筛选（bank_transfer、yape、pago_movil、spei 等）。值来自 GET /v1/payouts/methods。
+      - name: search
+        in: query
+        schema:
+          type: string
+        description: 对 payout_id、bank_reference 或 idempotency_key 进行不区分大小写的部分匹配。
       - name: from
         in: query
         schema:
@@ -4695,6 +4705,28 @@ paths:
         schema:
           type: string
         description: 按来源国筛选（ISO 3166-1 alpha-2，例如 BO、MX、VE）。
+      - name: method
+        in: query
+        schema:
+          type: string
+        description: 按通道方法筛选（bank_transfer、qr、card 等）。值来自 GET /v1/payins/methods。
+      - name: kind
+        in: query
+        schema:
+          type: string
+          enum: [push, qr, card, collect, checkout, pos]
+        description: 按 payin 类型筛选。
+      - name: refund_status
+        in: query
+        schema:
+          type: string
+          enum: [none, partial, full]
+        description: 按派生的退款程度筛选。
+      - name: search
+        in: query
+        schema:
+          type: string
+        description: 对 payin_id、reference 或 idempotency_key 进行不区分大小写的部分匹配。
       - name: from
         in: query
         schema:

@@ -1150,13 +1150,16 @@ el cobro, crea un payin nuevo.
 curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   -H "Authorization: Bearer <token>"
 
-# Historial con filtros
-curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&page_size=50" \
+# Historial con filtros: fechas, estado, país, método, tipo, devolución y búsqueda
+curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&method=qr&kind=qr&refund_status=none&search=9c2a&page_size=50" \
   -H "Authorization: Bearer <token>"
 ```
 
 `from`/`to` van en `YYYY-MM-DD` (zona horaria de tu organización); fecha inválida responde
-`400 invalid_range`.
+`400 invalid_range`. `method` y `kind` acotan el riel y el tipo de payin,
+`refund_status` acepta `none`, `partial` o `full`, y `search` hace una coincidencia
+parcial sin distinguir mayúsculas/minúsculas sobre el ID del payin, la referencia
+o la clave de idempotencia.
 
 ## Errores frecuentes
 

@@ -9,12 +9,24 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.83 · 3 versiones - 14 de septiembre de 2026
+## v2.84 · 4 versiones - 14 de septiembre de 2026
+
+### v2.84
+
+**Agregado**
+
+- **Filtros en listados de payouts y payins**: los listados de payouts aceptan
+  `method` y `search`; los listados de payins aceptan `method`, `kind`,
+  `refund_status` y `search`.
 
 ### v2.83
 
 **Cambiado**
 
+- **Filtro por ciclo de vida en la página pública de status**: los corredores
+  desactivados por controles administrativos del operador ya no aparecen en
+  las filas ni en el historial de incidentes, ni afectan el estado general.
+  Los corredores habilitados que están caídos siguen visibles.
 - **Las señales KYC/KYB severas pasan a revisión humana**: el motor de decisión automática ya no emite `rejected` ante sanciones AML severas (incluidas partes KYB), países prohibidos o señales explícitas de fraude/rechazo del proveedor. Conserva los códigos originales en `auto_decision_reasons`; un `rejected` cerrado por el proveedor sigue siendo autoritativo.
 - **Detalle del estado de verificación propia**: `GET /v1/me/verification` ahora expone dentro de `submission` los campos opcionales `pending_documents`, `changes_requested_comments`, `documents_received` y `documents_gate`.
 

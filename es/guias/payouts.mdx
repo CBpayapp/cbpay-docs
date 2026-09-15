@@ -330,8 +330,8 @@ Cada payout se puede leer individualmente y el listado acepta filtros:
 curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
   -H "Authorization: Bearer <token>"
 
-# Historial con filtros: fechas, estado, país y paginación
-curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&status=failed&country=MX&page=1&page_size=50" \
+# Historial con filtros: fechas, estado, país, método, búsqueda y paginación
+curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&status=failed&country=MX&method=bank_transfer&search=0d4f&page=1&page_size=50" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -361,7 +361,9 @@ curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&sta
 ```
 
 `from`/`to` van en `YYYY-MM-DD` (zona horaria de tu organización, ambos inclusive); una fecha inválida
-responde `400 invalid_range`.
+responde `400 invalid_range`. `method` filtra por el catálogo activo de payouts y
+`search` hace una coincidencia parcial sin distinguir mayúsculas/minúsculas sobre
+el ID del payout, la referencia bancaria o la clave de idempotencia.
 
 ## Ejemplos por país
 

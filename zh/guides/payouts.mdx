@@ -313,8 +313,8 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
   -H "Authorization: Bearer <token>"
 
-# History with filters: dates, status and pagination
-curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&status=failed&country=MX&page=1&page_size=50" \
+# History with filters: dates, status, country, method, search and pagination
+curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&status=failed&country=MX&method=bank_transfer&search=0d4f&page=1&page_size=50" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -344,7 +344,8 @@ curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&sta
 ```
 
 `from`/`to` 使用 `YYYY-MM-DD`（组织时区，两端均含）；日期无效时返回
-`400 invalid_range`。
+`400 invalid_range`。`method` 按实时 payout 目录过滤，`search` 会对 payout ID、
+银行参考号或幂等键进行不区分大小写的部分匹配。
 
 ## 各国示例
 

@@ -996,13 +996,15 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   -H "Authorization: Bearer <token>"
 
-# History with filters
-curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&page_size=50" \
+# History with filters: dates, status, country, method, kind, refund status, search
+curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&method=qr&kind=qr&refund_status=none&search=9c2a&page_size=50" \
   -H "Authorization: Bearer <token>"
 ```
 
 `from`/`to` 使用 `YYYY-MM-DD`（组织时区）；日期无效时返回
-`400 invalid_range`。
+`400 invalid_range`。`method` 与 `kind` 用于缩小通道和 payin 类型，
+`refund_status` 接受 `none`、`partial` 或 `full`，`search` 会对 payin ID、
+参考号或幂等键进行不区分大小写的部分匹配。
 
 ## 常见错误
 

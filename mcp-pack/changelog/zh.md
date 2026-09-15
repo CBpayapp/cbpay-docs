@@ -8,12 +8,21 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.83 · 3 个版本 - 2026年9月14日
+## v2.84 · 4 个版本 - 2026年9月14日
+
+### v2.84
+
+**新增**
+
+- **Payout 和 payin 列表筛选器**：payout 列表现在支持 `method` 和
+  `search`；payin 列表现在支持 `method`、`kind`、`refund_status` 和
+  `search`。
 
 ### v2.83
 
 **变更**
 
+- **公开状态页遵循通道生命周期**：运营方通过管理控制停用的通道不再出现在状态列表或事故历史中，也不再影响整体状态。已启用但处于中断状态的通道仍会显示。
 - **严重 KYC/KYB 信号转入人工审核**：自动决策引擎不再因为严重 AML 制裁（包括 KYB 关联方）、禁止司法辖区或明确的文件欺诈/提供方拒绝信号产生 `rejected`。原始代码仍保存在 `auto_decision_reasons`；提供方已经关闭的 `rejected` 决定仍然具有权威性。
 - **自助验证状态详情**：`GET /v1/me/verification` 现在会在 `submission` 中返回可选字段 `pending_documents`、`changes_requested_comments`、`documents_received` 和 `documents_gate`。
 

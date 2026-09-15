@@ -1077,13 +1077,15 @@ collection, create a new payin.
 curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   -H "Authorization: Bearer <token>"
 
-# History with filters
-curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&page_size=50" \
+# History with filters: dates, status, country, method, kind, refund status, search
+curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&method=qr&kind=qr&refund_status=none&search=9c2a&page_size=50" \
   -H "Authorization: Bearer <token>"
 ```
 
 `from`/`to` use `YYYY-MM-DD` (organization timezone); an invalid date responds
-`400 invalid_range`.
+`400 invalid_range`. `method` and `kind` narrow the rail and payin shape,
+`refund_status` accepts `none`, `partial` or `full`, and `search` performs a
+case-insensitive partial match on the payin ID, reference or idempotency key.
 
 ## Common errors
 

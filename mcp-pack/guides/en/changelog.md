@@ -8,12 +8,24 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.83 · 3 versions - September 14, 2026
+## v2.84 · 4 versions - September 14, 2026
+
+### v2.84
+
+**Added**
+
+- **Payout and payin list filters**: payout lists now accept `method` and
+  `search`; payin lists now accept `method`, `kind`, `refund_status`, and
+  `search`.
 
 ### v2.83
 
 **Changed**
 
+- **Public status page lifecycle filtering**: corridors disabled by your
+  operator's administrative controls no longer appear in status rows or
+  incident history, and no longer affect the overall state. Enabled corridors
+  that are down remain visible.
 - **KYC/KYB severe signals now route to human review**: the automatic decision engine no longer emits `rejected` for severe AML sanctions (including KYB parties), prohibited jurisdictions or explicit document-fraud/provider-rejection signals. It preserves the original codes in `auto_decision_reasons`; a provider-closed `rejected` decision remains authoritative.
 - **Self-verification status detail**: `GET /v1/me/verification` now exposes optional `pending_documents`, `changes_requested_comments`, `documents_received` and `documents_gate` fields inside `submission`.
 
