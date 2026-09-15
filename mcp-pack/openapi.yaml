@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.83"
+  version: "2.84"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3970,6 +3970,16 @@ paths:
         schema:
           type: string
         description: Filter by destination country (ISO 3166-1 alpha-2, e.g. CL, PE, MX).
+      - name: method
+        in: query
+        schema:
+          type: string
+        description: Filter by rail method (bank_transfer, yape, pago_movil, spei...). Values come from GET /v1/payouts/methods.
+      - name: search
+        in: query
+        schema:
+          type: string
+        description: Case-insensitive partial match against payout_id, bank_reference or idempotency_key.
       - name: from
         in: query
         schema:
@@ -4971,6 +4981,28 @@ paths:
         schema:
           type: string
         description: Filter by origin country (ISO 3166-1 alpha-2, e.g. BO, MX, VE).
+      - name: method
+        in: query
+        schema:
+          type: string
+        description: Filter by rail method (bank_transfer, qr, card...). Values come from GET /v1/payins/methods.
+      - name: kind
+        in: query
+        schema:
+          type: string
+          enum: [push, qr, card, collect, checkout, pos]
+        description: Filter by payin kind.
+      - name: refund_status
+        in: query
+        schema:
+          type: string
+          enum: [none, partial, full]
+        description: Filter by derived refund degree.
+      - name: search
+        in: query
+        schema:
+          type: string
+        description: Case-insensitive partial match against payin_id, reference or idempotency_key.
       - name: from
         in: query
         schema:
