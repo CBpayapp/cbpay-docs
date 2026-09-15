@@ -133,6 +133,11 @@ degraded or down, and the average uptime; the incident timeline at the bottom
 spells out each reason in plain language. The HTML loads no JavaScript and no
 external resources, so you can safely embed it in an iframe.
 
+The public page lists only corridors enabled for your organization: corridors
+disabled by the operator do not appear in rows or incident history, while an
+enabled corridor that is down remains visible and contributes to the overall
+state.
+
 The `orgToken` is an opaque token your operator shares with you (org admins
 can read it as `status_page_url` in `GET /v1/org/branding`).
 
@@ -206,6 +211,10 @@ whether an organization exists. The endpoint is rate-limited per IP.
     automatically — the same configuration used by receipts and hosted pages.
     Ask your operator for your organization's status page URL, or read it
     from <code>GET /v1/org/branding</code> if you are an org admin.
+#### Why doesn't a corridor appear on the status page?
+    Your operator may have disabled it through administrative controls, in
+    which case it is omitted. If it is enabled but currently down, it remains
+    listed in red and contributes to the overall state.
 #### Why don't I see which provider is behind an incident?
     By design the platform is provider-agnostic: corridors are identified by
     country, currency and method only. Incident reasons are normalized and

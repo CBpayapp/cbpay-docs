@@ -66,7 +66,7 @@ sequenceDiagram
 
 | Estado | Qué significa | Qué hacer |
 |---|---|---|
-| `pending` | La pedimos al procesador y todavía no hay respuesta definitiva. Tu saldo ya está reservado. | Esperar el webhook. **No** reintentes con otra clave: duplicarías la devolución. |
+| `pending` | La pedimos al procesador y todavía no hay respuesta definitiva. Tu saldo ya está reservado. Mientras siga pendiente, la respuesta incluye `reconciliation_required: true`. | Esperar el webhook. **No** reintentes con otra clave: duplicarías la devolución. |
 | `completed` | El procesador la aprobó. El débito quedó firme en tu cartola. | Nada. Estado final. |
 | `failed` | El procesador la rechazó. El monto reservado volvió a tu saldo, exacto. | Revisa `failure_reason` y decide si corresponde reintentar con una clave nueva. |
 
@@ -114,7 +114,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/9f1c2b30-…/refunds \
 ```
 
 La respuesta es `201` cuando el procesador aprueba en el acto, `202`
-cuando queda en curso y `422` cuando rechaza.
+cuando queda en curso (con `reconciliation_required: true`) y `422` cuando
+rechaza. Un resultado ambiguo queda persistido en el mismo claim de
+devolución y se reconcilia por el webhook del procesador o el sweep de solo
+lectura; la plataforma nunca lo vuelve a despachar.
 
 </Step>
 <Step title="O devuelve una parte">
@@ -336,6 +339,7 @@ verificación, sin credenciales y sin ver datos personales. Detalle en
 | 402 | `insufficient_funds` | Fondea la cuenta y reintenta **con la misma** `idempotency_key`. |
 | 404 | `not_found` | El cobro (o la devolución) no existe en tu cuenta. |
 | 409 | `idempotency_conflict` | Hay otra devolución en vuelo con esa clave; consulta su estado. |
+| 503 | `refund_event_pending` | El resultado quedó guardado, pero todavía se persiste su evento final. Reintenta con la **misma** clave de idempotencia; no envíes otra devolución. |
 | 422 | `payin_not_refundable` | El cobro no está acreditado o no tiene referencia del procesador. |
 | 422 | `settlement_pending` | El saldo del cobro está programado para settlement y aún no está disponible; devuélvelo después de liberarse (al llegar `settle_at`, o antes si tu admin de organización lo libera). |
 | 422 | `refund_not_supported` | Ese riel no admite devolución (QR, transferencia, CLABE, collect). Los cobros POS se devuelven por el riel crypto. |

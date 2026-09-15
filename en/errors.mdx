@@ -95,6 +95,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `error` | Meaning |
 |---|---|
 | `invalid_json` | Body is not valid JSON or has unknown fields |
+| `invalid_lang` | `lang` must be `es`, `en` or `zh` |
 | `invalid_settings` | Organization settings are not a valid JSON object or could not be normalized; correct the settings payload and retry |
 | `invalid_type` | `type` must be `person` or `company` |
 | `invalid_email` / `invalid_display_name` | Invalid required field |
@@ -134,6 +135,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 |---|---|---|
 | 402 | `insufficient_funds` | Not enough available balance — on outbound banking transfers the check includes the rail fee (`balance >= amount + fee`); the operation is not created when it does not hold |
 | 404 | `not_found` | Resource does not exist (or belongs to another account) |
+| 404 | `not_available` | The document does not exist in the requested language |
 | 404 | `country_not_found` | Unknown ISO 3166-1 alpha-2 country code (cities catalog) |
 | 404 | `bank_not_found` | The routing number or SWIFT/BIC is not in the embedded bank directory — keep the payout/counterparty form manual |
 | 404 | `postal_code_not_found` | Unknown postal code, or a country without a dataset (postal code lookup) — keep the address fields manual |

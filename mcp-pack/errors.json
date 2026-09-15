@@ -1,5 +1,5 @@
 {
-  "count": 244,
+  "count": 246,
   "errors": [
     {
       "category": {
@@ -615,6 +615,20 @@
         "en": "Body is not valid JSON or has unknown fields",
         "es": "Body no es JSON válido o tiene campos desconocidos",
         "zh": "请求体不是有效的 JSON 或包含未知字段"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "invalid_lang",
+      "http": 400,
+      "meaning": {
+        "en": "`lang` must be `es`, `en` or `zh`",
+        "es": "`lang` debe ser `es`, `en` o `zh`",
+        "zh": "`lang` 必须为 `es`、`en` 或 `zh`"
       }
     },
     {
@@ -1245,6 +1259,20 @@
         "en": "Resource does not exist (or belongs to another account)",
         "es": "Recurso inexistente (o de otra cuenta)",
         "zh": "资源不存在（或属于其他账户）"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "not_available",
+      "http": 404,
+      "meaning": {
+        "en": "The document does not exist in the requested language",
+        "es": "El documento no existe en el idioma pedido",
+        "zh": "所请求语言下不存在该文档"
       }
     },
     {

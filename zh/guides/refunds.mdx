@@ -60,7 +60,7 @@ sequenceDiagram
 
 | 状态 | 含义 | 应对 |
 |---|---|---|
-| `pending` | 已向处理机构发起，尚无最终答复。你的余额已被预留。 | 等待 Webhook。**不要**用新的幂等键重试：会导致重复退款。 |
+| `pending` | 已向处理机构发起，尚无最终答复。你的余额已被预留。未解决期间响应会带 `reconciliation_required: true`。 | 等待 Webhook。**不要**用新的幂等键重试：会导致重复退款。 |
 | `completed` | 处理机构已批准。扣款在对账单上最终生效。 | 无需操作。终态。 |
 | `failed` | 处理机构已拒绝。预留金额已原额返还余额。 | 查看 `failure_reason`，再决定是否用新键重试。 |
 
@@ -106,7 +106,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/9f1c2b30-…/refunds \
 }
 ```
 
-处理机构当场批准返回 `201`，仍在处理中返回 `202`，拒绝返回 `422`。
+处理机构当场批准返回 `201`，仍在处理中返回带
+`reconciliation_required: true` 的 `202`，拒绝返回 `422`。结果不明确时会
+持久化在同一个退款 claim 中，由处理机构 webhook 或只读 sweep 完成核对；
+平台绝不会再次发送退款。
 
 </Step>
 <Step title="或退还一部分">
@@ -315,6 +318,7 @@ curl -L https://api.qbank.cl/platform/v1/payin-refunds/3a7d51c8-…/receipt \
 | 402 | `insufficient_funds` | 为账户充值后用**相同的** `idempotency_key` 重试。 |
 | 404 | `not_found` | 该收款（或退款）在你的账户下不存在。 |
 | 409 | `idempotency_conflict` | 已有使用该键的退款在处理中；请查询其状态。 |
+| 503 | `refund_event_pending` | 退款结果已保存，但最终事件仍在持久化。请使用**相同**幂等键重试；不要发送第二笔退款。 |
 | 422 | `payin_not_refundable` | 收款未入账，或没有处理机构侧的凭据。 |
 | 422 | `settlement_pending` | 该收款的余额仍在结算排期中，尚不可用；请在释放后退款（到达 `settle_at` 时自动释放，或由您的组织管理员提前释放）。 |
 | 422 | `refund_not_supported` | 该通道不支持退款（二维码、转账、专属账户、collect）。POS 收款通过加密通道退款。 |

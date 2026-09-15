@@ -94,6 +94,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `error` | Significado |
 |---|---|
 | `invalid_json` | Body no es JSON válido o tiene campos desconocidos |
+| `invalid_lang` | `lang` debe ser `es`, `en` o `zh` |
 | `invalid_settings` | Los settings de la organización no son un objeto JSON válido o no pudieron normalizarse; corrige el payload y reintenta |
 | `invalid_type` | `type` debe ser `person` o `company` |
 | `invalid_email` / `invalid_display_name` | Campo requerido inválido |
@@ -133,6 +134,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 |---|---|---|
 | 402 | `insufficient_funds` | Saldo disponible insuficiente — en transferencias banking salientes el chequeo incluye la comisión del riel (`saldo >= monto + comisión`); la operación no se crea si no se cumple |
 | 404 | `not_found` | Recurso inexistente (o de otra cuenta) |
+| 404 | `not_available` | El documento no existe en el idioma pedido |
 | 404 | `country_not_found` | Código de país ISO 3166-1 alpha-2 desconocido (catálogo de ciudades) |
 | 404 | `bank_not_found` | El routing number o SWIFT/BIC no está en el directorio bancario embebido — el formulario de payout/contraparte sigue manual |
 | 404 | `postal_code_not_found` | Código postal desconocido, o un país sin dataset (lookup por código postal) — los campos de dirección siguen manuales |

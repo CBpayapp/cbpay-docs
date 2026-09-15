@@ -11,6 +11,18 @@ con anticipación y quedan marcados como **Breaking**.
 
 ## v2.85 · 5 versiones - 14 de septiembre de 2026
 
+### v2.85
+
+**Cambiado**
+
+- **Clasificación de fallos en tarjetas hosted**: las páginas de pago con
+  tarjeta ahora exponen el enum estable `failure_code` (`declined`,
+  `authentication_failed`, `provider_unavailable`, `invalid_data`,
+  `card_unavailable`, `expired`, `needs_review`, `unknown`) y lo traducen
+  para el pagador en EN/ES/ZH. El `failure_reason` histórico sigue
+  compatible; los resultados ambiguos `needs_review` no deben reintentarse
+  con un pago nuevo.
+
 ### v2.84
 
 **Agregado**
@@ -113,18 +125,7 @@ con anticipación y quedan marcados como **Breaking**.
   una cuenta asociada, permitiendo que las integraciones cierren cobros
   impagos sin depender del polling.
 
-## v2.85 · 5 versions - 12 de septiembre de 2026
-
-### v2.85
-
-**Cambiado**
-
-- **Clasificación de fallas en pagos hosted con tarjeta**: las páginas de pago
-  ahora exponen el enum estable `failure_code` (`declined`,
-  `authentication_failed`, `provider_unavailable`, `invalid_data`,
-  `card_unavailable`, `expired`, `needs_review`, `unknown`) y lo traducen para
-  pagadores en EN/ES/ZH. `failure_reason` se conserva por compatibilidad; un
-  resultado ambiguo `needs_review` no debe reintentarse con un pago nuevo.
+## v2.77 · 3 versions - 12 de septiembre de 2026
 
 ### v2.77
 
