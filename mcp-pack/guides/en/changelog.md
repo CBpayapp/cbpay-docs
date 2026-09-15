@@ -8,7 +8,18 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.84 · 4 versions - September 14, 2026
+## v2.85 · 5 versions - September 14, 2026
+
+### v2.85
+
+**Changed**
+
+- **Hosted card failure classification**: card payment pages now expose the
+  stable `failure_code` enum (`declined`, `authentication_failed`,
+  `provider_unavailable`, `invalid_data`, `card_unavailable`, `expired`,
+  `needs_review`, `unknown`) and translate it for payers in EN/ES/ZH.
+  The legacy `failure_reason` remains compatible; ambiguous
+  `needs_review` results must not be retried with a new payment.
 
 ### v2.84
 
