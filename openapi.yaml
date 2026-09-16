@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.87"
+  version: "2.88"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -10756,6 +10756,7 @@ paths:
                   - wallet_deposit_received
                   - wallet_send_status_changed
                   - wallet_key_exported
+                  - admin_announcement
                   - '*'
                 callback_url:
                   type: string
@@ -23472,6 +23473,34 @@ webhooks:
               settlement_asset: USDC
               conversion_status: done
               idempotency_key: order-10042
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge the delivery.
+  admin_announcement:
+    post:
+      summary: Organization announcement
+      description: 'A named organization administrator approved a localized plain-text announcement for this account. The event is account-scoped and never broadcast to another account.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [broadcast_id, subject, body]
+              properties:
+                broadcast_id:
+                  type: string
+                  format: uuid
+                subject:
+                  type: string
+                  description: Localized plain-text subject.
+                body:
+                  type: string
+                  description: Localized plain-text body. HTML is never sent.
+            example:
+              broadcast_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
+              subject: Scheduled maintenance
+              body: Some services will be read-only on 2026-09-20 from 02:00 UTC.
       responses:
         '200':
           description: Return any 2xx to acknowledge the delivery.

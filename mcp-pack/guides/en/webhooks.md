@@ -150,6 +150,7 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `balance_adjusted` | An administrator applied a manual credit or debit to a balance |
 | `account_status_changed` | The account's administrative status changed (`active` / `blocked` / `closed`) |
 | `member_security_event` | A security event of one of the account's users (sign-in, credential change, new factor, revoked session) |
+| `admin_announcement` | A named organization administrator approved a localized plain-text announcement for this account |
 
 ### Payload of each event
 
@@ -860,3 +861,21 @@ This event reports an inbound EUR transfer received by an owned virtual IBAN.
 The event is normalized before delivery; consumers should deduplicate by the
 event ID and fetch the banking operation or virtual account when they need the
 latest state. The event does not expose an upstream provider identity.
+
+## `admin_announcement`
+
+This account-scoped event is emitted when an organization administrator's
+approved broadcast reaches the account notification channel. It is plain
+localized text, never HTML:
+
+```json
+{
+  "broadcast_id": "4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
+  "subject": "Scheduled maintenance",
+  "body": "Some services will be read-only on 2026-09-20 from 02:00 UTC."
+}
+```
+
+The event is delivered only to the account selected by the campaign. It can
+be received through an account webhook subscription and the account event
+stream; deduplicate deliveries by `X-Webhook-Event-ID`.

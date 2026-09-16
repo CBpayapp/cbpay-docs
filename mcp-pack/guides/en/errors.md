@@ -378,3 +378,20 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## Account broadcast error codes
+
+These codes are returned by the organization administration broadcast
+endpoints. They are listed here so shared SDKs can keep one error catalog.
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_channels` | No supported delivery channel was selected | Send `email`, `notification`, or both |
+| 400 | `invalid_content` | Subject/body is empty or too long | Use subject 1–160 runes and body 1–4000 runes |
+| 400 | `invalid_audience` | Audience mode, filters or IDs are invalid | Use `filters` or 1–5000 organization-owned account IDs |
+| 400 | `invalid_reason` | Rejection reason is missing or too long | Send a 1–500 rune audited reason |
+| 403 | `named_admin_required` | The actor is not a named administrator | Use a named `god` or `super_admin` administrator |
+| 403 | `partner_forbidden` | A bank partner tried to use an organization broadcast | Use an allowed organization administrator |
+| 409 | `empty_audience` | No account matched at submit/approval time | Correct the audience and resubmit |
+| 409 | `audience_too_large` | The filters match more than 20000 accounts | Narrow the filters and resubmit |
+| 409 | `second_approver_required` | The creator tried to approve their own campaign | Have a different named God approve it |

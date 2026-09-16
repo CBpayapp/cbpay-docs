@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.87"
+  version: "2.88"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -10739,6 +10739,7 @@ paths:
                   - wallet_deposit_received
                   - wallet_send_status_changed
                   - wallet_key_exported
+                  - admin_announcement
                   - '*'
                 callback_url:
                   type: string
@@ -23316,6 +23317,34 @@ webhooks:
               settlement_asset: USDC
               conversion_status: done
               idempotency_key: order-10042
+      responses:
+        '200':
+          description: Devuelve cualquier 2xx para confirmar la entrega.
+  admin_announcement:
+    post:
+      summary: Anuncio de organización
+      description: 'Un administrador nombrado de la organización aprobó un anuncio localizado de texto plano para esta cuenta. El evento está acotado a la cuenta y nunca se transmite a otra.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [broadcast_id, subject, body]
+              properties:
+                broadcast_id:
+                  type: string
+                  format: uuid
+                subject:
+                  type: string
+                  description: Subject localizado de texto plano.
+                body:
+                  type: string
+                  description: Body localizado de texto plano. Nunca se envía HTML.
+            example:
+              broadcast_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
+              subject: Mantenimiento programado
+              body: Algunos servicios serán de solo lectura el 2026-09-20 desde las 02:00 UTC.
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.
