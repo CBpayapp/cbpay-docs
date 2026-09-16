@@ -9,7 +9,15 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.87 · 2 versiones - 15 de septiembre de 2026
+## v2.88 · 3 versiones - 15 de septiembre de 2026
+
+### v2.88
+
+**Agregado**
+
+- **Anuncios de organización**: las suscripciones webhook de cuenta pueden
+  recibir el nuevo evento account-scoped `admin_announcement`, con el payload
+  localizado de texto plano `{broadcast_id, subject, body}`.
 
 ### v2.87
 

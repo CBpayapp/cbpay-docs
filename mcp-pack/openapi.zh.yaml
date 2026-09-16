@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.87"
+  version: "2.88"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -10358,6 +10358,7 @@ paths:
                   - wallet_deposit_received
                   - wallet_send_status_changed
                   - wallet_key_exported
+                  - admin_announcement
                   - '*'
                 callback_url:
                   type: string
@@ -22566,6 +22567,34 @@ webhooks:
               settlement_asset: USDC
               conversion_status: done
               idempotency_key: order-10042
+      responses:
+        '200':
+          description: 返回任意 2xx 以确认投递。
+  admin_announcement:
+    post:
+      summary: 组织公告
+      description: '命名的组织管理员为该账户批准了本地化纯文本公告。事件仅属于该账户，绝不会广播给其他账户。'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [broadcast_id, subject, body]
+              properties:
+                broadcast_id:
+                  type: string
+                  format: uuid
+                subject:
+                  type: string
+                  description: 本地化纯文本 subject。
+                body:
+                  type: string
+                  description: 本地化纯文本 body；绝不会发送 HTML。
+            example:
+              broadcast_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
+              subject: 计划维护
+              body: 部分服务将在 2026-09-20 02:00 UTC 起进入只读模式。
       responses:
         '200':
           description: 返回任意 2xx 以确认投递。

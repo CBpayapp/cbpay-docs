@@ -143,6 +143,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `balance_adjusted` | 管理员对某个余额执行了手动入账或扣款 |
 | `account_status_changed` | 账户的管理状态发生变化（`active` / `blocked` / `closed`） |
 | `member_security_event` | 账户成员的安全事件（登录、凭据更改、新增验证因素、会话被撤销） |
+| `admin_announcement` | 命名的组织管理员批准了面向该账户的本地化纯文本公告 |
 
 ### 各事件的载荷
 
@@ -825,3 +826,19 @@ This event reports an inbound EUR transfer received by an owned virtual IBAN.
 The event is normalized before delivery; consumers should deduplicate by the
 event ID and fetch the banking operation or virtual account when they need the
 latest state. The event does not expose an upstream provider identity.
+
+## `admin_announcement`
+
+当组织管理员批准的 broadcast 到达账户通知渠道时，会发出此账户范围事件。
+载荷是本地化纯文本，绝不是 HTML：
+
+```json
+{
+  "broadcast_id": "4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
+  "subject": "计划维护",
+  "body": "部分服务将在 2026-09-20 02:00 UTC 起进入只读模式。"
+}
+```
+
+事件只发送给 campaign 选中的账户。它可以通过账户 webhook 订阅和账户
+event stream 接收；请使用 `X-Webhook-Event-ID` 对投递去重。

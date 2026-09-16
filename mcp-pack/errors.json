@@ -1,5 +1,5 @@
 {
-  "count": 246,
+  "count": 255,
   "errors": [
     {
       "category": {
@@ -3435,6 +3435,132 @@
         "en": "The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID.",
         "es": "The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID.",
         "zh": "The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID."
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "invalid_channels",
+      "http": 400,
+      "meaning": {
+        "en": "No supported delivery channel was selected — Fix: Send `email`, `notification`, or both",
+        "es": "No se seleccionó un canal válido — Fix: Envía `email`, `notification` o ambos",
+        "zh": "未选择有效的发送渠道 — Fix: 发送 `email`、`notification` 或二者"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "invalid_content",
+      "http": 400,
+      "meaning": {
+        "en": "Subject/body is empty or too long — Fix: Use subject 1–160 runes and body 1–4000 runes",
+        "es": "Subject/body vacío o demasiado largo — Fix: Usa subject de 1–160 runas y body de 1–4000 runas",
+        "zh": "subject/body 为空或过长 — Fix: subject 使用 1–160 个 rune，body 使用 1–4000 个 rune"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "invalid_audience",
+      "http": 400,
+      "meaning": {
+        "en": "Audience mode, filters or IDs are invalid — Fix: Use `filters` or 1–5000 organization-owned account IDs",
+        "es": "Modo, filtros o IDs inválidos — Fix: Usa `filters` o 1–5000 IDs de cuentas de la organización",
+        "zh": "受众模式、筛选器或 ID 无效 — Fix: 使用 `filters` 或 1–5000 个组织内账户 ID"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "invalid_reason",
+      "http": 400,
+      "meaning": {
+        "en": "Rejection reason is missing or too long — Fix: Send a 1–500 rune audited reason",
+        "es": "Falta la razón de rechazo o es demasiado larga — Fix: Envía una razón auditada de 1–500 runas",
+        "zh": "缺少拒绝原因或原因过长 — Fix: 发送 1–500 个 rune 的审计原因"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "named_admin_required",
+      "http": 403,
+      "meaning": {
+        "en": "The actor is not a named administrator — Fix: Use a named `god` or `super_admin` administrator",
+        "es": "El actor no es un administrador nombrado — Fix: Usa un administrador nombrado `god` o `super_admin`",
+        "zh": "actor 不是命名管理员 — Fix: 使用命名的 `god` 或 `super_admin` 管理员"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "partner_forbidden",
+      "http": 403,
+      "meaning": {
+        "en": "A bank partner tried to use an organization broadcast — Fix: Use an allowed organization administrator",
+        "es": "Un bank partner intentó usar un broadcast de organización — Fix: Usa un administrador permitido",
+        "zh": "bank partner 尝试使用组织 broadcast — Fix: 使用允许的组织管理员"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "empty_audience",
+      "http": 409,
+      "meaning": {
+        "en": "No account matched at submit/approval time — Fix: Correct the audience and resubmit",
+        "es": "Ninguna cuenta coincidió al enviar/aprobar — Fix: Corrige la audiencia y vuelve a enviar",
+        "zh": "提交/审批时没有账户匹配 — Fix: 修正受众后重新提交"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "audience_too_large",
+      "http": 409,
+      "meaning": {
+        "en": "The filters match more than 20000 accounts — Fix: Narrow the filters and resubmit",
+        "es": "Los filtros coinciden con más de 20000 cuentas — Fix: Acota los filtros y vuelve a enviar",
+        "zh": "筛选器匹配超过 20000 个账户 — Fix: 缩小筛选范围后重新提交"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "second_approver_required",
+      "http": 409,
+      "meaning": {
+        "en": "The creator tried to approve their own campaign — Fix: Have a different named God approve it",
+        "es": "El creador intentó aprobar su campaña — Fix: Pide aprobación a otro God nombrado",
+        "zh": "创建者尝试审批自己的 campaign — Fix: 让另一名命名 God 审批"
       }
     }
   ]

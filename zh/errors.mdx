@@ -367,3 +367,19 @@ description: "错误格式与完整的错误码目录"
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## 账户批量消息错误代码
+
+以下代码来自组织管理 broadcast 端点，便于共享 SDK 使用统一的错误目录。
+
+| HTTP | `error` | 原因 | 解决方法 |
+|---:|---|---|---|
+| 400 | `invalid_channels` | 未选择有效的发送渠道 | 发送 `email`、`notification` 或二者 |
+| 400 | `invalid_content` | subject/body 为空或过长 | subject 使用 1–160 个 rune，body 使用 1–4000 个 rune |
+| 400 | `invalid_audience` | 受众模式、筛选器或 ID 无效 | 使用 `filters` 或 1–5000 个组织内账户 ID |
+| 400 | `invalid_reason` | 缺少拒绝原因或原因过长 | 发送 1–500 个 rune 的审计原因 |
+| 403 | `named_admin_required` | actor 不是命名管理员 | 使用命名的 `god` 或 `super_admin` 管理员 |
+| 403 | `partner_forbidden` | bank partner 尝试使用组织 broadcast | 使用允许的组织管理员 |
+| 409 | `empty_audience` | 提交/审批时没有账户匹配 | 修正受众后重新提交 |
+| 409 | `audience_too_large` | 筛选器匹配超过 20000 个账户 | 缩小筛选范围后重新提交 |
+| 409 | `second_approver_required` | 创建者尝试审批自己的 campaign | 让另一名命名 God 审批 |

@@ -8,7 +8,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.87 · 2 versions - September 15, 2026
+## v2.88 · 3 versions - September 15, 2026
+
+### v2.88
+
+**Added**
+
+- **Organization announcements**: account webhook subscriptions can receive
+  the new account-scoped `admin_announcement` event with the plain-text
+  localized payload `{broadcast_id, subject, body}`.
 
 ### v2.87
 

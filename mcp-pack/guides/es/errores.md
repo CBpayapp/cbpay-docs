@@ -379,3 +379,20 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
 | `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
 | `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## Códigos de mensajería masiva
+
+Estos códigos provienen de los endpoints de administración de organización.
+Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
+
+| HTTP | `error` | Causa | Solución |
+|---:|---|---|---|
+| 400 | `invalid_channels` | No se seleccionó un canal válido | Envía `email`, `notification` o ambos |
+| 400 | `invalid_content` | Subject/body vacío o demasiado largo | Usa subject de 1–160 runas y body de 1–4000 runas |
+| 400 | `invalid_reason` | Falta la razón de rechazo o es demasiado larga | Envía una razón auditada de 1–500 runas |
+| 400 | `invalid_audience` | Modo, filtros o IDs inválidos | Usa `filters` o 1–5000 IDs de cuentas de la organización |
+| 403 | `named_admin_required` | El actor no es un administrador nombrado | Usa un administrador nombrado `god` o `super_admin` |
+| 403 | `partner_forbidden` | Un bank partner intentó usar un broadcast de organización | Usa un administrador permitido |
+| 409 | `empty_audience` | Ninguna cuenta coincidió al enviar/aprobar | Corrige la audiencia y vuelve a enviar |
+| 409 | `audience_too_large` | Los filtros coinciden con más de 20000 cuentas | Acota los filtros y vuelve a enviar |
+| 409 | `second_approver_required` | El creador intentó aprobar su campaña | Pide aprobación a otro God nombrado |

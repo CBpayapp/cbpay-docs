@@ -8,7 +8,15 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.87 · 2 个版本 - 2026年9月15日
+## v2.88 · 3 个版本 - 2026年9月15日
+
+### v2.88
+
+**新增**
+
+- **组织公告**：账户 webhook 订阅现在可以接收新的账户范围事件
+  `admin_announcement`，其 payload 为本地化纯文本
+  `{broadcast_id, subject, body}`。
 
 ### v2.87
 
