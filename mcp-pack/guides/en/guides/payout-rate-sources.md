@@ -22,6 +22,37 @@ The field is available on payout creation and payout detail when attribution is
 loaded. It may be absent on historical or list rows. It does not change the
 debit, fee or webhook contract.
 
+### Current payout quote in `GET /v1/rates`
+
+The account-facing rates response keeps the payout field name `rate`. This is
+the executable-market quote for the next payout: the platform checks the
+oldest open FIFO lot for the country's currency. When eligible inventory is
+available, `rate_source` is `lot`; otherwise the quote uses spot and
+`rate_source` is `spot`. A failed inventory read also falls back to `spot`;
+the payout debit itself remains fail-closed.
+
+`payin_rate` remains the deposit-side quote based on spot. FIFO lots price
+payouts only. The organization-admin endpoint exposes the same distinction
+with `payout_rate` and `rate_source`.
+
+```json
+{
+  "rates": {
+    "chile": {
+      "currency": "CLP",
+      "rate": "910.896551",
+      "rate_source": "lot",
+      "payin_rate": "955.10"
+    }
+  }
+}
+```
+
+This per-country value is an indicative next-payout view. A larger payout can
+consume multiple lots; use the opt-in `lot_quote` below for an amount-specific
+indicative quote, and use the payout response plus final webhook as the
+authoritative execution record.
+
 To preview an indicative inventory-aware quote, add `currency` and `amount` to
 `GET /v1/rates`:
 

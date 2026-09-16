@@ -8,6 +8,17 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.89 · 1 个版本 - 2026年9月16日
+
+### v2.89
+
+**变更**
+
+- **可执行 payout 报价来源**：`GET /v1/rates` 的每个国家现在会在
+  `rate` 旁返回 `rate_source`。`lot` 表示 payout 侧使用最早开放的
+  FIFO 批次；`spot` 表示使用 spot。`payin_rate` 仍基于 spot，可选的按
+  金额 `lot_quote` 保持不变且仍为指示性报价。
+
 ## v2.88 · 3 个版本 - 2026年9月15日
 
 ### v2.88

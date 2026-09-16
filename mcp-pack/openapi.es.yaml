@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.88"
+  version: "2.89"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2894,8 +2894,11 @@ paths:
         mismas tasas usadas cuando las operaciones se ejecutan (`local_amount / rate = USDT`) — más la
         configuración de comisiones **efectiva** de la cuenta — los defaults de la organización ya resueltos
         contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla.
-        `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). `asset_prices`
-        trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins
+        `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando
+        `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda;
+        cuando es `spot`, no existe un lote elegible y se usa spot. `payin_rate` sigue basado en spot porque
+        los lotes solo cotizan payouts. Usa `lot_quote` opcional para una cotización indicativa por monto.
+        `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins
         valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado,
         el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación
         desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para
@@ -2936,6 +2939,11 @@ paths:
                           type: string
                           description: Tasa aplicada a los payouts (dispersiones).
                           example: '950.123456'
+                        rate_source:
+                          type: string
+                          enum: [lot, spot]
+                          description: La tasa de payout usa el lote FIFO abierto más antiguo o el fallback spot.
+                          example: lot
                         payin_rate:
                           type: string
                           description: Tasa aplicada a los payins (depósitos/cobros fiat).
@@ -3024,14 +3032,17 @@ paths:
                   chile:
                     currency: CLP
                     rate: '950.25'
+                    rate_source: lot
                     payin_rate: '955.10'
                   mexico:
                     currency: MXN
                     rate: '17.50'
+                    rate_source: spot
                     payin_rate: '17.62'
                   peru:
                     currency: PEN
                     rate: '3.72'
+                    rate_source: spot
                     payin_rate: '3.75'
                 asset_prices:
                   USDT:

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.88"
+  version: "2.89"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2914,9 +2914,12 @@ paths:
         same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective**
         fee configuration — org defaults already resolved against your account's overrides — so clients
         can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal)
-        side and `payin_rate` the payin (deposit) side. `asset_prices` carries the USD reference price
-        of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for
-        display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement
+        side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side
+        quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible
+        lot backs the quote. `payin_rate` remains spot-based because FIFO lots price payouts only.
+        Use the optional `lot_quote` for an amount-specific indicative quote. `asset_prices` carries
+        the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins
+        are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement
         price** your account would get right now if it paid an operation from that balance (`settlement_rate`,
         spread included) and whether the asset is currently `available` — use it to estimate before sending
         `settlement_asset` in a payout.
@@ -2956,6 +2959,11 @@ paths:
                           type: string
                           description: Rate applied to payouts (dispersals).
                           example: '950.123456'
+                        rate_source:
+                          type: string
+                          enum: [lot, spot]
+                          description: The payout-side rate is backed by the oldest open FIFO lot or a spot fallback.
+                          example: lot
                         payin_rate:
                           type: string
                           description: Rate applied to payins (fiat deposits/collections).
@@ -3044,14 +3052,17 @@ paths:
                   chile:
                     currency: CLP
                     rate: '950.25'
+                    rate_source: lot
                     payin_rate: '955.10'
                   mexico:
                     currency: MXN
                     rate: '17.50'
+                    rate_source: spot
                     payin_rate: '17.62'
                   peru:
                     currency: PEN
                     rate: '3.72'
+                    rate_source: spot
                     payin_rate: '3.75'
                 asset_prices:
                   USDT:

@@ -23,6 +23,37 @@ El campo está disponible en la creación y el detalle cuando se carga la
 atribución. Puede faltar en filas históricas o de listado. No cambia el débito,
 la comisión ni el contrato del webhook.
 
+### Cotización de payout vigente en `GET /v1/rates`
+
+La respuesta de tasas para la cuenta mantiene el nombre `rate` para la punta
+de payout. Es la cotización de mercado ejecutable para el próximo payout: la
+plataforma revisa el lote FIFO abierto más antiguo de la moneda del país.
+Cuando existe inventario elegible, `rate_source` es `lot`; si no, usa spot y
+`rate_source` es `spot`. Si falla la lectura del inventario, también cae a
+`spot`; el débito del payout sigue siendo fail-closed.
+
+`payin_rate` sigue siendo la cotización de depósitos basada en spot. Los lotes
+FIFO solo valorizan payouts. El endpoint para administradores de organización
+expone la misma distinción con `payout_rate` y `rate_source`.
+
+```json
+{
+  "rates": {
+    "chile": {
+      "currency": "CLP",
+      "rate": "910.896551",
+      "rate_source": "lot",
+      "payin_rate": "955.10"
+    }
+  }
+}
+```
+
+Este valor por país es una vista indicativa del próximo payout. Un payout más
+grande puede consumir varios lotes; usa el `lot_quote` opt-in para una
+cotización indicativa por monto y conserva la respuesta del payout junto con
+el webhook final como registro autoritativo de la ejecución.
+
 Para previsualizar una cotización indicativa que considere inventario, agrega
 `currency` y `amount` a `GET /v1/rates`:
 

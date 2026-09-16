@@ -21,6 +21,35 @@ Payout 响应可能包含 `rate_source`，用于说明执行市场汇率的来�
 当归因已加载时，创建和详情响应会提供该字段。历史或列表记录可能省略；
 它不会改变扣款、费用或 webhook 合约。
 
+### `GET /v1/rates` 中的当前 payout 报价
+
+账户视图的汇率响应仍使用 `rate` 作为 payout 侧字段。它表示下一笔
+payout 的可执行市场报价：平台会检查该国家货币最早的开放 FIFO 批次。
+如果存在可用库存，`rate_source` 为 `lot`；否则使用 spot，且
+`rate_source` 为 `spot`。库存读取失败时也会回退到 spot；payout 扣款本身
+仍然 fail-closed。
+
+`payin_rate` 仍是基于 spot 的入金侧报价。FIFO 批次只为 payout 定价。
+组织管理员 endpoint 使用 `payout_rate` 和 `rate_source` 表达同一来源
+区别。
+
+```json
+{
+  "rates": {
+    "chile": {
+      "currency": "CLP",
+      "rate": "910.896551",
+      "rate_source": "lot",
+      "payin_rate": "955.10"
+    }
+  }
+}
+```
+
+这个按国家返回的值是下一笔 payout 的指示性视图。较大的 payout 可能会
+消耗多个批次；如需按金额获取指示性报价，请使用下方的可选
+`lot_quote`，并以 payout 响应和最终 webhook 作为执行的权威记录。
+
 要预览考虑库存的指示性报价，请为 `GET /v1/rates` 添加 `currency` 和
 `amount`：
 

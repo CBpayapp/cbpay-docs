@@ -8,6 +8,18 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.89 · 1 version - September 16, 2026
+
+### v2.89
+
+**Changed**
+
+- **Executable payout quote source**: each country in `GET /v1/rates` now
+  includes `rate_source` with `rate`. `lot` means the payout-side quote is
+  backed by the oldest open FIFO lot; `spot` means it uses spot. `payin_rate`
+  remains spot-based, and the optional amount-specific `lot_quote` is
+  unchanged and indicative.
+
 ## v2.88 · 3 versions - September 15, 2026
 
 ### v2.88
