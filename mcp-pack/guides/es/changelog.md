@@ -9,6 +9,18 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.89 · 1 versión - 16 de septiembre de 2026
+
+### v2.89
+
+**Cambiado**
+
+- **Origen de la cotización ejecutable de payout**: cada país de
+  `GET /v1/rates` ahora incluye `rate_source` junto a `rate`. `lot` significa
+  que la punta de payout usa el lote FIFO abierto más antiguo; `spot` indica
+  que usa spot. `payin_rate` sigue basado en spot y el `lot_quote` opcional por
+  monto permanece sin cambios e indicativo.
+
 ## v2.88 · 3 versiones - 15 de septiembre de 2026
 
 ### v2.88

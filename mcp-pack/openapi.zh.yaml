@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.88"
+  version: "2.89"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -2740,7 +2740,10 @@ paths:
       operationId: getRates
       summary: 获取我的外汇汇率与费用
       description: 返回适用于调用账户的各国汇率——与操作执行时使用的相同(`local_amount / rate = USDT`)——以及账户的**有效**费用配置(组织默认值已与账户覆盖项解析合并),便于客户端在创建操作前计算确切成本。`rate`
-        为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为
+        为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。当 `rate_source` 为 `lot` 时,
+        payout 报价由该货币最早的开放 FIFO 批次支持；为 `spot` 时没有可用批次、使用 spot。
+        `payin_rate` 仍基于 spot，因为 FIFO 批次只为 payout 定价。按金额获取指示性报价时使用可选的
+        `lot_quote`。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为
         1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在
         payout 传 `settlement_asset` 之前用它来估算。
       parameters:
@@ -2779,6 +2782,11 @@ paths:
                           type: string
                           description: 适用于 payout(派发)的汇率。
                           example: '950.123456'
+                        rate_source:
+                          type: string
+                          enum: [lot, spot]
+                          description: payout 汇率由最早开放的 FIFO 批次或 spot fallback 支持。
+                          example: lot
                         payin_rate:
                           type: string
                           description: 适用于 payin(法币充值/收款)的汇率。
@@ -2863,14 +2871,17 @@ paths:
                   chile:
                     currency: CLP
                     rate: '950.25'
+                    rate_source: lot
                     payin_rate: '955.10'
                   mexico:
                     currency: MXN
                     rate: '17.50'
+                    rate_source: spot
                     payin_rate: '17.62'
                   peru:
                     currency: PEN
                     rate: '3.72'
+                    rate_source: spot
                     payin_rate: '3.75'
                 asset_prices:
                   USDT:
