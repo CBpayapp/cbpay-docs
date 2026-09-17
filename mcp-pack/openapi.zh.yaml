@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.97"
+  version: "2.99"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -17977,6 +17977,7 @@ paths:
                     content_type: application/pdf
                     size_bytes: 482110
                     uploaded_by: account
+                    category: proofOfAddress
                     created_at: '2026-08-06T15:40:00Z'
                   created_at: '2026-08-06T14:32:00Z'
                   updated_at: '2026-08-06T15:40:00Z'
@@ -17995,6 +17996,7 @@ paths:
       summary: 为信息请求上传文件
       description: |-
         为处于 `info_requested` 状态的审核上传证明文件。以原始二进制形式发送请求体，携带对应的 `Content-Type`（PDF、PNG、JPEG、WEBP、TXT、CSV、DOC(X) 或 XLS(X)，最大 50 MB），并在 `name` 查询参数中提供文件名。上传文件后，审核将回到 `in_review` 状态，等待合规团队重新评估。
+        可选 query 参数 `category` 使用固定的 banking 文档词汇。省略时文件仍会显示在审核中，但不能同步到 banking provider。文件可在 `info_requested`，或此前 request-info 后仍为 `in_review` 时上传。
       parameters:
       - name: reviewID
         in: path
@@ -18007,6 +18009,29 @@ paths:
         description: Original filename (max 200 chars, no path separators).
         schema:
           type: string
+      - name: category
+        in: query
+        required: false
+        description: 可选的固定 banking 文档类别。省略时文件可见，但不会同步到 provider。
+        schema:
+          type: string
+          enum:
+          - identity
+          - proofOfResidence
+          - proofOfAddress
+          - bankStatement
+          - legalPresence
+          - companyDetails
+          - ownershipStructure
+          - controlStructure
+          - uboIdentity
+          - uboProofOfAddress
+          - sourceOfWealth
+          - financialStatements
+          - amlPolicy
+          - wolfsberg
+          - mlroCV
+          - businessLicense
       requestBody:
         required: true
         content:
@@ -18039,6 +18064,7 @@ paths:
                   content_type: application/pdf
                   size_bytes: 482110
                   uploaded_by: account
+                  category: proofOfAddress
                   created_at: '2026-08-06T15:40:00Z'
                 status: in_review
         '400':
@@ -18046,6 +18072,11 @@ paths:
           content:
             application/json:
               examples:
+                invalid_category:
+                  summary: 无效的文档类别
+                  value:
+                    error: invalid_category
+                    message: unknown document category
                 invalid_name:
                   summary: Missing filename
                   value:
@@ -18064,7 +18095,7 @@ paths:
                 error: not_found
                 message: review not found
         '409':
-          description: The review is not waiting for information.
+          description: 审核必须处于 `info_requested`，或在此前 `request-info` 后处于 `in_review`。
           content:
             application/json:
               example:
@@ -20854,7 +20885,7 @@ paths:
                     virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
                     currency: EUR
                     asset: BANK_EUR
-                    available: '80.00'
+                    received_total: '80.00'
                     held: '0.00'
                     purpose: banking_eur
                     source: platform_ledger_reconciled_to_banking_provider
@@ -20956,6 +20987,291 @@ paths:
               example:
                 error: rail_source_unavailable
                 message: the selected source account is not configured for this organization
+  /v1/banking/company-wallets:
+    post:
+      tags: [银行服务]
+      operationId: createCompanyWallet
+      summary: 为已验证企业账户预留并读取专用 EUR 钱包。
+      description: >-
+        Requires the Banking product, a verified company account and an idempotency key.
+        Optional registrant overrides complete the approved KYB profile. Missing holder
+        paths return 422 registrant_incomplete.
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key]
+              properties:
+                idempotency_key:
+                  type: string
+                trading_website:
+                  type: string
+                business_activity:
+                  type: string
+                is_micro_enterprise:
+                  type: boolean
+                incorporation_country:
+                  type: string
+                incorporation_date:
+                  type: string
+                  format: date
+                expected_turnover:
+                  type: string
+            example:
+              idempotency_key: company-wallet-eur-001
+              trading_website: https://example.com
+              business_activity: International software services
+              is_micro_enterprise: false
+              incorporation_country: CL
+              incorporation_date: '2020-04-15'
+              expected_turnover: '250000.00'
+      responses:
+        '202':
+          description: Durable reservation accepted.
+          content:
+            application/json:
+              example:
+                company_wallet:
+                  id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  currency: EUR
+                  status: pending
+                  order_reference: wallet-order-001
+                  created_at: '2026-09-17T15:00:00Z'
+                  updated_at: '2026-09-17T15:00:00Z'
+        '200':
+          description: Idempotent replay of the original reservation.
+          content:
+            application/json:
+              example:
+                company_wallet:
+                  id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  currency: EUR
+                  status: pending
+                idempotency_hit: true
+        '400':
+          description: Invalid JSON, missing idempotency key or mismatched header/body key.
+          content:
+            application/json:
+              example: {error: idempotency_key_required, message: provide idempotency_key}
+        '422':
+          description: The verified company registrant is incomplete.
+          content:
+            application/json:
+              example: {error: registrant_incomplete, message: missing holder fields}
+        '502':
+          description: The reservation did not return an order reference.
+          content:
+            application/json:
+              example: {error: wallet_reservation_failed, message: provider accepted without orderReference}
+        '503':
+          description: The durable request could not be checked or persisted.
+          content:
+            application/json:
+              example: {error: banking_recovery_pending, message: reconcile the durable request}
+    get:
+      tags: [银行服务]
+      operationId: listCompanyWallets
+      summary: 列出当前账户的持久化企业钱包预留。
+      parameters:
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, default: 1}
+      - name: page_size
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 200, default: 50}
+      responses:
+        '200':
+          description: Paginated company wallets.
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                company_wallets: []
+
+  /v1/banking/company-wallets/{walletID}:
+    get:
+      tags: [银行服务]
+      operationId: getCompanyWallet
+      summary: 读取一个企业钱包；provider 暂时不可用时，处理中响应可能包含 sync_error。
+      parameters:
+      - name: walletID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Company wallet detail.
+          content:
+            application/json:
+              example:
+                company_wallet:
+                  id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  currency: EUR
+                  status: active
+                  wallet_uuid: wallet-001
+                  iban: DE00...
+                  activated_at: '2026-09-17T15:05:00Z'
+        '404':
+          description: Company wallet not found in the account.
+          content:
+            application/json:
+              example: {error: not_found, message: company wallet not found}
+
+  /v1/banking/company-wallets/{walletID}/balance:
+    get:
+      tags: [银行服务]
+      operationId: getCompanyWalletBalance
+      summary: 读取激活企业钱包的实时 EUR 余额。
+      parameters:
+      - name: walletID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Live EUR wallet balance.
+          content:
+            application/json:
+              example:
+                wallet_id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                currency: EUR
+                available: '12500.00'
+                amounts:
+                - currency: EUR
+                  available: '12500.00'
+                source: banking_provider_live
+        '409':
+          description: The wallet is not active yet.
+          content:
+            application/json:
+              example: {error: wallet_not_ready, message: company wallet is not active yet}
+        '502':
+          description: The live wallet response is unreadable.
+          content:
+            application/json:
+              example: {error: wallet_read_failed, message: provider wallet response is not readable}
+
+  /v1/banking/company-wallets/{walletID}/operations:
+    get:
+      tags: [银行服务]
+      operationId: listCompanyWalletOperations
+      summary: 按完整日期窗口列出钱包操作。
+      parameters:
+      - name: walletID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: from
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      - name: to
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      responses:
+        '200':
+          description: Wallet statement flattened into neutral operations.
+          content:
+            application/json:
+              example:
+                wallet_id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                from: '2026-09-01'
+                to: '2026-09-16'
+                operations:
+                - source_tx_id: bank-order-8842
+                  occurred_at: '2026-09-15T10:30:00Z'
+                  amount: '450.00'
+                  currency: EUR
+                  direction: credit
+                  reference: CB-EUR-001
+                  counterparty: Example Client
+                  description: Invoice 8842
+                  from_address: DE00...
+                  to_address: DE11...
+        '400':
+          description: Invalid or unavailable date range.
+          content:
+            application/json:
+              example: {error: invalid_range, message: from/to must be valid dates}
+        '409':
+          description: The wallet is not active yet.
+          content:
+            application/json:
+              example: {error: wallet_not_ready, message: company wallet is not active yet}
+        '502':
+          description: The statement response is unreadable.
+          content:
+            application/json:
+              example: {error: wallet_statement_failed, message: provider statement is not readable}
+
+  /v1/banking/virtual-ibans/{virtualIBANID}/operations:
+    get:
+      tags: [银行服务]
+      operationId: listVirtualIBANOperations
+      summary: 列出虚拟 IBAN 收到的操作
+      description: 只返回该虚拟 IBAN 的镜像操作，并要求完整日期窗口。
+      parameters:
+      - name: virtualIBANID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: from
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      - name: to
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, default: 1}
+      - name: page_size
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 200, default: 50}
+      responses:
+        '200':
+          description: 归属于虚拟 IBAN 的分页操作。
+          content:
+            application/json:
+              example:
+                virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                page: 1
+                page_size: 50
+                operations:
+                - operation_id: 7f3c1a2b-9d4e-4f6a-8b0c-1d2e3f4a5b6c
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  direction: in
+                  currency: EUR
+                  amount: '120.00'
+                  status: completed
+                  type: bank_transfer
+                  reference: SEPA-001
+                  created_at: '2026-09-15T10:30:00Z'
+        '400':
+          description: 日期范围无效。
+          content:
+            application/json:
+              example: {error: invalid_range, message: from and to are required}
+        '404':
+          description: 账户中找不到该虚拟 IBAN。
+          content:
+            application/json:
+              example: {error: not_found, message: virtual IBAN not found}
+
 components:
   securitySchemes:
     bearerAuth:
