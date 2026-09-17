@@ -9,7 +9,39 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.94 · 2 versiones - 17 de septiembre de 2026
+## v2.97 · 5 versiones - 17 de septiembre de 2026
+
+### v2.97
+
+**Cambiado**
+
+- **Guardas de settlement para metales**: las referencias de ejecución de
+  XPT/PLATINUM ahora usan una segunda referencia pública independiente cuando
+  está disponible. Una divergencia superior al 2% deja la cotización fuera de
+  settlement; si la referencia secundaria no está disponible, la guardia
+  existente de frescura de la referencia sigue activa. Las rutas y los shapes de la API
+  no cambian.
+- **Frescura de tasas más veraz**: los timestamps de las tasas respaldadas por
+  la referencia ahora reflejan el payload de origen, y los payloads con más de siete
+  días de antigüedad se rechazan antes de publicarse.
+- **Defaults de tarjetas para metales**: el colchón y el haircut degradado por
+  defecto de SILVER son 3%; BTC se mantiene en 5%, GOLD en 2% y PLATINUM en
+  2%. Los overrides por organización siguen disponibles.
+
+### v2.96
+
+**Cambiado**
+
+- **SEPA Instant simplificado a un corredor Europa**: `sepa` ahora usa la
+  única fila de enrutamiento `EU`/`EUR`. El país real del beneficiario sale del
+  IBAN; los IBAN GB fallan rápido con HTTP 400 antes del despacho. Configura
+  el pricing del payout con `country: "EU"`.
+
+### v2.95
+
+**Added**
+
+- **Activos ledger de plata y platino**: las cuentas ahora admiten `SILVER` y `PLATINUM` como saldos de metales finos en gramos, con seis decimales, junto a USDT, USDC, BTC y GOLD. Las superficies existentes de swaps, settlement, gasto con tarjetas, checkout, cartola y analytics reflejan el vocabulario ampliado. `asset_prices` informa XAG/XPT por onza troy y SILVER/PLATINUM por gramo. No se agrega ningún endpoint ni riel on-chain de metales.
 
 ### v2.94
 
