@@ -68,12 +68,16 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 | 巴拉圭 | PYG | 预告银行转账 |
 | 巴西 | BRL | 动态 PIX 二维码 |
 | 阿根廷 | ARS | 专属 CVU 账户 |
+| 委内瑞拉 | VES | 主动收款（`c2p`） |
 | 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT） |
 
 > **注**
-**委内瑞拉（VES）**：拉取式收款（`c2p` / `debito_inmediato`）**已不再提供** ——
-创建时会返回该通道不受支持。向委内瑞拉的对外付款（`pago_movil`、
-`bank_transfer`）不受影响：参见 [payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
+**委内瑞拉（VES）**：现在可通过 `c2p` 进行主动收款。付款人先在其银行
+应用中生成 `claveDinamica`，再将其交给您的集成；集成在 collect 请求的
+`otp` 字段中发送该值。C2P 没有之前的 `/collect/otp` 请求步骤。
+`debito_inmediato` 不是当前可用的通道。向委内瑞拉的对外付款
+（`pago_movil`、`bank_transfer`）不受影响：参见
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
 可用性可能变化；目录（`GET /v1/payins/methods`）始终是唯一可信来源。
 在所有情况下入账方式相同：按您当前的 `payin_rate` 折算为 USDT，并在
 扣除固定入金费用后净额入账。如果您希望将收款保留在其他余额（USDC、BTC
@@ -679,23 +683,51 @@ SWIFT 电汇。`notes` 字段携带汇款银行正确填写表单所需的操作
 
 ## 主动扣款（pull）
 
-部分通道支持由付款人授权的 pull 扣款。账户必须先完成身份审核并获批，才能调用以下
-两个接口：
+部分通道支持由付款人授权的 pull 扣款。账户必须先完成身份审核并获批，
+才能调用该请求。
+
+### 委内瑞拉 C2P
+
+对于 `VE/VES/c2p`，付款人先在银行应用中生成 `claveDinamica`。集成将该值
+作为 `otp` 发送；它不是 CBPay 返回的 OTP，也不存在先申请 OTP 的步骤：
 
 ```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins/collect/otp   -H "Authorization: Bearer <token>"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678" }'
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: collect-2026-09-17-c2p-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "VE",
+    "currency": "VES",
+    "method": "c2p",
+    "amount": "200.00",
+    "payer_document": "V18184460",
+    "payer_phone": "4244445566",
+    "payer_bank": "0138",
+    "otp": "123457",
+    "idempotency_key": "collect-2026-09-17-c2p-001"
+  }'
 ```
 
-OTP 响应会返回 `otp_reference`；在扣款接口中使用相同的
-`idempotency_key`：
+该 request 使用现有 collect 合同。`payer_document`、`payer_phone`、
+`payer_bank` 和 `otp` 是 C2P 所需的付款人数据；`otp` 携带银行生成的
+动态密钥。响应 shape 不变；同步成功时包含 `paid: true`、
+`provider_reference` 和已入账 payin 的标识。
+
+### 基于 OTP 的 pull 方式
 
 ```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins/collect   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: collect-2026-09-11-001"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678", "otp": "12345678", "otp_reference": "OTP-5521", "idempotency_key": "collect-2026-09-11-001" }'
+`POST /v1/payins/collect/otp` 只用于确实会在扣款前签发 OTP 的
+pull 方式，不属于 C2P 流程。对 C2P 调用时，公共 API 返回
+`422 provider_rejected`；不要把它理解为 C2P 扣款失败，也不要改用
+`debito_inmediato`。
 ```
 
-平台会在调用 core 前筛查付款人。命中 hold 时返回 `202 in_review`，不会扣款；批准后
-使用相同请求重试。如果账户尚未获批，两个接口都会在执行 collect 通道前返回
-`403 verification_required`。请始终检查 `GET /v1/payins/methods`，因为通道可用性会变化。
+平台会在调用 core 前筛查付款人。命中 hold 时返回 `202 in_review`，不会扣款；
+批准后使用相同 request 重试。如果账户尚未获批，collect 会在执行通道前
+返回 `403 verification_required`。timeout 或 5xx 不授权创建新操作：
+保留相同的幂等上下文并跟踪操作状态。请始终检查
+`GET /v1/payins/methods`，因为通道可用性会变化。
 
 ## 通用收款链接（`checkout`）
 

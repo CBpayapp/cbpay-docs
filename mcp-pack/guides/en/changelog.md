@@ -8,22 +8,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.96 · 4 versions - September 17, 2026
-
-### v2.96
-
-**Changed**
-
-- **SEPA Instant simplified to one Europe corridor**: `sepa` now uses the
-  single `EU`/`EUR` routing row. The beneficiary's actual country is read from
-  the IBAN; GB IBANs fail fast with HTTP 400 before dispatch. Configure the
-  payout pricing row with `country: "EU"`.
-
-### v2.95
-
-**Added**
-
-- **Silver and platinum ledger assets**: accounts now support `SILVER` and `PLATINUM` as six-decimal fine-metal gram balances, alongside USDT, USDC, BTC and GOLD. Existing swap, settlement, card-spending, checkout, statement and analytics surfaces expose the expanded vocabulary. `asset_prices` reports XAG/XPT per troy ounce and SILVER/PLATINUM per gram. No new endpoint or on-chain metal rail is introduced.
+## v2.94 · 2 versions - September 17, 2026
 
 ### v2.94
 

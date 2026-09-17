@@ -8,21 +8,7 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.96 · 4 个版本 - 2026年9月17日
-
-### v2.96
-
-**变更**
-
-- **SEPA Instant 简化为单一欧洲走廊**：`sepa` 现在使用唯一的
-  `EU`/`EUR` 路由行。受益人的实际国家取自 IBAN；GB IBAN 会在派发前以
-  HTTP 400 快速拒绝。payout pricing 使用 `country: "EU"` 行。
-
-### v2.95
-
-**Added**
-
-- **白银与铂金 ledger 资产**：账户现在支持以六位小数记录精炼金属克数的 `SILVER` 与 `PLATINUM` 余额，并与 USDT、USDC、BTC、GOLD 一起使用。现有 swap、settlement、卡片消费、checkout、账单与 analytics 表面均支持扩展后的资产词汇。`asset_prices` 以金衡盎司提供 XAG/XPT，并以克提供 SILVER/PLATINUM。没有新增端点，也没有新增链上金属通道。
+## v2.94 · 2 个版本 - 2026年9月17日
 
 ### v2.94
 

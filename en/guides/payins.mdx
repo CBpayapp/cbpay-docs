@@ -82,13 +82,16 @@ Collection corridors and modes:
 | Paraguay | PYG | Announced bank transfer |
 | Brazil | BRL | Dynamic PIX QR |
 | Argentina | ARS | Dedicated CVU account |
+| Venezuela | VES | Active collection (`c2p`) |
 | United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT) |
 
 <Note>
-**Venezuela (VES)**: pull collection (`c2p` / `debito_inmediato`) is **no
-longer available** — creating one responds that the corridor is not
-supported. Outgoing payments to Venezuela (`pago_movil`, `bank_transfer`)
-are unchanged: see [payouts](/en/guides/payouts).
+**Venezuela (VES)**: active collection is available through `c2p`. The payer
+generates a `claveDinamica` in their bank app and gives it to your
+integration; send that value in the `otp` field of the collect request. There
+is no preceding `/collect/otp` request for C2P. `debito_inmediato` is not a
+live corridor. Outgoing payments to Venezuela (`pago_movil`,
+`bank_transfer`) are unchanged: see [payouts](/en/guides/payouts).
 </Note>
 
 Availability may vary; the catalog (`GET /v1/payins/methods`) is always the
@@ -782,23 +785,54 @@ without announcing with
 ## Active collection (pull)
 
 Some corridors expose a pull charge where the payer authorizes a debit. The
-account must be identity-approved before either request:
+account must be identity-approved before the request.
+
+### Venezuela C2P
+
+For `VE/VES/c2p`, the payer first generates a `claveDinamica` in their bank
+app. Your integration sends that value as `otp`; it is not an OTP returned by
+CBPay and there is no request-OTP step:
 
 ```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins/collect/otp   -H "Authorization: Bearer <token>"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678" }'
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: collect-2026-09-17-c2p-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "VE",
+    "currency": "VES",
+    "method": "c2p",
+    "amount": "200.00",
+    "payer_document": "V18184460",
+    "payer_phone": "4244445566",
+    "payer_bank": "0138",
+    "otp": "123457",
+    "idempotency_key": "collect-2026-09-17-c2p-001"
+  }'
 ```
 
-The OTP response carries an `otp_reference`; submit it with the same
-`idempotency_key` to the charge endpoint:
+The request uses the existing collect contract. `payer_document`,
+`payer_phone`, `payer_bank` and `otp` are the payer data needed by the C2P
+rail; `otp` carries the bank-generated dynamic key. The response keeps the
+existing payin shape and, on synchronous success, includes `paid: true`,
+`provider_reference` and the credited payin identifiers.
+
+### OTP-based pull methods
 
 ```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins/collect   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: collect-2026-09-11-001"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678", "otp": "12345678", "otp_reference": "OTP-5521", "idempotency_key": "collect-2026-09-11-001" }'
+`POST /v1/payins/collect/otp` is only for a live pull method that explicitly
+issues an OTP before the charge. It is not part of the `c2p` flow. Calling it
+for C2P returns the public `422 provider_rejected` response; do not interpret
+that response as a failed C2P charge, and do not replace the C2P request with
+`debito_inmediato`.
 ```
 
 The platform screens the payer before calling the core. A hold returns
 `202 in_review` without charging; retry the same request after approval. If
-the account is not approved, both endpoints return `403 verification_required`
-before the collect corridor is executed. Always check
+the account is not approved, the collect request returns
+`403 verification_required` before the corridor is executed. A timeout or 5xx
+does not authorize a new operation: keep the same idempotency context and
+follow the resource/reconciliation state. Always check
 `GET /v1/payins/methods` because corridor availability can change.
 
 ## Universal checkout link (`checkout`)

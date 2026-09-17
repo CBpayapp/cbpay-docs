@@ -125,7 +125,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   BIP-21/EIP-681 URI）；精确金额显示在旁边可复制。若支付资产与
   `settlement_asset` 不同，报出的应付额**已包含转换成本**（由付款人
   承担；你收到精确的目标金额）。部分支付会累加，页面显示剩余金额。
-  涉及 BTC/GOLD/SILVER/PLATINUM 的报价每 15 分钟刷新。
+  涉及 BTC/GOLD 的报价每 15 分钟刷新。
 - **CBPay 应用**：商户二维码内嵌链接
   （`cbpay:pay?to=…&checkout=…`）。应用通过内部转账以 4 种余额中的
   任意一种付款：同一资产 ⇒ 精确目标金额；不同 ⇒ 含转换的应付额。金额
