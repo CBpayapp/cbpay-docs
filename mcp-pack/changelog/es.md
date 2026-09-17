@@ -9,22 +9,7 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.96 · 4 versiones - 17 de septiembre de 2026
-
-### v2.96
-
-**Cambiado**
-
-- **SEPA Instant simplificado a un corredor Europa**: `sepa` ahora usa la
-  única fila de enrutamiento `EU`/`EUR`. El país real del beneficiario sale del
-  IBAN; los IBAN GB fallan rápido con HTTP 400 antes del despacho. Configura
-  el pricing del payout con `country: "EU"`.
-
-### v2.95
-
-**Added**
-
-- **Activos ledger de plata y platino**: las cuentas ahora admiten `SILVER` y `PLATINUM` como saldos de metales finos en gramos, con seis decimales, junto a USDT, USDC, BTC y GOLD. Las superficies existentes de swaps, settlement, gasto con tarjetas, checkout, cartola y analytics reflejan el vocabulario ampliado. `asset_prices` informa XAG/XPT por onza troy y SILVER/PLATINUM por gramo. No se agrega ningún endpoint ni riel on-chain de metales.
+## v2.94 · 2 versiones - 17 de septiembre de 2026
 
 ### v2.94
 

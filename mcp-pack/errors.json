@@ -1,5 +1,5 @@
 {
-  "count": 259,
+  "count": 258,
   "errors": [
     {
       "category": {
@@ -895,20 +895,6 @@
         "en": "Missing a required field (e.g. `enabled` on AML monitoring, `external_customer_id` on verifications)",
         "es": "Falta un campo requerido (ej. `enabled` en monitoreo AML, `external_customer_id` en verificaciones)",
         "zh": "缺少必填字段（例如 AML 监控的 `enabled`、身份验证的 `external_customer_id`）"
-      }
-    },
-    {
-      "category": {
-        "en": "Validation (400)",
-        "es": "Validación (400)",
-        "zh": "校验（400）"
-      },
-      "code": "invalid_iban",
-      "http": 400,
-      "meaning": {
-        "en": "The SEPA payout IBAN is invalid, unsupported for the `EU` route, or belongs to GB in SEPA Instant V1; correct it and retry with a new payout idempotency key",
-        "es": "El IBAN del payout SEPA es inválido, no es compatible con la ruta `EU` o pertenece a GB en SEPA Instant V1; corrígelo y reintenta con una clave de idempotencia nueva",
-        "zh": "SEPA payout 的 IBAN 无效、不支持 `EU` 路由，或在 SEPA Instant V1 中属于 GB；请修正后使用新的幂等键重试"
       }
     },
     {
@@ -1900,9 +1886,9 @@
       "code": "settlement_limit_exceeded",
       "http": 422,
       "meaning": {
-        "en": "The operation exceeds the per-operation limit for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or split the operation",
-        "es": "La operación supera el límite por operación de los assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o divide la operación",
-        "zh": "该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作"
+        "en": "The operation exceeds the per-operation limit for volatile assets (BTC/GOLD); use USDT/USDC or split the operation",
+        "es": "La operación supera el límite por operación de los assets volátiles (BTC/GOLD); usa USDT/USDC o divide la operación",
+        "zh": "该操作超出波动性资产（BTC/GOLD）的单笔操作限额；请使用 USDT/USDC 或拆分操作"
       }
     },
     {
@@ -1914,9 +1900,9 @@
       "code": "settlement_daily_limit_exceeded",
       "http": 422,
       "meaning": {
-        "en": "The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later",
-        "es": "La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o reintenta más tarde",
-        "zh": "该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试"
+        "en": "The account exceeded its 24h volume for volatile assets (BTC/GOLD); use USDT/USDC or retry later",
+        "es": "La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD); usa USDT/USDC o reintenta más tarde",
+        "zh": "该账户已超出波动性资产（BTC/GOLD）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试"
       }
     },
     {
@@ -3230,9 +3216,9 @@
       "code": "pricing_unavailable",
       "http": 503,
       "meaning": {
-        "en": "BTC/GOLD/SILVER/PLATINUM execution price unavailable or stale; retry later or settle in USDT/USDC",
-        "es": "Precio de ejecución de BTC/GOLD/SILVER/PLATINUM no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC",
-        "zh": "BTC/GOLD/SILVER/PLATINUM 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算"
+        "en": "BTC/GOLD execution price unavailable or stale; retry later or settle in USDT/USDC",
+        "es": "Precio de ejecución de BTC/GOLD no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC",
+        "zh": "BTC/GOLD 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算"
       }
     },
     {

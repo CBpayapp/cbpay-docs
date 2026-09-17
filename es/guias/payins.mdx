@@ -82,13 +82,16 @@ Corredores y modalidades de cobro:
 | Paraguay | PYG | Transferencia anunciada |
 | Brasil | BRL | QR PIX dinámico |
 | Argentina | ARS | Cuenta CVU dedicada |
+| Venezuela | VES | Cobro activo (`c2p`) |
 | Estados Unidos | USD | Página de pago con tarjeta internacional (`card`), transferencia anunciada (dos rieles: wire doméstico + SWIFT internacional) |
 
 <Note>
-**Venezuela (VES)**: el cobro pull (`c2p` / `debito_inmediato`) **ya no está
-disponible** — crearlo responde que el corredor no está soportado. Los pagos
-salientes a Venezuela (`pago_movil`, `bank_transfer`) no cambian: ver
-[payouts](/es/guias/payouts).
+**Venezuela (VES)**: el cobro activo está disponible mediante `c2p`. El
+pagador genera una `claveDinamica` en la app de su banco y te la entrega; tu
+integración la envía en el campo `otp` del collect. No existe una llamada
+previa a `/collect/otp` para C2P. `debito_inmediato` no es un corredor vivo.
+Los pagos salientes a Venezuela (`pago_movil`, `bank_transfer`) no cambian:
+ver [payouts](/es/guias/payouts).
 </Note>
 
 La disponibilidad puede variar; el catálogo (`GET /v1/payins/methods`) es
@@ -787,25 +790,54 @@ destino sin anunciar con
 ## Cobro activo (pull)
 
 Algunos corredores ofrecen un cobro pull donde el pagador autoriza un débito.
-La cuenta debe tener su identidad aprobada antes de cualquiera de las dos
-requests:
+La cuenta debe tener su identidad aprobada antes del request.
+
+### C2P de Venezuela
+
+Para `VE/VES/c2p`, el pagador primero genera una `claveDinamica` en la app de
+su banco. Tu integración envía ese valor como `otp`; no es un OTP que CBPay
+devuelva y no existe un paso de solicitud de OTP:
 
 ```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins/collect/otp   -H "Authorization: Bearer <token>"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678" }'
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: collect-2026-09-17-c2p-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "VE",
+    "currency": "VES",
+    "method": "c2p",
+    "amount": "200.00",
+    "payer_document": "V18184460",
+    "payer_phone": "4244445566",
+    "payer_bank": "0138",
+    "otp": "123457",
+    "idempotency_key": "collect-2026-09-17-c2p-001"
+  }'
 ```
 
-La respuesta OTP lleva `otp_reference`; envíalo con la misma
-`idempotency_key` al endpoint de cobro:
+El request usa el contrato collect existente. `payer_document`, `payer_phone`,
+`payer_bank` y `otp` son los datos que necesita el riel C2P; `otp` lleva la
+clave dinámica generada por el banco. La respuesta conserva el shape actual y,
+si se aprueba en forma síncrona, incluye `paid: true`, `provider_reference` y
+los identificadores del payin acreditado.
+
+### Métodos pull basados en OTP
 
 ```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins/collect   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: collect-2026-09-11-001"   -H "Content-Type: application/json"   -d '{ "country": "VE", "currency": "VES", "method": "pago_movil", "amount": "100.00", "payer_document": "V12345678", "otp": "12345678", "otp_reference": "OTP-5521", "idempotency_key": "collect-2026-09-11-001" }'
+`POST /v1/payins/collect/otp` se usa solo cuando el método pull activo emite un
+OTP antes del cobro. No forma parte del flujo C2P. Si lo llamas para C2P, la
+API responde el `422 provider_rejected` público; no lo interpretes como un
+cobro C2P fallido ni reemplaces C2P por `debito_inmediato`.
 ```
 
 La plataforma evalúa al pagador antes de llamar al core. Un hold responde
-`202 in_review` sin cobrar; reintenta la misma request después de la
-aprobación. Si la cuenta no está aprobada, ambos endpoints responden
-`403 verification_required` antes de ejecutar el corredor collect. Revisa
-siempre `GET /v1/payins/methods`, porque la disponibilidad puede cambiar.
+`202 in_review` sin cobrar; reintenta el mismo request después de la
+aprobación. Si la cuenta no está aprobada, el collect responde
+`403 verification_required` antes de ejecutar el corredor. Un timeout o 5xx
+no autoriza una operación nueva: conserva el mismo contexto de idempotencia y
+sigue el estado de la operación. Revisa siempre
+`GET /v1/payins/methods`, porque la disponibilidad puede cambiar.
 
 ## Link de cobro universal (`checkout`)
 
