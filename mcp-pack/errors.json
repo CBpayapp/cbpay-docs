@@ -1,5 +1,5 @@
 {
-  "count": 255,
+  "count": 257,
   "errors": [
     {
       "category": {
@@ -559,6 +559,20 @@
         "en": "The organization has not enabled global treasury visibility for its admin panel; ask a platform administrator to enable `global_treasury_read` in the organization settings",
         "es": "La organización no tiene habilitada la visibilidad de tesorería global en su panel admin; pide a un administrador de plataforma que habilite `global_treasury_read` en los settings de la organización",
         "zh": "该组织尚未在其管理面板启用全局资金总览；请联系平台管理员在组织设置中启用 `global_treasury_read`"
+      }
+    },
+    {
+      "category": {
+        "en": "Organization admin panel",
+        "es": "Panel de administración de organización",
+        "zh": "组织管理面板"
+      },
+      "code": "core_admin_credential_missing",
+      "http": 503,
+      "meaning": {
+        "en": "A platform administrator catalog requires a configured core credential; contact the platform administrator",
+        "es": "Un catálogo de administrador de plataforma requiere una credencial del core configurada; contacta al administrador de plataforma",
+        "zh": "平台管理员目录需要配置核心凭证；请联系平台管理员"
       }
     },
     {
@@ -1567,6 +1581,20 @@
         "en": "The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true`",
         "es": "El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true`",
         "zh": "处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "checkout_expiring_soon",
+      "http": 422,
+      "meaning": {
+        "en": "The checkout link expires in less than 5 minutes. Ask the merchant for a new link before paying by card",
+        "es": "El link de checkout vence en menos de 5 minutos. Pide al comercio un link nuevo antes de pagar con tarjeta",
+        "zh": "checkout 链接将在不到 5 分钟后过期。使用银行卡付款前，请向商户索取新的链接"
       }
     },
     {

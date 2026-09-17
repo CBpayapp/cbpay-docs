@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.89 · 1 version - September 16, 2026
+## v2.90 · 2 versions - September 16, 2026
+
+### v2.90
+
+**Changed**
+
+- **Card checkout minimum lifetime**: card materialization now accepts checkout
+  links with at least 5 minutes remaining. Links with less time return
+  `422 checkout_expiring_soon` with instructions to request a new link, instead
+  of failing later with a generic card-session validation error.
 
 ### v2.89
 

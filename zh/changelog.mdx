@@ -7,7 +7,15 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月16日" description="v2.89 · 1 个版本">
+<Update label="2026年9月16日" description="v2.90 · 2 个版本">
+
+### v2.90
+
+**变更**
+
+- **银行卡 checkout 的最短有效期**：银行卡物化现在接受剩余至少 5 分钟的
+  checkout 链接。剩余时间不足时返回 `422 checkout_expiring_soon`，并提示
+  付款前向商户索取新链接，而不是稍后以通用的银行卡会话校验错误失败。
 
 ### v2.89
 

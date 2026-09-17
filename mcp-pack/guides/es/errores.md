@@ -86,6 +86,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | HTTP | `error` | Significado |
 |---|---|---|
 | 403 | `global_treasury_access_disabled` | La organización no tiene habilitada la visibilidad de tesorería global en su panel admin; pide a un administrador de plataforma que habilite `global_treasury_read` en los settings de la organización |
+| 503 | `core_admin_credential_missing` | Un catálogo de administrador de plataforma requiere una credencial del core configurada; contacta al administrador de plataforma |
 | 400 | `invalid_value` | Un setting de la organización se envió con el tipo incorrecto (ej. `global_treasury_read` debe ser booleano, no un string) |
 | 409 | `approval_in_progress` | Otro administrador está aplicando este ajuste; espera a que termine antes de intentarlo de nuevo |
 
@@ -157,7 +158,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 422 | `currency_not_supported` | Sin tasa FX para esa moneda |
 | 422 | `core_rejected` | El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` |
-| 400 | `invalid_payload` | En `method: "card"`, `expires_at` debe ser RFC3339, quedar al menos 15 minutos hacia adelante y no superar 48 horas |
+| 400 | `invalid_payload` | En `method: "card"`, `expires_at` debe ser RFC3339, quedar al menos 5 minutos hacia adelante y no superar 48 horas |
+| 422 | `checkout_expiring_soon` | El link de checkout vence en menos de 5 minutos. Pide al comercio un link nuevo antes de pagar con tarjeta |
 | 429 | `too_many_open_card_sessions` | La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o espera que venza una sesión existente antes de crear otra |
 | 503 | `card_recovery_pending` | La plataforma está reconciliando un cobro con tarjeta ambiguo. Reintenta con la **misma** clave de idempotencia; no generes una nueva ni un segundo cobro |
 | 409 | `core_charge_terminal` | El cobro de tarjeta subyacente ya tiene un estado final, por lo que la plataforma no lo volverá a acreditar — lee el estado actual del payin/cobro y no crees un segundo cobro |

@@ -116,6 +116,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   可以使用**已保存的卡片**：输入邮箱、用验证码完成验证后选择卡片 ——
   勾选"记住此设备"后 30 天内无需再次验证（参见
   [已保存卡片](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions#付款人在支付页面上发现自己的卡片)）。
+- **银行卡链接有效期**：物化银行卡付款时，checkout 链接必须至少剩余
+  **5 分钟**。如果剩余时间不足，公开端点会返回
+  `422 checkout_expiring_soon`；请在付款前向商户索取新的链接。
 - **加密货币（每笔收款一个钱包）**：选择币种后生成专属地址及其
   `qr_payload` 和 `qr_png_base64`——二维码始终为裸地址（BTC bech32、
   TRON base58、ETH hex），以兼容钱包与交易所（Binance 等会拒绝
@@ -222,6 +225,7 @@ fintoc）支付的收款仍立即入账，与以往相同。详见
 | 410 | `checkout_expired` | 链接到期未支付 |
 | 422 | `method_unavailable` | 该方式对此链接或国家不可用 |
 | 422 | `country_unavailable` | 该国家没有可用的支付方式 |
+| 422 | `checkout_expiring_soon` | checkout 链接将在不到 5 分钟后过期；使用银行卡付款前，请向商户索取新的链接 |
 | 422 | `checkout_amount_mismatch` | CBPay 转账不足以覆盖收款的当前应付额 |
 | 422 | `collect_otp_failed` | 通道拒绝发送 OTP（请检查数据） |
 | 422 | `collect_rejected` | 通道拒绝了拉取式扣款（OTP 无效或数据错误）；链接保持待支付 |

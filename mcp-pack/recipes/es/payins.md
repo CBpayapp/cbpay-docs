@@ -409,7 +409,7 @@ siempre la dirección de facturación completa — incluido el estado/región
 cuando el país tiene subdivisiones — para que el pago pueda capturarse.
 - `success_url` / `failure_url` (opcionales, https públicas) redirigen al
   pagador al terminar; sin ellas la página muestra el resultado final.
-- `expires_at` (opcional, RFC3339, mínimo 15 minutos) define la vigencia de
+- `expires_at` (opcional, RFC3339, mínimo 5 minutos) define la vigencia de
   la sesión; el default es **60 minutos** y el máximo es **48 horas**. La
   API valida este valor antes de crear la sesión e incluye el vencimiento
   RFC3339 efectivo en las respuestas exitosas de tarjeta. Si vence sin pago,

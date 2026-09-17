@@ -376,7 +376,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 付款能够被捕获。
 - `success_url` / `failure_url`（可选，公共 https）在完成后重定向付款
   人；不提供时页面会显示最终结果。
-- `expires_at`（可选，RFC3339，至少提前 15 分钟）设置会话有效期；
+- `expires_at`（可选，RFC3339，至少提前 5 分钟）设置会话有效期；
   默认为 **60 分钟**，最长 **48 小时**。API 会在创建会话前校验该值，
   并在成功的银行卡响应中返回生效的 RFC3339 过期时间。到期未付款时，
   该 payin 转为 `expired`，您会收到 `payin_expired` webhook。
