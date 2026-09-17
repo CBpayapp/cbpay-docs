@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.95"
+  version: "2.96"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -3263,7 +3263,7 @@ paths:
                       description: EUR SEPA Instant 通道必填。
                     iban:
                       type: string
-                      description: SEPA 必填；按 ISO 13616 mod-97 规范化并校验。
+                      description: SEPA 必填；按 ISO 13616 mod-97 规范化并校验。失败（含 GB IBAN，SEPA Instant V1 不支持）返回 400 invalid_iban。
                       example: DE89370400440532013000
                     bic:
                       type: string
@@ -3653,10 +3653,10 @@ paths:
                     bank_country: US
                   description: Invoice 2212
                   idempotency_key: us-swift-2212
-              sepa_de:
-                summary: 德国 — EUR SEPA Instant payout
+              sepa_eu:
+                summary: 欧洲（EU）— EUR SEPA Instant payout
                 value:
-                  country: DE
+                  country: EU
                   currency: EUR
                   method: sepa
                   amount: '100.00'
@@ -3667,7 +3667,7 @@ paths:
                     iban: DE89370400440532013000
                     bic: COBADEFFXXX
                   description: Invoice 2026-0916
-                  idempotency_key: sepa-de-20260916-001
+                  idempotency_key: sepa-eu-20260917-001
               cl_paid_from_btc:
                 summary: 智利 — 从 BTC 余额支付(settlement_asset)
                 value:
@@ -3727,8 +3727,8 @@ paths:
                   value:
                     payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
                     account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                    idempotency_key: sepa-de-20260916-001
-                    country: DE
+                    idempotency_key: sepa-eu-20260917-001
+                    country: EU
                     currency: EUR
                     method: sepa
                     local_amount: '100.00'
@@ -4119,7 +4119,7 @@ paths:
         CBPay 提供的可用 payout 通道(国家、货币、方式)。直接透传处理核心的目录。每一项都带
         `availability`(`operational` | `degraded` | `down`)——通道的实时健康状态,便于你在渲染时
         决定展示、提示或隐藏某个渠道(见服务状态指南)。没有事件记录的通道始终为 `operational`。
-        `sepa` 仅支持 EUR，并注册 35 个国家：AT、BE、BG、HR、CY、CZ、DK、EE、FI、FR、DE、GR、HU、IE、IT、LV、LT、LU、MT、NL、PL、PT、RO、SK、SI、ES、SE、IS、LI、NO、CH、MC、SM、AD、VA。GB 不在 V1。
+        `sepa` 仅支持 EUR，并注册为一个 `EU` 路由走廊。受益人的实际国家以 IBAN 为准。GB 不在 SEPA Instant V1，GB IBAN 会在派发前以 HTTP 400 快速拒绝。
       responses:
         '200':
           description: 方式目录。

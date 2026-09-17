@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.95"
+  version: "2.96"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3461,7 +3461,7 @@ paths:
                       description: Required by the EUR SEPA Instant corridor. Individuals require both a first and last name; mononyms are not payable in V1. Names are folded to the provider charset, including diacritics and the documented European letter mappings; unsupported characters return 400 invalid_payload.
                     iban:
                       type: string
-                      description: Required by SEPA; normalized and checked with ISO 13616 mod-97.
+                      description: Required by SEPA; normalized and checked with ISO 13616 mod-97. Failures (including GB IBANs, excluded from SEPA Instant V1) return 400 invalid_iban.
                       example: DE89370400440532013000
                     bic:
                       type: string
@@ -3541,15 +3541,10 @@ paths:
 
                     payout guide.
 
-                    SEPA Instant (`method: "sepa"`) is EUR-only and is available for
-
-                    35 countries: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU,
-
-                    IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI,
-
-                    NO, CH, MC, SM, AD and VA. GB is excluded from the V1 Instant
-
-                    registry. Its beneficiary requires `beneficiary_type` (`individual`
+                    SEPA Instant (`method: "sepa"`) is EUR-only and uses the single
+                    `EU` routing row. The beneficiary''s actual country is read from
+                    the IBAN. GB is excluded from SEPA Instant V1 and a GB IBAN fails
+                    fast with HTTP 400 before dispatch. Its beneficiary requires `beneficiary_type` (`individual`
 
                     or `corporate`) and `iban`; `bic` is optional. For individuals,
 
@@ -3888,10 +3883,10 @@ paths:
                     bank_country: US
                   description: Invoice 2212
                   idempotency_key: us-swift-2212
-              sepa_de:
-                summary: Germany — SEPA Instant payout in EUR
+              sepa_eu:
+                summary: Europe (EU) — SEPA Instant payout in EUR
                 value:
-                  country: DE
+                  country: EU
                   currency: EUR
                   method: sepa
                   amount: '100.00'
@@ -3902,7 +3897,7 @@ paths:
                     iban: DE89370400440532013000
                     bic: COBADEFFXXX
                   description: Invoice 2026-0916
-                  idempotency_key: sepa-de-20260916-001
+                  idempotency_key: sepa-eu-20260917-001
               cl_paid_from_btc:
                 summary: Chile — paid from the BTC balance (settlement_asset)
                 value:
@@ -3962,8 +3957,8 @@ paths:
                   value:
                     payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
                     account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                    idempotency_key: sepa-de-20260916-001
-                    country: DE
+                    idempotency_key: sepa-eu-20260917-001
+                    country: EU
                     currency: EUR
                     method: sepa
                     local_amount: '100.00'
@@ -4361,7 +4356,7 @@ paths:
         (`operational` | `degraded` | `down`) — the live health of the corridor, so you
         can decide at render time whether to show, warn about or hide a channel (see the
         service status guide). A corridor with no recorded incidents is always `operational`.
-        The `sepa` method is EUR-only and is registered for 35 countries: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI, NO, CH, MC, SM, AD and VA. GB is excluded from V1.
+        The `sepa` method is EUR-only and is registered as one routing corridor with country code `EU`. The beneficiary's actual country is authoritative from the IBAN. GB is excluded from SEPA Instant V1 and a GB IBAN fails fast with HTTP 400.
       responses:
         '200':
           description: Methods catalog.

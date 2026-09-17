@@ -8,7 +8,15 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.95 · 3 个版本 - 2026年9月17日
+## v2.96 · 4 个版本 - 2026年9月17日
+
+### v2.96
+
+**变更**
+
+- **SEPA Instant 简化为单一欧洲走廊**：`sepa` 现在使用唯一的
+  `EU`/`EUR` 路由行。受益人的实际国家取自 IBAN；GB IBAN 会在派发前以
+  HTTP 400 快速拒绝。payout pricing 使用 `country: "EU"` 行。
 
 ### v2.95
 

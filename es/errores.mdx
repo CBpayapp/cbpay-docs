@@ -112,6 +112,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_chain` / `invalid_asset` | Red o activo no soportado |
 | `to_address_required` | Falta dirección destino del retiro |
 | `invalid_payload` | Falta un campo requerido (ej. `enabled` en monitoreo AML, `external_customer_id` en verificaciones) |
+| `invalid_iban` | El IBAN del payout SEPA es inválido, no es compatible con la ruta `EU` o pertenece a GB en SEPA Instant V1; corrígelo y reintenta con una clave de idempotencia nueva |
 | `invalid_qr_payload` | QR de payout ilegible o no soportado (BR Code corrupto, checksum inválido o QR PIX dinámico); el `message` explica la razón exacta |
 | `liveness_already_completed` | La prueba de vida de esa verificación ya fue superada |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Suscripción de webhook inválida |

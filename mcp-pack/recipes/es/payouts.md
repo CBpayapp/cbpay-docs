@@ -1189,9 +1189,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ## SEPA Instant en EUR
 
 Consulta la [guía dedicada de payouts SEPA Instant](https://docs.cbpayapp.com/es/guias/sepa-instant-payouts)
-para el catálogo EUR de 35 países, el contrato IBAN/BIC, `beneficiary_type`,
-estados, errores y reconciliación. Códigos V1: `AT`, `BE`, `BG`, `HR`, `CY`,
-`CZ`, `DK`, `EE`, `FI`, `FR`, `DE`, `GR`, `HU`, `IE`, `IT`, `LV`, `LT`, `LU`, `MT`, `NL`, `PL`, `PT`, `RO`, `SK`, `SI`, `ES`, `SE`, `IS`, `LI`, `NO`, `CH`, `MC`, `SM`, `AD`, `VA` (todos `EUR` + `sepa`; `GB` queda fuera de V1).
+para la única fila de enrutamiento Europa (`EU`)/EUR/`sepa`; el país real del
+beneficiario sale del IBAN. Los IBAN GB fallan rápido con HTTP 400 antes del
+despacho; SEPA Credit Transfer para GB es alcance futuro.
 
 ## Documento de respaldo obligatorio en transferencias USD
 

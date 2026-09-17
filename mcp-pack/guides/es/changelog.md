@@ -9,7 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.95 · 3 versiones - 17 de septiembre de 2026
+## v2.96 · 4 versiones - 17 de septiembre de 2026
+
+### v2.96
+
+**Cambiado**
+
+- **SEPA Instant simplificado a un corredor Europa**: `sepa` ahora usa la
+  única fila de enrutamiento `EU`/`EUR`. El país real del beneficiario sale del
+  IBAN; los IBAN GB fallan rápido con HTTP 400 antes del despacho. Configura
+  el pricing del payout con `country: "EU"`.
 
 ### v2.95
 

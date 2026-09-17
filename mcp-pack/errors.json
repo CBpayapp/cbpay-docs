@@ -1,5 +1,5 @@
 {
-  "count": 258,
+  "count": 259,
   "errors": [
     {
       "category": {
@@ -895,6 +895,20 @@
         "en": "Missing a required field (e.g. `enabled` on AML monitoring, `external_customer_id` on verifications)",
         "es": "Falta un campo requerido (ej. `enabled` en monitoreo AML, `external_customer_id` en verificaciones)",
         "zh": "缺少必填字段（例如 AML 监控的 `enabled`、身份验证的 `external_customer_id`）"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "invalid_iban",
+      "http": 400,
+      "meaning": {
+        "en": "The SEPA payout IBAN is invalid, unsupported for the `EU` route, or belongs to GB in SEPA Instant V1; correct it and retry with a new payout idempotency key",
+        "es": "El IBAN del payout SEPA es inválido, no es compatible con la ruta `EU` o pertenece a GB en SEPA Instant V1; corrígelo y reintenta con una clave de idempotencia nueva",
+        "zh": "SEPA payout 的 IBAN 无效、不支持 `EU` 路由，或在 SEPA Instant V1 中属于 GB；请修正后使用新的幂等键重试"
       }
     },
     {

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.95"
+  version: "2.96"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -3438,7 +3438,7 @@ paths:
                       description: Obligatorio para el corredor SEPA Instant en EUR.
                     iban:
                       type: string
-                      description: Obligatorio en SEPA; se normaliza y valida con ISO 13616 mod-97.
+                      description: Obligatorio en SEPA; se normaliza y valida con ISO 13616 mod-97. Los fallos (incluidos los IBAN GB, excluidos de SEPA Instant V1) devuelven 400 invalid_iban.
                       example: DE89370400440532013000
                     bic:
                       type: string
@@ -3851,10 +3851,10 @@ paths:
                     bank_country: US
                   description: Factura 2212
                   idempotency_key: us-swift-2212
-              sepa_de:
-                summary: Alemania — payout SEPA Instant en EUR
+              sepa_eu:
+                summary: Europa (EU) — payout SEPA Instant en EUR
                 value:
-                  country: DE
+                  country: EU
                   currency: EUR
                   method: sepa
                   amount: '100.00'
@@ -3865,7 +3865,7 @@ paths:
                     iban: DE89370400440532013000
                     bic: COBADEFFXXX
                   description: Factura 2026-0916
-                  idempotency_key: sepa-de-20260916-001
+                  idempotency_key: sepa-eu-20260917-001
               cl_paid_from_btc:
                 summary: Chile — pagado desde el saldo BTC (settlement_asset)
                 value:
@@ -3925,8 +3925,8 @@ paths:
                   value:
                     payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
                     account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                    idempotency_key: sepa-de-20260916-001
-                    country: DE
+                    idempotency_key: sepa-eu-20260917-001
+                    country: EU
                     currency: EUR
                     method: sepa
                     local_amount: '100.00'
@@ -4324,7 +4324,7 @@ paths:
         (`operational` | `degraded` | `down`) — la salud en vivo del corredor, para decidir
         al renderizar si muestras, adviertes u ocultas un canal (ver la guía de estado del
         servicio). Un corredor sin incidentes registrados siempre es `operational`.
-        El método `sepa` solo usa EUR y se registra para 35 países: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI, NO, CH, MC, SM, AD y VA. GB queda fuera de V1.
+        El método `sepa` solo usa EUR y se registra como un único corredor de enrutamiento con código `EU`. El país real del beneficiario es autoritativo desde el IBAN. GB queda fuera de SEPA Instant V1 y un IBAN GB falla rápido con HTTP 400.
       responses:
         '200':
           description: Catálogo de métodos.

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-17 07:15 UTC",
-    "_content_sha256": "f5772637e23fa39d4ec342101f4e80555d3e69e8a8794f7cf5de4e923c025704"
+    "_generated_at": "2026-09-17 08:31 UTC",
+    "_content_sha256": "da04bba447b7eedf5aef49dd50970d8fbfb276597ca4261c5cad3122ad5cb01b"
   },
   "auth": {
     "type": "bearer",
@@ -10718,7 +10718,7 @@
           ]
         },
         {
-          "name": "Create a payout — Germany — SEPA Instant payout in EUR",
+          "name": "Create a payout — Europe (EU) — SEPA Instant payout in EUR",
           "request": {
             "method": "POST",
             "header": [
@@ -10745,7 +10745,7 @@
             "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (USDT unless changed via `PUT /v1/settlement`). Send `settlement_asset` (USDT, USDC, BTC or GOLD) to pay this specific operation from another balance: the USDT total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD/SILVER/PLATINUM is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the technical screening queue is available, the response is `202` with a payout resource in `status: pending`, `status_code: compliance_pending`, `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch. After screening returns `process`, the same resource can remain `pending` with `compliance_dispatch_pending`, `compliance_dispatching` or `core_unreachable` while `funds_debited` is true; keep the same idempotency key and wait for reconciliation. A terminal screening failure before the debit path can return `failed` with `predebit_failure: true` and `funds_debited: false`; it has no `receipt_url`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"DE\",\n  \"currency\": \"EUR\",\n  \"method\": \"sepa\",\n  \"amount\": \"100.00\",\n  \"beneficiary\": {\n    \"beneficiary_type\": \"individual\",\n    \"given_name\": \"Elena\",\n    \"first_surname\": \"Fuentes\",\n    \"iban\": \"DE89370400440532013000\",\n    \"bic\": \"COBADEFFXXX\"\n  },\n  \"description\": \"Invoice 2026-0916\",\n  \"idempotency_key\": \"sepa-de-20260916-001\"\n}",
+              "raw": "{\n  \"country\": \"EU\",\n  \"currency\": \"EUR\",\n  \"method\": \"sepa\",\n  \"amount\": \"100.00\",\n  \"beneficiary\": {\n    \"beneficiary_type\": \"individual\",\n    \"given_name\": \"Elena\",\n    \"first_surname\": \"Fuentes\",\n    \"iban\": \"DE89370400440532013000\",\n    \"bic\": \"COBADEFFXXX\"\n  },\n  \"description\": \"Invoice 2026-0916\",\n  \"idempotency_key\": \"sepa-eu-20260917-001\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -10987,7 +10987,7 @@
                 "methods"
               ]
             },
-            "description": "Available payout corridors (country, currency, method) offered by CBPay. Pass-through of the processing core catalog. Every item carries `availability` (`operational` | `degraded` | `down`) — the live health of the corridor, so you can decide at render time whether to show, warn about or hide a channel (see the service status guide). A corridor with no recorded incidents is always `operational`. The `sepa` method is EUR-only and is registered for 35 countries: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI, NO, CH, MC, SM, AD and VA. GB is excluded from V1."
+            "description": "Available payout corridors (country, currency, method) offered by CBPay. Pass-through of the processing core catalog. Every item carries `availability` (`operational` | `degraded` | `down`) — the live health of the corridor, so you can decide at render time whether to show, warn about or hide a channel (see the service status guide). A corridor with no recorded incidents is always `operational`. The `sepa` method is EUR-only and is registered as one routing corridor with country code `EU`. The beneficiary's actual country is authoritative from the IBAN. GB is excluded from SEPA Instant V1 and a GB IBAN fails fast with HTTP 400."
           },
           "response": [
             {
