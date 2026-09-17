@@ -1,0 +1,167 @@
+---
+title: "Company wallets"
+description: "Reserve and operate a dedicated EUR wallet for a verified business account"
+slug: en/guides/company-wallets
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/company-wallets
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+## Company wallets for EUR businesses
+
+Verified company accounts can reserve one dedicated EUR company wallet when
+the Banking product is enabled. The wallet is the account's operational
+banking wallet: its virtual IBANs route money to it, and outgoing EUR
+operations use the accepted corporate holder. The reservation is durable and
+idempotent; it does not move money until a later banking operation.
+
+### Reserve the wallet
+
+The request is accepted only for a verified company account. Send the
+idempotency key in the header or as `idempotency_key` in the JSON body. The
+optional overrides fill gaps that are not present in the approved KYB profile:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/company-wallets \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-wallet-eur-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idempotency_key": "company-wallet-eur-001",
+    "trading_website": "https://example.com",
+    "business_activity": "International software services",
+    "is_micro_enterprise": false,
+    "incorporation_country": "CL",
+    "incorporation_date": "2020-04-15",
+    "expected_turnover": "250000.00"
+  }'
+```
+
+The platform builds the complete corporate holder from the verified KYB
+profile plus these overrides. If required holder data is still missing, the
+request returns `422 registrant_incomplete` and names the missing paths.
+Success is `202 Accepted`:
+
+```json
+{
+  "company_wallet": {
+    "id": "7d2c1a8e-4d3e-4f7f-9a1c-000000000001",
+    "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "currency": "EUR",
+    "status": "pending",
+    "order_reference": "wallet-order-001",
+    "created_at": "2026-09-17T15:00:00Z",
+    "updated_at": "2026-09-17T15:00:00Z"
+  }
+}
+```
+
+Replaying the same key returns `200` with the original object and
+`idempotency_hit: true`; never create a second reservation with a new key
+after an ambiguous response.
+
+### List, read, balance and operations
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/company-wallets?page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/company-wallets/7d2c1a8e-4d3e-4f7f-9a1c-000000000001 \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/company-wallets/7d2c1a8e-4d3e-4f7f-9a1c-000000000001/balance \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/banking/company-wallets/7d2c1a8e-4d3e-4f7f-9a1c-000000000001/operations?from=2026-09-01&to=2026-09-16" \
+  -H "Authorization: Bearer <token>"
+```
+
+The detail may include `sync_error` when polling the reservation failed; the
+stored state remains visible and the next read can reconcile it. Balance is
+live and returns every wallet amount plus the EUR scalar:
+
+```json
+{
+  "wallet_id": "7d2c1a8e-4d3e-4f7f-9a1c-000000000001",
+  "currency": "EUR",
+  "available": "12500.00",
+  "amounts": [
+    { "currency": "EUR", "available": "12500.00" }
+  ],
+  "source": "banking_provider_live"
+}
+```
+
+Operations require `from` and `to` as `YYYY-MM-DD`. The provider window is
+clamped to the last completed day; requesting today as the end date does not
+make an incomplete statement look final:
+
+```json
+{
+  "wallet_id": "7d2c1a8e-4d3e-4f7f-9a1c-000000000001",
+  "from": "2026-09-01",
+  "to": "2026-09-16",
+  "operations": [
+    {
+      "source_tx_id": "bank-order-8842",
+      "occurred_at": "2026-09-15T10:30:00Z",
+      "amount": "450.00",
+      "currency": "EUR",
+      "direction": "credit",
+      "reference": "CB-EUR-001",
+      "counterparty": "Example Client",
+      "description": "Invoice 8842",
+      "from_address": "DE00...",
+      "to_address": "DE11..."
+    }
+  ]
+}
+```
+
+An inactive or not-yet-assigned wallet returns `409 wallet_not_ready`.
+`wallet_read_failed` and `wallet_statement_failed` are upstream read
+failures; keep the durable reservation and retry the read, not the
+reservation.
+
+### Banking EUR virtual IBAN balance
+
+`GET /v1/banking/virtual-ibans/{virtualIBANID}/balance` returns
+`received_total`, the net amount received by that virtual IBAN in the
+platform mirror. It intentionally does not return `available`: outgoing EUR
+payments debit the account-level `BANK_EUR` balance and cannot be attributed
+honestly to one receiving IBAN yet.
+
+```json
+{
+  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+  "currency": "EUR",
+  "asset": "BANK_EUR",
+  "received_total": "1250.00",
+  "purpose": "banking_eur",
+  "source": "platform_ledger_reconciled_to_banking_provider"
+}
+```
+
+The account-level balance is the source for spendable funds. The per-IBAN
+outflow attribution is a future phase; do not subtract an imagined amount
+from `received_total`.
+
+## States
+
+| Status | Meaning | Next action |
+|---|---|---|
+| `pending` / `provisioning` | Reservation is still being reconciled | Poll the detail with the same account credential |
+| `active` | Wallet UUID and EUR balance are available | Read balance or dated operations |
+| `declined` / `failed` | Reservation reached a terminal failure | Inspect the stored error and start a new business decision |
+
+See the [Banking EUR and company-wallet errors](https://docs.cbpayapp.com/en/errors#banking-eur-and-company-wallet-errors)
+for public error codes and recovery actions.
+
+## FAQ
+
+#### Can I reserve a second wallet with a new key?
+No. Reuse the same idempotency key after an ambiguous response and reconcile
+the durable reservation. A new key creates a new request.
+#### Does a virtual IBAN have its own spendable balance?
+No. `received_total` is the honest inbound mirror for a receiving IBAN.
+Outgoing EUR payments debit the account-level `BANK_EUR` balance.

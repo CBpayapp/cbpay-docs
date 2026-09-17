@@ -9,7 +9,18 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.99 · 7 versiones - 17 de septiembre de 2026
+## v2.100 · 7 versiones - 17 de septiembre de 2026
+### v2.100
+
+**Agregado**
+
+- Las cuentas de depósito BOB están disponibles mediante `BO/BOB/bank_transfer`.
+
+**Cambiado**
+
+- Las cuentas persona reciben un destino por corredor. Las empresas pueden crear destinos adicionales con un `idempotency_key` distinto; repetir la misma clave es idempotente.
+- La provisión comienza solo después de aprobar KYC/KYB. El alias visible al proveedor se genera en el servidor desde el nombre verificado y el ruteo de recepción permanece separado del ruteo de payouts.
+
 ### v2.99
 
 **Cambiado**

@@ -112,6 +112,7 @@ description: "错误格式与完整的错误码目录"
 | `invalid_chain` / `invalid_asset` | 不支持的网络或资产 |
 | `to_address_required` | 缺少提现目标地址 |
 | `invalid_payload` | 缺少必填字段（例如 AML 监控的 `enabled`、身份验证的 `external_customer_id`） |
+| `invalid_iban` | SEPA payout 的 IBAN 无效、不支持 `EU` 路由，或在 SEPA Instant V1 中属于 GB；请修正后使用新的幂等键重试 |
 | `invalid_qr_payload` | 出金二维码不可读或不受支持（BR Code 损坏、校验和无效或动态 PIX 二维码）；`message` 说明具体原因 |
 | `liveness_already_completed` | 该验证的活体检测已经通过 |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Webhook 订阅无效 |
@@ -182,8 +183,8 @@ description: "错误格式与完整的错误码目录"
 | 400 | `invalid_kind_of_business` | `kind_of_business` 不是目录中的代码（`GET /v1/cards/catalog/business-activities`） |
 | 400 | `invalid_settlement_asset` | `settlement_asset` 不是 USDT、USDC、BTC 或 GOLD |
 | 400 | `settlement_asset_disabled` | 您的组织已禁用该资产作为结算来源 |
-| 422 | `settlement_limit_exceeded` | 该操作超出波动性资产（BTC/GOLD）的单笔操作限额；请使用 USDT/USDC 或拆分操作 |
-| 422 | `settlement_daily_limit_exceeded` | 该账户已超出波动性资产（BTC/GOLD）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试 |
+| 422 | `settlement_limit_exceeded` | 该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作 |
+| 422 | `settlement_daily_limit_exceeded` | 该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试 |
 | 400 | `invalid_pair` | 兑换（swap）的源货币与目标货币相同 |
 | 400 | `amount_too_small` | 兑换金额不足目标货币的最小单位 |
 | 400 | `swap_asset_disabled` | 兑换涉及的某一货币已被您的组织禁用 |
@@ -321,7 +322,7 @@ description: "错误格式与完整的错误码目录"
 | 503 | `verifications_unavailable` | 身份验证暂时不可用 |
 | 503 | `org_credential_missing` | 服务正在配置中；请联系 CBPay 支持 |
 | 503 | `withdrawals_unavailable` | 该通道未启用链上提现 |
-| 503 | `pricing_unavailable` | BTC/GOLD 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算 |
+| 503 | `pricing_unavailable` | BTC/GOLD/SILVER/PLATINUM 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算 |
 | 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的**幂等键重试 |
 | 503 | `webhook_processing_pending` | 入站 webhook 事件正在处理中；短暂退避后重试同一条投递，不要创建新的操作 |
 | 503 | `export_unavailable` | 当前环境未启用独立钱包私钥导出 |
@@ -387,3 +388,16 @@ description: "错误格式与完整的错误码目录"
 | 409 | `empty_audience` | 提交/审批时没有账户匹配 | 修正受众后重新提交 |
 | 409 | `audience_too_large` | 筛选器匹配超过 20000 个账户 | 缩小筛选范围后重新提交 |
 | 409 | `second_approver_required` | 创建者尝试审批自己的 campaign | 让另一名命名 God 审批 |
+
+## Banking EUR 与企业钱包错误
+
+| HTTP | 代码 | 处理 |
+|---:|---|---|
+| 409 | `virtual_iban_limit_reached` | 个人账户该 purpose 已有虚拟 IBAN；请复用它，企业不受同样的 purpose 上限。 |
+| 409 | `wallet_not_ready` | 钱包仍为 `pending`/`provisioning`；读取详情直到变为 `active`。 |
+| 422 | `virtual_iban_limit_reached` | 预留时达到个人账户的 purpose 上限；不要创建第二个 key。 |
+| 422 | `registrant_incomplete` | 按 `message` 补充 KYC/KYB 或公司注册字段，并重试同一持久化请求。 |
+| 502 | `wallet_reservation_failed` | 预留没有返回可用 reference；先协调再重试。 |
+| 502 | `wallet_reservation_status_failed` | 状态读取失败；保留 `order_reference` 或 `client_order`。 |
+| 502 | `wallet_read_failed` | live wallet 响应或 EUR 金额不可读；检查状态后重试读取。 |
+| 502 | `wallet_statement_failed` | statement 不可读；使用完整日期窗口后重试读取。 |

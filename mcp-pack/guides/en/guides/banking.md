@@ -543,6 +543,11 @@ does *not* fall back to the legacy fee.
 
 The general error catalog lives in [Errors](https://docs.cbpayapp.com/en/errors).
 
+## Company wallets
+
+Dedicated EUR wallets for verified business accounts. See the complete reservation, balance, statement and error
+contract in [Company wallets](https://docs.cbpayapp.com/en/guides/company-wallets).
+
 ## FAQ
 
 #### Does banking money show up in my USDT balance?

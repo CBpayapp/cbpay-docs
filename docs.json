@@ -115,6 +115,7 @@
                     "group": "Pagar (money out)",
                     "pages": [
                       "es/guias/payouts",
+                      "es/guias/sepa-instant-payouts",
                       "es/guias/payout-rate-sources",
                       "es/guias/qr-payout"
                     ]
@@ -129,6 +130,7 @@
                   "es/guias/pruebas-de-firma",
                   "es/guias/tarjetas",
                       "es/guias/banking",
+                      "es/guias/company-wallets",
                       "es/guias/cartola",
                       "es/guias/comprobantes",
                       "es/guias/seguimiento",
@@ -240,6 +242,7 @@
                     "group": "Money out",
                     "pages": [
                       "en/guides/payouts",
+                      "en/guides/sepa-instant-payouts",
                       "en/guides/payout-rate-sources",
                       "en/guides/qr-payout"
                     ]
@@ -254,6 +257,7 @@
                   "en/guides/signature-proofs",
                   "en/guides/cards",
                       "en/guides/banking",
+                      "en/guides/company-wallets",
                       "en/guides/statement",
                       "en/guides/receipts",
                       "en/guides/tracking",
@@ -364,6 +368,7 @@
                     "group": "付款（Money out）",
                     "pages": [
                       "zh/guides/payouts",
+                      "zh/guides/sepa-instant-payouts",
                       "zh/guides/payout-rate-sources",
                       "zh/guides/qr-payout"
                     ]
@@ -378,6 +383,7 @@
                   "zh/guides/signature-proofs",
                   "zh/guides/cards",
                       "zh/guides/banking",
+                      "zh/guides/company-wallets",
                       "zh/guides/statement",
                       "zh/guides/receipts",
                       "zh/guides/tracking",

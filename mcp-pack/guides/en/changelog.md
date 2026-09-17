@@ -8,7 +8,18 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.99 · 7 versions - September 17, 2026
+## v2.100 · 7 versions - September 17, 2026
+### v2.100
+
+**Added**
+
+- BOB deposit accounts are available through `BO/BOB/bank_transfer`.
+
+**Changed**
+
+- Person accounts receive one receiving destination per corridor. Company accounts can create additional destinations with a distinct `idempotency_key`; replaying the same key is idempotent.
+- Deposit-account provisioning starts only after the account's KYC/KYB verification is approved. The provider-facing alias is generated server-side from the verified account name, and receiving-account routing remains separate from payout routing.
+
 ### v2.99
 
 **Changed**
