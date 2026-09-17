@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.97"
+  version: "2.99"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -18525,6 +18525,7 @@ paths:
                     content_type: application/pdf
                     size_bytes: 482110
                     uploaded_by: account
+                    category: proofOfAddress
                     created_at: '2026-08-06T15:40:00Z'
                   created_at: '2026-08-06T14:32:00Z'
                   updated_at: '2026-08-06T15:40:00Z'
@@ -18543,6 +18544,7 @@ paths:
       summary: Sube un archivo para una solicitud de información
       description: |-
         Sube un documento de respaldo para una revisión en `info_requested`. Envía el binario crudo con su `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) o XLS(X), hasta 50 MB) y el nombre del archivo en el query param `name`. Al subir un archivo la revisión vuelve a `in_review` para que el equipo de cumplimiento la re-evalúe.
+        El query param opcional `category` usa un vocabulario cerrado de documentos banking. Si se omite, el archivo queda visible en la review pero no puede sincronizarse con el proveedor banking. Los uploads se aceptan en `info_requested` o en `in_review después de un `request-info` previo.
       parameters:
       - name: reviewID
         in: path
@@ -18555,6 +18557,29 @@ paths:
         description: Original filename (max 200 chars, no path separators).
         schema:
           type: string
+      - name: category
+        in: query
+        required: false
+        description: Categoría cerrada opcional de documento banking. Omítela para un archivo visible que no pueda sincronizarse con el proveedor.
+        schema:
+          type: string
+          enum:
+          - identity
+          - proofOfResidence
+          - proofOfAddress
+          - bankStatement
+          - legalPresence
+          - companyDetails
+          - ownershipStructure
+          - controlStructure
+          - uboIdentity
+          - uboProofOfAddress
+          - sourceOfWealth
+          - financialStatements
+          - amlPolicy
+          - wolfsberg
+          - mlroCV
+          - businessLicense
       requestBody:
         required: true
         content:
@@ -18587,6 +18612,7 @@ paths:
                   content_type: application/pdf
                   size_bytes: 482110
                   uploaded_by: account
+                  category: proofOfAddress
                   created_at: '2026-08-06T15:40:00Z'
                 status: in_review
         '400':
@@ -18594,6 +18620,11 @@ paths:
           content:
             application/json:
               examples:
+                invalid_category:
+                  summary: Categoría de documento inválida
+                  value:
+                    error: invalid_category
+                    message: unknown document category
                 invalid_name:
                   summary: Missing filename
                   value:
@@ -18612,7 +18643,7 @@ paths:
                 error: not_found
                 message: review not found
         '409':
-          description: The review is not waiting for information.
+          description: La review debe estar en `info_requested` o en `in_review` después de un `request-info` previo.
           content:
             application/json:
               example:
@@ -21544,7 +21575,7 @@ paths:
                     virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
                     currency: EUR
                     asset: BANK_EUR
-                    available: '80.00'
+                    received_total: '80.00'
                     held: '0.00'
                     purpose: banking_eur
                     source: platform_ledger_reconciled_to_banking_provider
@@ -21646,6 +21677,291 @@ paths:
               example:
                 error: rail_source_unavailable
                 message: the selected source account is not configured for this organization
+  /v1/banking/company-wallets:
+    post:
+      tags: [Banca]
+      operationId: createCompanyWallet
+      summary: Reserva y consulta una wallet EUR dedicada para una cuenta empresa verificada.
+      description: >-
+        Requires the Banking product, a verified company account and an idempotency key.
+        Optional registrant overrides complete the approved KYB profile. Missing holder
+        paths return 422 registrant_incomplete.
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key]
+              properties:
+                idempotency_key:
+                  type: string
+                trading_website:
+                  type: string
+                business_activity:
+                  type: string
+                is_micro_enterprise:
+                  type: boolean
+                incorporation_country:
+                  type: string
+                incorporation_date:
+                  type: string
+                  format: date
+                expected_turnover:
+                  type: string
+            example:
+              idempotency_key: company-wallet-eur-001
+              trading_website: https://example.com
+              business_activity: International software services
+              is_micro_enterprise: false
+              incorporation_country: CL
+              incorporation_date: '2020-04-15'
+              expected_turnover: '250000.00'
+      responses:
+        '202':
+          description: Durable reservation accepted.
+          content:
+            application/json:
+              example:
+                company_wallet:
+                  id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  currency: EUR
+                  status: pending
+                  order_reference: wallet-order-001
+                  created_at: '2026-09-17T15:00:00Z'
+                  updated_at: '2026-09-17T15:00:00Z'
+        '200':
+          description: Idempotent replay of the original reservation.
+          content:
+            application/json:
+              example:
+                company_wallet:
+                  id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  currency: EUR
+                  status: pending
+                idempotency_hit: true
+        '400':
+          description: Invalid JSON, missing idempotency key or mismatched header/body key.
+          content:
+            application/json:
+              example: {error: idempotency_key_required, message: provide idempotency_key}
+        '422':
+          description: The verified company registrant is incomplete.
+          content:
+            application/json:
+              example: {error: registrant_incomplete, message: missing holder fields}
+        '502':
+          description: The reservation did not return an order reference.
+          content:
+            application/json:
+              example: {error: wallet_reservation_failed, message: provider accepted without orderReference}
+        '503':
+          description: The durable request could not be checked or persisted.
+          content:
+            application/json:
+              example: {error: banking_recovery_pending, message: reconcile the durable request}
+    get:
+      tags: [Banca]
+      operationId: listCompanyWallets
+      summary: Lista las reservas durables de wallets de empresa de la cuenta autenticada.
+      parameters:
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, default: 1}
+      - name: page_size
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 200, default: 50}
+      responses:
+        '200':
+          description: Paginated company wallets.
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                company_wallets: []
+
+  /v1/banking/company-wallets/{walletID}:
+    get:
+      tags: [Banca]
+      operationId: getCompanyWallet
+      summary: Obtén una wallet de empresa. Una lectura pendiente puede incluir sync_error si la conciliación temporal falla.
+      parameters:
+      - name: walletID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Company wallet detail.
+          content:
+            application/json:
+              example:
+                company_wallet:
+                  id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  currency: EUR
+                  status: active
+                  wallet_uuid: wallet-001
+                  iban: DE00...
+                  activated_at: '2026-09-17T15:05:00Z'
+        '404':
+          description: Company wallet not found in the account.
+          content:
+            application/json:
+              example: {error: not_found, message: company wallet not found}
+
+  /v1/banking/company-wallets/{walletID}/balance:
+    get:
+      tags: [Banca]
+      operationId: getCompanyWalletBalance
+      summary: Lee el saldo EUR en vivo de una wallet de empresa activa.
+      parameters:
+      - name: walletID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Live EUR wallet balance.
+          content:
+            application/json:
+              example:
+                wallet_id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                currency: EUR
+                available: '12500.00'
+                amounts:
+                - currency: EUR
+                  available: '12500.00'
+                source: banking_provider_live
+        '409':
+          description: The wallet is not active yet.
+          content:
+            application/json:
+              example: {error: wallet_not_ready, message: company wallet is not active yet}
+        '502':
+          description: The live wallet response is unreadable.
+          content:
+            application/json:
+              example: {error: wallet_read_failed, message: provider wallet response is not readable}
+
+  /v1/banking/company-wallets/{walletID}/operations:
+    get:
+      tags: [Banca]
+      operationId: listCompanyWalletOperations
+      summary: Lista las operaciones de la wallet en una ventana de días completos.
+      parameters:
+      - name: walletID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: from
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      - name: to
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      responses:
+        '200':
+          description: Wallet statement flattened into neutral operations.
+          content:
+            application/json:
+              example:
+                wallet_id: 7d2c1a8e-4d3e-4f7f-9a1c-000000000001
+                from: '2026-09-01'
+                to: '2026-09-16'
+                operations:
+                - source_tx_id: bank-order-8842
+                  occurred_at: '2026-09-15T10:30:00Z'
+                  amount: '450.00'
+                  currency: EUR
+                  direction: credit
+                  reference: CB-EUR-001
+                  counterparty: Example Client
+                  description: Invoice 8842
+                  from_address: DE00...
+                  to_address: DE11...
+        '400':
+          description: Invalid or unavailable date range.
+          content:
+            application/json:
+              example: {error: invalid_range, message: from/to must be valid dates}
+        '409':
+          description: The wallet is not active yet.
+          content:
+            application/json:
+              example: {error: wallet_not_ready, message: company wallet is not active yet}
+        '502':
+          description: The statement response is unreadable.
+          content:
+            application/json:
+              example: {error: wallet_statement_failed, message: provider statement is not readable}
+
+  /v1/banking/virtual-ibans/{virtualIBANID}/operations:
+    get:
+      tags: [Banca]
+      operationId: listVirtualIBANOperations
+      summary: Listar operaciones recibidas por un IBAN virtual
+      description: Vista del espejo acotada al IBAN virtual; exige una ventana de días completos.
+      parameters:
+      - name: virtualIBANID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: from
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      - name: to
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, default: 1}
+      - name: page_size
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 200, default: 50}
+      responses:
+        '200':
+          description: Operaciones paginadas atribuidas al IBAN virtual.
+          content:
+            application/json:
+              example:
+                virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                page: 1
+                page_size: 50
+                operations:
+                - operation_id: 7f3c1a2b-9d4e-4f6a-8b0c-1d2e3f4a5b6c
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  direction: in
+                  currency: EUR
+                  amount: '120.00'
+                  status: completed
+                  type: bank_transfer
+                  reference: SEPA-001
+                  created_at: '2026-09-15T10:30:00Z'
+        '400':
+          description: Rango de fechas inválido.
+          content:
+            application/json:
+              example: {error: invalid_range, message: from and to are required}
+        '404':
+          description: El IBAN virtual no pertenece a la cuenta.
+          content:
+            application/json:
+              example: {error: not_found, message: virtual IBAN not found}
+
 components:
   securitySchemes:
     bearerAuth:

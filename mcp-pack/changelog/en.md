@@ -8,7 +8,30 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.97 · 5 versions - September 17, 2026
+## v2.99 · 7 versions - September 17, 2026
+### v2.99
+
+**Changed**
+
+- Account transaction-review uploads now accept an optional closed
+  `category` query parameter and can receive additional evidence after a
+  previous `request-info` while the review remains `in_review`. Each upload
+  is visible in the review and resets the first maker-checker approval;
+  unknown categories return `400 invalid_category`. Request-info emails link
+  directly to `/reviews/{reviewID}` when a portal base is available.
+
+### v2.98
+
+**Added**
+- EUR company wallets for verified businesses: durable reservation, account and org-admin reads, live wallet balance and dated operations.
+- Core company-wallet reservation/status/wallet/statement routes and the Europe `EU`/`EUR`/`sepa` OTC catalog.
+
+**Changed**
+- Banking EUR virtual-IBAN balance now returns `received_total`, not a fabricated per-IBAN `available`; companies may create additional virtual IBANs while people remain capped per purpose.
+- Organization expenses accept EUR and treasury exposes the operational EUR wallet source.
+
+**Errors**
+- Added `wallet_not_ready`, `wallet_reservation_failed`, `wallet_reservation_status_failed`, `wallet_read_failed`, `wallet_statement_failed` and `virtual_iban_limit_reached` coverage.
 
 ### v2.97
 

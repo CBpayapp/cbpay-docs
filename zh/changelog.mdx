@@ -7,7 +7,29 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月17日" description="v2.97 · 5 个版本">
+<Update label="2026年9月17日" description="v2.99 · 7 个版本">
+### v2.99
+
+**变更**
+
+- 账户交易审核上传现在接受可选的固定 `category` query 参数；此前
+  request-info 后，只要审核仍为 `in_review`，也可以继续上传证据。每次
+  上传都会显示在审核中并重置 maker-checker 的第一次批准；未知类别返回
+  `400 invalid_category`。当 portal base 可用时，request-info 邮件会直接
+  链接到 `/reviews/{reviewID}`。
+
+### v2.98
+
+**新增**
+- 已验证企业的 EUR 钱包：持久化预留、账户与 org-admin 读取、实时余额和日期操作。
+- Core 钱包预留/状态/wallet/statement 路由，以及欧洲 `EU`/`EUR`/`sepa` OTC catalog。
+
+**变更**
+- Banking EUR 虚拟 IBAN 余额现在返回 `received_total`，不再伪造每个 IBAN 的 `available`；企业可创建多个虚拟 IBAN，个人账户仍按 purpose 限制。
+- 组织费用接受 EUR，treasury 显示运营 EUR 钱包 source。
+
+**错误**
+- 覆盖 `wallet_not_ready`、`wallet_reservation_failed`、`wallet_reservation_status_failed`、`wallet_read_failed`、`wallet_statement_failed` 和 `virtual_iban_limit_reached`。
 
 ### v2.97
 
