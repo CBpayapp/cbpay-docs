@@ -173,7 +173,8 @@ description: "错误格式与完整的错误码目录"
 | 422 | `wallet_limit_reached` | 该账户在此网络+资产组合下已持有对应钱包（充值钱包：所有账户；[隔离钱包](/zh/guides/segregated-wallets)：个人账户） |
 | 422 | `insufficient_gas` | [独立钱包](/zh/guides/segregated-wallets)没有支付网络费所需的原生 gas（TRX/ETH）；请为该地址充值后重试 |
 | 409 | `idempotency_conflict` | 使用相同幂等键的另一次钱包创建/转出仍在进行中；请使用同一个键重试 |
-| 409 | `card_limit_reached` | 个人账户试图创建第二张同类型卡片 |
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停；请申请虚拟卡。已经发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请；请先处理现有申请再申请新卡 |
 | 409 | `card_cancelled` | 卡片已注销，无法更新 |
 | 409 | `card_not_pending` | 只有处于 `pending_activation` 状态的卡片才能激活 |
 | 409 | `cardholder_kyc_pending` | 指定持卡人需要提交身份证明文件 |
@@ -181,8 +182,8 @@ description: "错误格式与完整的错误码目录"
 | 400 | `invalid_kind_of_business` | `kind_of_business` 不是目录中的代码（`GET /v1/cards/catalog/business-activities`） |
 | 400 | `invalid_settlement_asset` | `settlement_asset` 不是 USDT、USDC、BTC 或 GOLD |
 | 400 | `settlement_asset_disabled` | 您的组织已禁用该资产作为结算来源 |
-| 422 | `settlement_limit_exceeded` | 该操作超出波动性资产（BTC/GOLD）的单笔操作限额；请使用 USDT/USDC 或拆分操作 |
-| 422 | `settlement_daily_limit_exceeded` | 该账户已超出波动性资产（BTC/GOLD）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试 |
+| 422 | `settlement_limit_exceeded` | 该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作 |
+| 422 | `settlement_daily_limit_exceeded` | 该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试 |
 | 400 | `invalid_pair` | 兑换（swap）的源货币与目标货币相同 |
 | 400 | `amount_too_small` | 兑换金额不足目标货币的最小单位 |
 | 400 | `swap_asset_disabled` | 兑换涉及的某一货币已被您的组织禁用 |
@@ -194,6 +195,7 @@ description: "错误格式与完整的错误码目录"
 | 422 | `country_unavailable` | 该国家在收款链接上没有可用的支付方式 |
 | 422 | `collect_otp_failed` | 通道拒绝发送链接拉取式收款的 OTP |
 | 422 | `collect_rejected` | 通道拒绝了链接的拉取式扣款（OTP 无效或数据错误）；链接保持待支付 |
+| 422 | `provider_rejected` | 对于 `VE/VES/c2p`，不要调用 `/collect/otp`；付款人会把银行生成的 `claveDinamica` 放在 collect 请求的 `otp` 字段中。Adapter 内部信号为 `collect_otp_unsupported`。 |
 | 422 | `settlement_asset_disabled` | 收款链接的 `settlement_asset` 已被您的组织禁用 |
 | 422 | `checkout_amount_mismatch` | CBPay 转账不足以覆盖收款链接的当前应付额；错误消息附带最新金额 |
 | 503 | `checkout_recovery_pending` | 所选 checkout 支付选项正在核对。请重试相同的物化请求；不要创建第二个支付选项 |
@@ -319,7 +321,7 @@ description: "错误格式与完整的错误码目录"
 | 503 | `verifications_unavailable` | 身份验证暂时不可用 |
 | 503 | `org_credential_missing` | 服务正在配置中；请联系 CBPay 支持 |
 | 503 | `withdrawals_unavailable` | 该通道未启用链上提现 |
-| 503 | `pricing_unavailable` | BTC/GOLD 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算 |
+| 503 | `pricing_unavailable` | BTC/GOLD/SILVER/PLATINUM 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算 |
 | 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的**幂等键重试 |
 | 503 | `webhook_processing_pending` | 入站 webhook 事件正在处理中；短暂退避后重试同一条投递，不要创建新的操作 |
 | 503 | `export_unavailable` | 当前环境未启用独立钱包私钥导出 |

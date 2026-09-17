@@ -41,7 +41,7 @@ curl https://api.qbank.cl/platform/v1/services \
 | `kyc` | Verificación de identidad KYC/KYB de terceros (links, submissions, documentos, liveness) |
 | `aml` | AML screening contra listas, rescreening y monitoreo |
 | `cards` | Emisión y operación de tarjetas |
-| `swaps` | Conversión entre saldos (USDT/USDC/BTC/GOLD) |
+| `swaps` | Conversión entre saldos (USDT/USDC/BTC/GOLD/SILVER/PLATINUM) |
 | `wallets` | [Wallets segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas) con saldo on-chain propio (solo empresas) |
 
 ## Qué pasa cuando un servicio está apagado

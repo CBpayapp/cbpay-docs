@@ -142,7 +142,7 @@ flowchart LR
     S --> B["即时入账到<br/>目标余额"]
 ```
 
-一次调用即可在 USDT、USDC、BTC 和 GOLD 之间按您账户的汇率兑换 ——
+一次调用即可在 USDT、USDC、BTC、GOLD、SILVER 和 PLATINUM 之间按您账户的汇率兑换 ——
 资金不离开账户，因此无需 OTP。详情：[兑换](https://docs.cbpayapp.com/zh/guides/swaps)。
 
 ## 8. 对账

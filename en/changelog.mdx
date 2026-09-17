@@ -7,7 +7,60 @@ description: "History of API and documentation changes"
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-<Update label="September 16, 2026" description="v2.90 · 2 versions">
+<Update label="September 17, 2026" description="v2.95 · 3 versions">
+
+### v2.95
+
+**Added**
+
+- **Silver and platinum ledger assets**: accounts now support `SILVER` and `PLATINUM` as six-decimal fine-metal gram balances, alongside USDT, USDC, BTC and GOLD. Existing swap, settlement, card-spending, checkout, statement and analytics surfaces expose the expanded vocabulary. `asset_prices` reports XAG/XPT per troy ounce and SILVER/PLATINUM per gram. No new endpoint or on-chain metal rail is introduced.
+
+### v2.94
+
+**Changed**
+
+- **Venezuela C2P collections**: `VE/VES/c2p` is available through the
+  existing collect endpoints. The payer supplies the bank-generated
+  `claveDinamica` in `otp`; do not call `/v1/payins/collect/otp` for C2P.
+  Request and response shapes remain unchanged. `debito_inmediato` remains
+  unavailable.
+
+### v2.93
+
+**Changed**
+
+- **Digital-only card issuance during a temporary physical cutoff**:
+  `POST /v1/cards` now returns `400 physical_temporarily_unavailable` for new
+  requests with `physical: true`. Physical cards already issued continue to
+  operate. For person accounts, `409 card_limit_reached` now means the
+  account already has one live card or one open card application.
+
+</Update>
+
+<Update label="September 16, 2026" description="v2.92 · 4 versions">
+
+### v2.92
+
+**Changed**
+
+- **SEPA Instant beneficiary and description validation**: SEPA descriptions are
+  folded to the provider charset, rejected with `400 invalid_payload` when
+  unsupported characters remain, and capped at 140 runes on the wire.
+  Beneficiary names apply the documented European fold map, and individual
+  beneficiaries require both a first and last name; mononyms are not payable
+  in V1.
+
+### v2.91
+
+**Added**
+
+- **SEPA Instant payouts in EUR**: the `sepa` method is now available through
+  the live payout catalog for 35 countries (AT, BE, BG, HR, CY, CZ, DK, EE,
+  FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES,
+  SE, IS, LI, NO, CH, MC, SM, AD and VA). Requests require a valid SEPA IBAN
+  and `beneficiary_type`; BIC is optional. Great Britain is excluded from V1.
+  The method is EUR-only and uses the existing `payout_status_changed`
+  webhook.
 
 ### v2.90
 

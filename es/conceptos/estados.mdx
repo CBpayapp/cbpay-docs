@@ -87,7 +87,7 @@ Si el retiro falla antes de transmitirse, el débito completo se reembolsa
 - `pending_activation` — física emitida, viaja inactiva; se activa con
   `POST /v1/cards/{id}/activate`.
 - `active` — autoriza compras en tiempo real contra el saldo del asset de
-  gasto de la tarjeta (`spending_asset`: USDT, USDC, BTC o GOLD).
+  gasto de la tarjeta (`spending_asset`: USDT, USDC, BTC, GOLD, SILVER o PLATINUM).
 - `frozen` — congelada (manual o por mensualidad impaga); las compras se
   rechazan con `unfunded_card_frozen`. Se descongela pagando lo pendiente.
 - `cancelled` — final; no se puede revertir.

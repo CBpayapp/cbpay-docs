@@ -1,7 +1,7 @@
 ---
 title: "Tarjetas: virtuales y físicas"
 icon: "credit-card"
-description: "Emite tarjetas que gastan directo de cualquier saldo de la cuenta (USDT, USDC, BTC o GOLD), con límites por tarjeta"
+description: "Emite tarjetas que gastan directo de cualquier saldo de la cuenta (USDT, USDC, BTC, GOLD, SILVER o PLATINUM), con límites por tarjeta"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
@@ -10,7 +10,7 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 Las tarjetas CBPay gastan **Just-In-Time del saldo central de la cuenta**:
 no hay que prefondearlas ni moverles saldo. Cada tarjeta elige desde qué
-saldo gasta (`spending_asset`: **USDT, USDC, BTC o GOLD**). USDT/USDC van
+saldo gasta (`spending_asset`: **USDT, USDC, BTC, GOLD, SILVER o PLATINUM**). USDT/USDC van
 1:1 con el USD; BTC y GOLD se convierten **al precio del momento de cada
 evento**. Cada compra se autoriza en tiempo real contra el saldo disponible
 de ese asset y los límites propios de la tarjeta, y el débito queda de
@@ -23,7 +23,7 @@ flowchart LR
     jit -->|"saldo y límites OK"| debito["Débito en el saldo elegido<br/>+ hold"]
     jit -->|"insuficiente / límite /<br/>congelada / sin precio"| rechazo["Compra rechazada<br/>(razón auditada)"]
     debito --> liquidacion{"Liquidación<br/>(1-2 días)"}
-    liquidacion -->|"confirmada"| settle["Hold consumido<br/>(BTC/GOLD: re-cotizado al momento)"]
+    liquidacion -->|"confirmada"| settle["Hold consumido<br/>(BTC/GOLD/SILVER/PLATINUM: re-cotizado al momento)"]
     liquidacion -->|"anulada"| refund["Fondos devueltos<br/>al mismo saldo"]
 ```
 
@@ -31,15 +31,15 @@ flowchart LR
 
 | Tipo de cuenta | Virtuales | Físicas | ¿Para terceros? |
 |---|---|---|---|
-| Persona | **1** | **1** | No |
-| Empresa | **Ilimitadas** | **Ilimitadas** | Sí: personas designadas (ej. empleados) |
+| Persona | **1 tarjeta viva total** | Nueva emisión física temporalmente no disponible | No |
+| Empresa | **Ilimitadas** | Nueva emisión física temporalmente no disponible | Sí: personas designadas (ej. empleados) |
 
 Cada tarjeta gasta del **saldo central de la cuenta en el asset que tenga
 configurado** (`spending_asset`, USDT por defecto). El control fino es por
 límites de gasto de cada tarjeta (por transacción, diario, mensual), que
 siempre se miden en **USD** y puedes cambiar en cualquier momento.
 
-## Elegir el saldo de gasto (USDT, USDC, BTC o GOLD)
+## Elegir el saldo de gasto (USDT, USDC, BTC, GOLD, SILVER o PLATINUM)
 
 Define `spending_asset` al crear la tarjeta o cámbialo después con `PATCH`.
 Solo afecta compras futuras: las autorizaciones en vuelo conservan el asset
@@ -74,16 +74,16 @@ evento (el mismo precio de settlement que ves en `GET /v1/rates`, bloque
   precio del momento del evento. Entre la compra y la devolución el precio
   puede variar — recibes el equivalente en tu asset al precio de ese
   momento, no la cantidad original.
-- Las compras BTC/GOLD comparten los **límites de assets volátiles** de tu
+- Las compras BTC/GOLD/SILVER/PLATINUM comparten los **límites de assets volátiles** de tu
   cuenta (por operación y volumen 24 h, visibles en `GET /v1/settlement`).
 
 | Error / rechazo | Dónde | Causa | Solución |
 |---|---|---|---|
 | `spending_asset_unavailable` | 400 en PATCH / rechazo de compra | El asset no existe o no está habilitado para compras | Usa `USDT`, `USDC`, `BTC` o `GOLD` |
 | `settlement_asset_disabled` | 400 en PATCH | Tu operador deshabilitó ese asset | Consulta `GET /v1/settlement` (`enabled_assets`) |
-| `pricing_unavailable` | Rechazo de compra (BTC/GOLD) | Precio de ejecución no disponible al autorizar | Reintenta la compra; si persiste, cambia a USDT/USDC |
-| `settlement_limit_exceeded` | Rechazo de compra (BTC/GOLD) | La compra excede el límite por operación de assets volátiles | Compra menor o gasta desde USDT/USDC |
-| `settlement_daily_limit_exceeded` | Rechazo de compra (BTC/GOLD) | Se alcanzó el volumen 24 h de assets volátiles de la cuenta | Espera o gasta desde USDT/USDC |
+| `pricing_unavailable` | Rechazo de compra (BTC/GOLD/SILVER/PLATINUM) | Precio de ejecución no disponible al autorizar | Reintenta la compra; si persiste, cambia a USDT/USDC |
+| `settlement_limit_exceeded` | Rechazo de compra (BTC/GOLD/SILVER/PLATINUM) | La compra excede el límite por operación de assets volátiles | Compra menor o gasta desde USDT/USDC |
+| `settlement_daily_limit_exceeded` | Rechazo de compra (BTC/GOLD/SILVER/PLATINUM) | Se alcanzó el volumen 24 h de assets volátiles de la cuenta | Espera o gasta desde USDT/USDC |
 
 <Note>
 Si el saldo del asset elegido no alcanza, la compra se rechaza con
@@ -91,7 +91,7 @@ Si el saldo del asset elegido no alcanza, la compra se rechaza con
 </Note>
 
 <Warning>
-Con BTC/GOLD tu saldo queda expuesto a la variación del precio entre los
+Con BTC/GOLD/SILVER/PLATINUM tu saldo queda expuesto a la variación del precio entre los
 eventos de una compra (autorización, captura, devolución). Cada conversión
 usa el precio efectivo del momento — CBPay nunca re-cotiza montos hacia
 atrás ni te descuenta "por si acaso": el colchón de la autorización se
@@ -118,7 +118,7 @@ La comisión por transacción sigue el mismo ciclo que la compra:
 
 - **Autorización**: el fee estimado se reserva **dentro del hold** junto al
   monto de la compra, en el mismo `spending_asset` de la tarjeta (el % se
-  aplica sobre el monto USD de la compra; en BTC/GOLD se convierte con el
+  aplica sobre el monto USD de la compra; en BTC/GOLD/SILVER/PLATINUM se convierte con el
   mismo precio del evento).
 - **Liquidación**: el fee se **recalcula** con la configuración vigente en
   ese momento y se cobra el definitivo (`card_fee` en tus movimientos); la
@@ -128,7 +128,7 @@ La comisión por transacción sigue el mismo ciclo que la compra:
   fracción de la compra devuelta (`card_fee_refund`).
 
 Si tu operador cambia el porcentaje entre la autorización y la liquidación,
-se cobra el fee de la liquidación — mismo criterio que el precio BTC/GOLD
+se cobra el fee de la liquidación — mismo criterio que el precio BTC/GOLD/SILVER/PLATINUM
 por evento. Las compras rechazadas (`declined`) **no cobran fee**.
 
 ## Crear una tarjeta
@@ -139,11 +139,14 @@ por cuenta**, en la primera emisión; las siguientes tarjetas lo reutilizan
 sin pedir datos. La `idempotency_key` es obligatoria siempre (un retry con
 la misma clave devuelve la tarjeta original y nunca cobra dos veces).
 
+<Warning>
+La emisión de tarjetas físicas nuevas está temporalmente no disponible. Una solicitud con `physical: true` devuelve `400 physical_temporarily_unavailable`; el corte se evalúa después del replay de idempotencia, por lo que una solicitud física existente se sigue resolviendo con su tarjeta original. Las físicas ya emitidas siguen operativas.
+</Warning>
+
 <Tabs>
 <Tab title="Cuenta persona">
 
-Una cuenta persona emite tarjetas **para sí misma** (máximo 1 virtual +
-1 física).
+Una cuenta persona emite tarjetas **para sí misma** (máximo 1 tarjeta viva total; la emisión física nueva está temporalmente no disponible).
 
 **Tu primera tarjeta** crea y verifica tu titular en el emisor. Como tu
 cuenta ya aprobó su [verificación de identidad](/es/guias/kyc), tus datos y
@@ -172,18 +175,20 @@ documento que el emisor exige, agrégalo explícito al `cardholder`
 (`first_name`, `email`, `address`, `id_front_url`…, mismo formato de
 siempre).
 
-**Tu segunda tarjeta** (por ejemplo la física) ya no pide ningún dato —
-tu titular quedó verificado:
+**Una segunda solicitud de emisión** no está disponible para una cuenta persona
+cuando ya tiene una tarjeta viva o una solicitud abierta. Devuelve
+`409 card_limit_reached`:
+
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/cards \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "physical": true, "idempotency_key": "card-f-1" }'
+  -d '{ "physical": false, "idempotency_key": "card-v-2" }'
 ```
 
-Si intentas una tercera del mismo tipo: `409 card_limit_reached` (cancela
-la existente primero).
+Una solicitud física devuelve `400 physical_temporarily_unavailable` incluso
+si la cuenta no tiene tarjetas. Solicita una tarjeta digital.
 
 </Tab>
 <Tab title="Cuenta empresa">
@@ -228,7 +233,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "physical": true,
+    "physical": false,
     "idempotency_key": "card-f-ops-1",
     "limits": { "per_transaction": "500.00", "monthly": "5000.00" }
   }'
@@ -270,6 +275,104 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 
 </Tab>
 </Tabs>
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+
+### Disponibilidad y errores de emisión
+
+| HTTP | Código | Significado y solución |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
 
 Respuesta (misma forma en todos los casos):
 
@@ -420,7 +523,7 @@ curl "https://api.qbank.cl/platform/v1/cards/{card_id}/transactions?from=2026-07
 
 `spend_asset` / `spend_amount` indican desde qué saldo se debitó realmente
 la compra y cuánto en ese asset (`amount_usd` / `amount_usdt` siguen siendo
-el valor USD de referencia). En BTC/GOLD, `spend_amount` de una transacción
+el valor USD de referencia). En BTC/GOLD/SILVER/PLATINUM, `spend_amount` de una transacción
 autorizada incluye el colchón de reserva; al liquidar queda el monto final.
 
 `fee_asset` / `fee_amount` son el asset y el monto de la comisión por compra
@@ -433,7 +536,7 @@ no cambia.
 | Estado | Significado |
 |---|---|
 | `authorized` | Compra aprobada en tiempo real: el monto salió del disponible del saldo elegido y quedó en hold |
-| `settled` | Confirmada en la liquidación de la red (el hold se consume; BTC/GOLD re-cotizado al momento de la captura) |
+| `settled` | Confirmada en la liquidación de la red (el hold se consume; BTC/GOLD/SILVER/PLATINUM re-cotizado al momento de la captura) |
 | `reversed` | Anulada: los fondos volvieron al mismo saldo (monto exacto si no se liquidó; re-convertido al precio del momento si ya se había liquidado) |
 | `declined` | Rechazada, con la razón: `insufficient_funds`, `card_limit_exceeded`, `card_frozen`, `account_blocked`, `spending_asset_unavailable`, `spending_asset_disabled`, `pricing_unavailable`, `settlement_limit_exceeded`, `settlement_daily_limit_exceeded` |
 
@@ -484,7 +587,7 @@ Sí: `spending_asset` es por tarjeta. Una empresa puede tener, por ejemplo,
 tarjetas corporativas gastando USDT, las de empleados gastando USDC y una
 personal gastando BTC. El cambio con `PATCH` aplica solo a compras futuras.
 </Accordion>
-<Accordion title="¿Qué es el colchón que veo reservado en compras BTC/GOLD?">
+<Accordion title="¿Qué es el colchón que veo reservado en compras BTC/GOLD/SILVER/PLATINUM?">
 La liquidación de una compra llega 1-2 días después de la autorización, y
 el precio de BTC/oro puede moverse entre medio. Por eso la autorización
 reserva el equivalente de la compra más un pequeño porcentaje. No es un
@@ -503,7 +606,7 @@ compra ya aprobada, una devolución) nunca se bloquean: se procesan con el
 Las devoluciones se convierten al precio del momento de la devolución, no
 al de la compra: recibes el equivalente en tu asset del monto USD devuelto.
 Si BTC subió desde la compra, recibes menos BTC (mismo valor USD); si bajó,
-más. Tu saldo BTC/GOLD siempre está expuesto al precio — es la naturaleza
+más. Tu saldo BTC/GOLD/SILVER/PLATINUM siempre está expuesto al precio — es la naturaleza
 de gastar desde un asset volátil.
 </Accordion>
 <Accordion title="¿Qué pasa si no hay saldo para la mensualidad?">
@@ -521,7 +624,7 @@ emitió.
 <Accordion title="¿Por qué el fee de una compra cambió entre la autorización y la liquidación?">
 La comisión por compra se calcula dos veces: estimada al autorizar (va en
 el hold) y definitiva al liquidar, con la configuración vigente en ese
-momento — igual que el precio BTC/GOLD, que se cotiza por evento. Si tu
+momento — igual que el precio BTC/GOLD/SILVER/PLATINUM, que se cotiza por evento. Si tu
 operador cambió el porcentaje entre ambos eventos, se cobra el valor de la
 liquidación y la diferencia se ajusta automáticamente contra lo reservado.
 Las devoluciones siempre reintegran el fee prorrateado sobre lo

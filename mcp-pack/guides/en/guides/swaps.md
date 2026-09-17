@@ -1,13 +1,13 @@
 ---
 title: "Swaps"
-description: "Convert between your USDT, USDC, BTC and GOLD balances instantly, with a prior quote and the execution rate of the moment"
+description: "Convert between your USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances instantly, with a prior quote and the execution rate of the moment"
 slug: en/guides/swaps
 lang: en
 source_url: https://docs.cbpayapp.com/en/guides/swaps
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-**Swaps** convert balance between your four currencies — `USDT`, `USDC`,
+**Swaps** convert balance between your six currencies — `USDT`, `USDC`,
 `BTC` and `GOLD` — **synchronously and instantly**, without the money ever
 leaving your account. Any pair works (including direct `BTC` ↔ `GOLD`).
 The rate you see in the quote is the rate you execute at: **no separate
@@ -81,7 +81,7 @@ curl -X POST https://api.qbank.cl/platform/v1/swaps \
 ```
 
 `amount` is in the **source** currency (`from_asset`), with up to its
-decimals (6 for USDT/USDC/GOLD, 8 for BTC).
+decimals (6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC).
 
 `201` response — the swap is synchronous, your balance changes instantly:
 
@@ -129,7 +129,7 @@ own section.
 - **Execution rate of the moment**: BTC and GOLD use the live execution
   price; if it is unavailable or stale the swap is rejected with
   `503 pricing_unavailable` (it never executes on an old price).
-- **Volatile-currency limits** (BTC/GOLD, shared with payouts and card
+- **Volatile-currency limits** (BTC/GOLD/SILVER/PLATINUM, shared with payouts and card
   purchases): per-operation cap and 24h rolling volume cap per account
   (`GET /v1/settlement` shows yours). USDT ↔ USDC has no limit.
 - Requires your approved [identity verification](https://docs.cbpayapp.com/en/guides/kyc) and the
@@ -139,7 +139,7 @@ own section.
 
 | HTTP | `error` | Cause | Solution |
 |---|---|---|---|
-| 400 | `invalid_asset` | Currency outside USDT/USDC/BTC/GOLD | Check `from_asset`/`to_asset` |
+| 400 | `invalid_asset` | Currency outside USDT/USDC/BTC/GOLD/SILVER/PLATINUM | Check `from_asset`/`to_asset` |
 | 400 | `invalid_pair` | Source and destination are the same currency | Pick different currencies |
 | 400 | `invalid_amount` | Invalid amount or too many decimals | Respect the source currency's decimals |
 | 400 | `amount_too_small` | The amount does not reach the destination's minimum unit | Increase the amount |
@@ -169,7 +169,7 @@ There is no undo: an executed swap is final (your balance already changed).
 You can swap back any time, at that moment's rate.
 #### Why was my BTC→GOLD swap rejected by limit if it was my first swap of the day?
 Volatile-currency limits are shared across swaps, payouts paid from
-BTC/GOLD and card purchases from BTC/GOLD — they all count against the same
+BTC/GOLD/SILVER/PLATINUM and card purchases from BTC/GOLD/SILVER/PLATINUM — they all count against the same
 24h rolling volume of your account. Check your caps at
 `GET /v1/settlement`.
 #### What do I gain by holding GOLD or BTC balance?

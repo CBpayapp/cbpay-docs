@@ -34,8 +34,8 @@ URL 和密钥。完整指南见[环境与测试](https://docs.cbpayapp.com/zh/en
 ## 资金与汇率
 
 #### 我的余额是什么货币？
-您的账户持有**四个相互独立的余额**：USDT（运营货币，6 位小数）、USDC、BTC 和
-GOLD。每笔法币操作（CLP 付款、BOB 代收……）都会在执行时按您账户的汇率与 USDT
+您的账户持有**六个相互独立的余额**：USDT（运营货币，6 位小数）、USDC、BTC、GOLD、
+SILVER、PLATINUM。每笔法币操作（CLP 付款、BOB 代收……）都会在执行时按您账户的汇率与 USDT
 互相转换（付款用 `rate`，代收用 `payin_rate`）；您也可以从其他余额结算付款（`settlement_asset`），并让代收自动兑换为您选择的资产（`default_payin_asset`）。参见[资金模型](https://docs.cbpayapp.com/zh/concepts/money-model)。
 #### 创建付款之前如何知道它的成本？
 查询 `GET /v1/rates`（返回**您专属的**各国汇率）并计算：

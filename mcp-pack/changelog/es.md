@@ -9,7 +9,56 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.90 · 2 versiones - 16 de septiembre de 2026
+## v2.95 · 3 versiones - 17 de septiembre de 2026
+
+### v2.95
+
+**Added**
+
+- **Activos ledger de plata y platino**: las cuentas ahora admiten `SILVER` y `PLATINUM` como saldos de metales finos en gramos, con seis decimales, junto a USDT, USDC, BTC y GOLD. Las superficies existentes de swaps, settlement, gasto con tarjetas, checkout, cartola y analytics reflejan el vocabulario ampliado. `asset_prices` informa XAG/XPT por onza troy y SILVER/PLATINUM por gramo. No se agrega ningún endpoint ni riel on-chain de metales.
+
+### v2.94
+
+**Cambiado**
+
+- **Cobros C2P en Venezuela**: `VE/VES/c2p` está disponible mediante los
+  endpoints collect existentes. El pagador entrega la `claveDinamica`
+  generada por su banco en `otp`; no llames a
+  `/v1/payins/collect/otp` para C2P. Los shapes de request y respuesta no
+  cambian. `debito_inmediato` sigue sin estar disponible.
+
+### v2.93
+
+**Cambiado**
+
+- **Emisión digital durante el corte temporal de físicas**:
+  `POST /v1/cards` ahora devuelve `400 physical_temporarily_unavailable`
+  para solicitudes nuevas con `physical: true`. Las tarjetas físicas ya
+  emitidas siguen operativas. En cuentas persona, `409 card_limit_reached`
+  significa que la cuenta ya tiene una tarjeta viva o una solicitud abierta.
+
+## v2.92 · 4 versiones - 16 de septiembre de 2026
+
+### v2.92
+
+**Cambiado**
+
+- **Validación de beneficiarios y descripción SEPA Instant**: la descripción
+  SEPA se pliega al charset del proveedor, rechaza caracteres no admitidos con
+  `400 invalid_payload` y queda limitada a 140 runas en el wire. Los nombres
+  aplican el mapa europeo documentado y las personas deben tener nombre y
+  apellido; los monónimos no se pueden pagar en V1.
+
+### v2.91
+
+**Agregado**
+
+- **Payouts SEPA Instant en EUR**: el método `sepa` queda disponible en el
+  catálogo de payouts para 35 países (AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR,
+  DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI,
+  NO, CH, MC, SM, AD y VA). El request exige un IBAN SEPA válido y
+  `beneficiary_type`; el BIC es opcional. Reino Unido queda fuera de V1.
+  El método es solo EUR y reutiliza el webhook `payout_status_changed`.
 
 ### v2.90
 

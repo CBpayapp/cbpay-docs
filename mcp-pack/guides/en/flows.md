@@ -145,7 +145,7 @@ flowchart LR
     S --> B["Instant credit in the<br/>target balance"]
 ```
 
-One call converts between USDT, USDC, BTC and GOLD at your account's
+One call converts between USDT, USDC, BTC, GOLD, SILVER and PLATINUM at your account's
 rate — no money leaves the account, so no OTP is required. Details:
 [swaps](https://docs.cbpayapp.com/en/guides/swaps).
 

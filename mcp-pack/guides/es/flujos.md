@@ -146,7 +146,7 @@ flowchart LR
     S --> B["Abono instantáneo en el<br/>saldo destino"]
 ```
 
-Una llamada convierte entre USDT, USDC, BTC y GOLD a la tasa de tu
+Una llamada convierte entre USDT, USDC, BTC, GOLD, SILVER y PLATINUM a la tasa de tu
 cuenta — la plata no sale de la cuenta, así que no requiere OTP. Detalle:
 [swaps](https://docs.cbpayapp.com/es/guias/swaps).
 

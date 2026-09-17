@@ -172,7 +172,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 422 | `wallet_limit_reached` | La cuenta ya tiene su wallet de esa combinación red+activo (depósito: todas las cuentas; [segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas): personas) |
 | 422 | `insufficient_gas` | La [wallet segregada](https://docs.cbpayapp.com/es/guias/wallets-segregadas) no tiene gas nativo (TRX/ETH) para el fee de red; fondea la dirección y reintenta |
 | 409 | `idempotency_conflict` | Otra creación/envío de wallet con la misma clave sigue en curso; reintenta con la misma clave |
-| 409 | `card_limit_reached` | Una cuenta persona intentó crear una segunda tarjeta del mismo tipo |
+| 400 | `physical_temporarily_unavailable` | La emisión de tarjetas físicas nuevas está pausada temporalmente; solicita una tarjeta digital. Las físicas existentes siguen operativas. |
+| 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud de tarjeta abierta; resuelve la solicitud existente antes de pedir otra |
 | 409 | `card_cancelled` | La tarjeta ya está cancelada y no se puede modificar |
 | 409 | `card_not_pending` | Solo tarjetas en `pending_activation` se pueden activar |
 | 409 | `cardholder_kyc_pending` | El titular designado requiere documentos de identidad |
@@ -180,8 +181,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 400 | `invalid_kind_of_business` | `kind_of_business` no es un código del catálogo (`GET /v1/cards/catalog/business-activities`) |
 | 400 | `invalid_settlement_asset` | `settlement_asset` no es USDT, USDC, BTC ni GOLD |
 | 400 | `settlement_asset_disabled` | Tu organización tiene deshabilitado ese asset como origen de settlement |
-| 422 | `settlement_limit_exceeded` | La operación supera el límite por operación de los assets volátiles (BTC/GOLD); usa USDT/USDC o divide la operación |
-| 422 | `settlement_daily_limit_exceeded` | La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD); usa USDT/USDC o reintenta más tarde |
+| 422 | `settlement_limit_exceeded` | La operación supera el límite por operación de los assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o divide la operación |
+| 422 | `settlement_daily_limit_exceeded` | La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o reintenta más tarde |
 | 400 | `invalid_pair` | Swap con la misma moneda de origen y destino |
 | 400 | `amount_too_small` | El monto del swap no alcanza la unidad mínima de la moneda destino |
 | 400 | `swap_asset_disabled` | Una de las monedas del swap está deshabilitada para tu organización |
@@ -194,6 +195,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 422 | `country_unavailable` | Ese país no tiene métodos de pago disponibles en el link de cobro |
 | 422 | `collect_otp_failed` | El rail rechazó el envío de la clave OTP del cobro pull del link |
 | 422 | `collect_rejected` | El rail rechazó el cobro pull del link (OTP inválida o datos incorrectos); el link sigue pendiente |
+| 422 | `provider_rejected` | Para `VE/VES/c2p`, no llames a `/collect/otp`; el pagador entrega la `claveDinamica` generada por su banco en el campo `otp` del collect. La señal interna del adapter es `collect_otp_unsupported`. |
 | 422 | `settlement_asset_disabled` | El `settlement_asset` del link de cobro está deshabilitado para tu organización |
 | 422 | `checkout_amount_mismatch` | La transferencia CBPay no cubre el monto vigente del link de cobro; el mensaje trae el monto actualizado |
 | 503 | `checkout_recovery_pending` | La opción de pago elegida en el checkout está en reconciliación. Reintenta la misma solicitud de materialización; no crees una segunda opción de pago |
@@ -321,7 +323,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible |
 | 503 | `org_credential_missing` | Servicio en configuración; contacta al soporte de CBPay |
 | 503 | `withdrawals_unavailable` | Retiros on-chain no habilitados para el corredor |
-| 503 | `pricing_unavailable` | Precio de ejecución de BTC/GOLD no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC |
+| 503 | `pricing_unavailable` | Precio de ejecución de BTC/GOLD/SILVER/PLATINUM no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC |
 | 503 | `channel_unavailable` | El canal de payout está temporalmente no disponible; reintenta más tarde con la **misma** clave de idempotencia |
 | 503 | `webhook_processing_pending` | Un evento webhook entrante ya está siendo procesado; reintenta la misma entrega después de un backoff corto y no crees una operación nueva |
 | 503 | `export_unavailable` | El export de llaves privadas de wallets segregadas no está habilitado en este entorno |

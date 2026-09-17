@@ -6,7 +6,7 @@ lang: zh
 source_url: https://docs.cbpayapp.com/zh/introduction
 ---
 CBPay 是一个面向拉丁美洲的多币种支付平台。每个账户持有
-**四个相互独立的虚拟余额** —— `USDT`（运营币种）、`USDC`、`BTC` 和
+**六个相互独立的虚拟余额** —— `USDT`（运营币种）、`USDC`、`BTC` 和
 `GOLD`（黄金克数）—— 并基于它们进行操作：
 
 - **法币付款（Payouts）** - 向智利、秘鲁、墨西哥、委内瑞拉、玻利维亚、巴西、巴拉圭、厄瓜多尔和 阿根廷的本地银行账户付款——包括支付扫描到的 PIX 二维码。

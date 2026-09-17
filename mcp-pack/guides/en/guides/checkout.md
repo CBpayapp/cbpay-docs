@@ -27,7 +27,7 @@ The page organizes the payment into **four tabs**:
 
 - **CBPay** — direct payment with the app: the merchant's alias and QR;
   scanning with the app pays instantly through an internal transfer, in
-  any of the 4 balances.
+  any of the 6 balances.
 - **Crypto** — the available coins grouped by network (today USDT on
   TRON and Ethereum, USDC on Ethereum and BTC; new networks show up on
   their own once enabled), each with a deposit address exclusive to that
@@ -145,11 +145,11 @@ and redirects to your `success_url` if you set one.
   a copy button. If the paid asset differs from the
   `settlement_asset`, the quoted due **already includes the conversion**
   (the payer covers it; you receive your exact target). Partial payments
-  accumulate and the page shows what's missing. Quotes involving BTC/GOLD
+  accumulate and the page shows what's missing. Quotes involving BTC/GOLD/SILVER/PLATINUM
   refresh every 15 minutes.
 - **CBPay app**: the merchant QR embeds the link
   (`cbpay:pay?to=…&checkout=…`). The app pays through an internal
-  transfer in any of the 4 balances: same asset ⇒ exact target; different
+  transfer in any of the 6 balances: same asset ⇒ exact target; different
   ⇒ due with the conversion included. The amount is validated server-side
   against a fresh quote — if it does not cover the charge it responds
   `422 checkout_amount_mismatch` with the current due. Integrators:
@@ -192,6 +192,11 @@ as `POST /v1/swaps`). The aggregate state travels in `conversion_status`:
   the pull-collection endpoints. The option must be materialized first; the
   amount is always the frozen materialization amount and never comes from the
   payer.
+
+For a materialized `VE/VES` C2P option, the payer supplies the
+bank-generated `claveDinamica` in the `otp` field of
+`POST {checkout_url}/collect`. Do not call `/collect/otp` for C2P; that
+endpoint is only for a method that issues an OTP before the charge.
 
 Useful if you prefer to render your own payment page on top of the same
 link.

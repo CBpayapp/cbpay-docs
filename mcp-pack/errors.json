@@ -1,5 +1,5 @@
 {
-  "count": 257,
+  "count": 258,
   "errors": [
     {
       "category": {
@@ -1757,12 +1757,26 @@
         "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
         "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
       },
+      "code": "physical_temporarily_unavailable",
+      "http": 400,
+      "meaning": {
+        "en": "New physical card issuance is temporarily paused; request a digital card. Existing physical cards continue operating.",
+        "es": "La emisión de tarjetas físicas nuevas está pausada temporalmente; solicita una tarjeta digital. Las físicas existentes siguen operativas.",
+        "zh": "新实体卡发行暂时暂停；请申请虚拟卡。已经发行的实体卡继续正常使用。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
       "code": "card_limit_reached",
       "http": 409,
       "meaning": {
-        "en": "A person account tried to create a second card of the same type",
-        "es": "Una cuenta persona intentó crear una segunda tarjeta del mismo tipo",
-        "zh": "个人账户试图创建第二张同类型卡片"
+        "en": "A person account already has one live card or one open card application; resolve the existing application before requesting another",
+        "es": "La cuenta persona ya tiene una tarjeta viva o una solicitud de tarjeta abierta; resuelve la solicitud existente antes de pedir otra",
+        "zh": "个人账户已有一张有效卡或一条开放申请；请先处理现有申请再申请新卡"
       }
     },
     {
@@ -1872,9 +1886,9 @@
       "code": "settlement_limit_exceeded",
       "http": 422,
       "meaning": {
-        "en": "The operation exceeds the per-operation limit for volatile assets (BTC/GOLD); use USDT/USDC or split the operation",
-        "es": "La operación supera el límite por operación de los assets volátiles (BTC/GOLD); usa USDT/USDC o divide la operación",
-        "zh": "该操作超出波动性资产（BTC/GOLD）的单笔操作限额；请使用 USDT/USDC 或拆分操作"
+        "en": "The operation exceeds the per-operation limit for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or split the operation",
+        "es": "La operación supera el límite por operación de los assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o divide la operación",
+        "zh": "该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作"
       }
     },
     {
@@ -1886,9 +1900,9 @@
       "code": "settlement_daily_limit_exceeded",
       "http": 422,
       "meaning": {
-        "en": "The account exceeded its 24h volume for volatile assets (BTC/GOLD); use USDT/USDC or retry later",
-        "es": "La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD); usa USDT/USDC o reintenta más tarde",
-        "zh": "该账户已超出波动性资产（BTC/GOLD）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试"
+        "en": "The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later",
+        "es": "La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o reintenta más tarde",
+        "zh": "该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试"
       }
     },
     {
@@ -2043,6 +2057,20 @@
         "en": "The rail rejected the link's pull charge (invalid OTP or wrong data); the link stays pending",
         "es": "El rail rechazó el cobro pull del link (OTP inválida o datos incorrectos); el link sigue pendiente",
         "zh": "通道拒绝了链接的拉取式扣款（OTP 无效或数据错误）；链接保持待支付"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "provider_rejected",
+      "http": 422,
+      "meaning": {
+        "en": "For `VE/VES/c2p`, do not call `/collect/otp`; the payer supplies the bank-generated `claveDinamica` in the collect request's `otp` field. The internal adapter signal is `collect_otp_unsupported`.",
+        "es": "Para `VE/VES/c2p`, no llames a `/collect/otp`; el pagador entrega la `claveDinamica` generada por su banco en el campo `otp` del collect. La señal interna del adapter es `collect_otp_unsupported`.",
+        "zh": "对于 `VE/VES/c2p`，不要调用 `/collect/otp`；付款人会把银行生成的 `claveDinamica` 放在 collect 请求的 `otp` 字段中。Adapter 内部信号为 `collect_otp_unsupported`。"
       }
     },
     {
@@ -3188,9 +3216,9 @@
       "code": "pricing_unavailable",
       "http": 503,
       "meaning": {
-        "en": "BTC/GOLD execution price unavailable or stale; retry later or settle in USDT/USDC",
-        "es": "Precio de ejecución de BTC/GOLD no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC",
-        "zh": "BTC/GOLD 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算"
+        "en": "BTC/GOLD/SILVER/PLATINUM execution price unavailable or stale; retry later or settle in USDT/USDC",
+        "es": "Precio de ejecución de BTC/GOLD/SILVER/PLATINUM no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC",
+        "zh": "BTC/GOLD/SILVER/PLATINUM 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算"
       }
     },
     {
@@ -3393,20 +3421,6 @@
         "en": "422 — Fix: Virtual IBAN request / approval | The verified KYC/KYB profile is missing required registrant fields; provide the missing document or incorporation data named in the message and retry the same request.",
         "es": "422 — Fix: Solicitud de vIBAN | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant; completa los datos de documento o incorporación indicados y reintenta la misma solicitud.",
         "zh": "422 — Fix: 虚拟 IBAN 申请 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段；按消息补充证件或公司注册数据，并重试相同申请。"
-      }
-    },
-    {
-      "category": {
-        "en": "Service (5xx)",
-        "es": "Servicio (5xx)",
-        "zh": "服务端（5xx）"
-      },
-      "code": "provider_rejected",
-      "http": null,
-      "meaning": {
-        "en": "The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state.",
-        "es": "The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state.",
-        "zh": "The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state."
       }
     },
     {

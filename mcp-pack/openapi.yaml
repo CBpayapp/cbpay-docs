@@ -1,18 +1,18 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.90"
+  version: "2.95"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
 
-    withdrawals, and KYC screening. Every account holds four independent
+    withdrawals, and KYC screening. Every account holds six independent
 
-    virtual balances — USDT (the operating currency), USDC, BTC and GOLD
+    virtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM
 
     (grams of fine gold) — convertible on demand with swaps.
 
-    Payouts and service fees can be paid from any of the four balances
+    Payouts and service fees can be paid from any of the six balances
 
     (`PUT /v1/settlement` or per-payout `settlement_asset`), and payins
 
@@ -21,7 +21,7 @@ info:
 
     All amounts are decimal strings in each currency''s precision (6 decimals
 
-    for USDT/USDC/GOLD, 8 for BTC). Errors always return
+    for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return
 
     `{"error": "<code>", "message": "<detail>"}`.
 
@@ -68,7 +68,7 @@ tags:
   description: Per-account address book of beneficiaries (CBPay, bank and crypto destinations) with
     phone matching and auto-save on every send.
 - name: Swaps
-  description: Instant conversion between the account's USDT, USDC, BTC and GOLD balances at the
+  description: Instant conversion between the account's USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances at the
     account's quoted rate.
 - name: Crypto
   description: On-chain funding and withdrawals (TRON, Ethereum and Bitcoin).
@@ -1078,6 +1078,8 @@ paths:
                     USDC: '50.100200'
                     BTC: '0.00046120'
                     GOLD: '0.462100'
+                    SILVER: '0.462100'
+                    PLATINUM: '0.462100'
                 country_quote:
                   country: BO
                   currency: BOB
@@ -2543,8 +2545,9 @@ paths:
       - Balances
       operationId: getBalances
       summary: Get balances
-      description: The four independent virtual balances of the calling account (USDT — the operating
-        currency —, USDC, BTC and GOLD in grams of fine gold). Every supported asset is always present,
+      description: The six independent virtual balances of the calling account (USDT — the operating
+        currency —, USDC, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver,
+        and PLATINUM in grams of fine platinum). Every supported asset is always present,
         with zeros if the account has not used that currency yet. If the account uses Banking, its BANK_USD/BANK_EUR
         mirror balances are also listed with the `custody` marker set to `banking` (the authoritative
         balance lives at the bank; these balances are not spendable inside the platform).
@@ -2570,6 +2573,12 @@ paths:
                   available: '0.00060000'
                   held: '0.00000000'
                 - asset: GOLD
+                - asset: SILVER
+                  available: '1.070000'
+                  held: '0.000000'
+                - asset: PLATINUM
+                  available: '35.000000'
+                  held: '0.000000'
                   available: '12.500000'
                   held: '0.000000'
                 - asset: BANK_USD
@@ -2589,7 +2598,7 @@ paths:
       summary: Get balance history
       description: 'Daily evolution of the account''s balances for dashboard charts: one series per asset
         (the closing available balance of each day, carried forward on days without movements) plus an
-        aggregated USD series that values BTC/GOLD at each day''s historical reference price. Includes
+        aggregated USD series that values BTC/GOLD/SILVER/PLATINUM at each day''s historical reference price. Includes
         the period''s total inflows/outflows and the current snapshot (available + held), so a front can
         render a Mercury-style balance card with its percentage change. The series tracks the **available**
         balance (holds have no history); `current` carries today''s `held` per asset. Days valued with
@@ -2599,7 +2608,7 @@ paths:
 
         The `assets` map also includes the banking account mirrors (`BANK_USD`, `BANK_EUR`) as their own
         series in their own currency (2 decimals). They are **not** part of the `total_usd` aggregate,
-        which only covers the operational balances (USDT, USDC, BTC, GOLD).
+        which only covers the operational balances (USDT, USDC, BTC, GOLD, SILVER, PLATINUM).
 
         '
       parameters:
@@ -2831,6 +2840,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           example: USDT
       - name: type
         in: query
@@ -3091,6 +3102,18 @@ paths:
                     price: '107.5341'
                     updated_at: '2026-07-07T09:12:05Z'
                     settlement_grade: true
+                  SILVER:
+                    currency: USD
+                    unit: gram
+                    price: '1.0700'
+                    updated_at: '2026-07-07T09:12:05Z'
+                    settlement_grade: true
+                  PLATINUM:
+                    currency: USD
+                    unit: gram
+                    price: '35.0000'
+                    updated_at: '2026-07-07T09:12:05Z'
+                    settlement_grade: true
                 lot_quote:
                   currency: CLP
                   amount: '100000.00000000'
@@ -3324,6 +3347,28 @@ paths:
                     first: '106.8812'
                     last: '107.5341'
                     change_pct: '0.61'
+                  SILVER:
+                    currency: USD
+                    unit: gram
+                    series:
+                    - date: '2026-06-12'
+                      price: '106.8812'
+                    - date: '2026-07-11'
+                      price: '1.0700'
+                    first: '106.8812'
+                    last: '107.5341'
+                    change_pct: '0.61'
+                  PLATINUM:
+                    currency: USD
+                    unit: gram
+                    series:
+                    - date: '2026-06-12'
+                      price: '106.8812'
+                    - date: '2026-07-11'
+                      price: '35.0000'
+                    first: '106.8812'
+                    last: '107.5341'
+                    change_pct: '0.61'
                 retrieved_at: '2026-07-11T15:00:00Z'
         '400':
           description: Missing/invalid date range or granularity (`invalid_range`, `invalid_granularity`).
@@ -3364,7 +3409,7 @@ paths:
         to pay this specific operation from another balance: the USDT total converts to that asset at
         the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and
         the debit, hold and — if it fails — the refund all live in that asset for the exact same amount.
-        If the execution price for BTC/GOLD is unavailable the request returns `503 pricing_unavailable`;
+        If the execution price for BTC/GOLD/SILVER/PLATINUM is unavailable the request returns `503 pricing_unavailable`;
         volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).
 
 
@@ -3400,13 +3445,34 @@ paths:
                   description: Local currency (e.g. CLP, PEN, MXN).
                 method:
                   type: string
-                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer`).
+                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer` or `sepa`).
                 amount:
                   type: string
                   description: Local currency amount as a positive decimal string.
                   example: '50000.00'
                 beneficiary:
                   type: object
+                  properties:
+                    beneficiary_type:
+                      type: string
+                      enum:
+                      - individual
+                      - corporate
+                      description: Required by the EUR SEPA Instant corridor. Individuals require both a first and last name; mononyms are not payable in V1. Names are folded to the provider charset, including diacritics and the documented European letter mappings; unsupported characters return 400 invalid_payload.
+                    iban:
+                      type: string
+                      description: Required by SEPA; normalized and checked with ISO 13616 mod-97.
+                      example: DE89370400440532013000
+                    bic:
+                      type: string
+                      description: Optional ISO 9362 BIC for SEPA; 8 or 11 characters.
+                      example: COBADEFFXXX
+                    given_name:
+                      type: string
+                      description: Individual given name; used with first_surname when provided.
+                    first_surname:
+                      type: string
+                      description: Individual first surname; used with given_name when provided.
                   additionalProperties:
                     type: string
                   description: 'Destination account details. Required keys depend on the
@@ -3475,6 +3541,20 @@ paths:
 
                     payout guide.
 
+                    SEPA Instant (`method: "sepa"`) is EUR-only and is available for
+
+                    35 countries: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU,
+
+                    IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI,
+
+                    NO, CH, MC, SM, AD and VA. GB is excluded from the V1 Instant
+
+                    registry. Its beneficiary requires `beneficiary_type` (`individual`
+
+                    or `corporate`) and `iban`; `bic` is optional. For individuals,
+
+                    `given_name` + `first_surname` take precedence over `name`.
+
                     '
                 beneficiary_contact_id:
                   type: string
@@ -3489,6 +3569,7 @@ paths:
                     it.
                 description:
                   type: string
+                  description: Optional payment narrative. For SEPA, the adapter folds it to the provider corporate charset, rejects unsupported characters with 400 invalid_payload, and truncates the wire value to 140 runes.
                 settlement_asset:
                   type: string
                   enum:
@@ -3496,6 +3577,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Virtual balance to debit for this operation. Omit to use your account's
                     default settlement asset (USDT unless changed via `PUT /v1/settlement`).
                 idempotency_key:
@@ -3805,6 +3888,21 @@ paths:
                     bank_country: US
                   description: Invoice 2212
                   idempotency_key: us-swift-2212
+              sepa_de:
+                summary: Germany — SEPA Instant payout in EUR
+                value:
+                  country: DE
+                  currency: EUR
+                  method: sepa
+                  amount: '100.00'
+                  beneficiary:
+                    beneficiary_type: individual
+                    given_name: Elena
+                    first_surname: Fuentes
+                    iban: DE89370400440532013000
+                    bic: COBADEFFXXX
+                  description: Invoice 2026-0916
+                  idempotency_key: sepa-de-20260916-001
               cl_paid_from_btc:
                 summary: Chile — paid from the BTC balance (settlement_asset)
                 value:
@@ -3859,6 +3957,38 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
+                sepa_processing:
+                  summary: SEPA payout approved and awaiting terminal reconciliation.
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: sepa-de-20260916-001
+                    country: DE
+                    currency: EUR
+                    method: sepa
+                    local_amount: '100.00'
+                    fx_rate: '0.920000'
+                    usdt_amount: '108.695652'
+                    fee: '0.300000'
+                    total_debit: '108.995652'
+                    settlement_asset: USDT
+                    settlement_amount: '108.995652'
+                    settlement_rate: '1'
+                    beneficiary:
+                      beneficiary_type: individual
+                      given_name: Elena
+                      first_surname: Fuentes
+                      iban: DE89370400440532013000
+                      bic: COBADEFFXXX
+                    description: Invoice 2026-0916
+                    status: processing
+                    status_code: approved
+                    status_message: payout approved; awaiting settlement confirmation
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    created_at: '2026-09-16T20:00:00Z'
+                    updated_at: '2026-09-16T20:00:01Z'
                 technical_screening_pending:
                   summary: The payout was accepted and is either dispatching after screening or waiting in the technical screening queue.
                   description: Technical screening is pending before any debit or core dispatch.
@@ -4231,6 +4361,7 @@ paths:
         (`operational` | `degraded` | `down`) — the live health of the corridor, so you
         can decide at render time whether to show, warn about or hide a channel (see the
         service status guide). A corridor with no recorded incidents is always `operational`.
+        The `sepa` method is EUR-only and is registered for 35 countries: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI, NO, CH, MC, SM, AD and VA. GB is excluded from V1.
       responses:
         '200':
           description: Methods catalog.
@@ -4614,6 +4745,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: Checkout only — the virtual balance the charge is denominated in and
                     settles into. Every payment is auto-converted to this asset on credit (same-asset
@@ -5596,7 +5729,7 @@ paths:
       summary: Create an internal transfer
       description: 'Moves balance between two CBPay accounts, atomically and always free of charge — any
         combination works: person to person, person to company, company to person or company to company.
-        Works with the four virtual balances (`USDT` default, `USDC`, `BTC`, `GOLD`) and always between
+        Works with the six virtual balances (`USDT` default, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) and always between
         balances of the **same currency** (no conversion). The destination is resolved by `to_account_id`,
         `to_email`, `to_phone` (OTP-verified phones only) or `to_contact_id`. Every transfer saves the
         recipient as a contact automatically (opt out with `save_contact: false`). The recipient''s webhook
@@ -5648,11 +5781,13 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: Balance currency to move; the destination receives in this same currency.
                 amount:
                   type: string
-                  description: Positive decimal string, up to the currency's decimals (6 for USDT/USDC/GOLD,
+                  description: Positive decimal string, up to the currency's decimals (6 for USDT/USDC/GOLD/SILVER/PLATINUM,
                     8 for BTC).
                   example: '10.500000'
                 description:
@@ -9749,7 +9884,7 @@ paths:
       - Swaps
       operationId: quoteSwap
       summary: Quote a swap
-      description: 'Free indicative quote to convert between your USDT, USDC, BTC and GOLD balances (any
+      description: 'Free indicative quote to convert between your USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances (any
         pair, source different from destination). The rate you see is your account''s execution rate —
         quoted = received, no separate fees. Indicative: execution uses the price at the POST moment (stablecoin
         pairs are stable).'
@@ -9764,6 +9899,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
       - name: to_asset
         in: query
         required: true
@@ -9774,6 +9911,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
       - name: amount
         in: query
         required: true
@@ -10146,6 +10285,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 crypto:
                   type: string
                   enum:
@@ -10483,7 +10624,7 @@ paths:
       operationId: createSwap
       summary: Create a swap
       description: 'Converts balance between two of your currencies, synchronously and atomically — your
-        balance changes instantly and the money never leaves your account (no OTP). Volatile pairs (BTC/GOLD)
+        balance changes instantly and the money never leaves your account (no OTP). Volatile pairs (BTC/GOLD/SILVER/PLATINUM)
         share the per-operation and 24h volume limits with payouts and card purchases. Requires an idempotency
         key: replaying returns the original swap and never re-executes.'
       parameters:
@@ -10506,6 +10647,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 to_asset:
                   type: string
                   enum:
@@ -10513,9 +10656,11 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 amount:
                   type: string
-                  description: Amount in the source currency (6 decimals for USDT/USDC/GOLD, 8 for BTC).
+                  description: Amount in the source currency (6 decimals for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC).
                 idempotency_key:
                   type: string
                   description: >-
@@ -10638,6 +10783,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         description: Matches either leg of the conversion.
       - name: from
         in: query
@@ -12914,6 +13061,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Virtual balance to debit for this operation. Omit to use your account's
                     default settlement asset.
                 idempotency_key:
@@ -13981,10 +14130,12 @@ paths:
       - Payins
       operationId: payinCollect
       summary: Active collection (pull)
-      deprecated: true
       description: >-
         Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin.
         Charges the payer directly in corridors that support pull collections.
+        For `VE/VES/c2p`, the payer-generated `claveDinamica` is sent in `otp`;
+        this method does not use `/v1/payins/collect/otp`. `debito_inmediato`
+        is not a live corridor.
         The platform requires an idempotency key and screens the payer before
         calling the core/provider. A PEP/firewall hold returns `202 in_review`
         without charging; approval only releases the review and the client must
@@ -14032,6 +14183,7 @@ paths:
                   type: string
                 otp:
                   type: string
+                  description: For `VE/VES/c2p`, the payer-generated `claveDinamica`; it is not issued by CBPay.
                 otp_reference:
                   type: string
                 idempotency_key:
@@ -14157,8 +14309,7 @@ paths:
       - Payins
       operationId: payinCollectOtp
       summary: Request a collection OTP
-      deprecated: true
-      description: Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Requests the one-time password some pull methods need before the charge.
+      description: Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Requests the one-time password only for pull methods that issue one before the charge. It is not part of the `VE/VES/c2p` flow, where the payer supplies `claveDinamica` in the collect request's `otp` field.
         Free of charge. The pull option must be materialized first and the final
         collect call remains subject to pre-charge screening.
       requestBody:
@@ -14188,7 +14339,7 @@ paths:
                 payer_account:
                   type: string
             example:
-              method: debito_inmediato
+              method: configured_pull_method
               amount: '1200.00'
               payer_document: V12345678
               payer_phone: '04141234567'
@@ -14229,6 +14380,14 @@ paths:
               example:
                 error: invalid_request
                 message: method is required
+        '422':
+          description: The selected corridor does not expose a provider-issued OTP (for example, `VE/VES/c2p`).
+          content:
+            application/json:
+              schema: *id012
+              example:
+                error: provider_rejected
+                message: c2p uses the payer-provided claveDinamica; no OTP request step exists
         '401':
           $ref: '#/components/responses/Unauthorized'
         '502':
@@ -15773,10 +15932,11 @@ paths:
       operationId: createCard
       summary: Create a card
       description: 'Issues a card (virtual or physical) that spends Just-In-Time from the account''s central
-        balance in the card''s spending asset (`spending_asset`: USDT/USDC 1:1 with the USD, or BTC/GOLD
+        balance in the card''s spending asset (`spending_asset`: USDT/USDC 1:1 with the USD, or BTC/GOLD/SILVER/PLATINUM
         converted at the price of the moment of each event; USDT by default) — no prefunding: every purchase
         is authorized in real time against the available balance and the card''s own limits. Person accounts
-        can hold **1 virtual + 1 physical** card; company accounts can create **unlimited** cards, for
+        can hold **1 live card total and 1 open application**; company accounts can create **unlimited**
+        cards. New physical issuance is temporarily unavailable; existing physical cards continue operating.
         the company itself or for designated persons (e.g. employees, passing their identity documents).
         Issuance bills the `card_creation_virtual` / `card_creation_physical` fee when configured (0 =
         free); the charge is refunded automatically if issuance fails. Physical cards are born `pending_activation`
@@ -15804,9 +15964,11 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: Balance the card spends from. USDT/USDC are at par with the USD (exact
-                    1:1, no conversion fee). BTC/GOLD convert at the effective price of the moment of
+                    1:1, no conversion fee). BTC/GOLD/SILVER/PLATINUM convert at the effective price of the moment of
                     each event, with a reserve cushion at authorization (fail-closed pricing, per-operation
                     and 24h volatile limits shared with payouts).
                 limits:
@@ -15844,11 +16006,11 @@ paths:
                   cardholder:
                     occupation: '52201'
                     salary_usd: 1800
-              subsequent_card:
-                summary: Subsequent card — holder already verified (no data needed)
+              company_subsequent_digital_card:
+                summary: Company — subsequent digital card
                 value:
-                  physical: true
-                  idempotency_key: card-f-ops-1
+                  physical: false
+                  idempotency_key: card-v-ops-1
                   spending_asset: USDC
                   limits:
                     per_transaction: '500.00'
@@ -15901,14 +16063,22 @@ paths:
                 review_id: 7a1c2e94-3b5f-4c8a-9d2e-6f0a1b2c3d4e
                 message: application received; it is pending review by our compliance team
         '400':
-          description: idempotency_key_required / invalid_amount
+          description: idempotency_key_required / invalid_amount / physical_temporarily_unavailable
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: idempotency_key_required
-                message: provide idempotency_key (body or Idempotency-Key header)
+              examples:
+                idempotency_key_required:
+                  summary: Missing idempotency key
+                  value:
+                    error: idempotency_key_required
+                    message: provide idempotency_key (body or Idempotency-Key header)
+                physical_temporarily_unavailable:
+                  summary: New physical issuance is paused
+                  value:
+                    error: physical_temporarily_unavailable
+                    message: physical cards are temporarily unavailable; request a virtual card
         '402':
           description: Balance cannot cover the issuance fee (insufficient_funds).
           content:
@@ -15926,7 +16096,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: card_limit_reached
-                message: person accounts can hold at most 1 virtual card (cancel the existing one first)
+                message: person accounts can hold at most 1 live card and 1 open application (resolve the existing application first)
         '422':
           description: verification_required / verification_not_approved / verification_kind_mismatch
             (designated persons need an approved third-party KYC verification_id).
@@ -16061,6 +16231,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: New spending balance. Only affects future purchases; in-flight authorizations
                     keep (and refund to) the asset they debited.
                 limits:
@@ -16638,7 +16810,7 @@ paths:
       description: Returns which virtual balance your operations (payouts and service fees) debit from
         by default, the balance your payins settle into by default (`default_payin_asset`), which assets
         your organization allows, and the per-operation limit (USDT equivalent) applied to volatile
-        assets (BTC/GOLD).
+        assets (BTC/GOLD/SILVER/PLATINUM).
       responses:
         '200':
           description: Current settlement settings.
@@ -16654,6 +16826,8 @@ paths:
                 - USDC
                 - BTC
                 - GOLD
+                - SILVER
+                - PLATINUM
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '401':
@@ -16687,6 +16861,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Balance payouts and service fees debit from by default. Optional.
                 default_payin_asset:
                   type: string
@@ -16695,6 +16871,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Balance payins settle into by default. Credits enter in USDT and the
                     net amount is auto-converted via the swap engine at the real price (no extra
                     swap spread). Optional.
@@ -16716,6 +16894,8 @@ paths:
                 - USDC
                 - BTC
                 - GOLD
+                - SILVER
+                - PLATINUM
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '400':
@@ -22001,7 +22181,9 @@ components:
           - USDC
           - BTC
           - GOLD
-          description: Balance the card's purchases spend from. USDT/USDC 1:1 with the USD; BTC/GOLD converted
+          - SILVER
+          - PLATINUM
+          description: Balance the card's purchases spend from. USDT/USDC 1:1 with the USD; BTC/GOLD/SILVER/PLATINUM converted
             at the price of the moment of each event. USDT by default. Changing it only affects future
             purchases.
         limits:
@@ -22343,6 +22525,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         to_asset:
           type: string
           enum:
@@ -22350,6 +22534,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         from_amount:
           type: string
         to_amount:
@@ -22603,6 +22789,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: Balance operations debit from when no per-request override is sent.
         default_payin_asset:
           type: string
@@ -22611,6 +22799,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: Balance payins settle into by default. Credits enter in USDT and the net amount
             is auto-converted via the swap engine at the real price, with no extra swap spread.
             Checkout/POS payins keep their
@@ -22622,10 +22812,10 @@ components:
           description: Assets your organization currently allows as settlement source.
         volatile_op_limit_usdt:
           type: string
-          description: Per-operation limit (USDT equivalent) for volatile assets (BTC/GOLD).
+          description: Per-operation limit (USDT equivalent) for volatile assets (BTC/GOLD/SILVER/PLATINUM).
         volatile_daily_limit_usdt:
           type: string
-          description: Rolling 24h volume cap (USDT equivalent) per account for volatile assets (BTC/GOLD).
+          description: Rolling 24h volume cap (USDT equivalent) per account for volatile assets (BTC/GOLD/SILVER/PLATINUM).
       example:
         default_settlement_asset: USDT
         default_payin_asset: USDT
@@ -22634,6 +22824,8 @@ components:
         - USDC
         - BTC
         - GOLD
+        - SILVER
+        - PLATINUM
         volatile_op_limit_usdt: '10000.000000'
         volatile_daily_limit_usdt: '50000.000000'
     Payout:
@@ -22675,6 +22867,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: Virtual balance the operation was actually debited from.
         settlement_amount:
           type: string
@@ -22763,6 +22957,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: The virtual balance the payin settles into. Checkout and POS payins
             denominate the charge in this per-link asset (no `currency`/`local_amount` until a
             local payment method is used; the charge amount is `asset_amount` in this asset).
