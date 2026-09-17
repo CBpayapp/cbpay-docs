@@ -139,6 +139,10 @@ y redirige a tu `success_url` si la configuraste.
   elige — con "Recordar este dispositivo" no repite el código por 30 días
   (ver
   [tarjetas guardadas](/es/guias/stored-cards-subscriptions#el-pagador-descubre-sus-tarjetas-en-la-página-de-pago)).
+- **Vigencia del link para tarjeta**: para materializar una tarjeta, el link
+  de checkout debe conservar al menos **5 minutos** de vigencia. Si queda
+  menos, el endpoint público responde `422 checkout_expiring_soon`; pide al
+  comercio un link nuevo antes de pagar con tarjeta.
 - **Crypto (wallet por cobro)**: al elegir una moneda se genera una
   dirección exclusiva con su `qr_payload` y `qr_png_base64` — el QR lleva
   SIEMPRE la dirección cruda (BTC bech32, TRON base58, ETH hex) para máxima
@@ -264,6 +268,7 @@ Errores propios del link (los ve quien abre la página):
 | 410 | `checkout_expired` | El link venció sin pago |
 | 422 | `method_unavailable` | Ese método no está disponible para este link o país |
 | 422 | `country_unavailable` | Ese país no tiene métodos de pago disponibles |
+| 422 | `checkout_expiring_soon` | El link de checkout vence en menos de 5 minutos; pide al comercio un link nuevo antes de pagar con tarjeta |
 | 422 | `checkout_amount_mismatch` | La transferencia CBPay no cubre el monto vigente del cobro |
 | 422 | `collect_otp_failed` | El rail rechazó el envío de la clave OTP (revisar los datos) |
 | 422 | `collect_rejected` | El rail rechazó el cobro pull (OTP inválida o datos incorrectos); el link sigue pendiente |

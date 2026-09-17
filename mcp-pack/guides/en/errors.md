@@ -86,6 +86,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | HTTP | `error` | Meaning |
 |---|---|---|
 | 403 | `global_treasury_access_disabled` | The organization has not enabled global treasury visibility for its admin panel; ask a platform administrator to enable `global_treasury_read` in the organization settings |
+| 503 | `core_admin_credential_missing` | A platform administrator catalog requires a configured core credential; contact the platform administrator |
 | 400 | `invalid_value` | An organization setting was sent with the wrong type (e.g. `global_treasury_read` must be a boolean, not a string) |
 | 409 | `approval_in_progress` | Another admin is currently applying this adjustment; wait for that action to finish before trying again |
 
@@ -157,7 +158,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | `core_rejected` | The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` |
-| 400 | `invalid_payload` | For `method: "card"`, `expires_at` must be RFC3339, at least 15 minutes ahead and no more than 48 hours ahead |
+| 400 | `invalid_payload` | For `method: "card"`, `expires_at` must be RFC3339, at least 5 minutes ahead and no more than 48 hours ahead |
+| 422 | `checkout_expiring_soon` | The checkout link expires in less than 5 minutes. Ask the merchant for a new link before paying by card |
 | 429 | `too_many_open_card_sessions` | The account has 50 open card sessions and no unused, zero-attempt pending session can be evicted — complete or wait for an existing session to expire before creating another |
 | 503 | `card_recovery_pending` | The platform is reconciling an ambiguous card request. Retry with the **same** idempotency key; do not create a new key or a second charge |
 | 409 | `core_charge_terminal` | The underlying card charge already has a final status, so the platform will not credit it again — read the current payin/charge state and do not create a second charge |

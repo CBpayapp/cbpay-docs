@@ -406,7 +406,7 @@ address — including the state/region when the country has subdivisions —
 so the payment can be captured.
 - `success_url` / `failure_url` (optional, public https) redirect the payer
   when done; without them the page shows the final result.
-- `expires_at` (optional, RFC3339, at least 15 minutes ahead) sets the
+- `expires_at` (optional, RFC3339, at least 5 minutes ahead) sets the
   session lifetime; the default is **60 minutes** and the maximum is
   **48 hours**. The API validates this value before creating the session
   and includes the effective RFC3339 expiry in successful card responses.

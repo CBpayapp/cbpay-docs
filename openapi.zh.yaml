@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.89"
+  version: "2.90"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
     和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
 
@@ -1165,7 +1165,7 @@ paths:
                     error: currency_required
                     message: 'this country accepts this method in more than one currency; send ?currency=XXX'
         '422':
-          description: 该方式对此链接或国家不可用。
+          description: 该方式对此链接或国家不可用，或银行卡链接将在不到 5 分钟后过期。
           content:
             application/json:
               examples:
@@ -1179,6 +1179,11 @@ paths:
                   value:
                     error: country_unavailable
                     message: no payment methods are available for that country
+                checkout_expiring_soon:
+                  summary: 银行卡链接即将过期
+                  value:
+                    error: checkout_expiring_soon
+                    message: this payment link expires too soon for card payment; ask the merchant for a new link
         '429':
           description: 来自此 IP 的请求过多。
           content:
@@ -4338,7 +4343,7 @@ paths:
                   type: string
                   format: date-time
                   description: 银行卡支付会话的可选 RFC3339 过期时间(`card` 方式)；
-                    至少提前 15 分钟，创建后最多 48 小时；默认 60 分钟。
+                    至少提前 5 分钟，创建后最多 48 小时；默认 60 分钟。
                 settlement_asset:
                   type: string
                   enum:

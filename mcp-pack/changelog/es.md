@@ -9,7 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.89 · 1 versión - 16 de septiembre de 2026
+## v2.90 · 2 versiones - 16 de septiembre de 2026
+
+### v2.90
+
+**Cambiado**
+
+- **Vigencia mínima del checkout con tarjeta**: ahora la materialización de
+  tarjeta acepta links de checkout con al menos 5 minutos restantes. Si queda
+  menos tiempo, responde `422 checkout_expiring_soon` e indica pedir un link
+  nuevo, en vez de fallar después con una validación genérica de la sesión.
 
 ### v2.89
 

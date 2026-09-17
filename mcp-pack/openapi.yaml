@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.89"
+  version: "2.90"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -1283,7 +1283,8 @@ paths:
                     error: currency_required
                     message: 'this country accepts this method in more than one currency; send ?currency=XXX'
         '422':
-          description: The method is not available for this link or country.
+          description: The method is not available for this link or country, or a card link
+            expires in less than 5 minutes.
           content:
             application/json:
               examples:
@@ -1297,6 +1298,11 @@ paths:
                   value:
                     error: country_unavailable
                     message: no payment methods are available for that country
+                checkout_expiring_soon:
+                  summary: Card link expires too soon
+                  value:
+                    error: checkout_expiring_soon
+                    message: this payment link expires too soon for card payment; ask the merchant for a new link
         '429':
           description: Too many requests from this IP.
           content:
@@ -4600,7 +4606,7 @@ paths:
                   type: string
                   format: date-time
                   description: Optional RFC3339 expiry for the card payment session (`card` method);
-                    at least 15 minutes ahead and no more than 48 hours from creation. Default 60 minutes.
+                    at least 5 minutes ahead and no more than 48 hours from creation. Default 60 minutes.
                 settlement_asset:
                   type: string
                   enum:

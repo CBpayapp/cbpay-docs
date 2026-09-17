@@ -87,6 +87,7 @@ description: "错误格式与完整的错误码目录"
 | HTTP | `error` | 含义 |
 |---|---|---|
 | 403 | `global_treasury_access_disabled` | 该组织尚未在其管理面板启用全局资金总览；请联系平台管理员在组织设置中启用 `global_treasury_read` |
+| 503 | `core_admin_credential_missing` | 平台管理员目录需要配置核心凭证；请联系平台管理员 |
 | 400 | `invalid_value` | 组织设置的值类型有误（例如 `global_treasury_read` 必须是布尔值，而不是字符串） |
 | 409 | `approval_in_progress` | 另一位管理员正在处理此 adjustment；请等待当前操作完成后再重试 |
 
@@ -158,7 +159,8 @@ description: "错误格式与完整的错误码目录"
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
 | 422 | `currency_not_supported` | 该货币没有汇率 |
 | 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 |
-| 400 | `invalid_payload` | 对于 `method: "card"`，`expires_at` 必须是 RFC3339，至少提前 15 分钟且不超过 48 小时 |
+| 400 | `invalid_payload` | 对于 `method: "card"`，`expires_at` 必须是 RFC3339，至少提前 5 分钟且不超过 48 小时 |
+| 422 | `checkout_expiring_soon` | checkout 链接将在不到 5 分钟后过期。使用银行卡付款前，请向商户索取新的链接 |
 | 429 | `too_many_open_card_sessions` | 账户已有 50 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |
 | 503 | `card_recovery_pending` | 平台正在核对一笔结果不明确的银行卡收款。请使用**相同**幂等键重试；不要生成新键或第二笔收款 |
 | 409 | `core_charge_terminal` | 底层银行卡扣款已经处于最终状态，因此平台不会再次入账 —— 读取当前 payin/扣款状态，切勿创建第二笔扣款 |

@@ -139,6 +139,10 @@ and redirects to your `success_url` if you set one.
   type their email, verify it with a code and pick one — with "Remember
   this device" they skip the code for 30 days (see
   [stored cards](/en/guides/stored-cards-subscriptions#the-payer-discovers-their-cards-on-the-payment-page)).
+- **Card link lifetime**: card materialization requires at least **5 minutes**
+  remaining on the checkout link. If less time remains, the public endpoint
+  returns `422 checkout_expiring_soon`; ask the merchant for a new link before
+  paying by card.
 - **Crypto (wallet per charge)**: choosing a currency generates an
   exclusive address with its `qr_payload` and `qr_png_base64` — the QR
   always carries the raw address (BTC bech32, TRON base58, ETH hex) for
@@ -267,6 +271,7 @@ Link-specific errors (seen by whoever opens the page):
 | 410 | `checkout_expired` | The link expired unpaid |
 | 422 | `method_unavailable` | That method is not available for this link or country |
 | 422 | `country_unavailable` | That country has no available payment methods |
+| 422 | `checkout_expiring_soon` | The checkout link expires in less than 5 minutes; ask the merchant for a new link before paying by card |
 | 422 | `checkout_amount_mismatch` | The CBPay transfer does not cover the charge's current due |
 | 422 | `collect_otp_failed` | The rail rejected the OTP delivery (check the data) |
 | 422 | `collect_rejected` | The rail rejected the pull charge (invalid OTP or wrong data); the link stays pending |
