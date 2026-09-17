@@ -1,5 +1,5 @@
 {
-  "count": 258,
+  "count": 265,
   "errors": [
     {
       "category": {
@@ -895,6 +895,20 @@
         "en": "Missing a required field (e.g. `enabled` on AML monitoring, `external_customer_id` on verifications)",
         "es": "Falta un campo requerido (ej. `enabled` en monitoreo AML, `external_customer_id` en verificaciones)",
         "zh": "缺少必填字段（例如 AML 监控的 `enabled`、身份验证的 `external_customer_id`）"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "invalid_iban",
+      "http": 400,
+      "meaning": {
+        "en": "The SEPA payout IBAN is invalid, unsupported for the `EU` route, or belongs to GB in SEPA Instant V1; correct it and retry with a new payout idempotency key",
+        "es": "El IBAN del payout SEPA es inválido, no es compatible con la ruta `EU` o pertenece a GB en SEPA Instant V1; corrígelo y reintenta con una clave de idempotencia nueva",
+        "zh": "SEPA payout 的 IBAN 无效、不支持 `EU` 路由，或在 SEPA Instant V1 中属于 GB；请修正后使用新的幂等键重试"
       }
     },
     {
@@ -1886,9 +1900,9 @@
       "code": "settlement_limit_exceeded",
       "http": 422,
       "meaning": {
-        "en": "The operation exceeds the per-operation limit for volatile assets (BTC/GOLD); use USDT/USDC or split the operation",
-        "es": "La operación supera el límite por operación de los assets volátiles (BTC/GOLD); usa USDT/USDC o divide la operación",
-        "zh": "该操作超出波动性资产（BTC/GOLD）的单笔操作限额；请使用 USDT/USDC 或拆分操作"
+        "en": "The operation exceeds the per-operation limit for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or split the operation",
+        "es": "La operación supera el límite por operación de los assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o divide la operación",
+        "zh": "该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作"
       }
     },
     {
@@ -1900,9 +1914,9 @@
       "code": "settlement_daily_limit_exceeded",
       "http": 422,
       "meaning": {
-        "en": "The account exceeded its 24h volume for volatile assets (BTC/GOLD); use USDT/USDC or retry later",
-        "es": "La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD); usa USDT/USDC o reintenta más tarde",
-        "zh": "该账户已超出波动性资产（BTC/GOLD）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试"
+        "en": "The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later",
+        "es": "La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o reintenta más tarde",
+        "zh": "该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试"
       }
     },
     {
@@ -3216,9 +3230,9 @@
       "code": "pricing_unavailable",
       "http": 503,
       "meaning": {
-        "en": "BTC/GOLD execution price unavailable or stale; retry later or settle in USDT/USDC",
-        "es": "Precio de ejecución de BTC/GOLD no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC",
-        "zh": "BTC/GOLD 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算"
+        "en": "BTC/GOLD/SILVER/PLATINUM execution price unavailable or stale; retry later or settle in USDT/USDC",
+        "es": "Precio de ejecución de BTC/GOLD/SILVER/PLATINUM no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC",
+        "zh": "BTC/GOLD/SILVER/PLATINUM 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算"
       }
     },
     {
@@ -3603,6 +3617,90 @@
         "en": "The creator tried to approve their own campaign — Fix: Have a different named God approve it",
         "es": "El creador intentó aprobar su campaña — Fix: Pide aprobación a otro God nombrado",
         "zh": "创建者尝试审批自己的 campaign — Fix: 让另一名命名 God 审批"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "virtual_iban_limit_reached",
+      "http": 409,
+      "meaning": {
+        "en": "A person already has a virtual IBAN for this purpose. Reuse it; companies are not subject to this per-purpose cap.",
+        "es": "La persona ya tiene un IBAN virtual para ese propósito. Reúsalo; el límite no aplica así a empresas.",
+        "zh": "个人账户该 purpose 已有虚拟 IBAN；请复用它，企业不受同样的 purpose 上限。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "wallet_not_ready",
+      "http": 409,
+      "meaning": {
+        "en": "The company wallet is still pending/provisioning. Poll the detail and wait for `active`.",
+        "es": "La wallet sigue `pending`/`provisioning`. Consulta el detalle hasta que quede `active`.",
+        "zh": "钱包仍为 `pending`/`provisioning`；读取详情直到变为 `active`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "wallet_reservation_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The reservation response had no usable order reference. Reconcile before any retry.",
+        "es": "La reserva no devolvió una referencia utilizable. Concilia antes de reintentar.",
+        "zh": "预留没有返回可用 reference；先协调再重试。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "wallet_reservation_status_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The status read failed. Keep the same `order_reference` or `client_order`.",
+        "es": "Falló la lectura de estado. Conserva `order_reference` o `client_order`.",
+        "zh": "状态读取失败；保留 `order_reference` 或 `client_order`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "wallet_read_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The live wallet response or EUR amount was unreadable. Retry the read after checking the wallet state.",
+        "es": "No se pudo leer la respuesta live o el monto EUR. Reintenta la lectura después de revisar el estado.",
+        "zh": "live wallet 响应或 EUR 金额不可读；检查状态后重试读取。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "wallet_statement_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The statement response was unreadable. Use a valid completed-day window and retry the read.",
+        "es": "No se pudo leer el statement. Usa una ventana válida de días completos y reintenta la lectura.",
+        "zh": "statement 不可读；使用完整日期窗口后重试读取。"
       }
     }
   ]

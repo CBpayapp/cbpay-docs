@@ -1,0 +1,160 @@
+---
+title: "企业钱包"
+description: "为已验证企业账户预留并操作专用 EUR 钱包"
+slug: zh/guides/company-wallets
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/guides/company-wallets
+---
+> **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
+
+## 企业 EUR 钱包
+
+已验证的企业账户在启用 Banking 产品后，可以预留一个专用 EUR 钱包。
+该钱包是企业的银行业务钱包：企业的虚拟 IBAN 将资金路由到该钱包，
+EUR 出账使用已接受的企业付款人。预留记录是持久化且幂等的；在后续
+银行操作执行前不会移动资金。
+
+### 预留钱包
+
+请求仅适用于已验证的企业账户。幂等键可以放在 header 或 JSON 的
+`idempotency_key` 中。可选 override 用于补充已批准 KYB profile 中缺少
+的资料：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/company-wallets \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-wallet-eur-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idempotency_key": "company-wallet-eur-001",
+    "trading_website": "https://example.com",
+    "business_activity": "International software services",
+    "is_micro_enterprise": false,
+    "incorporation_country": "CL",
+    "incorporation_date": "2020-04-15",
+    "expected_turnover": "250000.00"
+  }'
+```
+
+平台根据已验证 KYB profile 和 override 生成完整企业付款人。如果仍缺少
+必填资料，返回 `422 registrant_incomplete` 并列出缺少的路径。成功返回
+`202 Accepted`：
+
+```json
+{
+  "company_wallet": {
+    "id": "7d2c1a8e-4d3e-4f7f-9a1c-000000000001",
+    "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "currency": "EUR",
+    "status": "pending",
+    "order_reference": "wallet-order-001",
+    "created_at": "2026-09-17T15:00:00Z",
+    "updated_at": "2026-09-17T15:00:00Z"
+  }
+}
+```
+
+使用相同键重放会返回原对象和 `idempotency_hit: true`；出现不明确响应
+后不要使用新键创建第二个预留。
+
+### 列表、详情、余额和操作
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/company-wallets?page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/company-wallets/7d2c1a8e-4d3e-4f7f-9a1c-000000000001 \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/company-wallets/7d2c1a8e-4d3e-4f7f-9a1c-000000000001/balance \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/banking/company-wallets/7d2c1a8e-4d3e-4f7f-9a1c-000000000001/operations?from=2026-09-01&to=2026-09-16" \
+  -H "Authorization: Bearer <token>"
+```
+
+当预留仍在处理中时，详情刷新 provider 状态；刷新失败会在响应中带
+`sync_error`，但不会丢失本地持久化状态。余额是实时读取，返回所有金额
+以及 EUR 标量：
+
+```json
+{
+  "wallet_id": "7d2c1a8e-4d3e-4f7f-9a1c-000000000001",
+  "currency": "EUR",
+  "available": "12500.00",
+  "amounts": [
+    { "currency": "EUR", "available": "12500.00" }
+  ],
+  "source": "banking_provider_live"
+}
+```
+
+操作接口要求 `from` 与 `to` 使用 `YYYY-MM-DD`。provider 窗口会截断到
+最近一个完整日；使用今天作为结束日不会制造不完整的最终状态：
+
+```json
+{
+  "wallet_id": "7d2c1a8e-4d3e-4f7f-9a1c-000000000001",
+  "from": "2026-09-01",
+  "to": "2026-09-16",
+  "operations": [
+    {
+      "source_tx_id": "bank-order-8842",
+      "occurred_at": "2026-09-15T10:30:00Z",
+      "amount": "450.00",
+      "currency": "EUR",
+      "direction": "credit",
+      "reference": "CB-EUR-001",
+      "counterparty": "Example Client",
+      "description": "Invoice 8842",
+      "from_address": "DE00...",
+      "to_address": "DE11..."
+    }
+  ]
+}
+```
+
+未激活或尚未分配 UUID 的钱包返回 `409 wallet_not_ready`。
+`wallet_read_failed` 与 `wallet_statement_failed` 表示读取失败；保留
+持久化预留并重试读取，不要重新预留。
+
+### Banking EUR 虚拟 IBAN 余额
+
+`GET /v1/banking/virtual-ibans/{virtualIBANID}/balance` 返回
+`received_total`，即该虚拟 IBAN 在平台镜像中收到的净金额。它不会返回
+`available`：EUR 出账在账户级别扣除 `BANK_EUR`，当前无法诚实地归属于
+某一个收款 IBAN。
+
+```json
+{
+  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+  "currency": "EUR",
+  "asset": "BANK_EUR",
+  "received_total": "1250.00",
+  "purpose": "banking_eur",
+  "source": "platform_ledger_reconciled_to_banking_provider"
+}
+```
+
+账户级余额才是可用资金来源。按 IBAN 分配出账是后续阶段；不要从
+`received_total` 中减去臆造金额。
+
+## 状态与错误
+
+| 状态 | 含义 | 下一步 |
+|---|---|---|
+| `pending` / `provisioning` | 预留仍在协调 | 使用同一账户凭证读取详情 |
+| `active` | 钱包 UUID 与 EUR 余额可用 | 读取余额或日期操作 |
+| `declined` / `failed` | 预留已进入终态失败 | 查看持久化错误并做新的业务决策 |
+
+请查看[Banking EUR 与企业钱包错误](https://docs.cbpayapp.com/zh/errors#banking-eur-与企业钱包错误)
+了解公开错误代码与恢复动作。
+
+## FAQ
+
+#### Can I reserve a second wallet with a new key?
+No. Reuse the same idempotency key after an ambiguous response and reconcile
+the durable reservation. A new key creates a new request.
+#### Does a virtual IBAN have its own spendable balance?
+No. `received_total` is the honest inbound mirror for a receiving IBAN.
+Outgoing EUR payments debit the account-level `BANK_EUR` balance.

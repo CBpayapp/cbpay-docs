@@ -111,6 +111,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_chain` / `invalid_asset` | Red o activo no soportado |
 | `to_address_required` | Falta dirección destino del retiro |
 | `invalid_payload` | Falta un campo requerido (ej. `enabled` en monitoreo AML, `external_customer_id` en verificaciones) |
+| `invalid_iban` | El IBAN del payout SEPA es inválido, no es compatible con la ruta `EU` o pertenece a GB en SEPA Instant V1; corrígelo y reintenta con una clave de idempotencia nueva |
 | `invalid_qr_payload` | QR de payout ilegible o no soportado (BR Code corrupto, checksum inválido o QR PIX dinámico); el `message` explica la razón exacta |
 | `liveness_already_completed` | La prueba de vida de esa verificación ya fue superada |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Suscripción de webhook inválida |
@@ -181,8 +182,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 400 | `invalid_kind_of_business` | `kind_of_business` no es un código del catálogo (`GET /v1/cards/catalog/business-activities`) |
 | 400 | `invalid_settlement_asset` | `settlement_asset` no es USDT, USDC, BTC ni GOLD |
 | 400 | `settlement_asset_disabled` | Tu organización tiene deshabilitado ese asset como origen de settlement |
-| 422 | `settlement_limit_exceeded` | La operación supera el límite por operación de los assets volátiles (BTC/GOLD); usa USDT/USDC o divide la operación |
-| 422 | `settlement_daily_limit_exceeded` | La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD); usa USDT/USDC o reintenta más tarde |
+| 422 | `settlement_limit_exceeded` | La operación supera el límite por operación de los assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o divide la operación |
+| 422 | `settlement_daily_limit_exceeded` | La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o reintenta más tarde |
 | 400 | `invalid_pair` | Swap con la misma moneda de origen y destino |
 | 400 | `amount_too_small` | El monto del swap no alcanza la unidad mínima de la moneda destino |
 | 400 | `swap_asset_disabled` | Una de las monedas del swap está deshabilitada para tu organización |
@@ -323,7 +324,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible |
 | 503 | `org_credential_missing` | Servicio en configuración; contacta al soporte de CBPay |
 | 503 | `withdrawals_unavailable` | Retiros on-chain no habilitados para el corredor |
-| 503 | `pricing_unavailable` | Precio de ejecución de BTC/GOLD no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC |
+| 503 | `pricing_unavailable` | Precio de ejecución de BTC/GOLD/SILVER/PLATINUM no disponible o desactualizado; reintenta más tarde o liquida en USDT/USDC |
 | 503 | `channel_unavailable` | El canal de payout está temporalmente no disponible; reintenta más tarde con la **misma** clave de idempotencia |
 | 503 | `webhook_processing_pending` | Un evento webhook entrante ya está siendo procesado; reintenta la misma entrega después de un backoff corto y no crees una operación nueva |
 | 503 | `export_unavailable` | El export de llaves privadas de wallets segregadas no está habilitado en este entorno |
@@ -400,3 +401,16 @@ Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
 | 409 | `empty_audience` | Ninguna cuenta coincidió al enviar/aprobar | Corrige la audiencia y vuelve a enviar |
 | 409 | `audience_too_large` | Los filtros coinciden con más de 20000 cuentas | Acota los filtros y vuelve a enviar |
 | 409 | `second_approver_required` | El creador intentó aprobar su campaña | Pide aprobación a otro God nombrado |
+
+## Errores de Banking EUR y wallets de empresa
+
+| HTTP | Código | Qué hacer |
+|---:|---|---|
+| 409 | `virtual_iban_limit_reached` | La persona ya tiene un IBAN virtual para ese propósito. Reúsalo; el límite no aplica así a empresas. |
+| 409 | `wallet_not_ready` | La wallet sigue `pending`/`provisioning`. Consulta el detalle hasta que quede `active`. |
+| 422 | `virtual_iban_limit_reached` | Se alcanzó el límite persona-por-propósito al reservar. No crees una segunda clave. |
+| 422 | `registrant_incomplete` | Completa los datos KYC/KYB o de incorporación indicados en `message` y repite la misma solicitud durable. |
+| 502 | `wallet_reservation_failed` | La reserva no devolvió una referencia utilizable. Concilia antes de reintentar. |
+| 502 | `wallet_reservation_status_failed` | Falló la lectura de estado. Conserva `order_reference` o `client_order`. |
+| 502 | `wallet_read_failed` | No se pudo leer la respuesta live o el monto EUR. Reintenta la lectura después de revisar el estado. |
+| 502 | `wallet_statement_failed` | No se pudo leer el statement. Usa una ventana válida de días completos y reintenta la lectura. |

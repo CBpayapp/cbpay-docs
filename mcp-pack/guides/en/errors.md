@@ -111,6 +111,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_chain` / `invalid_asset` | Unsupported network or asset |
 | `to_address_required` | Missing withdrawal destination address |
 | `invalid_payload` | Missing a required field (e.g. `enabled` on AML monitoring, `external_customer_id` on verifications) |
+| `invalid_iban` | The SEPA payout IBAN is invalid, unsupported for the `EU` route, or belongs to GB in SEPA Instant V1; correct it and retry with a new payout idempotency key |
 | `invalid_qr_payload` | The payout QR is unreadable or unsupported (corrupt BR Code, bad checksum, or a dynamic PIX QR); the `message` explains the exact reason |
 | `liveness_already_completed` | That verification's liveness check already passed |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Invalid webhook subscription |
@@ -181,8 +182,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 400 | `invalid_kind_of_business` | `kind_of_business` is not a catalog code (`GET /v1/cards/catalog/business-activities`) |
 | 400 | `invalid_settlement_asset` | `settlement_asset` is not USDT, USDC, BTC or GOLD |
 | 400 | `settlement_asset_disabled` | Your organization disabled that asset as settlement source |
-| 422 | `settlement_limit_exceeded` | The operation exceeds the per-operation limit for volatile assets (BTC/GOLD); use USDT/USDC or split the operation |
-| 422 | `settlement_daily_limit_exceeded` | The account exceeded its 24h volume for volatile assets (BTC/GOLD); use USDT/USDC or retry later |
+| 422 | `settlement_limit_exceeded` | The operation exceeds the per-operation limit for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or split the operation |
+| 422 | `settlement_daily_limit_exceeded` | The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later |
 | 400 | `invalid_pair` | Swap with the same source and destination currency |
 | 400 | `amount_too_small` | The swap amount does not reach the destination currency's minimum unit |
 | 400 | `swap_asset_disabled` | One of the swap currencies is disabled for your organization |
@@ -322,7 +323,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 503 | `verifications_unavailable` | Identity verification temporarily unavailable |
 | 503 | `org_credential_missing` | Service being configured; contact CBPay support |
 | 503 | `withdrawals_unavailable` | On-chain withdrawals not enabled for the corridor |
-| 503 | `pricing_unavailable` | BTC/GOLD execution price unavailable or stale; retry later or settle in USDT/USDC |
+| 503 | `pricing_unavailable` | BTC/GOLD/SILVER/PLATINUM execution price unavailable or stale; retry later or settle in USDT/USDC |
 | 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the **same** idempotency key |
 | 503 | `webhook_processing_pending` | An inbound webhook event is already being processed; retry the same delivery after a short backoff and do not create a new operation |
 | 503 | `export_unavailable` | Segregated wallet private key export is not enabled on this environment |
@@ -399,3 +400,16 @@ endpoints. They are listed here so shared SDKs can keep one error catalog.
 | 409 | `empty_audience` | No account matched at submit/approval time | Correct the audience and resubmit |
 | 409 | `audience_too_large` | The filters match more than 20000 accounts | Narrow the filters and resubmit |
 | 409 | `second_approver_required` | The creator tried to approve their own campaign | Have a different named God approve it |
+
+## Banking EUR and company-wallet errors
+
+| HTTP | Code | What to do |
+|---:|---|---|
+| 409 | `virtual_iban_limit_reached` | A person already has a virtual IBAN for this purpose. Reuse it; companies are not subject to this per-purpose cap. |
+| 409 | `wallet_not_ready` | The company wallet is still pending/provisioning. Poll the detail and wait for `active`. |
+| 422 | `virtual_iban_limit_reached` | The person-per-purpose limit was reached while reserving the request. Do not create a second key. |
+| 422 | `registrant_incomplete` | Complete the missing verified KYC/KYB or incorporation fields named in `message`, then retry the same durable request. |
+| 502 | `wallet_reservation_failed` | The reservation response had no usable order reference. Reconcile before any retry. |
+| 502 | `wallet_reservation_status_failed` | The status read failed. Keep the same `order_reference` or `client_order`. |
+| 502 | `wallet_read_failed` | The live wallet response or EUR amount was unreadable. Retry the read after checking the wallet state. |
+| 502 | `wallet_statement_failed` | The statement response was unreadable. Use a valid completed-day window and retry the read. |

@@ -545,6 +545,12 @@ fallback.
 | 422 | `verification_invalid` | Referenciaste tu verificación de onboarding; el tercero necesita la suya propia |
 | 404 | `not_found` | El tercero (o la verificación) no existe o no pertenece a tu cuenta |
 | 502 | `banking_request_failed` | Error del corredor bancario; la comisión se reembolsó — reintenta |
+
+## Wallets de empresa
+
+Wallets EUR dedicadas para cuentas empresa verificadas. See the complete reservation, balance, statement and error
+contract in [Company wallets](https://docs.cbpayapp.com/es/guias/company-wallets).
+
 ## FAQ
 
 #### ¿El dinero banking aparece en mi saldo USDT?
