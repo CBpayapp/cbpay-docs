@@ -1148,13 +1148,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ## EUR 中的 SEPA Instant
 
 请参阅[专门的 SEPA Instant payout 指南](https://docs.cbpayapp.com/zh/guides/sepa-instant-payouts)，
-了解 35 个国家的 EUR 目录、IBAN/BIC 与 `beneficiary_type` 合约、
-状态、错误和 reconciliation。
-
-V1 代码为：`AT`、`BE`、`BG`、`HR`、`CY`、`CZ`、`DK`、`EE`、`FI`、`FR`、
-`DE`、`GR`、`HU`、`IE`、`IT`、`LV`、`LT`、`LU`、`MT`、`NL`、`PL`、`PT`、
-`RO`、`SK`、`SI`、`ES`、`SE`、`IS`、`LI`、`NO`、`CH`、`MC`、`SM`、`AD`、
-`VA`（全部为 `EUR` + `sepa`；`GB` 不在 V1）。
+了解唯一的欧洲路由走廊：请求使用 `country: "EU"`、`currency: "EUR"` 和
+`method: "sepa"`。受益人的实际国家取自 IBAN。GB IBAN 不在 SEPA Instant
+V1，并会在派发前以 HTTP 400 快速拒绝；英国的 SEPA Credit Transfer 属于
+未来范围。
 
 ### 美元转账的强制支持文件
 

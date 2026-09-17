@@ -88,6 +88,14 @@ payout 可能改变结果。`marked_rate` 可选。校验错误作为正常 `200
 | `executed` | payout 响应包含权威归因。 | 保存响应和最终 webhook 用于对账。 |
 | `error` | 响应包含 `invalid_amount`、`currency_not_supported` 或 `quote_unavailable`。 | 修正输入或重试只读报价；不要从错误响应创建 payout。 |
 
+### SEPA EUR 汇率键
+
+唯一的欧洲（`EU`）/EUR/`sepa` 路由走廊共享汇率键 `sepa`，其
+`currency: "EUR"`。payout 目录对该行返回 `country: "EU"`，受益人的实际
+国家取自 IBAN。payout fee 与 FX spread 都解析到 `EU` pricing 行。
+`rate_source` 仍表示可执行的 payout 报价来源（`lot` 或 `spot`）；
+`payin_rate` 仍是入金侧的 spot 报价。
+
 <AccordionGroup>
 <Accordion title="Does this quote reserve inventory?">
   No. It is read-only and indicative. The payout debit transaction locks and

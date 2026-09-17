@@ -111,6 +111,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_chain` / `invalid_asset` | Unsupported network or asset |
 | `to_address_required` | Missing withdrawal destination address |
 | `invalid_payload` | Missing a required field (e.g. `enabled` on AML monitoring, `external_customer_id` on verifications) |
+| `invalid_iban` | The SEPA payout IBAN is invalid, unsupported for the `EU` route, or belongs to GB in SEPA Instant V1; correct it and retry with a new payout idempotency key |
 | `invalid_qr_payload` | The payout QR is unreadable or unsupported (corrupt BR Code, bad checksum, or a dynamic PIX QR); the `message` explains the exact reason |
 | `liveness_already_completed` | That verification's liveness check already passed |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Invalid webhook subscription |

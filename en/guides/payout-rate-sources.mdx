@@ -92,6 +92,15 @@ the final `payout_status_changed` event remain the authoritative records.
 | `executed` | The payout response contains the authoritative attribution. | Persist the response and final webhook for reconciliation. |
 | `error` | The response contains `invalid_amount`, `currency_not_supported` or `quote_unavailable`. | Correct the inputs or retry the read-only quote; do not create a payout from the error. |
 
+### SEPA EUR rate key
+
+The single Europe (`EU`)/EUR/`sepa` routing corridor shares one rate
+key: `sepa`, with `currency: "EUR"`. The payout catalog returns `country:
+"EU"` for this row, while the beneficiary's actual country comes from the
+IBAN. The payout fee and FX spread resolve on the `EU` pricing row.
+`rate_source` still describes the executable payout quote (`lot` or `spot`);
+`payin_rate` remains the deposit-side spot quote.
+
 <AccordionGroup>
 <Accordion title="Does this quote reserve inventory?">
   No. It is read-only and indicative. The payout debit transaction locks and

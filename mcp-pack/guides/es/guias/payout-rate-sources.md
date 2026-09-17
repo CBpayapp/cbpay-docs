@@ -92,6 +92,15 @@ evento final `payout_status_changed` son la fuente autoritativa.
 | `executed` | La respuesta del payout contiene la atribución autoritativa. | Guarda la respuesta y el webhook final para conciliar. |
 | `error` | La respuesta contiene `invalid_amount`, `currency_not_supported` o `quote_unavailable`. | Corrige los datos o repite la cotización de solo lectura; no crees un payout desde el error. |
 
+### Llave de tasa EUR para SEPA
+
+El único corredor de enrutamiento Europa (`EU`)/EUR/`sepa` comparte
+una sola llave de tasa: `sepa`, con `currency: "EUR"`. El catálogo de payouts
+devuelve `country: "EU"` para esta fila, mientras el país real del beneficiario
+sale del IBAN. El fee de payout y el spread FX resuelven sobre la fila de
+pricing `EU`. `rate_source` sigue describiendo la cotización ejecutable
+(`lot` o `spot`) y `payin_rate` sigue siendo spot del lado de depósitos.
+
 #### Does this quote reserve inventory?
   No. It is read-only and indicative. The payout debit transaction locks and
   consumes inventory atomically.

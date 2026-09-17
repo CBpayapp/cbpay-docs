@@ -112,6 +112,7 @@ description: "错误格式与完整的错误码目录"
 | `invalid_chain` / `invalid_asset` | 不支持的网络或资产 |
 | `to_address_required` | 缺少提现目标地址 |
 | `invalid_payload` | 缺少必填字段（例如 AML 监控的 `enabled`、身份验证的 `external_customer_id`） |
+| `invalid_iban` | SEPA payout 的 IBAN 无效、不支持 `EU` 路由，或在 SEPA Instant V1 中属于 GB；请修正后使用新的幂等键重试 |
 | `invalid_qr_payload` | 出金二维码不可读或不受支持（BR Code 损坏、校验和无效或动态 PIX 二维码）；`message` 说明具体原因 |
 | `liveness_already_completed` | 该验证的活体检测已经通过 |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Webhook 订阅无效 |
