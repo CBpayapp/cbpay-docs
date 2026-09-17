@@ -8,7 +8,38 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.94 · 2 versions - September 17, 2026
+## v2.97 · 5 versions - September 17, 2026
+
+### v2.97
+
+**Changed**
+
+- **Metal settlement safeguards**: XPT/PLATINUM execution references now use
+  a second independent public reference when available. A divergence above
+  2% marks the quote as not eligible for settlement; if the secondary
+  reference is unavailable, the existing reference freshness guard remains in
+  force. Existing API paths and response shapes are unchanged.
+- **More truthful rate freshness**: reference-backed rate timestamps now reflect the
+  source payload, and payloads older than the seven-day default tolerance are
+  rejected before publication.
+- **Card metal defaults**: the default SILVER cushion and degraded haircut
+  are 3%; BTC remains 5%, GOLD 2% and PLATINUM 2%. Organization overrides
+  remain supported.
+
+### v2.96
+
+**Changed**
+
+- **SEPA Instant simplified to one Europe corridor**: `sepa` now uses the
+  single `EU`/`EUR` routing row. The beneficiary's actual country is read from
+  the IBAN; GB IBANs fail fast with HTTP 400 before dispatch. Configure the
+  payout pricing row with `country: "EU"`.
+
+### v2.95
+
+**Added**
+
+- **Silver and platinum ledger assets**: accounts now support `SILVER` and `PLATINUM` as six-decimal fine-metal gram balances, alongside USDT, USDC, BTC and GOLD. Existing swap, settlement, card-spending, checkout, statement and analytics surfaces expose the expanded vocabulary. `asset_prices` reports XAG/XPT per troy ounce and SILVER/PLATINUM per gram. No new endpoint or on-chain metal rail is introduced.
 
 ### v2.94
 
