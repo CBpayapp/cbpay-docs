@@ -6,7 +6,7 @@ lang: en
 source_url: https://docs.cbpayapp.com/en/introduction
 ---
 CBPay is a multi-currency payment platform for Latin America. Every
-account holds **four independent virtual balances** — `USDT` (the operating
+account holds **six independent virtual balances** — `USDT` (the operating
 currency), `USDC`, `BTC` and `GOLD` (grams of gold) — and operates against
 them:
 
@@ -16,7 +16,7 @@ them:
 - **Cards & subscriptions** - Issue cards that spend from any balance in real time, accept card payments, [save cards on file and schedule recurring charges](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions).
 - **QR POS** - Register verified merchants and generate amount-bound crypto QR charges for physical points of sale.
 - **On-chain crypto** - Fund and withdraw USDT/USDC over TRON and Ethereum, and native BTC over Bitcoin — every account is born with its deposit wallets.
-- **Swaps** - Convert between your USDT, USDC, BTC and GOLD balances at your account's rate, instantly.
+- **Swaps** - Convert between your USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances at your account's rate, instantly.
 - **Internal transfers** - Move balance to any other CBPay account — by ID, alias, QR or verified phone — instantly and free of charge.
 - **Banking** - Real bank accounts in your name: receive, hold and send money over international rails (SEPA, SWIFT, ACH), including third-party accounts.
 - **Segregated wallets** - Dedicated on-chain wallets with their own balance, isolated from the ledger — create, import and export them.

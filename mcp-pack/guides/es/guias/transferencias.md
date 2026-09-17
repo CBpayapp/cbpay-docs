@@ -1,6 +1,6 @@
 ---
 title: "Transferencias internas"
-description: "Mueve USDT, USDC, BTC o GOLD entre cuentas CBPay, gratis y al instante"
+description: "Mueve USDT, USDC, BTC, GOLD, SILVER o PLATINUM entre cuentas CBPay, gratis y al instante"
 slug: es/guias/transferencias
 lang: es
 source_url: https://docs.cbpayapp.com/es/guias/transferencias
@@ -9,7 +9,7 @@ source_url: https://docs.cbpayapp.com/es/guias/transferencias
 
 Las transferencias internas mueven saldo entre dos cuentas **CBPay**, de
 forma atómica en el ledger y **siempre sin comisión** — el dinero nunca sale
-del ecosistema. Funcionan con las cuatro monedas (`USDT`, `USDC`, `BTC`,
+del ecosistema. Funcionan con las seis monedas (`USDT`, `USDC`, `BTC`,
 `GOLD`) y siempre **entre saldos de la misma moneda**: el `asset` que envías
 es el `asset` que recibe el destino, sin conversión.
 

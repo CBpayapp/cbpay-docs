@@ -5,9 +5,9 @@ slug: en/concepts/money-model
 lang: en
 source_url: https://docs.cbpayapp.com/en/concepts/money-model
 ---
-## Four independent virtual balances
+## Six independent virtual balances
 
-Every account holds **four virtual balances, one per currency**. They are
+Every account holds **six virtual balances, one per currency**. They are
 fully independent: they never mix and are never converted automatically.
 
 | Currency | What it is | Decimals | How it is funded |
@@ -17,7 +17,7 @@ fully independent: they never mix and are never converted automatically.
 | `BTC` | Bitcoin | 8 (satoshis) | Operator credits and internal transfers |
 | `GOLD` | **Grams of fine gold** backed by a custodian | 6 | Operator credits and internal transfers |
 
-`GET /v1/balances` always returns all four (zeros if you have not used that
+`GET /v1/balances` always returns all six (zeros if you have not used that
 currency yet), as **decimal strings**:
 
 ```json
@@ -38,7 +38,7 @@ unit (micro-USDT, satoshis, micro-grams) and computed with exact rational
 arithmetic. There are no floats and no accumulated rounding errors.
 **USDT is the operating currency**: payouts, fiat payins and service fees
 are always priced in USDT. But the **payment** can come from any of the
-four balances — see [Choose which balance pays](#choose-which-balance-pays).
+six balances — see [Choose which balance pays](#choose-which-balance-pays).
 Payins credit in USDT and, if you configure `default_payin_asset`, the net
 amount auto-converts into the balance you choose — see
 [Choose which balance receives your payins](#choose-which-balance-receives-your-payins).
@@ -50,7 +50,7 @@ operator (GOLD).
 ## Choose which balance pays
 
 **Payouts** and **service fees** (KYC, wallet creation, banking) can be
-debited from any of your four balances. The pricing pipeline does not
+debited from any of your six balances. The pricing pipeline does not
 change: the operation is quoted in USDT as always, and at the end the total
 translates to the chosen asset at the **effective settlement price** of the
 moment.
@@ -77,7 +77,7 @@ Multi-asset settlement rules:
 | Execution price | BTC and GOLD use an on-chain execution feed (not the reference price). If the feed is stale or unavailable, the operation returns `503 pricing_unavailable` — it never executes on a doubtful price. |
 | Debit, hold and refund | All three live in the chosen asset. If the payout fails, the **exact** `settlement_amount` is refunded — never re-quoted. |
 | Idempotency | Replaying with the same key returns the original amount; the price is never recomputed. |
-| Per-operation limit | Volatile assets (BTC/GOLD) have a per-operation limit (USDT equivalent, visible in `GET /v1/settlement`); exceeding it returns `422 settlement_limit_exceeded`. |
+| Per-operation limit | Volatile assets (BTC/GOLD/SILVER/PLATINUM) have a per-operation limit (USDT equivalent, visible in `GET /v1/settlement`); exceeding it returns `422 settlement_limit_exceeded`. |
 | Per-account daily limit | Volatile assets also have a rolling 24h volume cap (`volatile_daily_limit_usdt` in `GET /v1/settlement`); exceeding it returns `422 settlement_daily_limit_exceeded`. Settle in USDT/USDC or retry later. |
 | USDT | Remains the default path and changes nothing for anyone who never touches this setting. |
 
@@ -106,7 +106,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 | Rule | Detail |
 |---|---|
 | Post-credit conversion | The payin credits in USDT and the conversion runs right after, as a swap (you will see `swap_out`/`swap_in` in your statement). |
-| Price and limits | The conversion executes **at the real price, with no swap spread** (no double cost: the payin already paid its fee and rate). The per-operation/24h limits of volatile assets (BTC/GOLD) apply. |
+| Price and limits | The conversion executes **at the real price, with no swap spread** (no double cost: the payin already paid its fee and rate). The per-operation/24h limits of volatile assets (BTC/GOLD/SILVER/PLATINUM) apply. |
 | If the conversion fails | The payin stays credited in USDT with `conversion_status: pending_retry` and the system retries automatically — funds are never lost or double-converted. |
 | Checkout and POS | Each link keeps the `settlement_asset` chosen at creation; this setting never re-converts them. A link created **without** `settlement_asset` uses your `default_payin_asset`. |
 | Surfaces | `GET /v1/payins`, the detail and the `payin_credited` webhook expose `settlement_asset` and `conversion_status` when a conversion applies. |
@@ -230,3 +230,7 @@ flowchart LR
 
 Final states (`completed`/`failed`) arrive via [webhook](https://docs.cbpayapp.com/en/webhooks); no
 polling required.
+
+### Custody-backed metal balances
+
+`SILVER` and `PLATINUM` are ledger-only, custodian-backed balances measured in fine grams with six decimal places. Settlement and swaps use a price oracle and the fixed `31.1034768` grams-per-troy-ounce conversion; no on-chain metal deposit, withdrawal or spending rail is implied.

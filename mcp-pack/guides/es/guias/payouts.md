@@ -206,7 +206,7 @@ transformaciones, todas registradas en la respuesta:
 ```
 
 Si el payout falla, se reembolsa el `settlement_amount` exacto a tu saldo
-BTC — nunca se re-cotiza. Si el precio de ejecución de BTC/GOLD no está
+BTC — nunca se re-cotiza. Si el precio de ejecución de BTC/GOLD/SILVER/PLATINUM no está
 disponible en ese momento recibirás `503 pricing_unavailable`, y los
 assets volátiles tienen un límite por operación
 (`422 settlement_limit_exceeded`; consúltalo en `GET /v1/settlement`).
@@ -1185,6 +1185,13 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   | `purpose` | Propósito del pago | `Invoice_Payment` |
   | `crypto_activity` | Si el pago se relaciona con compra/venta de cripto (`Yes`/`No`) | `No` |
   | `payment_gateway` | Declaración de gateway de depósito | default del riel |
+
+## SEPA Instant en EUR
+
+Consulta la [guía dedicada de payouts SEPA Instant](https://docs.cbpayapp.com/es/guias/sepa-instant-payouts)
+para el catálogo EUR de 35 países, el contrato IBAN/BIC, `beneficiary_type`,
+estados, errores y reconciliación. Códigos V1: `AT`, `BE`, `BG`, `HR`, `CY`,
+`CZ`, `DK`, `EE`, `FI`, `FR`, `DE`, `GR`, `HU`, `IE`, `IT`, `LV`, `LT`, `LU`, `MT`, `NL`, `PL`, `PT`, `RO`, `SK`, `SI`, `ES`, `SE`, `IS`, `LI`, `NO`, `CH`, `MC`, `SM`, `AD`, `VA` (todos `EUR` + `sepa`; `GB` queda fuera de V1).
 
 ## Documento de respaldo obligatorio en transferencias USD
 

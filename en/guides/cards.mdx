@@ -23,7 +23,7 @@ flowchart LR
     jit -->|"balance & limits OK"| debit["Debit on the chosen balance<br/>+ hold"]
     jit -->|"insufficient / limit /<br/>frozen / no price"| declined["Purchase declined<br/>(audited reason)"]
     debit --> clearing{"Settlement<br/>(1-2 days)"}
-    clearing -->|"confirmed"| settle["Hold consumed<br/>(BTC/GOLD: re-quoted at capture)"]
+    clearing -->|"confirmed"| settle["Hold consumed<br/>(BTC/GOLD/SILVER/PLATINUM: re-quoted at capture)"]
     clearing -->|"annulled"| refund["Funds returned<br/>to the same balance"]
 ```
 
@@ -31,8 +31,8 @@ flowchart LR
 
 | Account type | Virtual | Physical | For third parties? |
 |---|---|---|---|
-| Person | **1** | **1** | No |
-| Company | **Unlimited** | **Unlimited** | Yes: designated persons (e.g. employees) |
+| Person | **1 live card total** | New physical issuance temporarily unavailable | No |
+| Company | **Unlimited** | New physical issuance temporarily unavailable | Yes: designated persons (e.g. employees) |
 
 Each card spends from the **account's central balance in its configured
 asset** (`spending_asset`, USDT by default). Fine-grained control is
@@ -73,16 +73,16 @@ no exchange fee: a 25.00 USD purchase debits 25.000000 of the chosen asset.
   the moment of the event. The price may move between the purchase and the
   refund — you receive the equivalent in your asset at that moment's
   price, not the original quantity.
-- BTC/GOLD purchases share your account's **volatile-asset limits** (per
+- BTC/GOLD/SILVER/PLATINUM purchases share your account's **volatile-asset limits** (per
   operation and 24h volume, visible in `GET /v1/settlement`).
 
 | Error / decline | Where | Cause | Solution |
 |---|---|---|---|
 | `spending_asset_unavailable` | 400 on PATCH / purchase decline | The asset does not exist or is not enabled for purchases | Use `USDT`, `USDC`, `BTC` or `GOLD` |
 | `settlement_asset_disabled` | 400 on PATCH | Your operator disabled that asset | Check `GET /v1/settlement` (`enabled_assets`) |
-| `pricing_unavailable` | Purchase decline (BTC/GOLD) | Execution price unavailable at authorization | Retry the purchase; if it persists, switch to USDT/USDC |
-| `settlement_limit_exceeded` | Purchase decline (BTC/GOLD) | The purchase exceeds the per-operation limit for volatile assets | Smaller purchase, or spend from USDT/USDC |
-| `settlement_daily_limit_exceeded` | Purchase decline (BTC/GOLD) | The account reached its 24h volatile-asset volume | Wait, or spend from USDT/USDC |
+| `pricing_unavailable` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | Execution price unavailable at authorization | Retry the purchase; if it persists, switch to USDT/USDC |
+| `settlement_limit_exceeded` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | The purchase exceeds the per-operation limit for volatile assets | Smaller purchase, or spend from USDT/USDC |
+| `settlement_daily_limit_exceeded` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | The account reached its 24h volatile-asset volume | Wait, or spend from USDT/USDC |
 
 <Note>
 If the chosen asset's balance is short, the purchase is declined with
@@ -90,7 +90,7 @@ If the chosen asset's balance is short, the purchase is declined with
 </Note>
 
 <Warning>
-With BTC/GOLD your balance is exposed to price moves between a purchase's
+With BTC/GOLD/SILVER/PLATINUM your balance is exposed to price moves between a purchase's
 events (authorization, capture, refund). Every conversion uses the
 effective price of its moment — CBPay never re-quotes amounts backwards nor
 deducts "just in case": the authorization cushion is always returned at
@@ -117,7 +117,7 @@ The per-transaction fee follows the same lifecycle as the purchase:
 
 - **Authorization**: the estimated fee is reserved **inside the hold**
   together with the purchase amount, in the card's `spending_asset` (the
-  percent applies over the purchase's USD amount; in BTC/GOLD it converts
+  percent applies over the purchase's USD amount; in BTC/GOLD/SILVER/PLATINUM it converts
   with the same event price).
 - **Settlement**: the fee is **recalculated** with the configuration in
   force at that moment and the definitive one is charged (`card_fee` in
@@ -127,7 +127,7 @@ The per-transaction fee follows the same lifecycle as the purchase:
   the refunded fraction of the purchase (`card_fee_refund`).
 
 If your operator changes the percent between authorization and settlement,
-the settlement fee is charged — the same criterion as the BTC/GOLD price
+the settlement fee is charged — the same criterion as the BTC/GOLD/SILVER/PLATINUM price
 per event. Declined purchases **charge no fee**.
 
 ## Create a card
@@ -138,11 +138,14 @@ account**, on the first issuance; subsequent cards reuse it with no data.
 The `idempotency_key` is always required (a retry with the same key returns
 the original card and never double-charges).
 
+<Warning>
+New physical issuance is temporarily unavailable. A request with `physical: true` returns `400 physical_temporarily_unavailable`; this cutoff is checked after idempotency replay, so a replay of an existing physical request still returns its original card. Physical cards that were already issued continue operating.
+</Warning>
+
 <Tabs>
 <Tab title="Person account">
 
-A person account issues cards **for itself** (at most 1 virtual +
-1 physical).
+A person account issues cards **for itself** (at most 1 live card total; new physical issuance is temporarily unavailable).
 
 **Your first card** creates and verifies your holder at the issuer. Since
 your account already approved its
@@ -172,18 +175,21 @@ the wizard without some data or document the issuer requires, add it
 explicitly to the `cardholder` (`first_name`, `email`, `address`,
 `id_front_url`…, same format as always).
 
-**Your second card** (the physical one, for example) asks for no data —
+**A second issuance request** is not available for a person account once it
+already has one live card or one open application. It returns
+`409 card_limit_reached`:
+ (the physical one, for example) asks for no data —
 your holder is already verified:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/cards \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "physical": true, "idempotency_key": "card-f-1" }'
+  -d '{ "physical": false, "idempotency_key": "card-v-2" }'
 ```
 
-A third card of the same type responds `409 card_limit_reached` (cancel
-the existing one first).
+A physical request returns `400 physical_temporarily_unavailable` even when
+the account has no card. Use a digital card request instead.
 
 </Tab>
 <Tab title="Company account">
@@ -227,7 +233,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "physical": true,
+    "physical": false,
     "idempotency_key": "card-f-ops-1",
     "limits": { "per_transaction": "500.00", "monthly": "5000.00" }
   }'
@@ -269,6 +275,132 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 
 </Tab>
 </Tabs>
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
 
 Response (same shape in every case):
 
@@ -419,7 +551,7 @@ curl "https://api.qbank.cl/platform/v1/cards/{card_id}/transactions?from=2026-07
 
 `spend_asset` / `spend_amount` show which balance the purchase actually
 debited and how much in that asset (`amount_usd` / `amount_usdt` remain the
-USD reference value). For BTC/GOLD, an authorized transaction's
+USD reference value). For BTC/GOLD/SILVER/PLATINUM, an authorized transaction's
 `spend_amount` includes the reserve cushion; after settlement it shows the
 final amount.
 
@@ -433,7 +565,7 @@ historical behavior is unchanged.
 | Status | Meaning |
 |---|---|
 | `authorized` | Approved in real time: the amount left the chosen balance's available and sits in a hold |
-| `settled` | Confirmed at network settlement (the hold is consumed; BTC/GOLD re-quoted at the capture moment) |
+| `settled` | Confirmed at network settlement (the hold is consumed; BTC/GOLD/SILVER/PLATINUM re-quoted at the capture moment) |
 | `reversed` | Annulled: funds returned to the same balance (exact amount if not settled; re-converted at the moment's price if it had settled) |
 | `declined` | Rejected, with the reason: `insufficient_funds`, `card_limit_exceeded`, `card_frozen`, `account_blocked`, `spending_asset_unavailable`, `spending_asset_disabled`, `pricing_unavailable`, `settlement_limit_exceeded`, `settlement_daily_limit_exceeded` |
 
@@ -484,7 +616,7 @@ corporate cards spending USDT, employee cards spending USDC and a personal
 one spending BTC. Changing it with `PATCH` only applies to future
 purchases.
 </Accordion>
-<Accordion title="What is the cushion I see reserved on BTC/GOLD purchases?">
+<Accordion title="What is the cushion I see reserved on BTC/GOLD/SILVER/PLATINUM purchases?">
 Network settlement arrives 1-2 days after the authorization, and the
 BTC/gold price can move in between. That is why the authorization reserves
 the purchase's equivalent plus a small percentage. It is not a charge: at
@@ -504,7 +636,7 @@ movement.
 Refunds convert at the price of the refund moment, not the purchase's: you
 receive the equivalent in your asset of the refunded USD amount. If BTC
 went up since the purchase you receive less BTC (same USD value); if it
-went down, more. Your BTC/GOLD balance is always exposed to the price —
+went down, more. Your BTC/GOLD/SILVER/PLATINUM balance is always exposed to the price —
 that is the nature of spending from a volatile asset.
 </Accordion>
 <Accordion title="Why did the fee of my purchase change between authorization and settlement?">

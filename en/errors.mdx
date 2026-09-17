@@ -173,7 +173,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 422 | `wallet_limit_reached` | The account already holds its wallet for that network+asset pair (deposit: every account; [segregated](/en/guides/segregated-wallets): persons) |
 | 422 | `insufficient_gas` | The [segregated wallet](/en/guides/segregated-wallets) has no native gas (TRX/ETH) for the network fee; fund the address and retry |
 | 409 | `idempotency_conflict` | Another wallet creation/send with the same key is still in flight; retry with the same key |
-| 409 | `card_limit_reached` | A person account tried to create a second card of the same type |
+| 400 | `physical_temporarily_unavailable` | New physical card issuance is temporarily paused; request a digital card. Existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open card application; resolve the existing application before requesting another |
 | 409 | `card_cancelled` | The card is already cancelled and cannot be updated |
 | 409 | `card_not_pending` | Only cards in `pending_activation` can be activated |
 | 409 | `cardholder_kyc_pending` | The designated cardholder requires identity documents |
@@ -181,8 +182,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 400 | `invalid_kind_of_business` | `kind_of_business` is not a catalog code (`GET /v1/cards/catalog/business-activities`) |
 | 400 | `invalid_settlement_asset` | `settlement_asset` is not USDT, USDC, BTC or GOLD |
 | 400 | `settlement_asset_disabled` | Your organization disabled that asset as settlement source |
-| 422 | `settlement_limit_exceeded` | The operation exceeds the per-operation limit for volatile assets (BTC/GOLD); use USDT/USDC or split the operation |
-| 422 | `settlement_daily_limit_exceeded` | The account exceeded its 24h volume for volatile assets (BTC/GOLD); use USDT/USDC or retry later |
+| 422 | `settlement_limit_exceeded` | The operation exceeds the per-operation limit for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or split the operation |
+| 422 | `settlement_daily_limit_exceeded` | The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later |
 | 400 | `invalid_pair` | Swap with the same source and destination currency |
 | 400 | `amount_too_small` | The swap amount does not reach the destination currency's minimum unit |
 | 400 | `swap_asset_disabled` | One of the swap currencies is disabled for your organization |
@@ -194,6 +195,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 422 | `country_unavailable` | That country has no payment methods available on the checkout link |
 | 422 | `collect_otp_failed` | The rail rejected the OTP delivery for the link's pull collection |
 | 422 | `collect_rejected` | The rail rejected the link's pull charge (invalid OTP or wrong data); the link stays pending |
+| 422 | `provider_rejected` | For `VE/VES/c2p`, do not call `/collect/otp`; the payer supplies the bank-generated `claveDinamica` in the collect request's `otp` field. The internal adapter signal is `collect_otp_unsupported`. |
 | 422 | `settlement_asset_disabled` | The checkout link's `settlement_asset` is disabled for your organization |
 | 422 | `checkout_amount_mismatch` | The CBPay transfer does not cover the checkout link's current due; the message carries the updated amount |
 | 503 | `checkout_recovery_pending` | The selected checkout payment option is being reconciled. Retry the same materialization request; do not create a second payment option |
@@ -321,7 +323,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 503 | `verifications_unavailable` | Identity verification temporarily unavailable |
 | 503 | `org_credential_missing` | Service being configured; contact CBPay support |
 | 503 | `withdrawals_unavailable` | On-chain withdrawals not enabled for the corridor |
-| 503 | `pricing_unavailable` | BTC/GOLD execution price unavailable or stale; retry later or settle in USDT/USDC |
+| 503 | `pricing_unavailable` | BTC/GOLD/SILVER/PLATINUM execution price unavailable or stale; retry later or settle in USDT/USDC |
 | 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the **same** idempotency key |
 | 503 | `webhook_processing_pending` | An inbound webhook event is already being processed; retry the same delivery after a short backoff and do not create a new operation |
 | 503 | `export_unavailable` | Segregated wallet private key export is not enabled on this environment |

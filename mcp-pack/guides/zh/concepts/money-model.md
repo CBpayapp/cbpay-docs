@@ -5,9 +5,9 @@ slug: zh/concepts/money-model
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 ---
-## 四个相互独立的虚拟余额
+## 六个相互独立的虚拟余额
 
-每个账户持有**四个虚拟余额，每个币种一个**。它们完全相互独立：
+每个账户持有**六个虚拟余额，每个币种一个**。它们完全相互独立：
 永远不会混合，也永远不会自动换算。
 
 | 币种 | 说明 | 小数位 | 入金方式 |
@@ -17,7 +17,7 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 | `BTC` | 比特币 | 8（聪） | 运营方入账与内部转账 |
 | `GOLD` | 由托管方背书的**纯金克数** | 6 | 运营方入账与内部转账 |
 
-`GET /v1/balances` 始终返回全部四个余额（尚未使用的币种返回零），
+`GET /v1/balances` 始终返回全部六个余额（尚未使用的币种返回零），
 金额均为**十进制字符串**：
 
 ```json
@@ -36,7 +36,7 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 在内部，每笔金额都以其币种的最小单位（微 USDT、聪、微克）存储为整数，
 并使用精确的有理数运算进行计算。不存在浮点数，也不存在累积的舍入误差。
 **USDT 是运营币种**：出款（payout）、法币收款（payin）与服务费始终
-以 USDT 计价。但**付款**可以来自四个余额中的任意一个 — 参见
+以 USDT 计价。但**付款**可以来自六个余额中的任意一个 — 参见
 [选择用哪个余额付款](#选择用哪个余额付款)。
 收款先入账到 USDT；若配置了 `default_payin_asset`，净额会自动兑换为您
 选择的余额 — 参见
@@ -47,7 +47,7 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 
 ## 选择用哪个余额付款
 
-**出款**与**服务费**（KYC、钱包创建、银行服务）可以从您四个余额中的
+**出款**与**服务费**（KYC、钱包创建、银行服务）可以从您六个余额中的
 任意一个扣款。定价流程不变：操作始终以 USDT 报价，最后再按当时的
 **有效结算价格**将总额换算为所选资产。
 
@@ -71,7 +71,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 | 执行价格 | BTC 和 GOLD 使用链上执行价格源（而非参考价格）。若价格源过期或不可用，操作返回 `503 pricing_unavailable` — 绝不会在可疑价格上执行。 |
 | 扣款、冻结与退款 | 三者都发生在所选资产上。若出款失败，将退还**精确的** `settlement_amount` — 绝不重新报价。 |
 | 幂等性 | 使用相同的幂等键重放会返回原始金额；价格绝不会重新计算。 |
-| 单笔操作限额 | 波动性资产（BTC/GOLD）设有单笔操作限额（等值 USDT，可在 `GET /v1/settlement` 中查看）；超出时返回 `422 settlement_limit_exceeded`。 |
+| 单笔操作限额 | 波动性资产（BTC/GOLD/SILVER/PLATINUM）设有单笔操作限额（等值 USDT，可在 `GET /v1/settlement` 中查看）；超出时返回 `422 settlement_limit_exceeded`。 |
 | 账户级每日限额 | 波动性资产还设有 24 小时滚动交易量上限（见 `GET /v1/settlement` 中的 `volatile_daily_limit_usdt`）；超出时返回 `422 settlement_daily_limit_exceeded`。请改用 USDT/USDC 结算或稍后重试。 |
 | USDT | 仍是默认路径；从未触碰此设置的用户不会有任何变化。 |
 
@@ -97,7 +97,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 | 规则 | 详情 |
 |---|---|
 | 入账后兑换 | 收款以 USDT 入账，兑换随即以一笔兑换（swap）执行（对账单中显示为 `swap_out`/`swap_in`）。 |
-| 价格与限额 | 兑换**按真实价格执行，不收取兑换点差**（不存在双重成本：收款已支付其手续费与汇率）。适用波动性资产（BTC/GOLD）的单笔/24 小时限额。 |
+| 价格与限额 | 兑换**按真实价格执行，不收取兑换点差**（不存在双重成本：收款已支付其手续费与汇率）。适用波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔/24 小时限额。 |
 | 兑换失败时 | 收款保持以 USDT 入账，`conversion_status: pending_retry`，系统自动重试 — 资金绝不丢失、绝不重复兑换。 |
 | Checkout 与 POS | 每个链接保留创建时选择的 `settlement_asset`；此配置不会再次兑换它们。**未**指定 `settlement_asset` 创建的链接会使用您的 `default_payin_asset`。 |
 | 展示范围 | 当发生兑换时，`GET /v1/payins`、详情接口与 `payin_credited` webhook 会包含 `settlement_asset` 和 `conversion_status`。 |
@@ -219,3 +219,7 @@ flowchart LR
 
 最终状态（`completed`/`failed`）通过 [webhook](https://docs.cbpayapp.com/zh/webhooks) 送达；
 无需轮询。
+
+### 由托管方支持的金属余额
+
+`SILVER` 与 `PLATINUM` 是由托管方支持、以精炼金属克数记录且保留六位小数的 ledger-only 余额。Settlement 与 swap 使用价格预言机和固定的 `31.1034768` 克/金衡盎司换算；这不代表存在链上金属充值、提现或消费通道。

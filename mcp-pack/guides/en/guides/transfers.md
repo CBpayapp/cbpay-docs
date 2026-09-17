@@ -9,7 +9,7 @@ source_url: https://docs.cbpayapp.com/en/guides/transfers
 
 Internal transfers move balance between two **CBPay accounts**, atomically
 in the ledger and **always free of charge** — the money never leaves the
-ecosystem. They work with all four currencies (`USDT`, `USDC`, `BTC`,
+ecosystem. They work with all six currencies (`USDT`, `USDC`, `BTC`,
 `GOLD`) and always **between balances of the same currency**: the `asset`
 you send is the `asset` the destination receives, with no conversion.
 

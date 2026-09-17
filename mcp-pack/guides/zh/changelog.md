@@ -8,7 +8,52 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.90 · 2 个版本 - 2026年9月16日
+## v2.95 · 3 个版本 - 2026年9月17日
+
+### v2.95
+
+**Added**
+
+- **白银与铂金 ledger 资产**：账户现在支持以六位小数记录精炼金属克数的 `SILVER` 与 `PLATINUM` 余额，并与 USDT、USDC、BTC、GOLD 一起使用。现有 swap、settlement、卡片消费、checkout、账单与 analytics 表面均支持扩展后的资产词汇。`asset_prices` 以金衡盎司提供 XAG/XPT，并以克提供 SILVER/PLATINUM。没有新增端点，也没有新增链上金属通道。
+
+### v2.94
+
+**变更**
+
+- **委内瑞拉 C2P 收款**：`VE/VES/c2p` 现在通过现有 collect endpoint
+  可用。付款人将银行生成的 `claveDinamica` 放在 `otp` 中；C2P 不要调用
+  `/v1/payins/collect/otp`。request 与 response shape 不变。
+  `debito_inmediato` 仍不可用。
+
+### v2.93
+
+**变更**
+
+- **实体卡临时暂停时仅发行虚拟卡**：`POST /v1/cards` 对新的
+  `physical: true` 请求返回 `400 physical_temporarily_unavailable`。
+  已发行的实体卡继续正常使用。对于个人账户，`409 card_limit_reached`
+  表示账户已经有一张有效卡或一条开放申请。
+
+## v2.92 · 4 个版本 - 2026年9月16日
+
+### v2.92
+
+**变更**
+
+- **SEPA Instant beneficiary 与 description 校验**：SEPA description 会折叠到
+  provider charset，仍含不支持字符时返回 `400 invalid_payload`，wire 值最多
+  140 个 runes。姓名使用文档化的欧洲字符映射；个人必须有名字和姓氏，
+  V1 不支持单名。
+
+### v2.91
+
+**新增**
+
+- **EUR SEPA Instant payout**：`sepa` 方法现在在 payout 目录中为 35 个国家
+  提供（AT、BE、BG、HR、CY、CZ、DK、EE、FI、FR、DE、GR、HU、IE、IT、LV、
+  LT、LU、MT、NL、PL、PT、RO、SK、SI、ES、SE、IS、LI、NO、CH、MC、SM、AD、
+  VA）。请求要求有效的 SEPA IBAN 和 `beneficiary_type`，BIC 可选。GB
+  不在 V1。该方法仅支持 EUR，并复用 `payout_status_changed` webhook。
 
 ### v2.90
 

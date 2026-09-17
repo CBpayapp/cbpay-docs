@@ -4,9 +4,9 @@ icon: "coins"
 description: "Saldos virtuales por moneda, conversión FX, holds y el ledger inmutable"
 ---
 
-## Cuatro saldos virtuales independientes
+## Seis saldos virtuales independientes
 
-Cada cuenta mantiene **cuatro saldos virtuales, uno por moneda**. Son
+Cada cuenta mantiene **seis saldos virtuales, uno por moneda**. Son
 totalmente independientes entre sí: nunca se mezclan ni se convierten
 automáticamente.
 
@@ -17,7 +17,7 @@ automáticamente.
 | `BTC` | Bitcoin | 8 (satoshis) | Abonos del operador y transferencias internas |
 | `GOLD` | **Gramos de oro fino** con respaldo en custodio | 6 | Abonos del operador y transferencias internas |
 
-`GET /v1/balances` devuelve siempre los cuatro (con ceros si no has operado
+`GET /v1/balances` devuelve siempre los seis (con ceros si no has operado
 esa moneda), como **strings decimales**:
 
 ```json
@@ -40,7 +40,7 @@ racional exacta. Nunca hay floats ni errores de redondeo acumulados.
 
 **USDT es la moneda operativa**: los precios de payouts, payins fiat y
 comisiones de servicios se cotizan siempre en USDT. Pero el **pago** puede
-salir de cualquiera de los cuatro saldos — ver
+salir de cualquiera de los seis saldos — ver
 [Elige desde qué saldo pagas](#elige-desde-que-saldo-pagas). Los payins
 acreditan en USDT y, si configuras `default_payin_asset`, el neto se
 auto-convierte al saldo que elijas — ver
@@ -53,7 +53,7 @@ operador (GOLD).
 ## Elige desde qué saldo pagas
 
 Los **payouts** y las **comisiones de servicios** (KYC, creación de
-wallets, banking) pueden debitarse desde cualquiera de tus cuatro saldos.
+wallets, banking) pueden debitarse desde cualquiera de tus seis saldos.
 El pipeline de pricing no cambia: la operación se cotiza en USDT como
 siempre, y al final el total se traduce al asset elegido con el **precio
 efectivo de settlement** del momento.
@@ -80,7 +80,7 @@ Reglas del settlement multi-asset:
 | Precio de ejecución | BTC y GOLD usan un feed on-chain de ejecución (no el precio de referencia). Si el feed está viejo o no disponible, la operación devuelve `503 pricing_unavailable` — nunca se ejecuta con un precio dudoso. |
 | Débito, hold y reembolso | Los tres viven en el asset elegido. Si el payout falla, se reembolsa el `settlement_amount` **exacto** — jamás se re-cotiza. |
 | Idempotencia | El replay con la misma llave devuelve el monto original; el precio no se recalcula. |
-| Límite por operación | Los assets volátiles (BTC/GOLD) tienen un límite por operación (equivalente USDT, visible en `GET /v1/settlement`); si lo superas: `422 settlement_limit_exceeded`. |
+| Límite por operación | Los assets volátiles (BTC/GOLD/SILVER/PLATINUM) tienen un límite por operación (equivalente USDT, visible en `GET /v1/settlement`); si lo superas: `422 settlement_limit_exceeded`. |
 | Límite diario por cuenta | Los assets volátiles también tienen un tope de volumen en 24 h móviles (`volatile_daily_limit_usdt` en `GET /v1/settlement`); al superarlo: `422 settlement_daily_limit_exceeded`. Paga en USDT/USDC o reintenta más tarde. |
 | USDT | Sigue siendo el camino por defecto y no cambia en nada para quien no toca esta configuración. |
 
@@ -109,7 +109,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 | Regla | Detalle |
 |---|---|
 | Conversión post-crédito | El payin acredita en USDT y la conversión corre inmediatamente después como un swap (verás `swap_out`/`swap_in` en tu cartola). |
-| Precio y límites | La conversión ejecuta **al precio real, sin spread de swap** (no hay doble costo: el payin ya pagó su comisión y su tasa). Aplican los límites por operación/24 h de los assets volátiles (BTC/GOLD). |
+| Precio y límites | La conversión ejecuta **al precio real, sin spread de swap** (no hay doble costo: el payin ya pagó su comisión y su tasa). Aplican los límites por operación/24 h de los assets volátiles (BTC/GOLD/SILVER/PLATINUM). |
 | Si la conversión falla | El payin queda acreditado en USDT con `conversion_status: pending_retry` y el sistema reintenta automático — el saldo jamás se pierde ni se convierte doble. |
 | Checkout y POS | Cada link conserva el `settlement_asset` elegido al crearlo; esta configuración no los re-convierte. Un link creado **sin** `settlement_asset` usa tu `default_payin_asset`. |
 | Superficies | `GET /v1/payins`, el detalle y el webhook `payin_credited` exponen `settlement_asset` y `conversion_status` cuando hay conversión. |
@@ -235,3 +235,7 @@ flowchart LR
 
 Los estados finales (`completed`/`failed`) llegan por
 [webhook](/es/webhooks); no es necesario hacer polling.
+
+### Saldos de metales respaldados por custodio
+
+`SILVER` y `PLATINUM` son saldos ledger-only respaldados por custodio y medidos en gramos finos con seis decimales. Settlement y swaps usan un oráculo de precios y la conversión fija de `31.1034768` gramos por onza troy; esto no implica un riel on-chain de depósito, retiro o gasto de metales.

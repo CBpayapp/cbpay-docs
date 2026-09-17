@@ -326,7 +326,7 @@ curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-
   handy for a "Bank USD"/"Bank EUR" chip on the chart. They are **not**
   part of the `total_usd` aggregate, which only covers the operational
   balances.
-- `total_usd` values BTC/GOLD at **each day's historical price**. When a
+- `total_usd` values BTC/GOLD/SILVER/PLATINUM at **each day's historical price**. When a
   day has no historical price yet, today's spot is used and that day is
   disclosed in `spot_priced_dates` (values are never invented).
 - `period.in_usd`/`out_usd` are the range's total inflows and outflows

@@ -325,7 +325,7 @@ curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-
   `BANK_EUR`) como serie propia en su moneda (2 decimales) — útiles para un
   chip "Bank USD"/"Bank EUR" en el gráfico. **No** entran al agregado
   `total_usd`, que cubre solo los saldos operativos.
-- `total_usd` valoriza BTC/GOLD al **precio histórico de cada día**. Si un
+- `total_usd` valoriza BTC/GOLD/SILVER/PLATINUM al **precio histórico de cada día**. Si un
   día aún no tiene precio histórico se usa el spot de hoy y ese día se
   declara en `spot_priced_dates` (jamás inventamos valores).
 - `period.in_usd`/`out_usd` son las entradas y salidas totales del rango

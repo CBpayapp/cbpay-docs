@@ -203,7 +203,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ```
 
 如果出金失败，将向您的 BTC 余额退回精确的 `settlement_amount` ——
-绝不重新报价。如果当时 BTC/GOLD 的执行价格不可用，您会收到
+绝不重新报价。如果当时 BTC/GOLD/SILVER/PLATINUM 的执行价格不可用，您会收到
 `503 pricing_unavailable`；波动性资产还有单笔操作限额
 （`422 settlement_limit_exceeded`；可在 `GET /v1/settlement` 中查询）。
 
@@ -1186,6 +1186,17 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   | `purpose` | 付款用途 | `Invoice_Payment` |
   | `crypto_activity` | 该付款是否涉及加密货币买卖活动（`Yes`/`No`） | `No` |
   | `payment_gateway` | 入金网关声明 | 通道默认值 |
+
+## EUR 中的 SEPA Instant
+
+请参阅[专门的 SEPA Instant payout 指南](/zh/guides/sepa-instant-payouts)，
+了解 35 个国家的 EUR 目录、IBAN/BIC 与 `beneficiary_type` 合约、
+状态、错误和 reconciliation。
+
+V1 代码为：`AT`、`BE`、`BG`、`HR`、`CY`、`CZ`、`DK`、`EE`、`FI`、`FR`、
+`DE`、`GR`、`HU`、`IE`、`IT`、`LV`、`LT`、`LU`、`MT`、`NL`、`PL`、`PT`、
+`RO`、`SK`、`SI`、`ES`、`SE`、`IS`、`LI`、`NO`、`CH`、`MC`、`SM`、`AD`、
+`VA`（全部为 `EUR` + `sepa`；`GB` 不在 V1）。
 
 ### 美元转账的强制支持文件
 

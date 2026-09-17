@@ -16,7 +16,7 @@ flowchart LR
     jit -->|"余额与限额通过"| debit["从所选余额扣款<br/>+ 冻结额"]
     jit -->|"余额不足 / 超限 /<br/>已冻结 / 无价格"| declined["消费被拒绝<br/>(原因留痕可审计)"]
     debit --> clearing{"清算<br/>(1-2 天)"}
-    clearing -->|"确认"| settle["冻结额被消耗<br/>(BTC/GOLD：按入账时刻重新计价)"]
+    clearing -->|"确认"| settle["冻结额被消耗<br/>(BTC/GOLD/SILVER/PLATINUM：按入账时刻重新计价)"]
     clearing -->|"撤销"| refund["资金退回<br/>同一余额"]
 ```
 
@@ -24,8 +24,8 @@ flowchart LR
 
 | 账户类型 | 虚拟卡 | 实体卡 | 可为第三方发卡？ |
 |---|---|---|---|
-| 个人 | **1** | **1** | 否 |
-| 企业 | **不限** | **不限** | 可以：指定人员（如员工） |
+| 个人 | **总计 1 张有效卡** | 新实体卡发行暂时不可用 | 否 |
+| 企业 | **不限** | 新实体卡发行暂时不可用 | 可以：指定人员（如员工） |
 
 每张卡都从**账户在其所配置资产中的中央余额**消费（`spending_asset`，默认 USDT）。精细化控制通过按卡设置的消费限额实现（单笔、每日、每月），限额始终以**美元**计量，并可随时修改。
 
@@ -48,20 +48,20 @@ curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
 - **清算（入账）**：最终金额按入账时刻的价格重新换算；缓冲额的多余部分退回您的余额（若价格波动超出缓冲范围，则补扣差额）。
 - **授权撤销**：退回**精确的**预留金额，不做任何换算。
 - **入账后的退款与调整**：按事件发生时刻的价格重新换算。价格可能在消费与退款之间发生变动——您收到的是该时刻价格下您资产中的等值，而非原始数量。
-- BTC/GOLD 消费与您账户的**波动性资产限额**共享（单笔操作及 24 小时交易量，可在 `GET /v1/settlement` 中查看）。
+- BTC/GOLD/SILVER/PLATINUM 消费与您账户的**波动性资产限额**共享（单笔操作及 24 小时交易量，可在 `GET /v1/settlement` 中查看）。
 
 | 错误 / 拒绝 | 出现位置 | 原因 | 解决方案 |
 |---|---|---|---|
 | `spending_asset_unavailable` | PATCH 返回 400 / 消费被拒 | 该资产不存在或未启用消费 | 使用 `USDT`、`USDC`、`BTC` 或 `GOLD` |
 | `settlement_asset_disabled` | PATCH 返回 400 | 您的运营方已禁用该资产 | 检查 `GET /v1/settlement`（`enabled_assets`） |
-| `pricing_unavailable` | 消费被拒（BTC/GOLD） | 授权时无法获得执行价格 | 重试该消费；若持续出现，切换到 USDT/USDC |
-| `settlement_limit_exceeded` | 消费被拒（BTC/GOLD） | 该消费超过波动性资产的单笔操作限额 | 减小消费金额，或改用 USDT/USDC 消费 |
-| `settlement_daily_limit_exceeded` | 消费被拒（BTC/GOLD） | 账户已达到 24 小时波动性资产交易量上限 | 等待，或改用 USDT/USDC 消费 |
+| `pricing_unavailable` | 消费被拒（BTC/GOLD/SILVER/PLATINUM） | 授权时无法获得执行价格 | 重试该消费；若持续出现，切换到 USDT/USDC |
+| `settlement_limit_exceeded` | 消费被拒（BTC/GOLD/SILVER/PLATINUM） | 该消费超过波动性资产的单笔操作限额 | 减小消费金额，或改用 USDT/USDC 消费 |
+| `settlement_daily_limit_exceeded` | 消费被拒（BTC/GOLD/SILVER/PLATINUM） | 账户已达到 24 小时波动性资产交易量上限 | 等待，或改用 USDT/USDC 消费 |
 
 > **注**
 若所选资产的余额不足，消费会以 `insufficient_funds` 被拒绝——不会自动回退到其他余额。
 > **重要**
-使用 BTC/GOLD 时，您的余额在一笔消费的各事件之间（授权、入账、退款）会暴露于价格波动。每次换算都使用其时刻的有效价格——CBPay 绝不会向后重新计价，也不会"以防万一"多扣：授权缓冲额始终在清算时退回。
+使用 BTC/GOLD/SILVER/PLATINUM 时，您的余额在一笔消费的各事件之间（授权、入账、退款）会暴露于价格波动。每次换算都使用其时刻的有效价格——CBPay 绝不会向后重新计价，也不会"以防万一"多扣：授权缓冲额始终在清算时退回。
 ## 费用（由您的运营方配置，可以为 0）
 
 | 服务 | 计费时机 |
@@ -80,22 +80,24 @@ curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
 按笔手续费与消费走同一生命周期：
 
 - **授权**：预估手续费与消费金额一起计入**预授权冻结**，币种为卡片的
-  `spending_asset`（百分比按消费的美元金额计算；BTC/GOLD 按该事件同一
+  `spending_asset`（百分比按消费的美元金额计算；BTC/GOLD/SILVER/PLATINUM 按该事件同一
   价格折算）。
 - **清算**：按当时生效的配置**重新计算**手续费并收取最终值
   （流水中的 `card_fee`）；与预估值的差额随保证金调整一并释放或补收。
 - **撤销与下调调整**：按退款比例**退回**手续费（`card_fee_refund`）。
 
 若运营商在授权与清算之间调整了费率，将按清算时的费率收取——与
-BTC/GOLD 按事件计价的规则一致。被拒消费（`declined`）**不收费**。
+BTC/GOLD/SILVER/PLATINUM 按事件计价的规则一致。被拒消费（`declined`）**不收费**。
 
 ## 创建卡片
 
 流程取决于您的账户是**个人**还是**企业**——请选择对应的标签页。共同规则：**持卡人每个账户只验证一次**，即首次发卡时验证；后续发卡直接复用，无需数据。`idempotency_key` 始终必填（使用相同 key 的重试会返回原始卡片，绝不会重复扣费）。
 
+> **重要**
+新实体卡发行暂时不可用。请求中使用 `physical: true` 会返回 `400 physical_temporarily_unavailable`；该限制在幂等重放之后检查，因此已存在的实体卡请求仍会返回原始卡片。已经发行的实体卡继续正常使用。
 #### 个人账户
 
-个人账户**为自己**发卡（最多 1 张虚拟卡 + 1 张实体卡）。
+个人账户**为自己**发卡（最多 1 张有效卡；新实体卡发行暂时不可用）。
 
 **您的第一张卡**会在发卡方创建并验证您的持卡人。由于您的账户已通过[身份验证](https://docs.cbpayapp.com/zh/guides/kyc)，您的数据和证件会**从验证中自动填充**——您只需补充发卡方专属字段（`occupation`、`salary_usd`）；任何显式提供的字段都优先于自动填充：
 
@@ -115,16 +117,16 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 
 `occupation` 是**目录代码**（[见下文](#occupation-and-business-activity-catalog-codes)），`salary_usd` 为美元整数。如果您的验证是通过向导完成的，而缺少发卡方要求的某些数据或证件，请在 `cardholder` 中显式补充（`first_name`、`email`、`address`、`id_front_url`…，格式与往常相同）。
 
-**您的第二张卡**（例如实体卡）无需任何数据——您的持卡人已完成验证：
+**第二次发卡请求**：个人账户一旦已有一张有效卡或一条开放申请，就不能再申请，返回 `409 card_limit_reached`：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/cards \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "physical": true, "idempotency_key": "card-f-1" }'
+  -d '{ "physical": false, "idempotency_key": "card-v-2" }'
 ```
 
-同类型的第三张卡会返回 `409 card_limit_reached`（请先注销现有的那张）。
+实体卡请求即使账户没有卡，也会返回 `400 physical_temporarily_unavailable`。请改为申请虚拟卡。
 
 #### 企业账户
 
@@ -164,7 +166,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "physical": true,
+    "physical": false,
     "idempotency_key": "card-f-ops-1",
     "limits": { "per_transaction": "500.00", "monthly": "5000.00" }
   }'
@@ -192,6 +194,97 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 - 未提供 `verification_id`（或验证未获批准）：`422 verification_required` / `422 verification_not_approved`。验证必须是 KYC（个人）；KYB 会返回 `422 verification_kind_mismatch`。
 - 显式提供的 `cardholder` 字段优先于自动填充（当发卡方要求验证中没有的某份证件时很有用）。
 - 卡面印刷姓名使用 `first_name` + `last_name`（合计最多 22 个字符），响应中包含 `cardholder_kind: "person"` 以及所使用的 `verification_id`。
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+
+### 可用性与发卡错误
+
+| HTTP | 代码 | 含义与解决方案 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
 
 响应（所有情况下结构相同）：
 
@@ -316,14 +409,14 @@ curl "https://api.qbank.cl/platform/v1/cards/{card_id}/transactions?from=2026-07
 }
 ```
 
-`spend_asset` / `spend_amount` 显示这笔消费实际从哪个余额扣款，以及在该资产中扣了多少（`amount_usd` / `amount_usdt` 仍为美元参考值）。对于 BTC/GOLD，已授权交易的 `spend_amount` 包含预留缓冲额；清算后显示最终金额。
+`spend_asset` / `spend_amount` 显示这笔消费实际从哪个余额扣款，以及在该资产中扣了多少（`amount_usd` / `amount_usdt` 仍为美元参考值）。对于 BTC/GOLD/SILVER/PLATINUM，已授权交易的 `spend_amount` 包含预留缓冲额；清算后显示最终金额。
 
 `fee_asset` / `fee_amount` 为按笔消费手续费的币种与金额（`settled` 后为最终值；`authorized` 状态时为预估值）。`fee_refunded_amount` 在撤销或下调调整产生退款后出现。若运营商未配置按笔手续费，交易中**不会包含** `fee_*` 字段——保持历史行为不变。
 
 | 状态 | 含义 |
 |---|---|
 | `authorized` | 已实时批准：金额已从所选余额的可用额中扣除并置于冻结额中 |
-| `settled` | 在卡组织清算时确认（冻结额被消耗；BTC/GOLD 按入账时刻重新计价） |
+| `settled` | 在卡组织清算时确认（冻结额被消耗；BTC/GOLD/SILVER/PLATINUM 按入账时刻重新计价） |
 | `reversed` | 已撤销：资金退回同一余额（未清算则退回精确金额；已清算则按当时价格重新换算） |
 | `declined` | 已拒绝，附带原因：`insufficient_funds`、`card_limit_exceeded`、`card_frozen`、`account_blocked`、`spending_asset_unavailable`、`spending_asset_disabled`、`pricing_unavailable`、`settlement_limit_exceeded`、`settlement_daily_limit_exceeded` |
 
@@ -357,12 +450,12 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
 消费以美元处理，并从卡片配置的余额（`spending_asset`）扣款。USDT/USDC 与美元 1:1，无兑换费；BTC 和 GOLD 按每个事件发生时刻的有效价格换算（与 `GET /v1/rates` 的 `settlement` 区块中的价格相同）。
 #### 不同的卡可以从不同的余额消费吗？
 可以：`spending_asset` 是按卡设置的。例如，一家企业可以让公司卡消费 USDT、员工卡消费 USDC、个人卡消费 BTC。通过 `PATCH` 修改只对未来的消费生效。
-#### BTC/GOLD 消费中我看到的预留缓冲额是什么？
+#### BTC/GOLD/SILVER/PLATINUM 消费中我看到的预留缓冲额是什么？
 卡组织清算在授权后 1-2 天到达，期间 BTC/黄金价格可能波动。因此授权时会预留消费等值金额外加一个小的百分比。这不是收费：清算时，消费按当时的价格重新换算，多预留的部分会自动退回您的余额。
 #### 如果消费时 BTC/黄金价格不可用会怎样？
 该消费会被拒绝（`pricing_unavailable`）——CBPay 绝不会用不可信的价格换算您的余额。这是暂时性状况（价格源降级）：几分钟后重试，或将卡片切换到 USDT/USDC。无法被拒绝的事件（已批准消费的清算、退款）永远不会被阻塞：它们会按最后已知价格加上审慎溢价处理，并在流水中留痕可审计。
 #### 我的一笔 BTC 消费被退款了——为什么收到的数量不一样？
-退款按退款时刻的价格换算，而非消费时刻的价格：您收到的是退款美元金额在您资产中的等值。如果 BTC 自消费以来上涨，您收到的 BTC 会更少（美元价值相同）；如果下跌，则更多。您的 BTC/GOLD 余额始终暴露于价格波动——这是用波动性资产消费的本质。
+退款按退款时刻的价格换算，而非消费时刻的价格：您收到的是退款美元金额在您资产中的等值。如果 BTC 自消费以来上涨，您收到的 BTC 会更少（美元价值相同）；如果下跌，则更多。您的 BTC/GOLD/SILVER/PLATINUM 余额始终暴露于价格波动——这是用波动性资产消费的本质。
 #### 为什么我的消费手续费在授权与清算之间发生了变化？
 授权时在冻结额中预留的是预估手续费；清算时按当时生效的配置重新计算——若运营商在两个事件之间调整了费率，则按清算时的费率收取。与预估值的差额随消费调整一并释放或补收，不会产生单独的手续费流水。
 #### 如果月费扣款时没有余额会怎样？

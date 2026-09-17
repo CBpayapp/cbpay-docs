@@ -54,7 +54,7 @@ Ver [Idioma y locale](https://docs.cbpayapp.com/es/guias/idioma).
 ## Dinero y tasas
 
 #### ¿En qué moneda está mi saldo?
-Tu cuenta mantiene **cuatro saldos independientes**: USDT (la moneda
+Tu cuenta mantiene **seis saldos independientes**: USDT (la moneda
 operativa, 6 decimales), USDC, BTC y GOLD. Las operaciones fiat (payouts
 en CLP, cobros en BOB…) se convierten a/desde USDT con las tasas de tu
 cuenta al momento de ejecutar (`rate` para payouts, `payin_rate` para

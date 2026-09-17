@@ -1,18 +1,18 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.90"
-  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有四个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC
-    和 GOLD(纯金克数)——可通过兑换(swap)按需转换。
+  version: "2.95"
+  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
+    GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
-    payout 和服务费可从四个余额中的任意一个支付(用 `PUT /v1/settlement`
+    payout 和服务费可从六个余额中的任意一个支付(用 `PUT /v1/settlement`
 
     设置默认值,或在单笔 payout 中用 `settlement_asset` 覆盖);payin
 
     可自动兑换为你选择的资产(`default_payin_asset`)。
 
 
-    所有金额均为十进制字符串,遵循各货币的精度(USDT/USDC/GOLD 为 6 位小数,BTC 为 8 位)。错误始终返回
+    所有金额均为十进制字符串,遵循各货币的精度(USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。错误始终返回
 
     `{"error": "<code>", "message": "<detail>"}`。
 
@@ -971,6 +971,8 @@ paths:
                     USDC: '50.100200'
                     BTC: '0.00046120'
                     GOLD: '0.462100'
+                    SILVER: '0.462100'
+                    PLATINUM: '0.462100'
                 country_quote:
                   country: BO
                   currency: BOB
@@ -2386,7 +2388,7 @@ paths:
       - 余额
       operationId: getBalances
       summary: 获取余额
-      description: 调用账户的四个独立虚拟余额(USDT——运营货币——、USDC、BTC 和以纯金克数计的 GOLD)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
+      description: 调用账户的六个独立虚拟余额(USDT——运营货币——、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER 和以纯铂金克数计的 PLATINUM)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
         Banking,其 BANK_USD/BANK_EUR 镜像余额也会列出,`custody` 标记为 `banking`(权威余额在银行;这些余额在平台内不可消费)。
       responses:
         '200':
@@ -2410,6 +2412,12 @@ paths:
                   available: '0.00060000'
                   held: '0.00000000'
                 - asset: GOLD
+                - asset: SILVER
+                  available: '1.070000'
+                  held: '0.000000'
+                - asset: PLATINUM
+                  available: '35.000000'
+                  held: '0.000000'
                   available: '12.500000'
                   held: '0.000000'
                 - asset: BANK_USD
@@ -2427,12 +2435,12 @@ paths:
       - 余额
       operationId: getBalancesHistory
       summary: 获取余额历史
-      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对 BTC/GOLD 估值的 USD 汇总序列。包含期间总流入/流出及当前快照(可用
+      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对 BTC/GOLD/SILVER/PLATINUM 估值的 USD 汇总序列。包含期间总流入/流出及当前快照(可用
         + 冻结),前端可据此渲染 Mercury 风格的余额卡片及其百分比变化。序列跟踪**可用**余额(冻结没有历史);`current` 携带今日各资产的 `held`。在历史价格存在之前用今日现价估值的日期会在
         `spot_priced_dates` 中披露——绝不虚构数值。
 
 
-        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总仅覆盖运营余额(USDT、USDC、BTC、GOLD)。
+        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总仅覆盖运营余额(USDT、USDC、BTC、GOLD、SILVER、PLATINUM)。
 
         '
       parameters:
@@ -2472,7 +2480,7 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 每个资产一条每日收盘余额序列。包含运营余额(USDT、USDC、BTC、GOLD)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
+                    description: 每个资产一条每日收盘余额序列。包含运营余额(USDT、USDC、BTC、GOLD、SILVER、PLATINUM)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
                       `total_usd`。
                     additionalProperties:
                       type: object
@@ -2660,6 +2668,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           example: USDT
       - name: type
         in: query
@@ -2909,6 +2919,18 @@ paths:
                     price: '107.5341'
                     updated_at: '2026-07-07T09:12:05Z'
                     settlement_grade: true
+                  SILVER:
+                    currency: USD
+                    unit: gram
+                    price: '1.0700'
+                    updated_at: '2026-07-07T09:12:05Z'
+                    settlement_grade: true
+                  PLATINUM:
+                    currency: USD
+                    unit: gram
+                    price: '35.0000'
+                    updated_at: '2026-07-07T09:12:05Z'
+                    settlement_grade: true
                 lot_quote:
                   currency: CLP
                   amount: '100000.00000000'
@@ -3138,6 +3160,28 @@ paths:
                     first: '106.8812'
                     last: '107.5341'
                     change_pct: '0.61'
+                  SILVER:
+                    currency: USD
+                    unit: gram
+                    series:
+                    - date: '2026-06-12'
+                      price: '106.8812'
+                    - date: '2026-07-11'
+                      price: '1.0700'
+                    first: '106.8812'
+                    last: '107.5341'
+                    change_pct: '0.61'
+                  PLATINUM:
+                    currency: USD
+                    unit: gram
+                    series:
+                    - date: '2026-06-12'
+                      price: '106.8812'
+                    - date: '2026-07-11'
+                      price: '35.0000'
+                    first: '106.8812'
+                    last: '107.5341'
+                    change_pct: '0.61'
                 retrieved_at: '2026-07-11T15:00:00Z'
         '400':
           description: 日期范围或粒度缺失/无效(`invalid_range`、`invalid_granularity`)。
@@ -3172,7 +3216,7 @@ paths:
 
         **从任意余额支付**:默认从你账户的默认结算资产扣款(USDT,除非通过 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USDT、USDC、BTC
         或 GOLD)可让这笔操作从其他余额支付:USDT 总额按当时的有效结算价格转换为该资产(见 `GET /v1/rates` 的 `settlement` 块),扣款、冻结以及失败时的退款都在该资产中且金额完全一致。若
-        BTC/GOLD 的执行价格不可用,请求返回 `503 pricing_unavailable`;波动性资产还有单笔限额(`422 settlement_limit_exceeded`)。
+        BTC/GOLD/SILVER/PLATINUM 的执行价格不可用,请求返回 `503 pricing_unavailable`;波动性资产还有单笔限额(`422 settlement_limit_exceeded`)。
 
 
         必须提供幂等键(请求体字段或 `Idempotency-Key` 请求头)。使用相同键重试会返回原始 payout(`200` 且 `idempotency_hit: true`)。
@@ -3210,6 +3254,27 @@ paths:
                   example: '50000.00'
                 beneficiary:
                   type: object
+                  properties:
+                    beneficiary_type:
+                      type: string
+                      enum:
+                      - individual
+                      - corporate
+                      description: EUR SEPA Instant 通道必填。
+                    iban:
+                      type: string
+                      description: SEPA 必填；按 ISO 13616 mod-97 规范化并校验。
+                      example: DE89370400440532013000
+                    bic:
+                      type: string
+                      description: SEPA 可选 ISO 9362 BIC；8 或 11 个字符。
+                      example: COBADEFFXXX
+                    given_name:
+                      type: string
+                      description: 个人名；与 first_surname 同时提供时使用。
+                    first_surname:
+                      type: string
+                      description: 个人第一姓氏；与 given_name 同时提供时使用。
                   additionalProperties:
                     type: string
                   description: '目标账户详情。所需键取决于国家与方式;参见 `GET /v1/payouts/methods` 和
@@ -3274,6 +3339,7 @@ paths:
                   description: 受益人会自动保存为联系人;传 false 可跳过。
                 description:
                   type: string
+                  description: 可选支付备注。对于 SEPA，adapter 会将其折叠到 provider corporate charset；不支持的字符返回 400 invalid_payload，wire 值最多 140 个 runes。
                 settlement_asset:
                   type: string
                   enum:
@@ -3281,6 +3347,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产(USDT,除非通过 `PUT /v1/settlement` 更改)。
                 idempotency_key:
                   type: string
@@ -3585,6 +3653,21 @@ paths:
                     bank_country: US
                   description: Invoice 2212
                   idempotency_key: us-swift-2212
+              sepa_de:
+                summary: 德国 — EUR SEPA Instant payout
+                value:
+                  country: DE
+                  currency: EUR
+                  method: sepa
+                  amount: '100.00'
+                  beneficiary:
+                    beneficiary_type: individual
+                    given_name: Elena
+                    first_surname: Fuentes
+                    iban: DE89370400440532013000
+                    bic: COBADEFFXXX
+                  description: Invoice 2026-0916
+                  idempotency_key: sepa-de-20260916-001
               cl_paid_from_btc:
                 summary: 智利 — 从 BTC 余额支付(settlement_asset)
                 value:
@@ -3639,6 +3722,38 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
+                sepa_processing:
+                  summary: SEPA payout 已批准，等待终态 reconciliation。
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: sepa-de-20260916-001
+                    country: DE
+                    currency: EUR
+                    method: sepa
+                    local_amount: '100.00'
+                    fx_rate: '0.920000'
+                    usdt_amount: '108.695652'
+                    fee: '0.300000'
+                    total_debit: '108.995652'
+                    settlement_asset: USDT
+                    settlement_amount: '108.995652'
+                    settlement_rate: '1'
+                    beneficiary:
+                      beneficiary_type: individual
+                      given_name: Elena
+                      first_surname: Fuentes
+                      iban: DE89370400440532013000
+                      bic: COBADEFFXXX
+                    description: Invoice 2026-0916
+                    status: processing
+                    status_code: approved
+                    status_message: payout approved; awaiting settlement confirmation
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    created_at: '2026-09-16T20:00:00Z'
+                    updated_at: '2026-09-16T20:00:01Z'
                 screening_verified_pending_dispatch:
                   summary: 筛查通过，扣款已持久化，等待 core 派发。
                   description: 同一个 payout 仍为 pending；保留原幂等键并等待状态 webhook。
@@ -4004,6 +4119,7 @@ paths:
         CBPay 提供的可用 payout 通道(国家、货币、方式)。直接透传处理核心的目录。每一项都带
         `availability`(`operational` | `degraded` | `down`)——通道的实时健康状态,便于你在渲染时
         决定展示、提示或隐藏某个渠道(见服务状态指南)。没有事件记录的通道始终为 `operational`。
+        `sepa` 仅支持 EUR，并注册 35 个国家：AT、BE、BG、HR、CY、CZ、DK、EE、FI、FR、DE、GR、HU、IE、IT、LV、LT、LU、MT、NL、PL、PT、RO、SK、SI、ES、SE、IS、LI、NO、CH、MC、SM、AD、VA。GB 不在 V1。
       responses:
         '200':
           description: 方式目录。
@@ -4228,7 +4344,7 @@ paths:
         12 位字母数字短码,适配任何银行附言字段(部分通道上限 20 个字符且不允许特殊字符)。使用 `method: "fintoc"`(智利)响应携带托管 `payment_url`:付款人打开后可从任意智利银行或钱包转账;存款会被自动检测、校验并入账。使用
         `method: "card"` 响应携带一个托管 3-D Secure 银行卡收银台的 `payment_url`,页面带有您组织的品牌 —— 支持玻利维亚(BOB)与以美元结算的国际银行卡(`country: "US"`;任意国家发行的 Visa、Mastercard、American Express、Discover 与 Diners);银行卡数据绝不经过您的集成。使用
         `method: "checkout"` 响应携带一个公开的 `checkout_url` —— 以您选择的虚拟余额计价的通用收款链接(`settlement_asset`:USDT、USDC、BTC
-        或 GOLD)。付款人可选择任何有可用 payin 走廊的国家(本地金额实时报价)、四个加密货币选项之一(带可扫描二维码的专属充值地址),或通过商户的
+        或 GOLD)。付款人可选择任何有可用 payin 走廊的国家(本地金额实时报价)、六个加密货币选项之一(带可扫描二维码的专属充值地址),或通过商户的
         CBPay 二维码/别名从 CBPay 应用即时付款;每笔付款自动兑换为结算资产(以相同资产付款则不兑换)。最先完成支付的方式生效。创建收款免费;存款入账时收取
         payin 费用。未发送 `stored_card_id` 时，开放的 `pending`/`challenge`
         银行卡会话可按同一账户、国家、币种、金额和 `payer_reference` 复用
@@ -4351,6 +4467,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: 仅 checkout —— 收款计价与结算的虚拟余额。每笔付款入账时自动兑换为该资产(以相同资产付款则不兑换)。须为您的组织启用(否则返回
                     `422 settlement_asset_disabled`)。
@@ -5309,7 +5427,7 @@ paths:
       - 转账
       operationId: createTransfer
       summary: 创建内部转账
-      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持四个虚拟余额(默认 `USDT`、`USDC`、`BTC`、`GOLD`),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
+      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持六个虚拟余额(默认 `USDT`、`USDC`、`BTC`、`GOLD`),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
         `to_account_id`、`to_email`、`to_phone`(仅 OTP 已验证的手机号)或 `to_contact_id` 解析。每笔转账都会自动把收款人保存为联系人(用
         `save_contact: false` 退出)。收款方的 webhook 订阅者会收到 `transfer_received`。'
       parameters:
@@ -5351,11 +5469,13 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: 要划转的余额币种;接收方以同一币种入账。
                 amount:
                   type: string
-                  description: 正数十进制字符串,不超过该货币的小数位数(USDT/USDC/GOLD 为 6 位,BTC 为 8 位)。
+                  description: 正数十进制字符串,不超过该货币的小数位数(USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
                   example: '10.500000'
                 description:
                   type: string
@@ -9355,7 +9475,7 @@ paths:
       - 兑换(Swaps)
       operationId: quoteSwap
       summary: swap 报价
-      description: 在你的 USDT、USDC、BTC 和 GOLD 余额之间兑换的免费指示性报价(任意交易对,源与目标不同)。你看到的汇率就是你账户的执行汇率——所见即所得,无额外费用。指示性:执行时使用
+      description: 在你的 USDT、USDC、BTC、GOLD、SILVER 和 PLATINUM 余额之间兑换的免费指示性报价(任意交易对,源与目标不同)。你看到的汇率就是你账户的执行汇率——所见即所得,无额外费用。指示性:执行时使用
         POST 当刻的价格(稳定币对保持稳定)。
       parameters:
       - name: from_asset
@@ -9368,6 +9488,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
       - name: to_asset
         in: query
         required: true
@@ -9378,6 +9500,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
       - name: amount
         in: query
         required: true
@@ -9750,6 +9874,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 crypto:
                   type: string
                   enum:
@@ -10086,7 +10212,7 @@ paths:
       - 兑换(Swaps)
       operationId: createSwap
       summary: 创建 swap
-      description: 在你的两种货币之间同步、原子地兑换余额——余额即时变动,资金从不离开你的账户(无需 OTP)。波动性交易对(BTC/GOLD)与 payouts 和卡片消费共享单笔及
+      description: 在你的两种货币之间同步、原子地兑换余额——余额即时变动,资金从不离开你的账户(无需 OTP)。波动性交易对(BTC/GOLD/SILVER/PLATINUM)与 payouts 和卡片消费共享单笔及
         24 小时交易量限额。必须提供幂等键:重放会返回原始 swap,绝不重复执行。
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
@@ -10108,6 +10234,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 to_asset:
                   type: string
                   enum:
@@ -10115,9 +10243,11 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 amount:
                   type: string
-                  description: 源货币金额(USDT/USDC/GOLD 为 6 位小数,BTC 为 8 位)。
+                  description: 源货币金额(USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。
                 idempotency_key:
                   type: string
                   description: >-
@@ -10239,6 +10369,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         description: 匹配兑换的任意一边。
       - name: from
         in: query
@@ -12328,6 +12460,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产。
                 idempotency_key:
                   type: string
@@ -13394,11 +13528,13 @@ paths:
       - 收款(Payins)
       operationId: payinCollect
       summary: 主动收款(pull)
-      deprecated: true
       description: >-
         需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。
         在支持 pull 收款的通道直接向付款人扣款。平台要求幂等键，并在调用
-        core/通道前对付款人执行 screening。PEP/防火墙暂留返回
+        core/通道前对付款人执行 screening。对于 `VE/VES/c2p`，付款人生成的
+        `claveDinamica` 放在 `otp` 中；该方式不使用
+        `/v1/payins/collect/otp`。`debito_inmediato` 不是当前可用的通道。
+        PEP/防火墙暂留返回
         `202 in_review` 且不会扣款；批准只释放审核，客户端使用相同的幂等
         上下文重试。超时或 5xx 会让 payin 保持 pending 并等待 webhook 对账，
         绝不会自动重发。只有证件的付款人以 `document_value`/`idNumber`
@@ -13443,6 +13579,7 @@ paths:
                   type: string
                 otp:
                   type: string
+                  description: 对于 `VE/VES/c2p`，这是付款人生成的 `claveDinamica`；不是由 CBPay 签发的 OTP。
                 otp_reference:
                   type: string
                 idempotency_key:
@@ -13567,8 +13704,7 @@ paths:
       - 收款(Payins)
       operationId: payinCollectOtp
       summary: 请求收款 OTP
-      deprecated: true
-      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 请求部分 pull 方式在扣款前所需的一次性密码。免费。支付选项必须先生成，最终 collect 会在扣款前执行 screening。
+      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。仅为会在扣款前签发 OTP 的 pull 方式请求一次性密码。该步骤不属于 `VE/VES/c2p`，后者由付款人在 collect 请求的 `otp` 字段中提供 `claveDinamica`。
       requestBody:
         required: true
         content:
@@ -13596,7 +13732,7 @@ paths:
                 payer_account:
                   type: string
             example:
-              method: debito_inmediato
+              method: configured_pull_method
               amount: '1200.00'
               payer_document: V12345678
               payer_phone: '04141234567'
@@ -13637,6 +13773,14 @@ paths:
               example:
                 error: invalid_request
                 message: method is required
+        '422':
+          description: 所选通道不提供 provider 签发的 OTP（例如 `VE/VES/c2p`）。
+          content:
+            application/json:
+              schema: *id012
+              example:
+                error: provider_rejected
+                message: c2p 使用付款人提供的 claveDinamica；不存在 OTP 请求步骤
         '401':
           $ref: '#/components/responses/Unauthorized'
         '502':
@@ -15152,7 +15296,7 @@ paths:
       operationId: createCard
       summary: 创建卡片
       description: 发行一张卡片(虚拟或实体),以 Just-In-Time 方式从账户中央余额按卡片的消费资产扣款(`spending_asset`:USDT/USDC 与 USD 1:1,或
-        BTC/GOLD 按每笔事件当时价格转换;默认 USDT)——无需预充值:每笔消费都实时对照可用余额和卡片自身限额授权。个人账户可持有 **1 张虚拟卡 + 1 张实体卡**;企业账户可创建**不限数量**的卡片,为企业本身或指定人员(例如员工,传入其身份文件)。若配置了
+        BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换;默认 USDT)——无需预充值:每笔消费都实时对照可用余额和卡片自身限额授权。个人账户最多持有 **1 张有效卡并有 1 条开放申请**；新实体卡发行暂时不可用；已经发行的实体卡继续正常使用;企业账户可创建**不限数量**的卡片,为企业本身或指定人员(例如员工,传入其身份文件)。若配置了
         `card_creation_virtual` / `card_creation_physical` 费用则在发卡时计费(0 = 免费);发卡失败自动退款。实体卡初始状态为 `pending_activation`,直到持卡人确认收到。
       requestBody:
         required: true
@@ -15176,8 +15320,10 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
-                  description: 卡片消费扣款的余额。USDT/USDC 与 USD 等价(精确 1:1,无转换费)。BTC/GOLD 按每笔事件当时的有效价格转换,并在授权时预留缓冲(fail-closed
+                  description: 卡片消费扣款的余额。USDT/USDC 与 USD 等价(精确 1:1,无转换费)。BTC/GOLD/SILVER/PLATINUM 按每笔事件当时的有效价格转换,并在授权时预留缓冲(fail-closed
                     定价,单笔及 24 小时波动限额与 payouts 共享)。
                 limits:
                   type: object
@@ -15207,11 +15353,11 @@ paths:
                   cardholder:
                     occupation: '52201'
                     salary_usd: 1800
-              subsequent_card:
-                summary: 后续卡片 — 持卡人已验证(无需数据)
+              company_subsequent_digital_card:
+                summary: 企业 — 后续虚拟卡
                 value:
-                  physical: true
-                  idempotency_key: card-f-ops-1
+                  physical: false
+                  idempotency_key: card-v-ops-1
                   spending_asset: USDC
                   limits:
                     per_transaction: '500.00'
@@ -15262,14 +15408,22 @@ paths:
                 review_id: 7a1c2e94-3b5f-4c8a-9d2e-6f0a1b2c3d4e
                 message: application received; it is pending review by our compliance team
         '400':
-          description: idempotency_key_required / invalid_amount
+          description: idempotency_key_required / invalid_amount / physical_temporarily_unavailable
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: idempotency_key_required
-                message: provide idempotency_key (body or Idempotency-Key header)
+              examples:
+                idempotency_key_required:
+                  summary: 缺少幂等键
+                  value:
+                    error: idempotency_key_required
+                    message: provide idempotency_key (body or Idempotency-Key header)
+                physical_temporarily_unavailable:
+                  summary: 实体卡发行暂停
+                  value:
+                    error: physical_temporarily_unavailable
+                    message: physical cards are temporarily unavailable; request a virtual card
         '402':
           description: 余额不足以支付开卡费用(insufficient_funds)。
           content:
@@ -15287,7 +15441,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: card_limit_reached
-                message: person accounts can hold at most 1 virtual card (cancel the existing one first)
+                message: person accounts can hold at most 1 live card and 1 open application (resolve the existing application first)
         '422':
           description: verification_required / verification_not_approved / verification_kind_mismatch(指定人员需要已通过的第三方
             KYC verification_id)。
@@ -15419,6 +15573,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: 新的消费余额。仅影响之后的消费;在途授权保持(并退款到)原扣款资产。
                 limits:
                   type: object
@@ -15978,7 +16134,7 @@ paths:
       - 账户
       operationId: getSettlement
       summary: 获取我的结算设置
-      description: 返回你的操作(payouts 与服务费)默认从哪个虚拟余额扣款、payins 默认入账到哪个余额(`default_payin_asset`)、组织允许哪些资产,以及适用于波动性资产(BTC/GOLD)的单笔限额(USDT 等值)。
+      description: 返回你的操作(payouts 与服务费)默认从哪个虚拟余额扣款、payins 默认入账到哪个余额(`default_payin_asset`)、组织允许哪些资产,以及适用于波动性资产(BTC/GOLD/SILVER/PLATINUM)的单笔限额(USDT 等值)。
       responses:
         '200':
           description: 当前结算设置。
@@ -15994,6 +16150,8 @@ paths:
                 - USDC
                 - BTC
                 - GOLD
+                - SILVER
+                - PLATINUM
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '401':
@@ -16020,6 +16178,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: payouts 与服务费默认扣款的余额。可选。
                 default_payin_asset:
                   type: string
@@ -16028,6 +16188,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: payins 默认入账的余额。入账仍以 USDT 进行,净额通过 swap 引擎按真实价格自动兑换(不收取额外 swap 价差)。可选。
             example:
               default_settlement_asset: BTC
@@ -16047,6 +16209,8 @@ paths:
                 - USDC
                 - BTC
                 - GOLD
+                - SILVER
+                - PLATINUM
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '400':
@@ -21241,7 +21405,9 @@ components:
           - USDC
           - BTC
           - GOLD
-          description: 卡片消费扣款的余额。USDT/USDC 与 USD 1:1;BTC/GOLD 按每笔事件当时价格转换。默认 USDT。修改仅影响之后的消费。
+          - SILVER
+          - PLATINUM
+          description: 卡片消费扣款的余额。USDT/USDC 与 USD 1:1;BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换。默认 USDT。修改仅影响之后的消费。
         limits:
           type: object
           description: 消费限额,始终以 USD 计,与消费资产无关。
@@ -21574,6 +21740,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         to_asset:
           type: string
           enum:
@@ -21581,6 +21749,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         from_amount:
           type: string
         to_amount:
@@ -21831,6 +22001,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: 未提供单次覆盖时,余额操作默认扣款的资产。
         default_payin_asset:
           type: string
@@ -21839,6 +22011,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: payins 默认入账的余额。入账仍以 USDT 进行,净额通过 swap 引擎按真实价格自动兑换,不收取额外 swap 价差。checkout/POS 保留其链接资产。
         enabled_assets:
           type: array
@@ -21847,10 +22021,10 @@ components:
           description: 你的组织当前允许作为结算来源的资产。
         volatile_op_limit_usdt:
           type: string
-          description: 波动性资产(BTC/GOLD)的单笔限额(USDT 等值)。
+          description: 波动性资产(BTC/GOLD/SILVER/PLATINUM)的单笔限额(USDT 等值)。
         volatile_daily_limit_usdt:
           type: string
-          description: 波动性资产(BTC/GOLD)每账户滚动 24 小时交易量上限(USDT 等值)。
+          description: 波动性资产(BTC/GOLD/SILVER/PLATINUM)每账户滚动 24 小时交易量上限(USDT 等值)。
       example:
         default_settlement_asset: USDT
         default_payin_asset: USDT
@@ -21859,6 +22033,8 @@ components:
         - USDC
         - BTC
         - GOLD
+        - SILVER
+        - PLATINUM
         volatile_op_limit_usdt: '10000.000000'
         volatile_daily_limit_usdt: '50000.000000'
     Payout:
@@ -21900,6 +22076,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: 该操作实际扣款的虚拟余额。
         settlement_amount:
           type: string
@@ -21984,6 +22162,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: payin 入账的虚拟余额。checkout 和 POS 收款以其链接资产计价(在使用本地支付方式之前没有
             `currency`/`local_amount`;收款金额为以该资产计价的 `asset_amount`)。其他已入账的 payins
             在账户配置了非 USDT 的 `default_payin_asset` 时携带该字段——净入账金额会自动兑换为该资产。

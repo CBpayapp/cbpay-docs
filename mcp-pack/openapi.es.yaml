@@ -1,12 +1,12 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.90"
+  version: "2.95"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
 
-    on-chain, y screening KYC. Cada cuenta mantiene cuatro saldos virtuales
+    on-chain, y screening KYC. Cada cuenta mantiene seis saldos virtuales
 
     independientes — USDT (la moneda operativa), USDC, BTC y GOLD (gramos de
 
@@ -14,7 +14,7 @@ info:
 
     Los payouts y las comisiones de servicios pueden pagarse desde cualquiera
 
-    de los cuatro saldos (`PUT /v1/settlement` u override por payout con
+    de los seis saldos (`PUT /v1/settlement` u override por payout con
 
     `settlement_asset`), y los payins pueden auto-convertirse al asset que
 
@@ -23,7 +23,7 @@ info:
 
     Todos los montos son strings decimales en la precisión de cada moneda (6
 
-    decimales para USDT/USDC/GOLD, 8 para BTC). Los errores siempre devuelven
+    decimales para USDT/USDC/GOLD/SILVER/PLATINUM, 8 para BTC). Los errores siempre devuelven
 
     `{"error": "<code>", "message": "<detail>"}`.
 
@@ -72,7 +72,7 @@ tags:
   description: Libreta de beneficiarios por cuenta (destinos CBPay, bancarios y crypto) con match por
     teléfono y auto-guardado en cada envío.
 - name: Swaps
-  description: Conversión instantánea entre los saldos USDT, USDC, BTC y GOLD de la cuenta a la tasa
+  description: Conversión instantánea entre los saldos USDT, USDC, BTC, GOLD, SILVER y PLATINUM de la cuenta a la tasa
     cotizada de la cuenta.
 - name: Crypto
   description: Fondeo y retiros on-chain (TRON, Ethereum y Bitcoin).
@@ -1055,6 +1055,8 @@ paths:
                     USDC: '50.100200'
                     BTC: '0.00046120'
                     GOLD: '0.462100'
+                    SILVER: '0.462100'
+                    PLATINUM: '0.462100'
                 country_quote:
                   country: BO
                   currency: BOB
@@ -2522,7 +2524,7 @@ paths:
       - Saldos
       operationId: getBalances
       summary: Obtener saldos
-      description: Los cuatro saldos virtuales independientes de la cuenta que llama (USDT — la moneda
+      description: Los seis saldos virtuales independientes de la cuenta que llama (USDT — la moneda
         operativa —, USDC, BTC y GOLD en gramos de oro fino). Todos los activos soportados vienen siempre,
         con ceros si la cuenta no ha usado esa moneda. Si la cuenta usa Banking, sus saldos espejo BANK_USD/BANK_EUR
         también se listan con el marcador `custody` en `banking` (el saldo autoritativo vive en el banco;
@@ -2549,6 +2551,12 @@ paths:
                   available: '0.00060000'
                   held: '0.00000000'
                 - asset: GOLD
+                - asset: SILVER
+                  available: '1.070000'
+                  held: '0.000000'
+                - asset: PLATINUM
+                  available: '35.000000'
+                  held: '0.000000'
                   available: '12.500000'
                   held: '0.000000'
                 - asset: BANK_USD
@@ -2568,7 +2576,7 @@ paths:
       summary: Obtener historial de saldos
       description: 'Evolución diaria de los saldos de la cuenta para gráficos de dashboard: una serie
         por asset (el saldo disponible de cierre de cada día, arrastrado en días sin movimientos) más
-        una serie agregada en USD que valoriza BTC/GOLD al precio de referencia histórico de cada día.
+        una serie agregada en USD que valoriza BTC/GOLD/SILVER/PLATINUM al precio de referencia histórico de cada día.
         Incluye las entradas/salidas totales del período y el snapshot actual (available + held), para
         que el front arme una tarjeta de saldo estilo dashboard con su variación porcentual. La serie
         refleja el saldo **disponible** (los holds no tienen historia); `current` trae el `held` de hoy
@@ -2811,6 +2819,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           example: USDT
       - name: type
         in: query
@@ -3071,6 +3081,18 @@ paths:
                     price: '107.5341'
                     updated_at: '2026-07-07T09:12:05Z'
                     settlement_grade: true
+                  SILVER:
+                    currency: USD
+                    unit: gram
+                    price: '1.0700'
+                    updated_at: '2026-07-07T09:12:05Z'
+                    settlement_grade: true
+                  PLATINUM:
+                    currency: USD
+                    unit: gram
+                    price: '35.0000'
+                    updated_at: '2026-07-07T09:12:05Z'
+                    settlement_grade: true
                 lot_quote:
                   currency: CLP
                   amount: '100000.00000000'
@@ -3304,6 +3326,28 @@ paths:
                     first: '106.8812'
                     last: '107.5341'
                     change_pct: '0.61'
+                  SILVER:
+                    currency: USD
+                    unit: gram
+                    series:
+                    - date: '2026-06-12'
+                      price: '106.8812'
+                    - date: '2026-07-11'
+                      price: '1.0700'
+                    first: '106.8812'
+                    last: '107.5341'
+                    change_pct: '0.61'
+                  PLATINUM:
+                    currency: USD
+                    unit: gram
+                    series:
+                    - date: '2026-06-12'
+                      price: '106.8812'
+                    - date: '2026-07-11'
+                      price: '35.0000'
+                    first: '106.8812'
+                    last: '107.5341'
+                    change_pct: '0.61'
                 retrieved_at: '2026-07-11T15:00:00Z'
         '400':
           description: Rango de fechas o granularidad faltante/inválida (`invalid_range`, `invalid_granularity`).
@@ -3344,7 +3388,7 @@ paths:
         USDC, BTC o GOLD) para pagar esta operación puntual desde otro saldo: el total en USDT se convierte
         a ese asset al precio efectivo de settlement del momento (ver el bloque `settlement` de `GET /v1/rates`)
         y el débito, la retención y — si falla — el reembolso viven en ese asset por el monto exacto.
-        Si el precio de ejecución de BTC/GOLD no está disponible, el request devuelve `503 pricing_unavailable`;
+        Si el precio de ejecución de BTC/GOLD/SILVER/PLATINUM no está disponible, el request devuelve `503 pricing_unavailable`;
         los assets volátiles además tienen un límite por operación (`422 settlement_limit_exceeded`).
 
 
@@ -3385,6 +3429,27 @@ paths:
                   example: '50000.00'
                 beneficiary:
                   type: object
+                  properties:
+                    beneficiary_type:
+                      type: string
+                      enum:
+                      - individual
+                      - corporate
+                      description: Obligatorio para el corredor SEPA Instant en EUR.
+                    iban:
+                      type: string
+                      description: Obligatorio en SEPA; se normaliza y valida con ISO 13616 mod-97.
+                      example: DE89370400440532013000
+                    bic:
+                      type: string
+                      description: BIC ISO 9362 opcional para SEPA; 8 u 11 caracteres.
+                      example: COBADEFFXXX
+                    given_name:
+                      type: string
+                      description: Nombre de la persona; se usa con first_surname cuando vienen ambos.
+                    first_surname:
+                      type: string
+                      description: Primer apellido de la persona; se usa con given_name cuando vienen ambos.
                   additionalProperties:
                     type: string
                   description: 'Datos de la cuenta de destino. Las claves requeridas dependen del
@@ -3471,6 +3536,7 @@ paths:
                     no guardarlo.
                 description:
                   type: string
+                  description: Narrativa de pago opcional. Para SEPA, el adapter la pliega al charset corporativo del proveedor, rechaza caracteres no admitidos con 400 invalid_payload y trunca el valor wire a 140 runas.
                 settlement_asset:
                   type: string
                   enum:
@@ -3478,6 +3544,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset
                     de settlement predeterminado de tu cuenta (USDT salvo que lo cambies con `PUT /v1/settlement`).
                 idempotency_key:
@@ -3783,6 +3851,21 @@ paths:
                     bank_country: US
                   description: Factura 2212
                   idempotency_key: us-swift-2212
+              sepa_de:
+                summary: Alemania — payout SEPA Instant en EUR
+                value:
+                  country: DE
+                  currency: EUR
+                  method: sepa
+                  amount: '100.00'
+                  beneficiary:
+                    beneficiary_type: individual
+                    given_name: Elena
+                    first_surname: Fuentes
+                    iban: DE89370400440532013000
+                    bic: COBADEFFXXX
+                  description: Factura 2026-0916
+                  idempotency_key: sepa-de-20260916-001
               cl_paid_from_btc:
                 summary: Chile — pagado desde el saldo BTC (settlement_asset)
                 value:
@@ -3837,6 +3920,38 @@ paths:
                     bank_reference: ''
                     created_at: '2026-07-07T12:00:00Z'
                     updated_at: '2026-07-07T12:00:00Z'
+                sepa_processing:
+                  summary: Payout SEPA aprobado y esperando conciliación terminal.
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: sepa-de-20260916-001
+                    country: DE
+                    currency: EUR
+                    method: sepa
+                    local_amount: '100.00'
+                    fx_rate: '0.920000'
+                    usdt_amount: '108.695652'
+                    fee: '0.300000'
+                    total_debit: '108.995652'
+                    settlement_asset: USDT
+                    settlement_amount: '108.995652'
+                    settlement_rate: '1'
+                    beneficiary:
+                      beneficiary_type: individual
+                      given_name: Elena
+                      first_surname: Fuentes
+                      iban: DE89370400440532013000
+                      bic: COBADEFFXXX
+                    description: Factura 2026-0916
+                    status: processing
+                    status_code: approved
+                    status_message: payout approved; awaiting settlement confirmation
+                    funds_debited: true
+                    compliance_pending: false
+                    bank_reference: ''
+                    created_at: '2026-09-16T20:00:00Z'
+                    updated_at: '2026-09-16T20:00:01Z'
                 screening_verified_pending_dispatch:
                   summary: El screening pasó y el débito quedó durable mientras espera el despacho al core.
                   description: El mismo payout sigue pendiente; conserva la clave de idempotencia original y espera el webhook de estado.
@@ -4209,6 +4324,7 @@ paths:
         (`operational` | `degraded` | `down`) — la salud en vivo del corredor, para decidir
         al renderizar si muestras, adviertes u ocultas un canal (ver la guía de estado del
         servicio). Un corredor sin incidentes registrados siempre es `operational`.
+        El método `sepa` solo usa EUR y se registra para 35 países: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI, NO, CH, MC, SM, AD y VA. GB queda fuera de V1.
       responses:
         '200':
           description: Catálogo de métodos.
@@ -4459,7 +4575,7 @@ paths:
         puede desalojar una sesión `pending` sin intentos, responde
         `429 too_many_open_card_sessions`. Con `method: "checkout"` la respuesta trae
         una `checkout_url` pública — un link de cobro universal denominado en el saldo virtual que
-        elijas (`settlement_asset`: USDT, USDC, BTC o GOLD). El pagador elige cualquier país con
+        elijas (`settlement_asset`: USDT, USDC, BTC, GOLD, SILVER o PLATINUM). El pagador elige cualquier país con
         corredor de payin vivo (monto local cotizado), cualquiera de las 4 opciones crypto (dirección
         de depósito exclusiva con QR escaneable) o paga al instante desde la app CBPay vía el
         QR/alias del comercio; cada pago se convierte automático al asset de settlement salvo que se
@@ -4597,6 +4713,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: Solo checkout — el saldo virtual en que se denomina y liquida el
                     cobro. Todo pago se convierte automático a este asset al acreditar (pagos en el
@@ -5580,7 +5698,7 @@ paths:
       summary: Crear una transferencia interna
       description: 'Mueve saldo entre dos cuentas CBPay, de forma atómica y siempre gratuita — funciona
         cualquier combinación: persona a persona, persona a empresa, empresa a persona o empresa a empresa.
-        Funciona con los cuatro saldos virtuales (`USDT` default, `USDC`, `BTC`, `GOLD`) y siempre entre
+        Funciona con los seis saldos virtuales (`USDT` default, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) y siempre entre
         saldos de la **misma moneda** (sin conversión). El destino se resuelve por `to_account_id`, `to_email`,
         `to_phone` (solo teléfonos verificados por OTP) o `to_contact_id`. Cada transferencia guarda al
         destinatario como contacto automáticamente (desactívalo con `save_contact: false`). Los suscriptores
@@ -5632,11 +5750,13 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: Moneda del saldo a mover; el destino recibe en esta misma moneda.
                 amount:
                   type: string
-                  description: String decimal positivo, hasta los decimales de la moneda (6 para USDT/USDC/GOLD,
+                  description: String decimal positivo, hasta los decimales de la moneda (6 para USDT/USDC/GOLD/SILVER/PLATINUM,
                     8 para BTC).
                   example: '10.500000'
                 description:
@@ -9732,7 +9852,7 @@ paths:
       - Swaps
       operationId: quoteSwap
       summary: Cotizar un swap
-      description: 'Cotización indicativa gratis para convertir entre tus saldos USDT, USDC, BTC y GOLD
+      description: 'Cotización indicativa gratis para convertir entre tus saldos USDT, USDC, BTC, GOLD, SILVER y PLATINUM
         (cualquier par, origen distinto del destino). La tasa que ves es la tasa de ejecución de tu cuenta
         — cotizado = recibido, sin comisiones aparte. Indicativa: la ejecución usa el precio del momento
         del POST (los pares entre stablecoins son estables).'
@@ -9747,6 +9867,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
       - name: to_asset
         in: query
         required: true
@@ -9757,6 +9879,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
       - name: amount
         in: query
         required: true
@@ -10129,6 +10253,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 crypto:
                   type: string
                   enum:
@@ -10466,7 +10592,7 @@ paths:
       operationId: createSwap
       summary: Crear un swap
       description: 'Convierte saldo entre dos de tus monedas, de forma síncrona y atómica — tu saldo cambia
-        al instante y la plata nunca sale de tu cuenta (sin OTP). Los pares volátiles (BTC/GOLD) comparten
+        al instante y la plata nunca sale de tu cuenta (sin OTP). Los pares volátiles (BTC/GOLD/SILVER/PLATINUM) comparten
         los límites por operación y de volumen 24h con payouts y compras con tarjeta. Requiere clave de
         idempotencia: el replay devuelve el swap original y jamás re-ejecuta.'
       parameters:
@@ -10489,6 +10615,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 to_asset:
                   type: string
                   enum:
@@ -10496,9 +10624,11 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                 amount:
                   type: string
-                  description: Monto en la moneda de origen (6 decimales para USDT/USDC/GOLD, 8 para BTC).
+                  description: Monto en la moneda de origen (6 decimales para USDT/USDC/GOLD/SILVER/PLATINUM, 8 para BTC).
                 idempotency_key:
                   type: string
                   description: >-
@@ -10621,6 +10751,8 @@ paths:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         description: Matchea cualquiera de las dos puntas de la conversión.
       - name: from
         in: query
@@ -12737,6 +12869,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset
                     de settlement predeterminado de tu cuenta.
                 idempotency_key:
@@ -13804,10 +13938,12 @@ paths:
       - Payins
       operationId: payinCollect
       summary: Cobro activo (pull)
-      deprecated: true
       description: >-
         Requiere identidad de cuenta aprobada; las cuentas persona necesitan KYC aprobado y las cuentas empresa KYB aprobado antes de que esta operación autenticada cree o cobre un payin.
         Cobra al pagador directamente en los corredores que soportan cobros pull.
+        Para `VE/VES/c2p`, la `claveDinamica` generada por el pagador viaja en
+        `otp`; este método no usa `/v1/payins/collect/otp`. `debito_inmediato`
+        no es un corredor vivo.
         La plataforma exige una clave de idempotencia y screenea al pagador antes
         de llamar al core/proveedor. Un hold PEP/firewall responde `202 in_review`
         sin cobrar; el approve solo libera la review y el cliente reintenta con
@@ -13856,6 +13992,7 @@ paths:
                   type: string
                 otp:
                   type: string
+                  description: Para `VE/VES/c2p`, la `claveDinamica` generada por el pagador; CBPay no la emite.
                 otp_reference:
                   type: string
                 idempotency_key:
@@ -13981,8 +14118,7 @@ paths:
       - Payins
       operationId: payinCollectOtp
       summary: Solicitar un OTP de cobro
-      deprecated: true
-      description: Requiere identidad de cuenta aprobada; las cuentas persona necesitan KYC aprobado y las cuentas empresa KYB aprobado antes de que esta operación autenticada cree o cobre un payin. Solicita la contraseña de un solo uso que algunos métodos pull necesitan antes del
+      description: Requiere identidad de cuenta aprobada; las cuentas persona necesitan KYC aprobado y las cuentas empresa KYB aprobado antes de que esta operación autenticada cree o cobre un payin. Solicita la contraseña de un solo uso solo para métodos pull que la emiten antes del cobro. No forma parte del flujo `VE/VES/c2p`, donde el pagador entrega `claveDinamica` en el campo `otp` del collect.
         cobro. Sin costo. La opción pull debe materializarse primero y el collect
         final queda sujeto al screening previo al cobro.
       requestBody:
@@ -14012,7 +14148,7 @@ paths:
                 payer_account:
                   type: string
             example:
-              method: debito_inmediato
+              method: configured_pull_method
               amount: '1200.00'
               payer_document: V12345678
               payer_phone: '04141234567'
@@ -14053,6 +14189,14 @@ paths:
               example:
                 error: invalid_request
                 message: method is required
+        '422':
+          description: El corredor seleccionado no expone un OTP emitido por el proveedor (por ejemplo, `VE/VES/c2p`).
+          content:
+            application/json:
+              schema: *id012
+              example:
+                error: provider_rejected
+                message: c2p usa la clave dinámica del pagador; no existe un paso de solicitud de OTP
         '401':
           $ref: '#/components/responses/Unauthorized'
         '502':
@@ -15601,10 +15745,10 @@ paths:
       operationId: createCard
       summary: Crear una tarjeta
       description: 'Emite una tarjeta (virtual o física) que gasta Just-In-Time del saldo central de la
-        cuenta en el asset de gasto de la tarjeta (`spending_asset`: USDT/USDC 1:1 con el USD, o BTC/GOLD
+        cuenta en el asset de gasto de la tarjeta (`spending_asset`: USDT/USDC 1:1 con el USD, o BTC/GOLD/SILVER/PLATINUM
         convertidos al precio del momento de cada evento; USDT por defecto) — sin prefondeo: cada compra
         se autoriza en tiempo real contra el saldo disponible y los límites propios de la tarjeta. Las
-        cuentas persona pueden tener **1 virtual + 1 física**; las cuentas empresa crean tarjetas **ilimitadas**,
+        cuentas persona pueden tener **1 tarjeta viva total y 1 solicitud abierta**; la emisión física nueva está temporalmente no disponible; las físicas existentes siguen operativas. Empresa: tarjetas ilimitadas; las cuentas empresa crean tarjetas **ilimitadas**,
         para la empresa o para personas designadas (ej. empleados, pasando sus documentos de identidad).
         La emisión cobra el fee `card_creation_virtual` / `card_creation_physical` cuando está configurado
         (0 = gratis); el cargo se reembolsa automáticamente si la emisión falla. Las tarjetas físicas
@@ -15632,9 +15776,11 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   default: USDT
                   description: Saldo desde el que gasta la tarjeta. USDT/USDC van a la par del USD (1:1
-                    exacto, sin comisión de conversión). BTC/GOLD se convierten al precio efectivo del
+                    exacto, sin comisión de conversión). BTC/GOLD/SILVER/PLATINUM se convierten al precio efectivo del
                     momento de cada evento, con colchón de reserva en la autorización (pricing fail-closed
                     y límites de assets volátiles compartidos con payouts).
                 limits:
@@ -15672,11 +15818,11 @@ paths:
                   cardholder:
                     occupation: '52201'
                     salary_usd: 1800
-              subsequent_card:
-                summary: Tarjeta siguiente — titular ya verificado (sin datos)
+              company_subsequent_digital_card:
+                summary: Empresa — tarjeta digital siguiente
                 value:
-                  physical: true
-                  idempotency_key: card-f-ops-1
+                  physical: false
+                  idempotency_key: card-v-ops-1
                   spending_asset: USDC
                   limits:
                     per_transaction: '500.00'
@@ -15729,14 +15875,22 @@ paths:
                 review_id: 7a1c2e94-3b5f-4c8a-9d2e-6f0a1b2c3d4e
                 message: application received; it is pending review by our compliance team
         '400':
-          description: idempotency_key_required / invalid_amount
+          description: idempotency_key_required / invalid_amount / physical_temporarily_unavailable
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: idempotency_key_required
-                message: provide idempotency_key (body or Idempotency-Key header)
+              examples:
+                idempotency_key_required:
+                  summary: Falta idempotency key
+                  value:
+                    error: idempotency_key_required
+                    message: provide idempotency_key (body or Idempotency-Key header)
+                physical_temporarily_unavailable:
+                  summary: Emisión física pausada
+                  value:
+                    error: physical_temporarily_unavailable
+                    message: physical cards are temporarily unavailable; request a virtual card
         '402':
           description: El saldo no alcanza para el fee de emisión (insufficient_funds).
           content:
@@ -15754,7 +15908,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: card_limit_reached
-                message: person accounts can hold at most 1 virtual card (cancel the existing one first)
+                message: person accounts can hold at most 1 live card and 1 open application (resolve the existing application first)
         '422':
           description: verification_required / verification_not_approved / verification_kind_mismatch
             (las personas designadas necesitan el verification_id de un KYC de terceros aprobado).
@@ -15889,6 +16043,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Nuevo saldo de gasto. Solo afecta compras futuras; las autorizaciones en
                     vuelo conservan (y devuelven a) el asset con el que debitaron.
                 limits:
@@ -16468,7 +16624,7 @@ paths:
       description: Devuelve desde qué saldo virtual se debitan por defecto tus operaciones (payouts y
         comisiones de servicios), en qué saldo se acreditan por defecto tus payins (`default_payin_asset`),
         qué assets permite tu organización, y el límite por operación (equivalente en USDT) que aplica
-        a los assets volátiles (BTC/GOLD).
+        a los assets volátiles (BTC/GOLD/SILVER/PLATINUM).
       responses:
         '200':
           description: Configuración de settlement vigente.
@@ -16484,6 +16640,8 @@ paths:
                 - USDC
                 - BTC
                 - GOLD
+                - SILVER
+                - PLATINUM
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '401':
@@ -16501,7 +16659,7 @@ paths:
         el crédito sigue entrando en USDT y el neto se auto-convierte vía el motor de swaps al precio
         real, sin spread de swap adicional (el payin ya pagó su comisión y su tasa; los payins de
         checkout y POS conservan el asset de su link). Cualquiera
-        de USDT, USDC, BTC o GOLD (si tu organización lo tiene habilitado). Envía uno o ambos campos. El
+        de USDT, USDC, BTC, GOLD, SILVER o PLATINUM (si tu organización lo tiene habilitado). Envía uno o ambos campos. El
         cambio aplica solo a operaciones nuevas; nada en tránsito se re-cotiza.
       requestBody:
         required: true
@@ -16517,6 +16675,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Saldo desde el que se debitan por defecto payouts y comisiones. Opcional.
                 default_payin_asset:
                   type: string
@@ -16525,6 +16685,8 @@ paths:
                   - USDC
                   - BTC
                   - GOLD
+                  - SILVER
+                  - PLATINUM
                   description: Saldo en que se acreditan por defecto los payins. El crédito entra en
                     USDT y el neto se auto-convierte vía el motor de swaps al precio real (sin
                     spread de swap adicional). Opcional.
@@ -16546,6 +16708,8 @@ paths:
                 - USDC
                 - BTC
                 - GOLD
+                - SILVER
+                - PLATINUM
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '400':
@@ -21848,8 +22012,10 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: Saldo desde el que gastan las compras de la tarjeta. USDT/USDC 1:1 con el USD;
-            BTC/GOLD convertidos al precio del momento de cada evento. USDT por defecto. Cambiarlo solo
+            BTC/GOLD/SILVER/PLATINUM convertidos al precio del momento de cada evento. USDT por defecto. Cambiarlo solo
             afecta compras futuras.
         limits:
           type: object
@@ -22184,6 +22350,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         to_asset:
           type: string
           enum:
@@ -22191,6 +22359,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
         from_amount:
           type: string
         to_amount:
@@ -22444,6 +22614,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: Saldo desde el que se debitan las operaciones cuando no se envía un override por
             request.
         default_payin_asset:
@@ -22453,6 +22625,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: Saldo en que se acreditan por defecto los payins. El crédito entra en USDT y el
             neto se auto-convierte vía el motor de swaps al precio real, sin spread de swap
             adicional. Checkout/POS conservan el asset de su link.
@@ -22463,11 +22637,11 @@ components:
           description: Assets que tu organización permite actualmente como origen del settlement.
         volatile_op_limit_usdt:
           type: string
-          description: Límite por operación (equivalente en USDT) para los assets volátiles (BTC/GOLD).
+          description: Límite por operación (equivalente en USDT) para los assets volátiles (BTC/GOLD/SILVER/PLATINUM).
         volatile_daily_limit_usdt:
           type: string
           description: Tope de volumen 24h (equivalente en USDT) por cuenta para los assets volátiles
-            (BTC/GOLD).
+            (BTC/GOLD/SILVER/PLATINUM).
       example:
         default_settlement_asset: USDT
         default_payin_asset: USDT
@@ -22476,6 +22650,8 @@ components:
         - USDC
         - BTC
         - GOLD
+        - SILVER
+        - PLATINUM
         volatile_op_limit_usdt: '10000.000000'
         volatile_daily_limit_usdt: '50000.000000'
     Payout:
@@ -22517,6 +22693,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: Saldo virtual desde el que realmente se debitó la operación.
         settlement_amount:
           type: string
@@ -22605,6 +22783,8 @@ components:
           - USDC
           - BTC
           - GOLD
+          - SILVER
+          - PLATINUM
           description: El saldo virtual en que se liquida el payin. Los payins de checkout y POS
             denominan el cobro en el asset de su link (sin `currency`/`local_amount` hasta que se
             usa un método de pago local; el monto del cobro es `asset_amount` en este asset). Los

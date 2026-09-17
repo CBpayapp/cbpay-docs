@@ -131,7 +131,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   BIP-21/EIP-681 URI）；精确金额显示在旁边可复制。若支付资产与
   `settlement_asset` 不同，报出的应付额**已包含转换成本**（由付款人
   承担；你收到精确的目标金额）。部分支付会累加，页面显示剩余金额。
-  涉及 BTC/GOLD 的报价每 15 分钟刷新。
+  涉及 BTC/GOLD/SILVER/PLATINUM 的报价每 15 分钟刷新。
 - **CBPay 应用**：商户二维码内嵌链接
   （`cbpay:pay?to=…&checkout=…`）。应用通过内部转账以 4 种余额中的
   任意一种付款：同一资产 ⇒ 精确目标金额；不同 ⇒ 含转换的应付额。金额
@@ -171,6 +171,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 - `POST {checkout_url}/collect/otp` / `POST {checkout_url}/collect`——
   拉取式收款端点。该方式必须先物化；金额始终使用物化时冻结的金额，
   不由付款人提供。
+
+对于已物化的 `VE/VES` C2P 选项，付款人会将银行生成的
+`claveDinamica` 放在 `POST {checkout_url}/collect` 的 `otp` 字段中。
+不要为 C2P 调用 `/collect/otp`；该端点只适用于会在扣款前签发 OTP 的方式。
 
 如果你想在同一链接上渲染自己的支付页面，这些端点会很有用。
 

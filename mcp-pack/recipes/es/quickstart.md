@@ -25,7 +25,7 @@ Antes de empezar, los datos que vas a necesitar en todos lados:
 | **URL base (test)** | `https://cryptobank.qbank.cl/platform` — dinero simulado, keys `pk_test_` |
 | **Autenticación** | Header `Authorization: Bearer <token>` (o `X-API-Key`) |
 | **Slug de organización** | `cbpay` (para registro y login) |
-| **Monedas del saldo** | 4 saldos independientes: USDT (operativa), USDC, BTC y GOLD — montos siempre como string (`"52.618258"`) |
+| **Monedas del saldo** | 6 saldos independientes: USDT (operativa), USDC, BTC y GOLD — montos siempre como string (`"52.618258"`) |
 | **Ambientes** | Dos ambientes aislados, misma API: integra primero en **test** y pasa a live cambiando URL + key — [guía](https://docs.cbpayapp.com/es/entorno-y-pruebas) |
 
 > **Tip**

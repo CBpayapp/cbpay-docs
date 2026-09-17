@@ -6,7 +6,7 @@ lang: es
 source_url: https://docs.cbpayapp.com/es/introduccion
 ---
 CBPay es una plataforma de pagos multi-moneda para Latinoamérica. Cada
-cuenta mantiene **cuatro saldos virtuales independientes** — `USDT` (la
+cuenta mantiene **seis saldos virtuales independientes** — `USDT` (la
 moneda operativa), `USDC`, `BTC` y `GOLD` (gramos de oro) — y opera sobre
 ellos:
 
@@ -16,7 +16,7 @@ ellos:
 - **Tarjetas y suscripciones** - Emite tarjetas que gastan de cualquier saldo en tiempo real, acepta pagos con tarjeta, [guarda tarjetas y agenda cobros recurrentes](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions).
 - **QR POS** - Registra merchants verificados y genera cobros QR crypto con monto para puntos de venta físicos.
 - **Crypto on-chain** - Fondea y retira USDT/USDC por TRON y Ethereum, y BTC nativo por Bitcoin — toda cuenta nace con sus wallets de depósito.
-- **Swaps** - Convierte entre tus saldos USDT, USDC, BTC y GOLD a la tasa de tu cuenta, al instante.
+- **Swaps** - Convierte entre tus saldos USDT, USDC, BTC, GOLD, SILVER y PLATINUM a la tasa de tu cuenta, al instante.
 - **Transferencias internas** - Mueve saldo a cualquier otra cuenta CBPay — por ID, alias, QR o teléfono verificado — al instante y sin comisión.
 - **Banking** - Cuentas bancarias reales a tu nombre: recibe, mantén y envía dinero por rieles internacionales (SEPA, SWIFT, ACH), incluidas cuentas de terceros.
 - **Wallets segregadas** - Wallets on-chain dedicadas con saldo propio, aisladas del ledger — créalas, impórtalas y expórtalas.

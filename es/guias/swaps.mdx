@@ -1,14 +1,14 @@
 ---
 title: "Swaps"
 icon: "arrow-right-arrow-left"
-description: "Convierte entre tus saldos USDT, USDC, BTC y GOLD al instante, con cotización previa y a la tasa de ejecución del momento"
+description: "Convierte entre tus saldos USDT, USDC, BTC, GOLD, SILVER y PLATINUM al instante, con cotización previa y a la tasa de ejecución del momento"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="es" />
 
-Los **swaps** convierten saldo entre tus cuatro monedas — `USDT`, `USDC`,
+Los **swaps** convierten saldo entre tus seis monedas — `USDT`, `USDC`,
 `BTC` y `GOLD` — de forma **síncrona e instantánea**, sin que la plata salga
 de tu cuenta. Cualquier par funciona (también `BTC` ↔ `GOLD` directo). La
 tasa que ves en la cotización es la tasa a la que se ejecuta: **no hay
@@ -86,7 +86,7 @@ curl -X POST https://api.qbank.cl/platform/v1/swaps \
 </CodeGroup>
 
 `amount` va en la moneda de **origen** (`from_asset`), con hasta sus
-decimales (6 para USDT/USDC/GOLD, 8 para BTC).
+decimales (6 para USDT/USDC/GOLD/SILVER/PLATINUM, 8 para BTC).
 
 Respuesta `201` — el swap es síncrono, tu saldo cambia al instante:
 
@@ -133,7 +133,7 @@ de origen y `swap_in` en la de destino, cada uno cuadrando en su sección.
   ejecución en vivo; si el precio no está disponible o está desactualizado,
   el swap se rechaza con `503 pricing_unavailable` (nunca se ejecuta con un
   precio viejo).
-- **Límites para monedas volátiles** (BTC/GOLD, compartidos con payouts y
+- **Límites para monedas volátiles** (BTC/GOLD/SILVER/PLATINUM, compartidos con payouts y
   compras con tarjeta): tope por operación y tope de volumen por cuenta en
   24 h móviles (`GET /v1/settlement` muestra los tuyos). USDT ↔ USDC no
   tiene límite.
@@ -144,7 +144,7 @@ de origen y `swap_in` en la de destino, cada uno cuadrando en su sección.
 
 | HTTP | `error` | Causa | Solución |
 |---|---|---|---|
-| 400 | `invalid_asset` | Moneda fuera de USDT/USDC/BTC/GOLD | Revisa `from_asset`/`to_asset` |
+| 400 | `invalid_asset` | Moneda fuera de USDT/USDC/BTC/GOLD/SILVER/PLATINUM | Revisa `from_asset`/`to_asset` |
 | 400 | `invalid_pair` | Origen y destino son la misma moneda | Elige monedas distintas |
 | 400 | `invalid_amount` | Monto inválido o demasiados decimales | Respeta los decimales de la moneda origen |
 | 400 | `amount_too_small` | El monto no alcanza ni la unidad mínima del destino | Sube el monto |
@@ -179,7 +179,7 @@ hacer el swap inverso cuando quieras, a la tasa vigente de ese momento.
 </Accordion>
 <Accordion title="¿Por qué mi swap BTC→GOLD fue rechazado por límite si era mi primer swap del día?">
 Los límites de monedas volátiles son compartidos entre swaps, payouts
-pagados desde BTC/GOLD y compras con tarjeta desde BTC/GOLD — todos suman
+pagados desde BTC/GOLD/SILVER/PLATINUM y compras con tarjeta desde BTC/GOLD/SILVER/PLATINUM — todos suman
 al mismo volumen de 24 h móviles de tu cuenta. Consulta tus topes en
 `GET /v1/settlement`.
 </Accordion>

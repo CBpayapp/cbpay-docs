@@ -1,6 +1,6 @@
 ---
 title: "兑换"
-description: "在你的 USDT、USDC、BTC 和 GOLD 余额之间即时兑换，可提前询价并按当下的执行汇率成交"
+description: "在你的 USDT、USDC、BTC、GOLD、SILVER 和 PLATINUM 余额之间即时兑换，可提前询价并按当下的执行汇率成交"
 slug: zh/guides/swaps
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/swaps
@@ -74,7 +74,7 @@ curl -X POST https://api.qbank.cl/platform/v1/swaps \
   }'
 ```
 
-`amount` 以**源**货币（`from_asset`）计，最多可使用该币种的小数位数（USDT/USDC/GOLD 为 6 位，BTC 为 8 位）。
+`amount` 以**源**货币（`from_asset`）计，最多可使用该币种的小数位数（USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位，BTC 为 8 位）。
 
 `201` 响应 — 兑换是同步的，你的余额即时变动：
 
@@ -114,14 +114,14 @@ curl https://api.qbank.cl/platform/v1/swaps/{swap_id} \
 - **同一账户**：资金始终不离开你的账户 — 只是更换币种。因此不需要 OTP。
 - `USDT`、`USDC`、`BTC` 和 `GOLD` 之间的**任意币对**（源 ≠ 目标）。
 - **按当下的执行汇率**：BTC 和 GOLD 使用实时执行价格；如果价格不可用或已过期，兑换会被拒绝并返回 `503 pricing_unavailable`（绝不按旧价格执行）。
-- **波动性货币限额**（BTC/GOLD，与出款和银行卡消费共享）：每笔操作上限和每账户 24 小时滚动交易量上限（`GET /v1/settlement` 可查看你的限额）。USDT ↔ USDC 没有限额。
+- **波动性货币限额**（BTC/GOLD/SILVER/PLATINUM，与出款和银行卡消费共享）：每笔操作上限和每账户 24 小时滚动交易量上限（`GET /v1/settlement` 可查看你的限额）。USDT ↔ USDC 没有限额。
 - 需要你已通过的[身份核验](https://docs.cbpayapp.com/zh/guides/kyc)且已启用 `swaps` 服务。
 
 ## 错误
 
 | HTTP | `error` | 原因 | 解决方案 |
 |---|---|---|---|
-| 400 | `invalid_asset` | 货币不在 USDT/USDC/BTC/GOLD 之内 | 检查 `from_asset`/`to_asset` |
+| 400 | `invalid_asset` | 货币不在 USDT/USDC/BTC/GOLD/SILVER/PLATINUM 之内 | 检查 `from_asset`/`to_asset` |
 | 400 | `invalid_pair` | 源货币与目标货币相同 | 选择不同的货币 |
 | 400 | `invalid_amount` | 金额无效或小数位过多 | 遵守源货币的小数位数 |
 | 400 | `amount_too_small` | 金额不足目标货币的最小单位 | 提高金额 |
@@ -142,6 +142,6 @@ curl https://api.qbank.cl/platform/v1/swaps/{swap_id} \
 #### 我可以撤销一笔兑换吗？
 无法撤销：已执行的兑换是最终的（你的余额已经变动）。你可以随时按当时的汇率换回来。
 #### 为什么我当天的第一笔 BTC→GOLD 兑换就因限额被拒绝？
-波动性货币限额在兑换、以 BTC/GOLD 支付的出款和以 BTC/GOLD 支付的银行卡消费之间共享 — 它们全部计入你账户同一个 24 小时滚动交易量。通过 `GET /v1/settlement` 查看你的上限。
+波动性货币限额在兑换、以 BTC/GOLD/SILVER/PLATINUM 支付的出款和以 BTC/GOLD/SILVER/PLATINUM 支付的银行卡消费之间共享 — 它们全部计入你账户同一个 24 小时滚动交易量。通过 `GET /v1/settlement` 查看你的上限。
 #### 持有 GOLD 或 BTC 余额有什么好处？
 GOLD 代表足金克数，BTC 代表比特币：在不离开生态系统的情况下获得价格敞口。你可以直接用这些余额支付出款、手续费和银行卡消费（多资产结算），并随时换回 USDT/USDC。
