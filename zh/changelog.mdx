@@ -7,9 +7,23 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月18日" description="v2.104 · 3 个版本">
-### v2.104
+<Update label="2026年9月18日" description="v2.105 · 4 个版本">
+### v2.105
+**新增**
 
+- **我的账户**：门户现在提供统一的 `/accounts` 页面，集中显示账户
+  QR 与 alias、本地收款目的地、USD Banking 账户、EUR 虚拟 IBAN 与企业
+  wallet，以及加密货币充值钱包。每个分区保留现有的 QR、复制和分享
+  操作，并显示诚实的空状态或处理中状态。
+
+**变更**
+
+- 门户中的 **我的钱包** 标签现在显示为 **Wallets**。钱包 ID、地址、
+  资产和只接收行为不变。
+- MX/CLABE 与 BO/BOB 收款目的地只有在账户 KYC/KYB 审核通过后才会
+  配置。现有 API 路由和响应结构不变。
+
+### v2.104
 **变更**
 
 - **发卡方数据**：`POST /v1/cards` 现在校验个人的 `occupation` 目录代码、
@@ -23,7 +37,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - 新增 `422 issuer_data_incomplete`、`422 screening_required` 与
   `422 cardholder_name_too_long` 文档覆盖；最后一个错误表示个人卡面
   打印的名字与姓氏合计超过 22 个字符。
-
 ### v2.103
 
 **变更**
@@ -33,7 +46,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 **错误**
 
 - 新增 `403 verification_requires_2fa`，并提供 TOTP 或通行密钥的注册步骤。
-
 ### v2.102
 
 **变更**

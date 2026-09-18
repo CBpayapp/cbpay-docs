@@ -8,9 +8,25 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.104 · 3 versions - September 18, 2026
-### v2.104
+## v2.105 · 4 versions - September 18, 2026
+### v2.105
+**Added**
 
+- **My accounts**: the portal now has a single `/accounts` page for the
+  account's QR and alias, local receiving destinations, USD Banking accounts,
+  EUR virtual IBANs and company wallets, and crypto deposit wallets. Each
+  section supports the existing QR, copy and share actions and shows an
+  honest empty or pending state.
+
+**Changed**
+
+- The portal label **My wallets** is now **Wallets**. Wallet IDs, addresses,
+  assets and receive-only behavior are unchanged.
+- MX/CLABE and BO/BOB deposit destinations are provisioned only after the
+  account's KYC/KYB verification is approved. Existing API routes and response
+  shapes are unchanged.
+
+### v2.104
 **Changed**
 
 - **Card issuance issuer data**: `POST /v1/cards` now validates person
@@ -26,7 +42,6 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 - Added `422 issuer_data_incomplete`, `422 screening_required` and
   `422 cardholder_name_too_long` coverage. The last error applies when a
   person's printed first and last names exceed 22 combined characters.
-
 ### v2.103
 
 **Changed**
@@ -36,7 +51,6 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 **Errors**
 
 - Added `403 verification_requires_2fa` with the enrollment steps for TOTP or passkeys.
-
 ### v2.102
 
 **Changed**

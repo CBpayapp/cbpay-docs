@@ -123,6 +123,7 @@
                   {
                     "group": "Saldos y cuenta",
                     "pages": [
+                      "es/guias/accounts",
                       "es/guias/transferencias",
                       "es/guias/swaps",
                       "es/guias/crypto",
@@ -250,6 +251,7 @@
                   {
                     "group": "Balances & account",
                     "pages": [
+                      "en/guides/accounts",
                       "en/guides/transfers",
                       "en/guides/swaps",
                       "en/guides/crypto",
@@ -376,6 +378,7 @@
                   {
                     "group": "余额与账户",
                     "pages": [
+                      "zh/guides/accounts",
                       "zh/guides/transfers",
                       "zh/guides/swaps",
                       "zh/guides/crypto",
