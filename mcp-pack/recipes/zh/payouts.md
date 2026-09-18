@@ -413,7 +413,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ```
 
 银行目录（`GET /v1/payouts/banks?country=CL`）列出当前有效的
-`bank_code` 值。
+`bank_code` 值。对于 `CL`/`CLP`/`bank_transfer`，payout 可能在约五分钟
+的短窗口内批量派发；`POST /v1/payouts` 仍返回 `202` 与
+`status: "processing"`，每笔 payout 仍保留自己的最终状态和
+`payout_status_changed` webhook。
 
 #### 秘鲁
 

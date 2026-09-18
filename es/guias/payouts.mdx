@@ -440,8 +440,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 }
 ```
 
-El catálogo de bancos (`GET /v1/payouts/banks?country=CL`) da los
-`bank_code` vigentes.
+El catálogo de bancos (`GET /v1/payouts/banks?country=CL`) da los `bank_code` vigentes. `CL`/`CLP`/`bank_transfer` puede despacharse en ventanas agrupadas de cinco minutos; `POST /v1/payouts` sigue respondiendo `202` con `status: "processing"` y cada payout conserva su estado final y su webhook `payout_status_changed`.
 
 </Tab>
 <Tab title="Perú">

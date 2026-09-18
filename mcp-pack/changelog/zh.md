@@ -8,6 +8,14 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.102 Â· 1 ä¸ªç‰ˆæœ¬ - 2026å¹´9æœˆ18æ—¥
+### v2.102
+
+**变更**
+
+- **智利 CLP 银行转账**现在可以在约五分钟的短窗口内进行批量派发。
+  `POST /v1/payouts` 仍返回 `202` 与 `status: "processing"`；每笔 payout
+  仍保留自己的 `payout_status_changed` webhook 和最终状态。
 ## v2.101 · 8 个版本 - 2026年9月17日
 ### v2.101
 
