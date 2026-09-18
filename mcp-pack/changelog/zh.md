@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.105 · 4 个版本 - 2026年9月18日
+## v2.106 · 5 个版本 - 2026年9月18日
+### v2.106
+
+**变更**
+
+- **我的账户导航**：CBPAY hero 现在进入三个可用 deep-link 的选项卡：
+  **Crypto** 显示充值钱包，**Fiat** 显示 MX/CLABE、BO/BOB 与 EUR 充值
+  工具，**Banking** 显示 USD/EUR 银行账户、Banking 虚拟 IBAN 与企业
+  wallet。当前选项卡通过 `?tab=` 反映在 URL 中。
+
 ### v2.105
 **新增**
 

@@ -20,42 +20,59 @@ Banking 目的地、EUR 工具和加密货币充值钱包。
 如果目的地或读取操作返回错误，请查看[公开错误目录](https://docs.cbpayapp.com/zh/errors)，了解
 错误代码和恢复动作。
 
+## CBPAY hero 与三个账户选项卡
+
+页面顶部显示账户的 **CBPAY** hero。QR 和 alias 操作始终位于顶部：可以
+显示 QR、复制收款 payload，或分享账户的收款身份。
+
+hero 下方有三个选项卡：
+
+- **Crypto**（`?tab=crypto`）：链上加密货币充值钱包。
+- **Fiat**（`?tab=fiat`）：MX/CLABE、BO/BOB 等法币工具，以及 EUR 充值
+  虚拟 IBAN。
+- **Banking**（`?tab=banking`）：USD/EUR Banking 账户、Banking 虚拟
+  IBAN 和 EUR 企业 wallet。
+
+当前选项卡会写入 URL，因此可以直接链接到
+`/accounts?tab=crypto`、`/accounts?tab=fiat` 或
+`/accounts?tab=banking`。没有 `tab` 时，页面打开默认选项卡，但三个分区
+仍然可用。
+
 ```mermaid
 flowchart LR
   open["打开 /accounts"] --> qr["QR + alias"]
-  open --> local["本地收款账户"]
-  open --> banking["USD Banking"]
-  open --> eur["EUR 虚拟 IBAN 与企业 wallet"]
-  open --> crypto["加密货币充值钱包"]
+  open --> tabs["Crypto / Fiat / Banking 选项卡"]
+  tabs --> crypto["Crypto：充值钱包"]
+  tabs --> fiat["Fiat：CLABE、BOB、充值 IBAN"]
+  tabs --> banking["Banking：USD、EUR、vIBAN、企业 wallet"]
   qr --> share["QR / 复制 / 分享"]
-  local --> share
-  banking --> share
-  eur --> share
   crypto --> share
+  fiat --> share
+  banking --> share
 ```
 
 ### 打开我的账户
 
 在门户侧边栏选择 **我的账户**。**Wallets** 是原来 **我的钱包** 的新
 显示名称；底层钱包和地址不变。
-### 选择收款目的地
+### 选择一个选项卡
 
-打开与付款人所用 rail 对应的分区。每张卡都会显示目的地状态以及可以
-安全分享给付款人的信息。
+选择 **Crypto**、**Fiat** 或 **Banking**。可以使用 `?tab=` deep-link
+保存当前视图，之后直接返回需要的分组。
 ### 复制、显示或分享
 
 使用卡片操作显示 QR、复制收款值或分享收款信息。只分享本次付款对应的
 目的地：账户或地址绑定到你的 CBPay 账户，不能与其他账户互换。
-## 每个分区显示什么
+## 每个选项卡显示什么
 
-| 分区 | 显示内容 | 使用场景 |
+| 选项卡 | 包含内容 | 可以分享什么 |
 |---|---|---|
-| **QR 与 alias** | 品牌 QR 图片、支付 payload 和可选账户 alias。QR 用于识别你的账户并接收转账。 | 付款人使用 CBPay QR 流程时展示 QR。 |
-| **本地收款账户** | 国家、币种、方式、收款 instrument、状态和创建时间。启用后包括 MXN CLABE 与 BOB 银行转账目的地。 | 复制 CLABE 或 BOB 账户号码，让付款人发起银行转账。 |
-| **Banking USD** | 已启用的 USD 银行账户、名称、币种和状态，以及详情中提供的收款要求（例如账户号、routing 或 SWIFT 数据）。 | 向付款人发送 wire 或 SWIFT 收款指引。 |
-| **EUR 虚拟 IBAN** | purpose（`funding_usdt` 或 `banking_eur`）、币种、状态，以及分配后显示的 IBAN。Banking EUR 工具还可能显示已对账的 `received_total`。 | 将 EUR 资金路由到正确 purpose，避免把充值地址误认为可用余额。 |
-| **企业钱包** | 已验证企业的预留状态、order reference、wallet UUID、IBAN 和可用时的激活时间。详情提供实时余额和按日期查询的操作。 | 用于企业 Banking 活动的专用 EUR wallet。 |
-| **Wallets** | 网络、资产、地址、钱包类型、只接收状态和创建时间。支持的充值组合包括 TRON/USDT、Ethereum/USDT、Ethereum/USDC 和 Bitcoin/BTC。 | 发起链上充值前复制区块链地址或显示 QR。 |
+| **Crypto** | 充值钱包的网络、资产、地址、钱包类型、只接收状态和创建时间。包括 TRON/USDT、Ethereum/USDT、Ethereum/USDC 与 Bitcoin/BTC。 | 区块链地址或其 QR。 |
+| **Fiat** | 法币收款工具的国家、币种、方式、instrument、状态和创建时间。包括 MXN CLABE、BO/BOB 目的地和 EUR 充值虚拟 IBAN（`purpose: funding_usdt`）。 | CLABE、BOB 账户号码或充值 IBAN，分享前先确认状态。 |
+| **Banking** | 已启用的 USD/EUR Banking 账户及其收款要求、Banking 虚拟 IBAN（`purpose: banking_eur`）和 EUR 企业 wallet。详情可能包括账户/IBAN、routing 或 SWIFT、状态、wallet UUID 和激活时间。 | 银行账户数据、Banking EUR IBAN 或已激活的企业 wallet 目的地。 |
+
+QR 与 alias 仍显示在选项卡上方的 CBPAY hero 中。QR 用于识别账户并接收
+转账，alias 是可选项。
 
 页面使用门户其他位置相同的账户范围资源：
 `GET /v1/me/qr`、`GET /v1/payins/deposit-accounts`、

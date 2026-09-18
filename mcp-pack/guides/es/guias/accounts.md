@@ -24,18 +24,36 @@ cartola.
 Si un destino o una lectura devuelve un error, usa el [catálogo público de
 errores](https://docs.cbpayapp.com/es/errores) para revisar el código y la acción de recuperación.
 
+## Hero CBPAY y tres pestañas de cuentas
+
+La página abre con un hero **CBPAY** para tu cuenta. Mantiene disponibles las
+acciones de QR y alias: mostrar el QR, copiar el payload receptor o compartir
+la identidad de recepción de la cuenta.
+
+Debajo del hero hay tres pestañas:
+
+- **Crypto** (`?tab=crypto`): wallets crypto de depósito on-chain.
+- **Fiat** (`?tab=fiat`): instrumentos fiat como MX/CLABE y BO/BOB, además de
+  los vIBANes EUR de fondeo.
+- **Banking** (`?tab=banking`): cuentas Banking USD/EUR, vIBANes Banking y
+  wallets EUR de empresa.
+
+La pestaña seleccionada queda reflejada en la URL. Puedes enlazar
+directamente a `/accounts?tab=crypto`, `/accounts?tab=fiat` o
+`/accounts?tab=banking`. Sin `tab`, la página abre su pestaña por defecto y
+mantiene disponibles las tres agrupaciones.
+
 ```mermaid
 flowchart LR
   open["Abrir /accounts"] --> qr["QR + alias"]
-  open --> local["Cuentas receptoras locales"]
-  open --> banking["Banking USD"]
-  open --> eur["vIBANes y wallets de empresa EUR"]
-  open --> crypto["Wallets crypto de depósito"]
+  open --> tabs["Pestañas Crypto / Fiat / Banking"]
+  tabs --> crypto["Crypto: wallets de depósito"]
+  tabs --> fiat["Fiat: CLABE, BOB, IBAN de fondeo"]
+  tabs --> banking["Banking: USD, EUR, vIBAN, wallet empresa"]
   qr --> share["QR / copiar / compartir"]
-  local --> share
-  banking --> share
-  eur --> share
   crypto --> share
+  fiat --> share
+  banking --> share
 ```
 
 ### Abre Mis cuentas
@@ -43,26 +61,26 @@ flowchart LR
 Selecciona **Mis cuentas** en la barra lateral del portal. La etiqueta
 **Wallets** reemplaza a **Mis wallets**; las wallets y direcciones subyacentes
 no cambian.
-### Elige el destino receptor
+### Elige una pestaña
 
-Abre la sección que corresponde al rail del pagador. Cada tarjeta muestra el
-estado del destino y los datos que puedes compartir de forma segura.
+Selecciona **Crypto**, **Fiat** o **Banking**. Puedes guardar la vista actual
+con su deep-link `?tab=` para volver directamente al grupo que necesitas.
 ### Copia, muestra o comparte
 
 Usa las acciones de la tarjeta para mostrar un QR, copiar el valor receptor o
 compartir los datos. Comparte solo el destino destinado a ese pago: una cuenta
 o dirección queda vinculada a tu cuenta CBPay y no se puede intercambiar con
 el destino de otra cuenta.
-## Qué muestra cada sección
+## Qué muestra cada pestaña
 
-| Sección | Qué ves | Cuándo sirve |
+| Pestaña | Qué contiene | Qué puedes compartir |
 |---|---|---|
-| **QR y alias** | Tu imagen QR brandeada, el payload de pago y el alias opcional de la cuenta. El QR identifica tu cuenta para recibir transferencias. | Muéstrale el QR a un pagador que use el flujo QR de CBPay. |
-| **Cuentas receptoras locales** | País, moneda, método, instrumento receptor, estado y fecha de creación. Incluye CLABE MXN y destinos de transferencia BOB cuando están habilitados. | Copia la CLABE o el número de cuenta BOB para una transferencia bancaria. |
-| **Banking USD** | La cuenta bancaria USD habilitada, su nombre, moneda y estado, más los requisitos de recepción entregados en su detalle (por ejemplo, número de cuenta, routing o SWIFT). | Envía instrucciones de recepción wire o SWIFT a un pagador. |
-| **vIBAN EUR** | Propósito (`funding_usdt` o `banking_eur`), moneda, estado y el IBAN cuando se asigna. Un instrumento Banking EUR también puede mostrar su `received_total` conciliado. | Enruta fondos EUR al propósito correcto sin confundir una dirección de fondeo con un saldo disponible. |
-| **Wallets de empresa** | Para empresas verificadas: estado de la reserva, referencia de orden, UUID de wallet, IBAN y hora de activación cuando estén disponibles. El detalle entrega el saldo vivo y las operaciones fechadas. | Usa la wallet EUR dedicada para la actividad de Banking empresarial. |
-| **Wallets** | Red, activo, dirección, tipo de wallet, estado de solo recepción y fecha de creación. Los pares de depósito incluyen TRON/USDT, Ethereum/USDT, Ethereum/USDC y Bitcoin/BTC. | Copia una dirección blockchain o muestra su QR antes de enviar un depósito on-chain. |
+| **Crypto** | Wallets de depósito con red, activo, dirección, tipo, estado de solo recepción y fecha de creación. Incluye TRON/USDT, Ethereum/USDT, Ethereum/USDC y Bitcoin/BTC. | Una dirección blockchain o su código QR. |
+| **Fiat** | Instrumentos receptores con país, moneda, método, instrumento, estado y fecha de creación. Incluye CLABE MXN, destinos BO/BOB y vIBANes EUR de fondeo (`purpose: funding_usdt`). | La CLABE, el número de cuenta BOB o el IBAN de fondeo, después de revisar su estado. |
+| **Banking** | Cuentas bancarias USD/EUR habilitadas con sus requisitos de recepción, vIBANes Banking (`purpose: banking_eur`) y wallets EUR de empresa. El detalle puede incluir cuenta/IBAN, routing o SWIFT, estado, UUID y activación. | Los datos de la cuenta bancaria, el IBAN Banking EUR o el destino activo de la wallet de empresa. |
+
+El QR y el alias siguen disponibles en el hero CBPAY sobre las pestañas. El
+QR identifica tu cuenta para recibir transferencias y el alias es opcional.
 
 La página usa los mismos recursos acotados a la cuenta que el resto del
 portal: `GET /v1/me/qr`, `GET /v1/payins/deposit-accounts`,
