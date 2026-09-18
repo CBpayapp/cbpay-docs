@@ -8,7 +8,13 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.100 · 7 versions - September 17, 2026
+## v2.101 · 8 versions - September 17, 2026
+### v2.101
+
+**Changed**
+
+- **Client statement breaking change**: `GET /v1/reports/statement` no longer returns the raw ledger `movements`, per-asset `assets[].movements`, or `summary.counts.movements`. Client PDF/XLSX downloads no longer include the Movements section or sheet. Reconcile with product sections and `balance_after`; org admins retain the full statement and `GET /v1/movements` remains the deep-audit path. Charges now include their `asset`, `period.timezone` reports the organization IANA timezone, and XLSX sheet names follow `lang`.
+
 ### v2.100
 
 **Added**

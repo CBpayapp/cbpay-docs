@@ -9,7 +9,13 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.100 · 7 versiones - 17 de septiembre de 2026
+## v2.101 · 8 versiones - 17 de septiembre de 2026
+### v2.101
+
+**Cambiado**
+
+- **Cambio incompatible en la cartola cliente**: `GET /v1/reports/statement` ya no devuelve el ledger crudo `movements`, `assets[].movements` ni `summary.counts.movements`. Las descargas PDF/XLSX del cliente ya no incluyen la sección ni la hoja Movimientos. La cuadratura se hace por secciones de producto y `balance_after`; el org-admin conserva la cartola completa y `GET /v1/movements` sigue siendo la vía de auditoría profunda. Los cargos ahora incluyen su `asset`, `period.timezone` informa la zona IANA de la organización y los nombres de hojas XLSX siguen `lang`.
+
 ### v2.100
 
 **Agregado**

@@ -46,6 +46,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 
 - `from` / `to`: fechas `YYYY-MM-DD` inclusive, en la zona horaria de tu organización. Rango máximo:
   400 días.
+- El campo de respuesta `period.timezone` contiene la zona horaria IANA real de la organización (por ejemplo `America/New_York`), no una etiqueta UTC fija.
 - `lang=en|es|zh`: idioma del PDF/Excel (default `en`). Tambien `Content-Language`.
 - Los archivos llegan con `Content-Disposition: attachment`. El basename sigue el locale (`statement_…` / `cartola_…` / `对账单_…`).
 
@@ -54,7 +55,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 ```json
 {
   "account": { "account_id": "…", "display_name": "Empresa Ejemplo SpA", "type": "company" },
-  "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "UTC" },
+  "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "America/New_York" },
   "generated_at": "2026-07-07T15:00:00Z",
   "summary": {
     "opening_balance": "0.000000",
@@ -63,7 +64,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
     "net_change": "947533.670000",
     "closing_balance": "947533.670000",
     "balanced": true,
-    "counts": { "payouts": 51, "payins": 12, "crypto_deposits": 18, "transfers": 4, "movements": 771 },
+    "counts": { "payouts": 51, "payins": 12, "crypto_deposits": 18, "transfers": 4 },
     "fees_by_service": { "payout": "15.300000", "funding": "897.550000" },
     "total_fees": "912.850000"
   },
@@ -87,14 +88,12 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
       "net_change": "10.500000",
       "closing_balance": "10.500000",
       "balanced": true,
-      "movements": [ { "type": "adjustment", "amount": "12.500000", "balance_after": "12.500000", "created_at": "…" } ]
     }
   ],
   "crypto_deposits": [ { "chain": "tron", "asset": "USDT", "tx_id": "…", "usdt_gross": "100.000000", "fee": "1.000000", "usdt_credited": "99.000000", "balance_after": "99.000000" } ],
   "crypto_withdrawals": [ { "…": "…" } ],
   "transfers": [ { "direction": "sent", "counterparty": "Ana Pérez", "asset": "USDT", "amount": "25.000000" } ],
-  "service_charges": [ { "type": "banking_fee", "service": "banking_customer", "fee_model": "fixed", "amount": "-0.500000", "balance_after": "98.500000" } ],
-  "movements": [ { "type": "funding", "amount": "99.000000", "balance_after": "99.000000", "created_at": "…" } ]
+  "service_charges": [ { "type": "banking_fee", "service": "banking_customer", "fee_model": "fixed", "asset": "USDT", "amount": "-0.500000", "balance_after": "98.500000" } ],
 }
 ```
 
@@ -106,8 +105,9 @@ Secciones:
 2. **`assets`** — una sección conciliada por cada saldo no-USDT con
    actividad o saldo (USDC, BTC, GOLD y, si usas Banking, los espejos
    `BANK_USD`/`BANK_EUR` de tus cuentas bancarias): saldo inicial/final,
-   entradas, salidas, su propio flag `balanced` y sus movimientos, en la
-   precisión de cada moneda. Si solo operas USDT, viene vacía.
+   entradas, salidas y su propio flag `balanced`, en la precisión de cada
+   moneda y SIN detalle crudo en la vista cliente; el detalle crudo por
+   asset vive solo en la cartola org-admin. Si solo operas USDT, viene vacía.
 3. **`breakdown`** — por producto, por país (payouts y payins con monto
    local y USDT), por moneda fiat y por mes.
 4. **Detalle por producto** — payouts (con beneficiario, tasa y débito),
@@ -116,38 +116,38 @@ Secciones:
    (`card_transactions`, con comercio y saldo de gasto), conversiones de
    saldo (`swaps`), operaciones bancarias (`banking_operations`) y cargos
    por servicio (con reembolsos).
-5. **`movements`** — el ledger crudo del saldo USDT: cada movimiento con su
-   `balance_after`. Es la sección con la que un auditor cuadra todo (los
-   movimientos de las otras monedas van dentro de su sección en `assets`).
+5. **Secciones de producto y auditoría** — la cartola del cliente omite el ledger crudo `movements`, los `assets[].movements` y `summary.counts.movements`. Cuadra por sección de producto usando `balance_after` en cargos y depósitos crypto. Para una auditoría profunda, usa la cartola org-admin o `GET /v1/movements`.
 
 > **Nota**
 **Comisiones transparentes.** En payouts, payins y retiros crypto, cuando la
 comisión combina un componente porcentual y uno fijo, la cartola los separa
-en `fee_percent` y `fee_fixed` (suman exacto el `fee`). Los cargos
-standalone (compliance, wallets, banking, verificaciones, tarjetas) son
-siempre de monto fijo y llevan `fee_model: "fixed"` — en el PDF/Excel se
-etiquetan como **Fixed Com**. Operaciones históricas anteriores a este campo
-muestran solo el `fee` combinado.
+en `fee_percent` y `fee_fixed` (suman exacto el `fee`). Los cargos standalone (compliance, wallets, banking, verificaciones y tarjetas) siempre son cargos de monto fijo, incluyen el `asset` cobrado (USDT para el resumen de fees que es solo USDT) y llevan `fee_model: "fixed"` — el PDF/Excel los etiqueta como **Fixed Com**.
 ## Cómo cuadrar la cartola (para tu contador)
 
-La cartola cumple una identidad contable exacta, sin redondeos:
+La cartola cumple identidades contables exactas, sin redondeos:
 
-```
+```text
 saldo_inicial + total_entradas − total_salidas = saldo_final
 ```
 
-- `balanced: true` confirma que la identidad se cumple contra el ledger —
-  tanto en el resumen USDT como en cada sección de `assets` (cada moneda
-  cuadra por separado; nunca se suman montos de monedas distintas).
-- Cada fila de `movements` trae el saldo resultante (`balance_after`):
-  puedes seguir el saldo línea a línea desde el inicial hasta el final.
-- El saldo final de la cartola de un período empalma con el inicial del
-  período siguiente.
-- Las comisiones nunca están escondidas en los montos: cada operación
-  muestra bruto, comisión y neto por separado, y `fees_by_service` las
-  totaliza.
-- En el Excel, la hoja **Movimientos** tiene celdas numéricas reales:
-  puedes sumar/pivotar sin limpiar nada.
+- `balanced: true` confirma la identidad contra el ledger para el resumen
+  USDT y, de forma independiente, para cada sección de `assets`. Nunca se
+  suman saldos de activos distintos.
+- Cada sección de producto se cuadra con sus propios montos y estados.
+  Los cargos y depósitos crypto incluyen `balance_after`, para verificar su
+  efecto en el saldo correspondiente sin depender de un dump del ledger.
+- La cartola del cliente omite deliberadamente el ledger USDT crudo
+  `movements`, `assets[].movements` y `summary.counts.movements`. Para una
+  auditoría profunda, un org-admin puede usar la cartola administrativa o
+  `GET /v1/movements`, la vista paginada del ledger.
+- El saldo final de un período empalma con el saldo inicial del siguiente.
+- El rango `from`/`to` se interpreta en la zona horaria de la organización (`period.timezone`), pero los timestamps de detalle de cada operación van en UTC (JSON en RFC3339 con `Z`; columnas Fecha (UTC) en PDF/Excel).
+- Las comisiones nunca quedan escondidas: cada operación expone bruto,
+  comisión y neto por separado; `fees_by_service` sigue siendo solo USDT por
+  diseño.
+- Los nombres de las hojas XLSX siguen el `lang` solicitado (`en`, `es` o
+  `zh`), incluyendo Crypto, Segregated, Cards, Swaps, Banking y Margins
+  cuando esas secciones están presentes.
 - La hoja **Payouts** del Excel lleva la columna **Ref. bancaria** (justo
   después de la columna de referencia/concepto) con el id de la transacción
   que asigna el banco de destino al confirmar el pago. El PDF de la cartola

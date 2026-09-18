@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.100"
+  version: "2.101"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -15700,8 +15700,7 @@ paths:
       description: 'Consolidates every movement of the period — payouts, payins, crypto deposits and withdrawals,
         internal transfers and service charges — into one auditable statement with an exact reconciliation:
         opening_balance + total_in − total_out = closing_balance, verified against the ledger (`balanced`).
-        The summary and movements cover the USDT operating balance; every other virtual balance (USDC,
-        BTC, GOLD) with activity reconciles independently inside `assets`. Request `format=pdf` or `format=xlsx`
+        The summary covers the USDT operating balance; every other virtual balance (USDC, BTC, GOLD) with activity reconciles independently inside `assets`. The client response omits raw ledger movements; use product sections for reconciliation and `GET /v1/movements` for deep audit. Request `format=pdf` or `format=xlsx`
         to download the CBPay-branded file (Content-Disposition: attachment).'
       parameters:
       - name: from
@@ -15755,7 +15754,7 @@ paths:
                 period:
                   from: '2026-01-01'
                   to: '2026-07-07'
-                  timezone: UTC
+                  timezone: America/New_York
                 generated_at: '2026-07-07T15:00:00Z'
                 summary:
                   opening_balance: '0.000000'
@@ -15771,7 +15770,6 @@ paths:
                     crypto_withdrawals: 3
                     transfers: 4
                     service_charges: 2
-                    movements: 771
                   fees_by_service:
                     payout: '15.300000'
                     funding: '897.550000'
@@ -15784,12 +15782,6 @@ paths:
                   net_change: '10.500000'
                   closing_balance: '10.500000'
                   balanced: true
-                  movements:
-                  - created_at: '2026-07-09T10:00:00Z'
-                    type: adjustment
-                    reference: adjustment gold-load-1
-                    amount: '12.500000'
-                    balance_after: '12.500000'
                 breakdown:
                   by_product:
                   - product: payouts
@@ -15867,15 +15859,11 @@ paths:
                   type: banking_fee
                   service: banking_customer
                   fee_model: fixed
+                  asset: USDT
                   reference: cust-001
                   amount: '-0.500000'
                   balance_after: '139.100000'
-                movements:
-                - created_at: '2026-03-19T22:57:00Z'
-                  type: payout_debit
-                  reference: payout 0d4f2a10-1b2c-3d4e-5f60-718293a4b5c6
-                  amount: '-13.324600'
-                  balance_after: '139.600000'
+
         '400':
           description: invalid_range / invalid_format.
           content:

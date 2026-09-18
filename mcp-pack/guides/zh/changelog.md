@@ -8,7 +8,13 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.100 · 7 个版本 - 2026年9月17日
+## v2.101 · 8 个版本 - 2026年9月17日
+### v2.101
+
+**变更**
+
+- **客户对账单破坏性变更**：`GET /v1/reports/statement` 不再返回原始账本 `movements`、各资产的 `assets[].movements` 或 `summary.counts.movements`。客户下载的 PDF/XLSX 不再包含 Movements 分区或工作表。请按产品分区并使用 `balance_after` 对账；org-admin 仍保留完整对账单，`GET /v1/movements` 继续作为深入审计路径。费用现在包含其 `asset`，`period.timezone` 返回组织的 IANA 时区，XLSX 工作表名称按 `lang` 本地化。
+
 ### v2.100
 
 **新增**

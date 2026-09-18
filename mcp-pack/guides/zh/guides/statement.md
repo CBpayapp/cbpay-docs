@@ -41,6 +41,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 ```
 
 - `from` / `to`：`YYYY-MM-DD` 格式的日期，均含当日，按贵组织时区。最大范围：400 天。
+- 响应字段 `period.timezone` 返回组织实际的 IANA 时区（例如 `America/New_York`），不会固定写成 UTC。
 - `lang=en|es|zh`：PDF/Excel 的语言（默认 `en`）。同时带 `Content-Language`。
 - 文件以 `Content-Disposition: attachment` 送达。文件名随 locale（`statement_…` / `cartola_…` / `对账单_…`）。
 
@@ -49,7 +50,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 ```json
 {
   "account": { "account_id": "…", "display_name": "Example Company SpA", "type": "company" },
-  "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "UTC" },
+  "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "America/New_York" },
   "generated_at": "2026-07-07T15:00:00Z",
   "summary": {
     "opening_balance": "0.000000",
@@ -58,7 +59,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
     "net_change": "947533.670000",
     "closing_balance": "947533.670000",
     "balanced": true,
-    "counts": { "payouts": 51, "payins": 12, "crypto_deposits": 18, "transfers": 4, "movements": 771 },
+    "counts": { "payouts": 51, "payins": 12, "crypto_deposits": 18, "transfers": 4 },
     "fees_by_service": { "payout": "15.300000", "funding": "897.550000" },
     "total_fees": "912.850000"
   },
@@ -82,40 +83,49 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
       "net_change": "10.500000",
       "closing_balance": "10.500000",
       "balanced": true,
-      "movements": [ { "type": "adjustment", "amount": "12.500000", "balance_after": "12.500000", "created_at": "…" } ]
     }
   ],
   "crypto_deposits": [ { "chain": "tron", "asset": "USDT", "tx_id": "…", "usdt_gross": "100.000000", "fee": "1.000000", "usdt_credited": "99.000000", "balance_after": "99.000000" } ],
   "crypto_withdrawals": [ { "…": "…" } ],
   "transfers": [ { "direction": "sent", "counterparty": "Ana Perez", "asset": "USDT", "amount": "25.000000" } ],
-  "service_charges": [ { "type": "banking_fee", "service": "banking_customer", "fee_model": "fixed", "amount": "-0.500000", "balance_after": "98.500000" } ],
-  "movements": [ { "type": "funding", "amount": "99.000000", "balance_after": "99.000000", "created_at": "…" } ]
+  "service_charges": [ { "type": "banking_fee", "service": "banking_customer", "fee_model": "fixed", "asset": "USDT", "amount": "-0.500000", "balance_after": "98.500000" } ],
 }
 ```
 
 分区：
 
 1. **`summary`** — 期初余额、流入、流出、期末余额、按服务分类的手续费，以及 **USDT 余额**（运营货币）的 `balanced` 标志。
-2. **`assets`** — 每个有活动或余额的非 USDT 币种各有一个已对账的分区（USDC、BTC、GOLD，以及若使用 Banking，则包括你银行账户的 `BANK_USD`/`BANK_EUR` 镜像）：期初/期末余额、流入、流出、各自的 `balanced` 标志及其流水，按各币种的精度呈现。如果你只使用 USDT，此分区为空。
+2. **`assets`** — 每个有活动或余额的非 USDT 币种各有一个已对账的分区（USDC、BTC、GOLD，以及若使用 Banking，则包括你银行账户的 `BANK_USD`/`BANK_EUR` 镜像）：期初/期末余额、流入、流出和各自的 `balanced` 标志，按各币种的精度呈现；客户端视图不含原始明细，各资产的原始明细仅见于 org-admin 对账单。如果你只使用 USDT，此分区为空。
 3. **`breakdown`** — 按产品、按国家（出款和入款，含本地金额和 USDT）、按法币币种和按月份。
 4. **按产品的明细** — 出款（收款人、汇率和扣款）、入款（按模式）、加密货币（含 `tx_id` 及其 `asset`）、转账（含对手方和 `asset`）、银行卡消费（`card_transactions`，含商户和消费余额）、余额兑换（`swaps`）、银行业务操作（`banking_operations`）和服务费（含退款）。
-5. **`movements`** — 原始 USDT 账本：每笔流水均带 `balance_after`。这是审计师用来核对全部数据的分区（其他币种的流水位于各自的 `assets` 分区内）。
+5. **产品分区与审计路径** — 客户对账单省略原始账本 `movements`、各资产的 `assets[].movements` 以及 `summary.counts.movements`。请按产品分区核对，并使用费用和加密货币充值中的 `balance_after`。如需深入审计，请使用 org-admin 对账单或 `GET /v1/movements`。
 
 > **注**
-**透明的手续费。** 在出款、入款和加密货币提现中，当手续费由百分比和固定部分组成时，对账单会将其拆分为 `fee_percent` 和 `fee_fixed`（两者之和精确等于 `fee`）。独立收费（合规、钱包、银行业务、身份核验、银行卡）始终为固定金额，并带有 `fee_model: "fixed"` — PDF/Excel 中标记为 **Fixed Com**。早于该字段的历史操作只显示合并后的 `fee`。
+**透明的手续费。** 在出款、入款和加密货币提现中，当手续费由百分比和固定部分组成时，对账单会将其拆分为 `fee_percent` 和 `fee_fixed`（两者之和精确等于 `fee`）。独立收费（合规、钱包、银行业务、身份核验和银行卡）始终是固定金额，并包含实际收费的 `asset`（仅 USDT 的手续费汇总使用 USDT），同时带有 `fee_model: "fixed"`；PDF/Excel 将其标记为 **Fixed Com**。
 ## 如何对账（给你的会计）
 
-对账单满足一个精确的会计恒等式，没有任何舍入：
+对账单满足精确的会计恒等式，不进行舍入：
 
-```
-opening_balance + total_in − total_out = closing_balance
+```text
+期初余额 + 总流入 − 总流出 = 期末余额
 ```
 
-- `balanced: true` 确认该恒等式与账本相符 — 无论是 USDT 汇总还是每个 `assets` 分区内部（每个币种单独对账；不同币种的金额绝不相加）。
-- 每一行 `movements` 都携带结果余额（`balance_after`）：你可以从期初到期末逐行跟踪余额变化。
+- `balanced: true` 表示 USDT 汇总以及每个 `assets` 分区分别与账本相符。
+  不同资产的余额绝不会相加。
+- 每个产品分区使用自己的金额和状态进行核对。费用和加密货币充值
+  都带有 `balance_after`，因此可以核验其对相应余额的影响，无需依赖
+  原始账本导出。
+- 客户对账单有意省略原始 USDT 账本的 `movements`、
+  `assets[].movements` 以及 `summary.counts.movements`。如需深入审计，
+  组织管理员可以使用管理员对账单，或使用分页账本视图
+  `GET /v1/movements`。
 - 一个期间的期末余额与下一个期间的期初余额一致。
-- 手续费绝不隐藏在金额中：每笔操作分别显示总额、手续费和净额，`fees_by_service` 汇总所有手续费。
-- 在 Excel 文件中，**Movements** 工作表使用真正的数值单元格：无需任何清洗即可求和/做透视表。
+- `from`/`to` 区间按组织时区（`period.timezone`）解释，但每笔操作的明细时间戳均为 UTC（JSON 为带 `Z` 的 RFC3339；PDF/Excel 中为“日期（UTC）”列）。
+- 手续费不会隐藏：每笔操作分别显示总额、手续费和净额；
+  `fees_by_service` 按设计仅汇总 USDT 手续费。
+- XLSX 工作表名称会根据请求的 `lang`（`en`、`es` 或 `zh`）本地化；
+  若分区存在，Crypto、Segregated、Cards、Swaps、Banking 和 Margins
+  工作表也会随之本地化。
 - Excel 的 **Payouts** 工作表带有 **Bank ref** 列（位于参考/摘要列之后），内容为收款银行在确认付款后分配的交易 id。对账单 PDF 有意省略该列（表格密度考虑）——单笔付款回执中会显示。
 
 ## 面向管理员（组织管理员）
