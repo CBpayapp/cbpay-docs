@@ -45,6 +45,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 
 - `from` / `to`: `YYYY-MM-DD` dates, inclusive, in your organization timezone. Maximum range:
   400 days.
+- The response field `period.timezone` contains the real IANA timezone of the organization (for example `America/New_York`), not a constant UTC label.
 - `lang=en|es|zh`: language of the PDF/Excel (default `en`). Also `Content-Language`.
 - Files arrive with `Content-Disposition: attachment`. The basename follows the locale (`statement_…` / `cartola_…` / `对账单_…`).
 
@@ -53,7 +54,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 ```json
 {
   "account": { "account_id": "…", "display_name": "Example Company SpA", "type": "company" },
-  "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "UTC" },
+  "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "America/New_York" },
   "generated_at": "2026-07-07T15:00:00Z",
   "summary": {
     "opening_balance": "0.000000",
@@ -62,7 +63,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
     "net_change": "947533.670000",
     "closing_balance": "947533.670000",
     "balanced": true,
-    "counts": { "payouts": 51, "payins": 12, "crypto_deposits": 18, "transfers": 4, "movements": 771 },
+    "counts": { "payouts": 51, "payins": 12, "crypto_deposits": 18, "transfers": 4 },
     "fees_by_service": { "payout": "15.300000", "funding": "897.550000" },
     "total_fees": "912.850000"
   },
@@ -86,14 +87,12 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
       "net_change": "10.500000",
       "closing_balance": "10.500000",
       "balanced": true,
-      "movements": [ { "type": "adjustment", "amount": "12.500000", "balance_after": "12.500000", "created_at": "…" } ]
     }
   ],
   "crypto_deposits": [ { "chain": "tron", "asset": "USDT", "tx_id": "…", "usdt_gross": "100.000000", "fee": "1.000000", "usdt_credited": "99.000000", "balance_after": "99.000000" } ],
   "crypto_withdrawals": [ { "…": "…" } ],
   "transfers": [ { "direction": "sent", "counterparty": "Ana Perez", "asset": "USDT", "amount": "25.000000" } ],
-  "service_charges": [ { "type": "banking_fee", "service": "banking_customer", "fee_model": "fixed", "amount": "-0.500000", "balance_after": "98.500000" } ],
-  "movements": [ { "type": "funding", "amount": "99.000000", "balance_after": "99.000000", "created_at": "…" } ]
+  "service_charges": [ { "type": "banking_fee", "service": "banking_customer", "fee_model": "fixed", "asset": "USDT", "amount": "-0.500000", "balance_after": "98.500000" } ],
 }
 ```
 
@@ -105,8 +104,10 @@ Sections:
 2. **`assets`** — one reconciled section per non-USDT balance with activity
    or balance (USDC, BTC, GOLD and, if you use Banking, the
    `BANK_USD`/`BANK_EUR` mirrors of your bank accounts): opening/closing
-   balance, inflows, outflows, its own `balanced` flag and its movements,
-   in each currency's precision. Empty if you only operate USDT.
+   balance, inflows, outflows and its own `balanced` flag, in each
+   currency's precision, WITHOUT raw detail in the client view; the raw
+   per-asset detail lives only in the org-admin statement. Empty if you
+   only operate USDT.
 3. **`breakdown`** — by product, by country (payouts and payins with local
    amount and USDT), by fiat currency and by month.
 4. **Per-product detail** — payouts (beneficiary, rate and debit), payins
@@ -114,36 +115,38 @@ Sections:
    counterparty and `asset`), card purchases (`card_transactions`, with
    merchant and spending balance), balance conversions (`swaps`), banking
    operations (`banking_operations`) and service charges (with refunds).
-5. **`movements`** — the raw USDT ledger: every movement with its
-   `balance_after`. This is the section an auditor uses to tie everything
-   out (other currencies' movements live inside their `assets` section).
+5. **Product sections and audit trail** — the client statement omits the raw ledger `movements` and per-asset `assets[].movements`; it also omits `summary.counts.movements`. Reconcile by product section, using `balance_after` on charges and crypto deposits. For deep audit, use the org-admin statement or `GET /v1/movements`.
 
 > **Note**
 **Transparent fees.** On payouts, payins and crypto withdrawals, when the
 fee combines a percentage and a fixed component, the statement splits them
 into `fee_percent` and `fee_fixed` (they add up exactly to `fee`).
-Standalone charges (compliance, wallets, banking, verifications, cards) are
-always fixed-amount and carry `fee_model: "fixed"` — the PDF/Excel labels
-them **Fixed Com**. Historical operations predating this field only show the
-combined `fee`.
+Standalone charges (compliance, wallets, banking, verifications and cards) are always fixed-amount charges, include the charged `asset` (USDT for the USDT-only fee summary), and carry `fee_model: "fixed"` — the PDF/Excel labels them **Fixed Com**.
 ## How to reconcile it (for your accountant)
 
-The statement satisfies an exact accounting identity, with no rounding:
+The statement satisfies exact accounting identities, without rounding:
 
-```
+```text
 opening_balance + total_in − total_out = closing_balance
 ```
 
-- `balanced: true` confirms the identity holds against the ledger — both
-  on the USDT summary and inside each `assets` section (every currency
-  reconciles separately; amounts of different currencies are never summed).
-- Every `movements` row carries the resulting balance (`balance_after`):
-  you can follow the balance line by line from opening to closing.
-- The closing balance of one period matches the opening of the next.
-- Fees are never hidden inside amounts: every operation shows gross, fee
-  and net separately, and `fees_by_service` totals them.
-- In the Excel file, the **Movements** sheet uses real numeric cells: you
-  can sum/pivot without cleaning anything.
+- `balanced: true` confirms the identity against the ledger for the USDT
+  summary and independently for every `assets` section. Balances from
+  different assets are never added together.
+- Each product section is reconciled using its own amounts and statuses.
+  Charges and crypto deposits include `balance_after`, so you can verify
+  their effect on the relevant balance without relying on a raw ledger dump.
+- The client statement intentionally omits the raw USDT ledger
+  `movements`, `assets[].movements`, and `summary.counts.movements`.
+  For deep audit, an org admin can use the administrator statement or
+  `GET /v1/movements`, the paginated ledger view.
+- The closing balance of one period matches the opening balance of the next.
+- The `from`/`to` range is interpreted in the organization's timezone (`period.timezone`), but each operation's detail timestamps are in UTC (JSON in RFC3339 with `Z`; Date (UTC) columns in PDF/Excel).
+- Fees are never hidden: each operation exposes gross, fee and net
+  separately, while `fees_by_service` remains USDT-only by design.
+- XLSX sheet names follow the requested `lang` (`en`, `es` or `zh`), including
+  Crypto, Segregated, Cards, Swaps, Banking and Margins when those sections
+  are present.
 - The Excel **Payouts** sheet carries a **Bank ref** column (right after
   the reference/concept column) with the transaction id assigned by the
   destination bank once it confirms the payment. The statement PDF omits
