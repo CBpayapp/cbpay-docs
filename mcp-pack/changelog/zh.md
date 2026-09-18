@@ -8,7 +8,18 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.102 Â· 1 ä¸ªç‰ˆæœ¬ - 2026å¹´9æœˆ18æ—¥
+## v2.103 · 2 个版本 - 2026年9月18日
+
+### v2.103
+
+**变更**
+
+- **自助身份验证安全**：新的 KYC/KYB 入驻链接申请需要已确认的 TOTP 或已注册的通行密钥。开放链接会在 gate 前重新返回，API key 自动化仍然豁免。已注册 TOTP 时，即使组织没有为 `login` 启用 OTP，登录也会强制进入普通 OTP 流程。
+
+**错误**
+
+- 新增 `403 verification_requires_2fa`，并提供 TOTP 或通行密钥的注册步骤。
+
 ### v2.102
 
 **变更**
@@ -16,7 +27,9 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **智利 CLP 银行转账**现在可以在约五分钟的短窗口内进行批量派发。
   `POST /v1/payouts` 仍返回 `202` 与 `status: "processing"`；每笔 payout
   仍保留自己的 `payout_status_changed` webhook 和最终状态。
+
 ## v2.101 · 8 个版本 - 2026年9月17日
+
 ### v2.101
 
 **变更**
@@ -1150,6 +1163,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `dedicated_instrument`，但 API 中并不存在。真实值为
   `amount_single_candidate` 与 `dedicated_clabe`；spec 中新增了
   `charge_link` 与 `manual_assign`（管理员手工路由存款）。
+
 ## v2.15 · 1 个版本 - 2026年7月26日
 
 ### v2.15
@@ -1167,6 +1181,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   收取两笔金额相同的真实款项，请为每个预告发送不同的密钥。
   复用已用于**其他**收款方式（QR、checkout、卡支付）的密钥，
   现在会返回 `409 idempotency_conflict`，而不是返回与请求不符的对象。
+
 ## v2.14 · 6 个版本 - 2026年7月25日
 
 ### v2.14

@@ -7,7 +7,6 @@ description: "Verificación de identidad con wizard hosteado: formulario, docume
 import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="es" />
-
 ## Verificación de la cuenta antes de crear payins
 
 La cobranza autenticada requiere `kyc_status: approved` en personas y KYB aprobado en empresas; mientras tanto, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), OTP/collect, cuentas de depósito dedicadas, cobros con tarjeta guardada y suscripciones responden `403 verification_required`.
@@ -34,13 +33,13 @@ flowchart LR
     revision -->|"faltan datos"| cambios["changes_requested /<br/>more_info_required"]
     revision -->|"rechazada"| rechazo["rejected (webhook)"]
 ```
-
 ## Tu propia verificación (onboarding)
 Al registrarte, tu cuenta nace sin verificar (`kyc_status: none`) y **solo
 puede fondear y leer**. Cualquier acción de dinero saliente (payouts,
 transferencias, retiros, banking, tarjetas) responde
 `403 verification_required` hasta que apruebes.
 
+<Note>Las solicitudes nuevas exigen TOTP confirmado o passkey registrado; revisa [Perfil y seguridad](/es/guias/perfil) para enrolar uno y reintenta. Los links abiertos se re-sirven antes del gate; la automatización con API key sigue exenta.</Note>
 <Steps>
 <Step title="Pide tu link de verificación">
 
@@ -842,6 +841,7 @@ submission abierta y liveness links no cobran de nuevo.
 | 400 | `invalid_format` | `format` inválido al pedir un informe de verificación | Usa `pdf` o `json` |
 | 400 | `invalid_language` | `lang` inválido al pedir un informe de verificación | Usa `en`, `es` o `zh` |
 | 402 | `insufficient_funds` | Saldo insuficiente para la comisión | Fondea la cuenta y reintenta |
+| 403 | `verification_requires_2fa` | Una solicitud nueva exige un TOTP confirmado o un passkey registrado | Enrola un factor y reintenta `POST /v1/me/verification/link` |
 | 403 | `verification_required` | Tu cuenta aún no aprobó su propia verificación | Completa tu [onboarding](#tu-propia-verificacion-onboarding) |
 | 403 | `company_account_required` | Una cuenta persona intentó verificar terceros | Solo cuentas empresa |
 | 403 | `service_disabled` | El servicio `kyc` está deshabilitado para tu cuenta | Contacta a tu operador |

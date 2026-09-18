@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-18 00:30 UTC",
-    "_content_sha256": "935c048ebfe3b4bdd546074fe74177f3f9dcfdb36265fd55b1a1f92baad6ce89"
+    "_generated_at": "2026-09-18 04:25 UTC",
+    "_content_sha256": "a1fc85af58b8dd0ab419bae7b4f6948cad40223c0250f9bb19f68ce12fa5b213"
   },
   "auth": {
     "type": "bearer",
@@ -657,7 +657,7 @@
                 "link"
               ]
             },
-            "description": "Returns the account's own identity-verification link (person accounts get a KYC link, company accounts a KYB link — derived from the account type). The hosted wizard covers the full flow: form, document uploads and video liveness. Free. If an open link already exists it is returned with 200; an already-approved account gets 409 already_verified. Until the account's verification is approved, every outgoing-money action answers 403 verification_required (funding and reads stay available).",
+            "description": "Returns the account's own identity-verification link (person accounts get a KYC link, company accounts a KYB link — derived from the account type). The hosted wizard covers the full flow: form, document uploads and video liveness. Free. A new self-service request requires a confirmed TOTP or a registered passkey; an existing open link is re-served before this gate and API-key automation remains exempt. If an open link already exists it is returned with 200; an already-approved account gets 409 already_verified. Until the account's verification is approved, every outgoing-money action answers 403 verification_required (funding and reads stay available).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"expires_in_days\": 14\n}",

@@ -144,6 +144,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 404 | `verification_not_found` | La cuenta aún no tiene ninguna verificación enviada (`GET /v1/me/verification/report` antes del onboarding) |
 | 409 | `duplicate` | El recurso ya existe |
 | 409 | `receipt_not_available` | El comprobante del payout no está disponible mientras espera el screening técnico o después de un fallo antes del débito; espera un estado financiero final |
+| 403 | `verification_requires_2fa` | Un link nuevo de KYC/KYB self-service exige un TOTP confirmado o un passkey registrado; un link abierto se re-sirve antes de este gate. **Solución:** enrola un factor y reintenta `POST /v1/me/verification/link` |
 | 403 | `verification_required` | Tu cuenta aún no aprobó su verificación de identidad (persona=KYC, empresa=KYB); hasta entonces se bloquean la creación autenticada de payins, collect, cuentas de depósito dedicadas, cobros con tarjeta guardada y suscripciones — pide tu link en `POST /v1/me/verification/link`; los abonos pasivos y las lecturas siguen disponibles |
 | 422 | `verification_required` | La operación exige el `verification_id` de una verificación aprobada del tercero (alta banking de terceros, tarjeta designada) |
 | 422 | `verification_not_approved` | La verificación referenciada aún no está aprobada |
