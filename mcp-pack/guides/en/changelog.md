@@ -8,6 +8,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.102 Â· 1 version - September 18, 2026
+### v2.102
+
+**Changed**
+
+- **Chile CLP bank transfers** may now be dispatched in short grouped windows
+  of approximately five minutes. The `POST /v1/payouts` response remains
+  `202` with `status: "processing"`, and each payout keeps its own
+  `payout_status_changed` webhook and final status.
 ## v2.101 · 8 versions - September 17, 2026
 ### v2.101
 

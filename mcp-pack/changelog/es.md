@@ -9,6 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.102 · 1 versión - 18 de septiembre de 2026
+### v2.102
+
+**Cambiado**
+
+- **Transferencias bancarias CLP en Chile** ahora pueden despacharse en
+  ventanas agrupadas breves de aproximadamente cinco minutos. La respuesta
+  de `POST /v1/payouts` sigue siendo `202` con
+  `status: "processing"`, y cada payout conserva su propio webhook
+  `payout_status_changed` y estado final.
 ## v2.101 · 8 versiones - 17 de septiembre de 2026
 ### v2.101
 
