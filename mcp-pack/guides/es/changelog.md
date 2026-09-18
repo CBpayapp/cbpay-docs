@@ -9,7 +9,25 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.103 · 2 versiones - 18 de septiembre de 2026
+## v2.104 · 3 versiones - 18 de septiembre de 2026
+### v2.104
+
+**Cambiado**
+
+- **Datos del emisor en la emisión de tarjetas**: `POST /v1/cards` ahora valida
+  códigos de catálogo para `occupation` en personas, `place_of_work` y
+  `salary_usd` no negativo; códigos de catálogo para `kind_of_business` en
+  empresas; y `occupation`, `place_of_work`, `salary_usd` más `pep` explícito
+  para personas designadas. El PEP del titular de cuenta se deriva del
+  screening AML, y el contacto, la representación legal y las URLs
+  documentales de empresa pueden completarse desde KYB. Los catálogos de
+  ocupaciones y actividades económicas aceptan búsqueda `?q=`.
+
+**Errores**
+
+- Se documentan `422 issuer_data_incomplete`, `422 screening_required` y
+  `422 cardholder_name_too_long`; este último aplica cuando el nombre y
+  apellido impresos de una persona superan juntos 22 caracteres.
 
 ### v2.103
 
@@ -30,9 +48,7 @@ con anticipación y quedan marcados como **Breaking**.
   de `POST /v1/payouts` sigue siendo `202` con
   `status: "processing"`, y cada payout conserva su propio webhook
   `payout_status_changed` y estado final.
-
 ## v2.101 · 8 versiones - 17 de septiembre de 2026
-
 ### v2.101
 
 **Cambiado**
@@ -1411,7 +1427,6 @@ destino. La creación es idempotente: una clave nueva responde
   valores reales son `amount_single_candidate` y `dedicated_clabe`; se
   agregaron `charge_link` y `manual_assign` (un admin ruteó el depósito a
   mano) al spec.
-
 ## v2.15 · 1 versión - 26 de julio de 2026
 
 ### v2.15
@@ -1433,7 +1448,6 @@ destino. La creación es idempotente: una clave nueva responde
   método de payin (QR, checkout, tarjeta) responde ahora
   `409 idempotency_conflict` en vez de devolver un objeto que no
   corresponde.
-
 ## v2.14 · 6 versiones - 25 de julio de 2026
 
 ### v2.14

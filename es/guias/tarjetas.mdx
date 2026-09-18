@@ -163,6 +163,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
     "idempotency_key": "card-v-1",
     "cardholder": {
       "occupation": "52201",
+      "place_of_work": "Andina SpA",
       "salary_usd": 1800
     }
   }'
@@ -258,6 +259,8 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
       "kind": "person",
       "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
       "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "pep": false,
       "salary_usd": 1800
     }
   }'
@@ -272,9 +275,84 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 - El nombre impreso usa `first_name` + `last_name` (máximo 22 caracteres
   combinados) y la respuesta llega con `cardholder_kind: "person"` y el
   `verification_id` usado.
+  Si el nombre combinado supera ese límite de impresión, la API responde
+  `422 cardholder_name_too_long`.
 
 </Tab>
 </Tabs>
+
+## Campos del emisor y PEP derivado del AML
+
+La primera emisión crea el titular en el emisor. La plataforma valida los
+campos propios del emisor **antes de cobrar el fee o crear un hold**. Cuando
+se reutiliza un titular de cuenta existente, estos campos no se vuelven a
+pedir.
+
+| Titular | Obligatorio al crear | Cómo se resuelve |
+|---|---|---|
+| Titular persona | `occupation`, `place_of_work`, `salary_usd`, `first_name`, `last_name`, `email` | `occupation` debe ser código del catálogo; `place_of_work` no puede estar vacío; `salary_usd` debe ser entero no negativo; nombres no vacíos y `email` debe contener `@` |
+| Titular empresa | `kind_of_business`, `registered_name`, `email` | `kind_of_business` debe ser código; `registered_name` y `email` salen del request, display name o nombre legal KYB, con email de la cuenta como respaldo; `email` debe contener `@` |
+| Persona designada | `occupation`, `place_of_work`, `salary_usd`, `first_name`, `last_name`, `email`, `pep` | Código de catálogo, nombres no vacíos, `email` con `@` y `pep` booleano explícito; no hay screening de cuenta para una persona designada |
+
+Para un titular de cuenta, la fuente soportada del PEP es el screening AML de
+la verificación de la cuenta. El gate de screening es obligatorio: un
+`pep: true` explícito **no** evita `422 screening_required`; cuando existe
+screening, el valor enviado al emisor es el OR conservador del booleano del
+request y el resultado del screening, por lo que un `false` del request nunca
+pisará un `true` del screening. El checklist muestra
+**`Politically exposed person (screening)`**.
+
+Los campos de contacto y representación legal de una empresa se completan
+desde los UBOs del KYB cuando el request no los trae. Las URLs documentales
+de la empresa se completan desde el expediente KYB con estos fallbacks:
+
+| Campo del emisor | Orden de fallback KYB |
+|---|---|
+| `certificate_of_good_standing_url` | `certificateOfGoodStanding`, luego `legalPresence` |
+| `register_shareholder_url` | `registerShareholder`, `ownershipStructure`, luego `controlStructure` |
+| `id_shareholders_url` | `idShareholders`, `uboIdentity`, `identity`, `ownershipStructure`, luego `controlStructure` |
+| `address_verification_shareholders_url` | `addressVerificationShareholders`, `uboProofOfAddress`, luego `proofOfAddress` |
+
+`business_license_url` no tiene fallback. Si el titular ensamblado todavía
+carece de datos requeridos por el emisor, la API responde HTTP `422` con las
+claves faltantes y no llama al emisor:
+
+```json
+{
+  "error": "issuer_data_incomplete",
+  "message": "missing issuer data: place_of_work"
+}
+```
+
+### Catálogos
+
+Usa los catálogos vivos en vez de escribir labels o inventar códigos:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/catalog/occupations?q=director" \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/cards/catalog/business-activities?q=informát" \
+  -H "Authorization: Bearer <token>"
+```
+
+Cada respuesta tiene la forma
+`{"items":[{"code":"...","label":"..."}],"meta":{"retrieved":"..."}}`.
+Envía `items[].code` en `occupation` o `kind_of_business`; un label como
+`"Ingeniero"` no es un código válido. El checklist del firewall usa la misma
+validación: un valor puede estar presente y aun así aparecer con `ok: false`
+si no pertenece al catálogo.
+
+<AccordionGroup>
+<Accordion title="¿Qué pasa si la cuenta todavía no tiene screening AML?">
+No se puede derivar el PEP del titular. Completa una verificación AML aprobada
+y reintenta el mismo request de tarjeta; no inventes un valor de PEP.
+</Accordion>
+<Accordion title="¿Cómo se informa el PEP de una persona designada?">
+Como la persona designada no es la titular de la cuenta, el request debe
+incluir un booleano explícito `cardholder.pep`. No existe un valor por defecto.
+</Accordion>
+</AccordionGroup>
 
 ### Disponibilidad y errores de emisión
 
@@ -282,6 +360,8 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 |---|---|---|
 | 400 | `physical_temporarily_unavailable` | La emisión física nueva está pausada temporalmente. Solicita una tarjeta digital; las físicas existentes siguen operativas. |
 | 409 | `card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud abierta. Cancela o resuelve la solicitud existente antes de pedir otra. |
+| 422 | `issuer_data_incomplete` | Faltan o son inválidos datos del emisor después de ensamblar el request, el autofill de verificación y los datos KYB. Corrige las claves indicadas en `message` y reintenta. |
+| 422 | `screening_required` | La cuenta no tiene un screening AML de verificación para derivar el PEP del titular. Completa el screening y reintenta el mismo request. |
 
 ### Disponibilidad y errores de emisión
 

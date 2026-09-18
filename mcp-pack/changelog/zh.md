@@ -8,7 +8,22 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.103 · 2 个版本 - 2026年9月18日
+## v2.104 · 3 个版本 - 2026年9月18日
+### v2.104
+
+**变更**
+
+- **发卡方数据**：`POST /v1/cards` 现在校验个人的 `occupation` 目录代码、
+  `place_of_work` 与非负 `salary_usd`；企业的 `kind_of_business` 目录代码；
+  以及指定人员的 `occupation`、`place_of_work`、`salary_usd` 和显式
+  `pep`。账户持卡人的 PEP 从 AML screening 派生；企业联系人、法定代表
+  与文件 URL 可从 KYB 自动补齐。职业和经营活动目录支持 `?q=` 搜索。
+
+**错误**
+
+- 新增 `422 issuer_data_incomplete`、`422 screening_required` 与
+  `422 cardholder_name_too_long` 文档覆盖；最后一个错误表示个人卡面
+  打印的名字与姓氏合计超过 22 个字符。
 
 ### v2.103
 
@@ -27,9 +42,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **智利 CLP 银行转账**现在可以在约五分钟的短窗口内进行批量派发。
   `POST /v1/payouts` 仍返回 `202` 与 `status: "processing"`；每笔 payout
   仍保留自己的 `payout_status_changed` webhook 和最终状态。
-
 ## v2.101 · 8 个版本 - 2026年9月17日
-
 ### v2.101
 
 **变更**
@@ -1163,7 +1176,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `dedicated_instrument`，但 API 中并不存在。真实值为
   `amount_single_candidate` 与 `dedicated_clabe`；spec 中新增了
   `charge_link` 与 `manual_assign`（管理员手工路由存款）。
-
 ## v2.15 · 1 个版本 - 2026年7月26日
 
 ### v2.15
@@ -1181,7 +1193,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   收取两笔金额相同的真实款项，请为每个预告发送不同的密钥。
   复用已用于**其他**收款方式（QR、checkout、卡支付）的密钥，
   现在会返回 `409 idempotency_conflict`，而不是返回与请求不符的对象。
-
 ## v2.14 · 6 个版本 - 2026年7月25日
 
 ### v2.14

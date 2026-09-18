@@ -118,6 +118,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
     "idempotency_key": "card-v-1",
     "cardholder": {
       "occupation": "52201",
+      "place_of_work": "Andina SpA",
       "salary_usd": 1800
     }
   }'
@@ -200,6 +201,8 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
       "kind": "person",
       "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
       "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "pep": false,
       "salary_usd": 1800
     }
   }'
@@ -207,10 +210,76 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 
 - 未提供 `verification_id`（或验证未获批准）：`422 verification_required` / `422 verification_not_approved`。验证必须是 KYC（个人）；KYB 会返回 `422 verification_kind_mismatch`。
 - 显式提供的 `cardholder` 字段优先于自动填充（当发卡方要求验证中没有的某份证件时很有用）。
-- 卡面印刷姓名使用 `first_name` + `last_name`（合计最多 22 个字符），响应中包含 `cardholder_kind: "person"` 以及所使用的 `verification_id`。
+- 卡面印刷姓名使用 `first_name` + `last_name`（合计最多 22 个字符），响应中包含 `cardholder_kind: "person"` 以及所使用的 `verification_id`。如果合计超过卡面打印限制，API 返回 `422 cardholder_name_too_long`。
 
 </Tab>
 </Tabs>
+
+## 发卡方字段与 AML 派生的 PEP
+
+首次发行会在发卡方创建持卡人。平台会在**收取发卡费用或创建
+hold 之前**校验发卡方字段。复用已有账户持卡人时，不会再次要求这些字段。
+
+| 持卡人 | 创建时必填 | 值如何解析 |
+|---|---|---|
+| 个人账户持卡人 | `occupation`、`place_of_work`、`salary_usd`、`first_name`、`last_name`、`email` | `occupation` 必须是目录代码；`place_of_work` 不能为空；`salary_usd` 必须非负；姓名不能为空且 `email` 必须包含 `@` |
+| 企业账户持卡人 | `kind_of_business`、`registered_name`、`email` | `kind_of_business` 必须是目录代码；`registered_name` 与 `email` 按 request、账户 display name 或 KYB 法定名称补齐，email 再以账户 email 兜底；必须包含 `@` |
+| 指定人员 | `occupation`、`place_of_work`、`salary_usd`、`first_name`、`last_name`、`email`、`pep` | 目录代码、非空姓名、含 `@` 的 email 和显式布尔值 `pep`；指定人员没有账户 screening |
+
+对于账户持卡人，受支持的 PEP 来源是账户 AML 身份验证的 screening。
+screening gate 是强制的：显式 `pep: true` **不能**绕过
+`422 screening_required`；screening 存在后，发送给发卡方的值是 request
+布尔值与 screening 结果的保守 OR，因此 request 的 `false` 不会覆盖
+screening 的 `true`。审核清单显示 **`Politically exposed person (screening)`**。
+
+如果 request 没有提供，企业的联系人和法定代表会从 KYB 的 UBO
+自动补齐。企业文件 URL 会按以下顺序从 KYB expediente 使用 fallback：
+
+| 发卡方字段 | KYB fallback 顺序 |
+|---|---|
+| `certificate_of_good_standing_url` | `certificateOfGoodStanding`，然后 `legalPresence` |
+| `register_shareholder_url` | `registerShareholder`、`ownershipStructure`，然后 `controlStructure` |
+| `id_shareholders_url` | `idShareholders`、`uboIdentity`、`identity`、`ownershipStructure`，然后 `controlStructure` |
+| `address_verification_shareholders_url` | `addressVerificationShareholders`、`uboProofOfAddress`，然后 `proofOfAddress` |
+
+`business_license_url` 没有 fallback。如果组装后的持卡人仍缺少发卡方
+要求的数据，API 返回 HTTP `422` 及缺失键，并且不会调用发卡方：
+
+```json
+{
+  "error": "issuer_data_incomplete",
+  "message": "missing issuer data: place_of_work"
+}
+```
+
+### 目录
+
+请使用实时目录，不要手写 label 或自行发明代码：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/catalog/occupations?q=director" \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/cards/catalog/business-activities?q=software" \
+  -H "Authorization: Bearer <token>"
+```
+
+每个响应的结构为
+`{"items":[{"code":"...","label":"..."}],"meta":{"retrieved":"..."}}`。
+在 `occupation` 或 `kind_of_business` 中发送 `items[].code`；如
+`"Engineer"` 这样的 label 不是有效代码。防火墙审核清单使用同一套
+代码校验：值即使存在，不在目录中也会显示 `ok: false`。
+
+<AccordionGroup>
+<Accordion title="如果账户还没有 AML screening，会怎样？">
+系统无法派生持卡人的 PEP。完成已批准的 AML 身份验证后，用同一个卡片
+request 重试；不要猜测 PEP 值。
+</Accordion>
+<Accordion title="指定人员如何提供 PEP？">
+指定人员不是账户持卡人，因此 request 必须包含显式布尔值
+`cardholder.pep`，没有默认值。
+</Accordion>
+</AccordionGroup>
 
 ### 可用性与发卡错误
 
@@ -218,6 +287,8 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 |---|---|---|
 | 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停。请申请虚拟卡；已发行的实体卡继续正常使用。 |
 | 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请。请先取消或处理现有申请。 |
+| 422 | `issuer_data_incomplete` | request、验证自动填充和 KYB 派生数据组装后仍缺少或存在无效的发卡方字段。根据 `message` 中列出的键修正后重试。 |
+| 422 | `screening_required` | 账户没有可用于派生持卡人 PEP 的 AML 身份验证 screening。完成 screening 后用同一个 request 重试。 |
 
 ### 可用性与发卡错误
 

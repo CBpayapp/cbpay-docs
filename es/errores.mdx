@@ -182,6 +182,9 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 409 | `cardholder_kyc_pending` | El titular designado requiere documentos de identidad |
 | 400 | `invalid_occupation` | `occupation` no es un código del catálogo (`GET /v1/cards/catalog/occupations`) |
 | 400 | `invalid_kind_of_business` | `kind_of_business` no es un código del catálogo (`GET /v1/cards/catalog/business-activities`) |
+| 422 | `issuer_data_incomplete` | Faltan o son inválidos los campos del emisor después de ensamblar el request, el autofill de verificación y los datos KYB; corrige las claves indicadas en `message` y reintenta |
+| 422 | `screening_required` | La cuenta no tiene un screening AML de verificación para derivar el PEP del titular; completa el screening y reintenta el mismo request de tarjeta |
+| 422 | `cardholder_name_too_long` | `first_name` y `last_name` de la persona superan juntos el límite de 22 caracteres impresos por el emisor; acorta el nombre y reintenta |
 | 400 | `invalid_settlement_asset` | `settlement_asset` no es USDT, USDC, BTC ni GOLD |
 | 400 | `settlement_asset_disabled` | Tu organización tiene deshabilitado ese asset como origen de settlement |
 | 422 | `settlement_limit_exceeded` | La operación supera el límite por operación de los assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o divide la operación |

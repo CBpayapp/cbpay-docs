@@ -1,5 +1,5 @@
 {
-  "count": 266,
+  "count": 269,
   "errors": [
     {
       "category": {
@@ -1875,6 +1875,48 @@
         "en": "`kind_of_business` is not a catalog code (`GET /v1/cards/catalog/business-activities`)",
         "es": "`kind_of_business` no es un código del catálogo (`GET /v1/cards/catalog/business-activities`)",
         "zh": "`kind_of_business` 不是目录中的代码（`GET /v1/cards/catalog/business-activities`）"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "issuer_data_incomplete",
+      "http": 422,
+      "meaning": {
+        "en": "Cardholder issuer fields are missing or invalid after request data, verification autofill and KYB-derived values are assembled; fix the keys listed in `message` and retry",
+        "es": "Faltan o son inválidos los campos del emisor después de ensamblar el request, el autofill de verificación y los datos KYB; corrige las claves indicadas en `message` y reintenta",
+        "zh": "request、验证自动填充和 KYB 派生数据组装后仍缺少或存在无效的发卡方字段；请根据 `message` 中列出的键修正并重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "screening_required",
+      "http": 422,
+      "meaning": {
+        "en": "The account has no AML verification screening from which to derive the account holder's PEP value; complete screening and retry the same card request",
+        "es": "La cuenta no tiene un screening AML de verificación para derivar el PEP del titular; completa el screening y reintenta el mismo request de tarjeta",
+        "zh": "账户没有可用于派生持卡人 PEP 的 AML 身份验证 screening；请完成 screening 后使用同一个卡片 request 重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "cardholder_name_too_long",
+      "http": 422,
+      "meaning": {
+        "en": "The person's `first_name` and `last_name` exceed the issuer's 22-character combined card-printing limit; shorten the printed name and retry",
+        "es": "`first_name` y `last_name` de la persona superan juntos el límite de 22 caracteres impresos por el emisor; acorta el nombre y reintenta",
+        "zh": "个人的 `first_name` 与 `last_name` 合计超过发卡方 22 个字符的卡面打印限制；请缩短姓名后重试"
       }
     },
     {

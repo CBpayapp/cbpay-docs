@@ -8,7 +8,24 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.103 · 2 versions - September 18, 2026
+## v2.104 · 3 versions - September 18, 2026
+### v2.104
+
+**Changed**
+
+- **Card issuance issuer data**: `POST /v1/cards` now validates person
+  `occupation` catalog codes, `place_of_work` and non-negative `salary_usd`;
+  company `kind_of_business` catalog codes; and designated-person
+  `occupation`, `place_of_work`, `salary_usd` plus explicit `pep`.
+  Account-holder PEP is derived from AML screening, company contact/legal
+  representation and document URLs can be completed from KYB, and the
+  occupation/business-activity catalogs support `?q=` search.
+
+**Errors**
+
+- Added `422 issuer_data_incomplete`, `422 screening_required` and
+  `422 cardholder_name_too_long` coverage. The last error applies when a
+  person's printed first and last names exceed 22 combined characters.
 
 ### v2.103
 
@@ -28,9 +45,7 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   of approximately five minutes. The `POST /v1/payouts` response remains
   `202` with `status: "processing"`, and each payout keeps its own
   `payout_status_changed` webhook and final status.
-
 ## v2.101 · 8 versions - September 17, 2026
-
 ### v2.101
 
 **Changed**
@@ -1365,7 +1380,6 @@ instrument. Company creation is idempotent: a new key returns
   API. The real values are `amount_single_candidate` and `dedicated_clabe`;
   `charge_link` and `manual_assign` (an admin routed the deposit by hand)
   were added to the spec.
-
 ## v2.15 · 1 release - July 26, 2026
 
 ### v2.15
@@ -1386,7 +1400,6 @@ instrument. Company creation is idempotent: a new key returns
   that was already used with ANOTHER payin method (QR, checkout, card)
   now replies `409 idempotency_conflict` instead of returning an object
   that does not match the request.
-
 ## v2.14 · 6 releases - July 25, 2026
 
 ### v2.14

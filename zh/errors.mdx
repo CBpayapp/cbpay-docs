@@ -182,6 +182,9 @@ description: "错误格式与完整的错误码目录"
 | 409 | `cardholder_kyc_pending` | 指定持卡人需要提交身份证明文件 |
 | 400 | `invalid_occupation` | `occupation` 不是目录中的代码（`GET /v1/cards/catalog/occupations`） |
 | 400 | `invalid_kind_of_business` | `kind_of_business` 不是目录中的代码（`GET /v1/cards/catalog/business-activities`） |
+| 422 | `issuer_data_incomplete` | request、验证自动填充和 KYB 派生数据组装后仍缺少或存在无效的发卡方字段；请根据 `message` 中列出的键修正并重试 |
+| 422 | `screening_required` | 账户没有可用于派生持卡人 PEP 的 AML 身份验证 screening；请完成 screening 后使用同一个卡片 request 重试 |
+| 422 | `cardholder_name_too_long` | 个人的 `first_name` 与 `last_name` 合计超过发卡方 22 个字符的卡面打印限制；请缩短姓名后重试 |
 | 400 | `invalid_settlement_asset` | `settlement_asset` 不是 USDT、USDC、BTC 或 GOLD |
 | 400 | `settlement_asset_disabled` | 您的组织已禁用该资产作为结算来源 |
 | 422 | `settlement_limit_exceeded` | 该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作 |
