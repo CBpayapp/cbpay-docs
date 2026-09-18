@@ -33,6 +33,9 @@ flowchart LR
 
 注册后，您的账户初始为未验证状态（`kyc_status: none`），**只能入金和读取数据**。任何资金流出操作（付款、内部转账、提现、银行服务、卡片）在您获批之前都会返回 `403 verification_required`。
 
+<Note>
+新的自助申请需要已确认的 TOTP 或已注册的通行密钥；请参阅[个人资料与安全](/zh/guides/profile)完成注册后重试。开放链接会在 gate 前重新返回，API key 自动化仍然豁免。
+</Note>
 <Steps>
 <Step title="申请您的验证链接">
 
@@ -732,6 +735,7 @@ curl "https://api.qbank.cl/platform/verify/reports/Bc3d4e5f6a7b84c9d0e1f2a3b4c5d
 | 400 | `invalid_format` | 请求验证报告时 `format` 无效 | 使用 `pdf` 或 `json` |
 | 400 | `invalid_language` | 请求验证报告时 `lang` 无效 | 使用 `en`、`es` 或 `zh` |
 | 402 | `insufficient_funds` | 余额不足以支付费用 | 为账户充值后重试 |
+| 403 | `verification_requires_2fa` | 新申请需要已确认的 TOTP 或已注册的通行密钥 | 注册一个因子后重试 `POST /v1/me/verification/link` |
 | 403 | `verification_required` | 您的账户尚未通过自身的验证 | 完成您的[入驻](#your-own-verification-onboarding) |
 | 403 | `company_account_required` | 个人账户尝试验证第三方 | 仅限企业账户 |
 | 403 | `service_disabled` | 您的账户已禁用 `kyc` 服务 | 联系您的运营方 |

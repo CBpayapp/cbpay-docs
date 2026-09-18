@@ -170,7 +170,11 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
   "role": "owner"
 }
 ```
-
+> **Nota**
+**Un TOTP enrolado siempre se exige al iniciar sesión.** Cuando un member
+confirma una app autenticadora, el login devuelve el flujo OTP pendiente aunque
+la política de la organización no exija OTP para `login`. El login con passkey
+ya es un flujo de dos factores y no pide un código adicional.
 ## El teléfono de la cuenta
 
 - Formato **E.164** (`+56912345678`), se define en el registro, con

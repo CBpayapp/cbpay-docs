@@ -33,14 +33,13 @@ flowchart LR
     revision -->|"faltan datos"| cambios["changes_requested /<br/>more_info_required"]
     revision -->|"rechazada"| rechazo["rejected (webhook)"]
 ```
-
 ## Tu propia verificación (onboarding)
 Al registrarte, tu cuenta nace sin verificar (`kyc_status: none`) y **solo
 puede fondear y leer**. Cualquier acción de dinero saliente (payouts,
 transferencias, retiros, banking, tarjetas) responde
 `403 verification_required` hasta que apruebes.
 
-### Pide tu link de verificación
+> **Nota**Las solicitudes nuevas exigen TOTP confirmado o passkey registrado; revisa [Perfil y seguridad](https://docs.cbpayapp.com/es/guias/perfil) para enrolar uno y reintenta. Los links abiertos se re-sirven antes del gate; la automatización con API key sigue exenta.### Pide tu link de verificación
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/me/verification/link \
@@ -815,6 +814,7 @@ submission abierta y liveness links no cobran de nuevo.
 | 400 | `invalid_format` | `format` inválido al pedir un informe de verificación | Usa `pdf` o `json` |
 | 400 | `invalid_language` | `lang` inválido al pedir un informe de verificación | Usa `en`, `es` o `zh` |
 | 402 | `insufficient_funds` | Saldo insuficiente para la comisión | Fondea la cuenta y reintenta |
+| 403 | `verification_requires_2fa` | Una solicitud nueva exige un TOTP confirmado o un passkey registrado | Enrola un factor y reintenta `POST /v1/me/verification/link` |
 | 403 | `verification_required` | Tu cuenta aún no aprobó su propia verificación | Completa tu [onboarding](#tu-propia-verificacion-onboarding) |
 | 403 | `company_account_required` | Una cuenta persona intentó verificar terceros | Solo cuentas empresa |
 | 403 | `service_disabled` | El servicio `kyc` está deshabilitado para tu cuenta | Contacta a tu operador |

@@ -33,14 +33,13 @@ flowchart LR
     review -->|"missing data"| changes["changes_requested /<br/>more_info_required"]
     review -->|"rejected"| rejectedNode["rejected (webhook)"]
 ```
-
 ## Your own verification (onboarding)
 When you register, your account starts unverified (`kyc_status: none`) and
 **can only fund and read**. Any outgoing-money action (payouts, transfers,
 withdrawals, banking, cards) answers `403 verification_required` until you
 are approved.
 
-### Request your verification link
+> **Note**New self-service requests require a confirmed TOTP or registered passkey; see [Profile & security](https://docs.cbpayapp.com/en/guides/profile) for enrollment steps and retry. Open links are re-served before this gate; API-key automation remains exempt.### Request your verification link
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/me/verification/link \
@@ -814,6 +813,7 @@ open submission and liveness links do not charge again.
 | 400 | `invalid_format` | Invalid `format` when requesting a verification report | Use `pdf` or `json` |
 | 400 | `invalid_language` | Invalid `lang` when requesting a verification report | Use `en`, `es` or `zh` |
 | 402 | `insufficient_funds` | Balance cannot cover the fee | Fund the account and retry |
+| 403 | `verification_requires_2fa` | A new self-service request needs a confirmed TOTP or a registered passkey | Enroll one factor, then retry `POST /v1/me/verification/link` |
 | 403 | `verification_required` | Your account has not approved its own verification | Complete your [onboarding](#your-own-verification-onboarding) |
 | 403 | `company_account_required` | A person account tried to verify third parties | Company accounts only |
 | 403 | `service_disabled` | The `kyc` service is disabled for your account | Contact your operator |

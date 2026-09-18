@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.102"
+  version: "2.103"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -7136,10 +7136,11 @@ paths:
       summary: Request my onboarding verification link
       description: 'Returns the account''s own identity-verification link (person accounts get a KYC link,
         company accounts a KYB link — derived from the account type). The hosted wizard covers the full
-        flow: form, document uploads and video liveness. Free. If an open link already exists it is returned
-        with 200; an already-approved account gets 409 already_verified. Until the account''s verification
-        is approved, every outgoing-money action answers 403 verification_required (funding and reads
-        stay available).'
+        flow: form, document uploads and video liveness. Free. A new self-service request requires a
+        confirmed TOTP or a registered passkey; an existing open link is re-served before this gate and
+        API-key automation remains exempt. If an open link already exists it is returned with 200; an
+        already-approved account gets 409 already_verified. Until the account''s verification is approved,
+        every outgoing-money action answers 403 verification_required (funding and reads stay available).'
       requestBody:
         required: false
         content:
@@ -7177,7 +7178,20 @@ paths:
                 error: already_verified
                 message: this account already completed its identity verification
         '403':
-          $ref: '#/components/responses/AccountRequired'
+          description: Account credential is required, or a new self-service verification request lacks a confirmed TOTP or registered passkey.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                account_required:
+                  value:
+                    error: account_required
+                    message: account credential required
+                verification_requires_2fa:
+                  value:
+                    error: verification_requires_2fa
+                    message: enroll an authenticator app (POST /v1/me/totp/enroll) or register a passkey (POST /v1/me/passkeys/register/begin) before requesting identity verification
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/me/verification/report:

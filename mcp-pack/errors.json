@@ -1,5 +1,5 @@
 {
-  "count": 265,
+  "count": 266,
   "errors": [
     {
       "category": {
@@ -1399,6 +1399,20 @@
         "en": "A payout receipt is not available while technical screening is pending or after a pre-debit screening failure; wait for a final financial state",
         "es": "El comprobante del payout no está disponible mientras espera el screening técnico o después de un fallo antes del débito; espera un estado financiero final",
         "zh": "技术筛查等待期间或扣款前筛查失败后，payout 暂无回执；请等待最终财务状态"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "verification_requires_2fa",
+      "http": 403,
+      "meaning": {
+        "en": "A new self-service KYC/KYB link requires a confirmed TOTP or a registered passkey; an existing open link is re-served before this gate. **Solution:** enroll one factor and retry `POST /v1/me/verification/link`",
+        "es": "Un link nuevo de KYC/KYB self-service exige un TOTP confirmado o un passkey registrado; un link abierto se re-sirve antes de este gate. **Solución:** enrola un factor y reintenta `POST /v1/me/verification/link`",
+        "zh": "新的自助 KYC/KYB 链接申请需要已确认的 TOTP 或已注册的通行密钥；已有开放链接会在此 gate 之前重新返回。**解决方法：** 注册一个因子后重试 `POST /v1/me/verification/link`"
       }
     },
     {

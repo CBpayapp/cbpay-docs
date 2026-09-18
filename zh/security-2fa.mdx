@@ -155,6 +155,12 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
   "role": "owner"
 }
 ```
+<Note>
+**已注册的 TOTP 在登录时始终会被要求。** member 确认验证器应用后，即使组织
+策略没有要求 `login` 使用 OTP，登录也会返回正常的待验证 OTP 流程。通行密钥
+登录本身已经是双因素流程，因此不会再要求第二个验证码。
+</Note>
+
 
 ## 账户的手机号
 

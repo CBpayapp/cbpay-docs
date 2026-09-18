@@ -170,7 +170,11 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
   "role": "owner"
 }
 ```
-
+> **Note**
+**An enrolled TOTP is always enforced at login.** Once a member confirms an
+authenticator app, the login returns the normal pending OTP flow even when the
+organization policy does not require OTP for `login`. Passkey login remains a
+two-factor flow on its own and does not request a second code.
 ## The account's phone
 
 - **E.164** format (`+56912345678`), set at registration, through

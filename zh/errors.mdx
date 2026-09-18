@@ -145,6 +145,7 @@ description: "错误格式与完整的错误码目录"
 | 404 | `verification_not_found` | 账户尚未提交任何验证（在完成入驻前调用 `GET /v1/me/verification/report`） |
 | 409 | `duplicate` | 资源已存在 |
 | 409 | `receipt_not_available` | 技术筛查等待期间或扣款前筛查失败后，payout 暂无回执；请等待最终财务状态 |
+| 403 | `verification_requires_2fa` | 新的自助 KYC/KYB 链接申请需要已确认的 TOTP 或已注册的通行密钥；已有开放链接会在此 gate 之前重新返回。**解决方法：** 注册一个因子后重试 `POST /v1/me/verification/link` |
 | 403 | `verification_required` | 您的账户尚未通过身份验证（个人=KYC，企业=KYB）；获批前不能创建认证 payin、collect、专属入金账户、已保存卡扣款或订阅——请通过 `POST /v1/me/verification/link` 申请审核链接；被动入账和读取仍可用 |
 | 422 | `verification_required` | 该操作需要一项已通过的第三方验证的 `verification_id`（第三方银行账户登记、指定持卡人卡片） |
 | 422 | `verification_not_approved` | 所引用的验证尚未通过 |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.102"
+  version: "2.103"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -6786,8 +6786,7 @@ paths:
       - KYC / KYB
       operationId: createMyVerificationLink
       summary: 请求我的入驻验证链接
-      description: 返回账户自己的身份验证链接(个人账户获得 KYC 链接,企业账户获得 KYB 链接——由账户类型决定)。托管向导涵盖完整流程:表单、文件上传与视频活体检测。免费。若已存在开放链接则返回
-        200;已通过验证的账户返回 409 already_verified。在账户验证通过之前,所有资金流出操作返回 403 verification_required(充值与读取保持可用)。
+      description: 返回账户自己的身份验证链接(个人账户获得 KYC 链接,企业账户获得 KYB 链接——由账户类型决定)。托管向导涵盖完整流程:表单、文件上传与视频活体检测。免费。新的自助申请需要已确认的 TOTP 或已注册的通行密钥；开放链接会在此 gate 前重新返回，API key 自动化仍然豁免。若已存在开放链接则返回 200;已通过验证的账户返回 409 already_verified。在账户验证通过之前,所有资金流出操作返回 403 verification_required(充值与读取保持可用)。
       requestBody:
         required: false
         content:
@@ -6825,7 +6824,20 @@ paths:
                 error: already_verified
                 message: this account already completed its identity verification
         '403':
-          $ref: '#/components/responses/AccountRequired'
+          description: 需要账户凭证，或新的自助验证申请缺少已确认的 TOTP 或已注册的通行密钥。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                account_required:
+                  value:
+                    error: account_required
+                    message: account credential required
+                verification_requires_2fa:
+                  value:
+                    error: verification_requires_2fa
+                    message: enroll an authenticator app (POST /v1/me/totp/enroll) or register a passkey (POST /v1/me/passkeys/register/begin) before requesting identity verification
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/me/verification/report:
