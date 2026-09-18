@@ -8,7 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.105 · 4 versions - September 18, 2026
+## v2.106 · 5 versions - September 18, 2026
+### v2.106
+
+**Changed**
+
+- **My accounts navigation**: the CBPAY hero now leads to three deep-linkable
+  tabs: **Crypto** for deposit wallets, **Fiat** for MX/CLABE, BO/BOB and EUR
+  funding instruments, and **Banking** for USD/EUR bank accounts, Banking
+  virtual IBANs and company wallets. The selected tab is available through
+  `?tab=`.
+
 ### v2.105
 **Added**
 
