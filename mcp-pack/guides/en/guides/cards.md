@@ -155,6 +155,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
     "idempotency_key": "card-v-1",
     "cardholder": {
       "occupation": "52201",
+      "place_of_work": "Andina SpA",
       "salary_usd": 1800
     }
   }'
@@ -245,6 +246,8 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
       "kind": "person",
       "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
       "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "pep": false,
       "salary_usd": 1800
     }
   }'
@@ -259,13 +262,85 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 - The printed name uses `first_name` + `last_name` (22 characters combined
   max) and the response carries `cardholder_kind: "person"` plus the
   `verification_id` used.
+  If the combined name exceeds that printing limit, the API returns
+  `422 cardholder_name_too_long`.
 
+## Issuer fields and AML-derived PEP
+
+The first issuance creates the issuer-side cardholder. The platform validates
+the issuer fields **before charging the issuance fee or creating a hold**.
+When an existing account holder is reused, these fields are not requested
+again.
+
+| Holder | Required at create time | How the value is resolved |
+|---|---|---|
+| Person account holder | `occupation`, `place_of_work`, `salary_usd`, `first_name`, `last_name`, `email` | `occupation` must be a catalog code; `place_of_work` must be non-empty; `salary_usd` must be a non-negative whole number; names must be non-empty and `email` must contain `@` |
+| Company account holder | `kind_of_business`, `registered_name`, `email` | `kind_of_business` must be a catalog code; `registered_name` and `email` are filled from the request, account display name or legal KYB name, and account email fallback; `email` must contain `@` |
+| Designated person | `occupation`, `place_of_work`, `salary_usd`, `first_name`, `last_name`, `email`, `pep` | Catalog code plus non-empty names, `email` containing `@`, and explicit boolean `pep`; account-holder screening is not available for a designated person |
+
+For an account holder, the supported PEP source is the account's AML
+verification screening. The screening gate is mandatory: an explicit
+`pep: true` does **not** bypass `422 screening_required`; once screening
+exists, the value sent to the issuer is the conservative OR of the request
+boolean and the screening result, so a request `false` never overrides a
+screening `true`. The checklist displays the result as
+**`Politically exposed person (screening)`**.
+
+Company contact and legal-representative fields are completed from KYB UBO
+data when the request does not provide them. Company document URLs are
+completed from the KYB file using these fallbacks:
+
+| Issuer field | KYB fallback order |
+|---|---|
+| `certificate_of_good_standing_url` | `certificateOfGoodStanding`, then `legalPresence` |
+| `register_shareholder_url` | `registerShareholder`, `ownershipStructure`, then `controlStructure` |
+| `id_shareholders_url` | `idShareholders`, `uboIdentity`, `identity`, `ownershipStructure`, then `controlStructure` |
+| `address_verification_shareholders_url` | `addressVerificationShareholders`, `uboProofOfAddress`, then `proofOfAddress` |
+
+`business_license_url` has no fallback. If the assembled holder is still
+missing required issuer data, the API returns HTTP `422` with the missing
+keys and no issuer call is made:
+
+```json
+{
+  "error": "issuer_data_incomplete",
+  "message": "missing issuer data: place_of_work"
+}
+```
+
+### Catalogs
+
+Use the live catalogs rather than typing labels or inventing codes:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/catalog/occupations?q=director" \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/cards/catalog/business-activities?q=software" \
+  -H "Authorization: Bearer <token>"
+```
+
+Each response has the shape
+`{"items":[{"code":"...","label":"..."}],"meta":{"retrieved":"..."}}`.
+Send `items[].code` in `occupation` or `kind_of_business`; a label such as
+`"Engineer"` is not accepted as a code. The same code validation is used by
+the firewall checklist, so a value can be present and still be marked
+`ok: false` when it is not in the catalog.
+
+#### What if the account has no AML screening yet?
+The issuer-side PEP value cannot be derived. Complete an approved AML
+verification and retry the same card request; do not guess a PEP value.
+#### What happens to a designated person's PEP value?
+Because a designated person is not the account holder, the request must carry
+an explicit boolean `cardholder.pep`. It has no default.
 ### Availability and issuance errors
 
 | HTTP | Code | Meaning and solution |
 |---|---|---|
 | 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
 | 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+| 422 | `issuer_data_incomplete` | Required issuer fields are missing or invalid after request data, verification autofill and KYB-derived values are assembled. Fix the listed keys in `message` and retry. |
+| 422 | `screening_required` | The account has no AML verification screening from which to derive the account holder's PEP value. Complete screening and retry the same card request. |
 
 ### Availability and issuance errors
 
