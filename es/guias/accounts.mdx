@@ -1,0 +1,127 @@
+---
+title: "Mis cuentas"
+icon: "building-columns"
+description: "Encuentra en un solo lugar tus cuentas receptoras, destinos bancarios y wallets crypto"
+---
+
+import { EnvUrls } from "/snippets/env-urls.jsx";
+
+<EnvUrls lang="es" />
+
+## Un solo lugar para tus datos de recepción
+
+La página **Mis cuentas** es el directorio del portal con los destinos que
+pueden recibir dinero para ti. Ábrela en `/accounts` desde la barra lateral,
+justo debajo de **Depositar**. La página agrupa tu identidad de cobro por QR,
+las cuentas receptoras locales, los destinos de Banking, los instrumentos EUR
+y las wallets crypto de depósito.
+
+No mezcla saldos con significados financieros distintos. Una cuenta bancaria
+sigue siendo una cuenta bancaria, un vIBAN sigue siendo un instrumento de
+ruteo y una wallet crypto de depósito sigue siendo una dirección blockchain.
+Usa las páginas de cada producto para enviar dinero, retirar y consultar la
+cartola.
+
+Si un destino o una lectura devuelve un error, usa el [catálogo público de
+errores](/es/errores) para revisar el código y la acción de recuperación.
+
+```mermaid
+flowchart LR
+  open["Abrir /accounts"] --> qr["QR + alias"]
+  open --> local["Cuentas receptoras locales"]
+  open --> banking["Banking USD"]
+  open --> eur["vIBANes y wallets de empresa EUR"]
+  open --> crypto["Wallets crypto de depósito"]
+  qr --> share["QR / copiar / compartir"]
+  local --> share
+  banking --> share
+  eur --> share
+  crypto --> share
+```
+
+<Steps>
+<Step title="Abre Mis cuentas">
+Selecciona **Mis cuentas** en la barra lateral del portal. La etiqueta
+**Wallets** reemplaza a **Mis wallets**; las wallets y direcciones subyacentes
+no cambian.
+</Step>
+<Step title="Elige el destino receptor">
+Abre la sección que corresponde al rail del pagador. Cada tarjeta muestra el
+estado del destino y los datos que puedes compartir de forma segura.
+</Step>
+<Step title="Copia, muestra o comparte">
+Usa las acciones de la tarjeta para mostrar un QR, copiar el valor receptor o
+compartir los datos. Comparte solo el destino destinado a ese pago: una cuenta
+o dirección queda vinculada a tu cuenta CBPay y no se puede intercambiar con
+el destino de otra cuenta.
+</Step>
+</Steps>
+
+## Qué muestra cada sección
+
+| Sección | Qué ves | Cuándo sirve |
+|---|---|---|
+| **QR y alias** | Tu imagen QR brandeada, el payload de pago y el alias opcional de la cuenta. El QR identifica tu cuenta para recibir transferencias. | Muéstrale el QR a un pagador que use el flujo QR de CBPay. |
+| **Cuentas receptoras locales** | País, moneda, método, instrumento receptor, estado y fecha de creación. Incluye CLABE MXN y destinos de transferencia BOB cuando están habilitados. | Copia la CLABE o el número de cuenta BOB para una transferencia bancaria. |
+| **Banking USD** | La cuenta bancaria USD habilitada, su nombre, moneda y estado, más los requisitos de recepción entregados en su detalle (por ejemplo, número de cuenta, routing o SWIFT). | Envía instrucciones de recepción wire o SWIFT a un pagador. |
+| **vIBAN EUR** | Propósito (`funding_usdt` o `banking_eur`), moneda, estado y el IBAN cuando se asigna. Un instrumento Banking EUR también puede mostrar su `received_total` conciliado. | Enruta fondos EUR al propósito correcto sin confundir una dirección de fondeo con un saldo disponible. |
+| **Wallets de empresa** | Para empresas verificadas: estado de la reserva, referencia de orden, UUID de wallet, IBAN y hora de activación cuando estén disponibles. El detalle entrega el saldo vivo y las operaciones fechadas. | Usa la wallet EUR dedicada para la actividad de Banking empresarial. |
+| **Wallets** | Red, activo, dirección, tipo de wallet, estado de solo recepción y fecha de creación. Los pares de depósito incluyen TRON/USDT, Ethereum/USDT, Ethereum/USDC y Bitcoin/BTC. | Copia una dirección blockchain o muestra su QR antes de enviar un depósito on-chain. |
+
+La página usa los mismos recursos acotados a la cuenta que el resto del
+portal: `GET /v1/me/qr`, `GET /v1/payins/deposit-accounts`,
+`GET /v1/banking/accounts`, `GET /v1/banking/virtual-ibans`,
+`GET /v1/banking/company-wallets` y `GET /v1/crypto/wallets`. Es una
+superficie de navegación y compartir, no un contrato API nuevo.
+
+## Estados vacíos y pendientes honestos
+
+- **Sin QR:** la cuenta no tiene un token QR disponible. La página no inventa
+  un QR ni muestra un placeholder como si pudiera recibir dinero.
+- **Sin CLABE o cuenta BOB:** estos destinos se provisionan solo después de
+  aprobar el KYC de una persona o el KYB de una empresa. Una aprobación
+  pendiente, un corredor no disponible o un claim existente pueden dejar la
+  sección vacía hasta que termine la conciliación.
+- **Banking USD vacío:** completa primero el perfil y la verificación de
+  Banking; luego espera a que una cuenta USD habilitada aparezca. Una cuenta
+  ausente no equivale a saldo cero.
+- **EUR en `pending_approval` o `pending`:** la solicitud sigue en
+  conciliación. No crees otro vIBAN o wallet de empresa solo porque la primera
+  lectura aún no está activa.
+- **Faltan wallets crypto:** una cuenta recién aprobada todavía puede estar
+  provisionando sus wallets de depósito. Actualiza la página y usa el destino
+  cuando aparezca la dirección. Las wallets operativas adicionales pertenecen
+  al producto separado de wallets segregadas.
+
+Si una tarjeta muestra un error temporal de lectura, actualiza esa tarjeta y
+conserva la solicitud o destino existente. No crees una segunda cuenta, wallet
+o vIBAN para adivinar el resultado de una operación ambigua.
+
+## Preguntas frecuentes
+
+<AccordionGroup>
+<Accordion title="¿Todo lo que aparece aquí son wallets?">
+No. La página agrupa una identidad QR, cuentas bancarias, vIBANes, una wallet
+Banking de empresa y direcciones on-chain de depósito. Sus saldos y reglas de
+operación siguen separados.
+</Accordion>
+<Accordion title="¿Por qué mi CLABE o cuenta BOB no apareció al registrarme?">
+El registro por sí solo no provisiona esos destinos. La cuenta debe alcanzar
+KYC o KYB aprobado. Después de la aprobación, el flujo normal de aprobación
+dispara la provisión y operaciones puede conciliar cuentas existentes.
+</Accordion>
+<Accordion title="¿Puedo compartir los datos que aparecen aquí?">
+Sí: comparte el QR o los datos receptores del pago esperado. Nunca compartas
+tokens de sesión, IDs internos ni un destino copiado desde otra cuenta CBPay.
+Verifica país, moneda y método antes de que el pagador envíe.
+</Accordion>
+<Accordion title="¿Por qué un destino aparece pendiente?">
+La provisión o conciliación con el proveedor todavía está en curso. Conserva
+la solicitud y no crees otra con una clave nueva. La página mostrará el valor
+receptor cuando esté disponible.
+</Accordion>
+<Accordion title="¿Cambiar Mis wallets por Wallets cambia mis direcciones?">
+No. Es solo un cambio de etiqueta en el portal. Los IDs, direcciones, activos
+y el comportamiento de solo recepción de las wallets se mantienen.
+</Accordion>
+</AccordionGroup>
