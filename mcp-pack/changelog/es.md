@@ -9,7 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.106 · 5 versiones - 18 de septiembre de 2026
+## v2.107 · 6 versiones - 18 de septiembre de 2026
+### v2.107
+
+**Agregado**
+
+- Las respuestas de payouts, `payout_status_changed`, CSV y comprobantes
+  ahora exponen `uetr` e `imad` como campos aditivos cuando están disponibles.
+- La guía de payouts explica su relación con la confirmación bancaria y el
+  tracker público de transacciones.
+
 ### v2.106
 
 **Cambiado**

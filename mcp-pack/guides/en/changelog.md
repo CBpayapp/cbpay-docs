@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.106 · 5 versions - September 18, 2026
+## v2.107 · 6 versions - September 18, 2026
+### v2.107
+
+**Added**
+
+- Payout responses, `payout_status_changed`, CSV exports and receipts now
+  expose additive `uetr` and `imad` bank-tracking fields when available.
+- The payout guide explains how these identifiers relate to bank confirmation
+  and the public transaction tracker.
+
 ### v2.106
 
 **Changed**

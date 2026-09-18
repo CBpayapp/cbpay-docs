@@ -166,6 +166,27 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 出金 CSV 导出以及对账单中。
 </Note>
 
+### 银行 tracking 标识与实时跟进
+
+Payout 响应和 `payout_status_changed` 会包含两个新增且不绑定具体提供
+商的字段：
+
+```json
+{
+  "bank_reference": "CBF1234567890123",
+  "uetr": "7d2e4b8a-9d11-4d3e-8f40-5c3b1a2e7f90",
+  "imad": ""
+}
+```
+
+- `uetr` 是 UETR/SWIFT gpi 标识，仅在银行为 SWIFT 转账报告该值时出现。
+- `imad` 是国内 wire/ACH 标识，仅在银行报告该值时出现。
+- 两个字段在可用前均为 `""`。CBPay 不会推导或编造这些值。
+
+相同字段也会出现在 payout CSV 和 payout PDF 回执中。公共
+[交易 tracker](/zh/guides/tracking) 显示当前公共状态并链接到同一份回执；
+它不会公开内部的 `manual_dispatch` 术语或合规细节。
+
 ### 从其他余额支付（`settlement_asset`）
 
 默认情况下，扣款来自您的默认结算资产（除非您通过 `PUT /v1/settlement`

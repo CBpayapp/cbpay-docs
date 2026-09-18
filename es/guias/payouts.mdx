@@ -172,9 +172,8 @@ el payout está en curso viene vacío (`""`); cuando el payout queda
 `completed`, lleva el id de transacción asignado por el banco/rail de
 destino. Es el valor que el beneficiario puede usar para cruzar el pago con
 su banco, y también aparece en el webhook `payout_status_changed`, el
-comprobante PDF, el export CSV de payouts y la cartola.
+comprobante PDF, el export CSV de payouts y la cartola. Las respuestas, CSV, webhooks y comprobantes también incluyen `uetr` (UETR/SWIFT gpi) e `imad` (wire/ACH doméstico), vacíos hasta que el banco los reporte; usa el [tracker público](/es/guias/seguimiento) para el estado vivo y el mismo comprobante.
 </Note>
-
 ### Pagar desde otro saldo (`settlement_asset`)
 
 Por defecto el débito sale de tu asset de settlement predeterminado (USDT

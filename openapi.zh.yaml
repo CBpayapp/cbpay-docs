@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.106"
+  version: "2.107"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -22430,6 +22430,12 @@ components:
         bank_reference:
           type: string
           description: 银行/支付渠道的交易参考号(受益人可用它与银行核对付款)。US ACH/wire/SWIFT 在创建时立即返回 CBF 参考号；其他通道在渠道报告之前为空。
+        uetr:
+          type: string
+          description: 银行在执行后报告的 UETR/SWIFT gpi tracking 标识；可用前为空。
+        imad:
+          type: string
+          description: 银行在执行后报告的国内 wire/ACH tracking 标识；可用前为空。
         created_at:
           type: string
           format: date-time

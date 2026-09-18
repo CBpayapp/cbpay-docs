@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.106"
+  version: "2.107"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -23052,6 +23052,12 @@ components:
         bank_reference:
           type: string
           description: Referencia de la transaccion en el banco/rail (ej. el id de transferencia del banco, con el que el beneficiario cruza el pago con su banco). En US ACH/wire/SWIFT es la referencia CBF que vuelve al crear; en el resto de corredores queda vacia hasta que el rail la reporta.
+        uetr:
+          type: string
+          description: Identificador UETR/SWIFT gpi reportado por el banco después de la ejecución; vacío hasta estar disponible.
+        imad:
+          type: string
+          description: Identificador doméstico wire/ACH reportado por el banco después de la ejecución; vacío hasta estar disponible.
         created_at:
           type: string
           format: date-time

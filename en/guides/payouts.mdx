@@ -170,9 +170,8 @@ payout stays `processing` until the bank confirms). On other corridors it
 stays empty (`""`) until the payout is `completed`. It is the value the
 beneficiary can use to cross-check the payment with their bank, and it also
 appears in the `payout_status_changed` webhook, the PDF receipt, the payouts
-CSV export and the statement.
+CSV export and the statement. Payout responses, webhooks, CSV and receipts also expose `uetr` (UETR/SWIFT gpi) and `imad` (domestic wire/ACH), both empty until reported by the bank; use the [public transaction tracker](/en/guides/tracking) for live status and the same receipt.
 </Note>
-
 ### Paying from another balance (`settlement_asset`)
 
 By default the debit comes from your default settlement asset (USDT unless
