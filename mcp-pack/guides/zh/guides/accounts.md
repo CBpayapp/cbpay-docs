@@ -10,8 +10,8 @@ source_url: https://docs.cbpayapp.com/zh/guides/accounts
 ## 集中查看收款信息
 
 **我的账户**是账户门户中的收款目的地目录。打开 `/accounts`，它位于
-侧边栏 **存款** 的下方。页面会集中显示 QR 收款身份、本地收款账户、
-Banking 目的地、EUR 工具和加密货币充值钱包。
+侧边栏 **存款** 的下方。页面会把账户身份、加密货币充值钱包、法币
+收款账户和 Banking 目的地集中在一个视图中。
 
 页面不会把含义不同的余额合并在一起。银行账户仍是银行账户，虚拟 IBAN
 仍是路由工具，加密货币充值钱包仍是区块链地址。发送资金、提现和查看
@@ -22,57 +22,66 @@ Banking 目的地、EUR 工具和加密货币充值钱包。
 
 ## CBPAY hero 与三个账户选项卡
 
-页面顶部显示账户的 **CBPAY** hero。QR 和 alias 操作始终位于顶部：可以
-显示 QR、复制收款 payload，或分享账户的收款身份。
+页面顶部显示账户的 **CBPAY** hero。账户有资料照片和姓名时会显示它们，
+同时显示永久 alias 和账户 QR。Hero 使用现有的 `GET /v1/me/qr` 响应；
+账户没有 QR 时不会伪造。
 
 hero 下方有三个选项卡：
 
-- **Crypto**（`?tab=crypto`）：链上加密货币充值钱包。
-- **Fiat**（`?tab=fiat`）：MX/CLABE、BO/BOB 等法币工具，以及 EUR 充值
-  虚拟 IBAN。
-- **Banking**（`?tab=banking`）：USD/EUR Banking 账户、Banking 虚拟
-  IBAN 和 EUR 企业 wallet。
+- **Crypto**（`?tab=crypto`）：先选择加密货币，再选择网络，只查看所选
+  充值钱包，并显示带品牌标识的 QR。
+- **Fiat**（`?tab=fiat`）：选择国家，查看该国家每个账户的**转账资料卡**。
+  Fiat 资料卡不会显示 QR。
+- **Banking**（`?tab=banking`）：选择国家，查看 Banking 账户。美国账户
+  有 **ACH**、**Wire** 和 **SWIFT** 子选项卡；欧洲显示 Banking 虚拟
+  IBAN 和企业 wallet。
 
-当前选项卡会写入 URL，因此可以直接链接到
-`/accounts?tab=crypto`、`/accounts?tab=fiat` 或
-`/accounts?tab=banking`。没有 `tab` 时，页面打开默认选项卡，但三个分区
-仍然可用。
+选项卡和目的地会反映在 URL 中：
+
+- `/accounts?tab=crypto&sel=USDT:tron`
+- `/accounts?tab=fiat&sel=BO`
+- `/accounts?tab=banking&sel=US:<account_id>:ach`
+- `/accounts?tab=banking&sel=EU`
+
+未知或格式错误的值会安全地回退到默认值；不会暴露其他账户，也不会创建
+新的目的地。
 
 ```mermaid
 flowchart LR
-  open["打开 /accounts"] --> qr["QR + alias"]
+  open["打开 /accounts"] --> hero["照片 + 姓名 + alias + 账户 QR"]
   open --> tabs["Crypto / Fiat / Banking 选项卡"]
-  tabs --> crypto["Crypto：充值钱包"]
-  tabs --> fiat["Fiat：CLABE、BOB、充值 IBAN"]
-  tabs --> banking["Banking：USD、EUR、vIBAN、企业 wallet"]
-  qr --> share["QR / 复制 / 分享"]
-  crypto --> share
-  fiat --> share
-  banking --> share
+  tabs --> crypto["货币 → 网络 → 钱包资料卡"]
+  tabs --> fiat["国家 → 转账资料卡"]
+  tabs --> banking["国家 → 账户 → ACH/Wire/SWIFT"]
+  crypto --> qr["品牌 QR / 复制 / 分享"]
+  banking --> qr
+  fiat --> copy["复制完整资料卡"]
 ```
 
 ### 打开我的账户
 
 在门户侧边栏选择 **我的账户**。**Wallets** 是原来 **我的钱包** 的新
 显示名称；底层钱包和地址不变。
-### 选择一个选项卡
+### 选择选项卡和目的地
 
-选择 **Crypto**、**Fiat** 或 **Banking**。可以使用 `?tab=` deep-link
-保存当前视图，之后直接返回需要的分组。
-### 复制、显示或分享
+选择 **Crypto**、**Fiat** 或 **Banking**，然后选择页面显示的货币、国家、
+账户或美国通道。可以使用 `?tab=&sel=` deep-link 保存当前视图。
+### 复制或分享正确的信息
 
-使用卡片操作显示 QR、复制收款值或分享收款信息。只分享本次付款对应的
-目的地：账户或地址绑定到你的 CBPay 账户，不能与其他账户互换。
+Crypto 和 Banking 资料卡可以显示带组织品牌标识的 QR、复制单个字段或
+分享所选通道。Fiat 资料卡没有 QR：使用**复制全部**复制完整的转账资料，
+包括持有人、银行、可用时的 NIT 和收款号码。
 ## 每个选项卡显示什么
 
 | 选项卡 | 包含内容 | 可以分享什么 |
 |---|---|---|
-| **Crypto** | 充值钱包的网络、资产、地址、钱包类型、只接收状态和创建时间。包括 TRON/USDT、Ethereum/USDT、Ethereum/USDC 与 Bitcoin/BTC。 | 区块链地址或其 QR。 |
-| **Fiat** | 法币收款工具的国家、币种、方式、instrument、状态和创建时间。包括 MXN CLABE、BO/BOB 目的地和 EUR 充值虚拟 IBAN（`purpose: funding_usdt`）。 | CLABE、BOB 账户号码或充值 IBAN，分享前先确认状态。 |
-| **Banking** | 已启用的 USD/EUR Banking 账户及其收款要求、Banking 虚拟 IBAN（`purpose: banking_eur`）和 EUR 企业 wallet。详情可能包括账户/IBAN、routing 或 SWIFT、状态、wallet UUID 和激活时间。 | 银行账户数据、Banking EUR IBAN 或已激活的企业 wallet 目的地。 |
+| **Crypto** | 先选择资产，再选择网络。资料卡只显示所选钱包、地址、网络、只接收状态和创建时间。包括 TRON/USDT、Ethereum/USDT、Ethereum/USDC 与 Bitcoin/BTC。 | 所选区块链地址或带组织标识的 QR。 |
+| **Fiat** | 选择 **MX**、**BO** 或 **EU**。MX/BO 账户显示持有人、返回时的 `bank_name`、BO 返回时的 `merchant_nit`，以及 CLABE 或账户号码。EU 显示充值虚拟 IBAN（`purpose: funding_usdt`）。Fiat **没有 QR**。 | 使用**复制全部**复制完整转账资料，或确认状态后分享充值 IBAN。 |
+| **Banking** | 选择 **US** 或 **EU**。US 账户按 ACH、Wire 和 SWIFT 子选项卡显示可用的收款字段。EU 显示 Banking 虚拟 IBAN（`purpose: banking_eur`）和 EUR 企业 wallet。资料卡在有数据时显示账户/IBAN、routing 或 SWIFT、状态和激活信息。 | 所选 Banking 通道（有数据时包含品牌 QR），或已激活的 EUR 目的地。 |
 
 QR 与 alias 仍显示在选项卡上方的 CBPAY hero 中。QR 用于识别账户并接收
-转账，alias 是可选项。
+转账，alias 是可选项。页面只显示 API 返回的字段，不会伪造持有人、银行、
+NIT 或账户号码。
 
 页面使用门户其他位置相同的账户范围资源：
 `GET /v1/me/qr`、`GET /v1/payins/deposit-accounts`、
@@ -82,8 +91,10 @@ QR 与 alias 仍显示在选项卡上方的 CBPAY hero 中。QR 用于识别账�
 
 ## 诚实的空状态与处理中状态
 
-- **没有 QR：**账户没有可用 QR token。页面不会伪造 QR，也不会把占位图
-  当作可收款目的地。
+- **没有 hero QR：**账户没有可用 QR token。页面不会伪造 QR，也不会把
+  占位图当作可收款目的地。
+- **Fiat 按设计没有 QR：**请使用转账资料卡和**复制全部**。Fiat 中没有
+  QR 不代表配置失败。
 - **没有 CLABE 或 BOB 账户：**本地收款目的地只有在个人 KYC 或企业 KYB
   审核通过后才会配置。审核进行中、走廊未启用或已有 claim 时，分区可能
   暂时为空，直到 reconcile 完成。
@@ -107,12 +118,16 @@ QR 与 alias 仍显示在选项卡上方的 CBPAY hero 中。QR 用于识别账�
 仅完成注册不会配置这些目的地。账户必须先通过 KYC 或 KYB。审核通过
 后，正常审批流程会触发配置；现有账户也可以由运营人员进行 reconcile。
 #### 可以分享这里显示的信息吗？
-可以，分享预期付款对应的 QR 或收款信息。不要分享 session token、内部
-ID，也不要从其他 CBPay 账户复制目的地。付款人发送前请确认国家、币种
-和方式。
+可以，分享所选 Crypto 或 Banking QR，或者使用**复制全部**复制 Fiat
+转账资料卡。不要分享 session token、内部 ID，也不要从其他 CBPay 账户
+复制目的地。付款人发送前请确认国家、币种和方式。
 #### 为什么目的地显示 pending？
 配置或与 provider 的 reconcile 仍在进行。保留原请求，不要使用新 key
 创建第二个请求。目的地可用后页面才会显示收款值。
 #### 把“我的钱包”改成 Wallets 会改变地址吗？
 不会。这只是门户显示名称变化。钱包 ID、地址、资产和只接收行为都保持
 不变。
+#### 为什么没有显示银行名称或 BO 商户 NIT？
+这些字段是可选的。MX 收款通道返回 `bank_name` 时页面才显示；BO/BOB
+通道返回 `merchant_nit` 时页面才显示。字段缺失时不会猜测或伪造值，只
+复制 API 实际返回的信息。

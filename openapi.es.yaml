@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.108"
+  version: "2.109"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -14274,6 +14274,8 @@ paths:
                 instrument: '734180000151000006'
                 details:
                   clabe: '734180000151000006'
+                  alias: CBPay Example MXN Account
+                  bank_name: Example Receiving Bank
                   status: active
                 status: active
                 created_at: '2026-07-07T12:00:00Z'
@@ -23754,6 +23756,19 @@ components:
           description: El destino de depósito a compartir con los pagadores (ej. la CLABE).
         details:
           type: object
+          properties:
+            alias:
+              type: string
+              description: Alias opcional de la cuenta receptora devuelto por el riel configurado.
+              example: CBPay Example MXN Account
+            merchant_nit:
+              type: string
+              description: NIT mercantil opcional de las cuentas receptoras BO/BOB.
+              example: '123456789'
+            bank_name:
+              type: string
+              description: Nombre opcional del banco receptor de las cuentas MX/MXN.
+              example: Example Receiving Bank
           additionalProperties: true
         status:
           type: string

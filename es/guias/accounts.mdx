@@ -12,9 +12,9 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 La página **Mis cuentas** es el directorio del portal con los destinos que
 pueden recibir dinero para ti. Ábrela en `/accounts` desde la barra lateral,
-justo debajo de **Depositar**. La página agrupa tu identidad de cobro por QR,
-las cuentas receptoras locales, los destinos de Banking, los instrumentos EUR
-y las wallets crypto de depósito.
+justo debajo de **Depositar**. La página reúne tu identidad de cuenta, las
+wallets crypto de depósito, las cuentas receptoras fiat y los destinos de
+Banking en una sola vista.
 
 No mezcla saldos con significados financieros distintos. Una cuenta bancaria
 sigue siendo una cuenta bancaria, un vIBAN sigue siendo un instrumento de
@@ -27,34 +27,41 @@ errores](/es/errores) para revisar el código y la acción de recuperación.
 
 ## Hero CBPAY y tres pestañas de cuentas
 
-La página abre con un hero **CBPAY** para tu cuenta. Mantiene disponibles las
-acciones de QR y alias: mostrar el QR, copiar el payload receptor o compartir
-la identidad de recepción de la cuenta.
+La página abre con un hero **CBPAY** para tu cuenta. Muestra la foto y el
+nombre del titular cuando están disponibles, además del alias permanente y el
+QR de la cuenta. El hero usa la respuesta existente de `GET /v1/me/qr`; no
+inventa un QR cuando la cuenta no tiene uno.
 
 Debajo del hero hay tres pestañas:
 
-- **Crypto** (`?tab=crypto`): wallets crypto de depósito on-chain.
-- **Fiat** (`?tab=fiat`): instrumentos fiat como MX/CLABE y BO/BOB, además de
-  los vIBANes EUR de fondeo.
-- **Banking** (`?tab=banking`): cuentas Banking USD/EUR, vIBANes Banking y
-  wallets EUR de empresa.
+- **Crypto** (`?tab=crypto`): elige una moneda y luego una red para ver solo
+  la wallet de depósito seleccionada, con un QR brandeado.
+- **Fiat** (`?tab=fiat`): elige un país y ve la ficha de **datos para
+  transferir** de cada cuenta de ese país. Las fichas Fiat nunca muestran QR.
+- **Banking** (`?tab=banking`): elige un país y ve las cuentas Banking.
+  Estados Unidos tiene subpestañas **ACH**, **Wire** y **SWIFT**; Europa
+  muestra vIBANes Banking y wallets de empresa.
 
-La pestaña seleccionada queda reflejada en la URL. Puedes enlazar
-directamente a `/accounts?tab=crypto`, `/accounts?tab=fiat` o
-`/accounts?tab=banking`. Sin `tab`, la página abre su pestaña por defecto y
-mantiene disponibles las tres agrupaciones.
+La pestaña y el instrumento seleccionado quedan reflejados en la URL:
+
+- `/accounts?tab=crypto&sel=USDT:tron`
+- `/accounts?tab=fiat&sel=BO`
+- `/accounts?tab=banking&sel=US:<account_id>:ach`
+- `/accounts?tab=banking&sel=EU`
+
+Los valores desconocidos o malformados vuelven al valor seguro por defecto;
+nunca exponen otra cuenta ni crean un destino.
 
 ```mermaid
 flowchart LR
-  open["Abrir /accounts"] --> qr["QR + alias"]
+  open["Abrir /accounts"] --> hero["Foto + nombre + alias + QR"]
   open --> tabs["Pestañas Crypto / Fiat / Banking"]
-  tabs --> crypto["Crypto: wallets de depósito"]
-  tabs --> fiat["Fiat: CLABE, BOB, IBAN de fondeo"]
-  tabs --> banking["Banking: USD, EUR, vIBAN, wallet empresa"]
-  qr --> share["QR / copiar / compartir"]
-  crypto --> share
-  fiat --> share
-  banking --> share
+  tabs --> crypto["Moneda → red → ficha wallet"]
+  tabs --> fiat["País → ficha datos para transferir"]
+  tabs --> banking["País → cuenta → ACH/Wire/SWIFT"]
+  crypto --> qr["QR brandeado / copiar / compartir"]
+  banking --> qr
+  fiat --> copy["Copiar ficha completa"]
 ```
 
 <Steps>
@@ -63,15 +70,17 @@ Selecciona **Mis cuentas** en la barra lateral del portal. La etiqueta
 **Wallets** reemplaza a **Mis wallets**; las wallets y direcciones subyacentes
 no cambian.
 </Step>
-<Step title="Elige una pestaña">
-Selecciona **Crypto**, **Fiat** o **Banking**. Puedes guardar la vista actual
-con su deep-link `?tab=` para volver directamente al grupo que necesitas.
+<Step title="Elige pestaña y selección">
+Selecciona **Crypto**, **Fiat** o **Banking**, y luego la moneda, país,
+cuenta o riel de Estados Unidos que muestra la página. Puedes guardar la vista
+actual con su deep-link `?tab=&sel=`.
 </Step>
-<Step title="Copia, muestra o comparte">
-Usa las acciones de la tarjeta para mostrar un QR, copiar el valor receptor o
-compartir los datos. Comparte solo el destino destinado a ese pago: una cuenta
-o dirección queda vinculada a tu cuenta CBPay y no se puede intercambiar con
-el destino de otra cuenta.
+<Step title="Copia o comparte los datos correctos">
+Las fichas Crypto y Banking pueden mostrar un QR con el símbolo de branding
+de la organización, copiar valores individuales o compartir el riel
+seleccionado. Las fichas Fiat no tienen QR: usa **Copiar todo** para copiar
+la ficha completa, con titular, banco, NIT cuando venga informado y número
+receptor.
 </Step>
 </Steps>
 
@@ -79,12 +88,14 @@ el destino de otra cuenta.
 
 | Pestaña | Qué contiene | Qué puedes compartir |
 |---|---|---|
-| **Crypto** | Wallets de depósito con red, activo, dirección, tipo, estado de solo recepción y fecha de creación. Incluye TRON/USDT, Ethereum/USDT, Ethereum/USDC y Bitcoin/BTC. | Una dirección blockchain o su código QR. |
-| **Fiat** | Instrumentos receptores con país, moneda, método, instrumento, estado y fecha de creación. Incluye CLABE MXN, destinos BO/BOB y vIBANes EUR de fondeo (`purpose: funding_usdt`). | La CLABE, el número de cuenta BOB o el IBAN de fondeo, después de revisar su estado. |
-| **Banking** | Cuentas bancarias USD/EUR habilitadas con sus requisitos de recepción, vIBANes Banking (`purpose: banking_eur`) y wallets EUR de empresa. El detalle puede incluir cuenta/IBAN, routing o SWIFT, estado, UUID y activación. | Los datos de la cuenta bancaria, el IBAN Banking EUR o el destino activo de la wallet de empresa. |
+| **Crypto** | Elige un activo y luego una red. La ficha muestra solo esa wallet, su dirección, red, estado de solo recepción y fecha de creación. Incluye TRON/USDT, Ethereum/USDT, Ethereum/USDC y Bitcoin/BTC. | La dirección blockchain seleccionada o un QR con el símbolo de la organización. |
+| **Fiat** | Elige **MX**, **BO** o **EU**. Las cuentas MX/BO muestran una ficha con titular, `bank_name` cuando viene informado, `merchant_nit` para BO cuando viene informado y CLABE o número de cuenta. EU muestra el vIBAN de fondeo (`purpose: funding_usdt`). Fiat **no tiene QR**. | La ficha completa, copiada con **Copiar todo**, o el IBAN de fondeo después de revisar su estado. |
+| **Banking** | Elige **US** o **EU**. Las cuentas US se agrupan en subpestañas ACH, Wire y SWIFT usando los datos receptores disponibles. EU muestra vIBANes Banking (`purpose: banking_eur`) y wallets EUR de empresa. Las fichas muestran cuenta/IBAN, routing o SWIFT, estado y activación cuando existen. | El riel Banking seleccionado, incluido su QR brandeado cuando esté disponible, o el destino EUR activo. |
 
 El QR y el alias siguen disponibles en el hero CBPAY sobre las pestañas. El
-QR identifica tu cuenta para recibir transferencias y el alias es opcional.
+QR identifica tu cuenta para recibir transferencias y el alias es opcional. La
+página solo muestra campos que devuelve la API; nunca fabrica titular, banco,
+NIT ni número de cuenta.
 
 La página usa los mismos recursos acotados a la cuenta que el resto del
 portal: `GET /v1/me/qr`, `GET /v1/payins/deposit-accounts`,
@@ -94,8 +105,10 @@ superficie de navegación y compartir, no un contrato API nuevo.
 
 ## Estados vacíos y pendientes honestos
 
-- **Sin QR:** la cuenta no tiene un token QR disponible. La página no inventa
-  un QR ni muestra un placeholder como si pudiera recibir dinero.
+- **Sin QR del hero:** la cuenta no tiene un token QR disponible. La página no
+  inventa un QR ni muestra un placeholder como si pudiera recibir dinero.
+- **Fiat no tiene QR por diseño:** usa la ficha de datos para transferir y
+  **Copiar todo**. La ausencia de QR en Fiat no es un error de provisión.
 - **Sin CLABE o cuenta BOB:** estos destinos se provisionan solo después de
   aprobar el KYC de una persona o el KYB de una empresa. Una aprobación
   pendiente, un corredor no disponible o un claim existente pueden dejar la
@@ -129,9 +142,10 @@ KYC o KYB aprobado. Después de la aprobación, el flujo normal de aprobación
 dispara la provisión y operaciones puede conciliar cuentas existentes.
 </Accordion>
 <Accordion title="¿Puedo compartir los datos que aparecen aquí?">
-Sí: comparte el QR o los datos receptores del pago esperado. Nunca compartas
-tokens de sesión, IDs internos ni un destino copiado desde otra cuenta CBPay.
-Verifica país, moneda y método antes de que el pagador envíe.
+Sí: comparte el QR Crypto o Banking seleccionado, o la ficha Fiat copiada con
+**Copiar todo**. Nunca compartas tokens de sesión, IDs internos ni un destino
+copiado desde otra cuenta CBPay. Verifica país, moneda y método antes de que el
+pagador envíe.
 </Accordion>
 <Accordion title="¿Por qué un destino aparece pendiente?">
 La provisión o conciliación con el proveedor todavía está en curso. Conserva
@@ -141,5 +155,11 @@ receptor cuando esté disponible.
 <Accordion title="¿Cambiar Mis wallets por Wallets cambia mis direcciones?">
 No. Es solo un cambio de etiqueta en el portal. Los IDs, direcciones, activos
 y el comportamiento de solo recepción de las wallets se mantienen.
+</Accordion>
+<Accordion title="¿Por qué falta el banco o el NIT mercantil de BO?">
+Son campos opcionales. `bank_name` se muestra cuando lo devuelve el riel
+receptor de MX y `merchant_nit` cuando lo devuelve el riel BO/BOB. Si falta un
+campo opcional, la página no lo reemplaza por un valor inventado; copia solo
+los datos que devolvió la API.
 </Accordion>
 </AccordionGroup>

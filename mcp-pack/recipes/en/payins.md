@@ -232,20 +232,32 @@ Response `201`:
   "currency": "MXN",
   "method": "bank_transfer",
   "instrument": "734180000151000006",
+  "details": {
+    "alias": "CBPay Example MXN Account",
+    "bank_name": "Example Receiving Bank"
+  },
   "status": "active"
 }
 ```
 
 `instrument` is the CLABE you share with your payers. Creation is free;
-each deposit pays the regular payin fee. List your accounts with
-`GET /v1/payins/deposit-accounts`.
-**Company accounts and multiple CLABEs.** A company account can create
-multiple `MX`/`MXN`/`bank_transfer` deposit accounts. Each CLABE is a
-separate immutable destination, but every destination remains bound to
-the same CBPay account; incoming transfers are credited by the
+each deposit pays the regular payin fee. The optional `details.alias`,
+`details.bank_name` and `details.merchant_nit` fields are returned when the
+receiving rail provides them (`merchant_nit` is used by BO/BOB accounts).
+List your accounts with `GET /v1/payins/deposit-accounts`.
+**Company accounts and multiple deposit destinations.** A company account can
+create multiple immutable deposit accounts in enabled additional corridors.
+The current additional corridors are `MX`/`MXN`/`bank_transfer` (CLABE) and
+`BO`/`BOB`/`bank_transfer` (BOB receiving account). Every destination remains
+bound to the same CBPay account; incoming transfers are credited by the
 destination instrument. Person accounts keep one deposit account per
 corridor, and the same one-per-corridor rule applies to other or legacy
 corridors.
+
+Funding-account provisioning starts only after the account's own verification
+is approved: KYC for a person or KYB for a company. Registration does not
+create a deposit account. The provider-facing alias is generated server-side
+from the verified account name.
 
 For a company CLABE, send an idempotency key in the body or header:
 
@@ -257,10 +269,13 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
   -d '{"country":"MX","currency":"MXN","method":"bank_transfer","idempotency_key":"company-clabe-001"}'
 ```
 
-A new key returns `201` and a new CLABE. Replaying the same key returns
+A new key returns `201` and a new destination for the selected corridor.
+Replaying the same key returns
 `200` with the original instrument and `idempotency_hit: true`; a
 concurrent in-flight replay can return `409 idempotency_conflict`.
-Creation is free; subsequent payins keep the normal payin fee. List
+Creation is free; subsequent payins keep the normal payin fee. The BOB
+destination is receive-only and is reconciled by polling; it does not create
+or select a payout routing source account. List
 destinations with `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 
 You can also use a one-off **announced bank transfer**
@@ -298,10 +313,11 @@ is no longer pending and recoverable it returns the same `422`; use
 #### Bolivia
 
 **Dedicated BOB receiving account**: for the fixed-account flow, use the
-[BOB virtual accounts guide](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts). It returns one
-stable `instrument` per account; the payer transfers BOB to that number and
-the credit is detected by polling. No announcement or payer reference is
-required.
+[BOB virtual accounts guide](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts). A person
+account receives one stable `instrument` for the corridor; a company can
+create additional BOB instruments with distinct idempotency keys. The payer
+transfers BOB to the selected number and the credit is detected by polling.
+No announcement or payer reference is required.
 
 **Collection QR** (the local interoperable standard): you generate the QR
 and your customer scans it with their banking app.

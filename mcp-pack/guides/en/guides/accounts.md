@@ -11,8 +11,9 @@ source_url: https://docs.cbpayapp.com/en/guides/accounts
 
 The **My accounts** page is the account portal's directory of destinations
 that can receive money for you. Open `/accounts` from the sidebar, directly
-below **Deposit**. The page groups your QR payment identity, local receiving
-accounts, Banking destinations, EUR instruments and crypto deposit wallets.
+below **Deposit**. The page keeps your account identity, crypto deposit
+wallets, fiat receiving accounts and Banking destinations in one visual
+directory.
 
 It does not merge balances that have different financial meanings. A bank
 account remains a bank account, a virtual IBAN remains a routing instrument,
@@ -24,34 +25,42 @@ If a destination or read operation returns an error, use the public
 
 ## CBPAY hero and three account tabs
 
-The page opens with a **CBPAY** hero for your account. It keeps the QR and
-alias actions immediately available: display the QR, copy the receiving
-payload or share the account's receive identity.
+The page opens with a **CBPAY** hero for your account. It shows the account
+owner's photo and name when available, plus the permanent alias and the
+account QR. The hero uses the existing `GET /v1/me/qr` response; it does not
+invent a QR when the account has none.
 
 Below the hero, the page has three tabs:
 
-- **Crypto** (`?tab=crypto`): deposit wallets for on-chain assets.
-- **Fiat** (`?tab=fiat`): local fiat instruments such as MX/CLABE and BO/BOB,
-  plus EUR funding virtual IBANs.
-- **Banking** (`?tab=banking`): USD/EUR Banking accounts, Banking virtual
-  IBANs and EUR company wallets.
+- **Crypto** (`?tab=crypto`): choose a crypto asset, then a network, and view
+  only the selected deposit wallet with a branded QR.
+- **Fiat** (`?tab=fiat`): choose a country and view the receiving
+  **transfer-details sheet** for each account in that country. Fiat sheets
+  never show a QR.
+- **Banking** (`?tab=banking`): choose a country and view Banking accounts.
+  United States accounts have the **ACH**, **Wire** and **SWIFT** sub-tabs;
+  Europe shows Banking virtual IBANs and company wallets.
 
-The selected tab is reflected in the URL, so you can link directly to
-`/accounts?tab=crypto`, `/accounts?tab=fiat` or `/accounts?tab=banking`.
-Without `tab`, the page opens on its default tab and still keeps all three
-sections available.
+The selected tab and instrument are reflected in the URL. Examples:
+
+- `/accounts?tab=crypto&sel=USDT:tron`
+- `/accounts?tab=fiat&sel=BO`
+- `/accounts?tab=banking&sel=US:<account_id>:ach`
+- `/accounts?tab=banking&sel=EU`
+
+Unknown or malformed values fall back to the safe default; they never expose
+another account or create a destination.
 
 ```mermaid
 flowchart LR
-  open["Open /accounts"] --> qr["QR + alias"]
+  open["Open /accounts"] --> hero["Photo + name + alias + account QR"]
   open --> tabs["Crypto / Fiat / Banking tabs"]
-  tabs --> crypto["Crypto: deposit wallets"]
-  tabs --> fiat["Fiat: CLABE, BOB, funding IBAN"]
-  tabs --> banking["Banking: USD, EUR, vIBAN, company wallet"]
-  qr --> share["QR / copy / share"]
-  crypto --> share
-  fiat --> share
-  banking --> share
+  tabs --> crypto["Asset → network → wallet card"]
+  tabs --> fiat["Country → transfer-details sheet"]
+  tabs --> banking["Country → account → ACH/Wire/SWIFT"]
+  crypto --> qr["Branded QR / copy / share"]
+  banking --> qr
+  fiat --> copy["Copy full transfer sheet"]
 ```
 
 ### Open My accounts
@@ -59,26 +68,29 @@ flowchart LR
 Select **My accounts** from the portal sidebar. The **Wallets** label is the
 new name for the area previously shown as **My wallets**; the underlying
 wallets and addresses are unchanged.
-### Choose a tab
+### Choose a tab and selection
 
-Select **Crypto**, **Fiat** or **Banking**. You can bookmark the current view
-with its `?tab=` deep-link when you need to return to a specific group.
-### Copy, show or share
+Select **Crypto**, **Fiat** or **Banking**, then choose the asset, country,
+account or US rail shown by the page. You can bookmark the current view with
+its `?tab=&sel=` deep-link.
+### Copy or share the right details
 
-Use the card actions to display a QR code, copy the destination value or share
-the receiving details. Share only the destination intended for that payment:
-an account or address is bound to your CBPay account and is not interchangeable
-with another account's destination.
+Crypto and Banking cards can display a QR with the organization's branding
+symbol, copy individual values or share the selected rail. Fiat cards have no
+QR: use **Copy all** to copy the complete transfer-details sheet, including
+the holder, bank, NIT when supplied and receiving number.
 ## What each tab shows
 
 | Tab | What it contains | What you can share |
 |---|---|---|
-| **Crypto** | Deposit wallets with network, asset, address, wallet type, receive-only status and creation time. Supported pairs include TRON/USDT, Ethereum/USDT, Ethereum/USDC and Bitcoin/BTC. | A blockchain address or its QR code. |
-| **Fiat** | Local receiving instruments with country, currency, method, instrument, status and creation time. This includes MXN CLABE, BO/BOB bank-transfer destinations and EUR funding virtual IBANs (`purpose: funding_usdt`). | The CLABE, BOB account number or funding IBAN, after checking its status. |
-| **Banking** | Enabled USD/EUR bank accounts with their receiving requirements, Banking virtual IBANs (`purpose: banking_eur`) and EUR company wallets. Details can include account number/IBAN, routing or SWIFT, status, wallet UUID and activation time. | The banking account details, Banking EUR IBAN or active company-wallet destination. |
+| **Crypto** | Pick an asset and then a network. The selected card shows only that wallet, its address, network, receive-only status and creation time. Supported pairs include TRON/USDT, Ethereum/USDT, Ethereum/USDC and Bitcoin/BTC. | The selected blockchain address or a QR with the organization symbol. |
+| **Fiat** | Pick **MX**, **BO** or **EU**. MX/BO accounts show a transfer-details sheet with the holder, `bank_name` when returned, `merchant_nit` for BO when returned, and the CLABE or account number. EU shows the funding virtual IBAN (`purpose: funding_usdt`). Fiat has **no QR**. | The complete transfer-details sheet, copied with **Copy all**, or the funding IBAN after checking its status. |
+| **Banking** | Pick **US** or **EU**. US accounts are grouped under ACH, Wire and SWIFT sub-tabs using the available receiving fields. EU shows Banking virtual IBANs (`purpose: banking_eur`) and EUR company wallets. Cards show account/IBAN, routing or SWIFT, status and activation details when available. | The selected Banking rail, including its branded QR when available, or the active EUR destination. |
 
 The QR and alias remain available in the CBPAY hero above the tabs. The QR
-identifies your account to receive transfers and the alias is optional.
+identifies your account to receive transfers and the alias is optional. A
+field is shown only when the API returns it; the page never fabricates a
+holder, bank, NIT or account value.
 
 The page uses the same account-scoped resources as the rest of the portal:
 `GET /v1/me/qr`, `GET /v1/payins/deposit-accounts`,
@@ -88,8 +100,10 @@ navigation and sharing surface, not a new API contract.
 
 ## Honest empty and pending states
 
-- **No QR:** the account has no QR token available. The page does not invent a
-  QR or display a placeholder as if it could receive money.
+- **No hero QR:** the account has no QR token available. The page does not
+  invent a QR or display a placeholder as if it could receive money.
+- **Fiat has no QR by design:** use the transfer-details sheet and **Copy
+  all**. The absence of a QR in Fiat is not a provisioning error.
 - **No CLABE or BOB account:** local deposit destinations are provisioned only
   after the account's KYC (person) or KYB (company) is approved. A pending
   approval, an unavailable corridor or an existing claim can leave this
@@ -121,9 +135,10 @@ first reach approved KYC or KYB. After approval, provisioning is triggered
 through the normal approval flow and existing accounts can be reconciled by
 operations.
 #### Can I share the values shown here?
-Yes, share the QR or the receiving details for the payment you expect. Never
-share session tokens, internal IDs or a destination copied from another CBPay
-account. Verify the country, currency and method before the payer sends.
+Yes, share the selected crypto or Banking QR, or the Fiat transfer-details
+sheet copied with **Copy all**. Never share session tokens, internal IDs or a
+destination copied from another CBPay account. Verify the country, currency
+and method before the payer sends.
 #### Why does a destination say pending?
 Provisioning or provider reconciliation is still in progress. Keep the
 destination request; do not create a second one with a new key. The page will
@@ -131,3 +146,8 @@ show the receiving value only once it is available.
 #### Does renaming My wallets to Wallets change my addresses?
 No. It is only a portal label change. The wallet IDs, addresses, assets and
 receive-only behavior remain the same.
+#### Why is a bank name or BO merchant NIT missing?
+Those are optional fields. `bank_name` is shown when the MX receiving rail
+returns it, and `merchant_nit` is shown when the BO/BOB rail returns it. A
+missing optional field is not replaced with a guessed value; copy the fields
+that the API returned.
