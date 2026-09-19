@@ -168,6 +168,7 @@
                 "pages": [
                   "es/seguridad-2fa",
                   "es/webhooks",
+                  "es/guias/integrations",
                   "es/eventos-tiempo-real",
                   "es/estado-del-servicio",
                   "es/errores",
@@ -296,6 +297,7 @@
                 "pages": [
                   "en/security-2fa",
                   "en/webhooks",
+                  "en/guides/integrations",
                   "en/realtime-events",
                   "en/service-status",
                   "en/errors",
@@ -423,6 +425,7 @@
                 "pages": [
                   "zh/security-2fa",
                   "zh/webhooks",
+                  "zh/guides/integrations",
                   "zh/realtime-events",
                   "zh/service-status",
                   "zh/errors",

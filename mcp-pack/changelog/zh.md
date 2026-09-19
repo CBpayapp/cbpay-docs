@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.107 · 6 个版本 - 2026年9月18日
+## v2.108 · 7 个版本 - 2026年9月18日
+### v2.108
+
+**新增**
+
+- 账户集成新增 `GET /v1/integration-status`，企业需要已批准 KYB，个人需要
+  有效授权，并记录人工会话与相应 OTP 要求。
+- 密码注册、已验证 OAuth 新账户和邮箱变更现在记录全局
+  `email_domain_blocked` 策略。
+
 ### v2.107
 
 **新增**

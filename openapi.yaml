@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.107"
+  version: "2.108"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -10938,6 +10938,7 @@ paths:
                 secret:
                   type: string
                   minLength: 16
+                  maxLength: 256
             example:
               event_type: payout_status_changed
               callback_url: https://api.myapp.com/webhooks/cbpay
@@ -22128,6 +22129,64 @@ paths:
             application/json:
               example: {error: not_found, message: virtual IBAN not found}
 
+  /v1/integration-status:
+    get:
+      tags:
+      - Account
+      operationId: getIntegrationStatus
+      summary: Get account integration eligibility
+      description: 'Returns the current eligibility for account-level API keys and webhooks.
+        Companies require an active account with approved KYB. Persons require an active account,
+        approved KYC and an effective administrator grant. The response never exposes the
+        administrator''s internal grant reason.'
+      responses:
+        '200':
+          description: Eligibility decision.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - eligible
+                properties:
+                  eligible:
+                    type: boolean
+                  reason_code:
+                    type: string
+                    enum:
+                    - integration_company_only
+                    - integration_kyb_required
+                    - account_blocked
+                  grant:
+                    type: object
+                    properties:
+                      granted_at:
+                        type: string
+                        format: date-time
+                      expires_at:
+                        type: string
+                        format: date-time
+              examples:
+                eligibleCompany:
+                  summary: Eligible company
+                  value:
+                    eligible: true
+                eligiblePerson:
+                  summary: Eligible person with grant
+                  value:
+                    eligible: true
+                    grant:
+                      granted_at: '2026-09-18T14:00:00Z'
+                      expires_at: '2026-12-31T23:59:59Z'
+                ineligible:
+                  summary: Person without an effective grant
+                  value:
+                    eligible: false
+                    reason_code: integration_company_only
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
 components:
   securitySchemes:
     bearerAuth:

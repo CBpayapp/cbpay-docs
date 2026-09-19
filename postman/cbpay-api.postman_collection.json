@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-18 04:25 UTC",
-    "_content_sha256": "a1fc85af58b8dd0ab419bae7b4f6948cad40223c0250f9bb19f68ce12fa5b213"
+    "_generated_at": "2026-09-19 02:12 UTC",
+    "_content_sha256": "e8396e2a550aa2a68275302fb3cdc27645f77e95df7378cc22e8728471df59f2"
   },
   "auth": {
     "type": "bearer",
@@ -7919,6 +7919,52 @@
             },
             "description": "Downloads a file previously uploaded by the account for this review. Returns the raw binary with the original `Content-Type`. Files from other accounts or other reviews answer `404 not_found` (never `403`, so existence is not leaked)."
           }
+        },
+        {
+          "name": "Get account integration eligibility",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/integration-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "integration-status"
+              ]
+            },
+            "description": "Returns the current eligibility for account-level API keys and webhooks. Companies require an active account with approved KYB. Persons require an active account, approved KYC and an effective administrator grant. The response never exposes the administrator's internal grant reason."
+          },
+          "response": [
+            {
+              "name": "200 Eligibility decision.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/integration-status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "integration-status"
+                  ]
+                }
+              },
+              "status": "Eligibility decision.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"eligible\": true\n}"
+            }
+          ]
         }
       ]
     },

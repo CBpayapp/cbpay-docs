@@ -405,3 +405,16 @@ description: "错误格式与完整的错误码目录"
 | 502 | `wallet_reservation_status_failed` | 状态读取失败；保留 `order_reference` 或 `client_order`。 |
 | 502 | `wallet_read_failed` | live wallet 响应或 EUR 金额不可读；检查状态后重试读取。 |
 | 502 | `wallet_statement_failed` | statement 不可读；使用完整日期窗口后重试读取。 |
+
+## 账户集成策略
+
+| HTTP | `error` | 含义与处理 |
+|---:|---|---|
+| 400 | `email_domain_blocked` | 邮箱域名被阻止；使用允许的域名。 |
+| 400 | `invalid_secret` | Webhook secret 必须为 16 到 256 个字符。 |
+| 403 | `session_required` | 创建账户 API key/Webhook 需要人工 JWT，而不是 API key。 |
+| 403 | `integration_company_only` | 个人账户需要有效管理员授权；企业账户需要 KYB 批准。 |
+| 403 | `integration_kyb_required` | 先批准 KYC/KYB，再创建或重新启用集成。 |
+| 403 | `account_blocked` | 账户不是 active；请让管理员恢复账户。 |
+| 403 | `otp_required` | 完成 `api_key_create` 或 `webhook_manage` OTP 后重试。 |
+| 403 | `integration_forbidden` | 账户不能使用集成；查询 `GET /v1/integration-status` 并处理返回的资格原因。 |

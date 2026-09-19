@@ -1,5 +1,5 @@
 {
-  "count": 269,
+  "count": 274,
   "errors": [
     {
       "category": {
@@ -3757,6 +3757,76 @@
         "en": "The statement response was unreadable. Use a valid completed-day window and retry the read.",
         "es": "No se pudo leer el statement. Usa una ventana válida de días completos y reintenta la lectura.",
         "zh": "statement 不可读；使用完整日期窗口后重试读取。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "email_domain_blocked",
+      "http": 400,
+      "meaning": {
+        "en": "The email domain is blocked for registration or email change; use a permitted domain.",
+        "es": "El dominio está bloqueado para registro o cambio de email; usa otro dominio permitido.",
+        "zh": "邮箱域名被阻止；使用允许的域名。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "invalid_secret",
+      "http": 400,
+      "meaning": {
+        "en": "The webhook secret must contain 16 to 256 characters.",
+        "es": "El secreto del webhook debe tener entre 16 y 256 caracteres.",
+        "zh": "Webhook secret 必须为 16 到 256 个字符。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "integration_company_only",
+      "http": 403,
+      "meaning": {
+        "en": "A person needs an effective administrator grant; a company needs approved KYB.",
+        "es": "Una persona necesita grant vigente; una empresa necesita KYB aprobado.",
+        "zh": "个人账户需要有效管理员授权；企业账户需要 KYB 批准。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "integration_kyb_required",
+      "http": 403,
+      "meaning": {
+        "en": "Approve the account's KYC/KYB before creating or reactivating the integration.",
+        "es": "Aprueba el KYC/KYB antes de crear o reactivar la integración.",
+        "zh": "先批准 KYC/KYB，再创建或重新启用集成。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "integration_forbidden",
+      "http": 403,
+      "meaning": {
+        "en": "The account cannot use integrations; read `GET /v1/integration-status` and resolve the returned eligibility reason.",
+        "es": "La cuenta no puede usar integraciones; consulta `GET /v1/integration-status` y resuelve el motivo.",
+        "zh": "账户不能使用集成；查询 `GET /v1/integration-status` 并处理返回的资格原因。"
       }
     }
   ]
