@@ -421,3 +421,16 @@ endpoints. They are listed here so shared SDKs can keep one error catalog.
 | 502 | `wallet_reservation_status_failed` | The status read failed. Keep the same `order_reference` or `client_order`. |
 | 502 | `wallet_read_failed` | The live wallet response or EUR amount was unreadable. Retry the read after checking the wallet state. |
 | 502 | `wallet_statement_failed` | The statement response was unreadable. Use a valid completed-day window and retry the read. |
+
+## Account integration policy
+
+| HTTP | `error` | Meaning and solution |
+|---:|---|---|
+| 400 | `email_domain_blocked` | The email domain is blocked for registration or email change; use a permitted domain. |
+| 400 | `invalid_secret` | The webhook secret must contain 16 to 256 characters. |
+| 403 | `session_required` | Account API-key and webhook creation requires a human JWT session, not an API key. |
+| 403 | `integration_company_only` | A person needs an effective administrator grant; a company needs approved KYB. |
+| 403 | `integration_kyb_required` | Approve the account's KYC/KYB before creating or reactivating the integration. |
+| 403 | `account_blocked` | The account is not active; ask the administrator to restore it. |
+| 403 | `otp_required` | Complete the `api_key_create` or `webhook_manage` OTP challenge and retry. |
+| 403 | `integration_forbidden` | The account cannot use integrations; read `GET /v1/integration-status` and resolve the returned eligibility reason. |

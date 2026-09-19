@@ -8,7 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.107 · 6 versions - September 18, 2026
+## v2.108 · 7 versions - September 18, 2026
+### v2.108
+
+**Added**
+
+- Account integrations now expose `GET /v1/integration-status` and gate
+  account API-key and webhook creation by approved company KYB or an active
+  person grant. Human sessions and the relevant OTP action are documented.
+- Registration, verified-email OAuth account creation and email changes now
+  document the global `email_domain_blocked` policy.
+
 ### v2.107
 
 **Added**

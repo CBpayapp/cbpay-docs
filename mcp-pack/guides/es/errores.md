@@ -418,3 +418,16 @@ Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
 | 502 | `wallet_reservation_status_failed` | Falló la lectura de estado. Conserva `order_reference` o `client_order`. |
 | 502 | `wallet_read_failed` | No se pudo leer la respuesta live o el monto EUR. Reintenta la lectura después de revisar el estado. |
 | 502 | `wallet_statement_failed` | No se pudo leer el statement. Usa una ventana válida de días completos y reintenta la lectura. |
+
+## Política de integraciones de cuenta
+
+| HTTP | `error` | Significado y solución |
+|---:|---|---|
+| 400 | `email_domain_blocked` | El dominio está bloqueado para registro o cambio de email; usa otro dominio permitido. |
+| 400 | `invalid_secret` | El secreto del webhook debe tener entre 16 y 256 caracteres. |
+| 403 | `session_required` | Crear API keys y webhooks de cuenta exige JWT humano, no API key. |
+| 403 | `integration_company_only` | Una persona necesita grant vigente; una empresa necesita KYB aprobado. |
+| 403 | `integration_kyb_required` | Aprueba el KYC/KYB antes de crear o reactivar la integración. |
+| 403 | `account_blocked` | La cuenta no está activa; solicita restaurarla. |
+| 403 | `otp_required` | Completa el OTP `api_key_create` o `webhook_manage` y reintenta. |
+| 403 | `integration_forbidden` | La cuenta no puede usar integraciones; consulta `GET /v1/integration-status` y resuelve el motivo. |

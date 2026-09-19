@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.107"
+  version: "2.108"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -10527,6 +10527,7 @@ paths:
                 secret:
                   type: string
                   minLength: 16
+                  maxLength: 256
             example:
               event_type: payout_status_changed
               callback_url: https://api.myapp.com/webhooks/cbpay
@@ -21272,6 +21273,62 @@ paths:
             application/json:
               example: {error: not_found, message: virtual IBAN not found}
 
+  /v1/integration-status:
+    get:
+      tags:
+      - Account
+      operationId: getIntegrationStatus
+      summary: 查询账户集成资格
+      description: '返回账户级 API key 与 Webhook 的当前资格。企业账户需要 active 且 KYB 已批准；
+        个人账户需要 active、KYC 已批准以及有效的管理员授权。响应不会泄露管理员内部原因。'
+      responses:
+        '200':
+          description: 资格决定。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - eligible
+                properties:
+                  eligible:
+                    type: boolean
+                  reason_code:
+                    type: string
+                    enum:
+                    - integration_company_only
+                    - integration_kyb_required
+                    - account_blocked
+                  grant:
+                    type: object
+                    properties:
+                      granted_at:
+                        type: string
+                        format: date-time
+                      expires_at:
+                        type: string
+                        format: date-time
+              examples:
+                eligibleCompany:
+                  summary: 企业账户合格
+                  value:
+                    eligible: true
+                eligiblePerson:
+                  summary: 个人账户有授权
+                  value:
+                    eligible: true
+                    grant:
+                      granted_at: '2026-09-18T14:00:00Z'
+                      expires_at: '2026-12-31T23:59:59Z'
+                ineligible:
+                  summary: 个人账户没有有效授权
+                  value:
+                    eligible: false
+                    reason_code: integration_company_only
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
 components:
   securitySchemes:
     bearerAuth:
