@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-19 02:12 UTC",
-    "_content_sha256": "e8396e2a550aa2a68275302fb3cdc27645f77e95df7378cc22e8728471df59f2"
+    "_generated_at": "2026-09-19 05:51 UTC",
+    "_content_sha256": "035298fecd09e6de4f67702de0fa2d25386f578572d6da9ea5b3cc5f5a0c6b24"
   },
   "auth": {
     "type": "bearer",
@@ -12891,7 +12891,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"deposit_accounts\": [\n    {\n      \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"instrument\": \"734180000151000006\",\n      \"details\": {\n        \"clabe\": \"734180000151000006\",\n        \"status\": \"active\"\n      },\n      \"status\": \"active\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"deposit_accounts\": [\n    {\n      \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"instrument\": \"734180000151000006\",\n      \"details\": {\n        \"clabe\": \"734180000151000006\",\n        \"alias\": \"CBPay Example MXN Account\",\n        \"bank_name\": \"Example Receiving Bank\",\n        \"status\": \"active\"\n      },\n      \"status\": \"active\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -12953,7 +12953,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"alias\": \"CBPay Example MXN Account\",\n    \"bank_name\": \"Example Receiving Bank\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
             }
           ]
         },
@@ -13015,7 +13015,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"alias\": \"CBPay Example MXN Account\",\n    \"bank_name\": \"Example Receiving Bank\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
             }
           ]
         },

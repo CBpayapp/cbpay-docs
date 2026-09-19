@@ -7,7 +7,26 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月18日" description="v2.108 · 7 个版本">
+<Update label="2026年9月18日" description="v2.109 · 8 个版本">
+### v2.109
+
+**变更**
+
+- **我的账户 F2**：`/accounts` 页面现在使用视觉选择器：Crypto（资产 →
+  网络）、Fiat（国家 → 转账资料卡）和 Banking（国家 → 账户）。美国
+  Banking 账户按 ACH、Wire 和 SWIFT 子选项卡分组。
+- 账户 hero 在有数据时显示持有人照片/姓名、alias 和账户 QR。Crypto 与
+  Banking 资料卡可以显示带组织品牌标识的 QR；Fiat 资料卡按设计不显示
+  QR。
+- Fiat 转账资料卡在 API 返回时显示持有人、银行、BO 商户 NIT 和收款号码，
+  支持逐字段复制与**复制全部**。选项卡和目的地可通过 `?tab=&sel=` 深链
+  接入。
+
+**API**
+
+- 存款账户响应新增可选字段 `alias`、`merchant_nit` 和 `bank_name`。
+  这些字段只有在收款通道提供时才会出现；客户端不应推断缺失值。
+
 ### v2.108
 
 **新增**

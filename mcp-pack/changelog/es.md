@@ -9,7 +9,29 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.108 · 7 versiones - 18 de septiembre de 2026
+## v2.109 · 8 versiones - 18 de septiembre de 2026
+### v2.109
+
+**Cambiado**
+
+- **Mis cuentas F2**: la página `/accounts` ahora usa selectores visuales para
+  Crypto (moneda → red), Fiat (país → ficha de datos para transferir) y
+  Banking (país → cuenta). Las cuentas Banking de Estados Unidos se agrupan
+  en subpestañas ACH, Wire y SWIFT.
+- El hero de la cuenta muestra foto/nombre del titular cuando están
+  disponibles, el alias y el QR de la cuenta. Las fichas Crypto y Banking
+  pueden mostrar un QR con el símbolo de branding de la organización; las
+  fichas Fiat no tienen QR por diseño.
+- Las fichas Fiat exponen titular, banco, NIT mercantil de BO y número
+  receptor cuando la API los devuelve, con copia por campo y **Copiar todo**.
+  La pestaña y el destino se pueden enlazar mediante `?tab=&sel=`.
+
+**API**
+
+- Las respuestas de cuentas de depósito agregan los campos opcionales
+  `alias`, `merchant_nit` y `bank_name`. Solo aparecen cuando los entrega el
+  riel receptor; el cliente no debe inferir valores faltantes.
+
 ### v2.108
 
 **Agregado**

@@ -8,7 +8,29 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.108 · 7 versions - September 18, 2026
+## v2.109 · 8 versions - September 18, 2026
+### v2.109
+
+**Changed**
+
+- **My accounts F2**: the `/accounts` page now uses visual pickers for
+  Crypto (asset → network), Fiat (country → transfer-details sheet) and
+  Banking (country → account). US Banking accounts are grouped under ACH,
+  Wire and SWIFT sub-tabs.
+- The account hero shows the owner's photo/name when available, the alias and
+  the account QR. Crypto and Banking cards can show a QR with the
+  organization's branding symbol; Fiat transfer sheets intentionally have no
+  QR.
+- Fiat transfer sheets expose the returned holder, bank, BO merchant NIT and
+  receiving number fields, with individual copy actions and **Copy all**.
+  The selected tab and destination can be deep-linked with `?tab=&sel=`.
+
+**API**
+
+- Deposit-account responses add optional `alias`, `merchant_nit` and
+  `bank_name` fields. They are returned only when the receiving rail provides
+  them; clients must not infer missing values.
+
 ### v2.108
 
 **Added**

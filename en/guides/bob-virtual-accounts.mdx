@@ -58,9 +58,10 @@ disabled even when the API contract exists.
 
 ## 2. Create or repair the receiving account
 
-Accounts normally receive their default BOB deposit instrument during account
-provisioning. This endpoint is also available when an existing account needs
-to repair a missing instrument:
+After the account's own verification is approved — KYC for a person or KYB
+for a company — the platform provisions the default BOB deposit instrument.
+Registration alone never creates a funding account. This endpoint is also
+available when an approved account needs to repair a missing instrument:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
@@ -69,8 +70,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
   -d '{
     "country": "BO",
     "currency": "BOB",
-    "method": "bank_transfer",
-    "alias": "Operations BOB"
+    "method": "bank_transfer"
   }'
 ```
 
@@ -83,9 +83,12 @@ Response `201`:
   "country": "BO",
   "currency": "BOB",
   "method": "bank_transfer",
-  "instrument": "7014227171",
+  "instrument": "<receiving-account-number>",
   "details": {
-    "account_number": "7014227171",
+    "account_number": "<receiving-account-number>",
+    "alias": "CBPay Example BOB 20260919",
+    "merchant_nit": "123456789",
+    "bank_name": "Example Receiving Bank",
     "status": "ACTIVA"
   },
   "status": "active",
@@ -95,12 +98,42 @@ Response `201`:
 
 Share `instrument` with the payer as the receiving account number. The
 `instrument_id` is CBPay's stable identifier; do not replace the receiving
-number with the UUID.
+number with the UUID. When returned, `details.alias`, `details.merchant_nit`
+and `details.bank_name` are presentation fields for the transfer-details
+sheet; missing optional values are not inferred.
 
-There is one active deposit account per account/country/currency/method. A
-second create does not create another destination. A missing or ambiguous
-provider response remains visible for reconciliation instead of being
-silently retried.
+Person accounts have at most one active deposit account per
+country/currency/method. Company accounts can create additional immutable
+destinations only in enabled corridors; the currently enabled additional
+deposit-account corridors are `MX/MXN/bank_transfer` and
+`BO/BOB/bank_transfer`. Each destination remains bound to the same CBPay
+account and incoming credits are matched by the destination instrument.
+
+After approval, the account's first corridor instrument is provisioned
+automatically. The request shown above is valid for repairing a missing
+post-approval instrument. The provider-facing alias is generated server-side
+from the account's verified name; clients do not choose that alias. A company
+creating an additional BOB destination must use a new idempotency key for each
+destination:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-bob-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BO",
+    "currency": "BOB",
+    "method": "bank_transfer",
+    "idempotency_key": "company-bob-001"
+  }'
+```
+
+A new key returns `201` with a new destination. Replaying the same completed
+key returns `200` with the original instrument and `idempotency_hit: true`;
+an in-flight replay can return `409 idempotency_conflict`. A missing or
+ambiguous provider response remains visible for reconciliation instead of
+being silently retried.
 
 ## 3. List the account's instruments
 
@@ -123,7 +156,7 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts?page=1&page_size=
       "country": "BO",
       "currency": "BOB",
       "method": "bank_transfer",
-      "instrument": "7014227171",
+      "instrument": "<receiving-account-number>",
       "status": "active",
       "created_at": "2026-09-09T20:00:00Z"
     }
