@@ -18,6 +18,130 @@ The account API is read-only for case decisions. A successful upload does not
 change the decision; it adds an immutable evidence version to the case.
 </Note>
 
+## Open cases by identifiers
+
+Organization administrators can open several cases from a pasted list of
+identifiers. This workflow accepts 1–100 unique, non-empty values after
+trimming and de-duplicating exact repeats. An identifier can be a payin ID,
+an idempotency key, a short reference, a `qbank_reference` or a
+`qbank_payin_id`.
+
+Both calls require the organization `disputes:write` permission. Preview is
+read-only: it does not create a case, hold funds or send a webhook.
+
+### 1. Preview the list
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/org/disputes/batch-preview" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "identifiers": [
+      "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin-reference-2026-00041",
+      "copied-value-with-no-match"
+    ]
+  }'
+```
+
+The response separates exact matches from values that cannot resolve to one
+payin. An `ambiguous` value includes up to five candidates; the candidate
+contains `payin_id`, `currency`, `local_amount` and `credited_at`.
+
+```json
+{
+  "matched": [
+    {
+      "input": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin_id": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "account_id": "5c4b3a29-1111-4222-8333-444455556666",
+      "method": "card",
+      "currency": "USD",
+      "local_amount": "100.00",
+      "credited_usdt": "100.000000",
+      "status": "credited",
+      "has_open_case": false
+    }
+  ],
+  "unmatched": [
+    {
+      "input": "copied-value-with-no-match",
+      "reason": "not_found"
+    }
+  ]
+}
+```
+
+Preview matches can still show a payin that is not eligible to open yet. Use
+`status` and `has_open_case` before confirming: batch-open only opens credited
+payins without an open case.
+
+### 2. Confirm the opening
+
+Send the same identifiers, or the full pasted list, with one batch
+idempotency key. `kind` defaults to `dispute` and can also be `fraud_hold`.
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/org/disputes/batch-open" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: disputes-batch-2026-09-19-001" \
+  -d '{
+    "identifiers": [
+      "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin-reference-2026-00041",
+      "copied-value-with-no-match"
+    ],
+    "kind": "dispute",
+    "idempotency_key": "disputes-batch-2026-09-19-001"
+  }'
+```
+
+The server resolves every identifier again. It never trusts a payin or
+account ID supplied by the client. Each matched credited payin is opened with
+its own idempotent key derived from the batch key and payin ID.
+
+```json
+{
+  "results": [
+    {
+      "input": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin_id": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "status": "opened",
+      "dispute_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+    },
+    {
+      "input": "payin-reference-2026-00041",
+      "payin_id": "6d5c4b3a-2f1e-4d3c-8b2a-1e0f9a8b7c6d",
+      "status": "skipped",
+      "reason": "case_already_open"
+    },
+    {
+      "input": "copied-value-with-no-match",
+      "status": "skipped",
+      "reason": "not_found"
+    }
+  ],
+  "summary": {
+    "opened": 1,
+    "skipped": 2,
+    "failed": 0
+  }
+}
+```
+
+The batch response is `200` after the request is valid. `case_already_open`,
+`not_found`, `ambiguous` and `not_credited` are item-level `skipped` results;
+an amount or opening failure is an item-level `failed` result. Replaying the
+same batch key returns the original item as `opened` with
+`idempotency_hit: true` and does not create a second hold.
+
+The API returns `invalid_payload` for an empty list, empty values, an invalid
+`kind` or more than 100 unique identifiers. There is no separate top-level
+`too_many` response code. Missing idempotency returns
+`idempotency_key_required`; a missing organization scope returns
+`org_required`.
+
 ## Lifecycle
 
 ```mermaid

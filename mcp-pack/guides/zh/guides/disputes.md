@@ -13,6 +13,123 @@ CBPay 向付款所属账户提供争议与欺诈案件信息。账户可以读�
 
 > **注**
 账户 API 不能作出决定。成功上传只会新增不可变证据版本，不会改变案件结果。
+## 按标识符打开案件
+
+组织管理员可以从粘贴的标识符列表批量打开案件。去除空格并删除完全
+重复的值后，列表必须包含 1–100 个非空唯一值。标识符可以是 payin ID、
+幂等键、短引用、`qbank_reference` 或 `qbank_payin_id`。
+
+两个接口都需要组织权限 `disputes:write`。Preview 只读：不会创建案件、
+冻结资金或发送 webhook。
+
+### 1. 预览列表
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/org/disputes/batch-preview" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "identifiers": [
+      "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin-reference-2026-00041",
+      "copied-value-with-no-match"
+    ]
+  }'
+```
+
+响应将唯一匹配与无法解析为单个 payin 的值分开。`ambiguous` 值最多包含
+五个候选，每个候选包含 `payin_id`、`currency`、`local_amount` 和
+`credited_at`。
+
+```json
+{
+  "matched": [
+    {
+      "input": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin_id": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "account_id": "5c4b3a29-1111-4222-8333-444455556666",
+      "method": "card",
+      "currency": "USD",
+      "local_amount": "100.00",
+      "credited_usdt": "100.000000",
+      "status": "credited",
+      "has_open_case": false
+    }
+  ],
+  "unmatched": [
+    {
+      "input": "copied-value-with-no-match",
+      "reason": "not_found"
+    }
+  ]
+}
+```
+
+预览也可能显示暂时不符合打开条件的 payin。确认前检查 `status` 和
+`has_open_case`：batch-open 只会打开已 credited 且没有开放案件的 payin。
+
+### 2. 确认打开
+
+发送相同标识符或完整粘贴列表，并提供一个 batch 幂等键。`kind` 默认是
+`dispute`，也可以是 `fraud_hold`。
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/org/disputes/batch-open" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: disputes-batch-2026-09-19-001" \
+  -d '{
+    "identifiers": [
+      "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin-reference-2026-00041",
+      "copied-value-with-no-match"
+    ],
+    "kind": "dispute",
+    "idempotency_key": "disputes-batch-2026-09-19-001"
+  }'
+```
+
+服务器会再次解析每个标识符，绝不信任客户端提交的 payin 或账户 ID。
+每个已 credited 的 payin 都使用由 batch key 与 payin ID 派生的独立幂等键。
+
+```json
+{
+  "results": [
+    {
+      "input": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin_id": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "status": "opened",
+      "dispute_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+    },
+    {
+      "input": "payin-reference-2026-00041",
+      "payin_id": "6d5c4b3a-2f1e-4d3c-8b2a-1e0f9a8b7c6d",
+      "status": "skipped",
+      "reason": "case_already_open"
+    },
+    {
+      "input": "copied-value-with-no-match",
+      "status": "skipped",
+      "reason": "not_found"
+    }
+  ],
+  "summary": {
+    "opened": 1,
+    "skipped": 2,
+    "failed": 0
+  }
+}
+```
+
+请求有效后，batch 响应始终为 `200`。`case_already_open`、`not_found`、
+`ambiguous` 和 `not_credited` 都是逐项的 `skipped` 结果；金额无效或打开
+失败是逐项的 `failed` 结果。使用相同 key 重放时，原始项目会以
+`opened` 和 `idempotency_hit: true` 返回，不会创建第二个冻结。
+
+空列表、空值、无效 `kind` 或超过 100 个唯一标识符都会返回
+`invalid_payload`；不存在单独的顶层 `too_many` 错误码。缺少幂等键返回
+`idempotency_key_required`，缺少组织 scope 返回 `org_required`。
+
 ## 生命周期
 
 ```mermaid

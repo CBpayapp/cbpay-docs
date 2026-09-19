@@ -9,7 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.110 · 1 versión - 19 de septiembre de 2026
+## v2.111 · 2 versiones - 19 de septiembre de 2026
+
+### v2.111
+
+**Agregado**
+
+- Los administradores de la organización pueden previsualizar y confirmar la
+  apertura de disputas desde una lista pegada de identificadores de payin. El
+  flujo resuelve coincidencias exactas, muestra ambigüedades antes de retener,
+  abre solo payins acreditados y devuelve resultados idempotentes por ítem.
 
 ### v2.110
 
