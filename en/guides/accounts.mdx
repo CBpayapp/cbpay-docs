@@ -163,3 +163,12 @@ missing optional field is not replaced with a guessed value; copy the fields
 that the API returned.
 </Accordion>
 </AccordionGroup>
+
+## Disputed balance
+
+The USDT item in `GET /v1/balances` can include `disputed`, the exact amount
+currently reserved by open dispute holds:
+
+```json
+{ "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
+```

@@ -842,3 +842,6 @@ latest state. The event does not expose an upstream provider identity.
 
 事件只发送给 campaign 选中的账户。它可以通过账户 webhook 订阅和账户
 event stream 接收；请使用 `X-Webhook-Event-ID` 对投递去重。
+
+## `dispute_status_changed`
+签名 payload 和状态变化见[争议指南](https://docs.cbpayapp.com/zh/guides/disputes)。

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-19 05:51 UTC",
-    "_content_sha256": "035298fecd09e6de4f67702de0fa2d25386f578572d6da9ea5b3cc5f5a0c6b24"
+    "_generated_at": "2026-09-19 08:30 UTC",
+    "_content_sha256": "d49dc10baed25b755cd096387df2f2ee04fd4fb54d4d6f1a5d7096ec8ac1bd69"
   },
   "auth": {
     "type": "bearer",
@@ -25611,6 +25611,349 @@
               "body": "{\n  \"org_id\": \"org_123\",\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"configured-source\"\n}"
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Disputes",
+      "item": [
+        {
+          "name": "List account dispute cases",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/disputes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "disputes"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Inclusive organization date, YYYY-MM-DD."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Inclusive organization date, YYYY-MM-DD."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Case status filter."
+                },
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true,
+                  "description": "dispute or fraud_hold."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": "One-based page."
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Maximum 200."
+                }
+              ]
+            },
+            "description": "Account-scoped, provider-neutral dispute data. Decisions are organization-admin only."
+          },
+          "response": [
+            {
+              "name": "200 Account dispute cases.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/disputes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "disputes"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Inclusive organization date, YYYY-MM-DD."
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Inclusive organization date, YYYY-MM-DD."
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Case status filter."
+                    },
+                    {
+                      "key": "kind",
+                      "value": "",
+                      "disabled": true,
+                      "description": "dispute or fraud_hold."
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": "One-based page."
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Maximum 200."
+                    }
+                  ]
+                }
+              },
+              "status": "Account dispute cases.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"disputes\": [\n    {\n      \"dispute_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\n      \"account_id\": \"5c4b3a29-1111-4222-8333-444455556666\",\n      \"kind\": \"dispute\",\n      \"status\": \"evidence\",\n      \"currency\": \"USD\",\n      \"disputed_usdt\": \"100.000000\",\n      \"held_usdt\": \"100.000000\",\n      \"underfunded\": false,\n      \"case_number\": \"CASE-2026-00041\",\n      \"source\": \"import\",\n      \"opened_by\": \"admin:2c1...\",\n      \"created_at\": \"2026-09-19T12:00:00Z\",\n      \"updated_at\": \"2026-09-19T12:05:00Z\",\n      \"deadline_at\": \"2026-10-01T00:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get an account dispute case",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/disputes/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "disputes",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Dispute case detail.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/disputes/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "disputes",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Dispute case detail.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"dispute_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\n  \"account_id\": \"5c4b3a29-1111-4222-8333-444455556666\",\n  \"kind\": \"dispute\",\n  \"status\": \"evidence\",\n  \"currency\": \"USD\",\n  \"disputed_usdt\": \"100.000000\",\n  \"held_usdt\": \"100.000000\",\n  \"underfunded\": false,\n  \"case_number\": \"CASE-2026-00041\",\n  \"source\": \"import\",\n  \"opened_by\": \"admin:2c1...\",\n  \"created_at\": \"2026-09-19T12:00:00Z\",\n  \"updated_at\": \"2026-09-19T12:05:00Z\",\n  \"deadline_at\": \"2026-10-01T00:00:00Z\",\n  \"items\": [\n    {\n      \"payin_id\": \"9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d\",\n      \"amount_usdt\": \"100.000000\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"event_id\": \"4d2...\",\n      \"event\": \"opened\",\n      \"actor\": \"admin:2c1...\",\n      \"created_at\": \"2026-09-19T12:00:00Z\"\n    }\n  ],\n  \"evidence\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "List account case evidence",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/disputes/:id/evidence",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "disputes",
+                ":id",
+                "evidence"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Evidence metadata.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/disputes/:id/evidence",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "disputes",
+                    ":id",
+                    "evidence"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Evidence metadata.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"evidence\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload account case evidence",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/disputes/:id/evidence",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "disputes",
+                ":id",
+                "evidence"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Multipart field `file`; accepted content types are PDF, PNG and JPG; maximum 10 MB."
+          },
+          "response": [
+            {
+              "name": "201 Evidence version created.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/disputes/:id/evidence",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "disputes",
+                    ":id",
+                    "evidence"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Evidence version created.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"evidence_id\": \"1f2...\",\n  \"version\": 2,\n  \"kind\": \"merchant_doc\",\n  \"sha256\": \"b4e2...\",\n  \"bytes\": 482110,\n  \"created_at\": \"2026-09-19T12:10:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download account case evidence",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/disputes/:id/evidence/:version/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "disputes",
+                ":id",
+                "evidence",
+                ":version",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                },
+                {
+                  "key": "version",
+                  "value": ""
+                }
+              ]
+            },
+            "description": ""
+          }
         }
       ]
     }

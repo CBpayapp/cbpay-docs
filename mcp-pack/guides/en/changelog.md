@@ -8,6 +8,19 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.110 · 1 version - September 19, 2026
+
+### v2.110
+
+**Added**
+
+- Added the fraud and disputes panel: account read-only case/evidence routes,
+  org-admin operations, preventive holds, maker-checker closes, processor
+  spreadsheet imports, immutable evidence packs and `dispute_status_changed`.
+- Added `disputes` analytics, `disputed` balance visibility and `disputes[]`
+  statement coverage. The deadline worker emits T-7/T-3/expired alerts
+  without moving money on expiration.
+
 ## v2.109 · 8 versions - September 18, 2026
 ### v2.109
 

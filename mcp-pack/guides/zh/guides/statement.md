@@ -168,3 +168,9 @@ JSON（集成）、PDF 和 XLSX —— 后两者均带有你组织的品牌标�
 #### 可以验证单笔流水吗？
 可以 —— 每笔操作都有带公开验证码的[凭证](https://docs.cbpayapp.com/zh/guides/receipts)；任何人
 无需认证即可验证。
+## 账单中的争议
+
+如果期间创建了案件，账单会包含 `disputes[]`。每项包含 `created_at`、
+`dispute_id`、`kind`、`status`、`disputed_usdt`、`held_usdt`、可选
+`case_number` 和 `deadline_at`。预防性冻结只记录一次；provider
+chargeback 是独立的金融扣账。

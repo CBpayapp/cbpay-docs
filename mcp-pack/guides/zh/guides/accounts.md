@@ -131,3 +131,11 @@ NIT 或账户号码。
 这些字段是可选的。MX 收款通道返回 `bank_name` 时页面才显示；BO/BOB
 通道返回 `merchant_nit` 时页面才显示。字段缺失时不会猜测或伪造值，只
 复制 API 实际返回的信息。
+## 争议冻结余额
+
+`GET /v1/balances` 的 USDT item 可能包含 `disputed`，表示开放争议当前
+冻结的精确金额：
+
+```json
+{ "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
+```

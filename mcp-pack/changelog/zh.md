@@ -8,6 +8,18 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.110 · 1 个版本 - 2026年9月19日
+
+### v2.110
+
+**新增**
+
+- 新增欺诈与争议面板：账户只读案件/证据路由、组织管理员操作、预防性
+  冻结、双人审批关闭、处理器表格导入、不可变证据包和
+  `dispute_status_changed`。
+- 新增 `disputes` analytics、余额 `disputed` 和账单 `disputes[]`。
+  deadline worker 发出 T-7/T-3/expired 通知，但到期不移动资金。
+
 ## v2.109 · 8 个版本 - 2026年9月18日
 ### v2.109
 

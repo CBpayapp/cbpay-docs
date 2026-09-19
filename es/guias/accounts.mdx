@@ -163,3 +163,12 @@ campo opcional, la página no lo reemplaza por un valor inventado; copia solo
 los datos que devolvió la API.
 </Accordion>
 </AccordionGroup>
+
+## Saldo disputado
+
+El item USDT de `GET /v1/balances` puede incluir `disputed`, el monto exacto
+retenido actualmente por casos abiertos:
+
+```json
+{ "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
+```

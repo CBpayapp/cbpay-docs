@@ -1,5 +1,5 @@
 {
-  "count": 46,
+  "count": 47,
   "events": [
     {
       "description": {
@@ -332,6 +332,30 @@
         "en": "Crypto withdrawal status changed",
         "es": "Estado de retiro crypto cambiado",
         "zh": "加密提现状态已变更"
+      }
+    },
+    {
+      "description": {
+        "en": "Signed account/org transition for a dispute case.",
+        "es": "Transición firmada de cuenta/organización para un caso de disputa.",
+        "zh": "争议案件的账户/组织签名状态变化。"
+      },
+      "event": "dispute_status_changed",
+      "payload_example": {
+        "account_id": "5c4b3a29-1111-4222-8333-444455556666",
+        "case_number": "CASE-2026-00041",
+        "deadline_at": "2026-10-01T00:00:00Z",
+        "dispute_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+        "disputed_usdt": "100.000000",
+        "event": "submitted",
+        "held_usdt": "100.000000",
+        "kind": "dispute",
+        "status": "submitted"
+      },
+      "summary": {
+        "en": "Dispute status changed",
+        "es": "Cambio de estado de disputa",
+        "zh": "争议状态已变化"
       }
     },
     {

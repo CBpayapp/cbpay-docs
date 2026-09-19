@@ -9,6 +9,18 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.110 · 1 versión - 19 de septiembre de 2026
+
+### v2.110
+
+**Agregado**
+
+- Se agregó el panel de fraude y disputas: rutas de cuenta de solo lectura,
+  operaciones org-admin, retenciones preventivas, cierres maker-checker,
+  importación de planillas, packs inmutables y `dispute_status_changed`.
+- Se agregaron analytics `disputes`, saldo `disputed` y cartola `disputes[]`.
+  El worker de deadlines avisa T-7/T-3/expired sin mover dinero al vencer.
+
 ## v2.109 · 8 versiones - 18 de septiembre de 2026
 ### v2.109
 

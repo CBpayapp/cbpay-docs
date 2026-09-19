@@ -196,3 +196,10 @@ percent+fixed transactional fees.
 #### Can I verify an individual movement?
 Yes — every operation has a [receipt](https://docs.cbpayapp.com/en/guides/receipts) with a public
 verification code; anyone can validate it without authentication.
+## Disputes in the statement
+
+The account statement includes `disputes[]` when a case was created in the
+period. Each item contains `created_at`, `dispute_id`, `kind`, `status`,
+`disputed_usdt`, `held_usdt`, optional `case_number` and `deadline_at`. The
+preventive hold is represented once; the provider chargeback is the separate
+financial debit.

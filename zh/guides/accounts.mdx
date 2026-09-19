@@ -143,3 +143,12 @@ NIT 或账户号码。
 复制 API 实际返回的信息。
 </Accordion>
 </AccordionGroup>
+
+## 争议冻结余额
+
+`GET /v1/balances` 的 USDT item 可能包含 `disputed`，表示开放争议当前
+冻结的精确金额：
+
+```json
+{ "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
+```

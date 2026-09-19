@@ -431,3 +431,18 @@ Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
 | 403 | `account_blocked` | La cuenta no está activa; solicita restaurarla. |
 | 403 | `otp_required` | Completa el OTP `api_key_create` o `webhook_manage` y reintenta. |
 | 403 | `integration_forbidden` | La cuenta no puede usar integraciones; consulta `GET /v1/integration-status` y resuelve el motivo. |
+
+## Disputas y fraude
+
+| HTTP | Código | Resolución |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Envía la clave en body o header para una acción financiera. |
+| 400 | `invalid_payload` | Corrige monto, fecha, UUID, archivo multipart o campo requerido. |
+| 404 | `not_found` | El caso, importación, fila, evidencia o cuenta está fuera del scope. |
+| 409 | `case_already_open` | Revisa el caso abierto del payin; no abras otra clave. |
+| 409 | `second_approver_required` | Otro admin nombrado debe cerrar el caso. |
+| 409 | `invalid_state` | La transición solicitada no aplica al estado actual. |
+| 409 | `bind_failed` | La fila ya no está unmatched o el payin no puede asociarse. |
+| 409 | `import_in_progress` | Una importación con esta clave sigue en curso; espera y repite con la misma clave. |
+| 503 | `pack_unavailable` | Reintenta cuando se recupere storage/render. |
+| 503 | `storage_unavailable` | Recupera storage privado y reintenta la evidencia. |
