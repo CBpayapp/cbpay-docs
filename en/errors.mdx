@@ -434,3 +434,18 @@ endpoints. They are listed here so shared SDKs can keep one error catalog.
 | 403 | `account_blocked` | The account is not active; ask the administrator to restore it. |
 | 403 | `otp_required` | Complete the `api_key_create` or `webhook_manage` OTP challenge and retry. |
 | 403 | `integration_forbidden` | The account cannot use integrations; read `GET /v1/integration-status` and resolve the returned eligibility reason. |
+
+## Disputes and fraud
+
+| HTTP | Code | Resolution |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Send the key in the JSON body or `Idempotency-Key` header for a money-changing dispute action. |
+| 400 | `invalid_payload` | Correct the amount, date, UUID, multipart file or required field. |
+| 404 | `not_found` | The case, import, row, evidence or account is outside the caller scope. |
+| 409 | `case_already_open` | Review the existing open case for the payin; do not create a new key. |
+| 409 | `second_approver_required` | A different named admin must close the case. |
+| 409 | `invalid_state` | The requested note, submit, evidence or close transition is not valid now. |
+| 409 | `bind_failed` | The import row is no longer unmatched or the selected payin cannot be bound. |
+| 409 | `import_in_progress` | An import with this key is still processing; wait and replay with the same key. |
+| 503 | `pack_unavailable` | Retry after private storage or PDF rendering recovers. |
+| 503 | `storage_unavailable` | Restore private storage and retry the evidence operation. |

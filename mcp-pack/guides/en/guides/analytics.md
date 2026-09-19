@@ -441,3 +441,22 @@ It doesn't: your rate derives from the market rate through your commercial
 configuration, which is a constant factor — the percentage change is the
 same. What you see charted is exactly what you would have gotten operating
 each day.
+## `disputes`
+
+The summary contains a `disputes` section with case volume and current
+preventive retention:
+
+```json
+{
+  "count": 3,
+  "disputed_usd": "300.000000",
+  "held_usd": "200.000000",
+  "open": 2,
+  "won": 1,
+  "lost": 0,
+  "by_kind": [{ "key": "dispute", "count": 3, "disputed_usd": "300.000000" }],
+  "by_status": [{ "key": "open", "count": 2, "disputed_usd": "200.000000" }]
+}
+```
+
+Preventive holds do not count as a second payin volume.

@@ -425,3 +425,21 @@ API 的 `from`/`to` 过滤器一致。响应会在 `timezone` 字段中回显。
 不会不同：您的汇率由市场汇率经您的商务配置推导而来，该配置是一个
 常数因子——百分比变化是相同的。图表所示正是您在每一天实际操作时
 本会得到的汇率。
+## `disputes`
+
+summary 包含案件量和预防性冻结：
+
+```json
+{
+  "count": 3,
+  "disputed_usd": "300.000000",
+  "held_usd": "200.000000",
+  "open": 2,
+  "won": 1,
+  "lost": 0,
+  "by_kind": [{ "key": "dispute", "count": 3, "disputed_usd": "300.000000" }],
+  "by_status": [{ "key": "open", "count": 2, "disputed_usd": "200.000000" }]
+}
+```
+
+预防性 hold 不会再次计入 payin volume。

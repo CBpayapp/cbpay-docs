@@ -199,3 +199,9 @@ cartola — a diferencia de las comisiones transaccionales de % + fijo.
 Sí — toda operación tiene su [comprobante](https://docs.cbpayapp.com/es/guias/comprobantes) con un
 código de verificación público; cualquiera puede validarlo sin
 autenticación.
+## Disputas en la cartola
+
+La cartola incluye `disputes[]` cuando se creó un caso en el período. Cada
+item trae `created_at`, `dispute_id`, `kind`, `status`, `disputed_usdt`,
+`held_usdt`, `case_number` opcional y `deadline_at`. El hold preventivo aparece
+una vez; el chargeback del proveedor es el débito financiero separado.

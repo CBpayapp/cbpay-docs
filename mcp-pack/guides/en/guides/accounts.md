@@ -151,3 +151,11 @@ Those are optional fields. `bank_name` is shown when the MX receiving rail
 returns it, and `merchant_nit` is shown when the BO/BOB rail returns it. A
 missing optional field is not replaced with a guessed value; copy the fields
 that the API returned.
+## Disputed balance
+
+The USDT item in `GET /v1/balances` can include `disputed`, the exact amount
+currently reserved by open dispute holds:
+
+```json
+{ "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
+```

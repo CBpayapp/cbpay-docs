@@ -151,3 +151,11 @@ Son campos opcionales. `bank_name` se muestra cuando lo devuelve el riel
 receptor de MX y `merchant_nit` cuando lo devuelve el riel BO/BOB. Si falta un
 campo opcional, la página no lo reemplaza por un valor inventado; copia solo
 los datos que devolvió la API.
+## Saldo disputado
+
+El item USDT de `GET /v1/balances` puede incluir `disputed`, el monto exacto
+retenido actualmente por casos abiertos:
+
+```json
+{ "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
+```

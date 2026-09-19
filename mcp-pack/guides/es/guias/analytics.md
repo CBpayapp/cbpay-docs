@@ -440,3 +440,21 @@ No difiere: tu tasa se deriva de la de mercado con tu configuración
 comercial, que es un factor constante — la variación porcentual es la
 misma. Lo que ves graficado es exactamente lo que habrías obtenido
 operando cada día.
+## `disputes`
+
+El resumen contiene `disputes` con volumen de casos y retención preventiva:
+
+```json
+{
+  "count": 3,
+  "disputed_usd": "300.000000",
+  "held_usd": "200.000000",
+  "open": 2,
+  "won": 1,
+  "lost": 0,
+  "by_kind": [{ "key": "dispute", "count": 3, "disputed_usd": "300.000000" }],
+  "by_status": [{ "key": "open", "count": 2, "disputed_usd": "200.000000" }]
+}
+```
+
+Los holds preventivos no vuelven a contar volumen de payins.

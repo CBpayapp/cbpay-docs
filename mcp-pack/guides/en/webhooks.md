@@ -879,3 +879,6 @@ localized text, never HTML:
 The event is delivered only to the account selected by the campaign. It can
 be received through an account webhook subscription and the account event
 stream; deduplicate deliveries by `X-Webhook-Event-ID`.
+
+## `dispute_status_changed`
+See the [disputes guide](https://docs.cbpayapp.com/en/guides/disputes) for the signed payload and transitions.

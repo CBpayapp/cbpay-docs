@@ -150,7 +150,8 @@
                       "es/guias/qscore-seal",
                       "es/guias/qscore-fraud",
                       "es/guias/qscore-index",
-                      "es/guias/revisiones-operaciones"
+                      "es/guias/revisiones-operaciones",
+                  "es/guias/disputas"
                     ]
                   },
                   {
@@ -279,7 +280,8 @@
                       "en/guides/qscore-seal",
                       "en/guides/qscore-fraud",
                       "en/guides/qscore-index",
-                      "en/guides/transaction-reviews"
+                      "en/guides/transaction-reviews",
+                      "en/guides/disputes"
                     ]
                   },
                   {
@@ -407,7 +409,8 @@
                       "zh/guides/qscore-seal",
                       "zh/guides/qscore-fraud",
                       "zh/guides/qscore-index",
-                      "zh/guides/transaction-reviews"
+                      "zh/guides/transaction-reviews",
+                      "zh/guides/disputes"
                     ]
                   },
                   {

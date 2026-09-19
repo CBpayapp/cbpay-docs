@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.109"
+  version: "2.110"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -18260,7 +18260,7 @@ paths:
         description: 'Tipos de evento separados por coma para filtrar. Un tipo desconocido responde `400 invalid_event_type`.'
         schema:
           type: string
-        example: payin_credited,payout_status_changed
+        example: payin_credited,payout_status_changed,dispute_status_changed
       - name: snapshot
         in: query
         required: false
@@ -22025,6 +22025,347 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/AccountRequired'
+  /v1/disputes:
+    get:
+      tags:
+      - Disputas
+      operationId: listAccountDisputes
+      summary: Lista los casos de disputa de la cuenta
+      description: Datos de disputa acotados a la cuenta. Las decisiones son solo de org-admin.
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Inclusive organization date, YYYY-MM-DD.
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Inclusive organization date, YYYY-MM-DD.
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Case status filter.
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+        description: dispute or fraud_hold.
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+        description: One-based page.
+        example: 1
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+        description: Maximum 200.
+        example: 50
+      responses:
+        '200':
+          description: Account dispute cases.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                default:
+                  value:
+                    page: 1
+                    page_size: 50
+                    disputes:
+                    - dispute_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                      account_id: 5c4b3a29-1111-4222-8333-444455556666
+                      kind: dispute
+                      status: evidence
+                      currency: USD
+                      disputed_usdt: '100.000000'
+                      held_usdt: '100.000000'
+                      underfunded: false
+                      case_number: CASE-2026-00041
+                      source: import
+                      opened_by: admin:2c1...
+                      created_at: '2026-09-19T12:00:00Z'
+                      updated_at: '2026-09-19T12:05:00Z'
+                      deadline_at: '2026-10-01T00:00:00Z'
+        '400':
+          description: invalid_range
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                invalid_range:
+                  value:
+                    error: invalid_range
+                    message: from and to must be YYYY-MM-DD
+        '404':
+          description: not_found
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                not_found:
+                  value:
+                    error: not_found
+                    message: dispute case not found
+  /v1/disputes/{id}:
+    get:
+      tags:
+      - Disputas
+      operationId: getAccountDispute
+      summary: Obtiene un caso de disputa de la cuenta
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Dispute case UUID.
+      responses:
+        '200':
+          description: Dispute case detail.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                default:
+                  value:
+                    dispute_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                    account_id: 5c4b3a29-1111-4222-8333-444455556666
+                    kind: dispute
+                    status: evidence
+                    currency: USD
+                    disputed_usdt: '100.000000'
+                    held_usdt: '100.000000'
+                    underfunded: false
+                    case_number: CASE-2026-00041
+                    source: import
+                    opened_by: admin:2c1...
+                    created_at: '2026-09-19T12:00:00Z'
+                    updated_at: '2026-09-19T12:05:00Z'
+                    deadline_at: '2026-10-01T00:00:00Z'
+                    items:
+                    - payin_id: 9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                      amount_usdt: '100.000000'
+                    timeline:
+                    - event_id: 4d2...
+                      event: opened
+                      actor: admin:2c1...
+                      created_at: '2026-09-19T12:00:00Z'
+                    evidence: []
+        '400':
+          description: invalid_range
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                invalid_range:
+                  value:
+                    error: invalid_range
+                    message: from and to must be YYYY-MM-DD
+        '404':
+          description: not_found
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                not_found:
+                  value:
+                    error: not_found
+                    message: dispute case not found
+  /v1/disputes/{id}/evidence:
+    get:
+      tags:
+      - Disputas
+      operationId: listAccountDisputeEvidence
+      summary: Lista la evidencia de un caso
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Dispute case UUID.
+      responses:
+        '200':
+          description: Evidence metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                default:
+                  value:
+                    evidence: []
+        '400':
+          description: invalid_range
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                invalid_range:
+                  value:
+                    error: invalid_range
+                    message: from and to must be YYYY-MM-DD
+        '404':
+          description: not_found
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                not_found:
+                  value:
+                    error: not_found
+                    message: dispute case not found
+    post:
+      tags:
+      - Disputas
+      operationId: uploadAccountDisputeEvidence
+      summary: Sube evidencia a un caso
+      description: Multipart field `file`; accepted content types are PDF, PNG and JPG; maximum 10 MB.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Dispute case UUID.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+            examples:
+              pdf:
+                value:
+                  file: purchase-receipt.pdf
+      responses:
+        '201':
+          description: Evidence version created.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                default:
+                  value:
+                    evidence_id: 1f2...
+                    version: 2
+                    kind: merchant_doc
+                    sha256: b4e2...
+                    bytes: 482110
+                    created_at: '2026-09-19T12:10:00Z'
+        '400':
+          description: invalid_payload
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                invalid_payload:
+                  value:
+                    error: invalid_payload
+                    message: only PDF, PNG or JPG evidence is accepted
+        '404':
+          description: not_found
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                not_found:
+                  value:
+                    error: not_found
+                    message: dispute case not found
+        '409':
+          description: invalid_state
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                invalid_state:
+                  value:
+                    error: invalid_state
+                    message: dispute case is closed
+        '503':
+          description: storage_unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                storage_unavailable:
+                  value:
+                    error: storage_unavailable
+                    message: evidence storage is not configured
+  /v1/disputes/{id}/evidence/{version}/download:
+    get:
+      tags:
+      - Disputas
+      operationId: downloadAccountDisputeEvidence
+      summary: Descarga la evidencia de un caso
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Dispute case UUID.
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Evidence version.
+        example: 2
+      responses:
+        '200':
+          description: Stored evidence bytes.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+              examples:
+                default:
+                  value: '%PDF-1.7 binary content'
+        '404':
+          description: not_found
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                not_found:
+                  value:
+                    error: not_found
+                    message: evidence not found
+
 components:
   securitySchemes:
     bearerAuth:
@@ -23868,6 +24209,29 @@ components:
             PNG en base64 que renderiza `qr_payload` como código QR, con el
             símbolo de marca de tu organización centrado.
 webhooks:
+  dispute_status_changed:
+    post:
+      summary: Cambio de estado de disputa
+      description: Transición firmada de cuenta/organización para un caso de disputa.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              event: submitted
+              dispute_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+              kind: dispute
+              status: submitted
+              account_id: 5c4b3a29-1111-4222-8333-444455556666
+              disputed_usdt: '100.000000'
+              held_usdt: '100.000000'
+              case_number: CASE-2026-00041
+              deadline_at: '2026-10-01T00:00:00Z'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge the delivery.
   payin_credited:
     post:
       summary: Payin acreditado

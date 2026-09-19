@@ -414,3 +414,18 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 403 | `account_blocked` | 账户不是 active；请让管理员恢复账户。 |
 | 403 | `otp_required` | 完成 `api_key_create` 或 `webhook_manage` OTP 后重试。 |
 | 403 | `integration_forbidden` | 账户不能使用集成；查询 `GET /v1/integration-status` 并处理返回的资格原因。 |
+
+## 争议与欺诈
+
+| HTTP | 代码 | 处理 |
+|---:|---|---|
+| 400 | `idempotency_key_required` | 金融操作在 body 或 header 中发送幂等键。 |
+| 400 | `invalid_payload` | 修正金额、日期、UUID、multipart 文件或必填字段。 |
+| 404 | `not_found` | 案件、导入、行、证据或账户超出调用者 scope。 |
+| 409 | `case_already_open` | 查看 payin 的开放案件，不要创建新键。 |
+| 409 | `second_approver_required` | 必须由另一名具名管理员关闭。 |
+| 409 | `invalid_state` | 当前状态不允许该转换。 |
+| 409 | `bind_failed` | 导入行不再是 unmatched 或 payin 无法关联。 |
+| 409 | `import_in_progress` | 相同 key 的导入仍在处理中；等待后用相同 key 重试。 |
+| 503 | `pack_unavailable` | storage 或 PDF 渲染恢复后重试。 |
+| 503 | `storage_unavailable` | 恢复私有 storage 后重试证据操作。 |
