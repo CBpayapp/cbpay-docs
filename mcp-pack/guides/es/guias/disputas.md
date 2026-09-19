@@ -15,6 +15,132 @@ organización pueden abrir, enviar o resolver un caso.
 > **Nota**
 La API de cuenta es de solo lectura para decisiones. Una subida exitosa no
 cambia el resultado: agrega una versión inmutable de evidencia.
+## Abrir casos por identificadores
+
+Los administradores de la organización pueden abrir varios casos desde una
+lista pegada de identificadores. El flujo acepta entre 1 y 100 valores únicos
+y no vacíos después de quitar espacios y duplicados exactos. Un identificador
+puede ser el ID del payin, una clave de idempotencia, una referencia corta,
+`qbank_reference` o `qbank_payin_id`.
+
+Ambas llamadas exigen el permiso de organización `disputes:write`. El preview
+es de solo lectura: no crea casos, no retiene fondos ni envía webhooks.
+
+### 1. Previsualizar la lista
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/org/disputes/batch-preview" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "identifiers": [
+      "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin-reference-2026-00041",
+      "valor-copiado-sin-coincidencia"
+    ]
+  }'
+```
+
+La respuesta separa las coincidencias exactas de los valores que no se pueden
+resolver a un único payin. Un valor `ambiguous` incluye hasta cinco
+candidatos; cada candidato trae `payin_id`, `currency`, `local_amount` y
+`credited_at`.
+
+```json
+{
+  "matched": [
+    {
+      "input": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin_id": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "account_id": "5c4b3a29-1111-4222-8333-444455556666",
+      "method": "card",
+      "currency": "USD",
+      "local_amount": "100.00",
+      "credited_usdt": "100.000000",
+      "status": "credited",
+      "has_open_case": false
+    }
+  ],
+  "unmatched": [
+    {
+      "input": "valor-copiado-sin-coincidencia",
+      "reason": "not_found"
+    }
+  ]
+}
+```
+
+El preview también puede mostrar un payin que todavía no es elegible para
+abrir. Revisa `status` y `has_open_case` antes de confirmar: batch-open solo
+abre payins acreditados que no tengan un caso abierto.
+
+### 2. Confirmar la apertura
+
+Envía los mismos identificadores, o la lista completa, con una clave de
+idempotencia del batch. `kind` por defecto es `dispute` y también acepta
+`fraud_hold`.
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/org/disputes/batch-open" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: disputes-batch-2026-09-19-001" \
+  -d '{
+    "identifiers": [
+      "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin-reference-2026-00041",
+      "valor-copiado-sin-coincidencia"
+    ],
+    "kind": "dispute",
+    "idempotency_key": "disputes-batch-2026-09-19-001"
+  }'
+```
+
+El servidor vuelve a resolver cada identificador. Nunca confía en un payin o
+cuenta enviado por el cliente. Cada payin acreditado que calza se abre con
+una clave idempotente propia derivada de la clave del batch y el ID del payin.
+
+```json
+{
+  "results": [
+    {
+      "input": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "payin_id": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "status": "opened",
+      "dispute_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+    },
+    {
+      "input": "payin-reference-2026-00041",
+      "payin_id": "6d5c4b3a-2f1e-4d3c-8b2a-1e0f9a8b7c6d",
+      "status": "skipped",
+      "reason": "case_already_open"
+    },
+    {
+      "input": "valor-copiado-sin-coincidencia",
+      "status": "skipped",
+      "reason": "not_found"
+    }
+  ],
+  "summary": {
+    "opened": 1,
+    "skipped": 2,
+    "failed": 0
+  }
+}
+```
+
+La respuesta del batch es `200` cuando la solicitud es válida.
+`case_already_open`, `not_found`, `ambiguous` y `not_credited` son resultados
+`skipped` por ítem; un monto inválido o un fallo de apertura es un resultado
+`failed` por ítem. Repetir la misma clave devuelve el ítem original como
+`opened` con `idempotency_hit: true` y no crea otra retención.
+
+La API devuelve `invalid_payload` para una lista vacía, valores vacíos, un
+`kind` inválido o más de 100 identificadores únicos. No existe un código
+superior separado `too_many`. Si falta la idempotencia devuelve
+`idempotency_key_required`; si falta el scope de organización devuelve
+`org_required`.
+
 ## Ciclo de vida
 
 ```mermaid

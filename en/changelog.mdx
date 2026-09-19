@@ -7,7 +7,16 @@ description: "History of API and documentation changes"
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-<Update label="September 19, 2026" description="v2.110 · 1 version">
+<Update label="September 19, 2026" description="v2.111 · 2 versions">
+
+### v2.111
+
+**Added**
+
+- Organization administrators can preview and confirm dispute opening from a
+  pasted list of payin identifiers. The flow resolves exact matches,
+  exposes ambiguities before any hold, opens credited payins only and returns
+  idempotent per-item results.
 
 ### v2.110
 
