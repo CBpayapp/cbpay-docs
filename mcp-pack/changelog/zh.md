@@ -8,7 +8,15 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.111 · 2 个版本 - 2026年9月19日
+## v2.112 · 3 个版本 - 2026年9月19日
+
+### v2.112
+
+**变更**
+
+- **争议操作仅接受已入账 payin**：单笔打开案件和手动绑定导入行在
+  payin 不是 `credited` 时返回 `409 payin_not_credited`，不会创建冻结。
+  batch 和导入流程会按项目或行报告该情况。
 
 ### v2.111
 

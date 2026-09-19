@@ -1,5 +1,5 @@
 {
-  "count": 279,
+  "count": 280,
   "errors": [
     {
       "category": {
@@ -3841,6 +3841,20 @@
         "en": "Review the existing open case for the payin; do not create a new key.",
         "es": "Revisa el caso abierto del payin; no abras otra clave.",
         "zh": "查看 payin 的开放案件，不要创建新键。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "payin_not_credited",
+      "http": 409,
+      "meaning": {
+        "en": "The payin is not `credited`, so there is nothing to hold; wait for credit before opening a case or binding an import row.",
+        "es": "El payin no está `credited`, por lo que no hay saldo que retener; espera la acreditación antes de abrir un caso o vincular una fila importada.",
+        "zh": "payin 尚未处于 `credited` 状态，因此没有可冻结的余额；等待入账后再打开案件或绑定导入行。"
       }
     },
     {

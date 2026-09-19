@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.111 · 2 versions - September 19, 2026
+## v2.112 · 3 versions - September 19, 2026
+
+### v2.112
+
+**Changed**
+
+- **Credited-only dispute operations**: single-case opening and manual
+  import-row binding now return `409 payin_not_credited` when the payin is not
+  `credited`; no hold is created. Batch and import flows report the condition
+  per item or row.
 
 ### v2.111
 

@@ -73,6 +73,11 @@ Preview matches can still show a payin that is not eligible to open yet. Use
 `status` and `has_open_case` before confirming: batch-open only opens credited
 payins without an open case.
 
+Single-case opening and manual import-row binding are also credited-only
+operations. A non-`credited` payin returns `409 payin_not_credited` and creates
+no hold; batch and import workflows report the condition per item or row
+instead of failing the whole request.
+
 ### 2. Confirm the opening
 
 Send the same identifiers, or the full pasted list, with one batch

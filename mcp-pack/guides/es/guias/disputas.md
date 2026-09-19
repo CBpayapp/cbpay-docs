@@ -74,6 +74,10 @@ El preview también puede mostrar un payin que todavía no es elegible para
 abrir. Revisa `status` y `has_open_case` antes de confirmar: batch-open solo
 abre payins acreditados que no tengan un caso abierto.
 
+La apertura individual y la vinculación manual de una fila importada también
+exigen un payin `credited`. Si no lo está, responden `409 payin_not_credited`
+y no crean una retención; batch e importación lo reportan por ítem o fila.
+
 ### 2. Confirmar la apertura
 
 Envía los mismos identificadores, o la lista completa, con una clave de

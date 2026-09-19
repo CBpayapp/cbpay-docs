@@ -443,6 +443,7 @@ endpoints. They are listed here so shared SDKs can keep one error catalog.
 | 400 | `invalid_payload` | Correct the amount, date, UUID, multipart file or required field. |
 | 404 | `not_found` | The case, import, row, evidence or account is outside the caller scope. |
 | 409 | `case_already_open` | Review the existing open case for the payin; do not create a new key. |
+| 409 | `payin_not_credited` | The payin is not `credited`, so there is nothing to hold; wait for credit before opening a case or binding an import row. |
 | 409 | `second_approver_required` | A different named admin must close the case. |
 | 409 | `invalid_state` | The requested note, submit, evidence or close transition is not valid now. |
 | 409 | `bind_failed` | The import row is no longer unmatched or the selected payin cannot be bound. |
