@@ -444,6 +444,7 @@ Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
 | 400 | `invalid_payload` | Corrige monto, fecha, UUID, archivo multipart o campo requerido. |
 | 404 | `not_found` | El caso, importación, fila, evidencia o cuenta está fuera del scope. |
 | 409 | `case_already_open` | Revisa el caso abierto del payin; no abras otra clave. |
+| 409 | `payin_not_credited` | El payin no está `credited`, por lo que no hay saldo que retener; espera la acreditación antes de abrir un caso o vincular una fila importada. |
 | 409 | `second_approver_required` | Otro admin nombrado debe cerrar el caso. |
 | 409 | `invalid_state` | La transición solicitada no aplica al estado actual. |
 | 409 | `bind_failed` | La fila ya no está unmatched o el payin no puede asociarse. |

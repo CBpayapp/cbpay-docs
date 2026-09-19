@@ -423,6 +423,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 400 | `invalid_payload` | 修正金额、日期、UUID、multipart 文件或必填字段。 |
 | 404 | `not_found` | 案件、导入、行、证据或账户超出调用者 scope。 |
 | 409 | `case_already_open` | 查看 payin 的开放案件，不要创建新键。 |
+| 409 | `payin_not_credited` | payin 尚未处于 `credited` 状态，因此没有可冻结的余额；等待入账后再打开案件或绑定导入行。 |
 | 409 | `second_approver_required` | 必须由另一名具名管理员关闭。 |
 | 409 | `invalid_state` | 当前状态不允许该转换。 |
 | 409 | `bind_failed` | 导入行不再是 unmatched 或 payin 无法关联。 |

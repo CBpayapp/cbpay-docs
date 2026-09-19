@@ -71,6 +71,10 @@ curl -X POST "https://api.qbank.cl/platform/v1/org/disputes/batch-preview" \
 预览也可能显示暂时不符合打开条件的 payin。确认前检查 `status` 和
 `has_open_case`：batch-open 只会打开已 credited 且没有开放案件的 payin。
 
+单笔打开案件和手动绑定导入行同样只接受状态为 `credited` 的 payin。
+否则返回 `409 payin_not_credited`，不会创建冻结；batch 和导入流程会按项目
+或行报告该情况。
+
 ### 2. 确认打开
 
 发送相同标识符或完整粘贴列表，并提供一个 batch 幂等键。`kind` 默认是

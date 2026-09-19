@@ -9,7 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.111 · 2 versiones - 19 de septiembre de 2026
+## v2.112 · 3 versiones - 19 de septiembre de 2026
+
+### v2.112
+
+**Cambiado**
+
+- **Operaciones de disputas solo con payins acreditados**: la apertura
+  individual y la vinculación manual de filas importadas ahora responden
+  `409 payin_not_credited` si el payin no está `credited`; no se crea una
+  retención. Batch e importación reportan la condición por ítem o fila.
 
 ### v2.111
 
