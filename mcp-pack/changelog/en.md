@@ -8,6 +8,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.116 · 1 version - September 20, 2026
+### v2.116
+
+**Changed**
+
+- Clarified the contents of organization-generated dispute evidence packs:
+  card-operation details for card payins, FIFO spend destinations and the
+  merchant's full verified KYB/KYC identity are included; payer data remains
+  masked and raw payin payloads/PAN-adjacent fields are excluded.
 ## v2.115 · 6 versions - September 19, 2026
 
 ### v2.115
