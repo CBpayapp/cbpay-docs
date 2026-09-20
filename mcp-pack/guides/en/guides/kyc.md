@@ -9,8 +9,7 @@ source_url: https://docs.cbpayapp.com/en/guides/kyc
 
 ## Account verification before creating payins
 
-Authenticated collection requires `kyc_status: approved` for person accounts and approved KYB for companies; until then, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), collect OTP/collect, dedicated deposit accounts, stored-card charges and subscriptions return `403 verification_required`.
-Existing public links, passive deposits, org-admin assignment and system-created instruments remain available; request `POST /v1/me/verification/link`, then retry after approval.
+Authenticated collection requires `kyc_status: approved` for person accounts and approved KYB for companies; until then, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), collect OTP/collect, dedicated deposit accounts, stored-card charges and subscriptions return `403 verification_required`. Existing public links, passive deposits, org-admin assignment and system-created instruments remain available; request `POST /v1/me/verification/link`, then retry after approval.
 
 **Identity verification** proves a person (KYC) or company (KYB) is who
 they claim to be, with real evidence: a complete form, document uploads
@@ -34,8 +33,7 @@ flowchart LR
     review -->|"rejected"| rejectedNode["rejected (webhook)"]
 ```
 ## Your own verification (onboarding)
-When you register, your account starts unverified (`kyc_status: none`) and
-**can only fund and read**. Any outgoing-money action (payouts, transfers,
+When you register, your account starts unverified (`kyc_status: none`) and **can only fund and read**. Any outgoing-money action (payouts, transfers,
 withdrawals, banking, cards) answers `403 verification_required` until you
 are approved.
 
@@ -814,6 +812,7 @@ open submission and liveness links do not charge again.
 | 400 | `invalid_language` | Invalid `lang` when requesting a verification report | Use `en`, `es` or `zh` |
 | 402 | `insufficient_funds` | Balance cannot cover the fee | Fund the account and retry |
 | 403 | `verification_requires_2fa` | A new self-service request needs a confirmed TOTP or a registered passkey | Enroll one factor, then retry `POST /v1/me/verification/link` |
+| 403 | `verification_rejected_requires_admin` | An administrator rejected the account's KYC/KYB for compliance | Contact your administrator to reopen verification; self-service resubmission is not available |
 | 403 | `verification_required` | Your account has not approved its own verification | Complete your [onboarding](#your-own-verification-onboarding) |
 | 403 | `company_account_required` | A person account tried to verify third parties | Company accounts only |
 | 403 | `service_disabled` | The `kyc` service is disabled for your account | Contact your operator |
@@ -828,7 +827,7 @@ open submission and liveness links do not charge again.
 Every account must approve identity verification before moving money out.
 Meanwhile you can fund and explore the API. Request your link with
 `POST /v1/me/verification/link` and complete it — approval unlocks everything.
-#### Hosted links vs data through the API — which one?
+#### Why does verification ask me to contact an administrator?An administrator may have deactivated or closed the account, or rejected its KYC/KYB. In those states, `POST /v1/me/verification/link` does not re-serve or create a self-service link. The administrator must restore the account or reopen verification first.#### Hosted links vs data through the API — which one?
 With links, your customer completes everything in the wizard (form +
 documents + liveness) and you never handle sensitive data. With API data
 you send the fields and upload documents via presign — useful if you have

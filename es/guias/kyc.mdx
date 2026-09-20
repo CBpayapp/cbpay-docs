@@ -9,15 +9,13 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 <EnvUrls lang="es" />
 ## Verificación de la cuenta antes de crear payins
 
-La cobranza autenticada requiere `kyc_status: approved` en personas y KYB aprobado en empresas; mientras tanto, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), OTP/collect, cuentas de depósito dedicadas, cobros con tarjeta guardada y suscripciones responden `403 verification_required`.
-Los links públicos, abonos pasivos, asignación de org-admin e instrumentos del sistema siguen disponibles; solicita `POST /v1/me/verification/link` y reintenta después de aprobar.
+La cobranza autenticada requiere `kyc_status: approved` en personas y KYB aprobado en empresas; mientras tanto, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), OTP/collect, cuentas de depósito dedicadas, cobros con tarjeta guardada y suscripciones responden `403 verification_required`. Los links públicos, abonos pasivos, asignación de org-admin e instrumentos del sistema siguen disponibles; solicita `POST /v1/me/verification/link` y reintenta después de aprobar.
 
 La **verificación de identidad** comprueba que una persona (KYC) o empresa
 (KYB) es quien dice ser, con evidencia real: formulario completo, subida de
 documentos validados por OCR y **prueba de vida en video**. Tiene dos caras:
 
-1. **Tu propia verificación (onboarding)** — obligatoria: hasta aprobarla,
-   tu cuenta solo puede **fondear** (payins, depósitos crypto, recibir
+1. **Tu propia verificación (onboarding)** — obligatoria: hasta aprobarla, tu cuenta solo puede **fondear** (payins, depósitos crypto, recibir
    transferencias) y consultar. Persona ⇒ KYC; empresa ⇒ KYB.
 2. **Verificación de tus clientes (solo cuentas empresa)** — generas links
    hosteados o envías los datos por API para verificar a tus propios
@@ -842,6 +840,7 @@ submission abierta y liveness links no cobran de nuevo.
 | 400 | `invalid_language` | `lang` inválido al pedir un informe de verificación | Usa `en`, `es` o `zh` |
 | 402 | `insufficient_funds` | Saldo insuficiente para la comisión | Fondea la cuenta y reintenta |
 | 403 | `verification_requires_2fa` | Una solicitud nueva exige un TOTP confirmado o un passkey registrado | Enrola un factor y reintenta `POST /v1/me/verification/link` |
+| 403 | `verification_rejected_requires_admin` | Un administrador rechazó el KYC/KYB de la cuenta por compliance | Contacta al administrador para reabrir la verificación; el reenvío self-service no está disponible |
 | 403 | `verification_required` | Tu cuenta aún no aprobó su propia verificación | Completa tu [onboarding](#tu-propia-verificacion-onboarding) |
 | 403 | `company_account_required` | Una cuenta persona intentó verificar terceros | Solo cuentas empresa |
 | 403 | `service_disabled` | El servicio `kyc` está deshabilitado para tu cuenta | Contacta a tu operador |
@@ -858,6 +857,7 @@ Toda cuenta debe aprobar su verificación antes de mover dinero hacia afuera.
 Mientras tanto puedes fondear y explorar la API. Pide el link con
 `POST /v1/me/verification/link` y complétalo — la aprobación desbloquea todo.
 </Accordion>
+<Accordion title="¿Por qué la verificación me pide contactar al administrador?">Un administrador pudo haber desactivado o cerrado la cuenta, o rechazado su KYC/KYB. En esos estados, `POST /v1/me/verification/link` no vuelve a servir ni crea un link self-service. Primero el administrador debe restaurar la cuenta o reabrir la verificación.</Accordion>
 <Accordion title="¿Qué diferencia hay entre links hosteados y datos por API?">
 Con links, tu cliente completa todo en el wizard (formulario + documentos +
 prueba de vida) y tú no manejas datos sensibles. Con datos por API tú envías

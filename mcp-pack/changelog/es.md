@@ -9,7 +9,20 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.113 · 4 versiones - 19 de septiembre de 2026
+## v2.114 · 5 versiones - 19 de septiembre de 2026
+
+### v2.114
+
+**Cambiado**
+
+- **Recuperación de verificación controlada por administrador**:
+  `POST /v1/me/verification/link` ahora responde `403 account_blocked` si un
+  administrador desactivó o cerró la cuenta, y
+  `403 verification_rejected_requires_admin` si un administrador rechazó su
+  KYC/KYB. El titular debe contactar al administrador para restaurar la
+  cuenta o reabrir la verificación; las cuentas que aún esperan verificación
+  (`none` o `pending`) no se ven afectadas, y las cuentas approved siguen
+  respondiendo `409 already_verified`.
 
 ### v2.113
 

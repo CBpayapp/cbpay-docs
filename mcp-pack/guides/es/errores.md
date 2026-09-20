@@ -34,7 +34,8 @@ Todos los errores comparten el mismo formato:
 | 403 | `account_required` | El endpoint exige credencial de cuenta |
 | 403 | `org_admin_required` | El endpoint exige credencial de administrador |
 | 403 | `forbidden` | Nivel de credencial no permitido |
-| 403 | `account_blocked` | La cuenta no está activa |
+| 403 | `account_blocked` | La cuenta no está activa; también bloquea `POST /v1/me/verification/link` — pide al administrador que la restaure |
+| 403 | `verification_rejected_requires_admin` | Compliance rechazó el KYC/KYB de la cuenta; el onboarding self-service está deshabilitado — contacta al administrador para reabrir la verificación |
 | 403 | `service_disabled` | El servicio no está habilitado para tu cuenta (consulta `GET /v1/services`) |
 | 403 | `org_suspended` | El servicio está suspendido; contacta al equipo de CBPay |
 | 403 | `company_only` | Función solo para cuentas empresa |
