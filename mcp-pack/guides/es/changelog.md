@@ -9,6 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.116 · 1 versión - 20 de septiembre de 2026
+### v2.116
+
+**Cambiado**
+
+- Se aclaró el contenido de los packs de evidencia de disputas generados por
+  la organización: incluyen detalles de la operación de tarjeta para payins
+  `card`, destinos de gastos FIFO e identidad KYB/KYC verificada completa del
+  comercio; el pagador permanece enmascarado y se excluyen payloads crudos/
+  campos adyacentes al PAN.
 ## v2.115 · 6 versiones - 19 de septiembre de 2026
 
 ### v2.115

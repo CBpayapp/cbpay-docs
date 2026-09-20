@@ -18,6 +18,21 @@ The account API is read-only for case decisions. A successful upload does not
 change the decision; it adds an immutable evidence version to the case.
 </Note>
 
+## Evidence pack contents
+
+When an organization generates an evidence pack, the account can download the
+same authenticated, private PDF associated with the case. It contains typed
+payin fields, ledger/FIFO evidence and external spend references.
+
+For card payins, the pack includes the processor-facing card operation
+(transaction references, approval, amount/currency/date, masked card details,
+issuer/country, 3DS, AVS/CVV, decision-manager result, device fingerprint and
+masked payer context). FIFO spends include the withdrawal or payout ID,
+asset/currency, status, destination address or bank reference and transaction
+hash when available. The merchant's verified KYB/KYC identity is included in
+full for processor representation; the payer remains masked. Raw payin
+payloads and PAN-adjacent fields are excluded.
+
 ## Open cases by identifiers
 
 Organization administrators can open several cases from a pasted list of

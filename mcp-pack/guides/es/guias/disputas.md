@@ -15,6 +15,22 @@ organización pueden abrir, enviar o resolver un caso.
 > **Nota**
 La API de cuenta es de solo lectura para decisiones. Una subida exitosa no
 cambia el resultado: agrega una versión inmutable de evidencia.
+## Contenido del pack de evidencia
+
+Cuando la organización genera un pack, la cuenta puede descargar el mismo PDF
+privado y autenticado asociado al caso. Incluye campos tipados del payin,
+evidencia de ledger/FIFO y referencias externas del gasto.
+
+Para payins con tarjeta, el pack incluye la operación que se presenta al
+procesador (referencias de transacción, aprobación, monto/moneda/fecha,
+detalles enmascarados de la tarjeta, emisor/país, 3DS, AVS/CVV, resultado del
+motor de decisión, fingerprint del dispositivo y contexto enmascarado del
+pagador). Los gastos FIFO incluyen el ID del retiro o payout, activo/moneda,
+estado, dirección de destino o referencia bancaria y hash de transacción si
+existe. La identidad verificada KYB/KYC del comercio se incluye completa para
+representarlo ante el procesador; el pagador permanece enmascarado. Se
+excluyen los payloads crudos y los campos adyacentes al PAN.
+
 ## Abrir casos por identificadores
 
 Los administradores de la organización pueden abrir varios casos desde una
