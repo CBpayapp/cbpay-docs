@@ -8,8 +8,17 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.114 · 5 个版本 - 2026年9月19日
+## v2.115 · 6 个版本 - 2026年9月19日
 
+### v2.115
+
+**变更**
+
+- **我的账户标签与说明**：Fiat 选项卡现在显示为 **法币到加密货币**；
+  URL slug 仍为 `?tab=fiat`。Crypto、法币到加密货币和 Banking 选项卡现在
+  都包含简短说明，并提示收款账户只属于当前账户、不会与他人共享。当图标
+  表示网络时，TRON 和 Ethereum 使用各自的网络图标，而不是资产图标。
+  API 路由和 response shape 不变。
 ### v2.114
 
 **变更**
@@ -20,7 +29,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   账户持有人必须联系管理员恢复账户或重新开放验证；仍在等待验证的账户
   （`none` 或 `pending`）不受影响，`approved` 账户仍返回
   `409 already_verified`。
-
 ### v2.113
 
 **变更**

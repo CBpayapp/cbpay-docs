@@ -36,11 +36,20 @@ Debajo del hero hay tres pestañas:
 
 - **Crypto** (`?tab=crypto`): elige una moneda y luego una red para ver solo
   la wallet de depósito seleccionada, con un QR brandeado.
-- **Fiat** (`?tab=fiat`): elige un país y ve la ficha de **datos para
+-  Deposita crypto directo a tu wallet de cada red.
+- **Fiat a Crypto** (`?tab=fiat`): elige un país y ve la ficha de **datos para
   transferir** de cada cuenta de ese país. Las fichas Fiat nunca muestran QR.
+-  Deposita fiat a tus datos y se convierte a crypto en tu saldo.
 - **Banking** (`?tab=banking`): elige un país y ve las cuentas Banking.
   Estados Unidos tiene subpestañas **ACH**, **Wire** y **SWIFT**; Europa
   muestra vIBANes Banking y wallets de empresa.
+-  Cuentas bancarias a tu nombre con saldo en moneda local fiat.
+
+**Estas cuentas son solo tuyas: únicas, no compartidas.**
+
+Cuando un icono representa una red, la página usa el icono de esa red: TRON
+usa su marca roja y Ethereum su diamante azul. Los iconos de activos siguen
+representando los activos.
 
 La pestaña y el instrumento seleccionado quedan reflejados en la URL:
 
@@ -55,7 +64,7 @@ nunca exponen otra cuenta ni crean un destino.
 ```mermaid
 flowchart LR
   open["Abrir /accounts"] --> hero["Foto + nombre + alias + QR"]
-  open --> tabs["Pestañas Crypto / Fiat / Banking"]
+  open --> tabs["Pestañas Crypto / Fiat a Crypto / Banking"]
   tabs --> crypto["Moneda → red → ficha wallet"]
   tabs --> fiat["País → ficha datos para transferir"]
   tabs --> banking["País → cuenta → ACH/Wire/SWIFT"]
@@ -71,14 +80,14 @@ Selecciona **Mis cuentas** en la barra lateral del portal. La etiqueta
 no cambian.
 </Step>
 <Step title="Elige pestaña y selección">
-Selecciona **Crypto**, **Fiat** o **Banking**, y luego la moneda, país,
+Selecciona **Crypto**, **Fiat a Crypto** o **Banking**, y luego la moneda, país,
 cuenta o riel de Estados Unidos que muestra la página. Puedes guardar la vista
 actual con su deep-link `?tab=&sel=`.
 </Step>
 <Step title="Copia o comparte los datos correctos">
 Las fichas Crypto y Banking pueden mostrar un QR con el símbolo de branding
 de la organización, copiar valores individuales o compartir el riel
-seleccionado. Las fichas Fiat no tienen QR: usa **Copiar todo** para copiar
+seleccionado. Las fichas Fiat a Crypto no tienen QR: usa **Copiar todo** para copiar
 la ficha completa, con titular, banco, NIT cuando venga informado y número
 receptor.
 </Step>
@@ -89,7 +98,7 @@ receptor.
 | Pestaña | Qué contiene | Qué puedes compartir |
 |---|---|---|
 | **Crypto** | Elige un activo y luego una red. La ficha muestra solo esa wallet, su dirección, red, estado de solo recepción y fecha de creación. Incluye TRON/USDT, Ethereum/USDT, Ethereum/USDC y Bitcoin/BTC. | La dirección blockchain seleccionada o un QR con el símbolo de la organización. |
-| **Fiat** | Elige **MX**, **BO** o **EU**. Las cuentas MX/BO muestran una ficha con titular, `bank_name` cuando viene informado, `merchant_nit` para BO cuando viene informado y CLABE o número de cuenta. EU muestra el vIBAN de fondeo (`purpose: funding_usdt`). Fiat **no tiene QR**. | La ficha completa, copiada con **Copiar todo**, o el IBAN de fondeo después de revisar su estado. |
+| **Fiat a Crypto** | Elige **MX**, **BO** o **EU**. Las cuentas MX/BO muestran una ficha con titular, `bank_name` cuando viene informado, `merchant_nit` para BO cuando viene informado y CLABE o número de cuenta. EU muestra el vIBAN de fondeo (`purpose: funding_usdt`). La pestaña Fiat a Crypto **no tiene QR**. | La ficha completa, copiada con **Copiar todo**, o el IBAN de fondeo después de revisar su estado. |
 | **Banking** | Elige **US** o **EU**. Las cuentas US se agrupan en subpestañas ACH, Wire y SWIFT usando los datos receptores disponibles. EU muestra vIBANes Banking (`purpose: banking_eur`) y wallets EUR de empresa. Las fichas muestran cuenta/IBAN, routing o SWIFT, estado y activación cuando existen. | El riel Banking seleccionado, incluido su QR brandeado cuando esté disponible, o el destino EUR activo. |
 
 El QR y el alias siguen disponibles en el hero CBPAY sobre las pestañas. El
@@ -107,7 +116,7 @@ superficie de navegación y compartir, no un contrato API nuevo.
 
 - **Sin QR del hero:** la cuenta no tiene un token QR disponible. La página no
   inventa un QR ni muestra un placeholder como si pudiera recibir dinero.
-- **Fiat no tiene QR por diseño:** usa la ficha de datos para transferir y
+- **Fiat a Crypto no tiene QR por diseño:** usa la ficha de datos para transferir y
   **Copiar todo**. La ausencia de QR en Fiat no es un error de provisión.
 - **Sin CLABE o cuenta BOB:** estos destinos se provisionan solo después de
   aprobar el KYC de una persona o el KYB de una empresa. Una aprobación

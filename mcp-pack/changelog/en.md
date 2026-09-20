@@ -8,8 +8,18 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.114 · 5 versions - September 19, 2026
+## v2.115 · 6 versions - September 19, 2026
 
+### v2.115
+
+**Changed**
+
+- **My accounts labels and guidance**: the Fiat tab is now labeled **Fiat to
+  crypto**; its URL slug remains `?tab=fiat`. The Crypto, Fiat to crypto and
+  Banking tabs now include short introductions and a note that receiving
+  accounts are unique to the account and not shared. Where an icon denotes a
+  network, TRON and Ethereum now use their network icons instead of asset
+  icons. No API route or response shape changed.
 ### v2.114
 
 **Changed**
@@ -21,7 +31,6 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   administrator to restore the account or reopen verification; accounts still
   awaiting verification (`none` or `pending`) are unaffected, while approved
   accounts still return `409 already_verified`.
-
 ### v2.113
 
 **Changed**

@@ -34,12 +34,21 @@ Below the hero, the page has three tabs:
 
 - **Crypto** (`?tab=crypto`): choose a crypto asset, then a network, and view
   only the selected deposit wallet with a branded QR.
-- **Fiat** (`?tab=fiat`): choose a country and view the receiving
+-  Deposit crypto straight to your wallet on each network.
+- **Fiat to crypto** (`?tab=fiat`): choose a country and view the receiving
   **transfer-details sheet** for each account in that country. Fiat sheets
   never show a QR.
+-  Deposit fiat to your details and it converts to crypto in your balance.
 - **Banking** (`?tab=banking`): choose a country and view Banking accounts.
   United States accounts have the **ACH**, **Wire** and **SWIFT** sub-tabs;
   Europe shows Banking virtual IBANs and company wallets.
+-  Bank accounts in your name with a balance in local fiat currency.
+
+**These accounts are yours alone: unique, not shared.**
+
+Where an icon denotes a network, the page uses the network icon: the red TRON
+mark for TRON and the blue Ethereum diamond for Ethereum. Token icons continue
+to denote assets.
 
 The selected tab and instrument are reflected in the URL. Examples:
 
@@ -54,7 +63,7 @@ another account or create a destination.
 ```mermaid
 flowchart LR
   open["Open /accounts"] --> hero["Photo + name + alias + account QR"]
-  open --> tabs["Crypto / Fiat / Banking tabs"]
+  open --> tabs["Crypto / Fiat to crypto / Banking tabs"]
   tabs --> crypto["Asset → network → wallet card"]
   tabs --> fiat["Country → transfer-details sheet"]
   tabs --> banking["Country → account → ACH/Wire/SWIFT"]
@@ -70,13 +79,13 @@ new name for the area previously shown as **My wallets**; the underlying
 wallets and addresses are unchanged.
 ### Choose a tab and selection
 
-Select **Crypto**, **Fiat** or **Banking**, then choose the asset, country,
+Select **Crypto**, **Fiat to crypto** or **Banking**, then choose the asset, country,
 account or US rail shown by the page. You can bookmark the current view with
 its `?tab=&sel=` deep-link.
 ### Copy or share the right details
 
 Crypto and Banking cards can display a QR with the organization's branding
-symbol, copy individual values or share the selected rail. Fiat cards have no
+symbol, copy individual values or share the selected rail. Fiat to crypto cards have no
 QR: use **Copy all** to copy the complete transfer-details sheet, including
 the holder, bank, NIT when supplied and receiving number.
 ## What each tab shows
@@ -84,7 +93,7 @@ the holder, bank, NIT when supplied and receiving number.
 | Tab | What it contains | What you can share |
 |---|---|---|
 | **Crypto** | Pick an asset and then a network. The selected card shows only that wallet, its address, network, receive-only status and creation time. Supported pairs include TRON/USDT, Ethereum/USDT, Ethereum/USDC and Bitcoin/BTC. | The selected blockchain address or a QR with the organization symbol. |
-| **Fiat** | Pick **MX**, **BO** or **EU**. MX/BO accounts show a transfer-details sheet with the holder, `bank_name` when returned, `merchant_nit` for BO when returned, and the CLABE or account number. EU shows the funding virtual IBAN (`purpose: funding_usdt`). Fiat has **no QR**. | The complete transfer-details sheet, copied with **Copy all**, or the funding IBAN after checking its status. |
+| **Fiat to crypto** | Pick **MX**, **BO** or **EU**. MX/BO accounts show a transfer-details sheet with the holder, `bank_name` when returned, `merchant_nit` for BO when returned, and the CLABE or account number. EU shows the funding virtual IBAN (`purpose: funding_usdt`). The Fiat to crypto tab has **no QR**. | The complete transfer-details sheet, copied with **Copy all**, or the funding IBAN after checking its status. |
 | **Banking** | Pick **US** or **EU**. US accounts are grouped under ACH, Wire and SWIFT sub-tabs using the available receiving fields. EU shows Banking virtual IBANs (`purpose: banking_eur`) and EUR company wallets. Cards show account/IBAN, routing or SWIFT, status and activation details when available. | The selected Banking rail, including its branded QR when available, or the active EUR destination. |
 
 The QR and alias remain available in the CBPAY hero above the tabs. The QR
@@ -102,7 +111,7 @@ navigation and sharing surface, not a new API contract.
 
 - **No hero QR:** the account has no QR token available. The page does not
   invent a QR or display a placeholder as if it could receive money.
-- **Fiat has no QR by design:** use the transfer-details sheet and **Copy
+- **Fiat to crypto has no QR by design:** use the transfer-details sheet and **Copy
   all**. The absence of a QR in Fiat is not a provisioning error.
 - **No CLABE or BOB account:** local deposit destinations are provisioned only
   after the account's KYC (person) or KYB (company) is approved. A pending
