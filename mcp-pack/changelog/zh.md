@@ -8,7 +8,18 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.113 · 4 个版本 - 2026年9月19日
+## v2.114 · 5 个版本 - 2026年9月19日
+
+### v2.114
+
+**变更**
+
+- **管理员控制的验证恢复**：当管理员停用或关闭账户时，
+  `POST /v1/me/verification/link` 现在返回 `403 account_blocked`；当管理员
+  拒绝账户的 KYC/KYB 时返回 `403 verification_rejected_requires_admin`。
+  账户持有人必须联系管理员恢复账户或重新开放验证；仍在等待验证的账户
+  （`none` 或 `pending`）不受影响，`approved` 账户仍返回
+  `409 already_verified`。
 
 ### v2.113
 

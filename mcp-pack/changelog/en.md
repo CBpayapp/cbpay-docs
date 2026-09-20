@@ -8,7 +8,19 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.113 · 4 versions - September 19, 2026
+## v2.114 · 5 versions - September 19, 2026
+
+### v2.114
+
+**Changed**
+
+- **Administrator-controlled verification recovery**: `POST /v1/me/verification/link`
+  now returns `403 account_blocked` when an administrator has deactivated or
+  closed the account, and `403 verification_rejected_requires_admin` when an
+  administrator rejected its KYC/KYB. The account holder must contact an
+  administrator to restore the account or reopen verification; accounts still
+  awaiting verification (`none` or `pending`) are unaffected, while approved
+  accounts still return `409 already_verified`.
 
 ### v2.113
 

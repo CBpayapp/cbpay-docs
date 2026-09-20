@@ -34,7 +34,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 403 | `account_required` | 该端点需要账户级凭证 |
 | 403 | `org_admin_required` | 该端点需要管理员凭证 |
 | 403 | `forbidden` | 凭证级别不允许 |
-| 403 | `account_blocked` | 账户处于非活跃状态 |
+| 403 | `account_blocked` | 账户不是 active；这也会阻止 `POST /v1/me/verification/link` —— 请联系管理员恢复账户 |
+| 403 | `verification_rejected_requires_admin` | 合规团队已拒绝该账户的 KYC/KYB；已禁用自助入驻 —— 请联系管理员重新开放验证 |
 | 403 | `member_disabled` | 该用户已被禁止登录；请联系您组织的管理员 |
 | 403 | `passkey_rejected` | 通行密钥（passkey）验证失败；请重试或使用密码登录 |
 | 403 | `owner_required` | 只有账户的 owner 成员才能执行该操作 |

@@ -1,5 +1,5 @@
 {
-  "count": 280,
+  "count": 281,
   "errors": [
     {
       "category": {
@@ -122,9 +122,23 @@
       "code": "account_blocked",
       "http": 403,
       "meaning": {
-        "en": "The account is not active",
-        "es": "La cuenta no está activa",
-        "zh": "账户处于非活跃状态"
+        "en": "The account is not active; this also blocks `POST /v1/me/verification/link` — ask an administrator to restore it",
+        "es": "La cuenta no está activa; también bloquea `POST /v1/me/verification/link` — pide al administrador que la restaure",
+        "zh": "账户不是 active；这也会阻止 `POST /v1/me/verification/link` —— 请联系管理员恢复账户"
+      }
+    },
+    {
+      "category": {
+        "en": "Authentication and permissions",
+        "es": "Autenticación y permisos",
+        "zh": "身份认证与权限"
+      },
+      "code": "verification_rejected_requires_admin",
+      "http": 403,
+      "meaning": {
+        "en": "Compliance rejected the account's KYC/KYB; self-service onboarding is disabled — contact your administrator to reopen verification",
+        "es": "Compliance rechazó el KYC/KYB de la cuenta; el onboarding self-service está deshabilitado — contacta al administrador para reabrir la verificación",
+        "zh": "合规团队已拒绝该账户的 KYC/KYB；已禁用自助入驻 —— 请联系管理员重新开放验证"
       }
     },
     {

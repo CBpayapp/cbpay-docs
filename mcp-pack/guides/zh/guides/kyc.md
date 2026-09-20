@@ -705,6 +705,7 @@ curl "https://api.qbank.cl/platform/verify/reports/Bc3d4e5f6a7b84c9d0e1f2a3b4c5d
 | 400 | `invalid_language` | 请求验证报告时 `lang` 无效 | 使用 `en`、`es` 或 `zh` |
 | 402 | `insufficient_funds` | 余额不足以支付费用 | 为账户充值后重试 |
 | 403 | `verification_requires_2fa` | 新申请需要已确认的 TOTP 或已注册的通行密钥 | 注册一个因子后重试 `POST /v1/me/verification/link` |
+| 403 | `verification_rejected_requires_admin` | 合规团队已拒绝该账户的 KYC/KYB | 联系管理员重新开放验证；不提供自助重新提交 |
 | 403 | `verification_required` | 您的账户尚未通过自身的验证 | 完成您的[入驻](#your-own-verification-onboarding) |
 | 403 | `company_account_required` | 个人账户尝试验证第三方 | 仅限企业账户 |
 | 403 | `service_disabled` | 您的账户已禁用 `kyc` 服务 | 联系您的运营方 |
@@ -717,7 +718,7 @@ curl "https://api.qbank.cl/platform/verify/reports/Bc3d4e5f6a7b84c9d0e1f2a3b4c5d
 
 #### 为什么注册后不能立即创建付款？
 每个账户在向外转出资金前都必须先通过身份验证（监管要求）。在此期间您可以入金（收款、加密货币充值、转入的内部转账）并探索 API。使用 `POST /v1/me/verification/link` 申请您的链接并完成它——批准后所有功能会自动解锁。
-#### 托管链接与通过 API 提交数据——该选哪个？
+#### 为什么验证会要求我联系管理员？管理员可能停用了或关闭了账户，或者拒绝了账户的 KYC/KYB。在这些状态下，`POST /v1/me/verification/link` 不会重新提供或创建自助链接。必须先由管理员恢复账户或重新开放验证。#### 托管链接与通过 API 提交数据——该选哪个？
 使用链接时，您的客户在向导中完成全部流程（表单 + 证件 + 活体检测），您完全不接触敏感数据。使用 API 数据方式时，您提交字段并通过预签名上传证件——如果您有自己的表单会很有用——但活体检测仍需要一个活体检测链接（它是摄像头流程，无法在服务器之间完成）。
 #### 费用在什么时候计收，什么时候不计收？
 在创建第三方链接或提交件时计费（正式模式）。不计费的情形：您自己的入驻验证、重新发送处于开放状态的提交件（相同的 external_customer_id）、活体检测链接、查询和证件操作。若创建失败，费用会自动退款。
