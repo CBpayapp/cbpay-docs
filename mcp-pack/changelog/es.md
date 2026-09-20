@@ -9,8 +9,18 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.114 · 5 versiones - 19 de septiembre de 2026
+## v2.115 · 6 versiones - 19 de septiembre de 2026
 
+### v2.115
+
+**Cambiado**
+
+- **Etiquetas y orientación de Mis cuentas**: la pestaña Fiat ahora se llama
+  **Fiat a Crypto**; conserva el slug `?tab=fiat`. Las pestañas Crypto, Fiat a
+  Crypto y Banking ahora incluyen intros breves y una línea que indica que las
+  cuentas receptoras son únicas de la cuenta y no compartidas. Cuando un icono
+  representa una red, TRON y Ethereum usan sus iconos de red en vez del icono
+  del activo. No cambian las rutas ni los shapes de la API.
 ### v2.114
 
 **Cambiado**
@@ -23,7 +33,6 @@ con anticipación y quedan marcados como **Breaking**.
   cuenta o reabrir la verificación; las cuentas que aún esperan verificación
   (`none` o `pending`) no se ven afectadas, y las cuentas approved siguen
   respondiendo `409 already_verified`.
-
 ### v2.113
 
 **Cambiado**

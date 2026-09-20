@@ -30,11 +30,19 @@ hero 下方有三个选项卡：
 
 - **Crypto**（`?tab=crypto`）：先选择加密货币，再选择网络，只查看所选
   充值钱包，并显示带品牌标识的 QR。
-- **Fiat**（`?tab=fiat`）：选择国家，查看该国家每个账户的**转账资料卡**。
-  Fiat 资料卡不会显示 QR。
+-  将加密货币直接存入你每个网络的钱包。
+- **法币到加密货币**（`?tab=fiat`）：选择国家，查看该国家每个账户的
+  **转账资料卡**。法币到加密货币资料卡不会显示 QR。
+-  将法币存入你的收款信息，自动转换为余额中的加密货币。
 - **Banking**（`?tab=banking`）：选择国家，查看 Banking 账户。美国账户
   有 **ACH**、**Wire** 和 **SWIFT** 子选项卡；欧洲显示 Banking 虚拟
   IBAN 和企业 wallet。
+-  以你名义开立的银行账户，余额为当地法币。
+
+**这些账户只属于你：专属持有，不与他人共用。**
+
+当图标表示网络时，页面使用网络自己的图标：TRON 使用红色 TRON 标志，
+Ethereum 使用蓝色以太坊菱形；代币图标仍表示资产。
 
 选项卡和目的地会反映在 URL 中：
 
@@ -49,7 +57,7 @@ hero 下方有三个选项卡：
 ```mermaid
 flowchart LR
   open["打开 /accounts"] --> hero["照片 + 姓名 + alias + 账户 QR"]
-  open --> tabs["Crypto / Fiat / Banking 选项卡"]
+  open --> tabs["Crypto / 法币到加密货币 / Banking 选项卡"]
   tabs --> crypto["货币 → 网络 → 钱包资料卡"]
   tabs --> fiat["国家 → 转账资料卡"]
   tabs --> banking["国家 → 账户 → ACH/Wire/SWIFT"]
@@ -64,19 +72,19 @@ flowchart LR
 显示名称；底层钱包和地址不变。
 ### 选择选项卡和目的地
 
-选择 **Crypto**、**Fiat** 或 **Banking**，然后选择页面显示的货币、国家、
+选择 **Crypto**、**法币到加密货币** 或 **Banking**，然后选择页面显示的货币、国家、
 账户或美国通道。可以使用 `?tab=&sel=` deep-link 保存当前视图。
 ### 复制或分享正确的信息
 
 Crypto 和 Banking 资料卡可以显示带组织品牌标识的 QR、复制单个字段或
-分享所选通道。Fiat 资料卡没有 QR：使用**复制全部**复制完整的转账资料，
+分享所选通道。法币到加密货币资料卡没有 QR：使用**复制全部**复制完整的转账资料，
 包括持有人、银行、可用时的 NIT 和收款号码。
 ## 每个选项卡显示什么
 
 | 选项卡 | 包含内容 | 可以分享什么 |
 |---|---|---|
 | **Crypto** | 先选择资产，再选择网络。资料卡只显示所选钱包、地址、网络、只接收状态和创建时间。包括 TRON/USDT、Ethereum/USDT、Ethereum/USDC 与 Bitcoin/BTC。 | 所选区块链地址或带组织标识的 QR。 |
-| **Fiat** | 选择 **MX**、**BO** 或 **EU**。MX/BO 账户显示持有人、返回时的 `bank_name`、BO 返回时的 `merchant_nit`，以及 CLABE 或账户号码。EU 显示充值虚拟 IBAN（`purpose: funding_usdt`）。Fiat **没有 QR**。 | 使用**复制全部**复制完整转账资料，或确认状态后分享充值 IBAN。 |
+| **法币到加密货币** | 选择 **MX**、**BO** 或 **EU**。MX/BO 账户显示持有人、返回时的 `bank_name`、BO 返回时的 `merchant_nit`，以及 CLABE 或账户号码。EU 显示充值虚拟 IBAN（`purpose: funding_usdt`）。法币到加密货币选项卡**没有 QR**。 | 使用**复制全部**复制完整转账资料，或确认状态后分享充值 IBAN。 |
 | **Banking** | 选择 **US** 或 **EU**。US 账户按 ACH、Wire 和 SWIFT 子选项卡显示可用的收款字段。EU 显示 Banking 虚拟 IBAN（`purpose: banking_eur`）和 EUR 企业 wallet。资料卡在有数据时显示账户/IBAN、routing 或 SWIFT、状态和激活信息。 | 所选 Banking 通道（有数据时包含品牌 QR），或已激活的 EUR 目的地。 |
 
 QR 与 alias 仍显示在选项卡上方的 CBPAY hero 中。QR 用于识别账户并接收
@@ -93,7 +101,7 @@ NIT 或账户号码。
 
 - **没有 hero QR：**账户没有可用 QR token。页面不会伪造 QR，也不会把
   占位图当作可收款目的地。
-- **Fiat 按设计没有 QR：**请使用转账资料卡和**复制全部**。Fiat 中没有
+- **法币到加密货币按设计没有 QR：**请使用转账资料卡和**复制全部**。法币到加密货币中没有
   QR 不代表配置失败。
 - **没有 CLABE 或 BOB 账户：**本地收款目的地只有在个人 KYC 或企业 KYB
   审核通过后才会配置。审核进行中、走廊未启用或已有 claim 时，分区可能
