@@ -143,6 +143,24 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
 - 使用相同 `idempotency_key` 重试会返回原始出金。玻利维亚的扫码引用
   为一次性（已扫描的二维码只能支付一次）；巴西的静态 PIX 二维码可
   复用，每笔支付携带自己的键。
+confirm 请求还接受 `settlement_asset`（`USDT`、`USDC`、`BTC`、`GOLD`、
+`SILVER` 或 `PLATINUM`），用于选择要扣款的虚拟余额。省略时使用账户
+默认结算资产。支付的内部标识由服务端生成：集成方只发送 `scan` 返回
+的 reference，以及保留两位小数的金额。
+
+### 状态对账
+
+如果同步响应还不能证明终态，payout 会保持 `processing`。读取已有资源：
+
+```http
+GET /v1/payouts/{payoutID}
+```
+
+不要创建另一个 payout，也不要使用新的 key。持续读取直到状态变为
+`completed` 或 `failed`；confirm 返回 `failed` 表示扣款已经退款。客户
+使用相同 key 重复 confirm 时，会收到原始 payout 以及
+`idempotency_hit: true`。
+
 ## 错误
 
 | HTTP | 代码 | 处理方式 |

@@ -9,7 +9,15 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.112 · 3 versiones - 19 de septiembre de 2026
+## v2.113 · 4 versiones - 19 de septiembre de 2026
+
+### v2.113
+
+**Cambiado**
+
+- La guía de payout QR ahora documenta el contrato sincronizado de dos pasos:
+  lectura sin débito, confirmación idempotente, `settlement_asset` opcional y
+  reconciliación por el payout existente cuando el estado queda transitorio.
 
 ### v2.112
 
