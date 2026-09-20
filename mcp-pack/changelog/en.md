@@ -8,7 +8,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.112 · 3 versions - September 19, 2026
+## v2.113 · 4 versions - September 19, 2026
+
+### v2.113
+
+**Changed**
+
+- The QR payout guide now documents the synchronized two-step contract:
+  debit-free scan, idempotent confirm, optional `settlement_asset` and
+  reconciliation through the existing payout when the status is transient.
 
 ### v2.112
 

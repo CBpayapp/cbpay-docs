@@ -149,6 +149,26 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
   En Bolivia la referencia del scan es de un solo uso (un QR escaneado solo
   puede pagarse una vez); en Brasil el QR PIX estático es reutilizable y
   cada pago lleva su propia clave.
+El confirm también acepta `settlement_asset` (`USDT`, `USDC`, `BTC`, `GOLD`,
+`SILVER` o `PLATINUM`) para elegir el saldo virtual que se debita; si se omite,
+se usa el activo predeterminado de la cuenta. El servidor genera los
+identificadores internos del pago: el integrador solo envía la referencia
+devuelta por `scan` y el monto con dos decimales.
+
+### Reconciliación del estado
+
+Si la respuesta síncrona no puede demostrar un estado terminal, el payout
+queda en `processing`. Consulta el recurso existente:
+
+```http
+GET /v1/payouts/{payoutID}
+```
+
+No crees otro payout ni uses una clave nueva. Repite la lectura hasta obtener
+`completed` o `failed`; un `failed` de confirmación implica que el débito ya
+fue reembolsado. Si el cliente repite el confirm con la misma clave, recibe
+el payout original con `idempotency_hit: true`.
+
 ## Errores
 
 | HTTP | Código | Qué hacer |
