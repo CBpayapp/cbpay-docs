@@ -9,8 +9,20 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.117 · 1 versión - 21 de septiembre de 2026
+## v2.118 · 2 versiones - 21 de septiembre de 2026
 
+### v2.118
+
+**Cambiado**
+
+- **Flujo deposit-first en el portal**: En `/payins/new`, Bolivia (`BO`) y
+  México (`MX`) ahora muestran siempre la cuenta de depósito dedicada, igual
+  que Mis cuentas. Si no existe un instrumento dedicado, el portal muestra
+  un estado vacío honesto con instrucciones para crear la cuenta o completar
+  la verificación; ya no ofrece las opciones de pagador de una transferencia
+  anunciada para estos corredores. Las rutas y los shapes de la API no
+  cambian, y los integradores todavía pueden usar el `POST /v1/payins`
+  anunciado.
 ### v2.117
 
 **Cambiado**
