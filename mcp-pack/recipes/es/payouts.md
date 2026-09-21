@@ -1202,9 +1202,8 @@ no solo al de EE. UU. (por ejemplo, también a un SWIFT internacional como
 
 ### Sube el documento
 
-Envía el archivo con `POST /v1/payouts/documents`: binario crudo con su
-`Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) o XLS(X), hasta
-50 MB) y el nombre del archivo en el query param `name`.
+Envía el archivo con `POST /v1/payouts/documents`: binario crudo un PDF (`application/pdf`, hasta 50 MB) y el nombre en el query
+param `name`. La interfaz actual de payouts US/USD acepta solo PDF.
 
 ```bash
 curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=factura-2210.pdf" \
