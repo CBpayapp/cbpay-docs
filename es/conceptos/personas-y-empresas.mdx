@@ -74,7 +74,8 @@ límites de gasto por tarjeta, servicios habilitados — funciona idéntico.
 |---|---|
 | `403 company_only` | Intentaste una función de empresa (miembros) desde una cuenta persona |
 | `422 wallet_limit_reached` | La cuenta ya tiene su wallet de esa combinación (depósito: todos; segregada: personas) |
-| `409 card_limit_reached` | Una persona intentó su segunda tarjeta del mismo tipo |
+| `409 card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud de tarjeta abierta |
+| `400 physical_temporarily_unavailable` | La emisión física nueva está pausada; las tarjetas físicas existentes siguen operativas |
 
 <Note>
 ¿Tu operación creció de persona a empresa? El tipo de cuenta no se cambia

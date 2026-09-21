@@ -27,7 +27,7 @@ La página organiza el pago en **cuatro pestañas**:
 
 - **CBPay** — pago directo con la app: el alias y el QR del comercio;
   quien escanea con la app paga al instante por transferencia interna,
-  en cualquiera de los 4 saldos.
+  en cualquiera de los 6 saldos.
 - **Crypto** — las monedas disponibles agrupadas por red (hoy USDT en
   TRON y Ethereum, USDC en Ethereum y BTC; redes nuevas aparecen solas
   al habilitarse), cada una con una dirección de depósito exclusiva de
@@ -145,11 +145,11 @@ y redirige a tu `success_url` si la configuraste.
   copiar. Si el asset pagado difiere del `settlement_asset`,
   el due cotizado **ya incluye la conversión** (la cubre el pagador; tú
   recibes tu meta exacta). Los pagos parciales se acumulan y la página
-  muestra cuánto falta. Cotizaciones con BTC/GOLD se refrescan cada 15
+  muestra cuánto falta. Cotizaciones con BTC/GOLD/SILVER/PLATINUM se refrescan cada 15
   minutos.
 - **App CBPay**: el QR del comercio embebe el link
   (`cbpay:pay?to=…&checkout=…`). La app paga por transferencia interna en
-  cualquiera de los 4 saldos: mismo asset ⇒ meta exacta; distinto ⇒ due
+  cualquiera de los 6 saldos: mismo asset ⇒ meta exacta; distinto ⇒ due
   con la conversión incluida. El monto se valida server-side contra una
   cotización fresca — si no cubre el cobro responde `422
   checkout_amount_mismatch` con el monto vigente. Integradores: `POST
