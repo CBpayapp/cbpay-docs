@@ -69,7 +69,8 @@ per-card spending limits, enabled services — works identically.
 |---|---|
 | `403 company_only` | You tried a company feature (members) from a person account |
 | `422 wallet_limit_reached` | The account already holds its wallet for that pair (deposit: everyone; segregated: persons) |
-| `409 card_limit_reached` | A person tried their second card of the same type |
+| `409 card_limit_reached` | A person account already has one live card or one open card application |
+| `400 physical_temporarily_unavailable` | New physical issuance is temporarily paused; existing physical cards continue operating |
 
 > **Note**
 Did your operation outgrow a person account? The account type cannot be

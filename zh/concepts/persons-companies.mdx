@@ -72,7 +72,8 @@ CBPay 有两种账户类型 — **个人**（`type: "person"`）和**企业**
 |---|---|
 | `403 company_only` | 您在个人账户上尝试了企业功能（成员） |
 | `422 wallet_limit_reached` | 该账户在此组合下已持有对应钱包（充值钱包：所有账户；隔离钱包：个人账户） |
-| `409 card_limit_reached` | 个人账户尝试创建同类型的第二张卡 |
+| `409 card_limit_reached` | 个人账户已有一张有效卡或一条开放申请 |
+| `400 physical_temporarily_unavailable` | 新实体卡发行暂时暂停；已经发行的实体卡继续正常使用 |
 
 <Note>
 您的业务规模超出了个人账户的能力？账户类型无法通过 API 更改：
