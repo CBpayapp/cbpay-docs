@@ -8,6 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.117 · 1 version - September 21, 2026
+
+### v2.117
+
+**Changed**
+
+- US/USD bank-rail payout guidance now requires a **PDF** supporting document
+  for the `ach`, `wire` and `swift` flows. The operator-only manual release
+  action is not part of the public integrator API; payout creation and the
+  existing status/webhook lifecycle are unchanged.
+
 ## v2.116 · 1 version - September 20, 2026
 ### v2.116
 

@@ -9,6 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.117 · 1 versión - 21 de septiembre de 2026
+
+### v2.117
+
+**Cambiado**
+
+- La guía de payouts bancarios US/USD ahora exige un documento de respaldo en
+  **PDF** para los flujos `ach`, `wire` y `swift`. La acción de liberación
+  manual es exclusiva del operador y no forma parte de la API pública del
+  integrador; la creación y el ciclo existente de estados/webhooks no cambian.
+
 ## v2.116 · 1 versión - 20 de septiembre de 2026
 ### v2.116
 

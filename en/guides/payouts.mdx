@@ -1247,8 +1247,8 @@ international SWIFT such as `PY/USD/swift`).
 <Steps>
 <Step title="Upload the document">
 Send the file with `POST /v1/payouts/documents`: raw binary body with
-its `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) or XLS(X),
-up to 50 MB) and the filename in the `name` query param.
+a PDF (`application/pdf`, up to 50 MB) and the filename in the `name`
+query param. The current US/USD payout UI accepts PDF only.
 
 ```bash
 curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-2210.pdf" \

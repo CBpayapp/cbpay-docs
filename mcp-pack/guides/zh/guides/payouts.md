@@ -1187,8 +1187,8 @@ V1，并会在派发前以 HTTP 400 快速拒绝；英国的 SEPA Credit Transfe
 ### 上传文件
 
 使用 `POST /v1/payouts/documents` 发送文件：请求体为**原始文件二进制**，
-通过 `Content-Type` 请求头声明类型（PDF、PNG、JPEG、WEBP、TXT、CSV、
-DOC(X) 或 XLS(X)，最大 50 MB），文件名通过 `name` 查询参数传递。
+一个 PDF（`application/pdf`，最大 50 MB），文件名通过 `name` 查询参数
+传递。当前 US/USD payout 界面只接受 PDF。
 
 ```bash
 curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-2210.pdf" \

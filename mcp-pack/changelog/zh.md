@@ -8,6 +8,16 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.117 · 1 个版本 - 2026年9月21日
+
+### v2.117
+
+**变更**
+
+- US/USD 银行 payout 指南现在要求 `ach`、`wire` 和 `swift` 流程使用
+  **PDF** 支持文件。人工释放操作仅供运营方使用，不属于公开集成方 API；
+  payout 创建以及现有状态/webhook 生命周期保持不变。
+
 ## v2.116 · 1 个版本 - 2026年9月20日
 ### v2.116
 
