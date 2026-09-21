@@ -8,8 +8,19 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.117 · 1 version - September 21, 2026
+## v2.118 · 2 versions - September 21, 2026
 
+### v2.118
+
+**Changed**
+
+- **Deposit-first portal flow**: On `/payins/new`, Bolivia (`BO`) and Mexico
+  (`MX`) now always show the account's dedicated receiving account, matching
+  My accounts. If no dedicated instrument exists, the portal shows an honest
+  empty state with guidance to create the account or complete verification;
+  it no longer offers announced-transfer payer options for these corridors.
+  API routes and response shapes are unchanged, and integrators can still use
+  announced `POST /v1/payins`.
 ### v2.117
 
 **Changed**
