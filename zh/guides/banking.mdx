@@ -467,6 +467,54 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 | `failed` | 失败；操作费用（如有）已退款 |
 | `cancelled` | 执行前已取消 |
 
+## EUR SEPA 操作与来源虚拟 IBAN
+
+当 `currency: "EUR"` 且 `WITHDRAW` 使用 `paymentType: "SEPA_CT"` 时，
+操作必须从一个已分配且 active、purpose 为 `banking_eur` 的虚拟 IBAN
+中扣款。来源字段位于请求顶层：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: eur-sepa-20260922-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "EUR",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "source_virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "sourceRequisit": { "account": "eur-account-001" },
+    "destinationRequisit": { "beneficiar": "beneficiary-account-001" },
+    "amount": { "currencyCode": "EUR", "units": "250", "nanos": 0 },
+    "comment": "Invoice 8841"
+  }'
+```
+
+如果账户只有一个 active 的 `banking_eur` 虚拟 IBAN，可以省略该字段。
+没有 active 账户时返回 `422 funding_account_required`；有多个 active
+账户但未提供明确 UUID 时返回 `422 ambiguous_source_viban`。资金来源
+检查暂时不可用时返回 `503 funding_account_unavailable`。
+
+平台忽略调用方提交的付款人身份字段，并从所选虚拟 IBAN 的 `registrant`
+服务端写入 `payer`。个人 registrant 提供名和姓；企业 registrant 提供
+注册公司名称及注册信息。没有按虚拟 IBAN 设置的金额上限；操作从账户的
+`BANK_EUR` 余额扣款。
+
+<Note>
+在此门控上线前创建的 Banking 操作 hold 属于 grandfathered 记录：继续
+使用原有 dispatch/reconciliation 流程。
+</Note>
+
+## 幂等与来源 vIBAN 边界情况
+
+`source_virtual_iban_id` 是 EUR Banking 操作意图的一部分。如果顺序重试
+之间 active 来源集合发生变化，使用同一幂等键会返回原操作。并发请求
+看到不同来源集合时返回 `409 idempotency_conflict`；两条路径都不会创建
+第二笔 `BANK_EUR` 扣款。
+
+默认来源和明确来源不能在同一个键下混用。replay 从默认选择改为明确
+vIBAN（或反向）时返回 `409 idempotency_conflict`，这是严格且安全的行为。
+
 ## 错误
 
 | HTTP | `error` | 处理方式 |

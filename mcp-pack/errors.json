@@ -1,5 +1,5 @@
 {
-  "count": 281,
+  "count": 284,
   "errors": [
     {
       "category": {
@@ -3925,6 +3925,48 @@
         "en": "Retry after private storage or PDF rendering recovers.",
         "es": "Reintenta cuando se recupere storage/render.",
         "zh": "storage 或 PDF 渲染恢复后重试。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "funding_account_required",
+      "http": 422,
+      "meaning": {
+        "en": "No allocated, active `banking_eur` virtual IBAN exists. Request one or use an active source.",
+        "es": "No existe un IBAN virtual `banking_eur` asignado y activo. Solicita uno o usa un origen activo.",
+        "zh": "没有已分配且 active 的 `banking_eur` 虚拟 IBAN。请先申请或使用 active 来源。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "ambiguous_source_viban",
+      "http": 422,
+      "meaning": {
+        "en": "More than one active EUR funding account exists. Send the selected `source_virtual_iban_id`.",
+        "es": "Hay más de una cuenta EUR activa. Envía el `source_virtual_iban_id` elegido.",
+        "zh": "存在多个 active EUR 资金账户。请发送选定的 `source_virtual_iban_id`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "funding_account_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The source-account check is temporarily unavailable. Retry with the same idempotency key; no debit or dispatch was performed.",
+        "es": "La consulta del origen está temporalmente no disponible. Reintenta con la misma clave de idempotencia; no se debitó ni despachó nada.",
+        "zh": "来源账户检查暂时不可用。请使用相同幂等键重试；不会发生扣款或 dispatch。"
       }
     }
   ]

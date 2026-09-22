@@ -8,6 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.119 · 1 version - September 22, 2026
+### v2.119
+
+**Changed**
+
+- SEPA Instant payouts now require an allocated and active `banking_eur`
+  virtual IBAN for customer accounts. Use the optional
+  `source_virtual_iban_id` when several active EUR funding accounts exist;
+  the ordering identity is derived from the selected vIBAN registrant.
+- Added the documented `funding_account_required`,
+  `ambiguous_source_viban` and `funding_account_unavailable` outcomes.
 ## v2.118 · 2 versions - September 21, 2026
 
 ### v2.118

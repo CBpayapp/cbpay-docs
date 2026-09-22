@@ -447,3 +447,16 @@ endpoints. They are listed here so shared SDKs can keep one error catalog.
 | 409 | `import_in_progress` | An import with this key is still processing; wait and replay with the same key. |
 | 503 | `pack_unavailable` | Retry after private storage or PDF rendering recovers. |
 | 503 | `storage_unavailable` | Restore private storage and retry the evidence operation. |
+
+## SEPA funding-source errors
+
+These errors are returned before a customer payout or EUR Banking operation
+is debited or dispatched:
+
+| HTTP | `error` | Meaning and solution |
+|---:|---|---|
+| 400 | `invalid_request` | `source_virtual_iban_id` must be a valid UUID. |
+| 404 | `not_found` | The explicit virtual IBAN does not belong to the account. |
+| 422 | `funding_account_required` | No allocated, active `banking_eur` virtual IBAN exists. Request one or use an active source. |
+| 422 | `ambiguous_source_viban` | More than one active EUR funding account exists. Send the selected `source_virtual_iban_id`. |
+| 503 | `funding_account_unavailable` | The source-account check is temporarily unavailable. Retry with the same idempotency key; no debit or dispatch was performed. |
