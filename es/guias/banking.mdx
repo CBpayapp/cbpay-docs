@@ -518,6 +518,47 @@ enriquecidos. Cuando llegue, consulta el detalle de la operación para leer
 la dirección, el monto, la contraparte y la referencia. Ver
 [webhooks](/es/webhooks).
 
+## Operaciones SEPA EUR y el IBAN virtual de origen
+
+Para `currency: "EUR"` y una operación `WITHDRAW` con
+`paymentType: "SEPA_CT"`, la operación debe financiarse desde un IBAN virtual
+asignado y activo cuyo propósito sea `banking_eur`. El origen se selecciona en
+el nivel superior del request:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: eur-sepa-20260922-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "EUR",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "source_virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "sourceRequisit": { "account": "eur-account-001" },
+    "destinationRequisit": { "beneficiar": "beneficiary-account-001" },
+    "amount": { "currencyCode": "EUR", "units": "250", "nanos": 0 },
+    "comment": "Invoice 8841"
+  }'
+```
+
+Si la cuenta tiene exactamente un IBAN virtual `banking_eur` activo, el campo
+se puede omitir. Sin una cuenta activa se devuelve
+`422 funding_account_required`; con varias cuentas activas y sin UUID
+explícito, `422 ambiguous_source_viban`. Una falla temporal al consultar el
+origen devuelve `503 funding_account_unavailable`.
+
+La plataforma ignora los campos de identidad ordenante enviados por el caller
+y estampa `payer` desde el `registrant` del IBAN virtual seleccionado. El
+registrant de una persona aporta nombre y apellido; el de una empresa aporta
+la razón social y sus datos de registro. No existe un tope por IBAN virtual:
+la operación debita el saldo `BANK_EUR` de la cuenta.
+
+<Note>
+Los holds de operaciones Banking creados antes de esta puerta quedan
+grandfathered y continúan por su despacho/conciliación existente.
+</Note>
+
 ## Comisiones por riel (depósitos y transferencias)
 
 Además de las comisiones fijas standalone, banking soporta **comisiones
@@ -553,6 +594,19 @@ fallback.
 | `completed` | El dinero llegó — final |
 | `failed` | Falló; si hubo comisión de la operación, se reembolsó |
 | `cancelled` | Cancelada antes de ejecutarse |
+
+## Casos límite de idempotencia y vIBAN de origen
+
+`source_virtual_iban_id` forma parte de la intención de la operación Banking
+EUR. Si el conjunto de orígenes activos cambia entre reintentos secuenciales,
+la misma clave de idempotencia devuelve la operación original. Una request
+concurrente que ve un conjunto distinto devuelve `409 idempotency_conflict`;
+ningún camino crea un segundo débito `BANK_EUR`.
+
+El origen default y un origen explícito no se pueden mezclar bajo una misma
+clave. Un replay que cambia de selección default a un vIBAN explícito (o al
+revés) devuelve `409 idempotency_conflict`: es el comportamiento estricto y
+seguro.
 
 ## Errores
 

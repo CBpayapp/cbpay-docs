@@ -114,6 +114,74 @@ The provider create and explicit approval are internal steps. Do not create a
 replacement payout while this one is `processing`; use the same idempotency
 key for a client retry.
 
+## EUR funding source and ordering identity
+
+For a customer account, every `sepa` payout must use an allocated and active
+virtual IBAN whose purpose is `banking_eur`. This funding account is also the
+source of the ordering-party identity sent to the banking rail.
+
+Send `source_virtual_iban_id` at the top level when you need to select a
+specific active EUR virtual IBAN:
+
+```json
+{
+  "country": "EU",
+  "currency": "EUR",
+  "method": "sepa",
+  "amount": "100.00",
+  "source_virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+  "beneficiary": {
+    "beneficiary_type": "individual",
+    "given_name": "Elena",
+    "first_surname": "Fuentes",
+    "iban": "DE89370400440532013000",
+    "bic": "COBADEFFXXX"
+  },
+  "idempotency_key": "sepa-eu-20260922-001"
+}
+```
+
+- With exactly one active `banking_eur` virtual IBAN, omitting the parameter
+  selects that account deterministically.
+- With no active account, the API returns `422 funding_account_required`.
+- With several active accounts, the API returns
+  `422 ambiguous_source_viban` until you send the selected UUID.
+- An explicit UUID that is not owned by the account or is not active returns
+  `404 not_found` or `422 funding_account_required`.
+
+The ordering name is taken from the selected virtual IBAN's server-side
+`registrant`: an individual uses its first and last name; a company uses its
+registered company name and registration data. A caller cannot replace this
+identity with `payer` or `cj_payer_*` fields. If the registrant cannot provide
+a usable identity, the request returns `422 registrant_incomplete`.
+
+There is no per-vIBAN amount cap in this flow. The payout still debits the
+account's normal settlement balance (`USDT` by default, or the requested
+`settlement_asset`); `BANK_EUR` is used by EUR Banking operations, not by
+customer payouts.
+
+<Note>
+Payout holds created before this source-account gate are grandfathered: they
+continue through their existing dispatch and reconciliation path and are not
+rejected retroactively.
+</Note>
+
+The source-account check runs before any debit or provider dispatch. If the
+funding-account lookup is temporarily unavailable, the API returns
+`503 funding_account_unavailable`; retry with the same idempotency key.
+
+## Idempotency and source selection edge cases
+
+The source vIBAN is part of the payout intent. If the active-vIBAN set changes
+between two sequential requests, retrying the same idempotency key still
+returns the original payout. If a concurrent request observes a different
+source set, it returns `409 idempotency_conflict`; both outcomes are safe and
+do not create a second debit. Do not use a new key to guess the result.
+
+The same key cannot represent both the default source and an explicit
+`source_virtual_iban_id`: that replay returns `409 idempotency_conflict`.
+This strict comparison prevents silently changing the ordering account.
+
 ## Statuses and returns
 
 | Provider signal | Public payout result | Financial meaning |

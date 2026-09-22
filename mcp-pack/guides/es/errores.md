@@ -448,3 +448,16 @@ Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
 | 409 | `import_in_progress` | Una importación con esta clave sigue en curso; espera y repite con la misma clave. |
 | 503 | `pack_unavailable` | Reintenta cuando se recupere storage/render. |
 | 503 | `storage_unavailable` | Recupera storage privado y reintenta la evidencia. |
+
+## Errores de cuenta de fondeo SEPA
+
+Estos errores se devuelven antes de debitar o despachar un payout cliente o
+una operación Banking EUR:
+
+| HTTP | `error` | Significado y solución |
+|---:|---|---|
+| 400 | `invalid_request` | `source_virtual_iban_id` debe ser un UUID válido. |
+| 404 | `not_found` | El IBAN virtual explícito no pertenece a la cuenta. |
+| 422 | `funding_account_required` | No existe un IBAN virtual `banking_eur` asignado y activo. Solicita uno o usa un origen activo. |
+| 422 | `ambiguous_source_viban` | Hay más de una cuenta EUR activa. Envía el `source_virtual_iban_id` elegido. |
+| 503 | `funding_account_unavailable` | La consulta del origen está temporalmente no disponible. Reintenta con la misma clave de idempotencia; no se debitó ni despachó nada. |

@@ -431,3 +431,15 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 409 | `import_in_progress` | 相同 key 的导入仍在处理中；等待后用相同 key 重试。 |
 | 503 | `pack_unavailable` | storage 或 PDF 渲染恢复后重试。 |
 | 503 | `storage_unavailable` | 恢复私有 storage 后重试证据操作。 |
+
+## SEPA 资金来源错误
+
+这些错误会在客户 payout 或 EUR Banking 操作扣款、dispatch 之前返回：
+
+| HTTP | `error` | 含义与解决方法 |
+|---:|---|---|
+| 400 | `invalid_request` | `source_virtual_iban_id` 必须是有效 UUID。 |
+| 404 | `not_found` | 明确指定的虚拟 IBAN 不属于该账户。 |
+| 422 | `funding_account_required` | 没有已分配且 active 的 `banking_eur` 虚拟 IBAN。请先申请或使用 active 来源。 |
+| 422 | `ambiguous_source_viban` | 存在多个 active EUR 资金账户。请发送选定的 `source_virtual_iban_id`。 |
+| 503 | `funding_account_unavailable` | 来源账户检查暂时不可用。请使用相同幂等键重试；不会发生扣款或 dispatch。 |

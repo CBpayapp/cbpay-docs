@@ -109,6 +109,69 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 Provider create 与显式 approve 是内部步骤。该 payout 为
 `processing` 时不要创建替代操作；客户端重试必须使用同一个幂等键。
 
+## EUR 资金来源与付款人身份
+
+对于客户账户，每笔 `sepa` payout 都必须使用已分配且处于 `active` 状态、
+purpose 为 `banking_eur` 的虚拟 IBAN。该资金账户同时决定发送给银行通道的
+付款人身份。
+
+需要选择某个已激活 EUR 虚拟 IBAN 时，在顶层发送
+`source_virtual_iban_id`：
+
+```json
+{
+  "country": "EU",
+  "currency": "EUR",
+  "method": "sepa",
+  "amount": "100.00",
+  "source_virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+  "beneficiary": {
+    "beneficiary_type": "individual",
+    "given_name": "Elena",
+    "first_surname": "Fuentes",
+    "iban": "DE89370400440532013000",
+    "bic": "COBADEFFXXX"
+  },
+  "idempotency_key": "sepa-eu-20260922-001"
+}
+```
+
+- 只有一个 active 的 `banking_eur` 虚拟 IBAN 时，省略该字段会确定性地
+  选择它。
+- 没有 active 账户时返回 `422 funding_account_required`。
+- 有多个 active 账户且未选择时返回
+  `422 ambiguous_source_viban`。
+- 明确指定的 UUID 不属于该账户或不是 active 时，返回
+  `404 not_found` 或 `422 funding_account_required`。
+
+付款人姓名来自所选虚拟 IBAN 的服务端 `registrant`：个人使用名和姓，
+企业使用注册公司名称及注册信息。调用方不能通过 `payer` 或
+`cj_payer_*` 字段替换该身份。若 registrant 无法提供可用身份，返回
+`422 registrant_incomplete`。
+
+此流程没有按虚拟 IBAN 设置的金额上限。Payout 仍从账户的常规结算余额
+扣款（默认 `USDT`，也可使用请求中的 `settlement_asset`）；`BANK_EUR`
+仅用于 EUR Banking 操作，不用于客户 payout。
+
+<Note>
+在此资金来源门控上线前创建的 payout hold 属于 grandfathered 记录：继续
+使用原有 dispatch 与 reconciliation 流程，不会被追溯拒绝。
+</Note>
+
+资金账户检查在扣款和调用银行通道前执行。若检查暂时不可用，API 返回
+`503 funding_account_unavailable`；请使用相同的幂等键重试。
+
+## 幂等与来源选择边界情况
+
+来源 vIBAN 属于 payout 意图的一部分。如果两次顺序请求之间 active vIBAN
+集合发生变化，使用同一幂等键重试仍返回原 payout。如果并发请求观察到
+不同的来源集合，则返回 `409 idempotency_conflict`；两种结果都安全，
+不会创建第二笔扣款。不要使用新键猜测结果。
+
+同一幂等键不能同时表示默认来源和明确的 `source_virtual_iban_id`：
+这种 replay 返回 `409 idempotency_conflict`。严格比较可以避免静默更换
+付款账户。
+
 ## 状态与 return
 
 | Provider 信号 | 公共 payout 结果 | 财务含义 |

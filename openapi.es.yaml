@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.118"
+  version: "2.119"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -3548,6 +3548,10 @@ paths:
                   - PLATINUM
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset
                     de settlement predeterminado de tu cuenta (USDT salvo que lo cambies con `PUT /v1/settlement`).
+                source_virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: IBAN virtual `banking_eur` activo opcional que financia un payout SEPA de cliente. Omítelo solo cuando la cuenta tenga exactamente una fuente EUR activa; envíalo si hay varias. La identidad ordenante se lee del registrant del vIBAN.
                 idempotency_key:
                   type: string
             examples:
@@ -3857,6 +3861,7 @@ paths:
                   country: EU
                   currency: EUR
                   method: sepa
+                  source_virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
                   amount: '100.00'
                   beneficiary:
                     beneficiary_type: individual
@@ -15299,13 +15304,18 @@ paths:
                       type: integer
                 comment:
                   type: string
+                source_virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: IBAN virtual `banking_eur` activo opcional que financia un retiro Banking EUR por SEPA. Omítelo solo con una fuente activa; varias fuentes requieren este UUID. La plataforma estampa `payer` desde el registrant del vIBAN.
                 idempotency_key:
                   type: string
             examples:
               withdraw:
                 summary: WITHDRAW a un beneficiario (SEPA)
                 value:
-                  currency: USD
+                  currency: EUR
+                  source_virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
                   type: WITHDRAW
                   paymentType: SEPA_CT
                   sourceRequisit:
@@ -15313,7 +15323,7 @@ paths:
                   destinationRequisit:
                     beneficiar: BNK-CPACC-11
                   amount:
-                    currencyCode: USD
+                    currencyCode: EUR
                     units: '250'
                     nanos: 0
                   comment: Invoice 8841
@@ -15389,6 +15399,19 @@ paths:
               example:
                 error: no_banking_customer
                 message: create your banking customer first (POST /v1/banking/customer)
+        '422':
+          description: >-
+            The EUR source-account gate returns `funding_account_required` when
+            no active `banking_eur` virtual IBAN exists, or
+            `ambiguous_source_viban` when several active sources exist without
+            `source_virtual_iban_id`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: funding_account_required
+                message: an active EUR funding account is required to send to Europe
         '502':
           description: Error del corredor bancario; la comisión (si hubo) se reembolsó (banking_request_failed).
           content:

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.118"
+  version: "2.119"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -3350,6 +3350,10 @@ paths:
                   - SILVER
                   - PLATINUM
                   description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产(USDT,除非通过 `PUT /v1/settlement` 更改)。
+                source_virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: 用于客户 SEPA payout 的 active `banking_eur` 虚拟 IBAN，可选。只有一个 active EUR 来源时可省略；存在多个来源时必须发送。付款人身份来自 vIBAN registrant。
                 idempotency_key:
                   type: string
             examples:
@@ -3659,6 +3663,7 @@ paths:
                   country: EU
                   currency: EUR
                   method: sepa
+                  source_virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
                   amount: '100.00'
                   beneficiary:
                     beneficiary_type: individual
@@ -14856,13 +14861,18 @@ paths:
                       type: integer
                 comment:
                   type: string
+                source_virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: 用于 EUR SEPA Banking 提现的 active `banking_eur` 虚拟 IBAN，可选。只有一个 active 来源时可省略；多个来源时必须发送该 UUID。平台从 vIBAN registrant 写入 `payer`。
                 idempotency_key:
                   type: string
             examples:
               withdraw:
                 summary: WITHDRAW 至受益人(SEPA)
                 value:
-                  currency: USD
+                  currency: EUR
+                  source_virtual_iban_id: 2f8c1d4e-1111-4b22-8a33-000000000001
                   type: WITHDRAW
                   paymentType: SEPA_CT
                   sourceRequisit:
@@ -14870,7 +14880,7 @@ paths:
                   destinationRequisit:
                     beneficiar: BNK-CPACC-11
                   amount:
-                    currencyCode: USD
+                    currencyCode: EUR
                     units: '250'
                     nanos: 0
                   comment: Invoice 8841
@@ -14946,6 +14956,19 @@ paths:
               example:
                 error: no_banking_customer
                 message: create your banking customer first (POST /v1/banking/customer)
+        '422':
+          description: >-
+            The EUR source-account gate returns `funding_account_required` when
+            no active `banking_eur` virtual IBAN exists, or
+            `ambiguous_source_viban` when several active sources exist without
+            `source_virtual_iban_id`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: funding_account_required
+                message: an active EUR funding account is required to send to Europe
         '502':
           description: 银行通道错误;所有费用已退款(banking_request_failed)。
           content:
