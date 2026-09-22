@@ -570,14 +570,13 @@ fallback.
 `source_virtual_iban_id` forma parte de la intención de la operación Banking
 EUR. Si el conjunto de orígenes activos cambia entre reintentos secuenciales,
 la misma clave de idempotencia devuelve la operación original. Una request
-concurrente que ve un conjunto distinto devuelve `409 idempotency_conflict`;
-ningún camino crea un segundo débito `BANK_EUR`.
+concurrente en vuelo devuelve `409 operation_in_progress`; reintenta con la
+misma clave.
 
-El origen default y un origen explícito no se pueden mezclar bajo una misma
-clave. Un replay que cambia de selección default a un vIBAN explícito (o al
-revés) devuelve `409 idempotency_conflict`: es el comportamiento estricto y
-seguro.
-
+El replay de Banking en el core no compara el payload del request con el
+payload original. La clave es la identidad de la operación original: no la
+reutilices con un payload materialmente distinto; usa la operación existente y
+su camino de conciliación.
 ## Errores
 
 | HTTP | `error` | Qué hacer |

@@ -482,13 +482,12 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
 ## 幂等与来源 vIBAN 边界情况
 
 `source_virtual_iban_id` 是 EUR Banking 操作意图的一部分。如果顺序重试
-之间 active 来源集合发生变化，使用同一幂等键会返回原操作。并发请求
-看到不同来源集合时返回 `409 idempotency_conflict`；两条路径都不会创建
-第二笔 `BANK_EUR` 扣款。
+之间 active 来源集合发生变化，使用同一幂等键会返回原操作。并发进行中
+的请求返回 `409 operation_in_progress`；请使用同一键重试。
 
-默认来源和明确来源不能在同一个键下混用。replay 从默认选择改为明确
-vIBAN（或反向）时返回 `409 idempotency_conflict`，这是严格且安全的行为。
-
+Core Banking replay 不会将 request payload 与原始 payload 进行比较。幂等
+键是原操作的身份：不要用它提交实质不同的 payload；请使用已有操作及其
+reconciliation 流程。
 ## 错误
 
 | HTTP | `error` | 处理方式 |
