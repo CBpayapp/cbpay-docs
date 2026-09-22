@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.119 · 1 version - September 22, 2026
+## v2.120 · 2 versions - September 22, 2026
+### v2.120
+
+**Changed**
+
+- Payin rate documentation now exposes `payin_rate_source` (`lot` or
+  `spot`) and the optional payin `rate_source` in create/detail responses.
+  USDT payin FIFO inventory is consumed at credit time; a shortage falls back
+  to spot without changing the quoted credit.
+
 ### v2.119
 
 **Changed**

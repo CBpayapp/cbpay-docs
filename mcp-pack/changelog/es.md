@@ -9,7 +9,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.119 · 1 versión - 22 de septiembre de 2026
+## v2.120 · 2 versiones - 22 de septiembre de 2026
+### v2.120
+
+**Cambiado**
+
+- La documentación de tasas payin ahora expone `payin_rate_source` (`lot` o
+  `spot`) y el `rate_source` opcional en create/detail de payin. El inventario
+  FIFO USDT se consume al acreditar; un faltante cae a spot sin cambiar el
+  crédito cotizado.
+
 ### v2.119
 
 **Cambiado**

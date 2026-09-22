@@ -24,7 +24,9 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 入金（payin）是一笔法币收款：您的客户以当地货币付款，您的账户自动获得
 USDT 入账，按**您的入金汇率**（`GET /v1/rates` 中的 `payin_rate`）折算，
-并在您的账户配置了固定入金费用时予以扣除。
+并在您的账户配置了固定入金费用时予以扣除。在 USDT v1 中，
+`payin_rate_source` 说明该汇率由启用的 payin FIFO 库存（`lot`）还是
+spot（`spot`）支持。汇率会在异步入账前固定。
 
 无论采用哪种模式，每条路径的终点都相同 —— 自动入账 + webhook：
 
@@ -87,8 +89,10 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 </Note>
 
 可用性可能变化；目录（`GET /v1/payins/methods`）始终是唯一可信来源。
-在所有情况下入账方式相同：按您当前的 `payin_rate` 折算为 USDT，并在
-扣除固定入金费用后净额入账。如果您希望将收款保留在其他余额（USDC、BTC
+在所有情况下入账方式相同：按已报价的 `payin_rate` 折算为 USDT，并在
+扣除固定入金费用后净额入账。入账时会按 FIFO 消费 payin 批次；若启用的
+库存不足，原报价仍然有效，缺口记录为 spot fallback 并发送运维告警。
+如果您希望将收款保留在其他余额（USDC、BTC
 或 GOLD），请配置 `default_payin_asset` — 参见
 [资金模型](/zh/concepts/money-model)。
 
@@ -1057,13 +1061,15 @@ CBPay 运营方之后更新了登记的账户，已经存在的通报仍会指�
   "currency": "BOB",
   "local_amount": "700.00",
   "fx_rate": "6.91",
+  "rate_source": "lot",
   "usdt_credited": "100.302460",
   "fee": "1.000000"
 }
 ```
 
 `fx_rate` 是入账时刻您的 `payin_rate` —— 折算严格按该汇率进行：
-`usdt_gross = 700.00 / 6.91`。
+`usdt_gross = 700.00 / 6.91`。出现 `rate_source` 时，它表示报价来源
+（`lot` 或 `spot`）；没有加载报价的历史 payin 会省略该字段。
 
 入金对象保留完整的明细：
 
@@ -1079,6 +1085,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   "status": "credited",
   "local_amount": "700.00",
   "fx_rate": "6.91",
+  "rate_source": "lot",
   "usdt_gross": "101.302460",
   "fee": "1.000000",
   "usdt_credited": "100.302460"
@@ -1146,8 +1153,9 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 `usdt_credited`。你也可以轮询 `GET /v1/payins/{id}`。
 </Accordion>
 <Accordion title="我的 payin 适用哪个汇率？">
-入账时刻生效的 `payin_rate`（见 `GET /v1/rates`）。你约定的点差已包含在
-汇率中 —— 绝不会单独列示。
+使用 `GET /v1/rates` 返回并在入账时生效的已报价 `payin_rate`。检查
+`payin_rate_source`：`lot` 表示启用的 USDT payin 库存支持了报价，
+`spot` 表示使用 spot 路径。您约定的点差已包含在汇率中 —— 绝不会单独列示。
 </Accordion>
 <Accordion title="payin 可以落在 USDT 以外的余额吗？">
 可以 —— 用 `PUT /v1/settlement` 设置 `default_payin_asset`。入账仍先进入

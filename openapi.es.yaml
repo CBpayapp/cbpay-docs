@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.119"
+  version: "2.120"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2912,8 +2912,10 @@ paths:
         contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla.
         `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando
         `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda;
-        cuando es `spot`, no existe un lote elegible y se usa spot. `payin_rate` sigue basado en spot porque
-        los lotes solo cotizan payouts. Usa `lot_quote` opcional para una cotización indicativa por monto.
+        cuando es `spot`, no existe un lote elegible y se usa spot. Para payins USDT,
+        `payin_rate_source` es `lot` cuando el inventario FIFO payin habilitado respalda la cotización
+        y `spot` en los demás casos. Los payins con tarjeta siguen usando spot. Usa `lot_quote` opcional
+        para una cotización indicativa por monto.
         `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins
         valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado,
         el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación
@@ -2964,6 +2966,11 @@ paths:
                           type: string
                           description: Tasa aplicada a los payins (depósitos/cobros fiat).
                           example: '955.10'
+                        payin_rate_source:
+                          type: string
+                          enum: [lot, spot]
+                          description: 'Origen de la cotización payin en USDT v1: inventario FIFO o spot.'
+                          example: lot
                   asset_prices:
                     type: object
                     description: Precio USD de referencia por activo del saldo virtual (display/valorización).
@@ -3050,6 +3057,7 @@ paths:
                     rate: '950.25'
                     rate_source: lot
                     payin_rate: '955.10'
+                    payin_rate_source: lot
                   mexico:
                     currency: MXN
                     rate: '17.50'
@@ -5226,6 +5234,7 @@ paths:
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-07T12:00:00Z'
                   fx_rate: '6.91'
+                  rate_source: lot
                   usdt_gross: '101.302460'
                   fee: '1.000000'
                   usdt_credited: '100.302460'
@@ -23608,6 +23617,10 @@ components:
           type: string
           description: Tu tasa de payin al momento del abono (presente una vez que el pago fue recibido
             y convertido).
+        rate_source:
+          type: string
+          enum: [lot, spot]
+          description: Origen de la cotización payin cuando se cargó; se omite en filas históricas sin cotización.
         usdt_gross:
           type: string
         fee:

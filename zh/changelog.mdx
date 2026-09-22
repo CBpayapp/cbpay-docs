@@ -7,7 +7,15 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月22日" description="v2.119 · 1个版本">
+<Update label="2026年9月22日" description="v2.120 · 2 个版本">
+### v2.120
+
+**变更**
+
+- payin 汇率文档现在公开 `payin_rate_source`（`lot` 或 `spot`）以及
+  payin create/detail 响应中可选的 `rate_source`。USDT FIFO payin 库存
+  在入账时消费；库存不足时回退到 spot，不改变已经报价的入账金额。
+
 ### v2.119
 
 **变更**

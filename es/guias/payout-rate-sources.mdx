@@ -32,9 +32,13 @@ Cuando existe inventario elegible, `rate_source` es `lot`; si no, usa spot y
 `rate_source` es `spot`. Si falla la lectura del inventario, también cae a
 `spot`; el débito del payout sigue siendo fail-closed.
 
-`payin_rate` sigue siendo la cotización de depósitos basada en spot. Los lotes
-FIFO solo valorizan payouts. El endpoint para administradores de organización
-expone la misma distinción con `payout_rate` y `rate_source`.
+`payin_rate` es la cotización del lado de depósitos. En USDT v1 puede estar
+respaldada por lotes payin habilitados, fondeados por trades `buy_crypto`
+liquidados; `payin_rate_source` informa `lot` o `spot`. Create/detail de payin
+puede incluir `rate_source` cuando cargó una cotización. Los payins con tarjeta
+siguen usando spot. El endpoint para administradores de organización expone la
+misma distinción con `payout_rate`, `payin_rate`, `rate_source` y
+`payin_rate_source`.
 
 ```json
 {
@@ -43,7 +47,8 @@ expone la misma distinción con `payout_rate` y `rate_source`.
       "currency": "CLP",
       "rate": "910.896551",
       "rate_source": "lot",
-      "payin_rate": "955.10"
+      "payin_rate": "955.10",
+      "payin_rate_source": "spot"
     }
   }
 }
@@ -83,7 +88,10 @@ valores dentro de la respuesta `200`: `invalid_amount`,
 `currency_not_supported` o `quote_unavailable`.
 
 La cotización no garantiza el precio futuro. La respuesta del payout y el
-evento final `payout_status_changed` son la fuente autoritativa.
+evento final `payout_status_changed` son la fuente autoritativa. Para payins,
+la cotización queda fijada antes del crédito asíncrono; el consumo FIFO registra
+la atribución al acreditar. Un faltante cae a spot y genera una alerta operativa
+sin cambiar el crédito cotizado.
 
 ### Estados de la cotización
 

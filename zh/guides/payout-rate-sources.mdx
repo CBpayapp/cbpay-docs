@@ -29,9 +29,12 @@ payout 的可执行市场报价：平台会检查该国家货币最早的开放 
 `rate_source` 为 `spot`。库存读取失败时也会回退到 spot；payout 扣款本身
 仍然 fail-closed。
 
-`payin_rate` 仍是基于 spot 的入金侧报价。FIFO 批次只为 payout 定价。
-组织管理员 endpoint 使用 `payout_rate` 和 `rate_source` 表达同一来源
-区别。
+`payin_rate` 是入金侧报价。在 USDT v1 中，它可以由已结算
+`buy_crypto` 交易提供的启用 payin FIFO 批次支持；
+`payin_rate_source` 返回 `lot` 或 `spot`。payin create/detail 在加载报价
+时可能包含 `rate_source`。银行卡 payin 仍使用 spot。组织管理员 endpoint
+使用 `payout_rate`、`payin_rate`、`rate_source` 和 `payin_rate_source`
+表达这些来源区别。
 
 ```json
 {
@@ -40,7 +43,8 @@ payout 的可执行市场报价：平台会检查该国家货币最早的开放 
       "currency": "CLP",
       "rate": "910.896551",
       "rate_source": "lot",
-      "payin_rate": "955.10"
+      "payin_rate": "955.10",
+      "payin_rate_source": "spot"
     }
   }
 }
@@ -78,7 +82,9 @@ payout 可能改变结果。`marked_rate` 可选。校验错误作为正常 `200
 `quote_unavailable`。
 
 报价不保证未来 payout 价格。payout 响应和最终
-`payout_status_changed` 事件才是权威记录。
+`payout_status_changed` 事件才是权威记录。对于 payin，报价在异步入账
+边界之前固定；FIFO 消费在入账时记录库存归因。库存不足时回退到 spot，
+并发送运维告警，但不会改变已经报价的入账金额。
 
 ### 报价状态
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.119"
+  version: "2.120"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2933,7 +2933,8 @@ paths:
         can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal)
         side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side
         quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible
-        lot backs the quote. `payin_rate` remains spot-based because FIFO lots price payouts only.
+        lot backs the quote. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO
+        inventory backs the quote and `spot` otherwise. Card payins remain spot-priced.
         Use the optional `lot_quote` for an amount-specific indicative quote. `asset_prices` carries
         the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins
         are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement
@@ -2985,6 +2986,11 @@ paths:
                           type: string
                           description: Rate applied to payins (fiat deposits/collections).
                           example: '955.10'
+                        payin_rate_source:
+                          type: string
+                          enum: [lot, spot]
+                          description: Payin quote provenance for USDT v1. FIFO inventory or spot.
+                          example: lot
                   asset_prices:
                     type: object
                     description: USD reference price per virtual balance asset (display/valuation).
@@ -3071,6 +3077,7 @@ paths:
                     rate: '950.25'
                     rate_source: lot
                     payin_rate: '955.10'
+                    payin_rate_source: lot
                   mexico:
                     currency: MXN
                     rate: '17.50'
@@ -5252,6 +5259,7 @@ paths:
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-07T12:00:00Z'
                   fx_rate: '6.91'
+                  rate_source: lot
                   usdt_gross: '101.302460'
                   fee: '1.000000'
                   usdt_credited: '100.302460'
@@ -23776,6 +23784,10 @@ components:
         fx_rate:
           type: string
           description: Your payin rate at credit time (present once the payment was received and converted).
+        rate_source:
+          type: string
+          enum: [lot, spot]
+          description: Payin quote provenance when a USDT payin quote was loaded; omitted for historical rows without a quote.
         usdt_gross:
           type: string
         fee:
