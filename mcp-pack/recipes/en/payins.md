@@ -23,7 +23,9 @@ system-created deposit instruments are not blocked.
 A payin is a fiat collection: your customer pays in local currency and your
 account gets credited in USDT automatically, converted at **your payin
 rate** (`payin_rate` in `GET /v1/rates`) minus the fixed payin fee when
-configured for your account.
+configured for your account. In USDT v1, `payin_rate_source` tells you whether
+that rate is backed by enabled payin FIFO inventory (`lot`) or spot (`spot`).
+The rate is fixed before the asynchronous payment is credited.
 
 Whatever the mode, every path ends the same way — automatic credit +
 webhook:
@@ -88,7 +90,10 @@ live corridor. Outgoing payments to Venezuela (`pago_movil`,
 `bank_transfer`) are unchanged: see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
 Availability may vary; the catalog (`GET /v1/payins/methods`) is always the
 source of truth. In every case the credit works the same way: converted to
-USDT at your current `payin_rate` and credited net of the fixed payin fee.
+USDT at the quoted `payin_rate` and credited net of the fixed payin fee.
+Payin lots are consumed FIFO when the credit is applied. If enabled inventory
+does not cover the credit, the existing quote remains authoritative and the
+uncovered portion is recorded as spot fallback with an operator alert.
 If you'd rather keep your collections in another balance (USDC, BTC or
 GOLD), configure `default_payin_asset` — see
 [the money model](https://docs.cbpayapp.com/en/concepts/money-model#choose-which-balance-receives-your-payins).
@@ -1082,13 +1087,16 @@ credited automatically and the `payin_credited` webhook fires:
   "currency": "BOB",
   "local_amount": "700.00",
   "fx_rate": "6.91",
+  "rate_source": "lot",
   "usdt_credited": "100.302460",
   "fee": "1.000000"
 }
 ```
 
 `fx_rate` is your `payin_rate` at credit time — the conversion happens at
-exactly that rate: `usdt_gross = 700.00 / 6.91`.
+exactly that rate: `usdt_gross = 700.00 / 6.91`. When present,
+`rate_source` is the quote provenance (`lot` or `spot`); historical payins
+without a loaded quote omit it.
 
 The payin object keeps the full detail:
 
@@ -1104,6 +1112,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   "status": "credited",
   "local_amount": "700.00",
   "fx_rate": "6.91",
+  "rate_source": "lot",
   "usdt_gross": "101.302460",
   "fee": "1.000000",
   "usdt_credited": "100.302460"
@@ -1172,7 +1181,9 @@ way as the `422` above: the payer cannot be shown an account yet.
 Subscribe to `payin_credited`: it carries the FX rate applied, the fee and
 the exact `usdt_credited`. You can also poll `GET /v1/payins/{id}`.
 #### Which FX rate applies to my payin?
-The `payin_rate` in force at credit time (see `GET /v1/rates`). Your
+The quoted `payin_rate` returned by `GET /v1/rates` and carried by the payin
+at credit time. Check `payin_rate_source`: `lot` means enabled USDT payin
+inventory backed the quote, while `spot` means the spot path was used. Your
 agreed spread is already inside the rate — it is never itemized.
 #### Can payins land in a balance other than USDT?
 Yes — set `default_payin_asset` with `PUT /v1/settlement`. The credit still

@@ -31,9 +31,12 @@ available, `rate_source` is `lot`; otherwise the quote uses spot and
 `rate_source` is `spot`. A failed inventory read also falls back to `spot`;
 the payout debit itself remains fail-closed.
 
-`payin_rate` remains the deposit-side quote based on spot. FIFO lots price
-payouts only. The organization-admin endpoint exposes the same distinction
-with `payout_rate` and `rate_source`.
+`payin_rate` is the deposit-side quote. In USDT v1 it can be backed by enabled
+payin lots funded by settled `buy_crypto` trades; `payin_rate_source` reports
+`lot` or `spot`. Payin create/detail responses can include `rate_source` when a
+quote was loaded. Card payins remain spot-priced. The organization-admin
+endpoint exposes the same distinction with `payout_rate`, `payin_rate`,
+`rate_source` and `payin_rate_source`.
 
 ```json
 {
@@ -42,7 +45,8 @@ with `payout_rate` and `rate_source`.
       "currency": "CLP",
       "rate": "910.896551",
       "rate_source": "lot",
-      "payin_rate": "955.10"
+      "payin_rate": "955.10",
+      "payin_rate_source": "spot"
     }
   }
 }
@@ -82,6 +86,9 @@ response: `invalid_amount`, `currency_not_supported` or `quote_unavailable`.
 
 The quote does not guarantee a future payout price. The payout response and
 the final `payout_status_changed` event remain the authoritative records.
+For payins, the quote is fixed before the asynchronous credit boundary; FIFO
+consumption records inventory attribution at credit time. A shortfall falls
+back to spot and raises an operator alert without changing the quoted credit.
 
 ### Quote statuses
 

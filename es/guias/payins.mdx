@@ -29,7 +29,9 @@ instrumentos de depósito creados por el sistema no se bloquean.
 Un payin es un cobro fiat: tu cliente paga en moneda local y tu cuenta
 recibe el abono en USDT automáticamente, convertido a **tu tasa de payin**
 (`payin_rate` en `GET /v1/rates`) menos la comisión fija de payin si tu
-cuenta la tiene configurada.
+cuenta la tiene configurada. En USDT v1, `payin_rate_source` indica si esa
+tasa está respaldada por inventario FIFO payin habilitado (`lot`) o por spot
+(`spot`). La tasa queda fijada antes del crédito asíncrono.
 
 Sea cual sea la modalidad, todos los caminos terminan igual — abono
 automático + webhook:
@@ -96,8 +98,11 @@ ver [payouts](/es/guias/payouts).
 
 La disponibilidad puede variar; el catálogo (`GET /v1/payins/methods`) es
 siempre la fuente de verdad. En todos los casos el abono llega igual: se
-convierte a USDT a tu `payin_rate` del momento y se acredita neto de la
-comisión fija de payin. Si prefieres quedarte con tus cobros en otro saldo
+convierte a USDT al `payin_rate` cotizado y se acredita neto de la comisión
+fija de payin. Los lotes payin se consumen FIFO al aplicar el crédito. Si el
+inventario habilitado no alcanza, la cotización existente sigue siendo
+autoritativa y el faltante se registra como fallback spot con alerta operativa.
+Si prefieres quedarte con tus cobros en otro saldo
 (USDC, BTC o GOLD), configura `default_payin_asset` — ver
 [el modelo de dinero](/es/conceptos/modelo-de-dinero#elige-en-que-saldo-se-acreditan-tus-payins).
 
@@ -1153,13 +1158,16 @@ acredita automáticamente y se emite el webhook `payin_credited`:
   "currency": "BOB",
   "local_amount": "700.00",
   "fx_rate": "6.91",
+  "rate_source": "lot",
   "usdt_credited": "100.302460",
   "fee": "1.000000"
 }
 ```
 
 `fx_rate` es tu `payin_rate` del momento del abono — la conversión se hace
-exactamente a esa tasa: `usdt_gross = 700.00 / 6.91`.
+exactamente a esa tasa: `usdt_gross = 700.00 / 6.91`. Cuando aparece,
+`rate_source` indica el origen de la cotización (`lot` o `spot`); los payins
+históricos sin cotización cargada omiten el campo.
 
 El objeto payin queda con el detalle completo:
 
@@ -1175,6 +1183,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   "status": "credited",
   "local_amount": "700.00",
   "fx_rate": "6.91",
+  "rate_source": "lot",
   "usdt_gross": "101.302460",
   "fee": "1.000000",
   "usdt_credited": "100.302460"
@@ -1252,7 +1261,9 @@ Suscríbete a `payin_credited`: trae la tasa FX aplicada, la comisión y el
 `usdt_credited` exacto. También puedes consultar `GET /v1/payins/{id}`.
 </Accordion>
 <Accordion title="¿Qué tasa FX aplica a mi payin?">
-El `payin_rate` vigente al momento de acreditar (ver `GET /v1/rates`). Tu
+El `payin_rate` cotizado por `GET /v1/rates` y vigente al momento de
+acreditar. Revisa `payin_rate_source`: `lot` significa que el inventario USDT
+payin habilitado respaldó la cotización; `spot` significa que se usó spot. Tu
 spread acordado ya viene dentro de la tasa — nunca se itemiza.
 </Accordion>
 <Accordion title="¿Los payins pueden caer en un saldo distinto de USDT?">
