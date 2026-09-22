@@ -555,15 +555,13 @@ they continue through their existing dispatch/reconciliation path.
 
 `source_virtual_iban_id` is part of the Banking EUR operation intent. If the
 active source set changes between sequential retries, the same idempotency key
-returns the original operation. A concurrent request that sees a different
-source set returns `409 idempotency_conflict`; neither path creates a second
-`BANK_EUR` debit.
+returns the original operation. A concurrent in-flight request returns
+`409 operation_in_progress`; retry with the same key.
 
-The default source and an explicit source cannot be mixed under one key. A
-replay that changes from default selection to an explicit vIBAN (or the
-reverse) returns `409 idempotency_conflict`, which is the strict and safe
-behavior.
-
+The core Banking replay does not compare the request payload with the original
+payload. The key is the identity of the original operation: do not reuse it for
+a materially different payload; use the existing operation and reconciliation
+path instead.
 ## Rail fees (deposits and transfers)
 
 On top of the standalone fixed fees, banking supports **transactional fees
