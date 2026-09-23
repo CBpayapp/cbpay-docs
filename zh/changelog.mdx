@@ -7,7 +7,16 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-<Update label="2026年9月23日" description="v2.123 · 2 个版本">
+<Update label="2026年9月23日" description="v2.124 · 3 个版本">
+
+### v2.124
+
+**变更**
+
+- 组织现在可以由平台 operator 启用新的 BOB 内部 QR 收款 route。公开
+  `POST /v1/payins` request、opaque `charge` response 和现有
+  `payin_received` webhook 保持不变；可用性按组织控制，集成方不能
+  选择内部 route。
 
 ### v2.123
 

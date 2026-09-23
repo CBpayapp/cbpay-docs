@@ -8,7 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.123 · 2 versions - September 23, 2026
+## v2.124 · 3 versions - September 23, 2026
+
+### v2.124
+
+**Changed**
+
+- Organizations can now enable a new internal BOB QR collection route through
+  their platform operator. The public `POST /v1/payins` request, opaque
+  `charge` response and existing `payin_received` webhook remain unchanged;
+  availability is controlled by the organization and is not selected by the
+  integrator.
 
 ### v2.123
 

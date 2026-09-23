@@ -9,7 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.123 · 2 versiones - 23 de septiembre de 2026
+## v2.124 · 3 versiones - 23 de septiembre de 2026
+
+### v2.124
+
+**Cambiado**
+
+- Las organizaciones ahora pueden habilitar, mediante su operador de
+  plataforma, un nuevo riel interno de cobros QR BOB. El request público
+  `POST /v1/payins`, la respuesta opaca `charge` y el webhook existente
+  `payin_received` no cambian; la disponibilidad se controla por
+  organización y el integrador no selecciona el riel.
 
 ### v2.123
 

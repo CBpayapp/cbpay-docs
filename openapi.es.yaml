@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.123"
+  version: "2.124"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -21443,9 +21443,12 @@ paths:
         business_activity, is_micro_enterprise, expected_turnover y un par documental
         por UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date,
         índice de UBO base cero, aliases camelCase aceptados): el riel corporativo
-        exige un documento completo por UBO y el perfil verificado no trae el país
-        emisor ni el vencimiento del documento del UBO. Si faltan rutas requeridas
-        responde `422 registrant_incomplete` y lista las rutas faltantes en `message`.
+        exige un documento completo por UBO. Los valores ya presentes en el
+        perfil KYB aprobado (incorporación, sitio web, industria, documentos
+        UBO) se autocompletan — los overrides solo cubren lo que el perfil
+        no trae, y el override explícito siempre gana. Si faltan rutas
+        requeridas responde `422 registrant_incomplete` y lista las rutas
+        faltantes en `message`.
       requestBody:
         required: true
         content:
@@ -21472,10 +21475,16 @@ paths:
                 isMicroEnterprise: {type: string, description: Alias camelCase}
                 expected_turnover: {type: string, description: Facturación esperada opcional}
                 expectedTurnover: {type: string, description: Alias camelCase}
-                ubo_0_document_issued_country: {type: string, description: País ISO alpha-2 de emisión del documento del UBO 0; repetir por índice de UBO}
+                tax_number: {type: string, description: Corrección del número tributario de la empresa (ej. RUT CL válido con dígito verificador)}
+                taxNumber: {type: string, description: Alias camelCase}
+                ubo_0_document_issued_country: {type: string, description: País ISO alpha-2 de emisión del documento del UBO 0; repetir por índice de UBO'}
                 ubo0DocumentIssuedCountry: {type: string, description: Alias camelCase}
-                ubo_0_document_expiration_date: {type: string, format: date, description: Vencimiento del documento del UBO 0; debe superar un mes desde hoy; repetir por índice de UBO}
+                ubo_0_document_expiration_date: {type: string, format: date, description: Vencimiento del documento del UBO 0; debe superar un mes desde hoy; repetir por índice de UBO'}
                 ubo0DocumentExpirationDate: {type: string, format: date, description: Alias camelCase}
+                ubo_0_pep: {type: string, description: '"true" o "false" si el UBO 0 es persona expuesta políticamente; repetir por índice de UBO'}
+                ubo0Pep: {type: string, description: Alias camelCase}
+                ubo_0_usa_tax_residency: {type: string, description: '"true" o "false" si el UBO 0 es residente fiscal EEUU; repetir por índice de UBO'}
+                ubo0UsaTaxResidency: {type: string, description: Alias camelCase}
             examples:
               funding:
                 value:
@@ -21863,8 +21872,9 @@ paths:
         Optional registrant overrides complete the approved KYB profile, including one
         document pair per UBO (ubo_{i}_document_issued_country,
         ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases
-        accepted): the corporate rail requires a full document per UBO and the
-        verified profile does not carry the UBO document issuing country or expiry.
+        accepted): the corporate rail requires a full document per UBO. Values
+        already present in the KYB profile are autofilled — overrides are only
+        needed for what the profile lacks, and explicit overrides always win.
         Missing holder paths return 422 registrant_incomplete.
       parameters:
       - name: Idempotency-Key
@@ -21895,6 +21905,9 @@ paths:
                   format: date
                 expected_turnover:
                   type: string
+                tax_number:
+                  type: string
+                  description: Corrección del número tributario de la empresa (ej. RUT CL válido con dígito verificador)
                 ubo_0_document_issued_country:
                   type: string
                   description: País ISO alpha-2 de emisión del documento del UBO 0; repetir por índice de UBO
@@ -21902,6 +21915,12 @@ paths:
                   type: string
                   format: date
                   description: Vencimiento del documento del UBO 0, a más de un mes; repetir por índice de UBO
+                ubo_0_pep:
+                  type: string
+                  description: '"true" o "false" si el UBO 0 es persona expuesta políticamente; repetir por índice de UBO'
+                ubo_0_usa_tax_residency:
+                  type: string
+                  description: '"true" o "false" si el UBO 0 es residente fiscal EEUU; repetir por índice de UBO'
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -21912,6 +21931,8 @@ paths:
               expected_turnover: '250000.00'
               ubo_0_document_issued_country: CL
               ubo_0_document_expiration_date: '2035-04-15'
+              ubo_0_pep: 'false'
+              ubo_0_usa_tax_residency: 'false'
       responses:
         '202':
           description: Durable reservation accepted.
