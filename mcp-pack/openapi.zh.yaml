@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.123"
+  version: "2.124"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -20747,7 +20747,9 @@ paths:
         is_micro_enterprise、expected_turnover 以及每位 UBO 的证件对
         （ubo_{i}_document_issued_country、ubo_{i}_document_expiration_date，
         UBO 索引从零开始，接受 camelCase aliases）：企业通道要求每位 UBO
-        证件完整，而 verified profile 不含 UBO 证件签发国家和到期日。
+        证件完整。已批准 KYB profile 中已有的值（注册信息、网站、行业、
+        UBO 证件）会自动补全—— overrides 仅补 profile 缺失项，显式
+        overrides 永远优先。
         缺少必填路径时返回 `422 registrant_incomplete`，缺失路径位于 `message`。
       requestBody:
         required: true
@@ -20775,10 +20777,16 @@ paths:
                 isMicroEnterprise: {type: string, description: camelCase alias}
                 expected_turnover: {type: string, description: 可选预期营业额}
                 expectedTurnover: {type: string, description: camelCase alias}
+                tax_number: {type: string, description: 公司税号更正（例如带校验位的有效智利 RUT）}
+                taxNumber: {type: string, description: camelCase alias}
                 ubo_0_document_issued_country: {type: string, description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复}
                 ubo0DocumentIssuedCountry: {type: string, description: camelCase alias}
                 ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 证件到期日，必须晚于一个月，按 UBO 索引重复}
                 ubo0DocumentExpirationDate: {type: string, format: date, description: camelCase alias}
+                ubo_0_pep: {type: string, description: UBO 0 是否为政治公众人物，"true" 或 "false"，按 UBO 索引重复}
+                ubo0Pep: {type: string, description: camelCase alias}
+                ubo_0_usa_tax_residency: {type: string, description: UBO 0 是否为美国税务居民，"true" 或 "false"，按 UBO 索引重复}
+                ubo0UsaTaxResidency: {type: string, description: camelCase alias}
             examples:
               funding:
                 value:
@@ -21164,8 +21172,9 @@ paths:
         Optional registrant overrides complete the approved KYB profile, including one
         document pair per UBO (ubo_{i}_document_issued_country,
         ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases
-        accepted): the corporate rail requires a full document per UBO and the
-        verified profile does not carry the UBO document issuing country or expiry.
+        accepted): the corporate rail requires a full document per UBO. Values
+        already present in the KYB profile are autofilled — overrides are only
+        needed for what the profile lacks, and explicit overrides always win.
         Missing holder paths return 422 registrant_incomplete.
       parameters:
       - name: Idempotency-Key
@@ -21196,6 +21205,9 @@ paths:
                   format: date
                 expected_turnover:
                   type: string
+                tax_number:
+                  type: string
+                  description: 公司税号更正（例如带校验位的有效智利 RUT）
                 ubo_0_document_issued_country:
                   type: string
                   description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复
@@ -21203,6 +21215,12 @@ paths:
                   type: string
                   format: date
                   description: UBO 0 证件到期日，晚于一个月，按 UBO 索引重复
+                ubo_0_pep:
+                  type: string
+                  description: UBO 0 是否为政治公众人物，"true" 或 "false"，按 UBO 索引重复
+                ubo_0_usa_tax_residency:
+                  type: string
+                  description: UBO 0 是否为美国税务居民，"true" 或 "false"，按 UBO 索引重复
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -21213,6 +21231,8 @@ paths:
               expected_turnover: '250000.00'
               ubo_0_document_issued_country: CL
               ubo_0_document_expiration_date: '2035-04-15'
+              ubo_0_pep: 'false'
+              ubo_0_usa_tax_residency: 'false'
       responses:
         '202':
           description: Durable reservation accepted.

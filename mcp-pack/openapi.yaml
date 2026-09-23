@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.123"
+  version: "2.124"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -21606,8 +21606,10 @@ paths:
         is_micro_enterprise, expected_turnover and one document pair per UBO
         (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date,
         zero-based UBO index, camelCase aliases accepted): the corporate rail
-        requires a full document per UBO and the verified profile does not
-        carry the UBO document issuing country or expiry. Missing required
+        requires a full document per UBO. Values already present in the
+        approved KYB profile (incorporation, website, industry, UBO
+        documents) are autofilled — overrides are only needed for what the
+        profile lacks, and explicit overrides always win. Missing required
         registrant paths return `422 registrant_incomplete` with the missing
         paths in `message`.
       requestBody:
@@ -21636,10 +21638,16 @@ paths:
                 isMicroEnterprise: {type: string, description: CamelCase alias}
                 expected_turnover: {type: string, description: Optional expected turnover override}
                 expectedTurnover: {type: string, description: CamelCase alias}
+                tax_number: {type: string, description: Company tax number correction (e.g. a valid CL RUT with check digit)}
+                taxNumber: {type: string, description: CamelCase alias}
                 ubo_0_document_issued_country: {type: string, description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index}
                 ubo0DocumentIssuedCountry: {type: string, description: CamelCase alias}
                 ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 document expiry; must be more than one month in the future; repeat per UBO index}
                 ubo0DocumentExpirationDate: {type: string, format: date, description: CamelCase alias}
+                ubo_0_pep: {type: string, description: '"true" or "false" whether UBO 0 is a politically exposed person; repeat per UBO index'}
+                ubo0Pep: {type: string, description: CamelCase alias}
+                ubo_0_usa_tax_residency: {type: string, description: '"true" or "false" whether UBO 0 is a US tax resident; repeat per UBO index'}
+                ubo0UsaTaxResidency: {type: string, description: CamelCase alias}
             examples:
               funding:
                 value:
@@ -22027,8 +22035,9 @@ paths:
         Optional registrant overrides complete the approved KYB profile, including one
         document pair per UBO (ubo_{i}_document_issued_country,
         ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases
-        accepted): the corporate rail requires a full document per UBO and the
-        verified profile does not carry the UBO document issuing country or expiry.
+        accepted): the corporate rail requires a full document per UBO. Values
+        already present in the KYB profile are autofilled — overrides are only
+        needed for what the profile lacks, and explicit overrides always win.
         Missing holder paths return 422 registrant_incomplete.
       parameters:
       - name: Idempotency-Key
@@ -22059,6 +22068,9 @@ paths:
                   format: date
                 expected_turnover:
                   type: string
+                tax_number:
+                  type: string
+                  description: Company tax number correction (e.g. a valid CL RUT with check digit)
                 ubo_0_document_issued_country:
                   type: string
                   description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index
@@ -22066,6 +22078,12 @@ paths:
                   type: string
                   format: date
                   description: UBO 0 document expiry, more than one month in the future; repeat per UBO index
+                ubo_0_pep:
+                  type: string
+                  description: '"true" or "false" whether UBO 0 is a politically exposed person; repeat per UBO index'
+                ubo_0_usa_tax_residency:
+                  type: string
+                  description: '"true" or "false" whether UBO 0 is a US tax resident; repeat per UBO index'
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -22076,6 +22094,8 @@ paths:
               expected_turnover: '250000.00'
               ubo_0_document_issued_country: CL
               ubo_0_document_expiration_date: '2035-04-15'
+              ubo_0_pep: 'false'
+              ubo_0_usa_tax_residency: 'false'
       responses:
         '202':
           description: Durable reservation accepted.
