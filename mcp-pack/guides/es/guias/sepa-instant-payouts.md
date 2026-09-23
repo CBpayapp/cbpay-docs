@@ -112,14 +112,15 @@ El create y el approve explícito del proveedor son pasos internos. No crees
 un payout de reemplazo mientras este esté `processing`; ante un retry del
 cliente usa la misma clave de idempotencia.
 
-## Cuenta EUR de origen e identidad ordenante
+## Fuente EUR e identidad ordenante
 
-Para una cuenta cliente, todo payout `sepa` debe usar un IBAN virtual
-asignado y activo cuyo propósito sea `banking_eur`. Esa cuenta de fondeo
-también determina la identidad del ordenante que se envía al riel bancario.
+Para una cuenta cliente, cada payout `sepa` debe resolver un IBAN virtual
+asignado y activo con propósito `funding_usdt`. Este es el propósito de fondeo
+para los payouts de clientes; los retiros de EUR Banking usan el propósito
+separado `banking_eur`.
 
-Envía `source_virtual_iban_id` en el nivel superior cuando necesites elegir
-un IBAN virtual EUR activo específico:
+Envía `source_virtual_iban_id` en el nivel superior cuando necesites elegir un
+IBAN virtual `funding_usdt` activo específico:
 
 ```json
 {
@@ -139,32 +140,37 @@ un IBAN virtual EUR activo específico:
 }
 ```
 
-- Con exactamente un IBAN virtual `banking_eur` activo, omitir el parámetro
+- Con exactamente un IBAN virtual `funding_usdt` activo, omitir el parámetro
   selecciona esa cuenta de forma determinista.
-- Sin una cuenta activa, la API devuelve `422 funding_account_required`.
-- Con varias cuentas activas, la API devuelve
-  `422 ambiguous_source_viban` hasta recibir el UUID elegido.
+- Sin una fuente activa, la API devuelve `422 funding_account_required`.
+- Con varias fuentes activas, la API devuelve
+  `422 ambiguous_source_viban` hasta que envíes el UUID elegido.
 - Un UUID explícito que no pertenece a la cuenta o no está activo devuelve
   `404 not_found` o `422 funding_account_required`.
 
-El nombre del ordenante sale del `registrant` server-side del IBAN virtual:
-una persona usa nombre y apellido; una empresa usa su razón social registrada
-y sus datos de registro. El caller no puede reemplazar esta identidad con
-campos `payer` o `cj_payer_*`. Si el registrant no permite una identidad
-usable, la API devuelve `422 registrant_incomplete`.
+La identidad ordenante se estampa server-side desde el `registrant` persistido
+del vIBAN seleccionado: una persona usa nombre y apellido, y una empresa usa
+su razón social registrada y sus datos de registro. Los campos `payer` o
+`cj_payer_*` enviados por el caller no pueden reemplazarla.
 
-No existe un tope por IBAN virtual en este flujo. El payout sigue debitando
-el saldo normal de liquidación de la cuenta (`USDT` por defecto, o el
-`settlement_asset` solicitado); `BANK_EUR` se usa en operaciones Banking EUR,
+En filas activas legacy sin un `registrant` utilizable, la plataforma deriva
+los nombres desde el perfil verificado vigente. Si no puede leer ese perfil,
+devuelve `503 funding_account_unavailable`; si la identidad resultante está
+incompleta, devuelve `422 registrant_incomplete`.
+
+No existe un tope por vIBAN. El payout descuenta del saldo normal de
+liquidación USDT de la cuenta; `BANK_EUR` se usa en operaciones EUR Banking,
 no en payouts de clientes.
 
 > **Nota**
-Los holds de payout creados antes de esta puerta de cuenta de origen quedan
-grandfathered: continúan por su despacho y conciliación existentes y no se
-rechazan retroactivamente.
-La verificación de la cuenta de fondeo ocurre antes de debitar o despachar al
-proveedor. Si la consulta queda temporalmente no disponible, la API devuelve
-`503 funding_account_unavailable`; reintenta con la misma clave de idempotencia.
+Los holds de payout creados antes de esta puerta de origen quedan
+grandfathered: continúan por su flujo existente de dispatch y reconciliación y
+no se rechazan retroactivamente.
+La comprobación de la fuente ocurre antes de cualquier débito o dispatch al
+proveedor. Si la consulta está temporalmente no disponible, reintenta con la
+misma clave de idempotencia.
+
+## Idempotencia y casos límite de selección de origen
 
 ## Casos límite de idempotencia y selección del origen
 

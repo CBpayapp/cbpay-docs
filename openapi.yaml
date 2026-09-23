@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.120"
+  version: "2.121"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3586,7 +3586,7 @@ paths:
                 source_virtual_iban_id:
                   type: string
                   format: uuid
-                  description: Optional active `banking_eur` virtual IBAN that funds a customer SEPA payout. Omit only when the account has exactly one active EUR funding account; send it when several are active. The ordering identity is read from the vIBAN registrant.
+                  description: Optional active `funding_usdt` virtual IBAN that funds a customer SEPA payout. Omit only when the account has exactly one active EUR funding account; send it when several are active. The ordering identity is read from the vIBAN registrant.
                 idempotency_key:
                   type: string
             examples:
@@ -15594,7 +15594,7 @@ paths:
         '422':
           description: >-
             The EUR source-account gate returns `funding_account_required` when
-            no active `banking_eur` virtual IBAN exists, or
+            no active `funding_usdt` virtual IBAN exists for a payout, or
             `ambiguous_source_viban` when several active sources exist without
             `source_virtual_iban_id`.
           content:

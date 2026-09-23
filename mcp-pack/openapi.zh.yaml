@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.120"
+  version: "2.121"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -3359,7 +3359,7 @@ paths:
                 source_virtual_iban_id:
                   type: string
                   format: uuid
-                  description: 用于客户 SEPA payout 的 active `banking_eur` 虚拟 IBAN，可选。只有一个 active EUR 来源时可省略；存在多个来源时必须发送。付款人身份来自 vIBAN registrant。
+                  description: 用于客户 SEPA payout 的 active `funding_usdt` 虚拟 IBAN，可选。只有一个 active EUR 来源时可省略；存在多个来源时必须发送。付款人身份来自 vIBAN registrant。
                 idempotency_key:
                   type: string
             examples:
@@ -14966,7 +14966,7 @@ paths:
         '422':
           description: >-
             The EUR source-account gate returns `funding_account_required` when
-            no active `banking_eur` virtual IBAN exists, or
+            no active `funding_usdt` virtual IBAN exists for a payout, or
             `ambiguous_source_viban` when several active sources exist without
             `source_virtual_iban_id`.
           content:

@@ -444,6 +444,6 @@ description: "错误格式与完整的错误码目录"
 |---:|---|---|
 | 400 | `invalid_request` | `source_virtual_iban_id` 必须是有效 UUID。 |
 | 404 | `not_found` | 明确指定的虚拟 IBAN 不属于该账户。 |
-| 422 | `funding_account_required` | 没有已分配且 active 的 `banking_eur` 虚拟 IBAN。请先申请或使用 active 来源。 |
+| 422 | `funding_account_required` | 该产品用途没有已分配且 active 的虚拟 IBAN。请先使用该用途的 active 来源。 |
 | 422 | `ambiguous_source_viban` | 存在多个 active EUR 资金账户。请发送选定的 `source_virtual_iban_id`。 |
 | 503 | `funding_account_unavailable` | 来源账户检查暂时不可用。请使用相同幂等键重试；不会发生扣款或 dispatch。 |

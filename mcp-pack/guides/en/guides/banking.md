@@ -488,43 +488,45 @@ amount, counterparty and reference. See [webhooks](https://docs.cbpayapp.com/en/
 
 ## EUR SEPA operations and the source virtual IBAN
 
-For `currency: "EUR"` and a `WITHDRAW` using `paymentType: "SEPA_CT"`,
-the operation must be funded by an allocated, active virtual IBAN with
-purpose `banking_eur`. The source is selected at the top level of the
-request:
+For `currency: "EUR"` and a `WITHDRAW` using `paymentType: "SEPA_CT"`, the
+operation must resolve an allocated, active virtual IBAN with purpose
+`banking_eur`. The source is selected at the top level:
 
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
-  -H "Authorization: Bearer <token>" \
-  -H "Idempotency-Key: eur-sepa-20260922-001" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "currency": "EUR",
-    "type": "WITHDRAW",
-    "paymentType": "SEPA_CT",
-    "source_virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-    "sourceRequisit": { "account": "eur-account-001" },
-    "destinationRequisit": { "beneficiar": "beneficiary-account-001" },
-    "amount": { "currencyCode": "EUR", "units": "250", "nanos": 0 },
-    "comment": "Invoice 8841"
-  }'
+```json
+{
+  "currency": "EUR",
+  "type": "WITHDRAW",
+  "paymentType": "SEPA_CT",
+  "source_virtual_iban_id": "<ACTIVE_BANKING_EUR_VIBAN_UUID>"
+}
 ```
 
 If the account has exactly one active `banking_eur` virtual IBAN, the field
-may be omitted. No active account returns `422 funding_account_required`;
-multiple active accounts without an explicit UUID return
-`422 ambiguous_source_viban`. A temporary failure while checking the source
-returns `503 funding_account_unavailable`.
+may be omitted. No active source returns `422 funding_account_required`;
+multiple active sources without an explicit UUID return
+`422 ambiguous_source_viban`. A malformed `source_virtual_iban_id` returns
+`400 invalid_request`; a valid UUID that is not found or does not belong to the
+account returns `404 not_found`. A temporary source lookup failure returns
+`503 funding_account_unavailable`.
 
-The platform ignores caller-supplied ordering-party identity fields and
-stamps `payer` from the selected virtual IBAN's `registrant`. Individual
-registrants provide first and last name; corporate registrants provide the
-registered company name and registration data. There is no per-vIBAN cap:
-the operation debits the account's `BANK_EUR` balance.
+The platform strips caller-supplied ordering-party fields and stamps `payer`
+server-side from the selected vIBAN's `registrant` (unless a more-specific
+server-side company-wallet payer is present). Individual registrants provide
+first and last name; corporate registrants provide the registered company
+name and registration data.
+
+For active legacy rows without a usable registrant, the platform derives the
+ordering names from the current verified profile. If that profile cannot be
+read, the request returns `503 funding_account_unavailable`; if the resulting
+identity is incomplete, it returns `422 registrant_incomplete`.
+
+There is no per-vIBAN amount cap. EUR Banking debits the account's `BANK_EUR`
+balance; `funding_usdt` is a separate purpose used by the customer payout
+funding flow.
 
 > **Note**
-Existing banking operation holds created before this gate are grandfathered:
-they continue through their existing dispatch/reconciliation path.
+Banking operation holds created before this source gate are grandfathered:
+they continue through their existing dispatch and reconciliation path.
 ## Idempotency and source vIBAN edge cases
 
 `source_virtual_iban_id` is part of the Banking EUR operation intent. If the

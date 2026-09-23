@@ -469,43 +469,51 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 
 ## EUR SEPA 操作与来源虚拟 IBAN
 
-当 `currency: "EUR"` 且 `WITHDRAW` 使用 `paymentType: "SEPA_CT"` 时，
-操作必须从一个已分配且 active、purpose 为 `banking_eur` 的虚拟 IBAN
-中扣款。来源字段位于请求顶层：
+当 `currency: "EUR"` 且 `WITHDRAW` 使用 `paymentType: "SEPA_CT"` 时，操作必须
+解析到一个已分配且 active、purpose 为 `banking_eur` 的虚拟 IBAN。来源字段位于
+请求顶层：
 
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
-  -H "Authorization: Bearer <token>" \
-  -H "Idempotency-Key: eur-sepa-20260922-001" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "currency": "EUR",
-    "type": "WITHDRAW",
-    "paymentType": "SEPA_CT",
-    "source_virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-    "sourceRequisit": { "account": "eur-account-001" },
-    "destinationRequisit": { "beneficiar": "beneficiary-account-001" },
-    "amount": { "currencyCode": "EUR", "units": "250", "nanos": 0 },
-    "comment": "Invoice 8841"
-  }'
+```json
+{
+  "currency": "EUR",
+  "type": "WITHDRAW",
+  "paymentType": "SEPA_CT",
+  "source_virtual_iban_id": "<ACTIVE_BANKING_EUR_VIBAN_UUID>"
+}
 ```
 
 如果账户只有一个 active 的 `banking_eur` 虚拟 IBAN，可以省略该字段。
-没有 active 账户时返回 `422 funding_account_required`；有多个 active
-账户但未提供明确 UUID 时返回 `422 ambiguous_source_viban`。资金来源
-检查暂时不可用时返回 `503 funding_account_unavailable`。
+没有 active 来源返回 `422 funding_account_required`；有多个 active 来源但
+没有明确 UUID 返回 `422 ambiguous_source_viban`。格式错误的
+`source_virtual_iban_id` 返回 `400 invalid_request`；有效 UUID 不存在或
+不属于该账户时返回 `404 not_found`。来源查询暂时不可用时返回
+`503 funding_account_unavailable`。
 
-平台忽略调用方提交的付款人身份字段，并从所选虚拟 IBAN 的 `registrant`
-服务端写入 `payer`。个人 registrant 提供名和姓；企业 registrant 提供
-注册公司名称及注册信息。没有按虚拟 IBAN 设置的金额上限；操作从账户的
-`BANK_EUR` 余额扣款。
+平台会删除调用方提交的付款人身份字段，并从所选 vIBAN 的 `registrant`
+由服务端写入 `payer`；如果存在更具体的服务端企业 wallet payer，则优先
+使用它。个人 registrant 提供名和姓，企业 registrant 提供注册公司名称及
+注册信息。
+
+对于没有可用 registrant 的 active legacy 行，平台会从当前已验证 profile
+推导付款人姓名。若 profile 暂时无法读取，返回
+`503 funding_account_unavailable`；若最终身份不完整，返回
+`422 registrant_incomplete`。
+
+此流程没有按 vIBAN 设置的金额上限。EUR Banking 从账户的 `BANK_EUR` 余额
+扣款；`funding_usdt` 是客户 payout 入金流程的独立用途。
 
 <Note>
-在此门控上线前创建的 Banking 操作 hold 属于 grandfathered 记录：继续
-使用原有 dispatch/reconciliation 流程。
+这道来源门控上线前创建的 Banking operation hold 属于 grandfathered 记录：
+继续使用原有 dispatch 与 reconciliation 流程。
 </Note>
 
 ## 幂等与来源 vIBAN 边界情况
+
+
+
+
+
+
 
 `source_virtual_iban_id` 是 EUR Banking 操作意图的一部分。如果顺序重试
 之间 active 来源集合发生变化，使用同一幂等键会返回原操作。并发进行中
