@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.121"
+  version: "2.123"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -728,6 +728,82 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many requests; wait a moment and retry
+  /v1/public/telegram/otc-desk/{orgID}/webhook:
+    post:
+      security: []
+      tags:
+      - OTC Desk
+      operationId: otcDeskTelegramWebhook
+      summary: OTC Desk 回调的 Telegram 机器人 webhook（由 Telegram 调用）
+      description: >-
+        接收组织 OTC DESK 群的 Telegram Bot API 更新（BOB 库存报价的内联按钮
+        回调）。由 Telegram 调用，而非集成方：以 X-Telegram-Bot-Api-Secret-Token
+        请求头认证（fail-closed 403），按钮载荷带 HMAC 签名，重复投递按
+        callback id 收敛。业务结果恒返回 200（Telegram 不得重试）；503 表示
+        store 不可用，可安全重试。
+      parameters:
+      - name: orgID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: 拥有 OTC Desk 机器人与群的组织。
+      - name: X-Telegram-Bot-Api-Secret-Token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: 为该组织配置的 webhook 密钥。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              update_id: 123456789
+              callback_query:
+                id: '3486293628410185798'
+                from: {id: 123456789, username: traderuno}
+                data: v1.AbC123XyZ456.a.1758600000.9f2c4a1b7d30e5c8
+      responses:
+        '200':
+          description: 已接收更新（accepted、passed、duplicate 或 ignored）。
+          content:
+            application/json:
+              example:
+                ok: true
+                accepted: true
+                offer_id: 8f3k2m9d-1a2b-4c3d-8e4f-5a6b7c8d9e0f
+        '400':
+          description: invalid_payload（更新格式错误）。
+          content:
+            application/json:
+              example:
+                error: invalid_payload
+                message: malformed update
+        '403':
+          description: webhook 密钥无效。
+          content:
+            application/json:
+              example:
+                error: forbidden
+                message: invalid webhook secret
+        '404':
+          description: 未知组织。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: resource not found
+        '503':
+          description: store_unavailable（可安全重试；去重使其幂等）。
+          content:
+            application/json:
+              example:
+                error: store_unavailable
+                message: try again
   /v1/public/signature-proofs/{code}:
     get:
       security: []
@@ -20667,8 +20743,12 @@ paths:
         为已认证账户申请一个持久化的虚拟 IBAN。`funding_usdt` 是默认用途；
         `banking_eur` 要求启用银行服务。平台从已批准的 KYC/KYB profile 自动
         补全 registrant V3。下列证件和公司注册字段可选，并接受 snake_case
-        与 camelCase aliases。缺少必填路径时返回 `422 registrant_incomplete`，
-        缺失路径位于 `message`。
+        与 camelCase aliases。企业账户还接受 trading_website、business_activity、
+        is_micro_enterprise、expected_turnover 以及每位 UBO 的证件对
+        （ubo_{i}_document_issued_country、ubo_{i}_document_expiration_date，
+        UBO 索引从零开始，接受 camelCase aliases）：企业通道要求每位 UBO
+        证件完整，而 verified profile 不含 UBO 证件签发国家和到期日。
+        缺少必填路径时返回 `422 registrant_incomplete`，缺失路径位于 `message`。
       requestBody:
         required: true
         content:
@@ -20687,6 +20767,18 @@ paths:
                 incorporationCountry: {type: string, description: camelCase alias}
                 incorporation_date: {type: string, format: date, description: 公司注册日期}
                 incorporationDate: {type: string, format: date, description: camelCase alias}
+                trading_website: {type: string, description: 公司网站 override}
+                tradingWebsite: {type: string, description: camelCase alias}
+                business_activity: {type: string, description: 公司经营活动 override}
+                businessActivity: {type: string, description: camelCase alias}
+                is_micro_enterprise: {type: string, description: 微型企业标志，"true" 或 "false"}
+                isMicroEnterprise: {type: string, description: camelCase alias}
+                expected_turnover: {type: string, description: 可选预期营业额}
+                expectedTurnover: {type: string, description: camelCase alias}
+                ubo_0_document_issued_country: {type: string, description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复}
+                ubo0DocumentIssuedCountry: {type: string, description: camelCase alias}
+                ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 证件到期日，必须晚于一个月，按 UBO 索引重复}
+                ubo0DocumentExpirationDate: {type: string, format: date, description: camelCase alias}
             examples:
               funding:
                 value:
@@ -20702,6 +20794,11 @@ paths:
                   purpose: banking_eur
                   incorporation_country: IT
                   incorporation_date: '2016-12-21'
+                  trading_website: https://example.com
+                  business_activity: Bubble wholesale
+                  is_micro_enterprise: 'true'
+                  ubo_0_document_issued_country: IT
+                  ubo_0_document_expiration_date: '2035-06-01'
       responses:
         '202':
           description: 已进入持久化人工审批队列。
@@ -20824,6 +20921,43 @@ paths:
           description: not_found.
         '503':
           description: Banking recovery or provider unavailable.
+  /v1/banking/virtual-ibans/{virtualIBANID}/close:
+    post:
+      tags: [银行服务]
+      operationId: closeVirtualIBAN
+      summary: 关闭一个已激活的虚拟 IBAN
+      description: >-
+        在欧元通道关闭已认证账户的一个虚拟 IBAN。仅可关闭已分配地址的
+        active 行；调用幂等（已关闭的行返回 200 与当前状态），提供商
+        404 会收敛为本地 closed。关闭免费，且不退还分配费用。
+      parameters:
+        - {name: virtualIBANID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: 虚拟 IBAN 已关闭（或此前已关闭）。
+          content:
+            application/json:
+              examples:
+                closed:
+                  value:
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                      owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                      purpose: funding_usdt
+                      currency: EUR
+                      iban: DE890000000000000000
+                      iban_country: DE
+                      status: closed
+        '403':
+          description: service_disabled.
+        '404':
+          description: not_found.
+        '409':
+          description: invalid_state（非 active，或未分配地址）。
+        '422':
+          description: provider_rejected（含通道详情）。
+        '503':
+          description: banking_recovery_pending（关闭结果不明，请重试）。
   /v1/banking/third-parties/{thirdPartyID}/virtual-ibans:
     post:
       tags: [Banking]
@@ -21027,8 +21161,12 @@ paths:
       summary: 为已验证企业账户预留并读取专用 EUR 钱包。
       description: >-
         Requires the Banking product, a verified company account and an idempotency key.
-        Optional registrant overrides complete the approved KYB profile. Missing holder
-        paths return 422 registrant_incomplete.
+        Optional registrant overrides complete the approved KYB profile, including one
+        document pair per UBO (ubo_{i}_document_issued_country,
+        ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases
+        accepted): the corporate rail requires a full document per UBO and the
+        verified profile does not carry the UBO document issuing country or expiry.
+        Missing holder paths return 422 registrant_incomplete.
       parameters:
       - name: Idempotency-Key
         in: header
@@ -21058,6 +21196,13 @@ paths:
                   format: date
                 expected_turnover:
                   type: string
+                ubo_0_document_issued_country:
+                  type: string
+                  description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复
+                ubo_0_document_expiration_date:
+                  type: string
+                  format: date
+                  description: UBO 0 证件到期日，晚于一个月，按 UBO 索引重复
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -21066,6 +21211,8 @@ paths:
               incorporation_country: CL
               incorporation_date: '2020-04-15'
               expected_turnover: '250000.00'
+              ubo_0_document_issued_country: CL
+              ubo_0_document_expiration_date: '2035-04-15'
       responses:
         '202':
           description: Durable reservation accepted.

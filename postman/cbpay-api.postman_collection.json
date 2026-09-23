@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-22 19:48 UTC",
-    "_content_sha256": "ec57a45ef292e42b87eb31ec6bf9ee5b57e420dc1578a7bcb7a222906c15b911"
+    "_generated_at": "2026-09-23 06:43 UTC",
+    "_content_sha256": "d0edde931981ceb79768305760b17f9d14aaef0da2f3b82b3817396723de65c1"
   },
   "auth": {
     "type": "bearer",
@@ -5403,6 +5403,99 @@
                 }
               ],
               "body": "{\n  \"valid\": true,\n  \"type\": \"qscore_fraud\",\n  \"status\": \"ready\",\n  \"date\": \"2026-09-06\",\n  \"issued_by\": \"CBPay\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OTC Desk",
+      "item": [
+        {
+          "name": "Telegram bot webhook for OTC Desk callbacks (called by Telegram)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Api-Secret-Token",
+                "value": "",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/public/telegram/otc-desk/:orgID/webhook",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "public",
+                "telegram",
+                "otc-desk",
+                ":orgID",
+                "webhook"
+              ],
+              "variable": [
+                {
+                  "key": "orgID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Receives Telegram Bot API updates for the organization's OTC DESK group (inline button callbacks on BOB inventory offers). Called by Telegram, not by integrators: authenticated with the X-Telegram-Bot-Api-Secret-Token header (fail-closed 403), button payloads carry an HMAC signature, and duplicate deliveries converge on the callback id. Business outcomes always answer 200 (Telegram must not retry); 503 means store unavailable and is safe to retry.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"update_id\": 123456789,\n  \"callback_query\": {\n    \"id\": \"3486293628410185798\",\n    \"from\": {\n      \"id\": 123456789,\n      \"username\": \"traderuno\"\n    },\n    \"data\": \"v1.AbC123XyZ456.a.1758600000.9f2c4a1b7d30e5c8\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Update received (accepted, passed, duplicate or ignored).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/public/telegram/otc-desk/:orgID/webhook",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "public",
+                    "telegram",
+                    "otc-desk",
+                    ":orgID",
+                    "webhook"
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Update received (accepted, passed, duplicate or ignored).",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ok\": true,\n  \"accepted\": true,\n  \"offer_id\": \"8f3k2m9d-1a2b-4c3d-8e4f-5a6b7c8d9e0f\"\n}"
             }
           ]
         }
@@ -21852,7 +21945,7 @@
                 "virtual-ibans"
               ]
             },
-            "description": "Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The platform autofills the provider V3 registrant from the approved KYC/KYB profile. The optional document and incorporation fields below accept snake_case and camelCase aliases. Missing required registrant paths return `422 registrant_incomplete` with the missing paths in `message`.",
+            "description": "Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The platform autofills the provider V3 registrant from the approved KYC/KYB profile. The optional document and incorporation fields below accept snake_case and camelCase aliases. Company accounts also accept trading_website, business_activity, is_micro_enterprise, expected_turnover and one document pair per UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases accepted): the corporate rail requires a full document per UBO and the verified profile does not carry the UBO document issuing country or expiry. Missing required registrant paths return `422 registrant_incomplete` with the missing paths in `message`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"purpose\": \"funding_usdt\",\n  \"idempotency_key\": \"viban-funding-2026-001\"\n}",
@@ -21914,7 +22007,7 @@
                 "virtual-ibans"
               ]
             },
-            "description": "Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The platform autofills the provider V3 registrant from the approved KYC/KYB profile. The optional document and incorporation fields below accept snake_case and camelCase aliases. Missing required registrant paths return `422 registrant_incomplete` with the missing paths in `message`.",
+            "description": "Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The platform autofills the provider V3 registrant from the approved KYC/KYB profile. The optional document and incorporation fields below accept snake_case and camelCase aliases. Company accounts also accept trading_website, business_activity, is_micro_enterprise, expected_turnover and one document pair per UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases accepted): the corporate rail requires a full document per UBO and the verified profile does not carry the UBO document issuing country or expiry. Missing required registrant paths return `422 registrant_incomplete` with the missing paths in `message`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"purpose\": \"funding_usdt\",\n  \"document_issued_country\": \"IT\",\n  \"document_expiration_date\": \"2035-06-01\"\n}",
@@ -21976,10 +22069,10 @@
                 "virtual-ibans"
               ]
             },
-            "description": "Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The platform autofills the provider V3 registrant from the approved KYC/KYB profile. The optional document and incorporation fields below accept snake_case and camelCase aliases. Missing required registrant paths return `422 registrant_incomplete` with the missing paths in `message`.",
+            "description": "Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The platform autofills the provider V3 registrant from the approved KYC/KYB profile. The optional document and incorporation fields below accept snake_case and camelCase aliases. Company accounts also accept trading_website, business_activity, is_micro_enterprise, expected_turnover and one document pair per UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases accepted): the corporate rail requires a full document per UBO and the verified profile does not carry the UBO document issuing country or expiry. Missing required registrant paths return `422 registrant_incomplete` with the missing paths in `message`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"purpose\": \"banking_eur\",\n  \"incorporation_country\": \"IT\",\n  \"incorporation_date\": \"2016-12-21\"\n}",
+              "raw": "{\n  \"purpose\": \"banking_eur\",\n  \"incorporation_country\": \"IT\",\n  \"incorporation_date\": \"2016-12-21\",\n  \"trading_website\": \"https://example.com\",\n  \"business_activity\": \"Bubble wholesale\",\n  \"is_micro_enterprise\": \"true\",\n  \"ubo_0_document_issued_country\": \"IT\",\n  \"ubo_0_document_expiration_date\": \"2035-06-01\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -22076,6 +22169,70 @@
                 }
               ],
               "body": "{\n  \"id\": \"2f8c1d4e-1111-4b22-8a33-000000000001\",\n  \"owner_account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"purpose\": \"funding_usdt\",\n  \"currency\": \"EUR\",\n  \"iban\": \"DE890000000000000000\",\n  \"iban_country\": \"DE\",\n  \"status\": \"active\",\n  \"client_order\": \"platform:virtual-iban:org:account:funding_usdt:key-001\",\n  \"order_reference\": \"provider-order-001\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Close an active virtual IBAN",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/banking/virtual-ibans/:virtualIBANID/close",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "banking",
+                "virtual-ibans",
+                ":virtualIBANID",
+                "close"
+              ],
+              "variable": [
+                {
+                  "key": "virtualIBANID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Closes one of the authenticated account's virtual IBANs at the EUR rail. Only active rows with an allocated address can be closed; the call is idempotent (an already closed row answers 200 with its current state) and a provider 404 converges to closed locally. Closing is free and never refunds the allocation fee."
+          },
+          "response": [
+            {
+              "name": "200 Virtual IBAN closed (or already closed).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/banking/virtual-ibans/:virtualIBANID/close",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "banking",
+                    "virtual-ibans",
+                    ":virtualIBANID",
+                    "close"
+                  ],
+                  "variable": [
+                    {
+                      "key": "virtualIBANID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Virtual IBAN closed (or already closed).",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"virtual_iban\": {\n    \"id\": \"2f8c1d4e-1111-4b22-8a33-000000000001\",\n    \"owner_account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"purpose\": \"funding_usdt\",\n    \"currency\": \"EUR\",\n    \"iban\": \"DE890000000000000000\",\n    \"iban_country\": \"DE\",\n    \"status\": \"closed\"\n  }\n}"
             }
           ]
         },
@@ -22451,10 +22608,10 @@
                 "company-wallets"
               ]
             },
-            "description": "Requires the Banking product, a verified company account and an idempotency key. Optional registrant overrides complete the approved KYB profile. Missing holder paths return 422 registrant_incomplete.",
+            "description": "Requires the Banking product, a verified company account and an idempotency key. Optional registrant overrides complete the approved KYB profile, including one document pair per UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases accepted): the corporate rail requires a full document per UBO and the verified profile does not carry the UBO document issuing country or expiry. Missing holder paths return 422 registrant_incomplete.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idempotency_key\": \"company-wallet-eur-001\",\n  \"trading_website\": \"https://example.com\",\n  \"business_activity\": \"International software services\",\n  \"is_micro_enterprise\": false,\n  \"incorporation_country\": \"CL\",\n  \"incorporation_date\": \"2020-04-15\",\n  \"expected_turnover\": \"250000.00\"\n}",
+              "raw": "{\n  \"idempotency_key\": \"company-wallet-eur-001\",\n  \"trading_website\": \"https://example.com\",\n  \"business_activity\": \"International software services\",\n  \"is_micro_enterprise\": false,\n  \"incorporation_country\": \"CL\",\n  \"incorporation_date\": \"2020-04-15\",\n  \"expected_turnover\": \"250000.00\",\n  \"ubo_0_document_issued_country\": \"CL\",\n  \"ubo_0_document_expiration_date\": \"2035-04-15\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
