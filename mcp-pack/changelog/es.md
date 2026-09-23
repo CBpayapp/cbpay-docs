@@ -9,7 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.120 · 2 versiones - 22 de septiembre de 2026
+## v2.121 · 3 versions - 22 de septiembre de 2026
+### v2.121
+
+**Cambiado**
+
+- Corregida la puerta de origen SEPA: los payouts de clientes requieren un
+  IBAN virtual `funding_usdt` asignado y activo, mientras los retiros EUR
+  Banking usan `banking_eur`.
+- Documentadas la selección determinista, la identidad ordenante server-side
+  desde el registrant del vIBAN, el fallback de perfil legacy y los resultados
+  `funding_account_unavailable` / `registrant_incomplete`.
 ### v2.120
 
 **Cambiado**
@@ -23,7 +33,7 @@ con anticipación y quedan marcados como **Breaking**.
 
 **Cambiado**
 
-- Los payouts SEPA Instant ahora exigen un IBAN virtual `banking_eur`
+- Los payouts SEPA Instant ahora exigen un IBAN virtual `funding_usdt`
   asignado y activo para cuentas cliente. Usa el parámetro opcional
   `source_virtual_iban_id` cuando existan varias cuentas EUR activas; la
   identidad ordenante sale del registrant del vIBAN elegido.

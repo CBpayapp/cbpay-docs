@@ -115,12 +115,13 @@ key for a client retry.
 
 ## EUR funding source and ordering identity
 
-For a customer account, every `sepa` payout must use an allocated and active
-virtual IBAN whose purpose is `banking_eur`. This funding account is also the
-source of the ordering-party identity sent to the banking rail.
+For a customer account, every `sepa` payout must resolve an allocated, active
+virtual IBAN with purpose `funding_usdt`. This is the funding purpose for
+customer payouts; EUR Banking withdrawals use the separate `banking_eur`
+purpose.
 
 Send `source_virtual_iban_id` at the top level when you need to select a
-specific active EUR virtual IBAN:
+specific active `funding_usdt` virtual IBAN:
 
 ```json
 {
@@ -140,32 +141,34 @@ specific active EUR virtual IBAN:
 }
 ```
 
-- With exactly one active `banking_eur` virtual IBAN, omitting the parameter
+- With exactly one active `funding_usdt` virtual IBAN, omitting the parameter
   selects that account deterministically.
-- With no active account, the API returns `422 funding_account_required`.
-- With several active accounts, the API returns
+- With no active source, the API returns `422 funding_account_required`.
+- With several active sources, the API returns
   `422 ambiguous_source_viban` until you send the selected UUID.
 - An explicit UUID that is not owned by the account or is not active returns
   `404 not_found` or `422 funding_account_required`.
 
-The ordering name is taken from the selected virtual IBAN's server-side
-`registrant`: an individual uses its first and last name; a company uses its
-registered company name and registration data. A caller cannot replace this
-identity with `payer` or `cj_payer_*` fields. If the registrant cannot provide
-a usable identity, the request returns `422 registrant_incomplete`.
+The ordering identity is stamped server-side from the selected vIBAN's
+persisted `registrant`: an individual uses its first and last name, while a
+company uses its registered company name and registration data. Caller-supplied
+`payer` or `cj_payer_*` fields cannot replace it.
 
-There is no per-vIBAN amount cap in this flow. The payout still debits the
-account's normal settlement balance (`USDT` by default, or the requested
-`settlement_asset`); `BANK_EUR` is used by EUR Banking operations, not by
-customer payouts.
+For active legacy rows without a usable persisted registrant, the platform
+derives the ordering names from the current verified profile. If that profile
+cannot be read, the API returns `503 funding_account_unavailable`; if the
+resulting identity is incomplete, it returns `422 registrant_incomplete`.
+
+There is no per-vIBAN amount cap. The payout debits the account's normal USDT
+settlement balance; `BANK_EUR` is used by EUR Banking operations, not customer
+payouts.
 
 > **Note**
 Payout holds created before this source-account gate are grandfathered: they
 continue through their existing dispatch and reconciliation path and are not
 rejected retroactively.
 The source-account check runs before any debit or provider dispatch. If the
-funding-account lookup is temporarily unavailable, the API returns
-`503 funding_account_unavailable`; retry with the same idempotency key.
+lookup is temporarily unavailable, retry with the same idempotency key.
 
 ## Idempotency and source selection edge cases
 

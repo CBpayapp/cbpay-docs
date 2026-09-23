@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.120 · 2 个版本 - 2026年9月22日
+## v2.121 · 3 versions - 2026年9月22日
+### v2.121
+
+**已更改**
+
+- 修正 SEPA 来源门控：客户 payout 要求已分配且 active 的 `funding_usdt`
+  虚拟 IBAN，EUR Banking 提现使用 `banking_eur`。
+- 文档补充确定性来源选择、从 vIBAN registrant 服务端写入付款人身份、
+  legacy profile fallback，以及 `funding_account_unavailable` /
+  `registrant_incomplete` 结果。
 ### v2.120
 
 **变更**
@@ -22,7 +31,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 **变更**
 
 - 客户账户的 SEPA Instant payout 现在必须使用已分配且 active 的
-  `banking_eur` 虚拟 IBAN。存在多个 active EUR 资金账户时使用可选字段
+  `funding_usdt` 虚拟 IBAN。存在多个 active EUR 资金账户时使用可选字段
   `source_virtual_iban_id`；付款人身份来自所选 vIBAN 的 registrant。
 - 文档新增 `funding_account_required`、`ambiguous_source_viban` 和
   `funding_account_unavailable` 结果。

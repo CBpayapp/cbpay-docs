@@ -3936,9 +3936,9 @@
       "code": "funding_account_required",
       "http": 422,
       "meaning": {
-        "en": "No allocated, active `banking_eur` virtual IBAN exists. Request one or use an active source.",
-        "es": "No existe un IBAN virtual `banking_eur` asignado y activo. Solicita uno o usa un origen activo.",
-        "zh": "没有已分配且 active 的 `banking_eur` 虚拟 IBAN。请先申请或使用 active 来源。"
+        "en": "No allocated, active virtual IBAN exists for the required product purpose. Use an active source for this flow.",
+        "es": "No existe un IBAN virtual asignado y activo para el propósito requerido. Usa una fuente activa para este flujo.",
+        "zh": "该产品用途没有已分配且 active 的虚拟 IBAN。请先使用该用途的 active 来源。"
       }
     },
     {

@@ -518,46 +518,54 @@ enriquecidos. Cuando llegue, consulta el detalle de la operación para leer
 la dirección, el monto, la contraparte y la referencia. Ver
 [webhooks](/es/webhooks).
 
-## Operaciones SEPA EUR y el IBAN virtual de origen
+## Operaciones EUR SEPA y el vIBAN de origen
 
-Para `currency: "EUR"` y una operación `WITHDRAW` con
-`paymentType: "SEPA_CT"`, la operación debe financiarse desde un IBAN virtual
-asignado y activo cuyo propósito sea `banking_eur`. El origen se selecciona en
-el nivel superior del request:
+Para `currency: "EUR"` y un `WITHDRAW` con `paymentType: "SEPA_CT"`, la
+operación debe resolver un IBAN virtual asignado y activo con propósito
+`banking_eur`. La fuente se selecciona en el nivel superior:
 
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
-  -H "Authorization: Bearer <token>" \
-  -H "Idempotency-Key: eur-sepa-20260922-001" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "currency": "EUR",
-    "type": "WITHDRAW",
-    "paymentType": "SEPA_CT",
-    "source_virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-    "sourceRequisit": { "account": "eur-account-001" },
-    "destinationRequisit": { "beneficiar": "beneficiary-account-001" },
-    "amount": { "currencyCode": "EUR", "units": "250", "nanos": 0 },
-    "comment": "Invoice 8841"
-  }'
+```json
+{
+  "currency": "EUR",
+  "type": "WITHDRAW",
+  "paymentType": "SEPA_CT",
+  "source_virtual_iban_id": "<UUID_VIBAN_BANKING_EUR_ACTIVO>"
+}
 ```
 
-Si la cuenta tiene exactamente un IBAN virtual `banking_eur` activo, el campo
-se puede omitir. Sin una cuenta activa se devuelve
-`422 funding_account_required`; con varias cuentas activas y sin UUID
-explícito, `422 ambiguous_source_viban`. Una falla temporal al consultar el
-origen devuelve `503 funding_account_unavailable`.
+Si la cuenta tiene exactamente un vIBAN `banking_eur` activo, puedes omitir el
+campo. Sin una fuente activa responde `422 funding_account_required`; con varias
+fuentes activas sin UUID explícito responde `422 ambiguous_source_viban`.
+Un `source_virtual_iban_id` con formato inválido responde `400
+invalid_request`; un UUID válido que no existe o no pertenece a la cuenta
+responde `404 not_found`. Un fallo temporal de lectura responde
+`503 funding_account_unavailable`.
 
-La plataforma ignora los campos de identidad ordenante enviados por el caller
-y estampa `payer` desde el `registrant` del IBAN virtual seleccionado. El
-registrant de una persona aporta nombre y apellido; el de una empresa aporta
-la razón social y sus datos de registro. No existe un tope por IBAN virtual:
-la operación debita el saldo `BANK_EUR` de la cuenta.
+La plataforma elimina los campos de identidad ordenante enviados por el caller
+y estampa `payer` server-side desde el `registrant` del vIBAN seleccionado,
+salvo que exista un payer de wallet corporativa más específico y también
+server-side. El registrant persona aporta nombre y apellido; el corporativo,
+razón social registrada y datos de registro.
+
+En filas activas legacy sin registrant utilizable, la plataforma deriva los
+nombres desde el perfil verificado vigente. Si no puede leer ese perfil,
+devuelve `503 funding_account_unavailable`; si la identidad queda incompleta,
+devuelve `422 registrant_incomplete`.
+
+No existe un tope por vIBAN. EUR Banking descuenta del saldo `BANK_EUR` de la
+cuenta; `funding_usdt` es un propósito separado del flujo de fondeo de payouts.
 
 <Note>
 Los holds de operaciones Banking creados antes de esta puerta quedan
-grandfathered y continúan por su despacho/conciliación existente.
+grandfathered y continúan por su flujo existente de dispatch y reconciliación.
 </Note>
+
+## Idempotencia y casos límite del vIBAN de origen
+
+
+
+
+
 
 ## Comisiones por riel (depósitos y transferencias)
 

@@ -110,11 +110,11 @@ Provider create 与显式 approve 是内部步骤。该 payout 为
 
 ## EUR 资金来源与付款人身份
 
-对于客户账户，每笔 `sepa` payout 都必须使用已分配且处于 `active` 状态、
-purpose 为 `banking_eur` 的虚拟 IBAN。该资金账户同时决定发送给银行通道的
-付款人身份。
+对于客户账户，每笔 `sepa` payout 都必须解析到一个已分配且 active、
+purpose 为 `funding_usdt` 的虚拟 IBAN。这是客户 payout 的入金用途；EUR
+Banking 提现使用独立的 `banking_eur` 用途。
 
-需要选择某个已激活 EUR 虚拟 IBAN 时，在顶层发送
+需要选择某个具体的 active `funding_usdt` 虚拟 IBAN 时，在顶层发送
 `source_virtual_iban_id`：
 
 ```json
@@ -135,28 +135,31 @@ purpose 为 `banking_eur` 的虚拟 IBAN。该资金账户同时决定发送给�
 }
 ```
 
-- 只有一个 active 的 `banking_eur` 虚拟 IBAN 时，省略该字段会确定性地
+- 只有一个 active 的 `funding_usdt` 虚拟 IBAN 时，省略该字段会确定性地
   选择它。
-- 没有 active 账户时返回 `422 funding_account_required`。
-- 有多个 active 账户且未选择时返回
+- 没有 active 来源时返回 `422 funding_account_required`。
+- 有多个 active 来源时，在发送所选 UUID 前返回
   `422 ambiguous_source_viban`。
 - 明确指定的 UUID 不属于该账户或不是 active 时，返回
   `404 not_found` 或 `422 funding_account_required`。
 
-付款人姓名来自所选虚拟 IBAN 的服务端 `registrant`：个人使用名和姓，
-企业使用注册公司名称及注册信息。调用方不能通过 `payer` 或
-`cj_payer_*` 字段替换该身份。若 registrant 无法提供可用身份，返回
+付款人身份由服务端从所选 vIBAN 持久化的 `registrant` 写入：个人使用名和
+姓，企业使用注册公司名称及注册信息。调用方提交的 `payer` 或
+`cj_payer_*` 字段不能替换该身份。
+
+对于没有可用持久化 registrant 的 active legacy 行，平台会从当前已验证
+profile 推导付款人姓名。若 profile 暂时无法读取，返回
+`503 funding_account_unavailable`；若最终身份不完整，返回
 `422 registrant_incomplete`。
 
-此流程没有按虚拟 IBAN 设置的金额上限。Payout 仍从账户的常规结算余额
-扣款（默认 `USDT`，也可使用请求中的 `settlement_asset`）；`BANK_EUR`
-仅用于 EUR Banking 操作，不用于客户 payout。
+此流程没有按 vIBAN 设置的金额上限。Payout 从账户正常的 USDT 结算余额
+扣款；`BANK_EUR` 仅用于 EUR Banking 操作，不用于客户 payout。
 
 > **注**
-在此资金来源门控上线前创建的 payout hold 属于 grandfathered 记录：继续
-使用原有 dispatch 与 reconciliation 流程，不会被追溯拒绝。
-资金账户检查在扣款和调用银行通道前执行。若检查暂时不可用，API 返回
-`503 funding_account_unavailable`；请使用相同的幂等键重试。
+这道来源门控上线前创建的 payout hold 属于 grandfathered 记录：继续使用
+原有 dispatch 与 reconciliation 流程，不会被追溯拒绝。
+来源检查在任何扣款或调用 provider 前执行。若来源查询暂时不可用，请使用
+相同的幂等键重试。
 
 ## 幂等与来源选择边界情况
 
