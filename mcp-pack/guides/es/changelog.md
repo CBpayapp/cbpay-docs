@@ -9,7 +9,28 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.123 · 2 versiones - 23 de septiembre de 2026
+
+### v2.123
+
+**Cambiado**
+
+- Se aclaró que este follow-up del OTC Desk es exclusivo para administradores
+  de organización. No cambió ninguna guía pública de integración, contrato de
+  endpoint ni comportamiento de webhook para clientes; la guía pública OTC
+  Desk queda **N/A**.
+
+### v2.122
+
+**Agregado**
+
+- Se agregó en la referencia API el callback del OTC Desk de Telegram
+  (`POST /v1/public/telegram/otc-desk/{orgID}/webhook`). Lo llama Telegram;
+  no es un webhook de integración para clientes y el Desk no emite un evento
+  webhook nuevo.
+
 ## v2.121 · 3 versions - 22 de septiembre de 2026
+
 ### v2.121
 
 **Cambiado**
@@ -39,6 +60,7 @@ con anticipación y quedan marcados como **Breaking**.
   identidad ordenante sale del registrant del vIBAN elegido.
 - Se documentan los resultados `funding_account_required`,
   `ambiguous_source_viban` y `funding_account_unavailable`.
+
 ## v2.118 · 2 versiones - 21 de septiembre de 2026
 
 ### v2.118
@@ -63,6 +85,7 @@ con anticipación y quedan marcados como **Breaking**.
   integrador; la creación y el ciclo existente de estados/webhooks no cambian.
 
 ## v2.116 · 1 versión - 20 de septiembre de 2026
+
 ### v2.116
 
 **Cambiado**
@@ -72,6 +95,7 @@ con anticipación y quedan marcados como **Breaking**.
   `card`, destinos de gastos FIFO e identidad KYB/KYC verificada completa del
   comercio; el pagador permanece enmascarado y se excluyen payloads crudos/
   campos adyacentes al PAN.
+
 ## v2.115 · 6 versiones - 19 de septiembre de 2026
 
 ### v2.115
@@ -133,6 +157,7 @@ con anticipación y quedan marcados como **Breaking**.
   El worker de deadlines avisa T-7/T-3/expired sin mover dinero al vencer.
 
 ## v2.109 · 8 versiones - 18 de septiembre de 2026
+
 ### v2.109
 
 **Cambiado**
@@ -236,7 +261,9 @@ con anticipación y quedan marcados como **Breaking**.
   de `POST /v1/payouts` sigue siendo `202` con
   `status: "processing"`, y cada payout conserva su propio webhook
   `payout_status_changed` y estado final.
+
 ## v2.101 · 8 versiones - 17 de septiembre de 2026
+
 ### v2.101
 
 **Cambiado**
@@ -1615,6 +1642,7 @@ destino. La creación es idempotente: una clave nueva responde
   valores reales son `amount_single_candidate` y `dedicated_clabe`; se
   agregaron `charge_link` y `manual_assign` (un admin ruteó el depósito a
   mano) al spec.
+
 ## v2.15 · 1 versión - 26 de julio de 2026
 
 ### v2.15
@@ -1636,6 +1664,7 @@ destino. La creación es idempotente: una clave nueva responde
   método de payin (QR, checkout, tarjeta) responde ahora
   `409 idempotency_conflict` en vez de devolver un objeto que no
   corresponde.
+
 ## v2.14 · 6 versiones - 25 de julio de 2026
 
 ### v2.14

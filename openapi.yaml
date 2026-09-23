@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.121"
+  version: "2.123"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -791,6 +791,84 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many requests; wait a moment and retry
+  /v1/public/telegram/otc-desk/{orgID}/webhook:
+    post:
+      security: []
+      tags:
+      - OTC Desk
+      operationId: otcDeskTelegramWebhook
+      summary: Telegram bot webhook for OTC Desk callbacks (called by Telegram)
+      description: >-
+        Receives Telegram Bot API updates for the organization's OTC DESK
+        group (inline button callbacks on BOB inventory offers). Called by
+        Telegram, not by integrators: authenticated with the
+        X-Telegram-Bot-Api-Secret-Token header (fail-closed 403), button
+        payloads carry an HMAC signature, and duplicate deliveries converge
+        on the callback id. Business outcomes always answer 200 (Telegram
+        must not retry); 503 means store unavailable and is safe to retry.
+      parameters:
+      - name: orgID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Organization that owns the OTC Desk bot and group.
+      - name: X-Telegram-Bot-Api-Secret-Token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Webhook secret configured for the organization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              update_id: 123456789
+              callback_query:
+                id: '3486293628410185798'
+                from: {id: 123456789, username: traderuno}
+                data: v1.AbC123XyZ456.a.1758600000.9f2c4a1b7d30e5c8
+      responses:
+        '200':
+          description: Update received (accepted, passed, duplicate or ignored).
+          content:
+            application/json:
+              example:
+                ok: true
+                accepted: true
+                offer_id: 8f3k2m9d-1a2b-4c3d-8e4f-5a6b7c8d9e0f
+        '400':
+          description: invalid_payload (malformed update).
+          content:
+            application/json:
+              example:
+                error: invalid_payload
+                message: malformed update
+        '403':
+          description: Invalid webhook secret.
+          content:
+            application/json:
+              example:
+                error: forbidden
+                message: invalid webhook secret
+        '404':
+          description: Unknown organization.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: resource not found
+        '503':
+          description: store_unavailable (safe to retry; dedupe makes it idempotent).
+          content:
+            application/json:
+              example:
+                error: store_unavailable
+                message: try again
   /v1/public/signature-proofs/{code}:
     get:
       security: []
@@ -21524,8 +21602,14 @@ paths:
         the Banking product. The platform autofills the provider V3 registrant
         from the approved KYC/KYB profile. The optional document and
         incorporation fields below accept snake_case and camelCase aliases.
-        Missing required registrant paths return `422 registrant_incomplete`
-        with the missing paths in `message`.
+        Company accounts also accept trading_website, business_activity,
+        is_micro_enterprise, expected_turnover and one document pair per UBO
+        (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date,
+        zero-based UBO index, camelCase aliases accepted): the corporate rail
+        requires a full document per UBO and the verified profile does not
+        carry the UBO document issuing country or expiry. Missing required
+        registrant paths return `422 registrant_incomplete` with the missing
+        paths in `message`.
       requestBody:
         required: true
         content:
@@ -21544,6 +21628,18 @@ paths:
                 incorporationCountry: {type: string, description: CamelCase alias}
                 incorporation_date: {type: string, format: date, description: Incorporation date override}
                 incorporationDate: {type: string, format: date, description: CamelCase alias}
+                trading_website: {type: string, description: Company trading website override}
+                tradingWebsite: {type: string, description: CamelCase alias}
+                business_activity: {type: string, description: Company business activity override}
+                businessActivity: {type: string, description: CamelCase alias}
+                is_micro_enterprise: {type: string, description: '"true" or "false" micro-enterprise flag override'}
+                isMicroEnterprise: {type: string, description: CamelCase alias}
+                expected_turnover: {type: string, description: Optional expected turnover override}
+                expectedTurnover: {type: string, description: CamelCase alias}
+                ubo_0_document_issued_country: {type: string, description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index}
+                ubo0DocumentIssuedCountry: {type: string, description: CamelCase alias}
+                ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 document expiry; must be more than one month in the future; repeat per UBO index}
+                ubo0DocumentExpirationDate: {type: string, format: date, description: CamelCase alias}
             examples:
               funding:
                 value:
@@ -21559,6 +21655,11 @@ paths:
                   purpose: banking_eur
                   incorporation_country: IT
                   incorporation_date: '2016-12-21'
+                  trading_website: https://example.com
+                  business_activity: Bubble wholesale
+                  is_micro_enterprise: 'true'
+                  ubo_0_document_issued_country: IT
+                  ubo_0_document_expiration_date: '2035-06-01'
       responses:
         '202':
           description: Durable request queued for manual approval.
@@ -21681,6 +21782,45 @@ paths:
           description: not_found.
         '503':
           description: Banking recovery or provider unavailable.
+  /v1/banking/virtual-ibans/{virtualIBANID}/close:
+    post:
+      tags: [Banking]
+      operationId: closeVirtualIBAN
+      summary: Close an active virtual IBAN
+      description: >-
+        Closes one of the authenticated account's virtual IBANs at the EUR
+        rail. Only active rows with an allocated address can be closed; the
+        call is idempotent (an already closed row answers 200 with its
+        current state) and a provider 404 converges to closed locally.
+        Closing is free and never refunds the allocation fee.
+      parameters:
+        - {name: virtualIBANID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Virtual IBAN closed (or already closed).
+          content:
+            application/json:
+              examples:
+                closed:
+                  value:
+                    virtual_iban:
+                      id: 2f8c1d4e-1111-4b22-8a33-000000000001
+                      owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                      purpose: funding_usdt
+                      currency: EUR
+                      iban: DE890000000000000000
+                      iban_country: DE
+                      status: closed
+        '403':
+          description: service_disabled.
+        '404':
+          description: not_found.
+        '409':
+          description: invalid_state (not active, or no allocated address).
+        '422':
+          description: provider_rejected with the rail detail.
+        '503':
+          description: banking_recovery_pending (ambiguous close outcome; retry the close).
   /v1/banking/third-parties/{thirdPartyID}/virtual-ibans:
     post:
       tags: [Banking]
@@ -21884,8 +22024,12 @@ paths:
       summary: Reserve and read a dedicated EUR company wallet for a verified business account.
       description: >-
         Requires the Banking product, a verified company account and an idempotency key.
-        Optional registrant overrides complete the approved KYB profile. Missing holder
-        paths return 422 registrant_incomplete.
+        Optional registrant overrides complete the approved KYB profile, including one
+        document pair per UBO (ubo_{i}_document_issued_country,
+        ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases
+        accepted): the corporate rail requires a full document per UBO and the
+        verified profile does not carry the UBO document issuing country or expiry.
+        Missing holder paths return 422 registrant_incomplete.
       parameters:
       - name: Idempotency-Key
         in: header
@@ -21915,6 +22059,13 @@ paths:
                   format: date
                 expected_turnover:
                   type: string
+                ubo_0_document_issued_country:
+                  type: string
+                  description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index
+                ubo_0_document_expiration_date:
+                  type: string
+                  format: date
+                  description: UBO 0 document expiry, more than one month in the future; repeat per UBO index
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -21923,6 +22074,8 @@ paths:
               incorporation_country: CL
               incorporation_date: '2020-04-15'
               expected_turnover: '250000.00'
+              ubo_0_document_issued_country: CL
+              ubo_0_document_expiration_date: '2035-04-15'
       responses:
         '202':
           description: Durable reservation accepted.

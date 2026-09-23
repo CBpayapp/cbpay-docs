@@ -8,7 +8,26 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.123 · 2 个版本 - 2026年9月23日
+
+### v2.123
+
+**已更改**
+
+- 明确本次 OTC Desk follow-up 仅面向组织管理员。没有改变公开客户集成
+  指南、endpoint contract 或客户 webhook 行为；公开 OTC Desk 指南为
+  **N/A**。
+
+### v2.122
+
+**新增**
+
+- 在 API 参考中新增 Telegram OTC Desk callback
+  (`POST /v1/public/telegram/otc-desk/{orgID}/webhook`)。该路径由 Telegram
+  调用，不是客户集成 webhook，Desk 也不会发出新的 webhook 事件。
+
 ## v2.121 · 3 versions - 2026年9月22日
+
 ### v2.121
 
 **已更改**
@@ -35,6 +54,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `source_virtual_iban_id`；付款人身份来自所选 vIBAN 的 registrant。
 - 文档新增 `funding_account_required`、`ambiguous_source_viban` 和
   `funding_account_unavailable` 结果。
+
 ## v2.118 · 2 个版本 - 2026年9月21日
 
 ### v2.118
@@ -55,6 +75,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   payout 创建以及现有状态/webhook 生命周期保持不变。
 
 ## v2.116 · 1 个版本 - 2026年9月20日
+
 ### v2.116
 
 **变更**
@@ -62,6 +83,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - 明确组织生成的争议证据包内容：卡 payin 的卡交易详情、FIFO 支出的
   资金目的地以及商户完整的已验证 KYB/KYC 身份；付款人仍然经过掩码，
   不包含原始 payload 或 PAN 相邻字段。
+
 ## v2.115 · 6 个版本 - 2026年9月19日
 
 ### v2.115
@@ -117,6 +139,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   deadline worker 发出 T-7/T-3/expired 通知，但到期不移动资金。
 
 ## v2.109 · 8 个版本 - 2026年9月18日
+
 ### v2.109
 
 **变更**
@@ -207,7 +230,9 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **智利 CLP 银行转账**现在可以在约五分钟的短窗口内进行批量派发。
   `POST /v1/payouts` 仍返回 `202` 与 `status: "processing"`；每笔 payout
   仍保留自己的 `payout_status_changed` webhook 和最终状态。
+
 ## v2.101 · 8 个版本 - 2026年9月17日
+
 ### v2.101
 
 **变更**
@@ -1341,6 +1366,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `dedicated_instrument`，但 API 中并不存在。真实值为
   `amount_single_candidate` 与 `dedicated_clabe`；spec 中新增了
   `charge_link` 与 `manual_assign`（管理员手工路由存款）。
+
 ## v2.15 · 1 个版本 - 2026年7月26日
 
 ### v2.15
@@ -1358,6 +1384,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   收取两笔金额相同的真实款项，请为每个预告发送不同的密钥。
   复用已用于**其他**收款方式（QR、checkout、卡支付）的密钥，
   现在会返回 `409 idempotency_conflict`，而不是返回与请求不符的对象。
+
 ## v2.14 · 6 个版本 - 2026年7月25日
 
 ### v2.14
