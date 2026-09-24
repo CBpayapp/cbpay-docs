@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.124"
+  version: "2.125"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -21443,7 +21443,15 @@ paths:
         business_activity, is_micro_enterprise, expected_turnover y un par documental
         por UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date,
         índice de UBO base cero, aliases camelCase aceptados): el riel corporativo
-        exige un documento completo por UBO. Los valores ya presentes en el
+        exige un documento completo por UBO. Las correcciones de identidad del
+        UBO (ubo_{i}_first_name, ubo_{i}_last_name, ubo_{i}_birth_date) pisan un
+        KYB con datos erróneos sin re-verificar; las fechas de nacimiento
+        (persona y UBOs) deben dar edad 16–85. tax_number funciona en AMBAS
+        ramas: una persona/empresa US debe dar un SSN/EIN válido de 9 dígitos;
+        otros países validan formatos conocidos (RUT CL, NINO/UTR GB) y omiten
+        valores inválidos en vez de fallar. Los nombres se pliegan al charset
+        latino del riel (José→Jose) y las direcciones validan el zip por país,
+        con address_zip como corrección cuando el zip del KYC viene malo. Los valores ya presentes en el
         perfil KYB aprobado (incorporación, sitio web, industria, documentos
         UBO) se autocompletan — los overrides solo cubren lo que el perfil
         no trae, y el override explícito siempre gana. Si faltan rutas
@@ -21475,8 +21483,10 @@ paths:
                 isMicroEnterprise: {type: string, description: Alias camelCase}
                 expected_turnover: {type: string, description: Facturación esperada opcional}
                 expectedTurnover: {type: string, description: Alias camelCase}
-                tax_number: {type: string, description: Corrección del número tributario de la empresa (ej. RUT CL válido con dígito verificador)}
+                tax_number: {type: string, description: 'Corrección del número tributario en AMBAS ramas (persona: SSN/ITIN de 9 dígitos si US; empresa: EIN de 9 dígitos si US, RUT CL válido con dígito verificador)'}
                 taxNumber: {type: string, description: Alias camelCase}
+                address_zip: {type: string, description: Corrección del código postal cuando el KYC trae uno con formato inválido para su país (vacío = se usa el del perfil)}
+                addressZip: {type: string, description: Alias camelCase}
                 ubo_0_document_issued_country: {type: string, description: País ISO alpha-2 de emisión del documento del UBO 0; repetir por índice de UBO'}
                 ubo0DocumentIssuedCountry: {type: string, description: Alias camelCase}
                 ubo_0_document_expiration_date: {type: string, format: date, description: Vencimiento del documento del UBO 0; debe superar un mes desde hoy; repetir por índice de UBO'}
@@ -21485,6 +21495,12 @@ paths:
                 ubo0Pep: {type: string, description: Alias camelCase}
                 ubo_0_usa_tax_residency: {type: string, description: '"true" o "false" si el UBO 0 es residente fiscal EEUU; repetir por índice de UBO'}
                 ubo0UsaTaxResidency: {type: string, description: Alias camelCase}
+                ubo_0_first_name: {type: string, description: Corrección del nombre del UBO 0 (pisa el valor KYB); repetir por índice de UBO}
+                ubo0FirstName: {type: string, description: Alias camelCase}
+                ubo_0_last_name: {type: string, description: Corrección del apellido del UBO 0 (pisa el valor KYB); repetir por índice de UBO}
+                ubo0LastName: {type: string, description: Alias camelCase}
+                ubo_0_birth_date: {type: string, format: date, description: Corrección de la fecha de nacimiento del UBO 0 (pisa el valor KYB); debe dar edad 16–85; repetir por índice de UBO}
+                ubo0BirthDate: {type: string, format: date, description: Alias camelCase}
             examples:
               funding:
                 value:
@@ -21875,7 +21891,9 @@ paths:
         accepted): the corporate rail requires a full document per UBO. Values
         already present in the KYB profile are autofilled — overrides are only
         needed for what the profile lacks, and explicit overrides always win.
-        Missing holder paths return 422 registrant_incomplete.
+        Missing holder paths return 422 registrant_incomplete. The accepted
+        reservation carries `upload_link`: a pre-signed upload URL where the
+        verification document zip must be PUT (provider requirement).
       parameters:
       - name: Idempotency-Key
         in: header
@@ -21907,7 +21925,10 @@ paths:
                   type: string
                 tax_number:
                   type: string
-                  description: Corrección del número tributario de la empresa (ej. RUT CL válido con dígito verificador)
+                  description: Corrección del número tributario de la empresa (EIN de 9 dígitos si US; RUT CL válido con dígito verificador)
+                address_zip:
+                  type: string
+                  description: Corrección del código postal cuando el KYC trae uno con formato inválido para su país (vacío = se usa el del perfil)
                 ubo_0_document_issued_country:
                   type: string
                   description: País ISO alpha-2 de emisión del documento del UBO 0; repetir por índice de UBO
@@ -21921,6 +21942,16 @@ paths:
                 ubo_0_usa_tax_residency:
                   type: string
                   description: '"true" o "false" si el UBO 0 es residente fiscal EEUU; repetir por índice de UBO'
+                ubo_0_first_name:
+                  type: string
+                  description: Corrección del nombre del UBO 0 (pisa el valor KYB); repetir por índice de UBO
+                ubo_0_last_name:
+                  type: string
+                  description: Corrección del apellido del UBO 0 (pisa el valor KYB); repetir por índice de UBO
+                ubo_0_birth_date:
+                  type: string
+                  format: date
+                  description: Corrección de la fecha de nacimiento del UBO 0 (pisa el valor KYB); debe dar edad 16–85; repetir por índice de UBO
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -21945,6 +21976,7 @@ paths:
                   currency: EUR
                   status: pending
                   order_reference: wallet-order-001
+                  upload_link: https://provider-uploads.example.invalid/verify/7d2c1a8e.zip
                   created_at: '2026-09-17T15:00:00Z'
                   updated_at: '2026-09-17T15:00:00Z'
         '200':
@@ -23417,6 +23449,7 @@ components:
             properties:
               asset:
                 type: string
+                description: Los activos fiat BOB, MXN y ARS del ledger usan dos decimales.
                 example: USDT
               available:
                 type: string
@@ -23541,6 +23574,9 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
+          - BOB
+          - MXN
+          - ARS
           description: Saldo desde el que se debitan las operaciones cuando no se envía un override por
             request.
         default_payin_asset:

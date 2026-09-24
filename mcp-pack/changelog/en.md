@@ -8,6 +8,14 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.125 · 1 version - September 24, 2026
+
+### v2.125
+
+**Added**
+
+- Added BOB, MXN and ARS as two-decimal ledger assets. Balances, history and analytics now expose them; same-asset transfers remain supported, while swaps, cards, checkout and POS keep explicit v1 rejection gates.
+
 ## v2.124 · 3 versions - September 23, 2026
 
 ### v2.124

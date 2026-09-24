@@ -7,6 +7,16 @@ description: "History of API and documentation changes"
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+<Update label="September 24, 2026" description="v2.125 · 1 version">
+
+### v2.125
+
+**Added**
+
+- Added BOB, MXN and ARS as two-decimal ledger assets. Balances, history and analytics now expose them; same-asset transfers remain supported, while swaps, cards, checkout and POS keep explicit v1 rejection gates.
+
+</Update>
+
 <Update label="September 23, 2026" description="v2.124 · 3 versions">
 
 ### v2.124
@@ -461,7 +471,6 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   The legacy `failure_reason` remains compatible; ambiguous
   `needs_review` results must not be retried with a new payment.
 
-
 ### v2.84
 
 **Added**
@@ -480,7 +489,6 @@ Breaking changes are announced in advance and flagged as **Breaking**.
   that are down remain visible.
 - **KYC/KYB severe signals now route to human review**: the automatic decision engine no longer emits `rejected` for severe AML sanctions (including KYB parties), prohibited jurisdictions or explicit document-fraud/provider-rejection signals. It preserves the original codes in `auto_decision_reasons`; a provider-closed `rejected` decision remains authoritative.
 - **Self-verification status detail**: `GET /v1/me/verification` now exposes optional `pending_documents`, `changes_requested_comments`, `documents_received` and `documents_gate` fields inside `submission`.
-
 
 ### v2.82
 
@@ -643,14 +651,12 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 
 ### v2.72
 
-
 - **Recovery contract**: added the durable core idempotency status route and
   the org-ops reconciliation path for ambiguous deposit-account claims.
   Platform recovery is fail-closed with
   `deposit_account_not_recoverable`, `idempotency_conflict`, and a recovery
   lease fence. Platform-admin adoption is a separate last-resort action, not
   an idempotent replay; use reconciliation for a verified core-fence replay.
-
 
 **Changed**
 
@@ -667,8 +673,6 @@ instrument. Company creation is idempotent: a new key returns
   `409 idempotency_conflict`. Person accounts and legacy corridors
   keep the one-per-corridor rule; deposit-account listing is now
   paginated.
-
-
 
 **BOB virtual deposit accounts**: the payin catalog now documents the
   `BO/BOB/bank_transfer` dedicated receiving-account flow, including account
@@ -1016,7 +1020,6 @@ instrument. Company creation is idempotent: a new key returns
   and `risk_consent_revoked`. New error codes: `purpose_required`,
   `invalid_purpose`, `invalid_doc_id`, `invalid_subject_type`,
   `invalid_email`, `already_decided`, `link_inactive` and `holder_mismatch`.
-
 
 ### v2.51
 
@@ -1411,7 +1414,6 @@ instrument. Company creation is idempotent: a new key returns
 
 - **Sanitized error messages across the API.** An error `message` never exposes provider names, infrastructure details, URLs, raw upstream bodies (JSON/HTML), or internal configuration — not in API responses, webhooks, or stored status fields. Business rejections from the payment processor keep their actionable reason (for example, why a document or account was rejected); infrastructure failures are replaced by the fixed generic message `"the payment provider could not process the request"` — retry those operations with the same `idempotency_key`. No shape changes: only message contents changed.
 
-
 ### v2.29
 
 **Added**
@@ -1428,8 +1430,6 @@ instrument. Company creation is idempotent: a new key returns
   purchase receipt shows the fee line, and the ledger records the
   movements as `card_fee` / `card_fee_refund`. Details in
   [cards](/en/guides/cards#per-purchase-fee-lifecycle).
-
-
 
 ### v2.28
 
@@ -1771,7 +1771,6 @@ instrument. Company creation is idempotent: a new key returns
 - **New error codes** ([errors](/en/errors)): `too_many_streams`,
   `stream_unavailable` and `streaming_unsupported`.
 
-
 ### v2.11
 
 **Added**
@@ -1801,7 +1800,6 @@ instrument. Company creation is idempotent: a new key returns
 - **New error codes** ([errors](/en/errors)): `payin_not_refundable`,
   `refund_not_supported`, `refund_exceeds_payin` and `invalid_amount`.
 
-
 ### v2.10
 
 **Changed**
@@ -1815,7 +1813,6 @@ instrument. Company creation is idempotent: a new key returns
   and website, still ships with no JavaScript and no external resources (so
   you can embed it or share it with your customers), and the JSON at
   `/v1/status/{token}` is unchanged.
-
 
 ### v2.09
 

@@ -7,6 +7,16 @@ description: "API 与文档变更历史"
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+<Update label="2026年9月24日" description="v2.125 · 1 version">
+
+### v2.125
+
+**Added**
+
+- 新增 BOB、MXN 和 ARS 两位小数账本资产。余额、history 和 analytics 现在会返回它们；相同资产转账保持支持，而 swaps、cards、checkout 和 POS 保留 v1 的显式拒绝 gate。
+
+</Update>
+
 <Update label="2026年9月23日" description="v2.124 · 3 个版本">
 
 ### v2.124
@@ -436,7 +446,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **严重 KYC/KYB 信号转入人工审核**：自动决策引擎不再因为严重 AML 制裁（包括 KYB 关联方）、禁止司法辖区或明确的文件欺诈/提供方拒绝信号产生 `rejected`。原始代码仍保存在 `auto_decision_reasons`；提供方已经关闭的 `rejected` 决定仍然具有权威性。
 - **自助验证状态详情**：`GET /v1/me/verification` 现在会在 `submission` 中返回可选字段 `pending_documents`、`changes_requested_comments`、`documents_received` 和 `documents_gate`。
 
-
 ### v2.82
 
 **Breaking**
@@ -580,13 +589,11 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 ### v2.72
 
-
 - **Recovery contract**：新增核心幂等状态路由和组织运营对充值账户
   歧义 claim 的 reconciliation 路由。Recovery 采用 fail-closed，并使用
   `deposit_account_not_recoverable`、`idempotency_conflict` 与 recovery
   lease fence。平台管理员 adoption 是独立的最后恢复操作，不是幂等
   replay；要重放已核验的 core fence，请使用 reconciliation。
-
 
 **变更**
 
@@ -602,8 +609,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   重放返回 `200` 并带 `idempotency_hit: true`，处理中重放可能
   返回 `409 idempotency_conflict`。个人账户和 legacy 通道仍然
   每个通道一个目的地；列表现在支持分页。
-
-
 
 **BOB 虚拟收款账户**：payin 目录现在记录
   `BO/BOB/bank_transfer` 专属收款账户流程，包括创建/列表、轮询对账、
@@ -909,7 +914,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `purpose_required`、`invalid_purpose`、`invalid_doc_id`、
   `invalid_subject_type`、`invalid_email`、`already_decided`、
   `link_inactive` 和 `holder_mismatch`。
-
 
 ### v2.51
 
@@ -1238,14 +1242,11 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 - **全 API 错误消息已脱敏。** 错误的 `message` 绝不会暴露提供商名称、基础设施细节、URL、上游原始响应体（JSON/HTML）或内部配置——无论是 API 响应、webhook 还是持久化的状态字段都不会。处理方的业务性拒绝会保留可操作的失败原因（例如某份文件或账户为何被拒绝）；基础设施故障会被替换为固定的通用消息 `"the payment provider could not process the request"` —— 请使用相同的 `idempotency_key` 重试这些操作。无结构变化：仅消息内容发生变化。
 
-
 ### v2.29
 
 **新增**
 
 - **按笔消费手续费**：卡交易现在可以携带按账户配置的交易手续费（百分比 + 固定），通过两个新服务实现 —— `card_purchase_virtual` 和 `card_purchase_physical`。手续费在**授权时预估**（计入余额冻结），在**结算时按当时生效的配置重新计算**，并在部分或全部撤销/调整时**按比例退还**。卡交易现在暴露 `fee_asset`、`fee_amount` 和 `fee_refunded_amount`（未配置手续费时省略 —— 未配置的账户不受影响），购买凭证显示手续费行，账本以 `card_fee` / `card_fee_refund` 记录相关流水。详见[卡片](/zh/guides/cards#按笔消费手续费（生命周期）)。
-
-
 
 ### v2.28
 
@@ -1535,7 +1536,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **新增错误码**（[错误](/zh/errors)）：`too_many_streams`、
   `stream_unavailable` 与 `streaming_unsupported`。
 
-
 ### v2.11
 
 **新增**
@@ -1560,7 +1560,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 - **新增错误码**（[错误](/zh/errors)）：`payin_not_refundable`、
   `refund_not_supported`、`refund_exceeds_payin` 与 `invalid_amount`。
 
-
 ### v2.10
 
 **变更**
@@ -1571,7 +1570,6 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   以及使用通俗语言描述原因的事件时间线。页面会自动使用你组织的
   logo、颜色和网站，仍然不包含 JavaScript 与外部资源（可以嵌入或分享
   给客户），`/v1/status/{token}` 的 JSON 保持不变。
-
 
 ### v2.09
 

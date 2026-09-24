@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.124"
+  version: "2.125"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2623,9 +2623,9 @@ paths:
       - Balances
       operationId: getBalances
       summary: Get balances
-      description: The six independent virtual balances of the calling account (USDT — the operating
+      description: The nine independent virtual balances of the calling account (USDT — the operating
         currency —, USDC, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver,
-        and PLATINUM in grams of fine platinum). Every supported asset is always present,
+        PLATINUM in grams of fine platinum, and fiat BOB, MXN and ARS with two decimals). Every supported asset is always present,
         with zeros if the account has not used that currency yet. If the account uses Banking, its BANK_USD/BANK_EUR
         mirror balances are also listed with the `custody` marker set to `banking` (the authoritative
         balance lives at the bank; these balances are not spendable inside the platform).
@@ -3659,7 +3659,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: Virtual balance to debit for this operation. Omit to use your account's
+                  description: Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN and ARS. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's
                     default settlement asset (USDT unless changed via `PUT /v1/settlement`).
                 source_virtual_iban_id:
                   type: string
@@ -13164,7 +13164,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: Virtual balance to debit for this operation. Omit to use your account's
+                  description: Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN and ARS. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's
                     default settlement asset.
                 idempotency_key:
                   type: string
@@ -21606,8 +21606,16 @@ paths:
         is_micro_enterprise, expected_turnover and one document pair per UBO
         (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date,
         zero-based UBO index, camelCase aliases accepted): the corporate rail
-        requires a full document per UBO. Values already present in the
-        approved KYB profile (incorporation, website, industry, UBO
+        requires a full document per UBO. UBO identity corrections
+        (ubo_{i}_first_name, ubo_{i}_last_name, ubo_{i}_birth_date) override a
+        KYB carrying wrong owner data without re-verification; birth dates
+        (person and UBOs) must yield age 16-85. tax_number works on BOTH
+        branches: a US person/company must provide a valid 9-digit SSN/EIN;
+        other countries validate known formats (CL RUT, GB NINO/UTR) and omit
+        invalid values instead of failing. Names fold to the rail latin
+        charset (José→Jose) and addresses validate zip format per country,
+        with address_zip as correction when the KYC zip is malformed.
+        Values already present in the approved KYB profile (incorporation, website, industry, UBO
         documents) are autofilled — overrides are only needed for what the
         profile lacks, and explicit overrides always win. Missing required
         registrant paths return `422 registrant_incomplete` with the missing
@@ -21638,8 +21646,10 @@ paths:
                 isMicroEnterprise: {type: string, description: CamelCase alias}
                 expected_turnover: {type: string, description: Optional expected turnover override}
                 expectedTurnover: {type: string, description: CamelCase alias}
-                tax_number: {type: string, description: Company tax number correction (e.g. a valid CL RUT with check digit)}
+                tax_number: {type: string, description: 'Tax number correction for BOTH branches (person: 9-digit SSN/ITIN when US; company: 9-digit EIN when US, valid CL RUT with check digit)'}
                 taxNumber: {type: string, description: CamelCase alias}
+                address_zip: {type: string, description: Address postal code correction when the KYC carries one with invalid country format (empty = profile value is used)}
+                addressZip: {type: string, description: CamelCase alias}
                 ubo_0_document_issued_country: {type: string, description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index}
                 ubo0DocumentIssuedCountry: {type: string, description: CamelCase alias}
                 ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 document expiry; must be more than one month in the future; repeat per UBO index}
@@ -21648,6 +21658,12 @@ paths:
                 ubo0Pep: {type: string, description: CamelCase alias}
                 ubo_0_usa_tax_residency: {type: string, description: '"true" or "false" whether UBO 0 is a US tax resident; repeat per UBO index'}
                 ubo0UsaTaxResidency: {type: string, description: CamelCase alias}
+                ubo_0_first_name: {type: string, description: UBO 0 first name correction (overrides the KYB value); repeat per UBO index}
+                ubo0FirstName: {type: string, description: CamelCase alias}
+                ubo_0_last_name: {type: string, description: UBO 0 last name correction (overrides the KYB value); repeat per UBO index}
+                ubo0LastName: {type: string, description: CamelCase alias}
+                ubo_0_birth_date: {type: string, format: date, description: UBO 0 birth date correction (overrides the KYB value); must yield age 16-85; repeat per UBO index}
+                ubo0BirthDate: {type: string, format: date, description: CamelCase alias}
             examples:
               funding:
                 value:
@@ -22035,10 +22051,14 @@ paths:
         Optional registrant overrides complete the approved KYB profile, including one
         document pair per UBO (ubo_{i}_document_issued_country,
         ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases
-        accepted): the corporate rail requires a full document per UBO. Values
+        accepted): the corporate rail requires a full document per UBO. UBO identity
+        corrections (ubo_{i}_first_name, ubo_{i}_last_name, ubo_{i}_birth_date, age
+        16-85) override wrong KYB owner data. Values
         already present in the KYB profile are autofilled — overrides are only
         needed for what the profile lacks, and explicit overrides always win.
-        Missing holder paths return 422 registrant_incomplete.
+        Missing holder paths return 422 registrant_incomplete. The accepted
+        reservation carries `upload_link`: a pre-signed upload URL where the
+        verification document zip must be PUT (provider requirement).
       parameters:
       - name: Idempotency-Key
         in: header
@@ -22070,7 +22090,10 @@ paths:
                   type: string
                 tax_number:
                   type: string
-                  description: Company tax number correction (e.g. a valid CL RUT with check digit)
+                  description: Company tax number correction (9-digit EIN when US; a valid CL RUT with check digit)
+                address_zip:
+                  type: string
+                  description: Address postal code correction when the KYC carries one with invalid country format (empty = profile value is used)
                 ubo_0_document_issued_country:
                   type: string
                   description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index
@@ -22084,6 +22107,16 @@ paths:
                 ubo_0_usa_tax_residency:
                   type: string
                   description: '"true" or "false" whether UBO 0 is a US tax resident; repeat per UBO index'
+                ubo_0_first_name:
+                  type: string
+                  description: UBO 0 first name correction (overrides the KYB value); repeat per UBO index
+                ubo_0_last_name:
+                  type: string
+                  description: UBO 0 last name correction (overrides the KYB value); repeat per UBO index
+                ubo_0_birth_date:
+                  type: string
+                  format: date
+                  description: UBO 0 birth date correction (overrides the KYB value); must yield age 16-85; repeat per UBO index
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -22108,6 +22141,7 @@ paths:
                   currency: EUR
                   status: pending
                   order_reference: wallet-order-001
+                  upload_link: https://provider-uploads.example.invalid/verify/7d2c1a8e.zip
                   created_at: '2026-09-17T15:00:00Z'
                   updated_at: '2026-09-17T15:00:00Z'
         '200':
@@ -23586,6 +23620,7 @@ components:
             properties:
               asset:
                 type: string
+                description: Ledger fiat assets BOB, MXN and ARS use two decimal places.
                 example: USDT
               available:
                 type: string
@@ -23710,7 +23745,10 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: Balance operations debit from when no per-request override is sent.
+          - BOB
+          - MXN
+          - ARS
+          description: Balance operations debit from when no per-request override is sent. Fiat values are accepted by the contract but return 503 pricing_unavailable until fiat settlement pricing is available.
         default_payin_asset:
           type: string
           enum:
@@ -23728,7 +23766,7 @@ components:
           type: array
           items:
             type: string
-          description: Assets your organization currently allows as settlement source.
+          description: Assets your organization currently allows as settlement source. Ledger fiat BOB, MXN and ARS use two decimals; fiat execution returns 503 pricing_unavailable in v1. Ledger fiat BOB, MXN and ARS use two decimals; fiat execution returns 503 pricing_unavailable in v1. Ledger fiat BOB, MXN and ARS use two decimals; fiat execution returns 503 pricing_unavailable in v1.
         volatile_op_limit_usdt:
           type: string
           description: Per-operation limit (USDT equivalent) for volatile assets (BTC/GOLD/SILVER/PLATINUM).

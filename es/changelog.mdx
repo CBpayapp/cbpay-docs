@@ -8,6 +8,16 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+<Update label="24 de septiembre de 2026" description="v2.125 · 1 version">
+
+### v2.125
+
+**Added**
+
+- Se agregaron BOB, MXN y ARS como activos fiat del ledger con dos decimales. Balances, history y analytics los exponen; las transferencias del mismo asset siguen soportadas y swaps, tarjetas, checkout y POS mantienen sus rechazos explícitos de v1.
+
+</Update>
+
 <Update label="23 de septiembre de 2026" description="v2.124 · 3 versiones">
 
 ### v2.124
@@ -487,7 +497,6 @@ con anticipación y quedan marcados como **Breaking**.
 - **Las señales KYC/KYB severas pasan a revisión humana**: el motor de decisión automática ya no emite `rejected` ante sanciones AML severas (incluidas partes KYB), países prohibidos o señales explícitas de fraude/rechazo del proveedor. Conserva los códigos originales en `auto_decision_reasons`; un `rejected` cerrado por el proveedor sigue siendo autoritativo.
 - **Detalle del estado de verificación propia**: `GET /v1/me/verification` ahora expone dentro de `submission` los campos opcionales `pending_documents`, `changes_requested_comments`, `documents_received` y `documents_gate`.
 
-
 ### v2.82
 
 **Breaking**
@@ -657,7 +666,6 @@ con anticipación y quedan marcados como **Breaking**.
 
 ### v2.72
 
-
 - **Contrato de recovery**: se agregaron la ruta durable de estado de
   idempotencia del core y la reconciliación org-ops para claims ambiguos de
   cuentas de depósito. El recovery es fail-closed con
@@ -665,7 +673,6 @@ con anticipación y quedan marcados como **Breaking**.
   La adopción del platform-admin es una acción separada de último recurso, no
   un replay idempotente; usa la reconciliación para repetir un fence core
   verificado.
-
 
 **Cambiado**
 
@@ -682,8 +689,6 @@ destino. La creación es idempotente: una clave nueva responde
   `409 idempotency_conflict`. Las cuentas persona y los corredores
   legados conservan un destino por corredor; el listado ahora es
   paginado.
-
-
 
 **Cuentas virtuales de depósito BOB**: el catálogo de payins documenta el
   flujo `BO/BOB/bank_transfer` con cuenta receptora dedicada, creación/listado,
@@ -1048,7 +1053,6 @@ destino. La creación es idempotente: una clave nueva responde
   `purpose_required`, `invalid_purpose`, `invalid_doc_id`,
   `invalid_subject_type`, `invalid_email`, `already_decided`, `link_inactive`
   y `holder_mismatch`.
-
 
 ### v2.51
 
@@ -1456,7 +1460,6 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Mensajes de error saneados en toda la API.** El `message` de un error nunca expone nombres de proveedores, detalles de infraestructura, URLs, bodies crudos del proveedor (JSON/HTML) ni configuración interna — ni en respuestas de la API, ni en webhooks, ni en los campos de estado persistidos. Los rechazos de negocio del procesador conservan su motivo accionable (por ejemplo, por qué se rechazó un documento o una cuenta); las fallas de infraestructura se reemplazan por el mensaje genérico fijo `"the payment provider could not process the request"` — reintenta esas operaciones con la misma `idempotency_key`. Sin cambios de shape: solo cambia el contenido de los mensajes.
 
-
 ### v2.29
 
 **Agregado**
@@ -1474,8 +1477,6 @@ destino. La creación es idempotente: una clave nueva responde
   de comisión, y el ledger registra los movimientos como `card_fee` /
   `card_fee_refund`. Detalles en
   [tarjetas](/es/guias/tarjetas#comisión-por-compra-ciclo-de-vida).
-
-
 
 ### v2.28
 
@@ -1822,7 +1823,6 @@ destino. La creación es idempotente: una clave nueva responde
 - **Códigos de error nuevos** ([errores](/es/errores)): `too_many_streams`,
   `stream_unavailable` y `streaming_unsupported`.
 
-
 ### v2.11
 
 **Agregado**
@@ -1853,7 +1853,6 @@ destino. La creación es idempotente: una clave nueva responde
   `payin_not_refundable`, `refund_not_supported`, `refund_exceeds_payin` e
   `invalid_amount`.
 
-
 ### v2.10
 
 **Cambiado**
@@ -1867,7 +1866,6 @@ destino. La creación es idempotente: una clave nueva responde
   el logo, los colores y el sitio web de tu organización, sigue sin
   JavaScript ni recursos externos (se puede embeber o compartir con tus
   clientes) y el JSON de `/v1/status/{token}` no cambia.
-
 
 ### v2.09
 
