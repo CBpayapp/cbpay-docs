@@ -160,3 +160,9 @@ NIT 或账户号码。
 ```json
 { "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
 ```
+
+{/* banking-fase2-fiat-hold:2026-09-24 */}
+
+## 本地保留标志
+
+管理员可通过 `PATCH /v1/accounts/{accountID}` 发送 `{"fiat_hold_local":true}`。GET 返回该标志，只影响未来入账。

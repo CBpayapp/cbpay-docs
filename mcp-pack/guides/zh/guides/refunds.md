@@ -330,3 +330,6 @@ curl -L https://api.qbank.cl/platform/v1/payin-refunds/3a7d51c8-…/receipt \
 #### 我组织的管理员也能退款吗？
 可以。管理后台可对组织下任意账户发起退款；该操作会记录执行的管理员，并
 在你的历史中以 `requested_by: "admin"` 显示。
+## 实际扣款资产
+
+退款响应和 `payin_refunded` 返回 `debited_asset`/`debited_amount`；`usdt_debited` 是等值，`balance_after` 使用实际资产。本地法币争议返回 `409 dispute_fiat_unsupported`。

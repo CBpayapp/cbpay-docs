@@ -412,6 +412,7 @@ Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
 | HTTP | Código | Qué hacer |
 |---:|---|---|
 | 409 | `virtual_iban_limit_reached` | La persona ya tiene un IBAN virtual para ese propósito. Reúsalo; el límite no aplica así a empresas. |
+| 409 | `no_fee_charged` | Este IBAN virtual no tuvo cobro (el primer fondeo es gratis). Nada que devolver. |
 | 409 | `wallet_not_ready` | La wallet sigue `pending`/`provisioning`. Consulta el detalle hasta que quede `active`. |
 | 422 | `virtual_iban_limit_reached` | Se alcanzó el límite persona-por-propósito al reservar. No crees una segunda clave. |
 | 422 | `registrant_incomplete` | Completa los datos KYC/KYB o de incorporación indicados en `message` y repite la misma solicitud durable. |
@@ -461,3 +462,7 @@ una operación Banking EUR:
 | 422 | `funding_account_required` | No existe un IBAN virtual asignado y activo para el propósito requerido. Usa una fuente activa para este flujo. |
 | 422 | `ambiguous_source_viban` | Hay más de una cuenta EUR activa. Envía el `source_virtual_iban_id` elegido. |
 | 503 | `funding_account_unavailable` | La consulta del origen está temporalmente no disponible. Reintenta con la misma clave de idempotencia; no se debitó ni despachó nada. |
+
+## `dispute_fiat_unsupported`
+
+No se puede abrir una controversia para un payin acreditado en BOB, MXN o ARS retenidos. Usa un crédito USDT soportado o espera soporte para controversias fiat.

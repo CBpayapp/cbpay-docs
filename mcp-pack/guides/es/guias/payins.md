@@ -1252,3 +1252,13 @@ siempre pueda escribirlos a mano.
 ## Plazo de liquidación de payins con tarjeta
 
 En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible el saldo después de confirmar el pago. Acepta `0` o un múltiplo de `24`: `0` deja el saldo disponible de inmediato, mientras `24` equivale a un día hábil de EE. UU. y `48` a dos. Los días hábiles son de lunes a viernes, excluyendo feriados federales observados de EE. UU., según la zona horaria de tu organización. Por ejemplo, viernes a las 15:00 más `48` horas liquida el martes a las 15:00 si no interviene un feriado; sábado más `48` horas también liquida el martes. Un valor como `27` se rechaza con HTTP `400 invalid_settlement_hours`. El pago se confirma de inmediato como `credited`; solo el saldo espera hasta `settle_at`. Los valores `settle_at` existentes y las configuraciones legadas no múltiplo mantienen la semántica de horas calendario.
+
+## Retención de fiat local
+
+Activa `fiat_hold_local: true` con `PATCH /v1/accounts/{accountID}` para que los créditos futuros BOB, MXN o ARS permanezcan en su saldo local. Los créditos existentes no se modifican. `credit_asset` siempre aparece y `fiat_credited` solo para fiat local; `usdt_credited` sigue siendo el equivalente USDT. Las tarjetas siempre liquidan en USDT y las conversiones, swaps de checkout y ofertas OTC saltan los payins retenidos.
+
+> **Importante**
+`refunded_amount` usa las unidades de `credit_asset` (micro-USDT para USDT y
+unidades minor de fiat para BOB/MXN/ARS). `usdt_credited` siempre está en
+micro-USDT. Ramifica por `credit_asset`; jamás calcules
+`usdt_credited - refunded_amount` cuando el crédito sea fiat.

@@ -359,3 +359,9 @@ that move money out still require available balance.
 Yes. The admin panel can originate the refund on any account of the
 organization; it is audited with the admin who executed it and shows up
 in your history with `requested_by: "admin"`.
+## Actual debit asset
+
+Refund responses and `payin_refunded` include authoritative
+`debited_asset` and `debited_amount`; `usdt_debited` remains the equivalent.
+`balance_after` is expressed in the actual debit asset. Local-fiat disputes
+are not supported and return `409 dispute_fiat_unsupported`.

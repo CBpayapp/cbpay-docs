@@ -415,6 +415,7 @@ endpoints. They are listed here so shared SDKs can keep one error catalog.
 | HTTP | Code | What to do |
 |---:|---|---|
 | 409 | `virtual_iban_limit_reached` | A person already has a virtual IBAN for this purpose. Reuse it; companies are not subject to this per-purpose cap. |
+| 409 | `no_fee_charged` | No fee was charged for this virtual IBAN (the first funding IBAN is free). Nothing to refund. |
 | 409 | `wallet_not_ready` | The company wallet is still pending/provisioning. Poll the detail and wait for `active`. |
 | 422 | `virtual_iban_limit_reached` | The person-per-purpose limit was reached while reserving the request. Do not create a second key. |
 | 422 | `registrant_incomplete` | Complete the missing verified KYC/KYB or incorporation fields named in `message`, then retry the same durable request. |
@@ -464,3 +465,7 @@ is debited or dispatched:
 | 422 | `funding_account_required` | No allocated, active virtual IBAN exists for the required product purpose. Use an active source for this flow. |
 | 422 | `ambiguous_source_viban` | More than one active EUR funding account exists. Send the selected `source_virtual_iban_id`. |
 | 503 | `funding_account_unavailable` | The source-account check is temporarily unavailable. Retry with the same idempotency key; no debit or dispatch was performed. |
+
+## `dispute_fiat_unsupported`
+
+A dispute cannot be opened for a payin credited in locally held BOB, MXN or ARS. The funds remain in the local balance; use a supported USDT credit or wait for the product to support local-fiat disputes.

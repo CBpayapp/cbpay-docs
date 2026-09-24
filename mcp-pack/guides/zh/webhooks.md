@@ -845,3 +845,7 @@ event stream 接收；请使用 `X-Webhook-Event-ID` 对投递去重。
 
 ## `dispute_status_changed`
 签名 payload 和状态变化见[争议指南](https://docs.cbpayapp.com/zh/guides/disputes)。
+
+## 收款资产字段
+
+`payin_credited` 始终包含 `credit_asset`，本地法币增加 `fiat_credited`；`payin_refunded` 增加 `debited_asset`/`debited_amount`。不新增事件。
