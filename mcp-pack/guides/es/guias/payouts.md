@@ -1332,3 +1332,4 @@ Los payouts del riel bancario US los paga el operador a mano. El create
 ya trae el CBF en `bank_reference` y queda `processing` hasta que el banco
 confirma. Escucha `payout_status_changed` para el estado final; un fallo
 reembolsa el debito solo.
+Los errores de límites money-out están en la referencia pública de errores.

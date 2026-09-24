@@ -1,5 +1,5 @@
 {
-  "count": 284,
+  "count": 289,
   "errors": [
     {
       "category": {
@@ -3709,6 +3709,20 @@
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
+      "code": "no_fee_charged",
+      "http": 409,
+      "meaning": {
+        "en": "No fee was charged for this virtual IBAN (the first funding IBAN is free). Nothing to refund.",
+        "es": "Este IBAN virtual no tuvo cobro (el primer fondeo es gratis). Nada que devolver.",
+        "zh": "该虚拟 IBAN 未收费（首个注资免费），无需退款。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
       "code": "wallet_not_ready",
       "http": 409,
       "meaning": {
@@ -3967,6 +3981,62 @@
         "en": "The source-account check is temporarily unavailable. Retry with the same idempotency key; no debit or dispatch was performed.",
         "es": "La consulta del origen está temporalmente no disponible. Reintenta con la misma clave de idempotencia; no se debitó ni despachó nada.",
         "zh": "来源账户检查暂时不可用。请使用相同幂等键重试；不会发生扣款或 dispatch。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "amount_below_minimum",
+      "http": 422,
+      "meaning": {
+        "en": "The operation amount is below the effective minimum; read `GET /v1/org/txn-firewall/limits/effective`.",
+        "es": "El monto está bajo el mínimo efectivo; consulta `GET /v1/org/txn-firewall/limits/effective`.",
+        "zh": "金额低于有效最小值；读取 `GET /v1/org/txn-firewall/limits/effective`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "amount_above_maximum",
+      "http": 422,
+      "meaning": {
+        "en": "The operation amount is above the effective maximum; read the effective policy before retrying.",
+        "es": "El monto supera el máximo efectivo; revisa la política antes de reintentar.",
+        "zh": "金额高于有效最大值；重试前先检查有效策略。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "velocity_limit_exceeded",
+      "http": 422,
+      "meaning": {
+        "en": "An internal transfer exceeded a rolling amount or operation-count cap. Payouts and crypto withdrawals enter review with `reason=velocity_limit` instead.",
+        "es": "Una transferencia interna superó un tope móvil de monto o cantidad. Payouts y retiros entran a review con `reason=velocity_limit`.",
+        "zh": "内部转账超过滚动金额或次数上限。Payout 和 crypto withdrawal 会以 `reason=velocity_limit` 进入 review。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "limits_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The limits could not be evaluated before debit; retry with the same idempotency key after storage recovers.",
+        "es": "No se pudieron evaluar los límites antes del débito; reintenta con la misma clave de idempotencia.",
+        "zh": "扣款前无法评估限额；恢复后使用同一幂等键重试。"
       }
     }
   ]

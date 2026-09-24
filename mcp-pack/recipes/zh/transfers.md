@@ -196,3 +196,4 @@ curl https://api.qbank.cl/platform/v1/transfers/77b1… \
 通过内部转账结算一个[收款链接](https://docs.cbpayapp.com/zh/guides/checkout)：目标被强制为链接
 所属账户，金额必须覆盖报价应付额（否则 `checkout_amount_mismatch`，
 422）。
+出金限额错误见公开错误参考。

@@ -1290,3 +1290,4 @@ payout。
 #### 为什么我的美国 ACH/wire/SWIFT payout 一直处于 processing？
 创建时就已经返回 `bank_reference`（CBF）。payout 保持 `processing`，直到银行确认人工付款。
 监听 `payout_status_changed` 以获得 `completed` 或 `failed`（已退款）。该通道没有额外的收款人 AML hold。
+出金限额错误见公开错误参考。

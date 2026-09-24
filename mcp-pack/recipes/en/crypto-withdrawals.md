@@ -459,3 +459,4 @@ with [Swaps](https://docs.cbpayapp.com/en/guides/swaps) to a withdrawable asset 
 The destination address failed the compliance screening. The operation is
 recorded as failed and your funds are refunded; contact your CBPay team if
 you believe it is a false positive.
+Money-out limit errors are listed in the public error reference.

@@ -217,3 +217,4 @@ token (`GET /v1/me/qr`). All resolve within your organization only.
 It settles a [checkout link](https://docs.cbpayapp.com/en/guides/checkout) by internal transfer: the
 destination is forced to the link's account and the amount must cover the
 quoted due (`checkout_amount_mismatch`, 422, otherwise).
+Money-out limit errors are listed in the public error reference.

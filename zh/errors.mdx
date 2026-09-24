@@ -449,6 +449,14 @@ description: "错误格式与完整的错误码目录"
 | 422 | `ambiguous_source_viban` | 存在多个 active EUR 资金账户。请发送选定的 `source_virtual_iban_id`。 |
 | 503 | `funding_account_unavailable` | 来源账户检查暂时不可用。请使用相同幂等键重试；不会发生扣款或 dispatch。 |
 
+### 出金限额错误
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 422 | `amount_below_minimum` | 金额低于有效最小值；读取 `GET /v1/org/txn-firewall/limits/effective`。 |
+| 422 | `amount_above_maximum` | 金额高于有效最大值；重试前先检查有效策略。 |
+| 422 | `velocity_limit_exceeded` | 内部转账超过滚动金额或次数上限。Payout 和 crypto withdrawal 会以 `reason=velocity_limit` 进入 review。 |
+| 503 | `limits_unavailable` | 扣款前无法评估限额；恢复后使用同一幂等键重试。 |
 ## `dispute_fiat_unsupported`
 
 本地保留 BOB、MXN 或 ARS 的 payin 暂不支持争议。请使用受支持的 USDT 入账，或等待本地法币争议功能。

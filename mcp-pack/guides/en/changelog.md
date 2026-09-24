@@ -8,7 +8,13 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.126 · 2 versions - September 24, 2026
+## v2.127 · 3 versions - September 24, 2026
+
+### v2.127
+
+**Changed**
+
+- Added public error documentation for configurable money-out limits: `amount_below_minimum`, `amount_above_maximum` and `velocity_limit_exceeded`. Organizations configure these controls; missing limits remain unrestricted.
 
 ### v2.126
 
