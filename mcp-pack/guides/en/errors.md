@@ -462,6 +462,14 @@ is debited or dispatched:
 | 422 | `ambiguous_source_viban` | More than one active EUR funding account exists. Send the selected `source_virtual_iban_id`. |
 | 503 | `funding_account_unavailable` | The source-account check is temporarily unavailable. Retry with the same idempotency key; no debit or dispatch was performed. |
 
+### Money-out limit errors
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 422 | `amount_below_minimum` | The operation amount is below the effective minimum; read `GET /v1/org/txn-firewall/limits/effective`. |
+| 422 | `amount_above_maximum` | The operation amount is above the effective maximum; read the effective policy before retrying. |
+| 422 | `velocity_limit_exceeded` | An internal transfer exceeded a rolling amount or operation-count cap. Payouts and crypto withdrawals enter review with `reason=velocity_limit` instead. |
+| 503 | `limits_unavailable` | The limits could not be evaluated before debit; retry with the same idempotency key after storage recovers. |
 ## `dispute_fiat_unsupported`
 
 A dispute cannot be opened for a payin credited in locally held BOB, MXN or ARS. The funds remain in the local balance; use a supported USDT credit or wait for the product to support local-fiat disputes.

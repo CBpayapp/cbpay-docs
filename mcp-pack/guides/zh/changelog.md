@@ -8,7 +8,13 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.126 · 2 个版本 - 2026年9月24日
+## v2.127 · 3 个版本 - 2026年9月24日
+
+### v2.127
+
+**变更**
+
+- 新增可配置出金限额的公开错误文档：`amount_below_minimum`、`amount_above_maximum` 和 `velocity_limit_exceeded`。组织配置这些控制；未配置限额时不增加限制。
 
 ### v2.126
 

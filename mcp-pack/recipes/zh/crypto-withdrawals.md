@@ -437,3 +437,4 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 #### 为什么我的提现被 compliance_hold 拦截？
 目标地址未通过合规筛查。操作记录为 failed 且资金已退回；如你认为是
 误报，请联系你的 CBPay 团队。
+出金限额错误见公开错误参考。

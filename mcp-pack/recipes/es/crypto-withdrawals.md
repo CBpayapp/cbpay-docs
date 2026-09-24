@@ -459,3 +459,4 @@ con [Swaps](https://docs.cbpayapp.com/es/guias/swaps) a un asset retirable.
 La dirección de destino no pasó el screening de compliance. La operación
 queda registrada como fallida y tus fondos se reembolsan; contacta a tu
 equipo CBPay si crees que es un falso positivo.
+Los errores de límites money-out están en la referencia pública de errores.

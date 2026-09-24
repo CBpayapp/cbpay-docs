@@ -219,3 +219,4 @@ organización.
 Liquida un [link de cobro](https://docs.cbpayapp.com/es/guias/checkout) por transferencia interna:
 el destino se fuerza a la cuenta del link y el monto debe cubrir el due
 cotizado (si no, `checkout_amount_mismatch`, 422).
+Los errores de límites money-out están en la referencia pública de errores.

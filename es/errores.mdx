@@ -467,6 +467,14 @@ una operación Banking EUR:
 | 422 | `ambiguous_source_viban` | Hay más de una cuenta EUR activa. Envía el `source_virtual_iban_id` elegido. |
 | 503 | `funding_account_unavailable` | La consulta del origen está temporalmente no disponible. Reintenta con la misma clave de idempotencia; no se debitó ni despachó nada. |
 
+### Errores de límites money-out
+
+| HTTP | `error` | Significado |
+|---|---|---|
+| 422 | `amount_below_minimum` | El monto está bajo el mínimo efectivo; consulta `GET /v1/org/txn-firewall/limits/effective`. |
+| 422 | `amount_above_maximum` | El monto supera el máximo efectivo; revisa la política antes de reintentar. |
+| 422 | `velocity_limit_exceeded` | Una transferencia interna superó un tope móvil de monto o cantidad. Payouts y retiros entran a review con `reason=velocity_limit`. |
+| 503 | `limits_unavailable` | No se pudieron evaluar los límites antes del débito; reintenta con la misma clave de idempotencia. |
 ## `dispute_fiat_unsupported`
 
 No se puede abrir una controversia para un payin acreditado en BOB, MXN o ARS retenidos. Usa un crédito USDT soportado o espera soporte para controversias fiat.

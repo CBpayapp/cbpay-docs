@@ -9,7 +9,13 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.126 · 2 versiones - 24 de septiembre de 2026
+## v2.127 · 3 versiones - 24 de septiembre de 2026
+
+### v2.127
+
+**Cambiado**
+
+- Se documentaron los errores públicos de límites money-out: `amount_below_minimum`, `amount_above_maximum` y `velocity_limit_exceeded`. La organización configura estos controles; sin límites no hay restricciones nuevas.
 
 ### v2.126
 

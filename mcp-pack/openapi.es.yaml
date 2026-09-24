@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.126"
+  version: "2.127"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -4180,6 +4180,11 @@ paths:
                 bank_reference: ''
                 created_at: '2026-07-07T12:00:00Z'
                 updated_at: '2026-07-07T12:00:00Z'
+          x-money-out-errors:
+          - amount_below_minimum
+          - amount_above_maximum
+          - velocity_limit_exceeded
+
         '503':
           description: El canal de payout está temporalmente no disponible (`channel_unavailable`);
             reintenta más tarde con la MISMA clave de idempotencia.
@@ -5957,6 +5962,11 @@ paths:
               example:
                 error: recipient_unavailable
                 message: destination account cannot receive transfers
+          x-money-out-errors:
+          - amount_below_minimum
+          - amount_above_maximum
+          - velocity_limit_exceeded
+
         '401':
           $ref: '#/components/responses/Unauthorized'
     get:
@@ -6206,6 +6216,11 @@ paths:
                 tx_id: ''
                 created_at: '2026-07-07T12:00:00Z'
                 updated_at: '2026-07-07T12:00:00Z'
+          x-money-out-errors:
+          - amount_below_minimum
+          - amount_above_maximum
+          - velocity_limit_exceeded
+
         '503':
           description: Retiros no habilitados para este corredor (`withdrawals_unavailable`).
           content:
