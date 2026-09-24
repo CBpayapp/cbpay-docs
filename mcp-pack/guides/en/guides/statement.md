@@ -203,3 +203,9 @@ period. Each item contains `created_at`, `dispute_id`, `kind`, `status`,
 `disputed_usdt`, `held_usdt`, optional `case_number` and `deadline_at`. The
 preventive hold is represented once; the provider chargeback is the separate
 financial debit.
+
+## Asset-aware payin rows
+
+Payin rows include `credit_asset` and optional `fiat_credited`; refund rows
+include `debited_asset` and `debited_amount`. JSON, PDF and XLSX preserve the
+real asset precision and keep the USDT equivalent separate.

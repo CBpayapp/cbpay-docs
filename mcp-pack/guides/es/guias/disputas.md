@@ -289,3 +289,8 @@ No. El worker solo cambia el caso a `expired` y registra el evento.
 #### ¿Puedo subir evidencia después de enviar el caso?
 Sí. `open`, `evidence` y `submitted` aceptan evidencia de cuenta. Los casos
 won, lost y expired quedan cerrados.
+## Fiat local retenido
+
+Un payin con `credit_asset` BOB, MXN o ARS devuelve
+`409 dispute_fiat_unsupported` sin crear caso ni hold. Batch lo omite como
+`fiat_unsupported` e import lo marca `payin holds local fiat (unsupported)`.

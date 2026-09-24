@@ -270,3 +270,6 @@ curl "https://api.qbank.cl/platform/v1/disputes/7c9e6679-7425-40de-944b-e07fc1f9
 #### 提交案件后还能上传证据吗？
 可以。`open`、`evidence` 和 `submitted` 接受账户证据；won、lost 和
 expired 已关闭。
+## 本地法币
+
+`credit_asset` 为 BOB、MXN、ARS 时返回 `409 dispute_fiat_unsupported`，不创建案件或冻结。批量跳过为 `fiat_unsupported`，导入标记 `payin holds local fiat (unsupported)`。

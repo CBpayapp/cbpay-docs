@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.125"
+  version: "2.126"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -23838,6 +23838,12 @@ components:
           type: string
           description: Monto abonado al saldo. También presente SIN `fx_rate` en cobros
             checkout/POS liquidados en crypto o vía transferencia CBPay (no aplica cotización FX).
+        credit_asset:
+          type: string
+          description: Activo realmente acreditado (USDT o fiat local retenido).
+        fiat_credited:
+          type: string
+          description: Monto fiat local; solo aparece cuando credit_asset es fiat.
         refund_status:
           type: string
           enum:

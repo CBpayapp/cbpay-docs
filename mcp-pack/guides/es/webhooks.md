@@ -885,4 +885,4 @@ cuenta. Es texto plano localizado, nunca HTML:
 El evento solo se entrega a la cuenta seleccionada por la campaña. Puede
 recibirse mediante una suscripción webhook de cuenta o el event stream;
 deduplica las entregas por `X-Webhook-Event-ID`.
-`dispute_status_changed`: consulta la [guía de disputas](https://docs.cbpayapp.com/es/guias/disputas) para payload y transiciones firmadas.
+`dispute_status_changed`: consulta la [guía de disputas](https://docs.cbpayapp.com/es/guias/disputas) para payload y transiciones firmadas.  Payins fiat locales: `payin_credited` lleva `credit_asset`/`fiat_credited`; `payin_refunded` lleva `debited_asset`/`debited_amount`.

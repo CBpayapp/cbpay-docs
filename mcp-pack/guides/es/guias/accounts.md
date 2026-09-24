@@ -165,6 +165,12 @@ los datos que devolvió la API.
 El item USDT de `GET /v1/balances` puede incluir `disputed`, el monto exacto
 retenido actualmente por casos abiertos:
 
+## Flag de retención fiat local
+
+El administrador puede enviar `PATCH /v1/accounts/{accountID}` con
+`{"fiat_hold_local":true}`. El GET de la cuenta devuelve el booleano y solo
+afecta créditos futuros BOB, MXN y ARS; los créditos históricos no cambian.
+
 ```json
 { "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
 ```

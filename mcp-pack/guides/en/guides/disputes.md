@@ -336,3 +336,9 @@ event. An administrator must make the explicit decision.
 #### Can I upload after the case is submitted?
 Yes. `open`, `evidence` and `submitted` accept account evidence. Won, lost and
 expired cases are closed to account uploads.
+## Locally held fiat
+
+Disputes require a supported USDT credit. A payin with `credit_asset` BOB,
+MXN or ARS returns `409 dispute_fiat_unsupported` without creating a case or
+hold. Batch-open skips it as `fiat_unsupported`; imports mark it unmatched as
+`payin holds local fiat (unsupported)`.

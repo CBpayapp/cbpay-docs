@@ -9,11 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.125 · 1 version - 24 de septiembre de 2026
+## v2.126 · 2 versiones - 24 de septiembre de 2026
+
+### v2.126
+
+**Agregado**
+
+- Se agregaron retenciones de payins en fiat local por cuenta para BOB, MXN y ARS, con payloads conscientes del activo.
 
 ### v2.125
 
-**Added**
+**Agregado**
 
 - Se agregaron BOB, MXN y ARS como activos fiat del ledger con dos decimales. Balances, history y analytics los exponen; las transferencias del mismo asset siguen soportadas y swaps, tarjetas, checkout y POS mantienen sus rechazos explícitos de v1.
 

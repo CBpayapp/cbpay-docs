@@ -8,7 +8,13 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.125 · 1 version - September 24, 2026
+## v2.126 · 2 versions - September 24, 2026
+
+### v2.126
+
+**Added**
+
+- Added account-level local-fiat payin holds for BOB, MXN and ARS, with asset-aware payin/refund payloads.
 
 ### v2.125
 

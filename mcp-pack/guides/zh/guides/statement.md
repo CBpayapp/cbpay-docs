@@ -174,3 +174,7 @@ JSON（集成）、PDF 和 XLSX —— 后两者均带有你组织的品牌标�
 `dispute_id`、`kind`、`status`、`disputed_usdt`、`held_usdt`、可选
 `case_number` 和 `deadline_at`。预防性冻结只记录一次；provider
 chargeback 是独立的金融扣账。
+
+## 按资产的账单行
+
+收款行包含 `credit_asset`/可选 `fiat_credited`，退款行包含 `debited_asset`/`debited_amount`。JSON、PDF、XLSX 保留实际资产精度。

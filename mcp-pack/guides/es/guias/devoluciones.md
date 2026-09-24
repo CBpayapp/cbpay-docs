@@ -359,3 +359,9 @@ operaciones que sacan plata seguirán exigiendo saldo disponible.
 Sí. El panel de administración permite originar la devolución sobre
 cualquier cuenta de la organización; queda auditada con el administrador
 que la ejecutó y aparece en tu historial con `requested_by: "admin"`.
+## Activo debitado real
+
+La respuesta y `payin_refunded` incluyen `debited_asset` y
+`debited_amount`; `usdt_debited` es el equivalente. `balance_after` usa el
+activo real. Las controversias de fiat local devuelven
+`409 dispute_fiat_unsupported`.

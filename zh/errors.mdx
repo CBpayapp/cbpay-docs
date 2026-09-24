@@ -399,6 +399,7 @@ description: "错误格式与完整的错误码目录"
 | HTTP | 代码 | 处理 |
 |---:|---|---|
 | 409 | `virtual_iban_limit_reached` | 个人账户该 purpose 已有虚拟 IBAN；请复用它，企业不受同样的 purpose 上限。 |
+| 409 | `no_fee_charged` | 该虚拟 IBAN 未收费（首个注资免费），无需退款。 |
 | 409 | `wallet_not_ready` | 钱包仍为 `pending`/`provisioning`；读取详情直到变为 `active`。 |
 | 422 | `virtual_iban_limit_reached` | 预留时达到个人账户的 purpose 上限；不要创建第二个 key。 |
 | 422 | `registrant_incomplete` | 按 `message` 补充 KYC/KYB 或公司注册字段，并重试同一持久化请求。 |
@@ -447,3 +448,7 @@ description: "错误格式与完整的错误码目录"
 | 422 | `funding_account_required` | 该产品用途没有已分配且 active 的虚拟 IBAN。请先使用该用途的 active 来源。 |
 | 422 | `ambiguous_source_viban` | 存在多个 active EUR 资金账户。请发送选定的 `source_virtual_iban_id`。 |
 | 503 | `funding_account_unavailable` | 来源账户检查暂时不可用。请使用相同幂等键重试；不会发生扣款或 dispatch。 |
+
+## `dispute_fiat_unsupported`
+
+本地保留 BOB、MXN 或 ARS 的 payin 暂不支持争议。请使用受支持的 USDT 入账，或等待本地法币争议功能。

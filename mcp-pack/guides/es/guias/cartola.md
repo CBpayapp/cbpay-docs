@@ -205,3 +205,9 @@ La cartola incluye `disputes[]` cuando se creó un caso en el período. Cada
 item trae `created_at`, `dispute_id`, `kind`, `status`, `disputed_usdt`,
 `held_usdt`, `case_number` opcional y `deadline_at`. El hold preventivo aparece
 una vez; el chargeback del proveedor es el débito financiero separado.
+
+## Filas por activo
+
+Payins incluyen `credit_asset` y `fiat_credited` opcional; devoluciones
+incluyen `debited_asset` y `debited_amount`. JSON, PDF y XLSX conservan la
+precisión del activo real y separan el equivalente USDT.

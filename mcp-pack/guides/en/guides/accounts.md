@@ -168,3 +168,9 @@ currently reserved by open dispute holds:
 ```json
 { "asset": "USDT", "available": "900.000000", "held": "100.000000", "disputed": "100.000000" }
 ```
+
+## Local-fiat hold setting
+
+Organization administrators can send `PATCH /v1/accounts/{accountID}` with
+`{"fiat_hold_local":true}`. The account GET returns the flag. It affects
+only future BOB, MXN and ARS payin credits.
