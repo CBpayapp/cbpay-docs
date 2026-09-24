@@ -135,7 +135,8 @@
                       "es/guias/cartola",
                       "es/guias/comprobantes",
                       "es/guias/seguimiento",
-                      "es/guias/analytics"
+                      "es/guias/analytics",
+                  "es/guides/fiat-ledger-assets"
                     ]
                   },
                   {
@@ -265,7 +266,8 @@
                       "en/guides/statement",
                       "en/guides/receipts",
                       "en/guides/tracking",
-                      "en/guides/analytics"
+                      "en/guides/analytics",
+                  "en/guides/fiat-ledger-assets"
                     ]
                   },
                   {
@@ -394,7 +396,8 @@
                       "zh/guides/statement",
                       "zh/guides/receipts",
                       "zh/guides/tracking",
-                      "zh/guides/analytics"
+                      "zh/guides/analytics",
+                  "zh/guides/fiat-ledger-assets"
                     ]
                   },
                   {

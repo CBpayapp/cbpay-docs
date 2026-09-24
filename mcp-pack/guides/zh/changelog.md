@@ -8,6 +8,14 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.125 · 1 version - 2026年9月24日
+
+### v2.125
+
+**Added**
+
+- 新增 BOB、MXN 和 ARS 两位小数账本资产。余额、history 和 analytics 现在会返回它们；相同资产转账保持支持，而 swaps、cards、checkout 和 POS 保留 v1 的显式拒绝 gate。
+
 ## v2.124 · 3 个版本 - 2026年9月23日
 
 ### v2.124

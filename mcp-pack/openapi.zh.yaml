@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.124"
+  version: "2.125"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -20747,7 +20747,13 @@ paths:
         is_micro_enterprise、expected_turnover 以及每位 UBO 的证件对
         （ubo_{i}_document_issued_country、ubo_{i}_document_expiration_date，
         UBO 索引从零开始，接受 camelCase aliases）：企业通道要求每位 UBO
-        证件完整。已批准 KYB profile 中已有的值（注册信息、网站、行业、
+        证件完整。UBO 身份更正（ubo_{i}_first_name、ubo_{i}_last_name、
+        ubo_{i}_birth_date）可在不重新验证的情况下覆盖 KYB 错误数据；出生
+        日期（个人与 UBO）须使年龄为 16–85 岁。tax_number 适用于两个分支：
+        美国个人/企业须提供有效 9 位 SSN/EIN；其他国家校验已知格式
+        （智利 RUT、英国 NINO/UTR），无效值将被忽略而非报错。姓名将折叠为
+        通道拉丁字符集（José→Jose），地址按国家校验邮编格式，
+        KYC 邮编有误时可用 address_zip 更正。已批准 KYB profile 中已有的值（注册信息、网站、行业、
         UBO 证件）会自动补全—— overrides 仅补 profile 缺失项，显式
         overrides 永远优先。
         缺少必填路径时返回 `422 registrant_incomplete`，缺失路径位于 `message`。
@@ -20777,8 +20783,10 @@ paths:
                 isMicroEnterprise: {type: string, description: camelCase alias}
                 expected_turnover: {type: string, description: 可选预期营业额}
                 expectedTurnover: {type: string, description: camelCase alias}
-                tax_number: {type: string, description: 公司税号更正（例如带校验位的有效智利 RUT）}
+                tax_number: {type: string, description: 个人与企业分支通用税号更正（美国个人：9 位 SSN/ITIN；美国企业：9 位 EIN；智利：带校验位的有效 RUT）}
                 taxNumber: {type: string, description: camelCase alias}
+                address_zip: {type: string, description: KYC 邮编国家格式有误时的更正（空 = 使用 profile 值）}
+                addressZip: {type: string, description: camelCase alias}
                 ubo_0_document_issued_country: {type: string, description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复}
                 ubo0DocumentIssuedCountry: {type: string, description: camelCase alias}
                 ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 证件到期日，必须晚于一个月，按 UBO 索引重复}
@@ -20787,6 +20795,12 @@ paths:
                 ubo0Pep: {type: string, description: camelCase alias}
                 ubo_0_usa_tax_residency: {type: string, description: UBO 0 是否为美国税务居民，"true" 或 "false"，按 UBO 索引重复}
                 ubo0UsaTaxResidency: {type: string, description: camelCase alias}
+                ubo_0_first_name: {type: string, description: UBO 0 名字更正（覆盖 KYB 值），按 UBO 索引重复}
+                ubo0FirstName: {type: string, description: camelCase alias}
+                ubo_0_last_name: {type: string, description: UBO 0 姓氏更正（覆盖 KYB 值），按 UBO 索引重复}
+                ubo0LastName: {type: string, description: camelCase alias}
+                ubo_0_birth_date: {type: string, format: date, description: UBO 0 出生日期更正（覆盖 KYB 值），年龄须为 16–85 岁，按 UBO 索引重复}
+                ubo0BirthDate: {type: string, format: date, description: camelCase alias}
             examples:
               funding:
                 value:
@@ -21175,7 +21189,9 @@ paths:
         accepted): the corporate rail requires a full document per UBO. Values
         already present in the KYB profile are autofilled — overrides are only
         needed for what the profile lacks, and explicit overrides always win.
-        Missing holder paths return 422 registrant_incomplete.
+        Missing holder paths return 422 registrant_incomplete. The accepted
+        reservation carries `upload_link`: a pre-signed upload URL where the
+        verification document zip must be PUT (provider requirement).
       parameters:
       - name: Idempotency-Key
         in: header
@@ -21207,7 +21223,10 @@ paths:
                   type: string
                 tax_number:
                   type: string
-                  description: 公司税号更正（例如带校验位的有效智利 RUT）
+                  description: 公司税号更正（美国：9 位 EIN；智利：带校验位的有效 RUT）
+                address_zip:
+                  type: string
+                  description: KYC 邮编国家格式有误时的更正（空 = 使用 profile 值）
                 ubo_0_document_issued_country:
                   type: string
                   description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复
@@ -21221,6 +21240,16 @@ paths:
                 ubo_0_usa_tax_residency:
                   type: string
                   description: UBO 0 是否为美国税务居民，"true" 或 "false"，按 UBO 索引重复
+                ubo_0_first_name:
+                  type: string
+                  description: UBO 0 名字更正（覆盖 KYB 值），按 UBO 索引重复
+                ubo_0_last_name:
+                  type: string
+                  description: UBO 0 姓氏更正（覆盖 KYB 值），按 UBO 索引重复
+                ubo_0_birth_date:
+                  type: string
+                  format: date
+                  description: UBO 0 出生日期更正（覆盖 KYB 值），年龄须为 16–85 岁，按 UBO 索引重复
             example:
               idempotency_key: company-wallet-eur-001
               trading_website: https://example.com
@@ -21245,6 +21274,7 @@ paths:
                   currency: EUR
                   status: pending
                   order_reference: wallet-order-001
+                  upload_link: https://provider-uploads.example.invalid/verify/7d2c1a8e.zip
                   created_at: '2026-09-17T15:00:00Z'
                   updated_at: '2026-09-17T15:00:00Z'
         '200':
@@ -22795,6 +22825,7 @@ components:
             properties:
               asset:
                 type: string
+                description: 账本法币资产 BOB、MXN 和 ARS 使用两位小数。
                 example: USDT
               available:
                 type: string
@@ -22916,6 +22947,9 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
+          - BOB
+          - MXN
+          - ARS
           description: 未提供单次覆盖时,余额操作默认扣款的资产。
         default_payin_asset:
           type: string

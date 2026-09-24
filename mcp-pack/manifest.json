@@ -1,42 +1,42 @@
 {
-  "content_sha256": "ccc75d5bdd5557ad1af3d5b45be6bfa52e8ab13f9720f58bcd90c64c183b5184",
+  "content_sha256": "0269f8d955b73a38fd6097a657ecf7645e8a72c6dcbbfd4a1560098e2802fa06",
   "counts": {
-    "chunks": 3870,
+    "chunks": 3897,
     "errors": 285,
     "languages": [
       "en",
       "es",
       "zh"
     ],
-    "pages": 180,
+    "pages": 183,
     "webhook_events": 47
   },
-  "docs_version": "v2.124",
-  "docs_version_date": "September 23, 2026",
+  "docs_version": "v2.125",
+  "docs_version_date": "September 24, 2026",
   "files": {
     "changelog/en.md": {
-      "bytes": 178692,
-      "sha256": "ae8e01b86ebc4864761229be4437348c50946b767df0f7b15de212847363f1c9"
+      "bytes": 178975,
+      "sha256": "6519447b22051235f3e0107be71570183cab2bac9656533938f7e4630f226405"
     },
     "changelog/es.md": {
-      "bytes": 189092,
-      "sha256": "ddc19fc068ba64c928352811a1a0fda22b637898be8e682622a91441abfaa5e3"
+      "bytes": 189417,
+      "sha256": "4377431ff8e35271db390ec82eb550713f3b23a45a7d202281c6571015532e2e"
     },
     "changelog/zh.md": {
-      "bytes": 169515,
-      "sha256": "94a083ac447e9fef466cdedcc787b78456d7a34bcb63c80b3fbf4993632dff27"
+      "bytes": 169795,
+      "sha256": "98f0e38b3eec60f2663a9202744550313ee34d417c7466068ab671adaec3b8a2"
     },
     "chunks/en.jsonl": {
-      "bytes": 1347911,
-      "sha256": "9ce5001ce4d258e49de827e68a30009ed2f9bee18c318ae5722e0b2caf6b7fa2"
+      "bytes": 1353815,
+      "sha256": "5ea19aad318d5c5a3aabc3fecd21a42e6fec0c3c912ce11d077bdff38020fcda"
     },
     "chunks/es.jsonl": {
-      "bytes": 1380623,
-      "sha256": "82b6b5f2ac22422d1e4623afadb6afe8d73943b0301b8ffbb3a4680a07db6412"
+      "bytes": 1386247,
+      "sha256": "b3b8bb4128d6b676a1b090bd67e0d7b33f1ab2ec47f0095a577b47c12148c24c"
     },
     "chunks/zh.jsonl": {
-      "bytes": 1295625,
-      "sha256": "0e56da6b979ff8228465fab9e83ab61dbde7fe7c38bde6b0984a5b4f8c5a612d"
+      "bytes": 1301095,
+      "sha256": "96a276401b17e92cc24e6cf2ebe18f9810f05f46c98a7e7a4550b7fcc4975db0"
     },
     "errors.json": {
       "bytes": 161890,
@@ -44,15 +44,15 @@
     },
     "evals/golden.json": {
       "bytes": 4240,
-      "sha256": "1679064fa926304782bfeefcd213f43f9425dfeac511a355bbd7f8058cdde782"
+      "sha256": "40547bc5e23e76348f1b1cbb0bd1e0af984c9a5157012cba43276c019d4c71ef"
     },
     "guides/en/authentication.md": {
       "bytes": 8486,
       "sha256": "be02405312c967303b6a29e9463d8a67951d9405c145e939995ad08e95a3a960"
     },
     "guides/en/changelog.md": {
-      "bytes": 178692,
-      "sha256": "ae8e01b86ebc4864761229be4437348c50946b767df0f7b15de212847363f1c9"
+      "bytes": 178975,
+      "sha256": "6519447b22051235f3e0107be71570183cab2bac9656533938f7e4630f226405"
     },
     "guides/en/concepts/fees.md": {
       "bytes": 13272,
@@ -141,6 +141,10 @@
     "guides/en/guides/disputes.md": {
       "bytes": 11292,
       "sha256": "66d27b3a31cf6c73e0912fce82b960c287b276f392a68ece5031f29e25ee05ae"
+    },
+    "guides/en/guides/fiat-ledger-assets.md": {
+      "bytes": 3401,
+      "sha256": "bbd83b5c2bb478b30de9f141674b704411511ca959bcececf64386f4f35dea3f"
     },
     "guides/en/guides/integrations.md": {
       "bytes": 6694,
@@ -264,7 +268,7 @@
     },
     "guides/en/postman.md": {
       "bytes": 1252,
-      "sha256": "b3642641a38af1d6c8a72688483e46e69a9fcca14b045214fbdb49d6b6123a42"
+      "sha256": "54a2bc03420f368054a8186efb5465d8019e6e3367347931b95f2f104391cada"
     },
     "guides/en/quickstart.md": {
       "bytes": 7310,
@@ -291,8 +295,8 @@
       "sha256": "693ec6744571979c10e26b458c178c234f0ba5b4140b3257e8b0fd4545564b68"
     },
     "guides/es/changelog.md": {
-      "bytes": 189092,
-      "sha256": "ddc19fc068ba64c928352811a1a0fda22b637898be8e682622a91441abfaa5e3"
+      "bytes": 189417,
+      "sha256": "4377431ff8e35271db390ec82eb550713f3b23a45a7d202281c6571015532e2e"
     },
     "guides/es/conceptos/comisiones.md": {
       "bytes": 13601,
@@ -502,6 +506,10 @@
       "bytes": 15356,
       "sha256": "2597d6967fcfa21afb4385acd7259da8ef9e4663fc2a192f32f67dbfe20f9439"
     },
+    "guides/es/guides/fiat-ledger-assets.md": {
+      "bytes": 3058,
+      "sha256": "b6133f7d83435f90cc15b16f96adac376bc4afc1089c5abe61d013632f428bbc"
+    },
     "guides/es/inicio-rapido.md": {
       "bytes": 7442,
       "sha256": "803738b7c5742878ff527018474e5fcfd7ea9cb4d78e6169ae764519d11c1f57"
@@ -516,7 +524,7 @@
     },
     "guides/es/postman.md": {
       "bytes": 1309,
-      "sha256": "c4fb3a6cd5f2cbef16930fb23c8f5384ab662ddd6faaeeb2ce7a49e793ecf277"
+      "sha256": "16d5199cdcd3dd2a015a9cefd776feafa75e0534dee12d4aaec15e428fb4221b"
     },
     "guides/es/seguridad-2fa.md": {
       "bytes": 10059,
@@ -531,8 +539,8 @@
       "sha256": "27ffeb409143f9520e4705bee7a3d91c629b3fda1ee1e38a79f974d93befb287"
     },
     "guides/zh/changelog.md": {
-      "bytes": 169515,
-      "sha256": "94a083ac447e9fef466cdedcc787b78456d7a34bcb63c80b3fbf4993632dff27"
+      "bytes": 169795,
+      "sha256": "98f0e38b3eec60f2663a9202744550313ee34d417c7466068ab671adaec3b8a2"
     },
     "guides/zh/concepts/fees.md": {
       "bytes": 12872,
@@ -621,6 +629,10 @@
     "guides/zh/guides/disputes.md": {
       "bytes": 9135,
       "sha256": "a81b8b7af2c9a64a801d2f6edd9b99a07517871629d52c6c0e808014e41bf0ce"
+    },
+    "guides/zh/guides/fiat-ledger-assets.md": {
+      "bytes": 2988,
+      "sha256": "4dc4083c7db6681c9a31aaa98eb7ce9009dd8568443f151856f2773200399d61"
     },
     "guides/zh/guides/integrations.md": {
       "bytes": 5494,
@@ -744,7 +756,7 @@
     },
     "guides/zh/postman.md": {
       "bytes": 1202,
-      "sha256": "3cd49f2a50c300fc845487bce1e673e76cd676c7af7c19f6cfc953c4e69f3934"
+      "sha256": "d995a58222622df17eee0ffa86d06e68537b9f14138d37708dc958797f48d52c"
     },
     "guides/zh/quickstart.md": {
       "bytes": 7407,
@@ -767,16 +779,16 @@
       "sha256": "e08c32e17ca838eeb06f84d08875782cb5d18c226c15d75d57802c117db3b3e6"
     },
     "openapi.es.yaml": {
-      "bytes": 986360,
-      "sha256": "3d1d21812d7fb3248dfe4d66e3723e6e299038e0925078881d18f2754cf382ad"
+      "bytes": 989304,
+      "sha256": "714641f071cc1c8a2ae2ce41b07942bf79393d9ac5c818ff0ba2bfe25587fe9f"
     },
     "openapi.yaml": {
-      "bytes": 979725,
-      "sha256": "5bfaa358f51778fbb2d0a79affec2e71adc6dc5a86f6c471e9f9110b760c8496"
+      "bytes": 983420,
+      "sha256": "d91b1fc8479d5ae939353ed064a2e4abb7b1e8ce84321016e5d7cce626a8622a"
     },
     "openapi.zh.yaml": {
-      "bytes": 944905,
-      "sha256": "f5f6ccdfe4a1f2806694353ce2343718094109759503655a5417f65160e5c635"
+      "bytes": 947538,
+      "sha256": "b7842ae9f9838c0719c26664137096c16b571291a3ab561e20fe45cd8c304c6a"
     },
     "recipes/en/checkout.md": {
       "bytes": 16863,
@@ -871,7 +883,7 @@
       "sha256": "290f7ad7598a41efbcedbe884b91548d0c704674047f60448d31f563f809845e"
     }
   },
-  "generated_at": "2026-09-23T23:04:52Z",
+  "generated_at": "2026-09-24T16:40:38Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
