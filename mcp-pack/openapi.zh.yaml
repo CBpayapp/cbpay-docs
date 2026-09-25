@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.127"
+  version: "2.128"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -2956,6 +2956,11 @@ paths:
                               type: string
                               description: 你的余额将按此有效 USD 单价估值(已含点差);不可用时为空。
                               example: '109029.34'
+                            same_currency_only:
+                              type: boolean
+                              description: 法币资产会返回 true；只能用于相同 payout 货币的结算。
+                              example: true
+                  updated_at:
                   updated_at:
                     type: string
                   fees:
@@ -3032,6 +3037,10 @@ paths:
                   - asset: BTC
                     available: true
                     settlement_rate: '109029.34070000'
+                  - asset: BOB
+                    available: true
+                    settlement_rate: '1'
+                    same_currency_only: true
                   - asset: GOLD
                     available: true
                     settlement_rate: '106.99642950'

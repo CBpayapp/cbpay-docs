@@ -9,7 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.127 · 3 versiones - 24 de septiembre de 2026
+## v2.128 · 4 versions - 24 de septiembre de 2026
+
+### v2.128
+
+**Cambiado**
+
+- Los payouts fiat en BOB, MXN y ARS ahora pueden debitar el saldo fiat local
+  de la misma moneda. El settlement de la misma moneda usa tasa `1` y spread
+  cero. El settlement cross-fiat responde `pricing_unavailable` y los montos
+  con más de dos decimales fiat responden `invalid_amount`. `GET /v1/rates`
+  marca estos assets con `same_currency_only: true`.
 
 ### v2.127
 

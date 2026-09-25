@@ -227,7 +227,9 @@ Payout 响应和 `payout_status_changed` 会包含两个新增且不绑定具体
 绝不重新报价。如果当时 BTC/GOLD/SILVER/PLATINUM 的执行价格不可用，您会收到
 `503 pricing_unavailable`；波动性资产还有单笔操作限额
 （`422 settlement_limit_exceeded`；可在 `GET /v1/settlement` 中查询）。
-
+有关 BOB、MXN 和 ARS 同币种法币 settlement 的 request/response 示例、
+校验错误以及 rates 中的 `same_currency_only` 字段，请参阅
+[法币 payout 结算](./fiat-settlement)。
 ### 技术筛查可能处于 pending
 
 CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂时不可用，**但

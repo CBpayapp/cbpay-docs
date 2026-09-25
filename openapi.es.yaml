@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.127"
+  version: "2.128"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -3121,6 +3121,11 @@ paths:
                               description: Precio USD efectivo por unidad al que se valoraría tu saldo
                                 (spread incluido); vacío cuando no está disponible.
                               example: '109029.34'
+                            same_currency_only:
+                              type: boolean
+                              description: Presente y true para assets fiat; solo pueden liquidar payouts
+                                en la misma moneda.
+                              example: true
                   updated_at:
                     type: string
                   fees:
@@ -3198,6 +3203,10 @@ paths:
                   - asset: BTC
                     available: true
                     settlement_rate: '109029.34070000'
+                  - asset: BOB
+                    available: true
+                    settlement_rate: '1'
+                    same_currency_only: true
                   - asset: GOLD
                     available: true
                     settlement_rate: '106.99642950'

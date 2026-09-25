@@ -210,7 +210,7 @@ BTC — nunca se re-cotiza. Si el precio de ejecución de BTC/GOLD/SILVER/PLATIN
 disponible en ese momento recibirás `503 pricing_unavailable`, y los
 assets volátiles tienen un límite por operación
 (`422 settlement_limit_exceeded`; consúltalo en `GET /v1/settlement`).
-
+Para settlement BOB, MXN o ARS en la misma moneda, consulta [Settlement de payouts fiat](./fiat-settlement).
 ### El screening técnico puede quedar pendiente
 
 CBPay screenea al beneficiario antes de debitar tu saldo o llamar al core. Si

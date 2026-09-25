@@ -8,7 +8,17 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.127 · 3 个版本 - 2026年9月24日
+## v2.128 · 4 versions - 2026年9月24日
+
+### v2.128
+
+**变更**
+
+- BOB、MXN 和 ARS 法币 payout 现在可以从相同货币的本地法币余额扣款。
+  同币种结算使用 rate `1` 且 settlement spread 为零。cross-fiat settlement
+  返回 `pricing_unavailable`，超过两位法币小数的金额返回
+  `invalid_amount`。`GET /v1/rates` 会将这些资产标记为
+  `same_currency_only: true`。
 
 ### v2.127
 

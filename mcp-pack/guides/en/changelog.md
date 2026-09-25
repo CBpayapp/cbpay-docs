@@ -8,7 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.127 · 3 versions - September 24, 2026
+## v2.128 · 4 versions - September 24, 2026
+
+### v2.128
+
+**Changed**
+
+- Fiat BOB, MXN and ARS payouts can now debit the same local-fiat balance.
+  Same-currency settlement uses rate `1` with zero settlement spread. Cross-fiat
+  settlement returns `pricing_unavailable`, and amounts above two fiat decimals
+  return `invalid_amount`. `GET /v1/rates` marks these assets with
+  `same_currency_only: true`.
 
 ### v2.127
 

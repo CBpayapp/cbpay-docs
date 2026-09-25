@@ -209,7 +209,7 @@ balance — never re-quoted. If the BTC/GOLD/SILVER/PLATINUM execution price is 
 at that moment you get `503 pricing_unavailable`, and volatile assets have
 a per-operation limit (`422 settlement_limit_exceeded`; check it in
 `GET /v1/settlement`).
-
+For same-currency BOB, MXN or ARS settlement, see [Fiat payout settlement](./fiat-settlement).
 ### Technical screening can be pending
 
 CBPay screens the beneficiary before it debits your balance or calls the core.
