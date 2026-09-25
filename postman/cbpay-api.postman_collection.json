@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-24 22:22 UTC",
-    "_content_sha256": "be5f5810054bdff8b91888b6b89c7ec23238cdb7d43957421bbd98b62cd033cb"
+    "_generated_at": "2026-09-25 02:59 UTC",
+    "_content_sha256": "36bbca748dc564705e1eb48ebeb45fe966e78b3ae84f4e0895e071c7e6c23d52"
   },
   "auth": {
     "type": "bearer",
@@ -8925,7 +8925,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"balances\": [\n    {\n      \"asset\": \"USDT\",\n      \"available\": \"125.430000\",\n      \"held\": \"10.000000\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    },\n    {\n      \"asset\": \"USDC\",\n      \"available\": \"50.000000\",\n      \"held\": \"0.000000\",\n      \"updated_at\": \"2026-07-08T09:00:00Z\"\n    },\n    {\n      \"asset\": \"BTC\",\n      \"available\": \"0.00060000\",\n      \"held\": \"0.00000000\"\n    },\n    {\n      \"asset\": \"GOLD\"\n    },\n    {\n      \"asset\": \"SILVER\",\n      \"available\": \"1.070000\",\n      \"held\": \"0.000000\"\n    },\n    {\n      \"asset\": \"PLATINUM\",\n      \"available\": \"12.500000\",\n      \"held\": \"0.000000\"\n    },\n    {\n      \"asset\": \"BANK_USD\",\n      \"available\": \"7500.00\",\n      \"held\": \"0.00\",\n      \"custody\": \"banking\",\n      \"updated_at\": \"2026-07-08T09:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"balances\": [\n    {\n      \"asset\": \"USDT\",\n      \"available\": \"125.430000\",\n      \"held\": \"10.000000\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    },\n    {\n      \"asset\": \"USDC\",\n      \"available\": \"50.000000\",\n      \"held\": \"0.000000\",\n      \"updated_at\": \"2026-07-08T09:00:00Z\"\n    },\n    {\n      \"asset\": \"BTC\",\n      \"available\": \"0.00060000\",\n      \"held\": \"0.00000000\"\n    },\n    {\n      \"asset\": \"GOLD\",\n      \"available\": \"12.500000\",\n      \"held\": \"0.000000\"\n    },\n    {\n      \"asset\": \"SILVER\",\n      \"available\": \"1.070000\",\n      \"held\": \"0.000000\"\n    },\n    {\n      \"asset\": \"PLATINUM\",\n      \"available\": \"35.000000\",\n      \"held\": \"0.000000\"\n    },\n    {\n      \"asset\": \"BANK_USD\",\n      \"available\": \"7500.00\",\n      \"held\": \"0.00\",\n      \"custody\": \"banking\",\n      \"updated_at\": \"2026-07-08T09:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
