@@ -2651,13 +2651,13 @@ paths:
                   available: '0.00060000'
                   held: '0.00000000'
                 - asset: GOLD
+                  available: '12.500000'
+                  held: '0.000000'
                 - asset: SILVER
                   available: '1.070000'
                   held: '0.000000'
                 - asset: PLATINUM
                   available: '35.000000'
-                  held: '0.000000'
-                  available: '12.500000'
                   held: '0.000000'
                 - asset: BANK_USD
                   available: '7500.00'
