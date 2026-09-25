@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-25 02:59 UTC",
-    "_content_sha256": "36bbca748dc564705e1eb48ebeb45fe966e78b3ae84f4e0895e071c7e6c23d52"
+    "_generated_at": "2026-09-25 23:04 UTC",
+    "_content_sha256": "7449c40ebc5c5f6d410d809488874cef0ffc9cb8d9cea7b76e58e716bedca34e"
   },
   "auth": {
     "type": "bearer",
@@ -12984,7 +12984,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"deposit_accounts\": [\n    {\n      \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"instrument\": \"734180000151000006\",\n      \"details\": {\n        \"clabe\": \"734180000151000006\",\n        \"alias\": \"CBPay Example MXN Account\",\n        \"bank_name\": \"Example Receiving Bank\",\n        \"status\": \"active\"\n      },\n      \"status\": \"active\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"deposit_accounts\": [\n    {\n      \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"purpose\": \"fondeo\",\n      \"instrument\": \"734180000151000006\",\n      \"details\": {\n        \"clabe\": \"734180000151000006\",\n        \"alias\": \"CBPay Example MXN Account\",\n        \"bank_name\": \"Example Receiving Bank\",\n        \"status\": \"active\"\n      },\n      \"status\": \"active\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -13009,10 +13009,10 @@
                 "deposit-accounts"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Provisions a fixed deposit destination bound to your account in corridors that support it (e.g. a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically, net of the payin fee. Creation is free.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Provisions a fixed deposit destination bound to your account in corridors that support it (e.g. a Mexican CLABE or an Argentine CVU). `purpose` defaults to `fondeo`, which converts incoming fiat to USDT. `banking` retains local fiat for `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer` only. Every transfer arriving to it is credited automatically, net of the payin fee. Creation is free.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"MX\",\n  \"currency\": \"MXN\"\n}",
+              "raw": "{\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"purpose\": \"fondeo\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -13046,7 +13046,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"alias\": \"CBPay Example MXN Account\",\n    \"bank_name\": \"Example Receiving Bank\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"purpose\": \"fondeo\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"alias\": \"CBPay Example MXN Account\",\n    \"bank_name\": \"Example Receiving Bank\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
             }
           ]
         },
@@ -13071,10 +13071,10 @@
                 "deposit-accounts"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Provisions a fixed deposit destination bound to your account in corridors that support it (e.g. a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically, net of the payin fee. Creation is free.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Provisions a fixed deposit destination bound to your account in corridors that support it (e.g. a Mexican CLABE or an Argentine CVU). `purpose` defaults to `fondeo`, which converts incoming fiat to USDT. `banking` retains local fiat for `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer` only. Every transfer arriving to it is credited automatically, net of the payin fee. Creation is free.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"AR\",\n  \"currency\": \"ARS\"\n}",
+              "raw": "{\n  \"country\": \"AR\",\n  \"currency\": \"ARS\",\n  \"purpose\": \"fondeo\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -13108,7 +13108,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"alias\": \"CBPay Example MXN Account\",\n    \"bank_name\": \"Example Receiving Bank\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+              "body": "{\n  \"instrument_id\": \"a1d4b7c0-1234-5678-9abc-def012345678\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"purpose\": \"fondeo\",\n  \"instrument\": \"734180000151000006\",\n  \"details\": {\n    \"clabe\": \"734180000151000006\",\n    \"alias\": \"CBPay Example MXN Account\",\n    \"bank_name\": \"Example Receiving Bank\",\n    \"status\": \"active\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
             }
           ]
         },

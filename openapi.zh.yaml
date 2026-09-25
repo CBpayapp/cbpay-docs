@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.128"
+  version: "2.129"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -13921,7 +13921,7 @@ paths:
       - 收款(Payins)
       operationId: createDepositAccount
       summary: 创建专属充值账户
-      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 在支持的通道(例如墨西哥 CLABE 或阿根廷 CVU)为你的账户开通固定充值目的地。到达该目的地的每笔转账都会自动入账,已扣除 payin 费用。创建免费。
+      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。在支持的通道开通固定充值目的地。`purpose` 默认为 `fondeo`；`banking` 仅在 BO/BOB、MX/MXN 和 AR/ARS 的 `bank_transfer` 中保留本地法币。创建免费。
       requestBody:
         required: true
         content:
@@ -13938,6 +13938,10 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
+                purpose:
+                  type: string
+                  enum: [fondeo, banking]
+                  default: fondeo
             examples:
               mx_clabe:
                 summary: 墨西哥 — 专属 CLABE(MXN)
@@ -13962,6 +13966,7 @@ paths:
                 country: MX
                 currency: MXN
                 method: bank_transfer
+                purpose: fondeo
                 instrument: '734180000151000006'
                 details:
                   clabe: '734180000151000006'
@@ -13970,6 +13975,17 @@ paths:
                   status: active
                 status: active
                 created_at: '2026-07-07T12:00:00Z'
+        '400':
+          description: 目的无效或 Banking 走廊不受支持。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_purpose:
+                  value:
+                    error: invalid_purpose
+                    message: purpose must be "fondeo" or "banking"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -23693,6 +23709,10 @@ components:
           type: string
         method:
           type: string
+        purpose:
+          type: string
+          enum: [fondeo, banking]
+          description: 充值目的地用途。
         instrument:
           type: string
           description: 分享给付款人的充值目的地(例如 CLABE)。

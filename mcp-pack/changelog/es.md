@@ -9,6 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+## v2.129 · 1 versión - 25 de septiembre de 2026
+
+### v2.129
+
+**Agregado**
+
+- Los destinos de depósito ahora exponen `purpose`: `fondeo` (por defecto,
+  convierte el fiat a USDT) o `banking` (conserva el fiat local para payouts).
+  Banking se limita a BO/BOB, MX/MXN y AR/ARS `bank_transfer`; los valores
+  inválidos devuelven `invalid_purpose`.
+
 ## v2.128 · 4 versions - 24 de septiembre de 2026
 
 ### v2.128

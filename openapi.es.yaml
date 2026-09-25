@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.128"
+  version: "2.129"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -14346,7 +14346,9 @@ paths:
       summary: Crear una cuenta de depósito dedicada
       description: Requiere identidad de cuenta aprobada; las cuentas persona necesitan KYC aprobado y las cuentas empresa KYB aprobado antes de que esta operación autenticada cree o cobre un payin. Aprovisiona un destino de depósito fijo ligado a tu cuenta en los corredores que lo
         soportan (ej. una CLABE mexicana o una CVU argentina). Cada transferencia que llega a él se acredita
-        automáticamente, neta de la comisión de payin. La creación es gratuita.
+        automáticamente, neta de la comisión de payin. `purpose` es `fondeo`
+        por defecto; `banking` conserva fiat local solo en BO/BOB, MX/MXN y
+        AR/ARS con `bank_transfer`. La creación es gratuita.
       requestBody:
         required: true
         content:
@@ -14363,6 +14365,10 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
+                purpose:
+                  type: string
+                  enum: [fondeo, banking]
+                  default: fondeo
             examples:
               mx_clabe:
                 summary: México — CLABE dedicada (MXN)
@@ -14387,6 +14393,7 @@ paths:
                 country: MX
                 currency: MXN
                 method: bank_transfer
+                purpose: fondeo
                 instrument: '734180000151000006'
                 details:
                   clabe: '734180000151000006'
@@ -14395,6 +14402,17 @@ paths:
                   status: active
                 status: active
                 created_at: '2026-07-07T12:00:00Z'
+        '400':
+          description: Propósito inválido o corredor Banking no soportado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_purpose:
+                  value:
+                    error: invalid_purpose
+                    message: purpose must be "fondeo" or "banking"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -24367,6 +24385,10 @@ components:
           type: string
         method:
           type: string
+        purpose:
+          type: string
+          enum: [fondeo, banking]
+          description: Propósito del destino de depósito.
         instrument:
           type: string
           description: El destino de depósito a compartir con los pagadores (ej. la CLABE).

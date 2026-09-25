@@ -10,6 +10,12 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 银行服务为您提供以您已验证档案名义开立的**真实银行账户**：您可以通过国际通道（视货币而定，SEPA、SWIFT、ACH）接收资金、持有法币余额，并向第三方发送付款。它是独立于您 USDT 余额的产品：**银行资金存放在您的银行账户中**，而不在 CBPay 余额里。
 
+对于本地法币走廊，请创建带有 `purpose: "banking"` 的充值目的地。
+该目的会保留本地法币，用于法币付款。默认的 `fondeo` 目的会把入账
+法币转换为 USDT，保持历史行为。Banking 目前仅支持
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和
+`AR/ARS/bank_transfer`。
+
 | 概念 | 存放位置 | 查询方式 |
 |---|---|---|
 | CBPay USDT 余额 | CBPay 账本 | `GET /v1/balances` |

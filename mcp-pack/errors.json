@@ -777,6 +777,20 @@
         "es": "Validación (400)",
         "zh": "校验（400）"
       },
+      "code": "invalid_purpose",
+      "http": 400,
+      "meaning": {
+        "en": "`purpose` must be `fondeo` or `banking` when creating a deposit destination; use a supported Banking corridor",
+        "es": "`purpose` debe ser `fondeo` o `banking`; elige un corredor Banking soportado",
+        "zh": "`purpose` 必须是 `fondeo` 或 `banking`；请选择受支持的 Banking 走廊"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
       "code": "idempotency_key_required",
       "http": 400,
       "meaning": {
@@ -2589,20 +2603,6 @@
         "en": "Missing `purpose` when creating a report — data protection law requires declaring it (`credit_evaluation`, `tenant_screening`, `hiring`, `supplier_onboarding` or `other`)",
         "es": "Falta `purpose` al crear un informe — la ley de protección de datos exige declararlo (`credit_evaluation`, `tenant_screening`, `hiring`, `supplier_onboarding` u `other`)",
         "zh": "创建报告时缺少 `purpose` — 数据保护法要求声明用途(`credit_evaluation`、`tenant_screening`、`hiring`、`supplier_onboarding` 或 `other`)"
-      }
-    },
-    {
-      "category": {
-        "en": "Qscore",
-        "es": "Qscore",
-        "zh": "Qscore"
-      },
-      "code": "invalid_purpose",
-      "http": 400,
-      "meaning": {
-        "en": "The `purpose` is not one of the allowed values (`credit_evaluation`, `tenant_screening`, `hiring`, `supplier_onboarding`, `other`) — fix the value. `self_access` is rejected here: your own report only goes through `POST /v1/qscore/my-report`",
-        "es": "El `purpose` no es uno de los valores permitidos (`credit_evaluation`, `tenant_screening`, `hiring`, `supplier_onboarding`, `other`) — corrige el valor. `self_access` se rechaza aquí: tu propio informe solo va por `POST /v1/qscore/my-report`",
-        "zh": "`purpose` 不是允许的值之一(`credit_evaluation`、`tenant_screening`、`hiring`、`supplier_onboarding`、`other`)— 请修正该值。`self_access` 在此被拒绝:您自己的报告只能通过 `POST /v1/qscore/my-report` 获取"
       }
     },
     {

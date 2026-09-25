@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.128"
+  version: "2.129"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -14530,8 +14530,11 @@ paths:
       operationId: createDepositAccount
       summary: Create a dedicated deposit account
       description: Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Provisions a fixed deposit destination bound to your account in corridors that support
-        it (e.g. a Mexican CLABE or an Argentine CVU). Every transfer arriving to it is credited automatically,
-        net of the payin fee. Creation is free.
+        it (e.g. a Mexican CLABE or an Argentine CVU). `purpose` defaults to
+        `fondeo`, which converts incoming fiat to USDT. `banking` retains local
+        fiat for `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and
+        `AR/ARS/bank_transfer` only. Every transfer arriving to it is credited
+        automatically, net of the payin fee. Creation is free.
       requestBody:
         required: true
         content:
@@ -14548,17 +14551,24 @@ paths:
                 method:
                   type: string
                   default: bank_transfer
+                purpose:
+                  type: string
+                  enum: [fondeo, banking]
+                  default: fondeo
+                  description: Deposit destination purpose. Banking is limited to BO/BOB, MX/MXN and AR/ARS bank_transfer.
             examples:
               mx_clabe:
                 summary: Mexico — dedicated CLABE (MXN)
                 value:
                   country: MX
                   currency: MXN
+                  purpose: fondeo
               ar_cvu:
                 summary: Argentina — dedicated CVU (ARS)
                 value:
                   country: AR
                   currency: ARS
+                  purpose: fondeo
       responses:
         '201':
           description: Deposit account created and bound to the calling account.
@@ -14572,6 +14582,7 @@ paths:
                 country: MX
                 currency: MXN
                 method: bank_transfer
+                purpose: fondeo
                 instrument: '734180000151000006'
                 details:
                   clabe: '734180000151000006'
@@ -14582,6 +14593,21 @@ paths:
                 created_at: '2026-07-07T12:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Invalid purpose or unsupported Banking corridor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_purpose:
+                  value:
+                    error: invalid_purpose
+                    message: purpose must be "fondeo" or "banking"
+                invalid_request:
+                  value:
+                    error: invalid_request
+                    message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer
         '403':
           description: The account identity is not approved for this authenticated operation. Account state or credential errors may also use account_required or account_blocked.
           content:
@@ -24537,6 +24563,10 @@ components:
           type: string
         method:
           type: string
+        purpose:
+          type: string
+          enum: [fondeo, banking]
+          description: Deposit destination purpose.
         instrument:
           type: string
           description: The deposit destination to share with payers (e.g. the CLABE).
