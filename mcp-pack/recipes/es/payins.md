@@ -245,6 +245,20 @@ gratis; cada depósito paga la comisión de payin normal. Los campos opcionales
 `details.alias`, `details.bank_name` y `details.merchant_nit` aparecen cuando
 los entrega el riel receptor (`merchant_nit` se usa en cuentas BO/BOB). Lista
 tus cuentas con `GET /v1/payins/deposit-accounts`.
+### Destinos de fondeo versus Banking
+
+Cada destino de depósito tiene un `purpose` explícito:
+
+- `fondeo` es el valor por defecto y convierte el fiat recibido a USDT.
+- `banking` mantiene el fiat local para pagos fiat y hoy solo funciona en
+  `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y
+  `AR/ARS/bank_transfer`.
+
+La respuesta de creación y `GET /v1/payins/deposit-accounts` incluyen
+`purpose`. El slot es determinista por cuenta, corredor y propósito; repetir
+la misma clave devuelve el recurso original con `idempotency_hit: true`.
+`fiat_hold_local` es un fallback legado para abonos sin instrumento asociado,
+no un reemplazo del propósito explícito.
 **Cuentas empresa y múltiples destinos de depósito.** Una cuenta empresa
 puede crear múltiples cuentas de depósito inmutables en corredores
 adicionales habilitados. Hoy los corredores adicionales son

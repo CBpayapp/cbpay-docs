@@ -104,6 +104,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_role` | 成员角色无效 |
 | `unknown_org` | 组织 slug 错误（应使用 `cbpay`） |
 | `invalid_request` | 缺少 `country`/`currency` |
+| `invalid_purpose` | `purpose` 必须是 `fondeo` 或 `banking`；请选择受支持的 Banking 走廊 |
 | `idempotency_key_required` | 缺少幂等键 |
 | `reserved_idempotency_key` | 幂等键使用了系统保留前缀（`payin-convert:` 或 `checkout-swap:`，属于自动转换）——请改用其他键 |
 | `beneficiary_required` | 缺少付款收款人信息 |

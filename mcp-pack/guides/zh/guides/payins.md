@@ -254,6 +254,19 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 后续 payin 继续按正常入金费用计费。BOB 目的地仅用于收款并通过轮询
 对账；它不会创建或选择 payout 路由来源账户。使用
 `GET /v1/payins/deposit-accounts?page=1&page_size=50` 分页查询目的地。
+### 充值与 Banking 目的
+
+每个充值目的地都有明确的 `purpose`：
+
+- `fondeo` 是默认值，保留历史行为：入账的法币会转换为 USDT。
+- `banking` 保留本地法币余额，用于法币付款；目前仅支持
+  `BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和
+  `AR/ARS/bank_transfer`。
+
+创建响应和 `GET /v1/payins/deposit-accounts` 都会返回 `purpose`。槽位按
+账户、走廊和目的确定；使用相同 key 重试会返回原始资源并带有
+`idempotency_hit: true`。`fiat_hold_local` 只是没有绑定 instrument 时的
+legacy fallback，不会替代目的字段。
 
 您也可以使用一次性的**预告银行转账**
 （`POST /v1/payins`，`method: "bank_transfer"`、`country: "MX"`）。

@@ -8,6 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.129 · 1 version - September 25, 2026
+
+### v2.129
+
+**Added**
+
+- Deposit destinations now expose `purpose`: `fondeo` (default, converts
+  incoming fiat to USDT) or `banking` (retains local fiat for payouts).
+  Banking is limited to BO/BOB, MX/MXN and AR/ARS `bank_transfer`; invalid
+  values return `invalid_purpose`.
+
 ## v2.128 · 4 versions - September 24, 2026
 
 ### v2.128

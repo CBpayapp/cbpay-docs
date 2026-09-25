@@ -8,6 +8,17 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.129 · 1 version - 2026年9月25日
+
+### v2.129
+
+**新增**
+
+- 充值目的地现在返回 `purpose`：默认的 `fondeo` 会把法币转换为
+  USDT，`banking` 会保留本地法币用于 payout。Banking 仅支持
+  BO/BOB、MX/MXN 和 AR/ARS `bank_transfer`；无效值返回
+  `invalid_purpose`。
+
 ## v2.128 · 4 versions - 2026年9月24日
 
 ### v2.128

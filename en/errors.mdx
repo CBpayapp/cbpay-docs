@@ -105,6 +105,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_role` | Invalid member role |
 | `unknown_org` | Wrong organization slug (use `cbpay`) |
 | `invalid_request` | Missing `country`/`currency` |
+| `invalid_purpose` | `purpose` must be `fondeo` or `banking` when creating a deposit destination; use a supported Banking corridor |
 | `idempotency_key_required` | Missing idempotency key |
 | `reserved_idempotency_key` | The key uses a system-reserved prefix (`payin-convert:` or `checkout-swap:`, owned by auto-conversions) — pick another key |
 | `beneficiary_required` | Missing payout beneficiary |
