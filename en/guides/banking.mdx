@@ -14,6 +14,7 @@ depending on the currency), hold fiat balances and send payments to third
 parties. It is a separate product from your USDT balance: **banking money
 lives in your bank accounts**, not in the CBPay balance.
 
+For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to USDT. Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
 | Concept | Where it lives | Queried with |
 |---|---|---|
 | CBPay USDT balance | CBPay ledger | `GET /v1/balances` |
