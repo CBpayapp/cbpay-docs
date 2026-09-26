@@ -8,7 +8,16 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
-## v2.130 · 1 个版本 - 2026年9月26日
+## v2.131 · 2 个版本 - 2026年9月26日
+
+### v2.131
+
+**新增**
+
+- 新增阿根廷 payout 校验错误 `invalid_cuit` 和 `invalid_cbu`（HTTP 400）
+  的公开文档。请在 `beneficiary.tax_id` 发送 11 位 CUIT/CUIL，在
+  `beneficiary.account_number` 发送 22 位 CBU/CVU；USD 必须使用 CBU。
+  参见[payout 错误](https://docs.cbpayapp.com/zh/errors)。
 
 ### v2.130
 

@@ -108,6 +108,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `idempotency_key_required` | 缺少幂等键 |
 | `reserved_idempotency_key` | 幂等键使用了系统保留前缀（`payin-convert:` 或 `checkout-swap:`，属于自动转换）——请改用其他键 |
 | `beneficiary_required` | 缺少付款收款人信息 |
+| `invalid_cuit` | 阿根廷（`AR`）payout 要求 `beneficiary.tax_id` 为 11 位 CUIT 或 CUIL — 请发送收款人的 11 位标识；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts) |
+| `invalid_cbu` | 阿根廷（`AR`）payout 要求 `beneficiary.account_number` 为 22 位 CBU 或 CVU；USD payout 仅接受 CBU — 请发送有效的 22 位 CBU/CVU（USD 使用 CBU）；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts) |
 | `invalid_amount` | 金额不是有效的正十进制数 |
 | `recipient_required` / `self_transfer` | 转账目标无效 |
 | `invalid_chain` / `invalid_asset` | 不支持的网络或资产 |

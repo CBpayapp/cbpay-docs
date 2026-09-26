@@ -8,7 +8,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
-## v2.130 · 1 version - September 26, 2026
+## v2.131 · 2 versions - September 26, 2026
+
+### v2.131
+
+**Added**
+
+- Added public documentation for the Argentina payout validation errors
+  `invalid_cuit` and `invalid_cbu` (HTTP 400). Send an 11-digit CUIT/CUIL in
+  `beneficiary.tax_id`; send a 22-digit CBU/CVU in
+  `beneficiary.account_number`, with CBU required for USD. See the
+  [payout errors](https://docs.cbpayapp.com/en/errors).
 
 ### v2.130
 

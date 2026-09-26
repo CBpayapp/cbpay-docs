@@ -109,6 +109,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `idempotency_key_required` | Falta la clave de idempotencia |
 | `reserved_idempotency_key` | La clave usa un prefijo reservado del sistema (`payin-convert:` o `checkout-swap:`, propios de las auto-conversiones) — usa otra clave |
 | `beneficiary_required` | Falta el beneficiario del payout |
+| `invalid_cuit` | Los payouts de Argentina (`AR`) exigen que `beneficiary.tax_id` sea un CUIT o CUIL de 11 dígitos — envía el identificador de 11 dígitos del beneficiario; consulta la [guía de payouts](/es/guias/payouts) |
+| `invalid_cbu` | Los payouts de Argentina (`AR`) exigen que `beneficiary.account_number` sea un CBU o CVU de 22 dígitos; los payouts en USD aceptan solo CBU — envía un CBU/CVU válido de 22 dígitos (CBU para USD); consulta la [guía de payouts](/es/guias/payouts) |
 | `invalid_amount` | Monto no es un decimal positivo válido |
 | `recipient_required` / `self_transfer` | Destino de transferencia inválido |
 | `invalid_chain` / `invalid_asset` | Red o activo no soportado |
