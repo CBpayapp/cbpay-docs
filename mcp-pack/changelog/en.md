@@ -8,6 +8,18 @@ source_url: https://docs.cbpayapp.com/en/changelog
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 
+## v2.130 · 1 version - September 26, 2026
+
+### v2.130
+
+**Changed**
+
+- EUR SEPA Banking withdrawals now accept the structured top-level
+  `beneficiary_type`, `beneficiary_given_name`, `beneficiary_first_surname`,
+  optional `beneficiary_middle_name`, and corporate `beneficiary_name` fields.
+  The platform forwards them as part of the operation request so the beneficiary
+  identity can be resolved before dispatch; other banking rails may omit them.
+
 ## v2.129 · 1 version - September 25, 2026
 
 ### v2.129

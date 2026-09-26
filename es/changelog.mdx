@@ -8,6 +8,21 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
+<Update label="26 de septiembre de 2026" description="v2.130 · 1 versión">
+
+### v2.130
+
+**Cambiado**
+
+- Los retiros EUR Banking por SEPA ahora aceptan los campos estructurados de
+  nivel superior `beneficiary_type`, `beneficiary_given_name`,
+  `beneficiary_first_surname`, `beneficiary_middle_name` opcional y
+  `beneficiary_name` para empresas. La plataforma los reenvía como parte del
+  request de la operación para resolver la identidad del beneficiario antes
+  del despacho; los demás rieles bancarios pueden omitirlos.
+
+</Update>
+
 <Update label="25 de septiembre de 2026" description="v2.129 · 1 versión">
 
 ### v2.129
