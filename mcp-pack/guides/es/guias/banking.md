@@ -8,11 +8,12 @@ source_url: https://docs.cbpayapp.com/es/guias/banking
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 Banking te da **cuentas bancarias reales** a nombre de tu perfil verificado:
-recibes fondos por rieles internacionales (SEPA, SWIFT, ACH según la
-moneda), mantienes saldo en moneda fiat y envías pagos a terceros. Es un
-producto distinto de tu saldo USDT: **el dinero de banking vive en tus
-cuentas bancarias**, no en el saldo CBPay.
+recibes fondos por rieles internacionales (SEPA, SWIFT, ACH según la moneda),
+mantienes saldo en moneda fiat y envías pagos a terceros. Es un
+producto distinto de tu saldo USDT: **el dinero de banking vive en tus cuentas
+bancarias**, no en el saldo CBPay.
 
+Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a USDT. Banking admite solo `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
 | Concepto | Dónde vive | Se consulta con |
 |---|---|---|
 | Saldo USDT CBPay | Ledger CBPay | `GET /v1/balances` |

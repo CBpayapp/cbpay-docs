@@ -1,5 +1,5 @@
 {
-  "content_sha256": "6d383fdaa00a20d279e5995fb209e218356d8256aad22da69fcd7ec7e7936a6e",
+  "content_sha256": "86e6b74227a55baa0c271facf7777afdca1c70bc8403e9ec34466c2aa8ce1d87",
   "counts": {
     "chunks": 3946,
     "errors": 289,
@@ -27,12 +27,12 @@
       "sha256": "5559b297c49c3dcbe59f48791881c0115b2e05fb92b681746840a702586fb4de"
     },
     "chunks/en.jsonl": {
-      "bytes": 1366922,
-      "sha256": "268e774f9877ce17e04dbf929df26d0f9296dea51cf66365e4821d2e74220acd"
+      "bytes": 1367179,
+      "sha256": "94d7d69b87fc08714e6e80196a6b1a65c1066a3cc3f7c760067cc06ddff8484a"
     },
     "chunks/es.jsonl": {
-      "bytes": 1398677,
-      "sha256": "8aba5db37145a32cffa3dce7b477f308028f8c7acb135c92500fd2d032e1d1ce"
+      "bytes": 1398939,
+      "sha256": "b47001c4c5546f5d50ad50df7134192a1453eab8594dd400554c0cf117ff4f73"
     },
     "chunks/zh.jsonl": {
       "bytes": 1313323,
@@ -111,8 +111,8 @@
       "sha256": "2095b6854d012e78dbacbd261a96cc67c0d825b3acc340258b1b21fbc822a647"
     },
     "guides/en/guides/banking.md": {
-      "bytes": 35638,
-      "sha256": "b999866a47742b75c6cdd916b630e0268d6a22dff32aee9710ec174304fff32e"
+      "bytes": 35892,
+      "sha256": "7acbaea49bafc6b379b1011ca805e28c55563e9d3bb81096b01b4aa50ab30197"
     },
     "guides/en/guides/bob-virtual-accounts.md": {
       "bytes": 8942,
@@ -367,8 +367,8 @@
       "sha256": "60f0274669ce97f6748f780befce7b099778b4afd178d056cdd2ffc0fdfdbd14"
     },
     "guides/es/guias/banking.md": {
-      "bytes": 36023,
-      "sha256": "cb72f070841644c623b7d00cae1a4bdba96c7b5b7e93814981e0d2b8618d6222"
+      "bytes": 36282,
+      "sha256": "aa970a61c62961c35babe0092851c8f07ec659ddf6c08990baa8fb516b934f23"
     },
     "guides/es/guias/bob-virtual-accounts.md": {
       "bytes": 8927,
@@ -895,7 +895,7 @@
       "sha256": "290f7ad7598a41efbcedbe884b91548d0c704674047f60448d31f563f809845e"
     }
   },
-  "generated_at": "2026-09-25T23:09:05Z",
+  "generated_at": "2026-09-25T23:39:01Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
