@@ -109,6 +109,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `idempotency_key_required` | Missing idempotency key |
 | `reserved_idempotency_key` | The key uses a system-reserved prefix (`payin-convert:` or `checkout-swap:`, owned by auto-conversions) — pick another key |
 | `beneficiary_required` | Missing payout beneficiary |
+| `invalid_cuit` | Argentina (`AR`) payouts require `beneficiary.tax_id` to be an 11-digit CUIT or CUIL — send the beneficiary's 11-digit identifier; see [payouts](/en/guides/payouts) |
+| `invalid_cbu` | Argentina (`AR`) payouts require `beneficiary.account_number` to be a 22-digit CBU or CVU; USD payouts accept only CBU — send a valid 22-digit CBU/CVU (CBU for USD); see [payouts](/en/guides/payouts) |
 | `invalid_amount` | Amount is not a valid positive decimal |
 | `recipient_required` / `self_transfer` | Invalid transfer destination |
 | `invalid_chain` / `invalid_asset` | Unsupported network or asset |

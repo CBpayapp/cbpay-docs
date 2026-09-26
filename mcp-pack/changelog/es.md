@@ -9,7 +9,17 @@ Todos los cambios de la API de CBPay y de esta documentación, del más
 reciente al más antiguo. Los cambios que rompen compatibilidad se anuncian
 con anticipación y quedan marcados como **Breaking**.
 
-## v2.130 · 1 versión - 26 de septiembre de 2026
+## v2.131 · 2 versiones - 26 de septiembre de 2026
+
+### v2.131
+
+**Agregado**
+
+- Se documentaron los errores de validación de payouts argentinos
+  `invalid_cuit` e `invalid_cbu` (HTTP 400). Envía un CUIT/CUIL de 11 dígitos
+  en `beneficiary.tax_id` y un CBU/CVU de 22 dígitos en
+  `beneficiary.account_number`; para USD se exige CBU. Consulta los
+  [errores de payouts](https://docs.cbpayapp.com/es/errores).
 
 ### v2.130
 
