@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.129"
+  version: "2.130"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -15572,7 +15572,11 @@ paths:
       description: Executes a TRANSFER (between your own bank accounts) or WITHDRAW (to a registered beneficiary).
         Requires an idempotency key; retries with the same key return the original operation without re-charging.
         Billed as the fixed `banking_operation` fee; refunded if the corridor rejects. The final state
-        arrives via the banking_operation_status_changed webhook.
+        arrives via the banking_operation_status_changed webhook. For an EUR SEPA
+        withdrawal, the top-level `beneficiary_*` fields provide the structured
+        beneficiary identity used to build the provider payee. They are optional
+        for other banking rails; if an EU-SEPA destination has no usable payee
+        identity, the API returns `400 invalid_payload`.
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -15628,6 +15632,24 @@ paths:
                   type: string
                   format: uuid
                   description: Optional active `banking_eur` virtual IBAN used to fund a EUR SEPA Banking withdrawal. Omit only when exactly one active source exists; several sources require this UUID. The platform stamps `payer` from the vIBAN registrant.
+                beneficiary_type:
+                  type: string
+                  enum:
+                  - individual
+                  - corporate
+                  description: Required for an EUR SEPA withdrawal; use `individual` for a person or `corporate` for a company. Optional for other banking rails.
+                beneficiary_given_name:
+                  type: string
+                  description: Required for a structured individual EUR SEPA beneficiary together with `beneficiary_first_surname`; optional for other banking rails.
+                beneficiary_first_surname:
+                  type: string
+                  description: Required for a structured individual EUR SEPA beneficiary together with `beneficiary_given_name`; optional for other banking rails.
+                beneficiary_middle_name:
+                  type: string
+                  description: Optional middle name for an individual EUR SEPA beneficiary; optional for other banking rails.
+                beneficiary_name:
+                  type: string
+                  description: Required company name for a corporate EUR SEPA beneficiary; a multi-word value is also accepted as the legacy individual-name fallback. Optional for other banking rails.
                 idempotency_key:
                   type: string
             examples:
@@ -15642,6 +15664,10 @@ paths:
                     account: c4d1e2f3-a4b5-c6d7-e8f9-a0b1c2d3e4f5
                   destinationRequisit:
                     beneficiar: BNK-CPACC-11
+                  beneficiary_type: individual
+                  beneficiary_given_name: Elena
+                  beneficiary_first_surname: Fuentes
+                  beneficiary_middle_name: María
                   amount:
                     currencyCode: EUR
                     units: '250'

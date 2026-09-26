@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-25 23:04 UTC",
-    "_content_sha256": "7449c40ebc5c5f6d410d809488874cef0ffc9cb8d9cea7b76e58e716bedca34e"
+    "_generated_at": "2026-09-26 07:25 UTC",
+    "_content_sha256": "3d906a354ed5039fc8de8d0a250b351193514b8bfaffa5f88606d0bce2713283"
   },
   "auth": {
     "type": "bearer",
@@ -21046,10 +21046,10 @@
                 "operations"
               ]
             },
-            "description": "Executes a TRANSFER (between your own bank accounts) or WITHDRAW (to a registered beneficiary). Requires an idempotency key; retries with the same key return the original operation without re-charging. Billed as the fixed `banking_operation` fee; refunded if the corridor rejects. The final state arrives via the banking_operation_status_changed webhook.",
+            "description": "Executes a TRANSFER (between your own bank accounts) or WITHDRAW (to a registered beneficiary). Requires an idempotency key; retries with the same key return the original operation without re-charging. Billed as the fixed `banking_operation` fee; refunded if the corridor rejects. The final state arrives via the banking_operation_status_changed webhook. For an EUR SEPA withdrawal, the top-level `beneficiary_*` fields provide the structured beneficiary identity used to build the provider payee. They are optional for other banking rails; if an EU-SEPA destination has no usable payee identity, the API returns `400 invalid_payload`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"currency\": \"EUR\",\n  \"source_virtual_iban_id\": \"2f8c1d4e-1111-4b22-8a33-000000000001\",\n  \"type\": \"WITHDRAW\",\n  \"paymentType\": \"SEPA_CT\",\n  \"sourceRequisit\": {\n    \"account\": \"c4d1e2f3-a4b5-c6d7-e8f9-a0b1c2d3e4f5\"\n  },\n  \"destinationRequisit\": {\n    \"beneficiar\": \"BNK-CPACC-11\"\n  },\n  \"amount\": {\n    \"currencyCode\": \"EUR\",\n    \"units\": \"250\",\n    \"nanos\": 0\n  },\n  \"comment\": \"Invoice 8841\",\n  \"idempotency_key\": \"acme-payment-0071\"\n}",
+              "raw": "{\n  \"currency\": \"EUR\",\n  \"source_virtual_iban_id\": \"2f8c1d4e-1111-4b22-8a33-000000000001\",\n  \"type\": \"WITHDRAW\",\n  \"paymentType\": \"SEPA_CT\",\n  \"sourceRequisit\": {\n    \"account\": \"c4d1e2f3-a4b5-c6d7-e8f9-a0b1c2d3e4f5\"\n  },\n  \"destinationRequisit\": {\n    \"beneficiar\": \"BNK-CPACC-11\"\n  },\n  \"beneficiary_type\": \"individual\",\n  \"beneficiary_given_name\": \"Elena\",\n  \"beneficiary_first_surname\": \"Fuentes\",\n  \"beneficiary_middle_name\": \"María\",\n  \"amount\": {\n    \"currencyCode\": \"EUR\",\n    \"units\": \"250\",\n    \"nanos\": 0\n  },\n  \"comment\": \"Invoice 8841\",\n  \"idempotency_key\": \"acme-payment-0071\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -21113,7 +21113,7 @@
                 "operations"
               ]
             },
-            "description": "Executes a TRANSFER (between your own bank accounts) or WITHDRAW (to a registered beneficiary). Requires an idempotency key; retries with the same key return the original operation without re-charging. Billed as the fixed `banking_operation` fee; refunded if the corridor rejects. The final state arrives via the banking_operation_status_changed webhook.",
+            "description": "Executes a TRANSFER (between your own bank accounts) or WITHDRAW (to a registered beneficiary). Requires an idempotency key; retries with the same key return the original operation without re-charging. Billed as the fixed `banking_operation` fee; refunded if the corridor rejects. The final state arrives via the banking_operation_status_changed webhook. For an EUR SEPA withdrawal, the top-level `beneficiary_*` fields provide the structured beneficiary identity used to build the provider payee. They are optional for other banking rails; if an EU-SEPA destination has no usable payee identity, the API returns `400 invalid_payload`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currency\": \"USD\",\n  \"type\": \"TRANSFER\",\n  \"paymentType\": \"EMPTY\",\n  \"sourceRequisit\": {\n    \"account\": \"c4d1e2f3-a4b5-c6d7-e8f9-a0b1c2d3e4f5\"\n  },\n  \"destinationRequisit\": {\n    \"account\": \"d5e2f3a4-b5c6-d7e8-f9a0-b1c2d3e4f5a6\"\n  },\n  \"amount\": {\n    \"currencyCode\": \"USD\",\n    \"units\": \"100\",\n    \"nanos\": 0\n  },\n  \"idempotency_key\": \"internal-move-0012\"\n}",

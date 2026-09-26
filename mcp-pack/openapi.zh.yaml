@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.129"
+  version: "2.130"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -14932,6 +14932,9 @@ paths:
       summary: 发送银行付款
       description: 执行 TRANSFER(你自己的银行账户之间)或 WITHDRAW(至已登记的受益人)。必须提供幂等键;使用相同键重试会返回原始操作而不重复扣费。按固定 `banking_operation`
         费用计费;若通道拒绝则退款。最终状态通过 banking_operation_status_changed webhook 送达。
+        对于 EUR SEPA 提现，顶层 `beneficiary_*` 字段提供用于构建 provider payee 的结构化受益人身份。
+        这些字段对其他银行通道是可选的；如果 EU-SEPA 目的地没有可用的 payee 身份，API 返回
+        `400 invalid_payload`。
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -14987,6 +14990,24 @@ paths:
                   type: string
                   format: uuid
                   description: 用于 EUR SEPA Banking 提现的 active `banking_eur` 虚拟 IBAN，可选。只有一个 active 来源时可省略；多个来源时必须发送该 UUID。平台从 vIBAN registrant 写入 `payer`。
+                beneficiary_type:
+                  type: string
+                  enum:
+                  - individual
+                  - corporate
+                  description: EUR SEPA 提现必填；个人使用 `individual`，企业使用 `corporate`。其他银行通道可选。
+                beneficiary_given_name:
+                  type: string
+                  description: 结构化 EUR SEPA 个人受益人必填，并且必须与 `beneficiary_first_surname` 同时提供；其他银行通道可选。
+                beneficiary_first_surname:
+                  type: string
+                  description: 结构化 EUR SEPA 个人受益人必填，并且必须与 `beneficiary_given_name` 同时提供；其他银行通道可选。
+                beneficiary_middle_name:
+                  type: string
+                  description: EUR SEPA 个人受益人的可选中间名；其他银行通道可选。
+                beneficiary_name:
+                  type: string
+                  description: EUR SEPA 企业受益人的公司名称必填；多词值也可作为 legacy 个人姓名 fallback。其他银行通道可选。
                 idempotency_key:
                   type: string
             examples:
@@ -15001,6 +15022,10 @@ paths:
                     account: c4d1e2f3-a4b5-c6d7-e8f9-a0b1c2d3e4f5
                   destinationRequisit:
                     beneficiar: BNK-CPACC-11
+                  beneficiary_type: individual
+                  beneficiary_given_name: Elena
+                  beneficiary_first_surname: Fuentes
+                  beneficiary_middle_name: María
                   amount:
                     currencyCode: EUR
                     units: '250'

@@ -8,6 +8,18 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 CBPay API 及本文档的每一次变更，最新的排在最前。
 破坏性变更会提前公告，并标注为 **Breaking**。
 
+## v2.130 · 1 个版本 - 2026年9月26日
+
+### v2.130
+
+**变更**
+
+- EUR SEPA Banking 提现现在接受顶层结构化字段
+  `beneficiary_type`、`beneficiary_given_name`、`beneficiary_first_surname`、
+  可选的 `beneficiary_middle_name` 以及企业使用的 `beneficiary_name`。
+  平台会将这些字段随 operation request 转发，以便在派发前解析受益人身份；
+  其他银行通道可以省略这些字段。
+
 ## v2.129 · 1 version - 2026年9月25日
 
 ### v2.129
