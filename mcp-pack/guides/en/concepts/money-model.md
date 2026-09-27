@@ -36,16 +36,11 @@ currency yet), as **decimal strings**:
 Internally each amount is stored as an integer in its currency's minimal
 unit (micro-USDT, satoshis, micro-grams) and computed with exact rational
 arithmetic. There are no floats and no accumulated rounding errors.
-**USDT is the operating currency**: payouts, fiat payins and service fees
-are always priced in USDT. But the **payment** can come from any of the
-six balances — see [Choose which balance pays](#choose-which-balance-pays).
-Payins credit in USDT and, if you configure `default_payin_asset`, the net
-amount auto-converts into the balance you choose — see
-[Choose which balance receives your payins](#choose-which-balance-receives-your-payins).
-The other balances are also funded via
-[internal transfers](https://docs.cbpayapp.com/en/guides/transfers) (always between balances of the
-same currency), on-chain deposits (USDC and BTC) or credits from your
-operator (GOLD).
+**USD is the principal balance for new accounts**: payouts, fiat payins,
+and service fees use USD when the account has no explicit legacy USDT
+setting. Legacy accounts with explicit USDT keep USDT. Payment can still
+come from any enabled balance — see [Choose which balance pays](#choose-which-balance-pays).
+Other balances are funded through the existing asset-specific flows.
 
 ## Choose which balance pays
 
@@ -79,7 +74,7 @@ Multi-asset settlement rules:
 | Idempotency | Replaying with the same key returns the original amount; the price is never recomputed. |
 | Per-operation limit | Volatile assets (BTC/GOLD/SILVER/PLATINUM) have a per-operation limit (USDT equivalent, visible in `GET /v1/settlement`); exceeding it returns `422 settlement_limit_exceeded`. |
 | Per-account daily limit | Volatile assets also have a rolling 24h volume cap (`volatile_daily_limit_usdt` in `GET /v1/settlement`); exceeding it returns `422 settlement_daily_limit_exceeded`. Settle in USDT/USDC or retry later. |
-| USDT | Remains the default path and changes nothing for anyone who never touches this setting. |
+| USD | Is the default for new accounts; legacy accounts with explicit USDT remain unchanged. |
 
 The `settlement` block of `GET /v1/rates` shows the effective per-asset
 price (spread included) so you can estimate before operating, and the
@@ -88,13 +83,11 @@ payout response records `settlement_asset`, `settlement_amount` and
 
 ## Choose which balance receives your payins
 
-By default **payins** (QR, bank transfer, collect, card) credit the USDT
-balance. If you would rather hold another asset, configure
-`default_payin_asset`: the credit still lands in USDT (pricing, FX spread
-and fees untouched) and the **net credited amount** auto-converts into
-your asset through the swap engine **at the real price, with no extra
-spread** — the payin already paid its fee and rate; the automatic
-conversion never charges twice. The same limits as a regular swap apply.
+For a new account, **payins** (QR, bank transfer, collect, and card) credit
+the USD balance directly in cents. A legacy account with an explicit USDT setting
+keeps USDT. If you configure another payin asset, the net amount follows the
+post-credit conversion flow at the real price, with no extra swap spread; the payin
+already paid its fee and rate. The same limits as a regular swap apply.
 
 ```bash
 # Credit my payins in USDC
@@ -170,7 +163,7 @@ operation from that asset (spread included):
               "settlement_grade": true }
   },
   "settlement": {
-    "default_asset": "USDT",
+    "default_asset": "USD",
     "assets": [
       { "asset": "USDT", "available": true, "settlement_rate": "1" },
       { "asset": "USDC", "available": true, "settlement_rate": "0.99900000" },

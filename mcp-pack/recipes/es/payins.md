@@ -20,12 +20,11 @@ Este gate aplica a la creación autenticada de la cuenta. Las páginas públicas
 de links ya creados siguen cobrables, los abonos pasivos ya recibidos siguen
 procesables, la asignación operativa de org-admin sigue disponible y los
 instrumentos de depósito creados por el sistema no se bloquean.
-Un payin es un cobro fiat: tu cliente paga en moneda local y tu cuenta
-recibe el abono en USDT automáticamente, convertido a **tu tasa de payin**
-(`payin_rate` en `GET /v1/rates`) menos la comisión fija de payin si tu
-cuenta la tiene configurada. En USDT v1, `payin_rate_source` indica si esa
-tasa está respaldada por inventario FIFO payin habilitado (`lot`) o por spot
-(`spot`). La tasa queda fijada antes del crédito asíncrono.
+Un payin es un cobro fiat: tu cliente paga en moneda local y una cuenta
+nueva USD-principal se acredita directamente en USD con 2 decimales. Las cuentas
+legacy con USDT explícito conservan USDT. Si se configura otro asset, el neto sigue
+la conversión post-crédito con tu **tasa de payin** (`payin_rate` en `GET /v1/rates`)
+menos la comisión fija.
 
 Sea cual sea la modalidad, todos los caminos terminan igual — abono
 automático + webhook:
@@ -38,7 +37,7 @@ flowchart LR
     anunciada["Transferencia anunciada<br/>(CL, PE, MX, PY, US)"] --> pago
     clabe["Cuenta dedicada CLABE / CVU<br/>(MX, AR)"] --> pago
     pago --> conv["Conversión FX a tu<br/>payin_rate − fee fijo"]
-    conv --> credito(("Abono USDT<br/>a tu saldo"))
+    conv --> credito(("Abono USD para cuentas nuevas<br/>o saldo USDT legacy"))
     credito --> wh["Webhook payin_credited"]
 ```
 
@@ -139,7 +138,7 @@ Respuesta `201`:
 ```
 
 Comparte la `payment_url` con el pagador (link, redirección o WebView).
-Cuando el pago se confirma, tu cuenta se acredita en USDT y recibes el
+Cuando el pago se confirma, una cuenta nueva se acredita en USD (o en USDT si tiene una configuración legacy explícita) y recibes el
 webhook `payin_credited`. El monto CLP debe ser entero (el peso chileno no
 usa decimales) y la sesión de pago vence en 24 horas por defecto. Un retry
 con la misma `idempotency_key` devuelve el mismo payin y la misma URL —
@@ -1147,7 +1146,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | Estado | Significado |
 |---|---|
 | `pending` | Cargo creado, esperando el pago |
-| `credited` | Pago recibido y abonado en USDT |
+| `credited` | Pago recibido y abonado en USD para cuentas nuevas; USDT legacy explícito permanece en USDT |
 | `unassigned` | Depósito recibido sin match automático (lo asigna el administrador) |
 | `expired` | El cargo venció sin pago |
 | `failed` | El cobro falló |
@@ -1269,10 +1268,31 @@ En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible 
 
 ## Retención de fiat local
 
-Activa `fiat_hold_local: true` con `PATCH /v1/accounts/{accountID}` para que los créditos futuros BOB, MXN o ARS permanezcan en su saldo local. Los créditos existentes no se modifican. `credit_asset` siempre aparece y `fiat_credited` solo para fiat local; `usdt_credited` sigue siendo el equivalente USDT. Las tarjetas siempre liquidan en USDT y las conversiones, swaps de checkout y ofertas OTC saltan los payins retenidos.
+Activa `fiat_hold_local: true` con `PATCH /v1/accounts/{accountID}` para que los créditos futuros BOB, MXN o ARS permanezcan en su saldo local. Los créditos existentes no se modifican. `credit_asset` siempre aparece y `fiat_credited` solo para fiat local; `usdt_credited` sigue siendo el equivalente USDT. Las tarjetas liquidan en USD para cuentas nuevas (o en USDT para cuentas legacy explícitas) y las conversiones, swaps de checkout y ofertas OTC saltan los payins retenidos.
 
 > **Importante**
 `refunded_amount` usa las unidades de `credit_asset` (micro-USDT para USDT y
 unidades minor de fiat para BOB/MXN/ARS). `usdt_credited` siempre está en
 micro-USDT. Ramifica por `credit_asset`; jamás calcules
 `usdt_credited - refunded_amount` cuando el crédito sea fiat.
+## USD como activo principal del ledger
+
+Las cuentas nuevas nacen con `USD` como valor predeterminado de
+`settlement_asset` y `payin_settlement_asset`. Las cuentas existentes con una
+configuración legacy explícita en `USDT` la conservan; las operaciones en
+vuelo nunca se vuelven a cotizar.
+
+Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
+d débitos directos, las comisiones y los flujos de payout, checkout, POS y
+tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
+swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
+MXN y ARS siguen siendo activos fiat separados del ledger; en v1 el pricing
+de money-out para esos activos sigue no disponible.
+
+Un payin acreditado directamente a una cuenta USD-principal expone
+`credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
+sigue siendo el equivalente USD para reportes. El hold de una controversia
+sigue el activo acreditado: un crédito USD nuevo usa `hold_asset: USD`,
+mientras un caso legacy en USDT conserva USDT. `disputed` y `held` usan las
+unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
+normalizados.

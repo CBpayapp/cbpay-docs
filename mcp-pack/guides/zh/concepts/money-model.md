@@ -38,8 +38,8 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 **USDT 是运营币种**：出款（payout）、法币收款（payin）与服务费始终
 以 USDT 计价。但**付款**可以来自六个余额中的任意一个 — 参见
 [选择用哪个余额付款](#选择用哪个余额付款)。
-收款先入账到 USDT；若配置了 `default_payin_asset`，净额会自动兑换为您
-选择的余额 — 参见
+新账户收款直接记入 USD；显式 legacy USDT 账户保持 USDT。若配置其他
+`default_payin_asset`，净额才会进入转换流程 — 参见
 [选择收款入账到哪个余额](#选择收款入账到哪个余额)。
 其他余额也可通过
 [内部转账](https://docs.cbpayapp.com/zh/guides/transfers)（始终在相同币种的余额之间进行）、
@@ -73,7 +73,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 | 幂等性 | 使用相同的幂等键重放会返回原始金额；价格绝不会重新计算。 |
 | 单笔操作限额 | 波动性资产（BTC/GOLD/SILVER/PLATINUM）设有单笔操作限额（等值 USDT，可在 `GET /v1/settlement` 中查看）；超出时返回 `422 settlement_limit_exceeded`。 |
 | 账户级每日限额 | 波动性资产还设有 24 小时滚动交易量上限（见 `GET /v1/settlement` 中的 `volatile_daily_limit_usdt`）；超出时返回 `422 settlement_daily_limit_exceeded`。请改用 USDT/USDC 结算或稍后重试。 |
-| USDT | 仍是默认路径；从未触碰此设置的用户不会有任何变化。 |
+| USD | 是新账户的默认余额；显式 USDT 的 legacy 账户保持不变。 |
 
 `GET /v1/rates` 的 `settlement` 区块显示每个资产的有效价格（已含点差），
 供您在操作前估算；出款响应中会记录 `settlement_asset`、
@@ -81,11 +81,10 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 ## 选择收款入账到哪个余额
 
-默认情况下，**收款**（QR、银行转账、collect、银行卡）入账到 USDT 余额。
-若您希望持有其他资产，可配置 `default_payin_asset`：入账仍然先以 USDT
-完成（定价、汇率点差与手续费均不变），随后**净入账金额**通过兑换引擎
-**按真实价格自动兑换，不收取额外点差** — 收款已支付其手续费与汇率，
-自动兑换绝不重复收费。适用与普通兑换相同的限额。
+对于新账户，**收款**（QR、银行转账、collect、银行卡）直接以 USD 分入账，
+精度为 2 位小数。带有显式 USDT 设置的 legacy 账户保持 USDT。若配置其他
+`default_payin_asset`，净额按真实价格走入账后的转换流程，不收取额外 swap
+点差；收款已经支付手续费和汇率。适用普通兑换的相同限额。
 
 ```bash
 # Credit my payins in USDC
@@ -96,7 +95,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 | 规则 | 详情 |
 |---|---|
-| 入账后兑换 | 收款以 USDT 入账，兑换随即以一笔兑换（swap）执行（对账单中显示为 `swap_out`/`swap_in`）。 |
+| 入账后兑换 | 仅当配置了非 USD 目标时执行；USD 主账户直接入账，legacy USDT 账户保持历史路径。 |
 | 价格与限额 | 兑换**按真实价格执行，不收取兑换点差**（不存在双重成本：收款已支付其手续费与汇率）。适用波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔/24 小时限额。 |
 | 兑换失败时 | 收款保持以 USDT 入账，`conversion_status: pending_retry`，系统自动重试 — 资金绝不丢失、绝不重复兑换。 |
 | Checkout 与 POS | 每个链接保留创建时选择的 `settlement_asset`；此配置不会再次兑换它们。**未**指定 `settlement_asset` 创建的链接会使用您的 `default_payin_asset`。 |
@@ -160,7 +159,7 @@ usdt_credited = usdt_gross − fee
               "settlement_grade": true }
   },
   "settlement": {
-    "default_asset": "USDT",
+    "default_asset": "USD",
     "assets": [
       { "asset": "USDT", "available": true, "settlement_rate": "1" },
       { "asset": "USDC", "available": true, "settlement_rate": "0.99900000" },

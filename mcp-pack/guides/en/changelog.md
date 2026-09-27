@@ -5,6 +5,23 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.132 · 1 version - September 27, 2026
+
+### v2.132
+
+**Changed**
+
+- New accounts are USD-principal: `settlement_asset` and
+  `payin_settlement_asset` default to `USD`. Legacy accounts with an explicit
+  `USDT` setting remain unchanged, and in-flight operations are never
+  re-quoted.
+- Added `USD` to the supported settlement, payin, swap, checkout/POS and
+  card asset surfaces where accepted. USD ledger amounts use two decimal
+  places, and USD↔USDT swaps use 1:1 pricing.
+- Controversy responses now distinguish the hold asset from its normalized
+  USD-equivalent fields through `hold_asset`, `disputed`, `held`,
+  `disputed_usdt`, and `held_usdt`.
+
 Every change to the CBPay API and this documentation, most recent first.
 Breaking changes are announced in advance and flagged as **Breaking**.
 

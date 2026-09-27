@@ -174,3 +174,22 @@ currently reserved by open dispute holds:
 Organization administrators can send `PATCH /v1/accounts/{accountID}` with
 `{"fiat_hold_local":true}`. The account GET returns the flag. It affects
 only future BOB, MXN and ARS payin credits.
+
+## USD as the principal ledger asset
+
+New accounts are created with `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`. Existing accounts with an explicit legacy `USDT`
+setting keep it; in-flight operations are never re-quoted.
+
+USD ledger amounts use cents (two decimal places). Direct credits and debits,
+fees, and supported payout, checkout, POS, and card paths use USD only where
+their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
+do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
+assets; v1 money-out pricing for those assets remains unavailable.
+
+A payin credited directly to a USD-principal account exposes
+`credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
+remains the USD-equivalent reporting field. A controversy hold follows the
+credited asset: new USD credits use `hold_asset: USD`, while legacy USDT
+cases remain USDT. `disputed` and `held` use hold-asset units;
+`disputed_usdt` and `held_usdt` are normalized equivalents.

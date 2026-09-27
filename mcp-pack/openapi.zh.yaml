@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.131"
+  version: "2.132"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -2740,6 +2740,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -3433,12 +3434,16 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
                   - GOLD
                   - SILVER
                   - PLATINUM
+                  - BOB
+                  - MXN
+                  - ARS
                   description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产(USDT,除非通过 `PUT /v1/settlement` 更改)。
                 source_virtual_iban_id:
                   type: string
@@ -4563,6 +4568,7 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -5566,6 +5572,7 @@ paths:
                 asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -9607,6 +9614,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -9619,6 +9627,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -9993,6 +10002,7 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10353,6 +10363,7 @@ paths:
                 from_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10362,6 +10373,7 @@ paths:
                 to_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10488,6 +10500,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -12580,12 +12593,16 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
                   - GOLD
                   - SILVER
                   - PLATINUM
+                  - BOB
+                  - MXN
+                  - ARS
                   description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产。
                 idempotency_key:
                   type: string
@@ -15489,6 +15506,7 @@ paths:
                 spending_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -15742,6 +15760,7 @@ paths:
                 spending_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16316,9 +16335,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettlementSettings'
               example:
-                default_settlement_asset: USDT
-                default_payin_asset: USDT
+                default_settlement_asset: USD
+                default_payin_asset: USD
                 enabled_assets:
+                - USD
                 - USDT
                 - USDC
                 - BTC
@@ -16347,6 +16367,7 @@ paths:
                 default_settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16357,6 +16378,7 @@ paths:
                 default_payin_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16378,6 +16400,7 @@ paths:
                 default_settlement_asset: BTC
                 default_payin_asset: USDC
                 enabled_assets:
+                - USD
                 - USDT
                 - USDC
                 - BTC
@@ -21686,6 +21709,9 @@ paths:
                       kind: dispute
                       status: evidence
                       currency: USD
+                      hold_asset: USDT
+                      disputed: '100.000000'
+                      held: '100.000000'
                       disputed_usdt: '100.000000'
                       held_usdt: '100.000000'
                       underfunded: false
@@ -21745,6 +21771,9 @@ paths:
                     kind: dispute
                     status: evidence
                     currency: USD
+                    hold_asset: USDT
+                    disputed: '100.000000'
+                    held: '100.000000'
                     disputed_usdt: '100.000000'
                     held_usdt: '100.000000'
                     underfunded: false
@@ -22408,6 +22437,7 @@ components:
         spending_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -22743,6 +22773,7 @@ components:
         from_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -22752,6 +22783,7 @@ components:
         to_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23005,6 +23037,7 @@ components:
         default_settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23018,6 +23051,7 @@ components:
         default_payin_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23037,9 +23071,10 @@ components:
           type: string
           description: 波动性资产(BTC/GOLD/SILVER/PLATINUM)每账户滚动 24 小时交易量上限(USDT 等值)。
       example:
-        default_settlement_asset: USDT
-        default_payin_asset: USDT
+        default_settlement_asset: USD
+        default_payin_asset: USD
         enabled_assets:
+        - USD
         - USDT
         - USDC
         - BTC
@@ -23083,6 +23118,7 @@ components:
         settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23175,6 +23211,7 @@ components:
         settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23255,6 +23292,7 @@ components:
             也会返回该字段（不适用外汇报价）。
         credit_asset:
           type: string
+          enum: [USD, USDT, BOB, MXN, ARS]
           description: 实际入账资产（USDT 或保留的本地法币）。
         fiat_credited:
           type: string

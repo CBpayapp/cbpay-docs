@@ -145,3 +145,19 @@ curl https://api.qbank.cl/platform/v1/swaps/{swap_id} \
 波动性货币限额在兑换、以 BTC/GOLD/SILVER/PLATINUM 支付的出款和以 BTC/GOLD/SILVER/PLATINUM 支付的银行卡消费之间共享 — 它们全部计入你账户同一个 24 小时滚动交易量。通过 `GET /v1/settlement` 查看你的上限。
 #### 持有 GOLD 或 BTC 余额有什么好处？
 GOLD 代表足金克数，BTC 代表比特币：在不离开生态系统的情况下获得价格敞口。你可以直接用这些余额支付出款、手续费和银行卡消费（多资产结算），并随时换回 USDT/USDC。
+## USD 作为主账本资产
+
+新账户创建时，`settlement_asset` 与 `payin_settlement_asset` 的默认值为
+`USD`。已有账户如果明确使用 legacy `USDT`，仍保持该设置；进行中的操作
+不会重新报价。
+
+USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
+资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
+的 swap 按 1:1 计价，不使用 FX 预言机。BOB、MXN、ARS 仍是独立的法币
+账本资产；v1 中这些资产的 money-out 定价仍不可用。
+
+USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
+表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
+跟随实际入账资产：新的 USD 入账使用 `hold_asset: USD`，legacy USDT
+案件仍使用 USDT。`disputed` 与 `held` 使用 hold 资产的单位；
+`disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。

@@ -168,8 +168,8 @@ appears in the `payout_status_changed` webhook, the PDF receipt, the payouts
 CSV export and the statement. Payout responses, webhooks, CSV and receipts also expose `uetr` (UETR/SWIFT gpi) and `imad` (domestic wire/ACH), both empty until reported by the bank; use the [public transaction tracker](https://docs.cbpayapp.com/en/guides/tracking) for live status and the same receipt.
 ### Paying from another balance (`settlement_asset`)
 
-By default the debit comes from your default settlement asset (USDT unless
-you change it via `PUT /v1/settlement`). To pay a single operation from
+For new accounts, the default debit comes from USD. Legacy accounts with
+an explicit USDT setting keep USDT; use `PUT /v1/settlement` to change it. To pay a single operation from
 another balance, add `settlement_asset` to the request. Example: a 100,000
 CLP payout paid from the BTC balance goes through four transformations,
 all recorded on the response:
