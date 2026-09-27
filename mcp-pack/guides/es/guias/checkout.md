@@ -306,3 +306,25 @@ recibes el mismo link. Una clave nueva crea un link nuevo e independiente.
 ## Plazo de liquidación de payins con tarjeta
 
 En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible el saldo después de confirmar el pago. Acepta `0` o un múltiplo de `24`: `0` deja el saldo disponible de inmediato, mientras `24` equivale a un día hábil de EE. UU. y `48` a dos. Los días hábiles son de lunes a viernes, excluyendo feriados federales observados de EE. UU., según la zona horaria de tu organización. Por ejemplo, viernes a las 15:00 más `48` horas liquida el martes a las 15:00 si no interviene un feriado; sábado más `48` horas también liquida el martes. Un valor como `27` se rechaza con HTTP `400 invalid_settlement_hours`. El pago se confirma de inmediato como `credited`; solo el saldo espera hasta `settle_at`. Los valores `settle_at` existentes y las configuraciones legadas no múltiplo mantienen la semántica de horas calendario.
+
+## USD como activo principal del ledger
+
+Las cuentas nuevas nacen con `USD` como valor predeterminado de
+`settlement_asset` y `payin_settlement_asset`. Las cuentas existentes con una
+configuración legacy explícita en `USDT` la conservan; las operaciones en
+vuelo nunca se vuelven a cotizar.
+
+Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
+d débitos directos, las comisiones y los flujos de payout, checkout, POS y
+tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
+swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
+MXN y ARS siguen siendo activos fiat separados del ledger; en v1 el pricing
+de money-out para esos activos sigue no disponible.
+
+Un payin acreditado directamente a una cuenta USD-principal expone
+`credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
+sigue siendo el equivalente USD para reportes. El hold de una controversia
+sigue el activo acreditado: un crédito USD nuevo usa `hold_asset: USD`,
+mientras un caso legacy en USDT conserva USDT. `disputed` y `held` usan las
+unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
+normalizados.

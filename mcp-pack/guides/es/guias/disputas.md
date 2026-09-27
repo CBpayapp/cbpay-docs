@@ -294,3 +294,25 @@ won, lost y expired quedan cerrados.
 Un payin con `credit_asset` BOB, MXN o ARS devuelve
 `409 dispute_fiat_unsupported` sin crear caso ni hold. Batch lo omite como
 `fiat_unsupported` e import lo marca `payin holds local fiat (unsupported)`.
+
+## USD como activo principal del ledger
+
+Las cuentas nuevas nacen con `USD` como valor predeterminado de
+`settlement_asset` y `payin_settlement_asset`. Las cuentas existentes con una
+configuración legacy explícita en `USDT` la conservan; las operaciones en
+vuelo nunca se vuelven a cotizar.
+
+Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
+los débitos directos, las comisiones y los flujos de payout, checkout, POS y
+tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
+swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
+MXN y ARS siguen siendo activos fiat separados del ledger; en v1 el pricing
+de money-out para esos activos sigue no disponible.
+
+Un payin acreditado directamente a una cuenta USD-principal expone
+`credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
+sigue siendo el equivalente USD para reportes. El hold de una controversia
+sigue el activo acreditado: un crédito USD nuevo usa `hold_asset: USD`,
+mientras un caso legacy en USDT conserva USDT. `disputed` y `held` usan las
+unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
+normalizados.

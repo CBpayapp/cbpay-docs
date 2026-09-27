@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.131"
+  version: "2.132"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -45,10 +45,10 @@ tags:
 - name: Balances
   description: Balances, movement history and FX rates.
 - name: Payouts
-  description: Fiat dispersals debited from the settlement balance of your choice (USDT by default).
+  description: Fiat dispersals debited from the settlement balance of your choice (USD for new accounts; USDT for legacy accounts).
 - name: Payins
   description: Fiat top-ups (QR, transfers, dedicated accounts, pull collections, cards, checkout links)
-    credited automatically — in USDT by default, or auto-converted to the settlement asset of your choice.
+    credited automatically — in USD for new accounts; USDT for legacy accounts, or auto-converted to the settlement asset of your choice.
 - name: Checkout
   description: >-
     Universal checkout links (`POST /v1/payins` with `method: "checkout"`) and the public
@@ -2914,6 +2914,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -3662,14 +3663,18 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
                   - GOLD
                   - SILVER
                   - PLATINUM
+                  - BOB
+                  - MXN
+                  - ARS
                   description: Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN and ARS. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's
-                    default settlement asset (USDT unless changed via `PUT /v1/settlement`).
+                    default settlement asset (USD for new accounts; legacy accounts with an explicit USDT setting keep USDT).
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -4840,6 +4845,7 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -5829,7 +5835,7 @@ paths:
       summary: Create an internal transfer
       description: 'Moves balance between two CBPay accounts, atomically and always free of charge — any
         combination works: person to person, person to company, company to person or company to company.
-        Works with the six virtual balances (`USDT` default, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) and always between
+        Works with the six virtual balances (`USD` for new accounts; `USDT` for legacy accounts, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) and always between
         balances of the **same currency** (no conversion). The destination is resolved by `to_account_id`,
         `to_email`, `to_phone` (OTP-verified phones only) or `to_contact_id`. Every transfer saves the
         recipient as a contact automatically (opt out with `save_contact: false`). The recipient''s webhook
@@ -5877,6 +5883,7 @@ paths:
                 asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10019,6 +10026,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -10031,6 +10039,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -10405,6 +10414,7 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10767,6 +10777,7 @@ paths:
                 from_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10776,6 +10787,7 @@ paths:
                 to_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10903,6 +10915,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -13182,12 +13195,16 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
                   - GOLD
                   - SILVER
                   - PLATINUM
+                  - BOB
+                  - MXN
+                  - ARS
                   description: Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN and ARS. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's
                     default settlement asset.
                 idempotency_key:
@@ -14821,7 +14838,7 @@ paths:
         >-
         Opens the account's banking profile (once per account). Omitted `type`/`name`/`email`
         autofill from the CBPay account. Billed as the fixed `banking_customer` fee from your settlement
-        asset (USDT by default); refunded if the corridor rejects.
+        asset (USD for new accounts; USDT for legacy accounts); refunded if the corridor rejects.
         The platform derives a deterministic core idempotency claim for this account/profile. Repeating the same request returns the original customer with `idempotency_hit: true` and never creates a second profile or charges a second profile fee. A payload change for the same account returns `409 idempotency_conflict`. If the upstream outcome is ambiguous, the response is `503 banking_recovery_pending`; do not retry with a new key.
       requestBody:
         required: true
@@ -16118,7 +16135,7 @@ paths:
       summary: Create a card
       description: 'Issues a card (virtual or physical) that spends Just-In-Time from the account''s central
         balance in the card''s spending asset (`spending_asset`: USDT/USDC 1:1 with the USD, or BTC/GOLD/SILVER/PLATINUM
-        converted at the price of the moment of each event; USDT by default) — no prefunding: every purchase
+        converted at the price of the moment of each event; USD for new accounts; USDT for legacy accounts) — no prefunding: every purchase
         is authorized in real time against the available balance and the card''s own limits. Person accounts
         can hold **1 live card total and 1 open application**; company accounts can create **unlimited**
         cards. New physical issuance is temporarily unavailable; existing physical cards continue operating.
@@ -16145,6 +16162,7 @@ paths:
                 spending_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16412,6 +16430,7 @@ paths:
                 spending_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -17004,9 +17023,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettlementSettings'
               example:
-                default_settlement_asset: USDT
-                default_payin_asset: USDT
+                default_settlement_asset: USD
+                default_payin_asset: USD
                 enabled_assets:
+                - USD
                 - USDT
                 - USDC
                 - BTC
@@ -17042,6 +17062,7 @@ paths:
                 default_settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -17052,6 +17073,7 @@ paths:
                 default_payin_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -17075,6 +17097,7 @@ paths:
                 default_settlement_asset: BTC
                 default_payin_asset: USDC
                 enabled_assets:
+                - USD
                 - USDT
                 - USDC
                 - BTC
@@ -22567,6 +22590,9 @@ paths:
                       kind: dispute
                       status: evidence
                       currency: USD
+                      hold_asset: USDT
+                      disputed: '100.000000'
+                      held: '100.000000'
                       disputed_usdt: '100.000000'
                       held_usdt: '100.000000'
                       underfunded: false
@@ -22626,6 +22652,9 @@ paths:
                     kind: dispute
                     status: evidence
                     currency: USD
+                    hold_asset: USDT
+                    disputed: '100.000000'
+                    held: '100.000000'
                     disputed_usdt: '100.000000'
                     held_usdt: '100.000000'
                     underfunded: false
@@ -23206,6 +23235,7 @@ components:
         spending_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23213,7 +23243,7 @@ components:
           - SILVER
           - PLATINUM
           description: Balance the card's purchases spend from. USDT/USDC 1:1 with the USD; BTC/GOLD/SILVER/PLATINUM converted
-            at the price of the moment of each event. USDT by default. Changing it only affects future
+            at the price of the moment of each event. USD for new accounts; USDT for legacy accounts. Changing it only affects future
             purchases.
         limits:
           type: object
@@ -23550,6 +23580,7 @@ components:
         from_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23559,6 +23590,7 @@ components:
         to_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23815,6 +23847,7 @@ components:
         default_settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23828,13 +23861,14 @@ components:
         default_payin_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
           - GOLD
           - SILVER
           - PLATINUM
-          description: Balance payins settle into by default. Credits enter in USDT and the net amount
+          description: Balance payins settle into by default. New accounts receive the net credit directly in USD cents; legacy accounts with an explicit USDT setting keep USDT. The net amount
             is auto-converted via the swap engine at the real price, with no extra swap spread.
             Checkout/POS payins keep their
             per-link asset.
@@ -23850,9 +23884,10 @@ components:
           type: string
           description: Rolling 24h volume cap (USDT equivalent) per account for volatile assets (BTC/GOLD/SILVER/PLATINUM).
       example:
-        default_settlement_asset: USDT
-        default_payin_asset: USDT
+        default_settlement_asset: USD
+        default_payin_asset: USD
         enabled_assets:
+        - USD
         - USDT
         - USDC
         - BTC
@@ -23896,6 +23931,7 @@ components:
         settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23992,6 +24028,7 @@ components:
         settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -24085,6 +24122,7 @@ components:
             checkout/POS charges settled in crypto or via a CBPay transfer (no FX quote applies).
         credit_asset:
           type: string
+          enum: [USD, USDT, BOB, MXN, ARS]
           description: Asset actually credited (USDT or retained local fiat).
         fiat_credited:
           type: string

@@ -16,11 +16,9 @@ source_url: https://docs.cbpayapp.com/zh/guides/payins
 > **注**
 该关卡仅适用于认证账户创建。已经创建的公开支付链接仍可支付，已经收到的被动入账
 仍可处理，org-admin 的运营分配仍可用，系统创建的入金工具不受阻止。
-入金（payin）是一笔法币收款：您的客户以当地货币付款，您的账户自动获得
-USDT 入账，按**您的入金汇率**（`GET /v1/rates` 中的 `payin_rate`）折算，
-并在您的账户配置了固定入金费用时予以扣除。在 USDT v1 中，
-`payin_rate_source` 说明该汇率由启用的 payin FIFO 库存（`lot`）还是
-spot（`spot`）支持。汇率会在异步入账前固定。
+在收款中，客户以当地货币付款。新账户直接以 USD 入账，精度为 2 位小数；
+带有显式 USDT 设置的 legacy 账户保持 USDT。若配置其他资产，则净额按
+`payin_rate`（`GET /v1/rates`）和固定手续费执行入账后的转换。
 
 无论采用哪种模式，每条路径的终点都相同 —— 自动入账 + webhook：
 
@@ -32,7 +30,7 @@ flowchart LR
     announced["预告转账<br/>（CL、PE、MX、PY、US）"] --> pay
     clabe["专属收款账户<br/>（BO、MX、AR）"] --> pay
     pay --> conv["按您的 payin_rate 进行<br/>外汇折算 − 固定费用"]
-    conv --> credit(("USDT 入账<br/>到您的余额"))
+    conv --> credit(("新账户 USD 入账<br/>或 legacy USDT 余额"))
     credit --> wh["Webhook payin_credited"]
 ```
 
@@ -1048,7 +1046,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | 状态 | 含义 |
 |---|---|
 | `pending` | 收款已创建，等待付款 |
-| `credited` | 已收到付款并以 USDT 入账 |
+| `credited` | 新账户以 USD 入账；显式 legacy USDT 账户仍以 USDT 入账 |
 | `unassigned` | 收到的存款未能自动匹配（由管理员路由分配） |
 | `expired` | 收款过期且未支付 |
 | `failed` | 收款失败 |
@@ -1149,10 +1147,26 @@ USDT，随后立即按真实价格转换；`conversion_status` 报告 `done` 或
 
 ## 保留本地法币
 
-使用 `PATCH /v1/accounts/{accountID}` 设置 `fiat_hold_local: true`，未来 BOB、MXN、ARS 收款保留为本地余额，历史入账不变。`credit_asset` 始终返回，`fiat_credited` 仅用于本地法币，`usdt_credited` 仍是等值 USDT。银行卡始终结算 USDT，自动转换、checkout swap 和 OTC 报价跳过保留收款。
+使用 `PATCH /v1/accounts/{accountID}` 设置 `fiat_hold_local: true`，未来 BOB、MXN、ARS 收款保留为本地余额，历史入账不变。`credit_asset` 始终返回，`fiat_credited` 仅用于本地法币，`usdt_credited` 仍是等值 USDT。银行卡对新账户使用 USD（显式 legacy USDT 账户仍使用 USDT），自动转换、checkout swap 和 OTC 报价跳过保留收款。
 
 > **重要**
 `refunded_amount` 使用 `credit_asset` 的单位（USDT 使用微型 USDT，BOB/MXN/ARS
 使用法币最小单位）。`usdt_credited` 始终使用微型 USDT。请按
 `credit_asset` 分支；当 credit 为法币时，绝不要计算
 `usdt_credited - refunded_amount`。
+## USD 作为主账本资产
+
+新账户创建时，`settlement_asset` 与 `payin_settlement_asset` 的默认值为
+`USD`。已有账户如果明确使用 legacy `USDT`，仍保持该设置；进行中的操作
+不会重新报价。
+
+USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
+资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
+的 swap 按 1:1 计价，不使用 FX 预言机。BOB、MXN、ARS 仍是独立的法币
+账本资产；v1 中这些资产的 money-out 定价仍不可用。
+
+USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
+表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
+跟随实际入账资产：新的 USD 入账使用 `hold_asset: USD`，legacy USDT
+案件仍使用 USDT。`disputed` 与 `held` 使用 hold 资产的单位；
+`disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。

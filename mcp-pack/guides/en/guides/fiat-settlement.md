@@ -71,7 +71,7 @@ fee converted and rounded up in local currency. The exact
 ```json
 {
   "settlement": {
-    "default_asset": "USDT",
+    "default_asset": "USD",
     "assets": [
       {
         "asset": "BOB",
@@ -106,3 +106,21 @@ Choose the payout currency or use a supported non-fiat settlement asset.
 #### Are settlement spreads applied to same-currency fiat?
 No. Same-currency fiat settlement uses an identity rate and zero settlement
 spreads. Configured fees are still charged and converted into fiat.
+## USD as the principal ledger asset
+
+New accounts are created with `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`. Existing accounts with an explicit legacy `USDT`
+setting keep it; in-flight operations are never re-quoted.
+
+USD ledger amounts use cents (two decimal places). Direct credits and debits,
+fees, and supported payout, checkout, POS, and card paths use USD only where
+their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
+do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
+assets; v1 money-out pricing for those assets remains unavailable.
+
+A payin credited directly to a USD-principal account exposes
+`credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
+remains the USD-equivalent reporting field. A controversy hold follows the
+credited asset: new USD credits use `hold_asset: USD`, while legacy USDT
+cases remain USDT. `disputed` and `held` use hold-asset units;
+`disputed_usdt` and `held_usdt` are normalized equivalents.

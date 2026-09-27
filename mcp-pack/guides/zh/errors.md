@@ -458,4 +458,4 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 503 | `limits_unavailable` | 扣款前无法评估限额；恢复后使用同一幂等键重试。 |
 ## `dispute_fiat_unsupported`
 
-本地保留 BOB、MXN 或 ARS 的 payin 暂不支持争议。请使用受支持的 USDT 入账，或等待本地法币争议功能。
+本地保留 BOB、MXN 或 ARS 的 payin 暂不支持争议。请使用受支持的 USD 或 USDT 入账，或等待本地法币争议功能。

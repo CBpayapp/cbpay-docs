@@ -20,10 +20,11 @@ This gate applies to authenticated account creation. Public payment pages for
 links that already exist remain payable, passive deposits already received
 remain processable, org-admin assignment remains operational, and
 system-created deposit instruments are not blocked.
-A payin is a fiat collection: your customer pays in local currency and your
-account gets credited in USDT automatically, converted at **your payin
-rate** (`payin_rate` in `GET /v1/rates`) minus the fixed payin fee when
-configured for your account. In USDT v1, `payin_rate_source` tells you whether
+A payin is a fiat collection: your customer pays in local currency and a new
+USD-principal account is credited directly in USD cents. Legacy accounts with an
+explicit USDT setting keep USDT. When another asset is configured, the net follows
+the post-credit conversion flow at **your payin rate** (`payin_rate` in
+`GET /v1/rates`) minus the fixed payin fee. In USDT v1, `payin_rate_source` tells you whether
 that rate is backed by enabled payin FIFO inventory (`lot`) or spot (`spot`).
 The rate is fixed before the asynchronous payment is credited.
 
@@ -38,7 +39,7 @@ flowchart LR
     announced["Announced transfer<br/>(CL, PE, MX, PY, US)"] --> pay
     clabe["Dedicated receiving account<br/>(BO, MX, AR)"] --> pay
     pay --> conv["FX conversion at your<br/>payin_rate − fixed fee"]
-    conv --> credit(("USDT credit<br/>to your balance"))
+    conv --> credit(("USD credit for new accounts<br/>or legacy USDT balance"))
     credit --> wh["Webhook payin_credited"]
 ```
 
@@ -89,8 +90,10 @@ is no preceding `/collect/otp` request for C2P. `debito_inmediato` is not a
 live corridor. Outgoing payments to Venezuela (`pago_movil`,
 `bank_transfer`) are unchanged: see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
 Availability may vary; the catalog (`GET /v1/payins/methods`) is always the
-source of truth. In every case the credit works the same way: converted to
-USDT at the quoted `payin_rate` and credited net of the fixed payin fee.
+source of truth. For a new USD-principal account, the net credit is written directly in USD cents.
+Legacy USDT accounts keep the historical USDT path; configured non-USD targets use
+the documented post-credit conversion. The quoted `payin_rate` and fixed fee still
+apply.
 Payin lots are consumed FIFO when the credit is applied. If enabled inventory
 does not cover the credit, the existing quote remains authoritative and the
 uncovered portion is recorded as spot fallback with an operator alert.
@@ -138,7 +141,8 @@ Response `201`:
 ```
 
 Share the `payment_url` with the payer (link, redirect or WebView). Once
-the payment is confirmed your account is credited in USDT and you receive
+the payment is confirmed your account is credited in USD for new accounts
+(or USDT for an explicit legacy account) and you receive
 the `payin_credited` webhook. The CLP amount must be an integer (the
 Chilean peso has no decimals) and the payment session expires after 24
 hours by default. A retry with the same `idempotency_key` returns the same
@@ -1153,7 +1157,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | Status | Meaning |
 |---|---|
 | `pending` | Charge created, waiting for the payment |
-| `credited` | Payment received and credited in USDT |
+| `credited` | Payment received and credited in USD for new accounts; explicit legacy USDT remains USDT |
 | `unassigned` | Deposit received without an automatic match (routed by the administrator) |
 | `expired` | The charge expired unpaid |
 | `failed` | The collection failed |
@@ -1215,9 +1219,9 @@ at credit time. Check `payin_rate_source`: `lot` means enabled USDT payin
 inventory backed the quote, while `spot` means the spot path was used. Your
 agreed spread is already inside the rate — it is never itemized.
 #### Can payins land in a balance other than USDT?
-Yes — set `default_payin_asset` with `PUT /v1/settlement`. The credit still
-enters in USDT and is converted right after at the real price;
-`conversion_status` reports `done` or `pending_retry` (auto-retried).
+Yes — set `default_payin_asset` with `PUT /v1/settlement`. New accounts credit directly in USD cents. Explicit legacy USDT accounts keep
+USDT; another configured target uses the post-credit conversion flow and
+`conversion_status` reports `done` or `pending_retry`.
 #### What happens when a charge (QR, checkout) expires unpaid?
 You receive `payin_expired` and the payin closes without moving money.
 Create a new charge — nothing was debited or credited.
@@ -1288,3 +1292,21 @@ offers skip locally held payins.
 minor fiat units for BOB/MXN/ARS). `usdt_credited` is always micro-USDT.
 Branch on `credit_asset`; never calculate `usdt_credited - refunded_amount`
 when the credit is fiat.
+## USD as the principal ledger asset
+
+New accounts are created with `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`. Existing accounts with an explicit legacy `USDT`
+setting keep it; in-flight operations are never re-quoted.
+
+USD ledger amounts use cents (two decimal places). Direct credits and debits,
+fees, and supported payout, checkout, POS, and card paths use USD only where
+their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
+do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
+assets; v1 money-out pricing for those assets remains unavailable.
+
+A payin credited directly to a USD-principal account exposes
+`credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
+remains the USD-equivalent reporting field. A controversy hold follows the
+credited asset: new USD credits use `hold_asset: USD`, while legacy USDT
+cases remain USDT. `disputed` and `held` use hold-asset units;
+`disputed_usdt` and `held_usdt` are normalized equivalents.

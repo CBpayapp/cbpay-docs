@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.131"
+  version: "2.132"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2893,6 +2893,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -3635,12 +3636,16 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
                   - GOLD
                   - SILVER
                   - PLATINUM
+                  - BOB
+                  - MXN
+                  - ARS
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset
                     de settlement predeterminado de tu cuenta (USDT salvo que lo cambies con `PUT /v1/settlement`).
                 source_virtual_iban_id:
@@ -4814,6 +4819,7 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -5804,7 +5810,7 @@ paths:
       summary: Crear una transferencia interna
       description: 'Mueve saldo entre dos cuentas CBPay, de forma atómica y siempre gratuita — funciona
         cualquier combinación: persona a persona, persona a empresa, empresa a persona o empresa a empresa.
-        Funciona con los seis saldos virtuales (`USDT` default, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) y siempre entre
+        Funciona con los seis saldos virtuales (`USD` for new accounts; `USDT` for legacy accounts, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) y siempre entre
         saldos de la **misma moneda** (sin conversión). El destino se resuelve por `to_account_id`, `to_email`,
         `to_phone` (solo teléfonos verificados por OTP) o `to_contact_id`. Cada transferencia guarda al
         destinatario como contacto automáticamente (desactívalo con `save_contact: false`). Los suscriptores
@@ -5852,6 +5858,7 @@ paths:
                 asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -9993,6 +10000,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -10005,6 +10013,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -10379,6 +10388,7 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10741,6 +10751,7 @@ paths:
                 from_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10750,6 +10761,7 @@ paths:
                 to_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -10877,6 +10889,7 @@ paths:
         schema:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -12996,12 +13009,16 @@ paths:
                 settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
                   - GOLD
                   - SILVER
                   - PLATINUM
+                  - BOB
+                  - MXN
+                  - ARS
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset
                     de settlement predeterminado de tu cuenta.
                 idempotency_key:
@@ -15955,6 +15972,7 @@ paths:
                 spending_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16222,6 +16240,7 @@ paths:
                 spending_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16816,9 +16835,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettlementSettings'
               example:
-                default_settlement_asset: USDT
-                default_payin_asset: USDT
+                default_settlement_asset: USD
+                default_payin_asset: USD
                 enabled_assets:
+                - USD
                 - USDT
                 - USDC
                 - BTC
@@ -16854,6 +16874,7 @@ paths:
                 default_settlement_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16864,6 +16885,7 @@ paths:
                 default_payin_asset:
                   type: string
                   enum:
+                  - USD
                   - USDT
                   - USDC
                   - BTC
@@ -16887,6 +16909,7 @@ paths:
                 default_settlement_asset: BTC
                 default_payin_asset: USDC
                 enabled_assets:
+                - USD
                 - USDT
                 - USDC
                 - BTC
@@ -22394,6 +22417,9 @@ paths:
                       kind: dispute
                       status: evidence
                       currency: USD
+                      hold_asset: USDT
+                      disputed: '100.000000'
+                      held: '100.000000'
                       disputed_usdt: '100.000000'
                       held_usdt: '100.000000'
                       underfunded: false
@@ -22453,6 +22479,9 @@ paths:
                     kind: dispute
                     status: evidence
                     currency: USD
+                    hold_asset: USDT
+                    disputed: '100.000000'
+                    held: '100.000000'
                     disputed_usdt: '100.000000'
                     held_usdt: '100.000000'
                     underfunded: false
@@ -23033,6 +23062,7 @@ components:
         spending_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23371,6 +23401,7 @@ components:
         from_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23380,6 +23411,7 @@ components:
         to_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23636,6 +23668,7 @@ components:
         default_settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23650,6 +23683,7 @@ components:
         default_payin_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23672,9 +23706,10 @@ components:
           description: Tope de volumen 24h (equivalente en USDT) por cuenta para los assets volátiles
             (BTC/GOLD/SILVER/PLATINUM).
       example:
-        default_settlement_asset: USDT
-        default_payin_asset: USDT
+        default_settlement_asset: USD
+        default_payin_asset: USD
         enabled_assets:
+        - USD
         - USDT
         - USDC
         - BTC
@@ -23718,6 +23753,7 @@ components:
         settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23814,6 +23850,7 @@ components:
         settlement_asset:
           type: string
           enum:
+          - USD
           - USDT
           - USDC
           - BTC
@@ -23908,6 +23945,7 @@ components:
             checkout/POS liquidados en crypto o vía transferencia CBPay (no aplica cotización FX).
         credit_asset:
           type: string
+          enum: [USD, USDT, BOB, MXN, ARS]
           description: Activo realmente acreditado (USDT o fiat local retenido).
         fiat_credited:
           type: string
