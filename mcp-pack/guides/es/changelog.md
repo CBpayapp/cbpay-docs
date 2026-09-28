@@ -5,7 +5,13 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.134 · 2 versiones - 28 de septiembre de 2026
+## v2.135 · 3 versions - 28 de septiembre de 2026
+
+### v2.135
+
+**Agregado**
+
+- Se agregó documentación operativa de Client Journey para administradores de organizaciones, con seguimiento SLA, recordatorios e hilos de respuestas de clientes.
 
 ### v2.134
 
