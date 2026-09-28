@@ -1,5 +1,5 @@
 {
-  "count": 291,
+  "count": 292,
   "errors": [
     {
       "category": {
@@ -1592,9 +1592,23 @@
       "code": "no_banking_customer",
       "http": 409,
       "meaning": {
-        "en": "Banking operation without a banking profile (`POST /v1/banking/customer` first)",
-        "es": "Operación banking sin perfil bancario creado (`POST /v1/banking/customer` primero)",
-        "zh": "在没有银行账户资料的情况下发起银行操作（请先 `POST /v1/banking/customer`）"
+        "en": "Legacy Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow",
+        "es": "Operación Banking legacy sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo",
+        "zh": "传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "banking_eur_requires_viban",
+      "http": 400,
+      "meaning": {
+        "en": "EUR Banking accounts are opened as virtual IBANs. Request `purpose: \"banking_eur\"` from Operar EUR instead of creating a generic banking customer",
+        "es": "Las cuentas Banking EUR se abren como vIBAN. Solicita `purpose: \"banking_eur\"` desde Operar EUR en vez de crear un customer Banking genérico",
+        "zh": "EUR Banking 账户通过虚拟 IBAN 开立。请在 Operar EUR 中请求 `purpose: \"banking_eur\"`，不要创建通用 banking customer"
       }
     },
     {

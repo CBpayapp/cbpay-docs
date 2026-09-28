@@ -158,7 +158,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 409 | `already_verified` | Pediste link de onboarding con la cuenta ya verificada |
 | 409 | `identity_locked` | Con la verificación aprobada, `display_name`, `tax_id` y `country` vienen de la identidad verificada y no se cambian por `PATCH /v1/me`; contacta al soporte |
 | 409 | `no_screening` | Rescreen/monitoreo AML sin un screening previo |
-| 409 | `no_banking_customer` | Operación banking sin perfil bancario creado (`POST /v1/banking/customer` primero) |
+| 409 | `no_banking_customer` | Operación Banking legacy sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
+| 400 | `banking_eur_requires_viban` | Las cuentas Banking EUR se abren como vIBAN. Solicita `purpose: "banking_eur"` desde Operar EUR en vez de crear un customer Banking genérico |
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |

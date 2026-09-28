@@ -5,6 +5,17 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.133 · 1 version - September 28, 2026
+
+### v2.133
+
+**Added**
+
+- EUR Banking now uses the direct virtual-IBAN flow. Accounts can request a
+  `banking_eur` virtual IBAN without creating a generic Banking customer first.
+- Generic Banking customer onboarding is USD-only; sending `currency: "EUR"`
+  returns `banking_eur_requires_viban` and points the integrator to Operar EUR.
+
 ## v2.132 · 1 version - September 27, 2026
 
 ### v2.132

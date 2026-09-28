@@ -88,6 +88,11 @@ Crypto and Banking cards can display a QR with the organization's branding
 symbol, copy individual values or share the selected rail. Fiat to crypto cards have no
 QR: use **Copy all** to copy the complete transfer-details sheet, including
 the holder, bank, NIT when supplied and receiving number.
+> **Note**
+**EUR Banking is requested directly as a virtual IBAN.** Do not create a
+generic Banking customer/profile first. From Operar EUR, request a
+`banking_eur` virtual IBAN; it can be requested before any generic Banking
+customer exists. The generic Banking onboarding remains USD-only.
 ## What each tab shows
 
 | Tab | What it contains | What you can share |

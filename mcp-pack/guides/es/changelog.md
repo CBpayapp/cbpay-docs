@@ -5,6 +5,17 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.133 · 1 version - 28 de septiembre de 2026
+
+### v2.133
+
+**Agregado**
+
+- Banking EUR ahora usa el flujo directo de vIBAN. Las cuentas pueden solicitar
+  un vIBAN `banking_eur` sin crear primero un customer Banking genérico.
+- El onboarding genérico de Banking es solo para USD; enviar `currency: "EUR"`
+  devuelve `banking_eur_requires_viban` y dirige al integrador a Operar EUR.
+
 ## v2.132 · 1 versión - 27 de septiembre de 2026
 
 ### v2.132

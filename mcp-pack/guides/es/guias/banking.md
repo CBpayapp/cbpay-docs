@@ -102,7 +102,11 @@ Consulta el estado en cualquier momento:
 curl https://api.qbank.cl/platform/v1/banking/customer \
   -H "Authorization: Bearer <token>"
 ```
-
+> **Nota**
+**EUR usa el flujo directo de vIBAN; el onboarding genérico es solo para USD.**
+Solicita `{"purpose":"banking_eur"}` desde Operar EUR: no requiere un customer
+Banking previo y la aprobación crea el vínculo local. El endpoint genérico
+devuelve `400 banking_eur_requires_viban` para EUR.
 ## 2. Documentos y verificación
 
 Sube cada documento en base64 (gratis):
@@ -142,21 +146,13 @@ Estados del perfil: `draft` → `submitted` → `under_review` →
 
 ## 3. Abre cuentas bancarias
 
-Con el perfil `approved`, crea una cuenta por moneda. Monedas disponibles:
-**USD** (rieles ACH/Fedwire/SWIFT) y **EUR** (SEPA/SWIFT):
+Con el perfil `approved`, crea la cuenta del Banking legado solo para **USD** (rieles ACH/Fedwire/SWIFT). EUR no se abre aquí: solicita un vIBAN `banking_eur` directamente en el [flujo de vIBAN EUR](#viban-eur).
 
 ```bash Cuenta USD
 curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "currency": "USD", "name": "Operativa USD" }'
-```
-
-```bash Cuenta EUR
-curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{ "currency": "EUR", "name": "Operativa EUR" }'
 ```
 
 Respuesta `201` — `data` incluye los datos para **recibir** (número de

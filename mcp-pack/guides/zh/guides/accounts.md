@@ -79,6 +79,10 @@ flowchart LR
 Crypto 和 Banking 资料卡可以显示带组织品牌标识的 QR、复制单个字段或
 分享所选通道。法币到加密货币资料卡没有 QR：使用**复制全部**复制完整的转账资料，
 包括持有人、银行、可用时的 NIT 和收款号码。
+> **注**
+**EUR Banking 直接通过虚拟 IBAN 申请。** 不要先创建通用 Banking
+customer/profile。在 Operar EUR 中请求 `banking_eur` vIBAN；即使尚无通用
+Banking customer，也可以发起申请。通用 Banking onboarding 仍仅支持 USD。
 ## 每个选项卡显示什么
 
 | 选项卡 | 包含内容 | 可以分享什么 |
