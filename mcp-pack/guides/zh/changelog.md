@@ -5,7 +5,13 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.134 · 2 个版本 - 2026年9月28日
+## v2.135 · 3 versions - 2026年9月28日
+
+### v2.135
+
+**新增**
+
+- 新增面向组织管理员的 Client Journey 运营文档，涵盖 SLA 跟踪、提醒和客户回复线程。
 
 ### v2.134
 
