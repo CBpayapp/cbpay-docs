@@ -5,7 +5,14 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.133 · 1 version - 2026年9月28日
+## v2.134 · 2 个版本 - 2026年9月28日
+
+### v2.134
+
+**修复**
+
+- SEPA payout 和 EUR Banking 提现现在从客户选定的 vIBAN 扣款；资金账户
+  不再作为扣款来源。
 
 ### v2.133
 

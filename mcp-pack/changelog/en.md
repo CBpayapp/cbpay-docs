@@ -5,7 +5,14 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.133 · 1 version - September 28, 2026
+## v2.134 · 2 versions - September 28, 2026
+
+### v2.134
+
+**Fixed**
+
+- SEPA payouts and EUR Banking withdrawals now debit from the selected
+  customer's vIBAN; the treasury account is no longer used as the source.
 
 ### v2.133
 

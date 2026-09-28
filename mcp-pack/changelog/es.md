@@ -5,7 +5,14 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.133 · 1 version - 28 de septiembre de 2026
+## v2.134 · 2 versiones - 28 de septiembre de 2026
+
+### v2.134
+
+**Corregido**
+
+- Los payouts SEPA y los retiros EUR Banking ahora debitan desde el vIBAN
+  seleccionado del cliente; la cuenta de tesorería ya no se usa como origen.
 
 ### v2.133
 
