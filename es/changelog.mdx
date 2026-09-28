@@ -4,6 +4,19 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="28 de septiembre de 2026" description="v2.133 · 1 version">
+
+### v2.133
+
+**Agregado**
+
+- Banking EUR ahora usa el flujo directo de vIBAN. Las cuentas pueden solicitar
+  un vIBAN `banking_eur` sin crear primero un customer Banking genérico.
+- El onboarding genérico de Banking es solo para USD; enviar `currency: "EUR"`
+  devuelve `banking_eur_requires_viban` y dirige al integrador a Operar EUR.
+
+</Update>
+
 <Update label="27 de septiembre de 2026" description="v2.132 · 1 versión">
 
 ### v2.132

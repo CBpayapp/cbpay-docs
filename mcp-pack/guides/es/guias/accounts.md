@@ -89,6 +89,11 @@ de la organización, copiar valores individuales o compartir el riel
 seleccionado. Las fichas Fiat a Crypto no tienen QR: usa **Copiar todo** para copiar
 la ficha completa, con titular, banco, NIT cuando venga informado y número
 receptor.
+> **Nota**
+**Banking EUR se solicita directamente como vIBAN.** No crees primero un
+customer/perfil Banking genérico. Desde Operar EUR solicita un vIBAN
+`banking_eur`; puedes pedirlo aunque todavía no exista un customer Banking
+genérico. El onboarding Banking genérico sigue siendo solo para USD.
 ## Qué muestra cada pestaña
 
 | Pestaña | Qué contiene | Qué puedes compartir |

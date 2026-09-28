@@ -158,7 +158,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 409 | `already_verified` | Onboarding link requested with an already-verified account |
 | 409 | `identity_locked` | With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support |
 | 409 | `no_screening` | AML rescreen/monitoring without a prior screening |
-| 409 | `no_banking_customer` | Banking operation without a banking profile (`POST /v1/banking/customer` first) |
+| 409 | `no_banking_customer` | Legacy Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
+| 400 | `banking_eur_requires_viban` | EUR Banking accounts are opened as virtual IBANs. Request `purpose: "banking_eur"` from Operar EUR instead of creating a generic banking customer |
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |

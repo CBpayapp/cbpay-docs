@@ -89,7 +89,14 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/customer \
 curl https://api.qbank.cl/platform/v1/banking/customer \
   -H "Authorization: Bearer <token>"
 ```
-
+> **注**
+**EUR 使用直接虚拟 IBAN 流程。** 通用的
+`POST /v1/banking/customer` onboarding 仅支持 USD。不要为 EUR 创建通用
+banking profile；请在 Operar EUR 中使用
+`POST /v1/banking/virtual-ibans`，发送 `{"purpose":"banking_eur"}`。
+账户无需先有 banking customer 即可申请该 vIBAN；平台会在批准期间创建所需
+的本地关联。向通用 customer 接口发送 `currency: "EUR"` 会返回
+`400 banking_eur_requires_viban`。
 ## 2. 证件与验证
 
 以 base64 格式上传每份证件（免费）：
@@ -125,7 +132,7 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/customer/submit \
 
 ## 3. 开立银行账户
 
-档案变为 `approved` 后，按货币各开立一个账户。可用货币：**USD**（ACH/Fedwire/SWIFT 通道）和 **EUR**（SEPA/SWIFT）：
+档案变为 `approved` 后，在通用 Banking onboarding 中只开立 **USD** 账户（ACH/Fedwire/SWIFT 通道）。EUR 不在此处开立；请直接使用 [EUR 虚拟 IBAN 流程](#eur-虚拟-iban) 请求 `banking_eur`。
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \

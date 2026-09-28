@@ -102,7 +102,8 @@ Check the state at any time:
 curl https://api.qbank.cl/platform/v1/banking/customer \
   -H "Authorization: Bearer <token>"
 ```
-
+> **Note**
+**EUR uses direct vIBAN; generic onboarding is USD-only.** Request `{"purpose":"banking_eur"}` from Operar EUR without a prior customer; approval creates the local linkage. Generic EUR returns `400 banking_eur_requires_viban`.
 ## 2. Documents and verification
 
 Upload each document as base64 (free):
@@ -142,8 +143,7 @@ parties you register (`customer_kind: third_party`, with their
 
 ## 3. Open bank accounts
 
-With the profile `approved`, create one account per currency. Available
-currencies: **USD** (ACH/Fedwire/SWIFT rails) and **EUR** (SEPA/SWIFT):
+With the profile `approved`, create the legacy Banking customer account for **USD** only (ACH/Fedwire/SWIFT rails). EUR is not opened here; request a `banking_eur` virtual IBAN directly in the [EUR virtual IBAN flow](#eur-virtual-ibans).
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \

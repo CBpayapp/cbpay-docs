@@ -158,7 +158,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 409 | `already_verified` | 使用已通过验证的账户请求了入驻链接 |
 | 409 | `identity_locked` | 验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持 |
 | 409 | `no_screening` | 在没有先行筛查的情况下发起 AML 重新筛查/监控 |
-| 409 | `no_banking_customer` | 在没有银行账户资料的情况下发起银行操作（请先 `POST /v1/banking/customer`） |
+| 409 | `no_banking_customer` | 传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程 |
+| 400 | `banking_eur_requires_viban` | EUR Banking 账户通过虚拟 IBAN 开立。请在 Operar EUR 中请求 `purpose: "banking_eur"`，不要创建通用 banking customer |
 | 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
 | 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |

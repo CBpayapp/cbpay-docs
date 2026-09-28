@@ -5,6 +5,17 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.133 · 1 version - 2026年9月28日
+
+### v2.133
+
+**新增**
+
+- EUR Banking 现在使用直接虚拟 IBAN 流程。账户无需先创建通用 Banking
+  customer，即可请求 `banking_eur` vIBAN。
+- 通用 Banking customer onboarding 仅支持 USD；发送 `currency: "EUR"`
+  会返回 `banking_eur_requires_viban`，并指引集成方使用 Operar EUR。
+
 ## v2.132 · 1 个版本 - 2026年9月27日
 
 ### v2.132
