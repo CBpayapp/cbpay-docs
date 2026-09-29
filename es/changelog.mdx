@@ -4,22 +4,32 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="28 de septiembre de 2026" description="v2.135 · 3 versions">
+<Update label="28 de septiembre de 2026" description="v2.136 · 4 versions">
 
+### v2.136
+
+**Cambiado**
+
+- Se actualizó el esquema público de configuración de comisiones para incluir
+  `banking_monthly` y eliminar el valor obsoleto `compliance_transaction`.
+  El detalle del pricing de organizaciones sigue en la API privada de admin.
+- El modelo de pricing admin ahora cobra `banking_return` tras la conciliación
+  exitosa, con idempotencia por operación.
+
+No se agregó ningún endpoint público, código de error ni migración.
 ### v2.135
 
 **Agregado**
 
-- Se agregó documentación operativa de Client Journey para administradores de organizaciones, con seguimiento SLA, recordatorios e hilos de respuestas de clientes.
-
-
+- Se aclaró que las operaciones de Client Journey pertenecen a la
+  documentación privada de administradores de organizaciones; esta versión
+  pública no agrega endpoints ni flujos para cuentas.
 ### v2.134
 
 **Corregido**
 
 - Los payouts SEPA y los retiros EUR Banking ahora debitan desde el vIBAN
   seleccionado del cliente; la cuenta de tesorería ya no se usa como origen.
-
 ### v2.133
 
 **Agregado**

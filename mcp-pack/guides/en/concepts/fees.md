@@ -238,7 +238,8 @@ The following service identifiers are present in the product configuration:
 | Service | Scope |
 |---|---|
 | `banking_funding` | Funding through an EUR virtual IBAN; charged only when configured |
-| `banking_return` | A banking return or recall; charged only when configured |
+| `banking_return` | A banking return or recall; charged after each successful reconciliation, idempotent per operation |
+| `banking_monthly` | Monthly fixed fee per account with an active banking profile; billed once per `YYYY-MM` period by a daily worker |
 | `banking_transfer_sepa_instant` | SEPA Instant transfer; charged only when configured |
 | `banking_virtual_iban` | Virtual IBAN lifecycle service; charged only when configured |
 

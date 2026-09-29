@@ -5,21 +5,30 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.135 · 3 versions - 2026年9月28日
+## v2.136 · 4 versions - 2026年9月28日
 
+### v2.136
+
+**变更**
+
+- 更新公共费用配置 schema，加入 `banking_monthly` 并移除过时的
+  `compliance_transaction` 服务值。组织 pricing 的详细行为仍记录在私有
+  admin API 文档中。
+- admin pricing 现在在退回成功完成对账后收取 `banking_return` 费用，并按操作幂等。
+
+本次没有新增公共 endpoint、错误码或数据库迁移。
 ### v2.135
 
 **新增**
 
-- 新增面向组织管理员的 Client Journey 运营文档，涵盖 SLA 跟踪、提醒和客户回复线程。
-
+- 明确 Client Journey 运营属于组织管理员私有文档；本公共 API 版本不新增
+  Journey endpoint 或账户侧流程。
 ### v2.134
 
 **修复**
 
 - SEPA payout 和 EUR Banking 提现现在从客户选定的 vIBAN 扣款；资金账户
   不再作为扣款来源。
-
 ### v2.133
 
 **新增**
