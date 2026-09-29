@@ -210,10 +210,48 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 
 - 未提供 `verification_id`（或验证未获批准）：`422 verification_required` / `422 verification_not_approved`。验证必须是 KYC（个人）；KYB 会返回 `422 verification_kind_mismatch`。
 - 显式提供的 `cardholder` 字段优先于自动填充（当发卡方要求验证中没有的某份证件时很有用）。
-- 卡面印刷姓名使用 `first_name` + `last_name`（合计最多 22 个字符），响应中包含 `cardholder_kind: "person"` 以及所使用的 `verification_id`。如果合计超过卡面打印限制，API 返回 `422 cardholder_name_too_long`。
+- 响应中包含 `cardholder_kind: "person"` 以及所使用的
+  `verification_id`。
 
 </Tab>
 </Tabs>
+
+## 卡面印刷姓名
+
+请求中的卡面印刷姓名是可选的。当已批准资料中的法定姓名超过发卡方
+22 字节的打印限制，或您需要较短的显示姓名时，请发送
+`cardholder.first_name` 和 `cardholder.last_name`。如果省略其中一个字段，
+系统会在自动填充阶段使用已批准的 KYC/KYB 资料。显式字段始终优先于资料
+中的值。
+
+系统会先去除两侧空格，再计算两个字段合计的 UTF-8 字节数。合计超过
+22 时，API 会在创建 hold 或收取费用**之前**返回
+`422 cardholder_name_too_long`。这是字节限制，不是 Unicode 字符数限制。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-print-name-1",
+    "cardholder": {
+      "first_name": "Ana",
+      "last_name": "Rojas"
+    }
+  }'
+```
+
+响应会在 `cardholder_name` 中返回最终采用的姓名：
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "cardholder_kind": "account",
+  "cardholder_name": "Ana Rojas",
+  "status": "active"
+}
+```
 
 ## 发卡方字段与 AML 派生的 PEP
 
@@ -222,9 +260,9 @@ hold 之前**校验发卡方字段。复用已有账户持卡人时，不会再�
 
 | 持卡人 | 创建时必填 | 值如何解析 |
 |---|---|---|
-| 个人账户持卡人 | `occupation`、`place_of_work`、`salary_usd`、`first_name`、`last_name`、`email` | `occupation` 必须是目录代码；`place_of_work` 不能为空；`salary_usd` 必须非负；姓名不能为空且 `email` 必须包含 `@` |
+| 个人账户持卡人 | `occupation`、`place_of_work`、`salary_usd`、`email` | `occupation` 必须是目录代码；`place_of_work` 不能为空；`salary_usd` 必须非负；`first_name`/`last_name` 默认从已批准验证中补齐，除非显式提供，组装后不能为空；`email` 必须包含 `@` |
 | 企业账户持卡人 | `kind_of_business`、`registered_name`、`email` | `kind_of_business` 必须是目录代码；`registered_name` 与 `email` 按 request、账户 display name 或 KYB 法定名称补齐，email 再以账户 email 兜底；必须包含 `@` |
-| 指定人员 | `occupation`、`place_of_work`、`salary_usd`、`first_name`、`last_name`、`email`、`pep` | 目录代码、非空姓名、含 `@` 的 email 和显式布尔值 `pep`；指定人员没有账户 screening |
+| 指定人员 | `occupation`、`place_of_work`、`salary_usd`、`email`、`pep` | 目录代码，姓名来自已批准 KYC 或显式值（组装后不能为空），含 `@` 的 email 和显式布尔值 `pep`；指定人员没有账户 screening |
 
 对于账户持卡人，受支持的 PEP 来源是账户 AML 身份验证的 screening。
 screening gate 是强制的：显式 `pep: true` **不能**绕过

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.136"
+  version: "2.137"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -16190,7 +16190,9 @@ paths:
                   description: 'Cardholder data. On the account''s FIRST issuance the holder is created
                     at the issuer: identity data and documents AUTO-FILL from the account''s approved
                     identity verification (explicit fields win); you only add the issuer-specific fields
-                    (occupation catalog code, salary_usd). Omit it on subsequent cards: the verified holder
+                    (occupation catalog code, salary_usd). Optional first_name and last_name override the
+                    verified profile for the printed name; together they must not exceed 22 UTF-8 bytes.
+                    Omit it on subsequent cards: the verified holder
                     is reused. Company accounts can also set kind "person" plus the verification_id of
                     THAT person''s APPROVED KYC to issue for a designated person (their identity and documents
                     come from the verification).'
@@ -16200,6 +16202,14 @@ paths:
                       format: uuid
                       description: 'REQUIRED for designated persons (kind "person" on company accounts):
                         submission_id of the person''s APPROVED third-party KYC verification.'
+                    first_name:
+                      type: string
+                      description: 'Optional explicit first name for card printing. If omitted, the approved
+                        KYC/KYB profile supplies it. Combined UTF-8 byte length with last_name must be <= 22.'
+                    last_name:
+                      type: string
+                      description: 'Optional explicit last name for card printing. If omitted, the approved
+                        KYC/KYB profile supplies it. Combined UTF-8 byte length with first_name must be <= 22.'
             examples:
               person_first_card:
                 summary: Person — FIRST card (identity auto-fills from the verification)
@@ -16230,6 +16240,14 @@ paths:
                     verification_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
                     occupation: '52201'
                     salary_usd: 1800
+              person_explicit_printing_name:
+                summary: Person — explicit printed name
+                value:
+                  physical: false
+                  idempotency_key: card-print-name-1
+                  cardholder:
+                    first_name: Ana
+                    last_name: Rojas
       responses:
         '201':
           description: Card created.
@@ -16237,19 +16255,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CardObject'
-              example:
-                card_id: 3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                physical: false
-                cardholder_kind: account
-                cardholder_name: Client X SpA
-                status: active
-                spending_asset: USDT
-                limits:
-                  monthly: '5000.000000'
-                created_at: '2026-07-08T12:00:00Z'
-                updated_at: '2026-07-08T12:00:00Z'
-                creation_fee: '3.000000'
+              examples:
+                card_created_with_printing_name:
+                  summary: Card created with the effective printed name
+                  value:
+                    card_id: 3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    physical: false
+                    cardholder_kind: account
+                    cardholder_name: Ana Rojas
+                    status: active
+                    spending_asset: USDT
+                    limits:
+                      monthly: '5000.000000'
+                    created_at: '2026-07-08T12:00:00Z'
+                    updated_at: '2026-07-08T12:00:00Z'
+                    creation_fee: '3.000000'
         '202':
           description: Application held for review (the organization has application review enabled). The resource is
             created only when compliance approves the review; the issuance/profile fee is charged when the application
@@ -16301,15 +16322,25 @@ paths:
                 error: card_limit_reached
                 message: person accounts can hold at most 1 live card and 1 open application (resolve the existing application first)
         '422':
-          description: verification_required / verification_not_approved / verification_kind_mismatch
-            (designated persons need an approved third-party KYC verification_id).
+          description: verification_required / verification_not_approved /
+            verification_kind_mismatch / cardholder_name_too_long (designated
+            persons need an approved third-party KYC verification_id; the
+            explicit printed name must fit the 22-byte limit).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: verification_required
-                message: 'an approved identity verification of the third party is required: pass verification_id'
+              examples:
+                verification_required:
+                  summary: Approved designated-person verification is missing
+                  value:
+                    error: verification_required
+                    message: 'an approved identity verification of the third party is required: pass verification_id'
+                cardholder_name_too_long:
+                  summary: Printed name exceeds the issuer limit
+                  value:
+                    error: cardholder_name_too_long
+                    message: first_name + last_name cannot exceed 22 characters combined (card printing limit)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

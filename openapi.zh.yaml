@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.136"
+  version: "2.137"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -15529,12 +15529,18 @@ paths:
                 cardholder:
                   type: object
                   description: 持卡人数据。账户首次开卡时会在发卡方创建持卡人:身份数据与文件会从账户已通过的身份验证自动填充(显式字段优先);你只需补充发卡方特有的字段(occupation
-                    目录代码、salary_usd)。后续开卡时可省略:直接复用已验证的持卡人。企业账户还可以设置 kind "person" 加上该人已通过 KYC 的 verification_id,为指定人员开卡(其身份与文件来自该验证)。
+                    目录代码、salary_usd)。可选的 first_name 和 last_name 会覆盖卡面印刷姓名，合计不得超过 22 个 UTF-8 字节。后续开卡时可省略:直接复用已验证的持卡人。企业账户还可以设置 kind "person" 加上该人已通过 KYC 的 verification_id,为指定人员开卡(其身份与文件来自该验证)。
                   properties:
                     verification_id:
                       type: string
                       format: uuid
                       description: 指定人员必填(企业账户 kind "person"):该人已通过的第三方 KYC 验证的 submission_id。
+                    first_name:
+                      type: string
+                      description: 可选的卡面印刷名字。省略时使用已批准的 KYC/KYB 资料；与 last_name 合计不得超过 22 个 UTF-8 字节。
+                    last_name:
+                      type: string
+                      description: 可选的卡面印刷姓氏。省略时使用已批准的 KYC/KYB 资料；与 first_name 合计不得超过 22 个 UTF-8 字节。
             examples:
               person_first_card:
                 summary: 个人 — 首张卡(身份从验证自动填充)
@@ -15565,6 +15571,14 @@ paths:
                     verification_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
                     occupation: '52201'
                     salary_usd: 1800
+              person_explicit_printing_name:
+                summary: 个人 — 显式卡面印刷姓名
+                value:
+                  physical: false
+                  idempotency_key: card-print-name-1
+                  cardholder:
+                    first_name: Ana
+                    last_name: Rojas
       responses:
         '201':
           description: 卡片已创建。
@@ -15572,19 +15586,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CardObject'
-              example:
-                card_id: 3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                physical: false
-                cardholder_kind: account
-                cardholder_name: Client X SpA
-                status: active
-                spending_asset: USDT
-                limits:
-                  monthly: '5000.000000'
-                created_at: '2026-07-08T12:00:00Z'
-                updated_at: '2026-07-08T12:00:00Z'
-                creation_fee: '3.000000'
+              examples:
+                card_created_with_printing_name:
+                  summary: 卡片已创建并返回最终卡面姓名
+                  value:
+                    card_id: 3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    physical: false
+                    cardholder_kind: account
+                    cardholder_name: Ana Rojas
+                    status: active
+                    spending_asset: USDT
+                    limits:
+                      monthly: '5000.000000'
+                    created_at: '2026-07-08T12:00:00Z'
+                    updated_at: '2026-07-08T12:00:00Z'
+                    creation_fee: '3.000000'
         '202':
           description: 申请已被挂起等待审核（组织已启用申请审核）。只有在合规团队批准审核后才会创建资源；开户/发卡费用在挂起时收取，若审核被拒绝将自动退还。请通过
             `txn_review_status_changed` webhook 或 `GET /v1/me/txn-reviews` 跟踪结果。
@@ -15634,15 +15651,24 @@ paths:
                 error: card_limit_reached
                 message: person accounts can hold at most 1 live card and 1 open application (resolve the existing application first)
         '422':
-          description: verification_required / verification_not_approved / verification_kind_mismatch(指定人员需要已通过的第三方
-            KYC verification_id)。
+          description: verification_required / verification_not_approved /
+            verification_kind_mismatch / cardholder_name_too_long(指定人员需要
+            已通过的第三方 KYC verification_id；显式卡面姓名必须符合 22 字节限制)。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: verification_required
-                message: 'an approved identity verification of the third party is required: pass verification_id'
+              examples:
+                verification_required:
+                  summary: 缺少指定人员的已批准验证
+                  value:
+                    error: verification_required
+                    message: 'an approved identity verification of the third party is required: pass verification_id'
+                cardholder_name_too_long:
+                  summary: 卡面姓名超过发卡方限制
+                  value:
+                    error: cardholder_name_too_long
+                    message: first_name + last_name cannot exceed 22 characters combined (card printing limit)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

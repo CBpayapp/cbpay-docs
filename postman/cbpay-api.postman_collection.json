@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-28 17:14 UTC",
-    "_content_sha256": "513f5de2222b76dbec08326f49eb38f171a42124376c338c69c856a39a767a75"
+    "_generated_at": "2026-09-29 05:16 UTC",
+    "_content_sha256": "8e8215f1233b0559e5f57abaf79545bfe85ea4dc6c589f53765ea2de83f1fa2d"
   },
   "auth": {
     "type": "bearer",
@@ -23150,7 +23150,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"card_id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"physical\": false,\n  \"cardholder_kind\": \"account\",\n  \"cardholder_name\": \"Client X SpA\",\n  \"status\": \"active\",\n  \"spending_asset\": \"USDT\",\n  \"limits\": {\n    \"monthly\": \"5000.000000\"\n  },\n  \"created_at\": \"2026-07-08T12:00:00Z\",\n  \"updated_at\": \"2026-07-08T12:00:00Z\",\n  \"creation_fee\": \"3.000000\"\n}"
+              "body": "{\n  \"card_id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"physical\": false,\n  \"cardholder_kind\": \"account\",\n  \"cardholder_name\": \"Ana Rojas\",\n  \"status\": \"active\",\n  \"spending_asset\": \"USDT\",\n  \"limits\": {\n    \"monthly\": \"5000.000000\"\n  },\n  \"created_at\": \"2026-07-08T12:00:00Z\",\n  \"updated_at\": \"2026-07-08T12:00:00Z\",\n  \"creation_fee\": \"3.000000\"\n}"
             }
           ]
         },
@@ -23210,7 +23210,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"card_id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"physical\": false,\n  \"cardholder_kind\": \"account\",\n  \"cardholder_name\": \"Client X SpA\",\n  \"status\": \"active\",\n  \"spending_asset\": \"USDT\",\n  \"limits\": {\n    \"monthly\": \"5000.000000\"\n  },\n  \"created_at\": \"2026-07-08T12:00:00Z\",\n  \"updated_at\": \"2026-07-08T12:00:00Z\",\n  \"creation_fee\": \"3.000000\"\n}"
+              "body": "{\n  \"card_id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"physical\": false,\n  \"cardholder_kind\": \"account\",\n  \"cardholder_name\": \"Ana Rojas\",\n  \"status\": \"active\",\n  \"spending_asset\": \"USDT\",\n  \"limits\": {\n    \"monthly\": \"5000.000000\"\n  },\n  \"created_at\": \"2026-07-08T12:00:00Z\",\n  \"updated_at\": \"2026-07-08T12:00:00Z\",\n  \"creation_fee\": \"3.000000\"\n}"
             }
           ]
         },
@@ -23270,7 +23270,67 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"card_id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"physical\": false,\n  \"cardholder_kind\": \"account\",\n  \"cardholder_name\": \"Client X SpA\",\n  \"status\": \"active\",\n  \"spending_asset\": \"USDT\",\n  \"limits\": {\n    \"monthly\": \"5000.000000\"\n  },\n  \"created_at\": \"2026-07-08T12:00:00Z\",\n  \"updated_at\": \"2026-07-08T12:00:00Z\",\n  \"creation_fee\": \"3.000000\"\n}"
+              "body": "{\n  \"card_id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"physical\": false,\n  \"cardholder_kind\": \"account\",\n  \"cardholder_name\": \"Ana Rojas\",\n  \"status\": \"active\",\n  \"spending_asset\": \"USDT\",\n  \"limits\": {\n    \"monthly\": \"5000.000000\"\n  },\n  \"created_at\": \"2026-07-08T12:00:00Z\",\n  \"updated_at\": \"2026-07-08T12:00:00Z\",\n  \"creation_fee\": \"3.000000\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create a card — Person — explicit printed name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/cards",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "cards"
+              ]
+            },
+            "description": "Issues a card (virtual or physical) that spends Just-In-Time from the account's central balance in the card's spending asset (`spending_asset`: USDT/USDC 1:1 with the USD, or BTC/GOLD/SILVER/PLATINUM converted at the price of the moment of each event; USD for new accounts; USDT for legacy accounts) — no prefunding: every purchase is authorized in real time against the available balance and the card's own limits. Person accounts can hold **1 live card total and 1 open application**; company accounts can create **unlimited** cards. New physical issuance is temporarily unavailable; existing physical cards continue operating. the company itself or for designated persons (e.g. employees, passing their identity documents). Issuance bills the `card_creation_virtual` / `card_creation_physical` fee when configured (0 = free); the charge is refunded automatically if issuance fails. Physical cards are born `pending_activation` until the holder confirms reception.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"physical\": false,\n  \"idempotency_key\": \"card-print-name-1\",\n  \"cardholder\": {\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Card created.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/cards",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "cards"
+                  ]
+                }
+              },
+              "status": "Card created.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"card_id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"physical\": false,\n  \"cardholder_kind\": \"account\",\n  \"cardholder_name\": \"Ana Rojas\",\n  \"status\": \"active\",\n  \"spending_asset\": \"USDT\",\n  \"limits\": {\n    \"monthly\": \"5000.000000\"\n  },\n  \"created_at\": \"2026-07-08T12:00:00Z\",\n  \"updated_at\": \"2026-07-08T12:00:00Z\",\n  \"creation_fee\": \"3.000000\"\n}"
             }
           ]
         },

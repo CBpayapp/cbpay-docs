@@ -272,14 +272,50 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
   `422 verification_kind_mismatch`.
 - Explicit `cardholder` fields win over the autofill (useful when the
   issuer requires a document the verification does not have).
-- The printed name uses `first_name` + `last_name` (22 characters combined
-  max) and the response carries `cardholder_kind: "person"` plus the
+- The response carries `cardholder_kind: "person"` plus the
   `verification_id` used.
-  If the combined name exceeds that printing limit, the API returns
-  `422 cardholder_name_too_long`.
 
 </Tab>
 </Tabs>
+
+## Printed name
+
+The card's printed name is optional in the request. Send
+`cardholder.first_name` and `cardholder.last_name` when the legal name from
+the approved profile is longer than the issuer's 22-byte printing limit or
+when you need a shorter display name. If you omit either field, the approved
+KYC/KYB profile supplies it during autofill. An explicit field always wins
+over the profile value.
+
+After trimming surrounding whitespace, the API counts the UTF-8 bytes of both
+fields together. A total above 22 is rejected with
+`422 cardholder_name_too_long` **before the issuance hold or fee**. This is a
+byte limit, not a Unicode-character limit.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-print-name-1",
+    "cardholder": {
+      "first_name": "Ana",
+      "last_name": "Rojas"
+    }
+  }'
+```
+
+The response exposes the effective value as `cardholder_name`:
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "cardholder_kind": "account",
+  "cardholder_name": "Ana Rojas",
+  "status": "active"
+}
+```
 
 ## Issuer fields and AML-derived PEP
 
@@ -290,9 +326,9 @@ again.
 
 | Holder | Required at create time | How the value is resolved |
 |---|---|---|
-| Person account holder | `occupation`, `place_of_work`, `salary_usd`, `first_name`, `last_name`, `email` | `occupation` must be a catalog code; `place_of_work` must be non-empty; `salary_usd` must be a non-negative whole number; names must be non-empty and `email` must contain `@` |
+| Person account holder | `occupation`, `place_of_work`, `salary_usd`, `email` | `occupation` must be a catalog code; `place_of_work` must be non-empty; `salary_usd` must be a non-negative whole number; `first_name`/`last_name` are filled from approved verification unless explicitly provided, and must be non-empty after assembly; `email` must contain `@` |
 | Company account holder | `kind_of_business`, `registered_name`, `email` | `kind_of_business` must be a catalog code; `registered_name` and `email` are filled from the request, account display name or legal KYB name, and account email fallback; `email` must contain `@` |
-| Designated person | `occupation`, `place_of_work`, `salary_usd`, `first_name`, `last_name`, `email`, `pep` | Catalog code plus non-empty names, `email` containing `@`, and explicit boolean `pep`; account-holder screening is not available for a designated person |
+| Designated person | `occupation`, `place_of_work`, `salary_usd`, `email`, `pep` | Catalog code plus names from approved KYC or explicit values (non-empty after assembly), `email` containing `@`, and explicit boolean `pep`; account-holder screening is not available for a designated person |
 
 For an account holder, the supported PEP source is the account's AML
 verification screening. The screening gate is mandatory: an explicit
