@@ -5,6 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.137 · 1 version - 2026年9月29日
+
+### v2.137
+
+**变更**
+
+- 卡片发行文档现在说明可选的 `cardholder.first_name` 和
+  `cardholder.last_name` 卡面姓名覆盖值。省略时使用已批准的 KYC/KYB
+  资料；显式值优先，两个字段合计限制为 22 个 UTF-8 字节。
+
 ## v2.136 · 4 versions - 2026年9月28日
 
 ### v2.136

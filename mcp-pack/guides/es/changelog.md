@@ -5,6 +5,17 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.137 · 1 versión - 29 de septiembre de 2026
+
+### v2.137
+
+**Cambiado**
+
+- La documentación de emisión de tarjetas ahora incluye los overrides
+  opcionales `cardholder.first_name` y `cardholder.last_name` para el nombre
+  impreso. Si se omiten, los completa el perfil KYC/KYB aprobado; los valores
+  explícitos ganan y su longitud UTF-8 combinada está limitada a 22 bytes.
+
 ## v2.136 · 4 versions - 28 de septiembre de 2026
 
 ### v2.136

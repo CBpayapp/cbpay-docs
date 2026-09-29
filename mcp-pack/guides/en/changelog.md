@@ -5,6 +5,17 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.137 · 1 version - September 29, 2026
+
+### v2.137
+
+**Changed**
+
+- Card issuance now documents optional `cardholder.first_name` and
+  `cardholder.last_name` overrides for the printed name. When omitted, the
+  approved KYC/KYB profile supplies them; explicit values win, and their
+  combined UTF-8 length is limited to 22 bytes.
+
 ## v2.136 · 4 versions - September 28, 2026
 
 ### v2.136
