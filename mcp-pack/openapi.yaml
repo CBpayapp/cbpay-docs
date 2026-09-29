@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.135"
+  version: "2.136"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -23800,13 +23800,13 @@ components:
           - compliance_person
           - compliance_company
           - compliance_rescreen
-          - compliance_transaction
           - compliance_monitoring
           - banking_deposit
           - banking_transfer_ach
           - banking_transfer_swift
           - banking_transfer_wire
           - banking_transfer_sepa
+          - banking_monthly
         country:
           type: string
         currency:

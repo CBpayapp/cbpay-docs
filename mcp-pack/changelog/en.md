@@ -5,21 +5,32 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.135 · 3 versions - September 28, 2026
+## v2.136 · 4 versions - September 28, 2026
 
+### v2.136
+
+**Changed**
+
+- Updated the public fee configuration schema to include `banking_monthly`
+  and remove the obsolete `compliance_transaction` service value. Detailed
+  organization pricing behavior remains documented in the private admin API.
+- The admin pricing model now charges `banking_return` after successful
+  reconciliation, idempotently per operation.
+
+No public endpoint, error code or database migration was added.
 ### v2.135
 
 **Added**
 
-- Added operational Client Journey documentation for organization administrators, including SLA tracking, reminders and customer reply threads.
-
+- Clarified that Client Journey operations belong to the private
+  organization-admin documentation; this public API release adds no Journey
+  endpoints or account-facing flow.
 ### v2.134
 
 **Fixed**
 
 - SEPA payouts and EUR Banking withdrawals now debit from the selected
   customer's vIBAN; the treasury account is no longer used as the source.
-
 ### v2.133
 
 **Added**
