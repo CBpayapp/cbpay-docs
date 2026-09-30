@@ -5,7 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.137 · 1 version - 2026年9月29日
+## v2.138 · 2 个版本 - 2026年9月29日
+
+### v2.138
+
+**新增**
+
+- ARS 与 USD 银行 payout 支持在 `beneficiary.account_number` 中提交银行
+  alias；平台会在派发前解析，USD 仍仅支持 CBU。
+- AR/ARS 存款账户响应可在 22 位 CVU 旁返回可选字段
+  `details.bank_alias`。
 
 ### v2.137
 

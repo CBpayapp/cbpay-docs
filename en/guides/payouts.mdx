@@ -388,7 +388,7 @@ when configured; `0.30` here).
 | EC | `deuna` | `name`, `document_value`, `sender_name`, `phone` (wallet mobile number) |
 | EC | `cash_pickup` / `cnb` | `name`, `document_value`, `sender_name` — the beneficiary withdraws with their ID |
 | PY | `bank_transfer` | `name` (max 35 chars), `tax_id`, `bank_code`, `account_number` |
-| AR | `bank_transfer` | `name`, `tax_id` (11-digit CUIT/CUIL), `account_number` (22-digit CBU or CVU; USD is CBU-only) |
+| AR | `bank_transfer` | `name`, `tax_id` (11-digit CUIT/CUIL), `account_number` (22-digit CBU/CVU or bank alias; USD is CBU-only) |
 | US | `ach` / `wire` / `swift` | `name`, `account_number`, `email`, `country_code` (any country), `address`, `city`, `postal_code` (+ `state` if `country_code` is `US`), `bank_name`, `bank_country` (`US` on `ach`/`wire`), `bank_code` (ABA routing for `ach`/`wire`, SWIFT BIC for `swift`; + `account_type` `CHECKING`/`SAVING` for `ach`) |
 
 
@@ -927,7 +927,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 </Tab>
 <Tab title="Argentina">
-
+**Bank aliases**: for ARS and USD `bank_transfer`, `beneficiary.account_number` also accepts a bank alias from 6 to 20 letters/numbers/dots/hyphens, with at least one letter. A numeric-only value is treated as a CBU/CVU, not an alias. CBPay resolves a valid alias to its destination account before dispatch; the wire uses the resolved CBU. ARS can resolve to a CBU or CVU; USD remains CBU-to-CBU only. An alias that cannot be resolved is rejected without debiting the balance. The original alias remains available in the payout evidence for reconciliation.
 Bank transfer in **ARS** or **USD** to any 22-digit **CBU or CVU** (bank
 accounts and virtual wallets). No `bank_code` needed: the CBU/CVU
 identifies the bank on its own.

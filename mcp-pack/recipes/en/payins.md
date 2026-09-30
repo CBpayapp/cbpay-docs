@@ -617,7 +617,8 @@ Response `201`:
 }
 ```
 
-`instrument` is the 22-digit CVU you share with your payers. Creation is
+`instrument` is the 22-digit CVU you share with your payers. For AR/ARS, the response may also include `details.bank_alias`, the bank-addressable alias of that CVU. It is optional and best-effort: if empty, continue using the 22-digit `instrument` value.
+Creation is
 free; every deposit pays the regular payin fee. List your accounts with
 `GET /v1/payins/deposit-accounts`.
 

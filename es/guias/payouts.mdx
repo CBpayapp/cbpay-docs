@@ -389,7 +389,7 @@ las de tu cuenta en `GET /v1/rates`; el débito es `usdt_amount + fee`
 | EC | `deuna` | `name`, `document_value`, `sender_name`, `phone` (celular de la billetera) |
 | EC | `cash_pickup` / `cnb` | `name`, `document_value`, `sender_name` — el beneficiario retira con su documento |
 | PY | `bank_transfer` | `name` (≤35), `tax_id`, `bank_code`, `account_number` |
-| AR | `bank_transfer` | `name`, `tax_id` (CUIT/CUIL de 11 dígitos), `account_number` (CBU o CVU de 22 dígitos; USD solo CBU) |
+| AR | `bank_transfer` | `name`, `tax_id` (CUIT/CUIL de 11 dígitos), `account_number` (CBU/CVU de 22 dígitos o alias bancario; USD solo CBU) |
 | US | `ach` / `wire` / `swift` | `name`, `account_number`, `email`, `country_code` (cualquier país), `address`, `city`, `postal_code` (+ `state` si `country_code` es `US`), `bank_name`, `bank_country` (`US` en `ach`/`wire`), `bank_code` (routing ABA para `ach`/`wire`, BIC SWIFT para `swift`; + `account_type` `CHECKING`/`SAVING` para `ach`) |
 
 
@@ -924,6 +924,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 </Tab>
 <Tab title="Argentina">
+**Alias bancarios**: en `bank_transfer` ARS y USD, `beneficiary.account_number` también acepta un alias de 6 a 20 letras/números/puntos/guiones, con al menos una letra. Un valor solo numérico se trata como CBU/CVU, no como alias. CBPay resuelve un alias válido a la cuenta destino antes de despachar; el wire usa el CBU resuelto. ARS puede resolver a CBU o CVU; USD sigue siendo solo CBU a CBU. Un alias que no puede resolverse se rechaza sin debitar el saldo. El alias original queda disponible en la evidencia del payout.
 
 Transferencia bancaria en **ARS** o **USD** a cualquier **CBU o CVU** de
 22 dígitos (cuentas bancarias y billeteras virtuales). No necesitas

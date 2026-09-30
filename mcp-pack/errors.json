@@ -1676,9 +1676,9 @@
       "code": "core_rejected",
       "http": 422,
       "meaning": {
-        "en": "The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true`",
-        "es": "El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true`",
-        "zh": "处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存"
+        "en": "The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` ; the processor can also reject an Argentina alias payout before debit when the alias cannot be resolved or a USD alias resolves to a CVU; correct the beneficiary and retry with a new idempotency key.",
+        "es": "El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` ; el procesador también puede rechazar un payout argentino antes del débito si el alias no resuelve o si un alias USD resuelve a CVU; corrige el beneficiario y reintenta con una clave de idempotencia nueva.",
+        "zh": "处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 ；处理方也可能在扣款前拒绝阿根廷 alias payout：alias 无法解析，或 USD alias 解析为 CVU；修正受益人后使用新的幂等键重试。"
       }
     },
     {

@@ -165,7 +165,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 422 | `currency_not_supported` | Sin tasa FX para esa moneda |
-| 422 | `core_rejected` | El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` |
+| 422 | `core_rejected` | El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` ; el procesador también puede rechazar un payout argentino antes del débito si el alias no resuelve o si un alias USD resuelve a CVU; corrige el beneficiario y reintenta con una clave de idempotencia nueva. |
 | 400 | `invalid_payload` | En `method: "card"`, `expires_at` debe ser RFC3339, quedar al menos 5 minutos hacia adelante y no superar 48 horas |
 | 422 | `checkout_expiring_soon` | El link de checkout vence en menos de 5 minutos. Pide al comercio un link nuevo antes de pagar con tarjeta |
 | 429 | `too_many_open_card_sessions` | La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o espera que venza una sesión existente antes de crear otra |

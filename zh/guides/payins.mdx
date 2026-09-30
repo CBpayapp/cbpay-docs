@@ -569,8 +569,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 }
 ```
 
-`instrument` 就是您分享给付款人的 22 位 CVU。创建免费；每笔存款按常规
-入金费用计费。使用 `GET /v1/payins/deposit-accounts` 列出您的账户。
+`instrument` 就是您分享给付款人的 22 位 CVU。对于 AR/ARS，响应还可能包含该 CVU 可接收转账的 `details.bank_alias`；该字段可选，若为空请继续使用 22 位 `instrument` 值。
+
 
 <Note>
 CVU **仅支持 ARS**，且为存款专用（只收不付）：任何第三方都无法从中
