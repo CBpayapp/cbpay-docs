@@ -5,7 +5,21 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.138 · 2 个版本 - 2026年9月29日
+## v2.140 · 1 个版本 - 2026年9月30日
+### v2.140
+**新增**
+
+- 在公共 corridor variants schema 中记录组织 scope 的
+  `CL/CLP/bank_transfer` 派发变体 `direct` 和 `batched`。没有 selector
+  行时，`direct` 仍是有效默认值；`batched` 受全局环境 gate 约束。
+
+## v2.139 · 3 个版本 - 2026年9月29日
+
+### v2.139
+
+**变更**
+
+- 文档现在说明，已支付的玻利维亚 QR payin 可以在 `GET /v1/payins/{payinID}` 中返回银行报告的付款人身份，使用 `payer_source: bank_event` 和可选的 `payer` 字段。本次没有新增 endpoint、错误码或 webhook。
 
 ### v2.138
 

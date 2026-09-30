@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.138"
+  version: "2.140"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -5115,6 +5115,12 @@ paths:
                   method: ''
                   local_amount: '700.00'
                   status: credited
+                  payer_source: bank_event
+                  match_method: charge_link
+                  payer:
+                    name: JUAN PEREZ
+                    document: '1234567'
+                    account: '1000001'
                   reference: QR-778812
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-07T12:00:00Z'
@@ -21256,7 +21262,7 @@ paths:
       tags: [Corridors]
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The current selector supports BO/BOB bank_transfer with legacy or v2. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with legacy or v2, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
       security:
         - bearerAuth: []
       responses:
@@ -21299,12 +21305,11 @@ paths:
               $ref: '#/components/schemas/OrgRailVariantRequest'
             example:
               direction: payout
-              country: BO
-              currency: BOB
+              country: CL
+              currency: CLP
               method: bank_transfer
-              variant: v2
-              source_account: "configured-source"
-              reason: Controlled rail migration
+              variant: batched
+              reason: Enable grouped payroll dispatch for future Chile payouts
       responses:
         '200':
           description: Updated variant
@@ -21315,11 +21320,10 @@ paths:
               example:
                 org_id: "org_123"
                 direction: payout
-                country: BO
-                currency: BOB
+                country: CL
+                currency: CLP
                 method: bank_transfer
-                variant: v2
-                source_account: "configured-source"
+                variant: batched
         '400':
           description: Invalid variant request
           content:
@@ -21328,7 +21332,7 @@ paths:
                 invalid_variant:
                   value:
                     error: invalid_rail_variant
-                    message: variant must be legacy or v2
+                    message: variant must be legacy or v2 for BO/BOB, or direct/batched for CL/CLP
         '403':
           description: Source routing requires platform administration
           content:
@@ -21337,12 +21341,18 @@ paths:
                 error: rail_source_admin_required
                 message: source account routing is platform-admin controlled
         '503':
-          description: Selected source account unavailable
+          description: Routing configuration or selected source account unavailable
           content:
             application/json:
-              example:
-                error: rail_source_unavailable
-                message: the selected source account is not configured for this organization
+              examples:
+                variant_unavailable:
+                  value:
+                    error: rail_variants_unavailable
+                    message: rail routing configuration is temporarily unavailable
+                source_unavailable:
+                  value:
+                    error: rail_source_unavailable
+                    message: the selected source account is not configured for this organization
   /v1/banking/company-wallets:
     post:
       tags: [银行服务]
@@ -22201,7 +22211,7 @@ components:
         country: {type: string}
         currency: {type: string}
         method: {type: string}
-        variant: {type: string, enum: [legacy, v2]}
+        variant: {type: string, enum: [legacy, v2, direct, batched]}
         source_account: {type: string}
     OrgRailVariantRequest:
       type: object
@@ -22211,7 +22221,7 @@ components:
         country: {type: string, example: BO}
         currency: {type: string, example: BOB}
         method: {type: string, example: bank_transfer}
-        variant: {type: string, enum: [legacy, v2]}
+        variant: {type: string, enum: [legacy, v2, direct, batched]}
         source_account: {type: string}
         reason: {type: string}
     DepositInstructions:
@@ -23407,9 +23417,10 @@ components:
           - none
           - bank_event
           description: >-
-            预告转账与未分配存款 — 付款人身份的来源。`declared` 由你提交，`account_identity`
+            预告转账与存款 — 付款人身份的来源。`declared` 由你提交，`account_identity`
             默认使用账户持有人已验证的税号，`none` 没有可用身份（只能通过参考号匹配），
-            `bank_event`（未分配存款）从到账的转账中读取。
+            `bank_event` 由银行报告，也适用于通过 `charge_link` 绑定的已支付 QR；
+            如果通道没有报告某个值，则省略对应字段。
         payer:
           type: object
           description: 已知时附加到该 payin 的付款人身份。
