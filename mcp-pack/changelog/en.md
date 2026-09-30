@@ -5,7 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.137 · 1 version - September 29, 2026
+## v2.138 · 2 versions - September 29, 2026
+
+### v2.138
+
+**Added**
+
+- ARS and USD bank payouts accept a bank alias in `beneficiary.account_number`;
+  the platform resolves it before dispatch and keeps USD CBU-only.
+- AR/ARS deposit-account responses may include the optional
+  `details.bank_alias` alongside the 22-digit CVU.
 
 ### v2.137
 

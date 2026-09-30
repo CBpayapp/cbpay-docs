@@ -4,7 +4,19 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="29 de septiembre de 2026" description="v2.137 · 1 versión">
+<Update label="29 de septiembre de 2026" description="v2.138 · 2 versiones">
+
+### v2.138
+
+**Agregado**
+
+- Los payouts ARS y USD aceptan un alias bancario en
+  `beneficiary.account_number`; la plataforma lo resuelve antes de despachar
+  y mantiene USD solo para CBU.
+- Las respuestas de cuentas de depósito AR/ARS pueden incluir el campo
+  opcional `details.bank_alias` junto al CVU de 22 dígitos.
+
+
 
 ### v2.137
 

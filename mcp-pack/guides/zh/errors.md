@@ -164,7 +164,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
 | 422 | `currency_not_supported` | 该货币没有汇率 |
-| 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 |
+| 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 ；处理方也可能在扣款前拒绝阿根廷 alias payout：alias 无法解析，或 USD alias 解析为 CVU；修正受益人后使用新的幂等键重试。 |
 | 400 | `invalid_payload` | 对于 `method: "card"`，`expires_at` 必须是 RFC3339，至少提前 5 分钟且不超过 48 小时 |
 | 422 | `checkout_expiring_soon` | checkout 链接将在不到 5 分钟后过期。使用银行卡付款前，请向商户索取新的链接 |
 | 429 | `too_many_open_card_sessions` | 账户已有 50 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |

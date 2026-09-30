@@ -165,7 +165,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
 | 422 | `currency_not_supported` | No FX rate for that currency |
-| 422 | `core_rejected` | The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` |
+| 422 | `core_rejected` | The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` ; the processor can also reject an Argentina alias payout before debit when the alias cannot be resolved or a USD alias resolves to a CVU; correct the beneficiary and retry with a new idempotency key. |
 | 400 | `invalid_payload` | For `method: "card"`, `expires_at` must be RFC3339, at least 5 minutes ahead and no more than 48 hours ahead |
 | 422 | `checkout_expiring_soon` | The checkout link expires in less than 5 minutes. Ask the merchant for a new link before paying by card |
 | 429 | `too_many_open_card_sessions` | The account has 50 open card sessions and no unused, zero-attempt pending session can be evicted — complete or wait for an existing session to expire before creating another |

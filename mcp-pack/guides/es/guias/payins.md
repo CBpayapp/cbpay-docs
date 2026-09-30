@@ -602,7 +602,8 @@ Respuesta `201`:
 }
 ```
 
-`instrument` es la CVU de 22 dígitos que compartes con tus pagadores. La
+`instrument` es la CVU de 22 dígitos que compartes con tus pagadores. Para AR/ARS, la respuesta también puede incluir `details.bank_alias`, el alias bancario direccionable de esa CVU. Es opcional y best-effort: si viene vacío, sigue usando el valor `instrument` de 22 dígitos.
+ La
 creación es gratis; cada depósito paga la comisión de payin normal. Lista
 tus cuentas con `GET /v1/payins/deposit-accounts`.
 
