@@ -125,7 +125,6 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_locale` | `PATCH /v1/me` (or register) sent a non-empty locale outside `en` / `es` / `zh`. Empty string stores English. Distinct from `invalid_language` (PDF report `lang`) and from org-admin `invalid_value` on `default_locale` |
 | `invalid_format` | The verification report `format` is not `pdf` or `json` |
 | `batch_too_large` | Contact import with more than 1,000 entries (paginate the upload) |
-| `invalid_alias` | Alias must be 4–20 chars (a-z, 0-9, dot, underscore, hyphen), start/end alphanumeric, and not a reserved word |
 | `invalid_body` | The request body could not be read (binary uploads, webhooks) |
 | `invalid_image` | The avatar body is empty or not a supported image (PNG/JPEG/WebP, max 512 KB) |
 | `invalid_interval` | Subscription `interval` must be `daily`, `weekly`, `monthly` or `yearly` |
@@ -481,3 +480,16 @@ is debited or dispatched:
 ## `dispute_fiat_unsupported`
 
 A dispute cannot be opened for a payin credited in locally held BOB, MXN or ARS. The funds remain in the local balance; use a supported USD or USDT credit or wait for the product to support local-fiat disputes.
+
+## Argentine bank aliases and profile aliases
+
+| HTTP | `error` | Meaning / action |
+|---|---|---|
+| 400 | `missing_alias` | An AR/ARS platform deposit-account creation must include the caller-chosen `bank_alias` |
+| 400 | `invalid_alias` | `bank_alias` must be 6–20 ASCII characters from `[A-Za-z0-9.-]` and contain at least one letter |
+| 400 | `invalid_account` | The core could not resolve the supplied deposit-account number |
+| 400 | `invalid_request` | A profile alias body value did not match a candidate derived from the verified name, or `bank_alias` was sent to an unsupported corridor |
+| 409 | `alias_already_set` | The profile alias is permanent and has already been set |
+| 409 | `alias_taken` | **Profile alias:** every candidate derived from the verified name is occupied; contact support. This is not actionable by inventing a value |
+| 422 | `alias_taken` | **Bank alias:** the Argentine banking system already uses this value; choose another |
+| 422 | `alias_unsupported` | The selected deposit-account rail does not support bank aliases |

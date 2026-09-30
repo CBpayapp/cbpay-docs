@@ -125,7 +125,6 @@ description: "错误格式与完整的错误码目录"
 | `invalid_locale` | `PATCH /v1/me`（或注册）发送了非空且不属于 `en` / `es` / `zh` 的 locale。空字符串会存为英语。不同于 `invalid_language`（PDF 报告的 `lang`），也不同于组织管理员在 `default_locale` 上的 `invalid_value` |
 | `invalid_format` | 验证报告的 `format` 不是 `pdf` 或 `json` |
 | `batch_too_large` | 联系人导入超过 1,000 条（请分批上传） |
-| `invalid_alias` | 别名须为 4–20 个字符（a-z、0-9、点、下划线、连字符），首尾为字母或数字，且不能是保留词 |
 | `invalid_body` | 无法读取请求体（二进制上传、webhook） |
 | `invalid_image` | 头像请求体为空或不是支持的图片格式（PNG/JPEG/WebP，最大 512 KB） |
 | `invalid_interval` | 订阅的 `interval` 必须是 `daily`、`weekly`、`monthly` 或 `yearly` |
@@ -464,3 +463,16 @@ description: "错误格式与完整的错误码目录"
 ## `dispute_fiat_unsupported`
 
 本地保留 BOB、MXN 或 ARS 的 payin 暂不支持争议。请使用受支持的 USD 或 USDT 入账，或等待本地法币争议功能。
+
+## 阿根廷银行别名与个人资料别名
+
+| HTTP | `error` | 含义 / 处理方式 |
+|---|---|---|
+| 400 | `missing_alias` | 平台创建 AR/ARS 存款账户时必须提供调用方选择的 `bank_alias` |
+| 400 | `invalid_alias` | `bank_alias` 必须为 6–20 个 `[A-Za-z0-9.-]` ASCII 字符，并至少包含一个字母 |
+| 400 | `invalid_account` | core 无法解析提供的存款账户号码 |
+| 400 | `invalid_request` | 个人资料别名 body 不匹配已验证姓名派生的候选值，或在不支持的通道发送了 `bank_alias` |
+| 409 | `alias_already_set` | 个人资料别名永久有效，已经设置 |
+| 409 | `alias_taken` | **个人资料别名：**已验证姓名派生的所有候选值都被占用；请联系支持，不能自行编造值 |
+| 422 | `alias_taken` | **银行别名：**阿根廷银行系统已占用该值；请选择其他值 |
+| 422 | `alias_unsupported` | 选择的存款账户通道不支持银行别名 |

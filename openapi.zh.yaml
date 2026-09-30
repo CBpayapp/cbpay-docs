@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.140"
+  version: "2.141"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -14019,6 +14019,13 @@ paths:
                   type: string
                   enum: [fondeo, banking]
                   default: fondeo
+                  description: 存款目的地用途。banking 仅限 BO/BOB、MX/MXN 和 AR/ARS bank_transfer。
+                bank_alias:
+                  type: string
+                  minLength: 6
+                  maxLength: 20
+                  pattern: '^[A-Za-z0-9.\-]*[A-Za-z][A-Za-z0-9.\-]*$'
+                  description: 由调用方为 AR/ARS CVU 选择的可寻址银行别名。创建 AR/ARS 银行转账充值账户时必填；它不同于个人资料别名。
             examples:
               mx_clabe:
                 summary: 墨西哥 — 专属 CLABE(MXN)
@@ -14030,30 +14037,48 @@ paths:
                 value:
                   country: AR
                   currency: ARS
+                  bank_alias: julieta.fernandez
       responses:
         '201':
-          description: 充值账户已创建并绑定到调用账户。
+          description: 已创建并绑定到调用账户的存款账户。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositInstrument'
-              example: &id013
-                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                purpose: fondeo
-                instrument: '734180000151000006'
-                details:
-                  clabe: '734180000151000006'
-                  alias: CBPay Example MXN Account
-                  bank_name: Example Receiving Bank
-                  status: active
-                status: active
-                created_at: '2026-07-07T12:00:00Z'
+              examples:
+                mx_clabe:
+                  value: &id013
+                    instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    purpose: fondeo
+                    instrument: '734180000151000006'
+                    details:
+                      clabe: '734180000151000006'
+                      alias: CBPay MXN 示例账户
+                      bank_name: 示例收款银行
+                      status: active
+                    status: active
+                    created_at: '2026-07-07T12:00:00Z'
+                ar_cvu:
+                  summary: 阿根廷 — 带银行别名的专属 CVU
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    country: AR
+                    currency: ARS
+                    method: bank_transfer
+                    purpose: fondeo
+                    instrument: '0000079900000000132537'
+                    details:
+                      bank_alias: julieta.fernandez
+                      alias_error: ''
+                    status: active
+                    created_at: '2026-09-30T12:00:00Z'
         '400':
-          description: 目的无效或 Banking 走廊不受支持。
+          description: 用途无效、不支持 Banking 通道或阿根廷银行别名无效。
           content:
             application/json:
               schema:
@@ -14063,10 +14088,22 @@ paths:
                   value:
                     error: invalid_purpose
                     message: purpose must be "fondeo" or "banking"
+                invalid_request:
+                  value:
+                    error: invalid_request
+                    message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer
+                missing_alias:
+                  value:
+                    error: missing_alias
+                    message: AR/ARS/bank_transfer 账户必须提供 bank_alias
+                invalid_alias:
+                  value:
+                    error: invalid_alias
+                    message: bank_alias 格式无效
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: 账户身份尚未获批，不能执行此认证操作。 Account state or credential errors may also use account_required or account_blocked.
+          description: 账户身份尚未批准，无法执行此认证操作。
           content:
             application/json:
               schema:
@@ -14075,19 +14112,34 @@ paths:
                 verification_required:
                   value:
                     error: verification_required
-                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                    message: 执行 payins 前需要完成身份验证
                 account_blocked:
                   value:
                     error: account_blocked
-                    message: account is not active
+                    message: 账户未处于活动状态
+        '422':
+          description: 请求的银行别名已被占用或通道不支持。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: 银行别名已被占用；请选择其他别名
+                alias_unsupported:
+                  value:
+                    error: alias_unsupported
+                    message: 该通道不支持银行别名
         '502':
-          description: 核心不可用(core_unavailable)。
+          description: Core 不可用。
           content:
             application/json:
               schema: *id012
               example:
                 error: core_unavailable
-                message: could not create the deposit account
+                message: 无法创建存款账户
     get:
       tags:
       - 收款(Payins)
@@ -14111,6 +14163,150 @@ paths:
                 - *id013
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /v1/payins/deposit-accounts/{instrumentID}/bank-alias:
+    put:
+      tags:
+      - 收款(Payins)
+      operationId: setDepositAccountBankAlias
+      summary: 设置或重命名阿根廷银行别名
+      description: >-
+        为已有的 AR/ARS 银行转账充值账户设置调用方选择的可寻址银行别名。
+        平台会验证该工具属于已认证账户，并要求核心使用银行通道验证别名。
+        重复设置相同别名是幂等 no-op。此银行别名不同于
+        `PUT /v1/me/alias` 中根据已验证姓名派生的永久个人资料别名。
+      parameters:
+      - name: instrumentID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bank_alias
+              properties:
+                bank_alias:
+                  type: string
+                  minLength: 6
+                  maxLength: 20
+                  pattern: '^[A-Za-z0-9.\-]*[A-Za-z][A-Za-z0-9.\-]*$'
+                  description: 6–20 个 ASCII 字母、数字、点或连字符，并且至少包含一个字母。
+            examples:
+              set_alias:
+                summary: 设置或重命名别名
+                value:
+                  bank_alias: julieta.fernandez
+      responses:
+        '200':
+          description: 银行别名已更新，或已经等于请求的值。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - instrument_id
+                - account_number
+                - bank_alias
+                - updated
+                properties:
+                  instrument_id:
+                    type: string
+                    format: uuid
+                  account_number:
+                    type: string
+                  bank_alias:
+                    type: string
+                  updated:
+                    type: boolean
+              examples:
+                updated:
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_number: '0000079900000000132537'
+                    bank_alias: julieta.fernandez
+                    updated: true
+                unchanged:
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_number: '0000079900000000132537'
+                    bank_alias: julieta.fernandez
+                    updated: false
+        '400':
+          description: JSON 无效或银行别名格式无效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value:
+                    error: invalid_json
+                    message: invalid request body
+                invalid_alias:
+                  value:
+                    error: invalid_alias
+                    message: bank_alias 格式无效
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 账户无法执行此认证的 payins 操作。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: 管理充值账户前需要完成身份验证
+        '404':
+          description: 工具不存在、不属于调用方，或路径 ID 无效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: deposit account not found
+        '409':
+          description: 充值账户仍在 provisioning，暂时无法更新。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: deposit_account_not_recoverable
+                message: the deposit account provisioning is still in flight; retry once it completes
+        '422':
+          description: 请求的别名已被占用，或该通道不支持银行别名。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: bank alias is already taken; choose another
+                alias_unsupported:
+                  value:
+                    error: alias_unsupported
+                    message: 该通道不支持银行别名
+        '502':
+          description: 核心在验证或应用别名时不可用。
+          content:
+            application/json:
+              schema: *id012
+              example:
+                error: core_unavailable
+                message: could not set the bank alias
+
   /v1/payins/deposit-instructions:
     get:
       tags:
@@ -17331,33 +17527,56 @@ paths:
   /v1/me/alias:
     put:
       tags:
-      - 账户
+      - Account
       operationId: setMyAlias
-      summary: 设置我的永久别名
-      description: 一次性设置账户的公开别名。别名是永久的,无法更改。格式:4-20 个字符(a-z、0-9、点、下划线、连字符),首尾必须为字母或数字;保留词会被拒绝。其他人可以按别名向你付款。
+      summary: 设置由已验证姓名派生的个人资料别名
+      description: 一次性设置账户的永久公开别名。该别名由账户已通过 KYC/KYB 验证的姓名派生，不能自由选择。request body 可选；如果提供 `alias`，必须等于由该已验证姓名派生的候选值之一。设置后不可更改。
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
-              required:
-              - alias
               properties:
                 alias:
                   type: string
-            example:
-              alias: taylor.code
+                  description: 可选的派生别名确认值。不要自行编造。
+            examples:
+              derived_confirmation:
+                value:
+                  alias: taylor.code
+              empty_body:
+                value: {}
       responses:
         '200':
-          description: 别名已设置(永久)。
+          description: Alias set permanently.
+          content:
+            application/json:
+              examples:
+                derived:
+                  value:
+                    alias: taylor.code
+                    note: 该别名永久有效，并由已验证姓名派生
+        '400':
+          description: The supplied alias does not match the verified-name candidates.
           content:
             application/json:
               example:
-                alias: taylor.code
-                note: the alias is permanent and cannot be changed
+                error: invalid_request
+                message: 别名由已验证姓名派生，不能自由选择
         '409':
-          description: 已设置过(`alias_already_set`)或已被占用(`alias_taken`)。
+          description: The profile alias is already set or no derived candidate is available.
+          content:
+            application/json:
+              examples:
+                alias_already_set:
+                  value:
+                    error: alias_already_set
+                    message: 该账户已经设置别名；不可更改
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: 无法从已验证姓名派生可用别名
   /v1/me/qr:
     get:
       tags:
@@ -23875,16 +24094,24 @@ components:
           properties:
             alias:
               type: string
-              description: 配置的收款通道返回的可选收款账户 alias。
+              description: Optional receiving-account alias returned by the configured rail.
               example: CBPay Example MXN Account
             merchant_nit:
               type: string
-              description: BO/BOB 收款账户的可选商户 NIT。
+              description: Optional merchant NIT for BO/BOB receiving accounts.
               example: '123456789'
             bank_name:
               type: string
-              description: MX/MXN 账户的可选收款银行名称。
+              description: Optional receiving-bank name for MX/MXN accounts.
               example: Example Receiving Bank
+            bank_alias:
+              type: string
+              description: 为此 AR/ARS CVU 选择的可寻址银行别名（若通道接受）。
+              example: julieta.fernandez
+            alias_error:
+              type: string
+              description: 请求的银行别名未保存时的机器可读原因，例如 `alias_taken`。
+              example: alias_taken
           additionalProperties: true
         status:
           type: string

@@ -1,5 +1,5 @@
 {
-  "count": 292,
+  "count": 297,
   "errors": [
     {
       "category": {
@@ -1105,20 +1105,6 @@
         "en": "Contact import with more than 1,000 entries (paginate the upload)",
         "es": "Import de contactos con más de 1.000 entradas (pagina la subida)",
         "zh": "联系人导入超过 1,000 条（请分批上传）"
-      }
-    },
-    {
-      "category": {
-        "en": "Validation (400)",
-        "es": "Validación (400)",
-        "zh": "校验（400）"
-      },
-      "code": "invalid_alias",
-      "http": 400,
-      "meaning": {
-        "en": "Alias must be 4–20 chars (a-z, 0-9, dot, underscore, hyphen), start/end alphanumeric, and not a reserved word",
-        "es": "El alias debe tener 4–20 caracteres (a-z, 0-9, punto, guion bajo, guion), empezar/terminar alfanumérico y no ser palabra reservada",
-        "zh": "别名须为 4–20 个字符（a-z、0-9、点、下划线、连字符），首尾为字母或数字，且不能是保留词"
       }
     },
     {
@@ -4079,6 +4065,90 @@
         "en": "The limits could not be evaluated before debit; retry with the same idempotency key after storage recovers.",
         "es": "No se pudieron evaluar los límites antes del débito; reintenta con la misma clave de idempotencia.",
         "zh": "扣款前无法评估限额；恢复后使用同一幂等键重试。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "missing_alias",
+      "http": 400,
+      "meaning": {
+        "en": "An AR/ARS platform deposit-account creation must include the caller-chosen `bank_alias`",
+        "es": "La creación de una cuenta de depósito AR/ARS en la plataforma debe incluir el `bank_alias` elegido por el caller",
+        "zh": "平台创建 AR/ARS 存款账户时必须提供调用方选择的 `bank_alias`"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_alias",
+      "http": 400,
+      "meaning": {
+        "en": "`bank_alias` must be 6–20 ASCII characters from `[A-Za-z0-9.-]` and contain at least one letter",
+        "es": "`bank_alias` debe tener 6–20 caracteres ASCII de `[A-Za-z0-9.-]` y al menos una letra",
+        "zh": "`bank_alias` 必须为 6–20 个 `[A-Za-z0-9.-]` ASCII 字符，并至少包含一个字母"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_account",
+      "http": 400,
+      "meaning": {
+        "en": "The core could not resolve the supplied deposit-account number",
+        "es": "El core no pudo resolver el número de cuenta de depósito enviado",
+        "zh": "core 无法解析提供的存款账户号码"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "alias_already_set",
+      "http": 409,
+      "meaning": {
+        "en": "The profile alias is permanent and has already been set",
+        "es": "El alias del perfil es permanente y ya fue fijado",
+        "zh": "个人资料别名永久有效，已经设置"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "alias_taken",
+      "http": 409,
+      "meaning": {
+        "en": "**Profile alias:** every candidate derived from the verified name is occupied; contact support. This is not actionable by inventing a value",
+        "es": "**Alias del perfil:** todos los candidatos derivados del nombre verificado están ocupados; contacta soporte. No se resuelve inventando un valor",
+        "zh": "**个人资料别名：**已验证姓名派生的所有候选值都被占用；请联系支持，不能自行编造值"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "alias_unsupported",
+      "http": 422,
+      "meaning": {
+        "en": "The selected deposit-account rail does not support bank aliases",
+        "es": "El riel de la cuenta de depósito no admite aliases bancarios",
+        "zh": "选择的存款账户通道不支持银行别名"
       }
     }
   ]

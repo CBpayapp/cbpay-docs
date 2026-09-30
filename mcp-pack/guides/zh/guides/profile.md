@@ -78,7 +78,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/password/forgot \
 
 每个账户都有两个**永久性**的公开标识，方便他人在 CBPay 账户之间向你转账：
 
-- **别名（Alias）** — 通过 `PUT /v1/me/alias` 一次性设定（4-20 个字符，允许 `a-z 0-9 . _ -`，不可使用保留词）。设定后不可更改。
+- **个人资料别名** — `PUT /v1/me/alias` 会根据 KYC/KYB 已验证的显示姓名一次性生成永久别名。request body 可选；如果提供 `alias`，必须匹配由该已验证姓名派生的候选值。不能自由选择或重命名。它不同于阿根廷 CVU 的 `bank_alias`。
 - **个人资料二维码** — `GET /v1/me/qr` 返回 `qr_token`、载荷 `cbpay:pay?to=<token>` 以及可直接渲染的 PNG。它只允许他人**向你转入**资金，因此永不变化。
 
 即将付款的人可以先通过 `GET /v1/resolve?alias=taylor.code`（或 `?qr=<token>`）确认你的身份，该接口返回你的姓名、类型和头像。转账也可以直接使用该目标：
@@ -159,7 +159,8 @@ SMS/WhatsApp OTP 挑战：`POST /v1/otp/challenges` + verify）。号码未验�
 |---|---|---|
 | `invalid_password` | 403 | 当前密码不匹配 |
 | `alias_already_set` | 409 | 别名已设定；它是永久性的 |
-| `alias_taken` | 409 | 该别名已被占用；请换一个 |
+| `alias_taken` | 409 | 已验证姓名的所有候选别名都被占用；请联系支持，不要自行编造别名 |
+| `invalid_request` | 400 | 提供的值不匹配已验证姓名派生的候选值；省略 body 或发送派生值 |
 | `email_in_use` | 409 | 另一个登录已使用该邮箱 |
 | `no_pending_email` | 409 | 没有待确认的邮箱更换；请重新发起 |
 | `policy_locked_by_org` | 403 | 你所在组织强制要求该操作/渠道；无法削弱 |

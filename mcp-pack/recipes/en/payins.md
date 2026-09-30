@@ -294,8 +294,7 @@ corridors.
 
 Funding-account provisioning starts only after the account's own verification
 is approved: KYC for a person or KYB for a company. Registration does not
-create a deposit account. The provider-facing alias is generated server-side
-from the verified account name.
+create a deposit account. For AR/ARS bank transfers, the platform requires the caller-chosen `bank_alias`; it is separate from the internal account label and the verified-name-derived profile alias.
 
 For a company CLABE, send an idempotency key in the body or header:
 
@@ -390,12 +389,11 @@ Response `201`:
   }
 }
 ```
-
 Display the QR to your customer — `qr_image_url` is a public CDN URL ready
 for an `` tag (prefer it over the base64 `qr_image`); when they pay,
 your account is credited automatically. It also works in USD
 (`currency: "USD"`).
-
+After a Bolivia QR is paid and bound through `charge_link`, `GET /v1/payins/{payinID}` may include `payer_source: "bank_event"` and a `payer` block with `name`, `document` and `account` when the bank reports them. If the rail does not report a value, that field is omitted; if it reports none of them, the whole `payer` block is omitted.
 **Card payment page (`card`)**: you receive a `payment_url` for a hosted
 3-D Secure checkout — the payer enters their card on a secure page branded
 with your organization's identity and, when their bank requires it,
@@ -592,40 +590,37 @@ In Brazil collections work exclusively through dynamic PIX QR (one QR = one
 payment, exact amount embedded). Announced bank transfers will come later.
 #### Argentina
 
-**Dedicated CVU account**: create a fixed CVU bound to your account —
-every ARS transfer arriving to it (from any CBU or CVU in the Argentine
-system) is credited automatically, no references needed:
+**Dedicated CVU account**: create a fixed CVU bound to your account.
+For `AR/ARS/bank_transfer`, the platform requires the bank-addressable
+`bank_alias` you want the Argentine banking system to use:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "country": "AR", "currency": "ARS" }'
+  -d '{ "country": "AR", "currency": "ARS", "method": "bank_transfer", "bank_alias": "julieta.fernandez" }'
 ```
 
-Response `201`:
+The alias must be 6–20 characters from `[A-Za-z0-9.-]` and contain at least
+one letter. The bank decides whether it is available; `422 alias_taken` is
+actionable, so choose another alias. The response includes the CVU and, when
+accepted, `details.bank_alias`; `details.alias_error` explains why a requested
+alias was not stored.
 
-```json
-{
-  "instrument_id": "f2b8…",
-  "account_id": "…",
-  "country": "AR",
-  "currency": "ARS",
-  "method": "bank_transfer",
-  "instrument": "0000079900000000132537",
-  "status": "active"
-}
+To set or rename the alias on an existing AR/ARS deposit account:
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/bank-alias \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "bank_alias": "julieta.fernandez" }'
 ```
 
-`instrument` is the 22-digit CVU you share with your payers. For AR/ARS, the response may also include `details.bank_alias`, the bank-addressable alias of that CVU. It is optional and best-effort: if empty, continue using the 22-digit `instrument` value.
-Creation is
-free; every deposit pays the regular payin fee. List your accounts with
-`GET /v1/payins/deposit-accounts`.
+The response returns `instrument_id`, `account_number`, `bank_alias` and
+`updated`. A repeated value returns `updated: false`. `invalid_alias` is
+`400`; an unsupported rail is `422 alias_unsupported`; a provisioning slot
+still in flight is `409 deposit_account_not_recoverable`.
 
-> **Note**
-The CVU works in **ARS only** and is deposit-only (receive-only): no
-third party can debit it. Direct debit attempts (DEBIN) against a deposit
-CVU are rejected automatically.
 #### United States
 
 **International card payment page (`card`)**: charge in US dollars with
@@ -1144,6 +1139,13 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   "payin_id": "9c2a…",
   "kind": "qr",
   "status": "credited",
+  "payer_source": "bank_event",
+  "match_method": "charge_link",
+  "payer": {
+    "name": "JUAN PEREZ",
+    "document": "1234567",
+    "account": "1000001"
+  },
   "local_amount": "700.00",
   "fx_rate": "6.91",
   "rate_source": "lot",
