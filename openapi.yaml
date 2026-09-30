@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.138"
+  version: "2.140"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5408,6 +5408,12 @@ paths:
                   method: ''
                   local_amount: '700.00'
                   status: credited
+                  payer_source: bank_event
+                  match_method: charge_link
+                  payer:
+                    name: JUAN PEREZ
+                    document: '1234567'
+                    account: '1000001'
                   reference: QR-778812
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-07T12:00:00Z'
@@ -22139,7 +22145,7 @@ paths:
       tags: [Corridors]
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The current selector supports BO/BOB bank_transfer with legacy or v2. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with legacy or v2, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
       security:
         - bearerAuth: []
       responses:
@@ -22182,12 +22188,11 @@ paths:
               $ref: '#/components/schemas/OrgRailVariantRequest'
             example:
               direction: payout
-              country: BO
-              currency: BOB
+              country: CL
+              currency: CLP
               method: bank_transfer
-              variant: v2
-              source_account: "configured-source"
-              reason: Controlled rail migration
+              variant: batched
+              reason: Enable grouped payroll dispatch for future Chile payouts
       responses:
         '200':
           description: Updated variant
@@ -22198,11 +22203,10 @@ paths:
               example:
                 org_id: "org_123"
                 direction: payout
-                country: BO
-                currency: BOB
+                country: CL
+                currency: CLP
                 method: bank_transfer
-                variant: v2
-                source_account: "configured-source"
+                variant: batched
         '400':
           description: Invalid variant request
           content:
@@ -22211,7 +22215,7 @@ paths:
                 invalid_variant:
                   value:
                     error: invalid_rail_variant
-                    message: variant must be legacy or v2
+                    message: variant must be legacy or v2 for BO/BOB, or direct/batched for CL/CLP
         '403':
           description: Source routing requires platform administration
           content:
@@ -22220,12 +22224,18 @@ paths:
                 error: rail_source_admin_required
                 message: source account routing is platform-admin controlled
         '503':
-          description: Selected source account unavailable
+          description: Routing configuration or selected source account unavailable
           content:
             application/json:
-              example:
-                error: rail_source_unavailable
-                message: the selected source account is not configured for this organization
+              examples:
+                variant_unavailable:
+                  value:
+                    error: rail_variants_unavailable
+                    message: rail routing configuration is temporarily unavailable
+                source_unavailable:
+                  value:
+                    error: rail_source_unavailable
+                    message: the selected source account is not configured for this organization
   /v1/banking/company-wallets:
     post:
       tags: [Banking]
@@ -23088,7 +23098,7 @@ components:
         country: {type: string}
         currency: {type: string}
         method: {type: string}
-        variant: {type: string, enum: [legacy, v2]}
+        variant: {type: string, enum: [legacy, v2, direct, batched]}
         source_account: {type: string}
     OrgRailVariantRequest:
       type: object
@@ -23098,7 +23108,7 @@ components:
         country: {type: string, example: BO}
         currency: {type: string, example: BOB}
         method: {type: string, example: bank_transfer}
-        variant: {type: string, enum: [legacy, v2]}
+        variant: {type: string, enum: [legacy, v2, direct, batched]}
         source_account: {type: string}
         reason: {type: string}
     PosMerchant:
@@ -24243,10 +24253,11 @@ components:
           - none
           - bank_event
           description: >-
-            Announced transfers and unassigned deposits — where the payer identity came from.
+            Announced transfers and deposits — where the payer identity came from.
             `declared` you sent it, `account_identity` the account holder's verified tax id was
             used as the default, `none` no identity was available (only the reference can match),
-            `bank_event` (unassigned deposits) it was read from the arriving transfer.
+            `bank_event` is reported by the bank, including for a paid QR charge bound through
+            `charge_link`; if the rail does not report a value, the corresponding field is omitted.
         payer:
           type: object
           description: Payer identity attached to the payin, when known.

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-30 03:20 UTC",
-    "_content_sha256": "e877cc1ca3d83b2d703c0504bd7a9153439ee53db29d41ced7d0efb21aebe4b6"
+    "_generated_at": "2026-09-30 13:29 UTC",
+    "_content_sha256": "8257aa50f6d323eb9917507dfbbac41f25c63941cc798348c2501cb2927ab5d2"
   },
   "auth": {
     "type": "bearer",
@@ -11682,7 +11682,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"payins\": [\n    {\n      \"payin_id\": \"4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"kind\": \"qr\",\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"method\": \"\",\n      \"local_amount\": \"700.00\",\n      \"status\": \"credited\",\n      \"reference\": \"QR-778812\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\",\n      \"fx_rate\": \"6.91\",\n      \"rate_source\": \"lot\",\n      \"usdt_gross\": \"101.302460\",\n      \"fee\": \"1.000000\",\n      \"usdt_credited\": \"100.302460\"\n    },\n    {\n      \"payin_id\": \"d0135ed5-8e9c-4f8b-a522-8ec100470426\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"kind\": \"checkout\",\n      \"country\": \"\",\n      \"currency\": \"\",\n      \"method\": \"checkout\",\n      \"local_amount\": \"\",\n      \"settlement_asset\": \"USDT\",\n      \"asset_amount\": \"50\",\n      \"status\": \"pending\",\n      \"reference\": \"CB68JZCT46QE\",\n      \"created_at\": \"2026-07-21T12:00:00Z\",\n      \"updated_at\": \"2026-07-21T12:00:00Z\"\n    },\n    {\n      \"payin_id\": \"8b3e1c4d-5a6f-7b8c-9d0e-1f2a3b4c5d6e\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"kind\": \"card\",\n      \"country\": \"US\",\n      \"currency\": \"USD\",\n      \"method\": \"card\",\n      \"local_amount\": \"498.75\",\n      \"status\": \"credited\",\n      \"reference\": \"CARD-8842\",\n      \"created_at\": \"2026-08-10T14:08:33Z\",\n      \"updated_at\": \"2026-08-10T14:08:40Z\",\n      \"fx_rate\": \"1.010202\",\n      \"usdt_gross\": \"493.811881\",\n      \"fee\": \"27.159654\",\n      \"usdt_credited\": \"466.652227\",\n      \"settle_at\": \"2026-08-12T14:08:33Z\",\n      \"settlement_pending\": true,\n      \"idempotency_key\": \"order-10042\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"payins\": [\n    {\n      \"payin_id\": \"4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"kind\": \"qr\",\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"method\": \"\",\n      \"local_amount\": \"700.00\",\n      \"status\": \"credited\",\n      \"payer_source\": \"bank_event\",\n      \"match_method\": \"charge_link\",\n      \"payer\": {\n        \"name\": \"JUAN PEREZ\",\n        \"document\": \"1234567\",\n        \"account\": \"1000001\"\n      },\n      \"reference\": \"QR-778812\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\",\n      \"fx_rate\": \"6.91\",\n      \"rate_source\": \"lot\",\n      \"usdt_gross\": \"101.302460\",\n      \"fee\": \"1.000000\",\n      \"usdt_credited\": \"100.302460\"\n    },\n    {\n      \"payin_id\": \"d0135ed5-8e9c-4f8b-a522-8ec100470426\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"kind\": \"checkout\",\n      \"country\": \"\",\n      \"currency\": \"\",\n      \"method\": \"checkout\",\n      \"local_amount\": \"\",\n      \"settlement_asset\": \"USDT\",\n      \"asset_amount\": \"50\",\n      \"status\": \"pending\",\n      \"reference\": \"CB68JZCT46QE\",\n      \"created_at\": \"2026-07-21T12:00:00Z\",\n      \"updated_at\": \"2026-07-21T12:00:00Z\"\n    },\n    {\n      \"payin_id\": \"8b3e1c4d-5a6f-7b8c-9d0e-1f2a3b4c5d6e\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"kind\": \"card\",\n      \"country\": \"US\",\n      \"currency\": \"USD\",\n      \"method\": \"card\",\n      \"local_amount\": \"498.75\",\n      \"status\": \"credited\",\n      \"reference\": \"CARD-8842\",\n      \"created_at\": \"2026-08-10T14:08:33Z\",\n      \"updated_at\": \"2026-08-10T14:08:40Z\",\n      \"fx_rate\": \"1.010202\",\n      \"usdt_gross\": \"493.811881\",\n      \"fee\": \"27.159654\",\n      \"usdt_credited\": \"466.652227\",\n      \"settle_at\": \"2026-08-12T14:08:33Z\",\n      \"settlement_pending\": true,\n      \"idempotency_key\": \"order-10042\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -12392,7 +12392,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"payin_id\": \"4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"kind\": \"qr\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"\",\n  \"local_amount\": \"700.00\",\n  \"status\": \"credited\",\n  \"reference\": \"QR-778812\",\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-07-07T12:00:00Z\",\n  \"fx_rate\": \"6.91\",\n  \"rate_source\": \"lot\",\n  \"usdt_gross\": \"101.302460\",\n  \"fee\": \"1.000000\",\n  \"usdt_credited\": \"100.302460\"\n}"
+              "body": "{\n  \"payin_id\": \"4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"kind\": \"qr\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"\",\n  \"local_amount\": \"700.00\",\n  \"status\": \"credited\",\n  \"payer_source\": \"bank_event\",\n  \"match_method\": \"charge_link\",\n  \"payer\": {\n    \"name\": \"JUAN PEREZ\",\n    \"document\": \"1234567\",\n    \"account\": \"1000001\"\n  },\n  \"reference\": \"QR-778812\",\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-07-07T12:00:00Z\",\n  \"fx_rate\": \"6.91\",\n  \"rate_source\": \"lot\",\n  \"usdt_gross\": \"101.302460\",\n  \"fee\": \"1.000000\",\n  \"usdt_credited\": \"100.302460\"\n}"
             }
           ]
         },
@@ -25772,7 +25772,7 @@
                 "corridor-variants"
               ]
             },
-            "description": "Returns the organization-scoped payout variant configuration. The current selector supports BO/BOB bank_transfer with legacy or v2. Payin routing uses corridor controls."
+            "description": "Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with legacy or v2, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls."
           },
           "response": [
             {
@@ -25826,7 +25826,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"configured-source\",\n  \"reason\": \"Controlled rail migration\"\n}",
+              "raw": "{\n  \"direction\": \"payout\",\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"batched\",\n  \"reason\": \"Enable grouped payroll dispatch for future Chile payouts\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -25859,7 +25859,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"org_id\": \"org_123\",\n  \"direction\": \"payout\",\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"v2\",\n  \"source_account\": \"configured-source\"\n}"
+              "body": "{\n  \"org_id\": \"org_123\",\n  \"direction\": \"payout\",\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"batched\"\n}"
             }
           ]
         }

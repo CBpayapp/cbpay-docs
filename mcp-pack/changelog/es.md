@@ -5,7 +5,22 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.138 · 2 versiones - 29 de septiembre de 2026
+## v2.140 · 1 versión - 30 de septiembre de 2026
+### v2.140
+**Agregado**
+
+- Se documentaron `direct` y `batched` como variantes de despacho con scope de
+  organización para el corredor `CL/CLP/bank_transfer` en el schema público de
+  variantes. `direct` sigue siendo el default efectivo cuando no existe una
+  fila de selector; `batched` queda sujeto al gate global de ambiente.
+
+## v2.139 · 3 versiones - 29 de septiembre de 2026
+
+### v2.139
+
+**Cambiado**
+
+- Se documentó que un payin QR de Bolivia pagado puede exponer la identidad del pagador reportada por el banco en `GET /v1/payins/{payinID}` mediante `payer_source: bank_event` y los campos opcionales de `payer`. No se agregaron endpoints, códigos de error ni webhooks.
 
 ### v2.138
 
