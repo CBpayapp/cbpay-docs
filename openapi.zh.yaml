@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.137"
+  version: "2.138"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -857,6 +857,58 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many verification attempts; wait a moment and retry
+  /v1/public/card-issuance-docs/{code}:
+    get:
+      security: []
+      tags:
+      - 发卡方文档
+      operationId: downloadCardIssuanceDocumentPublic
+      summary: 下载发卡文档（内部）
+      description: "面向发卡方的内部 capability 端点，用于下载卡片申请审核附件。
+        HMAC 代码绑定到一个文件和一条 `card_application` 审核记录。无效或无关
+        的代码返回通用 404。本端点不供客户集成使用。"
+      parameters:
+      - name: code
+        in: path
+        required: true
+        description: 单个卡片申请审核文件的 HMAC capability 代码。
+        schema:
+          type: string
+        example: Hc41d2a887f3e4b219c6d2e8f1a5b7d90a1b2c3d4e5f60718293a
+      responses:
+        '200':
+          description: 私有审核附件，以下载文件的方式返回。
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+            X-Robots-Tag:
+              schema:
+                type: string
+                example: noindex
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: capability 代码无效、无关或不可用。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this document link does not correspond to any document issued by this platform
+        '429':
+          description: 此 IP 的尝试次数过多。
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many requests; wait a moment and retry
   /pay/{token}:
     get:
       security: []
@@ -3386,7 +3438,8 @@ paths:
 
                     阿根廷:`tax_id`(11 位 CUIT/CUIL)+ `account_number`
 
-                    (22 位 CBU 或 CVU;USD 仅支持 CBU)—— 无需 `bank_code`。
+                    （22 位 CBU 或 CVU，或 6–20 个字符且至少包含一个字母的银行
+                    alias；USD 仅支持 CBU）—— 无需 `bank_code`。
 
                     美国(USD):每笔转账都需收款人完整的身份与邮政地址 —— `name`、
 
@@ -3641,6 +3694,7 @@ paths:
                     name: Julieta Fernandez
                     tax_id: 27-23456789-1
                     account_number: '2850590940090418135201'
+                    bank_alias: julieta.fernandez
                   idempotency_key: ar-ars-3311
               ar_usd_cbu:
                 summary: 阿根廷 — USD 转账(仅 CBU)
