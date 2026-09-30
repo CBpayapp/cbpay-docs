@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.140"
+  version: "2.141"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -14634,6 +14634,12 @@ paths:
                   enum: [fondeo, banking]
                   default: fondeo
                   description: Deposit destination purpose. Banking is limited to BO/BOB, MX/MXN and AR/ARS bank_transfer.
+                bank_alias:
+                  type: string
+                  minLength: 6
+                  maxLength: 20
+                  pattern: '^[A-Za-z0-9.\-]*[A-Za-z][A-Za-z0-9.\-]*$'
+                  description: Bank-addressable alias chosen by the caller for an AR/ARS CVU. Required when creating an AR/ARS bank-transfer deposit account; it is distinct from the profile alias.
             examples:
               mx_clabe:
                 summary: Mexico — dedicated CLABE (MXN)
@@ -14646,6 +14652,7 @@ paths:
                 value:
                   country: AR
                   currency: ARS
+                  bank_alias: julieta.fernandez
                   purpose: fondeo
       responses:
         '201':
@@ -14654,25 +14661,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositInstrument'
-              example: &id013
-                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                purpose: fondeo
-                instrument: '734180000151000006'
-                details:
-                  clabe: '734180000151000006'
-                  alias: CBPay Example MXN Account
-                  bank_name: Example Receiving Bank
-                  status: active
-                status: active
-                created_at: '2026-07-07T12:00:00Z'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+              examples:
+                mx_clabe:
+                  value: &id013
+                    instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    purpose: fondeo
+                    instrument: '734180000151000006'
+                    details:
+                      clabe: '734180000151000006'
+                      alias: CBPay Example MXN Account
+                      bank_name: Example Receiving Bank
+                      status: active
+                    status: active
+                    created_at: '2026-07-07T12:00:00Z'
+                ar_cvu:
+                  summary: Argentina — dedicated CVU with bank alias
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    country: AR
+                    currency: ARS
+                    method: bank_transfer
+                    purpose: fondeo
+                    instrument: '0000079900000000132537'
+                    details:
+                      bank_alias: julieta.fernandez
+                      alias_error: ''
+                    status: active
+                    created_at: '2026-09-30T12:00:00Z'
         '400':
-          description: Invalid purpose or unsupported Banking corridor.
+          description: Invalid purpose, unsupported Banking corridor, or invalid Argentine bank alias.
           content:
             application/json:
               schema:
@@ -14686,8 +14708,18 @@ paths:
                   value:
                     error: invalid_request
                     message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer
+                missing_alias:
+                  value:
+                    error: missing_alias
+                    message: bank_alias is required for AR/ARS/bank_transfer deposit accounts
+                invalid_alias:
+                  value:
+                    error: invalid_alias
+                    message: bank_alias has an invalid format
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: The account identity is not approved for this authenticated operation. Account state or credential errors may also use account_required or account_blocked.
+          description: The account identity is not approved for this authenticated operation.
           content:
             application/json:
               schema:
@@ -14696,13 +14728,28 @@ paths:
                 verification_required:
                   value:
                     error: verification_required
-                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                    message: identity verification is required before creating payins
                 account_blocked:
                   value:
                     error: account_blocked
                     message: account is not active
+        '422':
+          description: The requested bank alias is unavailable or unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: bank alias is already taken; choose another
+                alias_unsupported:
+                  value:
+                    error: alias_unsupported
+                    message: this rail does not support bank aliases
         '502':
-          description: Core unavailable (core_unavailable).
+          description: Core unavailable.
           content:
             application/json:
               schema: *id012
@@ -14732,6 +14779,152 @@ paths:
                 - *id013
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /v1/payins/deposit-accounts/{instrumentID}/bank-alias:
+    put:
+      tags:
+      - Payins
+      operationId: setDepositAccountBankAlias
+      summary: Set or rename an Argentine bank alias
+      description: >-
+        Sets the bank-addressable alias chosen by the caller for an existing
+        AR/ARS bank-transfer deposit account. The platform verifies that the
+        instrument belongs to the authenticated account and asks the core to
+        verify the alias with the banking rail. Repeating the same alias is an
+        idempotent no-op. This bank alias is separate from the permanent
+        verified-name-derived profile alias at `PUT /v1/me/alias`.
+      parameters:
+      - name: instrumentID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bank_alias
+              properties:
+                bank_alias:
+                  type: string
+                  minLength: 6
+                  maxLength: 20
+                  pattern: '^[A-Za-z0-9.\-]*[A-Za-z][A-Za-z0-9.\-]*$'
+                  description: 6–20 ASCII letters, digits, dots or hyphens, with at least one letter.
+            examples:
+              set_alias:
+                summary: Set or rename the alias
+                value:
+                  bank_alias: julieta.fernandez
+      responses:
+        '200':
+          description: Bank alias updated or already equal to the requested value.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - instrument_id
+                - account_number
+                - bank_alias
+                - updated
+                properties:
+                  instrument_id:
+                    type: string
+                    format: uuid
+                  account_number:
+                    type: string
+                  bank_alias:
+                    type: string
+                  updated:
+                    type: boolean
+              examples:
+                updated:
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_number: '0000079900000000132537'
+                    bank_alias: julieta.fernandez
+                    updated: true
+                unchanged:
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_number: '0000079900000000132537'
+                    bank_alias: julieta.fernandez
+                    updated: false
+        '400':
+          description: Invalid JSON or invalid bank alias format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value:
+                    error: invalid_json
+                    message: invalid request body
+                invalid_alias:
+                  value:
+                    error: invalid_alias
+                    message: bank_alias has an invalid format
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The account cannot perform this authenticated payin operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: identity verification is required before managing deposit accounts
+        '404':
+          description: The instrument does not exist, is not owned by the caller, or the path ID is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: deposit account not found
+        '409':
+          description: Deposit-account provisioning is still in flight and cannot be updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: deposit_account_not_recoverable
+                message: the deposit account provisioning is still in flight; retry once it completes
+        '422':
+          description: The requested alias is unavailable or unsupported by the rail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: bank alias is already taken; choose another
+                alias_unsupported:
+                  value:
+                    error: alias_unsupported
+                    message: this rail does not support bank aliases
+        '502':
+          description: Core unavailable while verifying or applying the alias.
+          content:
+            application/json:
+              schema: *id012
+              example:
+                error: core_unavailable
+                message: could not set the bank alias
+
   /v1/payins/deposit-instructions:
     get:
       tags:
@@ -18061,33 +18254,54 @@ paths:
       tags:
       - Account
       operationId: setMyAlias
-      summary: Set my permanent alias
-      description: 'Sets the account''s public alias ONCE. The alias is permanent and cannot be changed.
-        Format: 4-20 chars (a-z, 0-9, dot, underscore, hyphen), starting and ending alphanumeric; reserved
-        words are rejected. Others can send you money by alias.'
+      summary: Set the profile alias derived from the verified name
+      description: Sets the account's permanent public alias once. The alias is derived from the account's verified KYC/KYB display name; it is not freely chosen. The request body is optional. If `alias` is supplied, it must equal one of the candidates derived from that verified name. Once set, the alias cannot be changed.
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
-              required:
-              - alias
               properties:
                 alias:
                   type: string
-            example:
-              alias: taylor.code
+                  description: Optional confirmation of the derived alias. Do not invent a value.
+            examples:
+              derived_confirmation:
+                value:
+                  alias: taylor.code
+              empty_body:
+                value: {}
       responses:
         '200':
-          description: Alias set (permanently).
+          description: Alias set permanently.
+          content:
+            application/json:
+              examples:
+                derived:
+                  value:
+                    alias: taylor.code
+                    note: the alias is permanent and is derived from the verified name
+        '400':
+          description: The supplied alias does not match the verified-name candidates.
           content:
             application/json:
               example:
-                alias: taylor.code
-                note: the alias is permanent and cannot be changed
+                error: invalid_request
+                message: alias is derived from the verified name and cannot be chosen
         '409':
-          description: Already set (`alias_already_set`) or taken (`alias_taken`).
+          description: The profile alias is already set or no derived candidate is available.
+          content:
+            application/json:
+              examples:
+                alias_already_set:
+                  value:
+                    error: alias_already_set
+                    message: this account already has an alias; it cannot be changed
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: could not derive an available alias from the verified name
   /v1/me/qr:
     get:
       tags:
@@ -24746,6 +24960,14 @@ components:
               type: string
               description: Optional receiving-bank name for MX/MXN accounts.
               example: Example Receiving Bank
+            bank_alias:
+              type: string
+              description: The bank-addressable alias chosen for this AR/ARS CVU, if the rail accepted one.
+              example: julieta.fernandez
+            alias_error:
+              type: string
+              description: Machine-readable reason why the requested bank alias was not stored, such as `alias_taken`.
+              example: alias_taken
           additionalProperties: true
         status:
           type: string

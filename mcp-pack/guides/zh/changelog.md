@@ -5,7 +5,15 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.140 · 1 个版本 - 2026年9月30日
+## v2.141 · 2 个版本 - 2026年9月30日
+### v2.141
+**新增**
+
+- 文档新增平台创建 AR/ARS 存款账户时必填的用户选择
+  `bank_alias`、`PUT /v1/payins/deposit-accounts/bank-alias`
+  重命名路由、格式与可操作的 `422 alias_taken`，并说明个人资料别名由已验证
+  姓名派生。
+
 ### v2.140
 **新增**
 

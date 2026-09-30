@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="September 30, 2026" description="v2.140 · 1 version">
+<Update label="September 30, 2026" description="v2.141 · 2 versions">
+### v2.141
+**Added**
+
+- Documented the user-chosen Argentine `bank_alias` required for AR/ARS
+  deposit-account creation at the platform layer, the
+  `PUT /v1/payins/deposit-accounts/bank-alias` core route,
+  its format and actionable `422 alias_taken` response, and the separate
+  verified-name-derived profile alias behavior.
+
 ### v2.140
 **Added**
 
@@ -463,7 +472,7 @@ Breaking changes are announced in advance and flagged as **Breaking**.
 **Changed**
 
 - Person accounts receive one receiving destination per corridor. Company accounts can create additional destinations with a distinct `idempotency_key`; replaying the same key is idempotent.
-- Deposit-account provisioning starts only after the account's KYC/KYB verification is approved. The provider-facing alias is generated server-side from the verified account name, and receiving-account routing remains separate from payout routing.
+- Deposit-account provisioning starts only after the account's KYC/KYB verification is approved. Receiving-account display fields are optional and are not inferred; AR/ARS bank transfers use the caller-chosen `bank_alias`, and receiving-account routing remains separate from payout routing.
 
 ### v2.99
 

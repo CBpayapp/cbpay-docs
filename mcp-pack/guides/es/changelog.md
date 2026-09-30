@@ -5,7 +5,16 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.140 · 1 versión - 30 de septiembre de 2026
+## v2.141 · 2 versiones - 30 de septiembre de 2026
+### v2.141
+**Agregado**
+
+- Se documentó el `bank_alias` argentino elegido por el usuario y obligatorio
+  al crear cuentas AR/ARS en la plataforma, la ruta de rename
+  `PUT /v1/payins/deposit-accounts/bank-alias`, su formato y
+  el `422 alias_taken` accionable, además del alias de perfil derivado del
+  nombre verificado.
+
 ### v2.140
 **Agregado**
 
@@ -441,7 +450,7 @@ con anticipación y quedan marcados como **Breaking**.
 **Cambiado**
 
 - Las cuentas persona reciben un destino por corredor. Las empresas pueden crear destinos adicionales con un `idempotency_key` distinto; repetir la misma clave es idempotente.
-- La provisión comienza solo después de aprobar KYC/KYB. El alias visible al proveedor se genera en el servidor desde el nombre verificado y el ruteo de recepción permanece separado del ruteo de payouts.
+- La provisión comienza solo después de aprobar KYC/KYB. Los campos de presentación de la cuenta receptora son opcionales y no se infieren; las transferencias AR/ARS usan el `bank_alias` elegido por el caller y el ruteo de recepción permanece separado del ruteo de payouts.
 
 ### v2.99
 

@@ -110,8 +110,7 @@ account and incoming credits are matched by the destination instrument.
 
 After approval, the account's first corridor instrument is provisioned
 automatically. The request shown above is valid for repairing a missing
-post-approval instrument. The provider-facing alias is generated server-side
-from the account's verified name; clients do not choose that alias. A company
+post-approval instrument. Receiving-account display fields are optional and are not inferred. This BOB flow does not create a user-selected bank alias; AR/ARS bank aliases are a separate contract documented in the payins guide. A company
 creating an additional BOB destination must use a new idempotency key for each
 destination:
 

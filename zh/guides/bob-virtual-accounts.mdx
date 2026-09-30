@@ -103,8 +103,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 同一个 CBPay 账户，到账按目的地 instrument 进行匹配。
 
 验证通过后，账户的第一个走廊工具会自动 provisioning。前面的请求也可
-用于修复验证通过后缺失的工具。发送给 provider 的 alias 由服务器根据账户
-的已验证名称生成，客户端不能自行选择。企业创建额外 BOB 目的地时，每个
+用于修复验证通过后缺失的工具。收款账户展示字段是可选的，不会被推断。该 BOB 流程不会创建用户选择的银行别名；AR/ARS 银行别名是 payins 指南中的独立契约。企业创建额外 BOB 目的地时，每个
 目的地都必须使用新的幂等键：
 
 ```bash

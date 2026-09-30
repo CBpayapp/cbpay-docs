@@ -244,8 +244,7 @@ CBPay 账户；入账会根据目的地 instrument 归属。个人账户仍然�
 走廊一个充值账户的规则，其他通道和 legacy 通道也一样。
 
 充值账户只有在账户自身验证通过后才会 provisioning：个人需要 KYC，企业
-需要 KYB。注册本身不会创建充值账户。发送给 provider 的 alias 由服务器
-根据账户的已验证名称生成。
+需要 KYB。注册本身不会创建充值账户。对于 AR/ARS 银行转账，平台要求调用方显式提供用户选择的 `bank_alias`；它不同于内部账户标签和根据已验证姓名派生的个人资料别名。其他收款账户展示字段是可选的，不会被推断。
 
 创建企业 CLABE 时，请在 body 或 header 中发送幂等键：
 
@@ -353,6 +352,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 将二维码展示给您的客户 —— `qr_image_url` 是可直接用于 `<img>` 标签的
 公共 CDN URL（优先使用它而非 base64 的 `qr_image`）；客户付款后，
 您的账户会自动入账。它同样支持 USD（`currency: "USD"`）。
+
+玻利维亚 QR 付款完成并通过 `charge_link` 绑定后，`GET /v1/payins/{payinID}` 可能返回 `payer_source: "bank_event"` 以及包含 `name`、`document` 和 `account` 的 `payer` 区块，前提是银行报告了这些信息。如果通道没有报告某个值，则省略对应字段；如果没有报告任何值，则省略整个 `payer` 区块。
 
 **银行卡支付页面（`card`）**：您会收到一个托管 3-D Secure 收银台的
 `payment_url` —— 付款人在带有您组织品牌的安全页面上输入银行卡信息，
@@ -544,38 +545,35 @@ base64 或 `charge.qr_image_url`，即公共 CDN URL）。二维码按
 </Tab>
 <Tab title="阿根廷">
 
-**专属 CVU 账户**：创建一个与您的账户绑定的固定 CVU —— 到达该账户的
-每一笔 ARS 转账（来自阿根廷系统中的任何 CBU 或 CVU）都会自动入账，
-无需任何参考号：
+**专属 CVU 账户**：创建绑定到你账户的固定 CVU。
+对于 `AR/ARS/bank_transfer`，平台要求你提供希望在阿根廷银行系统中使用的
+可寻址 `bank_alias`：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "country": "AR", "currency": "ARS" }'
+  -d '{ "country": "AR", "currency": "ARS", "method": "bank_transfer", "bank_alias": "julieta.fernandez" }'
 ```
 
-响应 `201`：
+别名必须为 6–20 个 `[A-Za-z0-9.-]` 字符，并至少包含一个字母。银行决定
+是否可用；`422 alias_taken` 是可操作的错误，请选择其他别名。响应包含
+CVU；银行接受时还会返回 `details.bank_alias`，而
+`details.alias_error` 说明请求的别名为何没有保存。
 
-```json
-{
-  "instrument_id": "f2b8…",
-  "account_id": "…",
-  "country": "AR",
-  "currency": "ARS",
-  "method": "bank_transfer",
-  "instrument": "0000079900000000132537",
-  "status": "active"
-}
+为已有 AR/ARS 存款账户设置或重命名别名：
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/bank-alias \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "bank_alias": "julieta.fernandez" }'
 ```
 
-`instrument` 就是您分享给付款人的 22 位 CVU。对于 AR/ARS，响应还可能包含该 CVU 可接收转账的 `details.bank_alias`；该字段可选，若为空请继续使用 22 位 `instrument` 值。
-
-
-<Note>
-CVU **仅支持 ARS**，且为存款专用（只收不付）：任何第三方都无法从中
-扣款。针对存款 CVU 的直接扣款尝试（DEBIN）会被自动拒绝。
-</Note>
+响应返回 `instrument_id`、`account_number`、`bank_alias` 和 `updated`。重复
+相同值会返回 `updated: false`。格式无效返回 `400 invalid_alias`；不支持
+该能力的通道返回 `422 alias_unsupported`；仍在创建中的账户返回
+`409 deposit_account_not_recoverable`。
 
 </Tab>
 <Tab title="美国">
@@ -1094,6 +1092,13 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   "payin_id": "9c2a…",
   "kind": "qr",
   "status": "credited",
+  "payer_source": "bank_event",
+  "match_method": "charge_link",
+  "payer": {
+    "name": "JUAN PEREZ",
+    "document": "1234567",
+    "account": "1000001"
+  },
   "local_amount": "700.00",
   "fx_rate": "6.91",
   "rate_source": "lot",

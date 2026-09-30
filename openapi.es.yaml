@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.140"
+  version: "2.141"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -14448,6 +14448,13 @@ paths:
                   type: string
                   enum: [fondeo, banking]
                   default: fondeo
+                  description: Propósito del destino de depósito. Banking se limita a BO/BOB, MX/MXN y AR/ARS bank_transfer.
+                bank_alias:
+                  type: string
+                  minLength: 6
+                  maxLength: 20
+                  pattern: '^[A-Za-z0-9.\-]*[A-Za-z][A-Za-z0-9.\-]*$'
+                  description: Alias bancario direccionable elegido por el caller para una CVU AR/ARS. Es obligatorio al crear una cuenta de depósito AR/ARS por transferencia bancaria y es distinto del alias del perfil.
             examples:
               mx_clabe:
                 summary: México — CLABE dedicada (MXN)
@@ -14459,6 +14466,7 @@ paths:
                 value:
                   country: AR
                   currency: ARS
+                  bank_alias: julieta.fernandez
       responses:
         '201':
           description: Cuenta de depósito creada y ligada a la cuenta que llama.
@@ -14466,23 +14474,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositInstrument'
-              example: &id013
-                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                purpose: fondeo
-                instrument: '734180000151000006'
-                details:
-                  clabe: '734180000151000006'
-                  alias: CBPay Example MXN Account
-                  bank_name: Example Receiving Bank
-                  status: active
-                status: active
-                created_at: '2026-07-07T12:00:00Z'
+              examples:
+                mx_clabe:
+                  value: &id013
+                    instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    purpose: fondeo
+                    instrument: '734180000151000006'
+                    details:
+                      clabe: '734180000151000006'
+                      alias: Cuenta MXN de ejemplo
+                      bank_name: Banco receptor de ejemplo
+                      status: active
+                    status: active
+                    created_at: '2026-07-07T12:00:00Z'
+                ar_cvu:
+                  summary: Argentina — CVU dedicada con alias bancario
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    country: AR
+                    currency: ARS
+                    method: bank_transfer
+                    purpose: fondeo
+                    instrument: '0000079900000000132537'
+                    details:
+                      bank_alias: julieta.fernandez
+                      alias_error: ''
+                    status: active
+                    created_at: '2026-09-30T12:00:00Z'
         '400':
-          description: Propósito inválido o corredor Banking no soportado.
+          description: Propósito inválido, corredor Banking no soportado o alias bancario argentino inválido.
           content:
             application/json:
               schema:
@@ -14492,10 +14517,22 @@ paths:
                   value:
                     error: invalid_purpose
                     message: purpose must be "fondeo" or "banking"
+                invalid_request:
+                  value:
+                    error: invalid_request
+                    message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer
+                missing_alias:
+                  value:
+                    error: missing_alias
+                    message: bank_alias es obligatorio para cuentas AR/ARS/bank_transfer
+                invalid_alias:
+                  value:
+                    error: invalid_alias
+                    message: bank_alias tiene un formato inválido
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: La identidad de la cuenta no está aprobada para esta operación autenticada. Account state or credential errors may also use account_required or account_blocked.
+          description: La identidad de la cuenta no está aprobada para esta operación autenticada.
           content:
             application/json:
               schema:
@@ -14504,19 +14541,34 @@ paths:
                 verification_required:
                   value:
                     error: verification_required
-                    message: identity verification is required before creating payins or using this service; request your verification link at POST /v1/me/verification/link
+                    message: se requiere verificación de identidad
                 account_blocked:
                   value:
                     error: account_blocked
-                    message: account is not active
+                    message: la cuenta no está activa
+        '422':
+          description: El alias bancario solicitado está ocupado o no es compatible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: el alias bancario ya está ocupado; elige otro
+                alias_unsupported:
+                  value:
+                    error: alias_unsupported
+                    message: este riel no admite aliases bancarios
         '502':
-          description: Core no disponible (core_unavailable).
+          description: Core no disponible.
           content:
             application/json:
               schema: *id012
               example:
                 error: core_unavailable
-                message: could not create the deposit account
+                message: no se pudo crear la cuenta de depósito
     get:
       tags:
       - Payins
@@ -14540,6 +14592,153 @@ paths:
                 - *id013
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /v1/payins/deposit-accounts/{instrumentID}/bank-alias:
+    put:
+      tags:
+      - Payins
+      operationId: setDepositAccountBankAlias
+      summary: Establecer o renombrar un alias bancario argentino
+      description: >-
+        Establece el alias bancario direccionable elegido por el caller para
+        una cuenta de depósito AR/ARS por transferencia bancaria ya existente.
+        La plataforma verifica que el instrumento pertenezca a la cuenta
+        autenticada y pide al core verificar el alias con el riel bancario.
+        Repetir el mismo alias es un no-op idempotente. Este alias bancario es
+        distinto del alias permanente del perfil derivado del nombre
+        verificado en `PUT /v1/me/alias`.
+      parameters:
+      - name: instrumentID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bank_alias
+              properties:
+                bank_alias:
+                  type: string
+                  minLength: 6
+                  maxLength: 20
+                  pattern: '^[A-Za-z0-9.\-]*[A-Za-z][A-Za-z0-9.\-]*$'
+                  description: 6–20 caracteres ASCII con letras, dígitos, puntos o guiones, y al menos una letra.
+            examples:
+              set_alias:
+                summary: Establecer o renombrar el alias
+                value:
+                  bank_alias: julieta.fernandez
+      responses:
+        '200':
+          description: Alias bancario actualizado o ya igual al valor solicitado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - instrument_id
+                - account_number
+                - bank_alias
+                - updated
+                properties:
+                  instrument_id:
+                    type: string
+                    format: uuid
+                  account_number:
+                    type: string
+                  bank_alias:
+                    type: string
+                  updated:
+                    type: boolean
+              examples:
+                updated:
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_number: '0000079900000000132537'
+                    bank_alias: julieta.fernandez
+                    updated: true
+                unchanged:
+                  value:
+                    instrument_id: f2b8c0de-1234-5678-9abc-def012345678
+                    account_number: '0000079900000000132537'
+                    bank_alias: julieta.fernandez
+                    updated: false
+        '400':
+          description: JSON inválido o formato inválido del alias bancario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value:
+                    error: invalid_json
+                    message: invalid request body
+                invalid_alias:
+                  value:
+                    error: invalid_alias
+                    message: bank_alias tiene un formato inválido
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: La cuenta no puede realizar esta operación autenticada de payins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                verification_required:
+                  value:
+                    error: verification_required
+                    message: se requiere verificación de identidad para administrar cuentas de depósito
+        '404':
+          description: El instrumento no existe, no pertenece al caller o el ID del path es inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: deposit account not found
+        '409':
+          description: La provisión de la cuenta de depósito sigue en curso y no puede actualizarse.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: deposit_account_not_recoverable
+                message: the deposit account provisioning is still in flight; retry once it completes
+        '422':
+          description: El alias solicitado está ocupado o el riel no lo admite.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: bank alias is already taken; choose another
+                alias_unsupported:
+                  value:
+                    error: alias_unsupported
+                    message: este riel no admite aliases bancarios
+        '502':
+          description: El core no está disponible al verificar o aplicar el alias.
+          content:
+            application/json:
+              schema: *id012
+              example:
+                error: core_unavailable
+                message: could not set the bank alias
+
   /v1/payins/deposit-instructions:
     get:
       tags:
@@ -17873,35 +18072,56 @@ paths:
   /v1/me/alias:
     put:
       tags:
-      - Cuenta
+      - Account
       operationId: setMyAlias
-      summary: Fijar mi alias permanente
-      description: 'Fija el alias público de la cuenta UNA vez. El alias es permanente y no se puede cambiar.
-        Formato: 4-20 caracteres (a-z, 0-9, punto, guion bajo, guion), empieza y termina en alfanumérico;
-        las palabras reservadas se rechazan. Otros pueden enviarte dinero por alias.'
+      summary: Fijar el alias del perfil derivado del nombre verificado
+      description: Fija una sola vez el alias público permanente de la cuenta. El alias se deriva del nombre de la cuenta verificado por KYC/KYB; no se puede elegir libremente. El body es opcional. Si envías `alias`, debe coincidir con uno de los candidatos derivados de ese nombre verificado. Una vez fijado, no se puede cambiar.
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
-              required:
-              - alias
               properties:
                 alias:
                   type: string
-            example:
-              alias: taylor.code
+                  description: Confirmación opcional del alias derivado. No inventes un valor.
+            examples:
+              derived_confirmation:
+                value:
+                  alias: taylor.code
+              empty_body:
+                value: {}
       responses:
         '200':
-          description: Alias fijado (de forma permanente).
+          description: Alias set permanently.
+          content:
+            application/json:
+              examples:
+                derived:
+                  value:
+                    alias: taylor.code
+                    note: el alias es permanente y se deriva del nombre verificado
+        '400':
+          description: The supplied alias does not match the verified-name candidates.
           content:
             application/json:
               example:
-                alias: taylor.code
-                note: the alias is permanent and cannot be changed
+                error: invalid_request
+                message: el alias se deriva del nombre verificado y no se puede elegir
         '409':
-          description: Ya fijado (`alias_already_set`) o tomado (`alias_taken`).
+          description: The profile alias is already set or no derived candidate is available.
+          content:
+            application/json:
+              examples:
+                alias_already_set:
+                  value:
+                    error: alias_already_set
+                    message: esta cuenta ya tiene un alias; no se puede cambiar
+                alias_taken:
+                  value:
+                    error: alias_taken
+                    message: no se pudo derivar un alias disponible desde el nombre verificado
   /v1/me/qr:
     get:
       tags:
@@ -24559,16 +24779,24 @@ components:
           properties:
             alias:
               type: string
-              description: Alias opcional de la cuenta receptora devuelto por el riel configurado.
+              description: Optional receiving-account alias returned by the configured rail.
               example: CBPay Example MXN Account
             merchant_nit:
               type: string
-              description: NIT mercantil opcional de las cuentas receptoras BO/BOB.
+              description: Optional merchant NIT for BO/BOB receiving accounts.
               example: '123456789'
             bank_name:
               type: string
-              description: Nombre opcional del banco receptor de las cuentas MX/MXN.
+              description: Optional receiving-bank name for MX/MXN accounts.
               example: Example Receiving Bank
+            bank_alias:
+              type: string
+              description: Alias bancario direccionable elegido para esta CVU AR/ARS, si el riel aceptó uno.
+              example: julieta.fernandez
+            alias_error:
+              type: string
+              description: Motivo legible por máquina por el que no se guardó el alias solicitado, por ejemplo `alias_taken`.
+              example: alias_taken
           additionalProperties: true
         status:
           type: string

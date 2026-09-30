@@ -98,8 +98,7 @@ Changing your email does **not** break your already-linked social logins
 Each account has two **permanent** public identifiers so others can send you
 money between CBPay accounts:
 
-- **Alias** — you choose it once with `PUT /v1/me/alias` (4-20 chars
-  `a-z 0-9 . _ -`, no reserved words). It cannot be changed.
+- **Profile alias** — `PUT /v1/me/alias` fixes one permanent alias derived from the KYC/KYB-verified display name. The body is optional; if you send `alias`, it must match a candidate derived from that verified name. You cannot freely choose or rename it. This profile alias is separate from an Argentine CVU `bank_alias`.
 - **Profile QR** — `GET /v1/me/qr` returns the `qr_token`, the payload
   `cbpay:pay?to=<token>` and a ready-to-render PNG. It only lets others
   **receive** money to you, so it never changes.
@@ -210,7 +209,8 @@ factor is added/removed — your safety net against unauthorized access.
 |---|---|---|
 | `invalid_password` | 403 | The current password does not match |
 | `alias_already_set` | 409 | The alias is already set; it is permanent |
-| `alias_taken` | 409 | That alias is taken; choose another |
+| `alias_taken` | 409 | The profile alias could not be derived because every verified-name candidate is taken; contact support rather than inventing an alias |
+| `invalid_request` | 400 | The supplied value does not match a candidate derived from the verified name; omit the body or send the derived value |
 | `email_in_use` | 409 | Another login already uses that email |
 | `no_pending_email` | 409 | No pending email change; start it again |
 | `policy_locked_by_org` | 403 | Your organization requires that action/channel; it cannot be weakened |

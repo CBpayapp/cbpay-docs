@@ -386,6 +386,8 @@ para un `<img>` (prefiérela por sobre el base64 `qr_image`); cuando paga, tu
 cuenta se acredita automáticamente. También funciona en USD
 (`currency: "USD"`).
 
+Después de que se paga un QR de Bolivia y queda vinculado mediante `charge_link`, `GET /v1/payins/{payinID}` puede incluir `payer_source: "bank_event"` y un bloque `payer` con `name`, `document` y `account` cuando el banco los informa. Si el riel no informa un valor, ese campo se omite; si no informa ninguno, se omite todo el bloque `payer`.
+
 **Página de pago con tarjeta (`card`)**: recibes una `payment_url` de un
 checkout hosted con 3-D Secure — el pagador ingresa su tarjeta en una página
 segura con la marca de tu organización y, si su banco lo exige, completa el
@@ -601,41 +603,37 @@ monto exacto embebido). La transferencia anunciada llegará más adelante.
 </Tab>
 <Tab title="Argentina">
 
-**Cuenta CVU dedicada**: creas una CVU fija vinculada a tu cuenta — toda
-transferencia en ARS que llegue a ella (desde cualquier CBU o CVU del
-sistema argentino) se acredita automáticamente, sin referencias:
+**Cuenta CVU dedicada**: crea una CVU fija ligada a tu cuenta.
+Para `AR/ARS/bank_transfer`, la plataforma exige el `bank_alias` direccionable
+que quieres usar en el sistema bancario argentino:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "country": "AR", "currency": "ARS" }'
+  -d '{ "country": "AR", "currency": "ARS", "method": "bank_transfer", "bank_alias": "julieta.fernandez" }'
 ```
 
-Respuesta `201`:
+El alias debe tener 6–20 caracteres de `[A-Za-z0-9.-]` y al menos una letra.
+El banco decide si está disponible; `422 alias_taken` es accionable, así que
+elige otro alias. La respuesta incluye la CVU y, si el banco lo acepta,
+`details.bank_alias`; `details.alias_error` explica por qué no se guardó el
+alias solicitado.
 
-```json
-{
-  "instrument_id": "f2b8…",
-  "account_id": "…",
-  "country": "AR",
-  "currency": "ARS",
-  "method": "bank_transfer",
-  "instrument": "0000079900000000132537",
-  "status": "active"
-}
+Para fijar o renombrar el alias de una cuenta AR/ARS existente:
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/bank-alias \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "bank_alias": "julieta.fernandez" }'
 ```
 
-`instrument` es la CVU de 22 dígitos que compartes con tus pagadores. Para AR/ARS, la respuesta también puede incluir `details.bank_alias`, el alias bancario direccionable de esa CVU. Es opcional y best-effort: si viene vacío, sigue usando el valor `instrument` de 22 dígitos.
- La
-creación es gratis; cada depósito paga la comisión de payin normal. Lista
-tus cuentas con `GET /v1/payins/deposit-accounts`.
-
-<Note>
-La CVU opera **solo en ARS** y es de depósito (receive-only): ningún
-tercero puede debitarla. Los intentos de débito directo (DEBIN) contra
-una CVU de depósito se rechazan automáticamente.
-</Note>
+La respuesta devuelve `instrument_id`, `account_number`, `bank_alias` y
+`updated`. Repetir el mismo valor devuelve `updated: false`. Un formato
+inválido es `400 invalid_alias`; un riel no compatible es `422
+alias_unsupported`; una provisión todavía pendiente es `409
+deposit_account_not_recoverable`.
 
 </Tab>
 <Tab title="Estados Unidos">
@@ -1195,6 +1193,13 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
   "payin_id": "9c2a…",
   "kind": "qr",
   "status": "credited",
+  "payer_source": "bank_event",
+  "match_method": "charge_link",
+  "payer": {
+    "name": "JUAN PEREZ",
+    "document": "1234567",
+    "account": "1000001"
+  },
   "local_amount": "700.00",
   "fx_rate": "6.91",
   "rate_source": "lot",

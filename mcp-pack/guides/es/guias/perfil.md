@@ -99,8 +99,7 @@ Cambiar tu email **no rompe** tus inicios de sesión sociales ya vinculados
 Cada cuenta tiene dos identificadores públicos **permanentes** para que te
 envíen dinero entre cuentas CBPay:
 
-- **Alias** — lo eliges una sola vez con `PUT /v1/me/alias` (4-20 caracteres
-  `a-z 0-9 . _ -`, sin palabras reservadas). No se puede cambiar.
+- **Alias del perfil** — `PUT /v1/me/alias` fija un alias permanente derivado del nombre verificado por KYC/KYB. El body es opcional; si envías `alias`, debe coincidir con un candidato derivado de ese nombre verificado. No puedes elegirlo libremente ni renombrarlo. Es distinto del `bank_alias` de una CVU argentina.
 - **QR de perfil** — `GET /v1/me/qr` devuelve el `qr_token`, el payload
   `cbpay:pay?to=<token>` y un PNG listo para mostrar. Solo sirve para
   **recibir**, por eso no cambia nunca.
@@ -210,7 +209,8 @@ agrega/quita un factor — tu red de seguridad ante un acceso no autorizado.
 |---|---|---|
 | `invalid_password` | 403 | La contraseña actual no coincide |
 | `alias_already_set` | 409 | El alias ya se fijó; es permanente |
-| `alias_taken` | 409 | Ese alias ya está en uso; elige otro |
+| `alias_taken` | 409 | No se pudo derivar el alias del perfil porque todos los candidatos del nombre verificado están ocupados; contacta soporte en vez de inventar un alias |
+| `invalid_request` | 400 | El valor enviado no coincide con un candidato derivado del nombre verificado; omite el body o envía el valor derivado |
 | `email_in_use` | 409 | Otro login ya usa ese email |
 | `no_pending_email` | 409 | No hay cambio de email pendiente; inícialo de nuevo |
 | `policy_locked_by_org` | 403 | Tu organización exige esa acción/canal; no se puede relajar |

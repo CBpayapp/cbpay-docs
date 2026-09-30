@@ -125,7 +125,6 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_locale` | `PATCH /v1/me` (o el registro) envió un locale no vacío fuera de `en` / `es` / `zh`. El string vacío guarda inglés. Distinto de `invalid_language` (`lang` de informe PDF) y del `invalid_value` de org-admin en `default_locale` |
 | `invalid_format` | `format` del informe de verificación no es `pdf` ni `json` |
 | `batch_too_large` | Import de contactos con más de 1.000 entradas (pagina la subida) |
-| `invalid_alias` | El alias debe tener 4–20 caracteres (a-z, 0-9, punto, guion bajo, guion), empezar/terminar alfanumérico y no ser palabra reservada |
 | `invalid_body` | No se pudo leer el body del request (subidas binarias, webhooks) |
 | `invalid_image` | El body del avatar está vacío o no es una imagen soportada (PNG/JPEG/WebP, máx 512 KB) |
 | `invalid_interval` | El `interval` de la suscripción debe ser `daily`, `weekly`, `monthly` o `yearly` |
@@ -482,3 +481,16 @@ una operación Banking EUR:
 ## `dispute_fiat_unsupported`
 
 No se puede abrir una controversia para un payin acreditado en BOB, MXN o ARS retenidos. Usa un crédito USDT soportado o espera soporte para controversias fiat.
+
+## Aliases bancarios argentinos y alias del perfil
+
+| HTTP | `error` | Significado / acción |
+|---|---|---|
+| 400 | `missing_alias` | La creación de una cuenta de depósito AR/ARS en la plataforma debe incluir el `bank_alias` elegido por el caller |
+| 400 | `invalid_alias` | `bank_alias` debe tener 6–20 caracteres ASCII de `[A-Za-z0-9.-]` y al menos una letra |
+| 400 | `invalid_account` | El core no pudo resolver el número de cuenta de depósito enviado |
+| 400 | `invalid_request` | El valor del body del alias de perfil no coincide con un candidato derivado del nombre verificado, o se envió `bank_alias` a un corredor no compatible |
+| 409 | `alias_already_set` | El alias del perfil es permanente y ya fue fijado |
+| 409 | `alias_taken` | **Alias del perfil:** todos los candidatos derivados del nombre verificado están ocupados; contacta soporte. No se resuelve inventando un valor |
+| 422 | `alias_taken` | **Alias bancario:** el sistema bancario argentino ya usa ese valor; elige otro |
+| 422 | `alias_unsupported` | El riel de la cuenta de depósito no admite aliases bancarios |
