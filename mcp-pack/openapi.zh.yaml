@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.142"
+  version: "2.143"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -91,7 +91,153 @@ tags:
 - name: 实时事件
   description: >-
     Server-Sent Events 流，实时推送账户内（管理员则为整个组织）发生的所有事件，支持通过 `Last-Event-ID` 重放、可选的初始快照，以及 90 天可查询历史。
+- name: 合同
+  description: 面向已验证企业账户的预填充 Grupo CB 主协议。
 paths:
+  /v1/me/contracts/envelopes:
+    get:
+      tags:
+      - 合同
+      operationId: listMyContractEnvelopes
+      summary: 列出我的合同信封
+      description: 返回当前认证账户成员所属的合同信封。
+      parameters:
+      - name: page
+        in: query
+        schema: { type: integer, minimum: 1, default: 1 }
+      - name: page_size
+        in: query
+        schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: 合同信封列表。
+          content:
+            application/json:
+              example:
+                items:
+                - id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                  account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
+                  template_version: v13.1
+                  lang: zh
+                  status: pending_client
+                  created_at: "2026-10-01T14:00:00Z"
+                  updated_at: "2026-10-01T14:00:00Z"
+                page: 1
+                page_size: 50
+        "401":
+          description: 需要认证。
+          content:
+            application/json:
+              example: { error: unauthorized, message: authentication required }
+  /v1/me/contracts/envelopes/{envelopeID}:
+    get:
+      tags:
+      - 合同
+      operationId: getMyContractEnvelope
+      summary: 查询我的合同信封
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: 信封及时间线。
+          content:
+            application/json:
+              example:
+                id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
+                template_version: v13.1
+                lang: zh
+                status: completed
+                final_hash: sha256-of-the-final-pdf
+                signer_name: Jordan Lee
+                signer_title: Chief Executive Officer
+                signed_at: "2026-10-01T14:03:12Z"
+        "404":
+          description: 成员范围内不存在该信封。
+          content:
+            application/json:
+              example: { error: not_found, message: resource not found }
+  /v1/me/contracts/envelopes/{envelopeID}/sign:
+    post:
+      tags:
+      - 合同
+      operationId: signMyContractEnvelope
+      summary: 签署我的合同信封
+      description: 需要 owner/operator 人工会话、明确同意以及 `X-OTP-Token` 中的新 OTP。
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: X-OTP-Token
+        in: header
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [signer_name, signer_title, consent]
+              properties:
+                signer_name: { type: string, minLength: 1, maxLength: 120 }
+                signer_title: { type: string, minLength: 1, maxLength: 120 }
+                consent: { type: boolean, const: true }
+            example:
+              signer_name: Jordan Lee
+              signer_title: Chief Executive Officer
+              consent: true
+      responses:
+        "200":
+          description: 已完成的信封。
+          content:
+            application/json:
+              example:
+                id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                status: completed
+                final_hash: sha256-of-the-final-pdf
+                signed_at: "2026-10-01T14:03:12Z"
+        "401":
+          description: OTP 无效或已过期。
+          content:
+            application/json:
+              example: { error: invalid_otp, message: the verification code is invalid or expired }
+        "409":
+          description: 信封已不可签署。
+          content:
+            application/json:
+              example: { error: contract_invalid_state, message: the contract envelope cannot be signed in its current state }
+        "422":
+          description: 同意或签署人信息无效。
+          content:
+            application/json:
+              example: { error: invalid_consent, message: consent must be true }
+  /v1/me/contracts/envelopes/{envelopeID}/pdf:
+    get:
+      tags:
+      - 合同
+      operationId: getMyContractEnvelopePDF
+      summary: 下载我的合同 PDF
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: PDF 二进制。
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "404":
+          description: 成员范围内不存在该信封。
+          content:
+            application/json:
+              example: { error: not_found, message: resource not found }
   /v1/payouts/{payoutID}/receipt:
     get:
       tags:

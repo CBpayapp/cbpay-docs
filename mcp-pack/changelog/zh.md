@@ -5,6 +5,13 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.143 · 1 个版本 - 2026年10月1日
+### v2.143
+**新增**
+
+- 新增已验证企业账户的 Grupo CB 主协议签署仪式：信封列表/详情/PDF/签署
+  endpoint、人工 session、明确同意、`X-OTP-Token` 一次性 OTP、
+  `contract_envelope_completed` 事件以及可操作的合同错误代码。
 ## v2.142 · 3 个版本 - 2026年9月30日
 ### v2.142
 **新增**

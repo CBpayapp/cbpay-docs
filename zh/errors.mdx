@@ -476,3 +476,32 @@ description: "错误格式与完整的错误码目录"
 | 409 | `alias_taken` | **个人资料别名：**已验证姓名派生的所有候选值都被占用；请联系支持，不能自行编造值 |
 | 422 | `alias_taken` | **银行别名：**阿根廷银行系统已占用该值；请选择其他值 |
 | 422 | `alias_unsupported` | 选择的存款账户通道不支持银行别名 |
+
+## Grupo CB 主协议签署仪式
+
+以下错误适用于 `POST /v1/me/contracts/envelopes/{envelopeID}/sign` 和
+合同信封资源。为保护隐私，message 可能是固定的泛化文本；code 是稳定
+的集成契约。
+
+| HTTP | Code | 原因与解决方法 |
+|---:|---|---|
+| 400 | `idempotency_key_required` | 组织管理员签发缺少 body key 或 `Idempotency-Key`；使用稳定 key 重试。 |
+| 400 | `invalid_idempotency_key` | key 无效或过长；缩短后重试。 |
+| 400 | `invalid_reason` | void 必须提供非空原因；把原因放入 body。 |
+| 400 | `invalid_content_type` | 签名图库只接受 `image/png`、`image/jpeg` 或 `image/jpg`。 |
+| 400 | `empty_file` | 上传没有字节；发送原始图片文件。 |
+| 400 | `invalid_image` | 文件不是有效 PNG/JPG；重新导出支持的格式。 |
+| 403 | `contract_counsel_required` | 英文签发需要 counsel 批准；批准或使用西班牙语。 |
+| 403 | `human_session_required` | 签署需要人工 session；API key 不能签署。 |
+| 403 | `account_blocked` | 账户不是 active；请管理员恢复。 |
+| 401 | `invalid_otp` | OTP 无效、过期或已使用；在 `X-OTP-Token` 中发送新的 token。 |
+| 409 | `contract_invalid_state` | 信封已经 completed 或 voided；不要重复操作。 |
+| 413 | `file_too_large` | raw 上传超过 5 MiB，或规范化图片超过 8 MiB。 |
+| 422 | `invalid_lang` | 只能使用 `es` 或 `en`。 |
+| 422 | `contract_account_ineligible` | 目标必须是 KYB 已批准的 active 企业账户。 |
+| 422 | `contract_unfillable` | 缺少已验证数据；先修正账户资料再签发。 |
+| 422 | `invalid_consent` | body 必须包含 JSON 布尔值 `"consent": true`。 |
+| 422 | `invalid_signer` | 姓名/职务为空或过长；使用 owner/operator 人工签署人。 |
+| 502 | `storage_failed` | 私有 storage 失败；重试前先协调信封状态。 |
+| 502 | `email_failed` | 签署后邮件失败；已完成信封仍然有效。 |
+| 503 | `storage_unavailable` | 私有 storage 不可用；恢复后重试。 |

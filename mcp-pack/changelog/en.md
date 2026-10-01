@@ -5,6 +5,14 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.143 · 1 version - October 1, 2026
+### v2.143
+**Added**
+
+- Added the Grupo CB framework agreement ceremony for verified company
+  accounts: member envelope list/detail/PDF/sign routes, human-session
+  signing with consent and a single-use `X-OTP-Token`, the
+  `contract_envelope_completed` event, and actionable contract errors.
 ## v2.142 · 3 versions - September 30, 2026
 ### v2.142
 **Added**

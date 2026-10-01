@@ -1,5 +1,5 @@
 {
-  "count": 297,
+  "count": 308,
   "errors": [
     {
       "category": {
@@ -4149,6 +4149,160 @@
         "en": "The selected deposit-account rail does not support bank aliases",
         "es": "El riel de la cuenta de depósito no admite aliases bancarios",
         "zh": "选择的存款账户通道不支持银行别名"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_idempotency_key",
+      "http": 400,
+      "meaning": {
+        "en": "The key is invalid or too long; use a shorter stable key.",
+        "es": "La key es inválida o demasiado larga; usa una key más corta.",
+        "zh": "key 无效或过长；缩短后重试。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_content_type",
+      "http": 400,
+      "meaning": {
+        "en": "Signature-library upload must use `image/png`, `image/jpeg` or `image/jpg`.",
+        "es": "La biblioteca acepta `image/png`, `image/jpeg` o `image/jpg`.",
+        "zh": "签名图库只接受 `image/png`、`image/jpeg` 或 `image/jpg`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "contract_counsel_required",
+      "http": 403,
+      "meaning": {
+        "en": "English issuance requires counsel approval; approve it or issue Spanish.",
+        "es": "La emisión en inglés exige aprobación de counsel; apruébala o usa español.",
+        "zh": "英文签发需要 counsel 批准；批准或使用西班牙语。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_otp",
+      "http": 401,
+      "meaning": {
+        "en": "The one-time OTP is invalid, expired or already used; send a fresh token in `X-OTP-Token`.",
+        "es": "OTP inválido, vencido o ya usado; envía uno nuevo en `X-OTP-Token`.",
+        "zh": "OTP 无效、过期或已使用；在 `X-OTP-Token` 中发送新的 token。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "contract_invalid_state",
+      "http": 409,
+      "meaning": {
+        "en": "The envelope is already completed or voided; do not repeat the operation.",
+        "es": "El sobre ya está completado o voided; no repitas la operación.",
+        "zh": "信封已经 completed 或 voided；不要重复操作。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "contract_account_ineligible",
+      "http": 422,
+      "meaning": {
+        "en": "The target must be an active company account with approved KYB.",
+        "es": "El destino debe ser una empresa activa con KYB aprobado.",
+        "zh": "目标必须是 KYB 已批准的 active 企业账户。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "contract_unfillable",
+      "http": 422,
+      "meaning": {
+        "en": "Verified data is missing; fix the account profile before issuing.",
+        "es": "Faltan datos verificados; corrige el perfil antes de emitir.",
+        "zh": "缺少已验证数据；先修正账户资料再签发。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_consent",
+      "http": 422,
+      "meaning": {
+        "en": "The signing body must contain the JSON boolean `\"consent\": true`.",
+        "es": "El body debe llevar el booleano JSON `\"consent\": true`.",
+        "zh": "body 必须包含 JSON 布尔值 `\"consent\": true`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_signer",
+      "http": 422,
+      "meaning": {
+        "en": "Signer name/title are empty or exceed the permitted length; use a human owner/operator.",
+        "es": "Nombre/cargo vacíos o demasiado largos; usa owner/operator humano.",
+        "zh": "姓名/职务为空或过长；使用 owner/operator 人工签署人。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "storage_failed",
+      "http": 502,
+      "meaning": {
+        "en": "Private storage failed while creating the final artifact; reconcile the envelope before retrying.",
+        "es": "Falló el storage privado; reconcilia el sobre antes de reintentar.",
+        "zh": "私有 storage 失败；重试前先协调信封状态。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "email_failed",
+      "http": 502,
+      "meaning": {
+        "en": "Completion email delivery failed after signing; the completed envelope remains authoritative.",
+        "es": "Falló el email posterior a la firma; el sobre completado sigue siendo válido.",
+        "zh": "签署后邮件失败；已完成信封仍然有效。"
       }
     }
   ]

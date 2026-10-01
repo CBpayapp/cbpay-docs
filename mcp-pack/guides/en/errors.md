@@ -489,3 +489,32 @@ A dispute cannot be opened for a payin credited in locally held BOB, MXN or ARS.
 | 409 | `alias_taken` | **Profile alias:** every candidate derived from the verified name is occupied; contact support. This is not actionable by inventing a value |
 | 422 | `alias_taken` | **Bank alias:** the Argentine banking system already uses this value; choose another |
 | 422 | `alias_unsupported` | The selected deposit-account rail does not support bank aliases |
+
+## Grupo CB contract ceremony
+
+These errors apply to `POST /v1/me/contracts/envelopes/{envelopeID}/sign` and
+the account contract resources. Messages may be generalized for privacy; the
+code is the stable integration contract.
+
+| HTTP | Code | Cause and solution |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Organization issuance requires a body key or `Idempotency-Key`; retry with a stable key. |
+| 400 | `invalid_idempotency_key` | The key is invalid or too long; use a shorter stable key. |
+| 400 | `invalid_reason` | Void requires a non-empty reason; send the reason in the void body. |
+| 400 | `invalid_content_type` | Signature-library upload must use `image/png`, `image/jpeg` or `image/jpg`. |
+| 400 | `empty_file` | The signature upload has no bytes; send the original image bytes. |
+| 400 | `invalid_image` | The file is not a valid PNG/JPG image; export it again in a supported format. |
+| 403 | `contract_counsel_required` | English issuance requires counsel approval; approve it or issue Spanish. |
+| 403 | `human_session_required` | Signing requires a human member session; API keys cannot sign. |
+| 403 | `account_blocked` | The account is not active; ask an administrator to restore it. |
+| 401 | `invalid_otp` | The one-time OTP is invalid, expired or already used; send a fresh token in `X-OTP-Token`. |
+| 409 | `contract_invalid_state` | The envelope is already completed or voided; do not repeat the operation. |
+| 413 | `file_too_large` | The raw upload is over 5 MiB, or the normalized signature image is over 8 MiB. |
+| 422 | `invalid_lang` | Use only `es` or `en`; invalid values are rejected. |
+| 422 | `contract_account_ineligible` | The target must be an active company account with approved KYB. |
+| 422 | `contract_unfillable` | Verified data is missing; fix the account profile before issuing. |
+| 422 | `invalid_consent` | The signing body must contain the JSON boolean `"consent": true`. |
+| 422 | `invalid_signer` | Signer name/title are empty or exceed the permitted length; use a human owner/operator. |
+| 502 | `storage_failed` | Private storage failed while creating the final artifact; reconcile the envelope before retrying. |
+| 502 | `email_failed` | Completion email delivery failed after signing; the completed envelope remains authoritative. |
+| 503 | `storage_unavailable` | Private storage is unavailable; retry after the service recovers. |
