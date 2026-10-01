@@ -1103,6 +1103,10 @@ registered destination account, the field is simply absent — fall back to
 showing the `reference` and asking the payer to use their usual bank details
 for your organization.
 
+## Dedicated-account metadata and payer identity
+
+Pushes credited to a dedicated deposit account expose `instrument_id`, an `instrument` block and the bank-reported `payer` block — full shape in the [BOB virtual accounts guide](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts#instrument-and-payer-fields-on-credited-pushes). Filter the history with `?instrument_id=<uuid>`.
+
 ## 3. Receiving the credit
 
 When the payment arrives (through any of the modes), your account is

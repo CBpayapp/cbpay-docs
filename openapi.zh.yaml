@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.141"
+  version: "2.142"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -4932,6 +4932,28 @@ paths:
                     payment_url: https://api.qbank.cl/pay/cards/9f3XkT2m…
                     expires_at: '2026-09-10T20:30:00Z'
                     session_reused: true
+                push_to_dedicated:
+                  value:
+                    payin_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    kind: push
+                    country: BO
+                    currency: BOB
+                    method: bank_transfer
+                    local_amount: '700.00'
+                    status: credited
+                    instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    instrument:
+                      instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                      account_number: '701458092378'
+                      purpose: fondeo
+                      status: active
+                    payer:
+                      name: JUAN PEREZ
+                      document: '1234567'
+                      account: '1000001'
+                    payer_source: bank_event
+                    usdt_credited: '100.302460'
         '400':
           $ref: '#/components/responses/BadRequest'
         '503':
@@ -5066,6 +5088,12 @@ paths:
         schema:
           type: string
         description: 对 payin_id、reference 或 idempotency_key 进行不区分大小写的部分匹配。
+      - name: instrument_id
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: 按专用收款工具 UUID 筛选。UUID 无效时返回 `400 invalid_request`。
       - name: from
         in: query
         schema:
@@ -5184,7 +5212,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payin'
-              example: *id006
+              examples:
+                standard:
+                  value: *id006
+                virtual_account_with_payer:
+                  summary: 含工具与付款人的专用账户入账
+                  value:
+                    payin_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    kind: push
+                    country: BO
+                    currency: BOB
+                    method: bank_transfer
+                    status: credited
+                    instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    instrument:
+                      instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                      account_number: '701458092378'
+                      purpose: fondeo
+                      status: active
+                    payer_source: bank_event
+                    payer:
+                      name: JUAN PEREZ
+                      document: '1234567'
+                      account: '1000001'
+                    local_amount: '700.00'
+                    usdt_gross: '101.302460'
+                    fee: '1.000000'
+                    usdt_credited: '100.302460'
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
@@ -23495,6 +23550,13 @@ components:
         payin_id:
           type: string
           format: uuid
+        instrument_id:
+          type: string
+          format: uuid
+          description: 收到 payin 的专用收款工具；通用收款和历史 payin 省略此字段。
+        instrument:
+          $ref: '#/components/schemas/PayinInstrument'
+          description: 工具记录存在时返回的专用工具元数据。
         account_id:
           type: string
         kind:
@@ -24067,6 +24129,21 @@ components:
         created_at:
           type: string
           format: date-time
+    PayinInstrument:
+      type: object
+      description: 收到该 payin 的专用收款工具。通用收款和历史 payin 不返回此对象。
+      properties:
+        instrument_id:
+          type: string
+          format: uuid
+        account_number:
+          type: string
+        purpose:
+          type: string
+          description: 工具用途，例如 `fondeo` 或 `banking`。
+        status:
+          type: string
+          description: 工具当前状态。
     DepositInstrument:
       type: object
       properties:
@@ -24173,6 +24250,22 @@ webhooks:
                 fee: *id017
                 settlement_asset: *id017
                 conversion_status: *id017
+                instrument_id:
+                  type: string
+                  format: uuid
+                  description: 收到 payin 的专用收款工具；不适用时省略。
+                instrument:
+                  $ref: '#/components/schemas/PayinInstrument'
+                payer:
+                  type: object
+                  description: 银行在新入账 push 中报告的付款人身份（有数据时返回）。
+                  properties:
+                    name:
+                      type: string
+                    document:
+                      type: string
+                    account:
+                      type: string
                 idempotency_key: *id017
             example:
               payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
@@ -24185,6 +24278,16 @@ webhooks:
               fee: '1.000000'
               settlement_asset: USDC
               conversion_status: done
+              instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+              instrument:
+                instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                account_number: '701458092378'
+                purpose: fondeo
+                status: active
+              payer:
+                name: JUAN PEREZ
+                document: '1234567'
+                account: '1000001'
               idempotency_key: order-10042
       responses:
         '200':

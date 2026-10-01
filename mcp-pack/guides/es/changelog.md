@@ -5,7 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.141 · 2 versiones - 30 de septiembre de 2026
+## v2.142 · 3 versiones - 30 de septiembre de 2026
+### v2.142
+**Agregado**
+
+- Se agregó metadata del instrumento de depósito dedicado (`instrument_id` e
+  `instrument`) en las respuestas de lista/detalle de payins, el filtro de
+  listado `instrument_id` y los webhooks `payin_credited`. Los nuevos pushes
+  acreditados también pueden exponer la identidad `payer` reportada por el
+  banco; los campos ausentes se mantienen honestamente omitidos. La identidad
+  de una cuenta dedicada pasa por el flujo de screening existente y puede
+  quedar en revisión.
+
 ### v2.141
 **Agregado**
 

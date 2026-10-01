@@ -180,6 +180,16 @@ curl "https://api.qbank.cl/platform/v1/payins?country=BO&status=credited&from=20
 The regular payin fee and FX conversion rules apply. The BOB bank movement is
 not exposed as a provider-specific object in the public API.
 
+### Instrument and payer fields on credited pushes
+
+The credited payin appears in the normal list/detail resources. When the
+credit landed in a dedicated account, use `instrument_id` and `instrument`
+(`account_number`, `purpose`, `status`) to reconcile it; filter the list with
+`?instrument_id=<uuid>`. A new credit may also carry
+`payer_source: "bank_event"` and the bank-reported `payer` block. Missing
+bank data is omitted, old payer data is not backfilled, and the existing
+screening flow may place the credit in review.
+
 ## BOB payouts
 
 BOB payouts continue to use the provider-agnostic payout contract:

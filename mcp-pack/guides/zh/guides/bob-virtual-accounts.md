@@ -166,6 +166,14 @@ curl "https://api.qbank.cl/platform/v1/payins?country=BO&status=credited&from=20
 
 适用标准 payin 费用和汇率规则。公开 API 不暴露银行供应商专属对象。
 
+### 已入账 push 的工具与付款人字段
+
+已入账 payin 仍通过普通列表/详情资源提供。若入账落在专用账户，请使用
+`instrument_id` 与 `instrument`（`account_number`、`purpose`、`status`）
+进行对账，也可用 `?instrument_id=<uuid>` 筛选列表。新入账还可能带有
+`payer_source: "bank_event"` 和银行报告的 `payer` 区块。银行未报告的数据
+会省略，历史付款人不会被补造，现有 screening 可能使入账进入审核。
+
 ## BOB payout
 
 BOB payout 继续使用与供应商无关的合同：

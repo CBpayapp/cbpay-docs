@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.141"
+  version: "2.142"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5220,6 +5220,29 @@ paths:
                     payment_url: https://api.qbank.cl/pay/cards/9f3XkT2m…
                     expires_at: '2026-09-10T20:30:00Z'
                     session_reused: true
+                push_to_dedicated:
+                  summary: Push to a dedicated deposit account
+                  value:
+                    payin_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    kind: push
+                    country: BO
+                    currency: BOB
+                    method: bank_transfer
+                    local_amount: '700.00'
+                    status: credited
+                    instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    instrument:
+                      instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                      account_number: '701458092378'
+                      purpose: fondeo
+                      status: active
+                    payer:
+                      name: JUAN PEREZ
+                      document: '1234567'
+                      account: '1000001'
+                    payer_source: bank_event
+                    usdt_credited: '100.302460'
         '400':
           $ref: '#/components/responses/BadRequest'
         '503':
@@ -5358,6 +5381,12 @@ paths:
         schema:
           type: string
         description: Case-insensitive partial match against payin_id, reference or idempotency_key.
+      - name: instrument_id
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Filter by the dedicated deposit instrument UUID. Invalid UUID returns `400 invalid_request`.
       - name: from
         in: query
         schema:
@@ -5477,7 +5506,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payin'
-              example: *id006
+              examples:
+                standard:
+                  value: *id006
+                virtual_account_with_payer:
+                  summary: Dedicated account credit with instrument and payer
+                  value:
+                    payin_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    kind: push
+                    country: BO
+                    currency: BOB
+                    method: bank_transfer
+                    status: credited
+                    instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                    instrument:
+                      instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                      account_number: '701458092378'
+                      purpose: fondeo
+                      status: active
+                    payer_source: bank_event
+                    payer:
+                      name: JUAN PEREZ
+                      document: '1234567'
+                      account: '1000001'
+                    local_amount: '700.00'
+                    usdt_gross: '101.302460'
+                    fee: '1.000000'
+                    usdt_credited: '100.302460'
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
@@ -24313,6 +24369,13 @@ components:
         payin_id:
           type: string
           format: uuid
+        instrument_id:
+          type: string
+          format: uuid
+          description: Dedicated deposit instrument that received the payin; omitted for generic collections and legacy payins.
+        instrument:
+          $ref: '#/components/schemas/PayinInstrument'
+          description: Dedicated instrument metadata, returned when the instrument row is available.
         account_id:
           type: string
         kind:
@@ -24923,6 +24986,21 @@ components:
         created_at:
           type: string
           format: date-time
+    PayinInstrument:
+      type: object
+      description: Dedicated deposit instrument that received the payin. Omitted for generic collections and legacy payins.
+      properties:
+        instrument_id:
+          type: string
+          format: uuid
+        account_number:
+          type: string
+        purpose:
+          type: string
+          description: Instrument purpose, such as `fondeo` or `banking`.
+        status:
+          type: string
+          description: Current instrument status.
     DepositInstrument:
       type: object
       properties:
@@ -25119,6 +25197,22 @@ webhooks:
                 fee: *id017
                 settlement_asset: *id017
                 conversion_status: *id017
+                instrument_id:
+                  type: string
+                  format: uuid
+                  description: Dedicated deposit instrument that received the payin; omitted when not applicable.
+                instrument:
+                  $ref: '#/components/schemas/PayinInstrument'
+                payer:
+                  type: object
+                  description: Bank-reported payer identity for new credited pushes, when available.
+                  properties:
+                    name:
+                      type: string
+                    document:
+                      type: string
+                    account:
+                      type: string
                 idempotency_key: *id017
             example:
               payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
@@ -25131,6 +25225,16 @@ webhooks:
               fee: '1.000000'
               settlement_asset: USDC
               conversion_status: done
+              instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+              instrument:
+                instrument_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                account_number: '701458092378'
+                purpose: fondeo
+                status: active
+              payer:
+                name: JUAN PEREZ
+                document: '1234567'
+                account: '1000001'
               idempotency_key: order-10042
       responses:
         '200':
