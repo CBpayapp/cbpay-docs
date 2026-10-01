@@ -125,6 +125,7 @@
                     "group": "Saldos y cuenta",
                     "pages": [
                       "es/guias/accounts",
+                      "es/guias/contrato-marco-grupo-cb",
                       "es/guias/transferencias",
                       "es/guias/swaps",
                       "es/guias/crypto",
@@ -257,6 +258,7 @@
                     "group": "Balances & account",
                     "pages": [
                       "en/guides/accounts",
+                      "en/guides/contract-agreement",
                       "en/guides/transfers",
                       "en/guides/swaps",
                       "en/guides/crypto",
@@ -388,6 +390,7 @@
                     "group": "余额与账户",
                     "pages": [
                       "zh/guides/accounts",
+                      "zh/guides/contract-agreement",
                       "zh/guides/transfers",
                       "zh/guides/swaps",
                       "zh/guides/crypto",

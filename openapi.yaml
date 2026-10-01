@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.142"
+  version: "2.143"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -119,7 +119,156 @@ tags:
 - name: Real-time events
   description: >-
     Server-Sent Events stream with everything that happens in the account (or across the organization for admins), replay with `Last-Event-ID`, optional initial snapshot and a 90-day queryable history.
+- name: Contracts
+  description: Pre-filled Grupo CB framework agreements for verified company accounts.
 paths:
+  /v1/me/contracts/envelopes:
+    get:
+      tags:
+      - Contracts
+      operationId: listMyContractEnvelopes
+      summary: List my contract envelopes
+      description: Returns the envelopes belonging to the authenticated account member.
+      parameters:
+      - name: page
+        in: query
+        schema: { type: integer, minimum: 1, default: 1 }
+      - name: page_size
+        in: query
+        schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Contract envelopes.
+          content:
+            application/json:
+              example:
+                items:
+                - id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                  account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
+                  template_version: v13.1
+                  lang: es
+                  status: pending_client
+                  created_at: "2026-10-01T14:00:00Z"
+                  updated_at: "2026-10-01T14:00:00Z"
+                page: 1
+                page_size: 50
+        "401":
+          description: Authentication required.
+          content:
+            application/json:
+              example: { error: unauthorized, message: authentication required }
+  /v1/me/contracts/envelopes/{envelopeID}:
+    get:
+      tags:
+      - Contracts
+      operationId: getMyContractEnvelope
+      summary: Get my contract envelope
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Envelope and its timeline.
+          content:
+            application/json:
+              example:
+                id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
+                template_version: v13.1
+                lang: es
+                status: completed
+                final_hash: sha256-of-the-final-pdf
+                signer_name: Jordan Lee
+                signer_title: Chief Executive Officer
+                signed_at: "2026-10-01T14:03:12Z"
+                events:
+                - event: completed
+                  created_at: "2026-10-01T14:03:12Z"
+        "404":
+          description: Envelope not found in the member scope.
+          content:
+            application/json:
+              example: { error: not_found, message: resource not found }
+  /v1/me/contracts/envelopes/{envelopeID}/sign:
+    post:
+      tags:
+      - Contracts
+      operationId: signMyContractEnvelope
+      summary: Sign my contract envelope
+      description: Requires a human owner/operator session, consent and a fresh OTP in `X-OTP-Token`.
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: X-OTP-Token
+        in: header
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [signer_name, signer_title, consent]
+              properties:
+                signer_name: { type: string, minLength: 1, maxLength: 120 }
+                signer_title: { type: string, minLength: 1, maxLength: 120 }
+                consent: { type: boolean, const: true }
+            example:
+              signer_name: Jordan Lee
+              signer_title: Chief Executive Officer
+              consent: true
+      responses:
+        "200":
+          description: Completed envelope.
+          content:
+            application/json:
+              example:
+                id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                status: completed
+                final_hash: sha256-of-the-final-pdf
+                signed_at: "2026-10-01T14:03:12Z"
+        "401":
+          description: The OTP is invalid or expired.
+          content:
+            application/json:
+              example: { error: invalid_otp, message: the verification code is invalid or expired }
+        "409":
+          description: The envelope is no longer signable.
+          content:
+            application/json:
+              example: { error: contract_invalid_state, message: the contract envelope cannot be signed in its current state }
+        "422":
+          description: Consent or signer data is invalid.
+          content:
+            application/json:
+              example: { error: invalid_consent, message: consent must be true }
+  /v1/me/contracts/envelopes/{envelopeID}/pdf:
+    get:
+      tags:
+      - Contracts
+      operationId: getMyContractEnvelopePDF
+      summary: Download my contract PDF
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: PDF bytes.
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "404":
+          description: Envelope not found in the member scope.
+          content:
+            application/json:
+              example: { error: not_found, message: resource not found }
   /v1/payouts/{payoutID}/receipt:
     get:
       tags:

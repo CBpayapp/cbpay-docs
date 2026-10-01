@@ -494,3 +494,32 @@ No se puede abrir una controversia para un payin acreditado en BOB, MXN o ARS re
 | 409 | `alias_taken` | **Alias del perfil:** todos los candidatos derivados del nombre verificado están ocupados; contacta soporte. No se resuelve inventando un valor |
 | 422 | `alias_taken` | **Alias bancario:** el sistema bancario argentino ya usa ese valor; elige otro |
 | 422 | `alias_unsupported` | El riel de la cuenta de depósito no admite aliases bancarios |
+
+## Ceremonia del Contrato Marco Grupo CB
+
+Estos errores aplican a `POST /v1/me/contracts/envelopes/{envelopeID}/sign` y
+a los recursos de sobres. El mensaje puede generalizarse por privacidad; el
+código es el contrato estable para la integración.
+
+| HTTP | Código | Causa y solución |
+|---:|---|---|
+| 400 | `idempotency_key_required` | La emisión admin exige key en body o `Idempotency-Key`; repite con una key estable. |
+| 400 | `invalid_idempotency_key` | La key es inválida o demasiado larga; usa una key más corta. |
+| 400 | `invalid_reason` | Void exige un motivo no vacío; envíalo en el body. |
+| 400 | `invalid_content_type` | La biblioteca acepta `image/png`, `image/jpeg` o `image/jpg`. |
+| 400 | `empty_file` | La carga no tiene bytes; envía el archivo original. |
+| 400 | `invalid_image` | El archivo no es PNG/JPG válido; expórtalo nuevamente. |
+| 403 | `contract_counsel_required` | La emisión en inglés exige aprobación de counsel; apruébala o usa español. |
+| 403 | `human_session_required` | Firmar exige sesión humana; las API keys no pueden firmar. |
+| 403 | `account_blocked` | La cuenta no está activa; pide al admin restaurarla. |
+| 401 | `invalid_otp` | OTP inválido, vencido o ya usado; envía uno nuevo en `X-OTP-Token`. |
+| 409 | `contract_invalid_state` | El sobre ya está completado o voided; no repitas la operación. |
+| 413 | `file_too_large` | La carga raw supera 5 MiB o la imagen normalizada supera 8 MiB. |
+| 422 | `invalid_lang` | Usa solo `es` o `en`; los demás valores se rechazan. |
+| 422 | `contract_account_ineligible` | El destino debe ser una empresa activa con KYB aprobado. |
+| 422 | `contract_unfillable` | Faltan datos verificados; corrige el perfil antes de emitir. |
+| 422 | `invalid_consent` | El body debe llevar el booleano JSON `"consent": true`. |
+| 422 | `invalid_signer` | Nombre/cargo vacíos o demasiado largos; usa owner/operator humano. |
+| 502 | `storage_failed` | Falló el storage privado; reconcilia el sobre antes de reintentar. |
+| 502 | `email_failed` | Falló el email posterior a la firma; el sobre completado sigue siendo válido. |
+| 503 | `storage_unavailable` | Storage privado no disponible; reintenta cuando se recupere. |

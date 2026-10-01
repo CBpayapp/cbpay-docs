@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.142"
+  version: "2.143"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -126,7 +126,153 @@ tags:
 - name: Eventos en tiempo real
   description: >-
     Stream Server-Sent Events con todo lo que pasa en la cuenta (o en toda la organización para administradores), replay con `Last-Event-ID`, snapshot inicial opcional e historial consultable de 90 días.
+- name: Contratos
+  description: Contratos Marco Grupo CB prellenados para cuentas empresa verificadas.
 paths:
+  /v1/me/contracts/envelopes:
+    get:
+      tags:
+      - Contratos
+      operationId: listMyContractEnvelopes
+      summary: Lista mis sobres de contrato
+      description: Devuelve los sobres de la cuenta del miembro autenticado.
+      parameters:
+      - name: page
+        in: query
+        schema: { type: integer, minimum: 1, default: 1 }
+      - name: page_size
+        in: query
+        schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Sobres de contrato.
+          content:
+            application/json:
+              example:
+                items:
+                - id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                  account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
+                  template_version: v13.1
+                  lang: es
+                  status: pending_client
+                  created_at: "2026-10-01T14:00:00Z"
+                  updated_at: "2026-10-01T14:00:00Z"
+                page: 1
+                page_size: 50
+        "401":
+          description: Se requiere autenticación.
+          content:
+            application/json:
+              example: { error: unauthorized, message: authentication required }
+  /v1/me/contracts/envelopes/{envelopeID}:
+    get:
+      tags:
+      - Contratos
+      operationId: getMyContractEnvelope
+      summary: Consulta mi sobre de contrato
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Sobre y timeline.
+          content:
+            application/json:
+              example:
+                id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
+                template_version: v13.1
+                lang: es
+                status: completed
+                final_hash: sha256-of-the-final-pdf
+                signer_name: Jordan Lee
+                signer_title: Chief Executive Officer
+                signed_at: "2026-10-01T14:03:12Z"
+        "404":
+          description: Sobre inexistente en el alcance del miembro.
+          content:
+            application/json:
+              example: { error: not_found, message: resource not found }
+  /v1/me/contracts/envelopes/{envelopeID}/sign:
+    post:
+      tags:
+      - Contratos
+      operationId: signMyContractEnvelope
+      summary: Firma mi sobre de contrato
+      description: Requiere sesión humana owner/operator, consentimiento y OTP fresco en `X-OTP-Token`.
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: X-OTP-Token
+        in: header
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [signer_name, signer_title, consent]
+              properties:
+                signer_name: { type: string, minLength: 1, maxLength: 120 }
+                signer_title: { type: string, minLength: 1, maxLength: 120 }
+                consent: { type: boolean, const: true }
+            example:
+              signer_name: Jordan Lee
+              signer_title: Chief Executive Officer
+              consent: true
+      responses:
+        "200":
+          description: Sobre completado.
+          content:
+            application/json:
+              example:
+                id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                status: completed
+                final_hash: sha256-of-the-final-pdf
+                signed_at: "2026-10-01T14:03:12Z"
+        "401":
+          description: OTP inválido o vencido.
+          content:
+            application/json:
+              example: { error: invalid_otp, message: the verification code is invalid or expired }
+        "409":
+          description: El sobre ya no se puede firmar.
+          content:
+            application/json:
+              example: { error: contract_invalid_state, message: the contract envelope cannot be signed in its current state }
+        "422":
+          description: Consentimiento o firmante inválido.
+          content:
+            application/json:
+              example: { error: invalid_consent, message: consent must be true }
+  /v1/me/contracts/envelopes/{envelopeID}/pdf:
+    get:
+      tags:
+      - Contratos
+      operationId: getMyContractEnvelopePDF
+      summary: Descarga mi PDF contractual
+      parameters:
+      - name: envelopeID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Bytes PDF.
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "404":
+          description: Sobre inexistente en el alcance del miembro.
+          content:
+            application/json:
+              example: { error: not_found, message: resource not found }
   /v1/payouts/{payoutID}/receipt:
     get:
       tags:

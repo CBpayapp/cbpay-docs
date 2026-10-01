@@ -5,6 +5,14 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.143 · 1 versión - 1 de octubre de 2026
+### v2.143
+**Agregado**
+
+- Se agregó la ceremonia del Contrato Marco Grupo CB para cuentas empresa
+  verificadas: lista/detalle/PDF/firma de sobres, sesión humana, consentimiento,
+  OTP de un solo uso en `X-OTP-Token`, evento
+  `contract_envelope_completed` y errores accionables.
 ## v2.142 · 3 versiones - 30 de septiembre de 2026
 ### v2.142
 **Agregado**

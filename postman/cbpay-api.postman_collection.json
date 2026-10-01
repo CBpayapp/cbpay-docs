@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-01 03:36 UTC",
-    "_content_sha256": "ba3e4d41990b1a448bc6a389e161c7d2ab7bb41ac3a18f634ce1f12f669e8a9d"
+    "_generated_at": "2026-10-01 15:07 UTC",
+    "_content_sha256": "567d23c06027be76b2b8b4448fc405fbf13eddc13d45e90e07deefd5de7d1f0e"
   },
   "auth": {
     "type": "bearer",
@@ -27,6 +27,266 @@
     }
   ],
   "item": [
+    {
+      "name": "Contracts",
+      "item": [
+        {
+          "name": "List my contract envelopes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/contracts/envelopes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "contracts",
+                "envelopes"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Returns the envelopes belonging to the authenticated account member."
+          },
+          "response": [
+            {
+              "name": "200 Contract envelopes.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/contracts/envelopes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "contracts",
+                    "envelopes"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Contract envelopes.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n      \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n      \"template_version\": \"v13.1\",\n      \"lang\": \"es\",\n      \"status\": \"pending_client\",\n      \"created_at\": \"2026-10-01T14:00:00Z\",\n      \"updated_at\": \"2026-10-01T14:00:00Z\"\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get my contract envelope",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/contracts/envelopes/:envelopeID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "contracts",
+                "envelopes",
+                ":envelopeID"
+              ],
+              "variable": [
+                {
+                  "key": "envelopeID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Envelope and its timeline.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/contracts/envelopes/:envelopeID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "contracts",
+                    "envelopes",
+                    ":envelopeID"
+                  ],
+                  "variable": [
+                    {
+                      "key": "envelopeID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Envelope and its timeline.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n  \"template_version\": \"v13.1\",\n  \"lang\": \"es\",\n  \"status\": \"completed\",\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\",\n  \"events\": [\n    {\n      \"event\": \"completed\",\n      \"created_at\": \"2026-10-01T14:03:12Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Sign my contract envelope",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-OTP-Token",
+                "value": "",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/contracts/envelopes/:envelopeID/sign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "contracts",
+                "envelopes",
+                ":envelopeID",
+                "sign"
+              ],
+              "variable": [
+                {
+                  "key": "envelopeID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Requires a human owner/operator session, consent and a fresh OTP in `X-OTP-Token`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"consent\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Completed envelope.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/contracts/envelopes/:envelopeID/sign",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "contracts",
+                    "envelopes",
+                    ":envelopeID",
+                    "sign"
+                  ],
+                  "variable": [
+                    {
+                      "key": "envelopeID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Completed envelope.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"status\": \"completed\",\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download my contract PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/contracts/envelopes/:envelopeID/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "contracts",
+                "envelopes",
+                ":envelopeID",
+                "pdf"
+              ],
+              "variable": [
+                {
+                  "key": "envelopeID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
     {
       "name": "Receipts",
       "item": [
