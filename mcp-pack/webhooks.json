@@ -555,7 +555,19 @@
         "fee": "1.000000",
         "fx_rate": "6.91",
         "idempotency_key": "order-10042",
+        "instrument": {
+          "account_number": "701458092378",
+          "instrument_id": "7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b",
+          "purpose": "fondeo",
+          "status": "active"
+        },
+        "instrument_id": "7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b",
         "local_amount": "700.00",
+        "payer": {
+          "account": "1000001",
+          "document": "1234567",
+          "name": "JUAN PEREZ"
+        },
         "payin_id": "4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
         "settlement_asset": "USDC",
         "usdt_credited": "100.302460"

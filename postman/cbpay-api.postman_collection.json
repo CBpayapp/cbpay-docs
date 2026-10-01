@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-09-30 19:14 UTC",
-    "_content_sha256": "fc555d8620a35e795c21e7205503ef2be26d841237cb32eccae9e350de5a4298"
+    "_generated_at": "2026-10-01 03:36 UTC",
+    "_content_sha256": "ba3e4d41990b1a448bc6a389e161c7d2ab7bb41ac3a18f634ce1f12f669e8a9d"
   },
   "auth": {
     "type": "bearer",
@@ -11632,6 +11632,12 @@
                   "description": "Case-insensitive partial match against payin_id, reference or idempotency_key."
                 },
                 {
+                  "key": "instrument_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by the dedicated deposit instrument UUID. Invalid UUID returns `400 invalid_request`."
+                },
+                {
                   "key": "from",
                   "value": "",
                   "disabled": true,
@@ -11713,6 +11719,12 @@
                       "value": "",
                       "disabled": true,
                       "description": "Case-insensitive partial match against payin_id, reference or idempotency_key."
+                    },
+                    {
+                      "key": "instrument_id",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by the dedicated deposit instrument UUID. Invalid UUID returns `400 invalid_request`."
                     },
                     {
                       "key": "from",

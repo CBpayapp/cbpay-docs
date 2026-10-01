@@ -5,7 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.141 · 2 个版本 - 2026年9月30日
+## v2.142 · 3 个版本 - 2026年9月30日
+### v2.142
+**新增**
+
+- payin 列表/详情响应、列表 `instrument_id` 筛选器和
+  `payin_credited` webhook 新增专用收款工具元数据（`instrument_id` 和
+  `instrument`）。新的入账 push 还可以返回银行报告的 `payer` 身份；没有
+  报告的数据保持省略。专用账户的付款人身份会进入现有 screening 流程，
+  可能进入人工审核。
+
 ### v2.141
 **新增**
 

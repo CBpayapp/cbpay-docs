@@ -181,6 +181,16 @@ curl "https://api.qbank.cl/platform/v1/payins?country=BO&status=credited&from=20
 Se aplican la comisión normal y las reglas de conversión de payins. La API
 pública no expone el objeto específico del proveedor bancario.
 
+### Campos de instrumento y pagador en pushes acreditados
+
+El payin acreditado aparece en los recursos normales de lista y detalle.
+Cuando el abono cayó en una cuenta dedicada, usa `instrument_id` y
+`instrument` (`account_number`, `purpose`, `status`) para conciliarlo; filtra
+la lista con `?instrument_id=<uuid>`. Un crédito nuevo también puede traer
+`payer_source: "bank_event"` y el bloque `payer` reportado por el banco. Los
+datos bancarios ausentes se omiten, el pagador histórico no se reconstruye y
+el screening existente puede dejar el abono en revisión.
+
 ## Payouts BOB
 
 Los payouts BOB mantienen el contrato provider-agnostic:

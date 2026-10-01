@@ -1097,6 +1097,13 @@ destino registrada, el campo simplemente está ausente — en ese caso muestra
 la `reference` y pídele al pagador que use los datos bancarios habituales de
 tu organización.
 
+## Metadatos de cuenta dedicada e identidad del pagador
+
+Los pushes acreditados en una cuenta de depósito dedicada exponen
+`instrument_id`, un bloque `instrument` y el bloque `payer` del banco — forma
+completa en la [guía de cuentas virtuales BOB](https://docs.cbpayapp.com/es/guias/bob-virtual-accounts#campos-de-instrumento-y-pagador-en-pushes-acreditados).
+Filtra el historial con `?instrument_id=<uuid>`.
+
 ## 3. Recibe el abono
 
 Cuando el pago llega (por cualquiera de las modalidades), tu cuenta se

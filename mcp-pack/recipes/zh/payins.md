@@ -997,6 +997,12 @@ CBPay 运营方之后更新了登记的账户，已经存在的通报仍会指�
 收款账户的走廊上，该字段直接缺省——此时展示 `reference`，并请付款人使用
 你组织常规的银行信息即可。
 
+## 专用账户元数据与付款人身份
+
+入账到专用收款账户的 push 会返回 `instrument_id`、`instrument` 区块和银行
+上报的 `payer` 区块——完整结构见 [BOB 虚拟账户指南](https://docs.cbpayapp.com/zh/guides/bob-virtual-accounts)。
+可使用 `?instrument_id=<uuid>` 筛选历史。
+
 ## 3. 接收入账
 
 当付款到达（无论通过哪种模式），您的账户会自动入账，并触发
