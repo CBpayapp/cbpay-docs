@@ -335,45 +335,9 @@ transfiere BOB al número seleccionado y el abono se detecta por polling. No
 requiere anuncio ni referencia del pagador.
 
 **QR de cobro** (estándar interoperable local): generas el QR y tu cliente
-lo escanea con su app bancaria.
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "BO",
-    "currency": "BOB",
-    "method": "qr",
-    "amount": "700.00",
-    "description": "Recarga app",
-    "expires_in": 3600
-  }'
-```
-
-Respuesta `201`:
-
-```json
-{
-  "payin_id": "9c2a…",
-  "status": "pending",
-  "charge": {
-    "charge_id": "…",
-    "qr_image": "<base64>",
-    "qr_image_url": "https://cdn.cbpayapp.com/public/payin-qr/<charge_id>.png",
-    "qr_payload": "<contenido del QR>",
-    "our_reference": "482915073",
-    "status": "pending"
-  }
-}
-```
-
-Muestra el QR a tu cliente — `qr_image_url` es una URL pública de CDN lista
-para un `` (prefiérela por sobre el base64 `qr_image`); cuando paga, tu
-cuenta se acredita automáticamente. También funciona en USD
-(`currency: "USD"`).
-
-Después de que se paga un QR de Bolivia y queda vinculado mediante `charge_link`, `GET /v1/payins/{payinID}` puede incluir `payer_source: "bank_event"` y un bloque `payer` con `name`, `document` y `account` cuando el banco los informa. Si el riel no informa un valor, ese campo se omite; si no informa ninguno, se omite todo el bloque `payer`.
+lo escanea con su app bancaria. Consulta la [guía de payins
+QR](https://docs.cbpayapp.com/es/guias/payins-qr) para ver el request, la respuesta, los reintentos y
+los errores.
 
 **Página de pago con tarjeta (`card`)**: recibes una `payment_url` de un
 checkout hosted con 3-D Secure — el pagador ingresa su tarjeta en una página

@@ -133,6 +133,23 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_settlement_hours` | `settlement_hours` 仅支持 `payin_card` 费用服务，且必须是非负整数（`0` = 立即入账）— 参见[费用](https://docs.cbpayapp.com/zh/concepts/fees) |
 | `invalid_country` | 国家/地区代码格式错误或缺失——ISO 3166-1 alpha-2（例如 `GET /v1/aml/catalogs/cities?country=`）；也用于有效但不支持的国家/地区过滤条件（例如在银行目录查询中传入非 `US` 的 `country`） |
 
+### QR payin 幂等性
+
+对于 `method: "qr"` 的 `POST /v1/payins`，`idempotency_key` 是可选的。
+可以在 JSON body 或 `Idempotency-Key` 请求头中发送；两者同时存在时以
+body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台会在服务
+端按账户对 key 做命名空间隔离；集成方发送的 key 不会被改写。
+
+- `400 invalid_idempotency_key`：key 超过 256 个字符或包含 CR/LF。修正
+  key 后，用修正后的请求重试。
+- `409 idempotency_conflict`：相同 key 被用于不同国家、币种、方式或数值
+  金额。要 replay，请保留原始 payload；要创建新收款，请使用新的 key。
+
+相同 key 与相同 payload 会返回原始收款，并带有
+`idempotency_hit: true`，不会创建第二笔收款。金额按数值比较
+（`100` 与 `100.00` 相同）；`glosa` 只是展示文本，不参与 replay 身份。
+使用 `GET /v1/payins/{payinID}` 查询实时状态。
+
 ### 资金与状态（402 / 404 / 409 / 422 / 429）
 
 | HTTP | `error` | 含义 |

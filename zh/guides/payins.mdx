@@ -316,44 +316,11 @@ BOB instrument。付款人向所选号码转入 BOB，系统通过轮询检测�
 不需要公告或付款人参考号。
 
 **收款二维码**（本地互操作标准）：您生成二维码，客户用其银行 App
-扫码支付。
+扫码支付。请参阅专门的 [QR payin 指南](/zh/guides/payins-qr)，其中包含
+请求、响应、重试和错误契约。
 
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "BO",
-    "currency": "BOB",
-    "method": "qr",
-    "amount": "700.00",
-    "description": "App top-up",
-    "expires_in": 3600
-  }'
-```
-
-响应 `201`：
-
-```json
-{
-  "payin_id": "9c2a…",
-  "status": "pending",
-  "charge": {
-    "charge_id": "…",
-    "qr_image": "<base64>",
-    "qr_image_url": "https://cdn.cbpayapp.com/public/payin-qr/<charge_id>.png",
-    "qr_payload": "<QR content>",
-    "our_reference": "482915073",
-    "status": "pending"
-  }
-}
-```
-
-将二维码展示给您的客户 —— `qr_image_url` 是可直接用于 `<img>` 标签的
-公共 CDN URL（优先使用它而非 base64 的 `qr_image`）；客户付款后，
-您的账户会自动入账。它同样支持 USD（`currency: "USD"`）。
-
-玻利维亚 QR 付款完成并通过 `charge_link` 绑定后，`GET /v1/payins/{payinID}` 可能返回 `payer_source: "bank_event"` 以及包含 `name`、`document` 和 `account` 的 `payer` 区块，前提是银行报告了这些信息。如果通道没有报告某个值，则省略对应字段；如果没有报告任何值，则省略整个 `payer` 区块。
+QR payin 的请求、响应、幂等重试和错误契约请参阅
+[QR payin 指南](/zh/guides/payins-qr)。
 
 **银行卡支付页面（`card`）**：您会收到一个托管 3-D Secure 收银台的
 `payment_url` —— 付款人在带有您组织品牌的安全页面上输入银行卡信息，

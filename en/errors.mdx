@@ -134,6 +134,27 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_settlement_hours` | `settlement_hours` is only accepted on the `payin_card` fee service and must be a non-negative integer (`0` = immediate credit) — see [fees](/en/concepts/fees) |
 | `invalid_country` | Malformed or missing country code — ISO 3166-1 alpha-2 (e.g. `GET /v1/aml/catalogs/cities?country=`); also a valid but unsupported country filter (e.g. a non-`US` `country` on the bank directory lookup) |
 
+### QR payin idempotency
+
+For `POST /v1/payins` with `method: "qr"`, `idempotency_key` is optional. You may
+send it in the JSON body or as `Idempotency-Key`; when both are present, the
+body value wins. A key can be up to 256 characters and cannot contain CR/LF.
+The platform scopes the key to the account server-side; the integrator sends
+the key unchanged.
+
+- `400 invalid_idempotency_key`: the key is longer than 256 characters or
+  contains CR/LF. Shorten it or remove those characters, then retry with the
+  same corrected request.
+- `409 idempotency_conflict`: the same key was used with a different country,
+  currency, method or numeric amount. Keep the original payload for a replay,
+  or choose a new key for a new charge.
+
+With the same key and payload, the API returns the original charge with
+`idempotency_hit: true` and does not create another charge. Numeric amounts are
+compared by value (`100` equals `100.00`); `glosa` is display-only and is not
+part of the replay identity. Read the live status with
+`GET /v1/payins/{payinID}`.
+
 ### Money and state (402 / 404 / 409 / 422 / 429)
 
 | HTTP | `error` | Meaning |
