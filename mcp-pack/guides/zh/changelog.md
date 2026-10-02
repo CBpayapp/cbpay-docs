@@ -5,7 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.145 · 2 个版本 - 2026年10月2日
+## v2.146 · 3 个版本 - 2026年10月2日
+### v2.146
+**新增**
+
+- 为 QR payin 增加可选幂等性：相同的 key 与等价 payload 会返回原始
+  charge，并带有 `idempotency_hit: true`；payload 不同则返回
+  `409 idempotency_conflict`。
+- 记录 `400 invalid_idempotency_key`、body 与 header 的优先级，以及
+  replay 时通过 GET 查询实时状态。
+
 ### v2.145
 **新增**
 

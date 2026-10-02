@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.145"
+  version: "2.146"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -4663,9 +4663,12 @@ paths:
         required: false
         description: >-
           JSON `idempotency_key` 的替代方式。当 body 未提供该键时，
-          `method: "card"` 必须使用此 header。body 与 header 不要发送不同的值。
+          `method: "card"` 必须使用此 header；QR 收款可选。body 与 header
+          不要发送不同的值。
         schema:
           type: string
+          maxLength: 256
+          pattern: '^[^\r\n]{1,256}$'
       requestBody:
         required: true
         content:
@@ -4712,9 +4715,11 @@ paths:
                     收款请使用 /v1/payins/collect。
                 idempotency_key:
                   type: string
+                  maxLength: 256
+                  pattern: '^[^\r\n]{1,256}$'
                   description: >-
                     对于 `method: "card"`，该键为必填：在 body 中发送，或使用
-                    `Idempotency-Key` 请求头。`bank_transfer`、`fintoc` 与
+                    `Idempotency-Key` 请求头。`qr`、`bank_transfer`、`fintoc` 与
                     `checkout` 可选。使用相同键重试会返回原始 payin、HTTP 200
                     和 `idempotency_hit: true` —— 托管方式返回同一个
                     `payment_url`/`checkout_url`，预告银行转账返回同一个
@@ -4823,6 +4828,7 @@ paths:
                   currency: BOB
                   method: qr
                   amount: '700.00'
+                  idempotency_key: qr-bo-001
                   description: 应用充值
                   expires_in: 3600
               br_pix_qr:
@@ -5039,7 +5045,8 @@ paths:
                     receipt_url: https://api.qbank.cl/platform/v1/payins/d0135ed5-8e9c-4f8b-a522-8ec100470426/receipt
         '200':
           description: >-
-            已公告转账（`bank_transfer`）的幂等重放，或开放银行卡会话（`card`）的复用。
+            QR 或已公告转账（`bank_transfer`）的幂等重放，或开放银行卡会话（`card`）
+            的复用。QR 与转账重放返回原始 payin，并带有 `idempotency_hit: true`；
             会话复用返回原有的 `payment_url` 与 `session_reused: true`，不会创建第二笔
             charge 或第二个会话。
           content:
@@ -5078,6 +5085,16 @@ paths:
                     payment_url: https://api.qbank.cl/pay/cards/9f3XkT2m…
                     expires_at: '2026-09-10T20:30:00Z'
                     session_reused: true
+                qr_replay:
+                  summary: 使用原始收款的 QR 重放
+                  value:
+                    payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
+                    status: pending
+                    charge:
+                      charge_id: c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4
+                      our_reference: QR-778812
+                      qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
+                    idempotency_hit: true
                 push_to_dedicated:
                   value:
                     payin_id: 7e3f1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
@@ -5101,7 +5118,18 @@ paths:
                     payer_source: bank_event
                     usdt_credited: '100.302460'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: >-
+            当 key 超过 256 个字符或包含 CR/LF 时返回
+            `invalid_idempotency_key`，其他请求体错误也返回 400。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_idempotency_key:
+                  value:
+                    error: invalid_idempotency_key
+                    message: Idempotency-Key must be at most 256 characters
         '503':
           description: >-
             平台正在核对不明确的银行卡操作（`card_recovery_pending`），或 core
@@ -5136,15 +5164,16 @@ paths:
                 message: too many open card payment sessions
         '409':
           description: >-
-            `idempotency_conflict` — 该幂等键已用于其他收款方式（QR、checkout、卡支付）。
-            幂等键在账户内唯一：每个逻辑操作使用一个键。
+            `idempotency_conflict` — 该幂等键已用于不同的 payload。幂等键在账户内
+            唯一：每个逻辑操作使用一个键。对于 QR，比较国家、币种、方法和数值金额；
+            展示描述不参与身份判断。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 error: idempotency_conflict
-                message: this idempotency key was used with a different payin method
+                message: this idempotency key was used with a different payload
         '403':
           description: 账户身份尚未获批，不能执行此认证操作。 Account state or credential errors may also use account_required or account_blocked.
           content:

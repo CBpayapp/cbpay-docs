@@ -357,43 +357,10 @@ transfers BOB to the selected number and the credit is detected by polling.
 No announcement or payer reference is required.
 
 **Collection QR** (the local interoperable standard): you generate the QR
-and your customer scans it with their banking app.
+and your customer scans it with their banking app. See the dedicated
+[QR payins guide](https://docs.cbpayapp.com/en/guides/payins-qr) for the request, response, retry and
+error contract.
 
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "BO",
-    "currency": "BOB",
-    "method": "qr",
-    "amount": "700.00",
-    "description": "App top-up",
-    "expires_in": 3600
-  }'
-```
-
-Response `201`:
-
-```json
-{
-  "payin_id": "9c2a…",
-  "status": "pending",
-  "charge": {
-    "charge_id": "…",
-    "qr_image": "<base64>",
-    "qr_image_url": "https://cdn.cbpayapp.com/public/payin-qr/<charge_id>.png",
-    "qr_payload": "<QR content>",
-    "our_reference": "482915073",
-    "status": "pending"
-  }
-}
-```
-Display the QR to your customer — `qr_image_url` is a public CDN URL ready
-for an `` tag (prefer it over the base64 `qr_image`); when they pay,
-your account is credited automatically. It also works in USD
-(`currency: "USD"`).
-After a Bolivia QR is paid and bound through `charge_link`, `GET /v1/payins/{payinID}` may include `payer_source: "bank_event"` and a `payer` block with `name`, `document` and `account` when the bank reports them. If the rail does not report a value, that field is omitted; if it reports none of them, the whole `payer` block is omitted.
 **Card payment page (`card`)**: you receive a `payment_url` for a hosted
 3-D Secure checkout — the payer enters their card on a secure page branded
 with your organization's identity and, when their bank requires it,

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-02 03:31 UTC",
-    "_content_sha256": "b1e837f9caa2724d7576bce40e004c0dc8548c62522b0d1dab4750bf69cbc307"
+    "_generated_at": "2026-10-02 19:34 UTC",
+    "_content_sha256": "d472d210beafbc5c6fb8137de22354a38340f30dfe7b5f15bf728537a9f5cf99"
   },
   "auth": {
     "type": "bearer",
@@ -12048,7 +12048,7 @@
             "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the QR image and the \"copia e cola\" payload. With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USDT, USDC, BTC or GOLD). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"qr\",\n  \"amount\": \"700.00\",\n  \"description\": \"App top-up\",\n  \"expires_in\": 3600\n}",
+              "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"qr\",\n  \"amount\": \"700.00\",\n  \"description\": \"App top-up\",\n  \"expires_in\": 3600,\n  \"idempotency_key\": \"qr-bo-001\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -12058,7 +12058,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12072,7 +12072,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12123,7 +12123,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12137,7 +12137,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12188,7 +12188,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12202,7 +12202,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12253,7 +12253,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12267,7 +12267,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12318,7 +12318,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12332,7 +12332,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12383,7 +12383,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12397,7 +12397,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12448,7 +12448,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12462,7 +12462,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12513,7 +12513,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12527,7 +12527,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12578,7 +12578,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12592,7 +12592,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12643,7 +12643,7 @@
           },
           "response": [
             {
-              "name": "200 Idempotent replay of an announced transfer (`bank_transfer`)",
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12657,7 +12657,7 @@
                   ]
                 }
               },
-              "status": "Idempotent replay of an announced transfer (`bank_transfer`)",
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [

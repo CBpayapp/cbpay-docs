@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="2 de octubre de 2026" description="v2.145 · 2 versiones">
+<Update label="2 de octubre de 2026" description="v2.146 · 3 versiones">
+### v2.146
+**Agregado**
+
+- Se agregó idempotencia opcional para payins QR: la misma clave con un payload
+  equivalente repite el cobro original con `idempotency_hit: true`, mientras
+  que un payload distinto devuelve `409 idempotency_conflict`.
+- Se documentaron `400 invalid_idempotency_key`, la precedencia entre body y
+  header, y la consulta del estado vivo al repetir un cobro.
+
 ### v2.145
 **Agregado**
 

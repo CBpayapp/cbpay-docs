@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.145"
+  version: "2.146"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -1957,7 +1957,18 @@ paths:
                 refresh_token: rt_6a1e6c22-93a1-4f0e-a7d1-1f2e3c4b5a69.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                 refresh_expires_at: '2026-08-06T12:00:00Z'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: >-
+            `invalid_idempotency_key` when the key is longer than 256 characters
+            or contains CR/LF, or another invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_idempotency_key:
+                  value:
+                    error: invalid_idempotency_key
+                    message: Idempotency-Key must be at most 256 characters
         '403':
           description: Service suspended (`org_suspended`); contact the CBPay team.
           content:
@@ -4929,10 +4940,12 @@ paths:
         required: false
         description: >-
           Alternative to the JSON `idempotency_key`. It is required for
-          `method: "card"` when the body does not contain the key. Do not send
-          different values in the body and header.
+          `method: "card"` when the body does not contain the key, and optional
+          for QR charges. Do not send different values in the body and header.
         schema:
           type: string
+          maxLength: 256
+          pattern: '^[^\r\n]{1,256}$'
       requestBody:
         required: true
         content:
@@ -4988,9 +5001,11 @@ paths:
                     collections.
                 idempotency_key:
                   type: string
+                  maxLength: 256
+                  pattern: '^[^\r\n]{1,256}$'
                   description: >-
                     For `method: "card"`, this key is required; send it in the body or as the
-                    `Idempotency-Key` header. It is optional for `bank_transfer`, `fintoc` and
+                    `Idempotency-Key` header. It is optional for `qr`, `bank_transfer`, `fintoc` and
                     `checkout` methods. A retry with the same key returns the original payin with
                     HTTP 200 and `idempotency_hit: true` — the
                     same `payment_url`/`checkout_url` for hosted methods, or the SAME `reference`
@@ -5116,6 +5131,7 @@ paths:
                   amount: '700.00'
                   description: App top-up
                   expires_in: 3600
+                  idempotency_key: qr-bo-001
               br_pix_qr:
                 summary: Brazil — dynamic PIX QR (BRL)
                 value:
@@ -5330,9 +5346,10 @@ paths:
                     receipt_url: https://api.qbank.cl/platform/v1/payins/d0135ed5-8e9c-4f8b-a522-8ec100470426/receipt
         '200':
           description: >-
-            Idempotent replay of an announced transfer (`bank_transfer`), or reuse of an
-            open card session (`card`). Card reuse returns the existing `payment_url` and
-            `session_reused: true`; it is not a second charge or session.
+            Idempotent replay of a QR or announced transfer (`bank_transfer`), or reuse of an
+            open card session (`card`). QR and bank-transfer replays return the original
+            payin with `idempotency_hit: true`; card reuse returns the existing `payment_url`
+            and `session_reused: true`. No second charge or session is created.
           content:
             application/json:
               schema:
@@ -5369,6 +5386,16 @@ paths:
                     payment_url: https://api.qbank.cl/pay/cards/9f3XkT2m…
                     expires_at: '2026-09-10T20:30:00Z'
                     session_reused: true
+                qr_replay:
+                  summary: QR replay with the original charge
+                  value:
+                    payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
+                    status: pending
+                    charge:
+                      charge_id: c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4
+                      our_reference: QR-778812
+                      qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
+                    idempotency_hit: true
                 push_to_dedicated:
                   summary: Push to a dedicated deposit account
                   value:
@@ -5429,16 +5456,17 @@ paths:
                 message: too many open card payment sessions
         '409':
           description: >-
-            `idempotency_conflict` — this idempotency key was already used with a different
-            payin method (QR, checkout, card). Keys are unique per account: use one key per
-            logical operation.
+            `idempotency_conflict` — this idempotency key was already used with a
+            different payload. Keys are unique per account: use one key per logical
+            operation. For QR charges, the comparison uses country, currency, method
+            and numeric amount; the display description is not part of the identity.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 error: idempotency_conflict
-                message: this idempotency key was used with a different payin method
+                message: this idempotency key was used with a different payload
         '403':
           description: The account identity is not approved for this authenticated operation. Account state or credential errors may also use account_required or account_blocked.
           content:

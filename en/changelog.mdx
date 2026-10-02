@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 2, 2026" description="v2.145 · 2 versions">
+<Update label="October 2, 2026" description="v2.146 · 3 versions">
+### v2.146
+**Added**
+
+- Added optional idempotency for QR payins: the same key and equivalent payload
+  replay the original charge with `idempotency_hit: true`, while a conflicting
+  payload returns `409 idempotency_conflict`.
+- Documented `400 invalid_idempotency_key`, the body/header key precedence, and
+  live-status lookup for replayed charges.
+
 ### v2.145
 **Added**
 

@@ -5,7 +5,16 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.145 · 2 versiones - 2 de octubre de 2026
+## v2.146 · 3 versiones - 2 de octubre de 2026
+### v2.146
+**Agregado**
+
+- Se agregó idempotencia opcional para payins QR: la misma clave con un payload
+  equivalente repite el cobro original con `idempotency_hit: true`, mientras
+  que un payload distinto devuelve `409 idempotency_conflict`.
+- Se documentaron `400 invalid_idempotency_key`, la precedencia entre body y
+  header, y la consulta del estado vivo al repetir un cobro.
+
 ### v2.145
 **Agregado**
 

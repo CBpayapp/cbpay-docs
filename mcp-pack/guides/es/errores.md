@@ -133,6 +133,27 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_settlement_hours` | `settlement_hours` solo se acepta en el servicio de comisión `payin_card` y debe ser un entero no negativo (`0` = acreditación inmediata) — ver [comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones) |
 | `invalid_country` | Código de país mal formado o ausente — ISO 3166-1 alpha-2 (ej. `GET /v1/aml/catalogs/cities?country=`); también un filtro de país válido pero no soportado (ej. un `country` distinto de `US` en el lookup del directorio bancario) |
 
+### Idempotencia de payins QR
+
+En `POST /v1/payins` con `method: "qr"`, `idempotency_key` es opcional.
+Puedes enviarla en el body JSON o como `Idempotency-Key`; si envías ambas,
+gana la del body. La clave admite hasta 256 caracteres y no puede contener
+CR/LF. La plataforma la scopea por cuenta del lado servidor; el integrador
+envía su clave sin modificarla.
+
+- `400 invalid_idempotency_key`: la clave supera 256 caracteres o contiene
+  CR/LF. Acórtala o elimina esos caracteres y reintenta el mismo request
+  corregido.
+- `409 idempotency_conflict`: la misma clave se usó con otro país, moneda,
+  método o monto numérico. Conserva el payload original para replay o usa una
+  clave nueva para crear otro cobro.
+
+Con la misma clave y el mismo payload, la API devuelve el cobro original con
+`idempotency_hit: true` y no crea otro. Los montos se comparan por valor
+(`100` equivale a `100.00`); `glosa` es texto de presentación y no forma parte
+de la identidad del replay. Consulta el estado vivo con
+`GET /v1/payins/{payinID}`.
+
 ### Dinero y estado (402 / 404 / 409 / 422 / 429)
 
 | HTTP | `error` | Significado |

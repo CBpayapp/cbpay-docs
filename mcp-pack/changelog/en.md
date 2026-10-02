@@ -5,7 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.145 · 2 versions - October 2, 2026
+## v2.146 · 3 versions - October 2, 2026
+### v2.146
+**Added**
+
+- Added optional idempotency for QR payins: the same key and equivalent payload
+  replay the original charge with `idempotency_hit: true`, while a conflicting
+  payload returns `409 idempotency_conflict`.
+- Documented `400 invalid_idempotency_key`, the body/header key precedence, and
+  live-status lookup for replayed charges.
+
 ### v2.145
 **Added**
 
