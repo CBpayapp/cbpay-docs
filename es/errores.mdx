@@ -517,7 +517,7 @@ código es el contrato estable para la integración.
 | 413 | `file_too_large` | La carga raw supera 5 MiB o la imagen normalizada supera 8 MiB. |
 | 422 | `invalid_lang` | Usa solo `es` o `en`; los demás valores se rechazan. |
 | 422 | `contract_account_ineligible` | El destino debe ser una empresa activa con KYB aprobado. |
-| 422 | `contract_unfillable` | Faltan datos verificados; corrige el perfil antes de emitir. |
+| 422 | `contract_unfillable` | Revisa el array `missing` de la respuesta: puede listar datos de identidad, aprobación de counsel o `pricing:<flag>` cuando un servicio habilitado no tiene una fila de precio efectiva. |
 | 422 | `invalid_consent` | El body debe llevar el booleano JSON `"consent": true`. |
 | 422 | `invalid_signer` | Nombre/cargo vacíos o demasiado largos; usa owner/operator humano. |
 | 502 | `storage_failed` | Falló el storage privado; reconcilia el sobre antes de reintentar. |

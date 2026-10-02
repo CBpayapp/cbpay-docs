@@ -512,7 +512,7 @@ code is the stable integration contract.
 | 413 | `file_too_large` | The raw upload is over 5 MiB, or the normalized signature image is over 8 MiB. |
 | 422 | `invalid_lang` | Use only `es` or `en`; invalid values are rejected. |
 | 422 | `contract_account_ineligible` | The target must be an active company account with approved KYB. |
-| 422 | `contract_unfillable` | Verified data is missing; fix the account profile before issuing. |
+| 422 | `contract_unfillable` | Inspect the response `missing` array: it may list identity data, counsel approval, or `pricing:<flag>` when an enabled service has no effective price row. |
 | 422 | `invalid_consent` | The signing body must contain the JSON boolean `"consent": true`. |
 | 422 | `invalid_signer` | Signer name/title are empty or exceed the permitted length; use a human owner/operator. |
 | 502 | `storage_failed` | Private storage failed while creating the final artifact; reconcile the envelope before retrying. |

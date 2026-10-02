@@ -5,6 +5,17 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.144 · 1 versión - 2 de octubre de 2026
+### v2.144
+**Cambiado**
+
+- Se actualizó el Contrato Marco Grupo CB a la plantilla `v13.2`. La emisión
+  org-admin falla cerrado con `422 contract_unfillable` y un array `missing`
+  cuando falta cobertura de precios efectiva; el snapshot visible para la
+  cuenta y el apéndice de precios del PDF omiten los spreads internos, mientras
+  que la vista org-admin conserva el snapshot completo. Al completar la
+  ceremonia del cliente también se registra automáticamente el hito
+  `contract_signed`.
 ## v2.143 · 1 versión - 1 de octubre de 2026
 ### v2.143
 **Agregado**

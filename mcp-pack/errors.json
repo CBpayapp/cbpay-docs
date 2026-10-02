@@ -4244,9 +4244,9 @@
       "code": "contract_unfillable",
       "http": 422,
       "meaning": {
-        "en": "Verified data is missing; fix the account profile before issuing.",
-        "es": "Faltan datos verificados; corrige el perfil antes de emitir.",
-        "zh": "缺少已验证数据；先修正账户资料再签发。"
+        "en": "Inspect the response `missing` array: it may list identity data, counsel approval, or `pricing:<flag>` when an enabled service has no effective price row.",
+        "es": "Revisa el array `missing` de la respuesta: puede listar datos de identidad, aprobación de counsel o `pricing:<flag>` cuando un servicio habilitado no tiene una fila de precio efectiva.",
+        "zh": "请检查响应中的 `missing` 数组：其中可能列出身份资料、法律顾问批准，或表示已启用服务缺少有效价格行的 `pricing:<flag>`。"
       }
     },
     {

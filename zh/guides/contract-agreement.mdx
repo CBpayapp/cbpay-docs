@@ -42,8 +42,24 @@ sequenceDiagram
 系统不存在 `draft` 或通用的 `pending` 状态。
 
 当 `lang=en` 时，组织必须设置 `contract_counsel_approved_en=true`。西班牙语
-签发不需要该英文 counsel gate。模板版本为 `v13.1`，模板哈希和 CBPay
+签发不需要该英文 counsel gate。模板版本为 `v13.2`，模板哈希和 CBPay
 签名版本会冻结在信封快照中。
+
+## 价格覆盖与显示金额
+
+组织签发 endpoint 会在创建信封前检查价格覆盖。如果已启用的服务没有
+effective fee row，系统返回 HTTP 422 `contract_unfillable`，并在
+`missing` 数组中使用 `pricing:<flag>` 形式的值。明确的零百分比、零固定
+费用表示有效的免费配置；没有 row 不满足覆盖。`transfers` 和 `swaps`
+豁免此 fee-row gate。
+
+在运营上，v13.2 的 §3 总说明表示附件 A 的数字只是示例，不是对账或收费
+价格。签发时以 Program 的 effective 配置为准；组织管理员应修复缺少的
+价格覆盖后重新签发信封。
+
+内部 margin `fx_spread`、`settlement_spread` 和 `swap_spread` 不会出现在
+账户侧 `fill_snapshot` 或 PDF 价格附录中。org-admin 视图仍保留完整价格
+snapshot 供审计。
 
 ## 签署仪式
 
@@ -93,7 +109,9 @@ curl -X POST \
   <Step title="确认完成">
     成功响应会将信封返回为 `completed`。再次读取资源并下载 PDF，保存
     `final_hash`。`contract_envelope_completed` 事件发送给 org-admin
-    audience。
+    audience。客户 claim 成功后，平台还会自动记录 Client Journey
+    milestone `contract_signed`，actor 为 `system:contract-ceremony`；
+    这不是管理员手工 milestone。
   </Step>
 </Steps>
 
@@ -107,7 +125,7 @@ curl -X POST \
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.1",
+      "template_version": "v13.2",
       "lang": "zh",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -127,7 +145,7 @@ curl -X POST \
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.1",
+  "template_version": "v13.2",
   "lang": "zh",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",
@@ -177,7 +195,7 @@ curl -X POST \
 | 409 | `contract_invalid_state` | 信封已完成或已 void；不要重复仪式。 |
 | 422 | `invalid_lang` | 只使用 `es` 或 `en`。 |
 | 422 | `contract_account_ineligible` | 账户不是 KYB 已批准的活动企业账户。 |
-| 422 | `contract_unfillable` | 缺少可信数据；修正资料后签发新信封。 |
+| 422 | `contract_unfillable` | 缺少可信数据或价格覆盖；检查 `missing` 中的 `pricing:<flag>`，修正资料后签发新信封。 |
 | 422 | `invalid_consent` | body 必须包含 `"consent": true`。 |
 | 422 | `invalid_signer` | 姓名和职务不能为空，且每项最多 120 个字符。 |
 | 502 | `storage_failed` | 私有存储失败；先读取并对账信封，再创建新的 key。 |

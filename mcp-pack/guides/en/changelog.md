@@ -5,6 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.144 · 1 version - October 2, 2026
+### v2.144
+**Changed**
+
+- Updated the Grupo CB framework agreement to template `v13.2`. Organization
+  issuance now fails closed with `422 contract_unfillable` and a `missing`
+  array when effective pricing coverage is absent; account-facing snapshots
+  and PDF pricing appendices omit internal spreads, while the organization
+  admin snapshot retains them. Completing the client ceremony also records
+  the `contract_signed` journey milestone automatically.
 ## v2.143 · 1 version - October 1, 2026
 ### v2.143
 **Added**

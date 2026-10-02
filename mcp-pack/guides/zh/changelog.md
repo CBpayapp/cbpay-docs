@@ -5,6 +5,15 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.144 · 1 个版本 - 2026年10月2日
+### v2.144
+**变更**
+
+- Grupo CB 主协议更新为 `v13.2`。缺少 effective pricing coverage 时，
+  org-admin 签发会 fail-closed，返回 `422 contract_unfillable` 和
+  `missing` 数组；账户侧 snapshot 与 PDF 价格附录不显示内部 spread，
+  org-admin 视图仍保留完整 snapshot。客户完成签署仪式后也会自动记录
+  `contract_signed` milestone。
 ## v2.143 · 1 个版本 - 2026年10月1日
 ### v2.143
 **新增**

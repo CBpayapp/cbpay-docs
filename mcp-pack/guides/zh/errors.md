@@ -495,7 +495,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 413 | `file_too_large` | raw 上传超过 5 MiB，或规范化图片超过 8 MiB。 |
 | 422 | `invalid_lang` | 只能使用 `es` 或 `en`。 |
 | 422 | `contract_account_ineligible` | 目标必须是 KYB 已批准的 active 企业账户。 |
-| 422 | `contract_unfillable` | 缺少已验证数据；先修正账户资料再签发。 |
+| 422 | `contract_unfillable` | 请检查响应中的 `missing` 数组：其中可能列出身份资料、法律顾问批准，或表示已启用服务缺少有效价格行的 `pricing:<flag>`。 |
 | 422 | `invalid_consent` | body 必须包含 JSON 布尔值 `"consent": true`。 |
 | 422 | `invalid_signer` | 姓名/职务为空或过长；使用 owner/operator 人工签署人。 |
 | 502 | `storage_failed` | 私有 storage 失败；重试前先协调信封状态。 |
