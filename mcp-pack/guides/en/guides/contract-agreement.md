@@ -47,7 +47,7 @@ There is no `draft` or generic `pending` state.
 
 For `lang=en`, the organization must have the platform setting
 `contract_counsel_approved_en=true`. Spanish issuance does not require that
-English-counsel gate. The document template is version `v13.2`; its hash and
+English-counsel gate. The document template is version `v13.3`; its hash and
 the CBPay signature version are frozen in the envelope snapshot.
 
 ## Pricing coverage and displayed amounts
@@ -58,10 +58,13 @@ envelope. If an enabled service has no effective fee row, it returns HTTP 422
 `pricing:<flag>`. An explicit zero-percent, zero-fixed row is a valid free
 configuration. `transfers` and `swaps` are exempt from this fee-row gate.
 
-Operationally, the v13.2 §3 blanket means figures in Appendix A are examples,
-not the prices to use for reconciliation or billing. The effective Program
-configuration captured at issue governs; an organization administrator must
-repair missing pricing and issue a new envelope.
+Operationally, the v13.3 agreement body no longer embeds a flat fixed-price
+table. Appendix A points to the current Client Fee Schedule/Program, and its
+applicable entries are grouped with localized pricing labels matching the
+portal/admin pricing board, including Fiat payments, Compliance, Cards,
+Banking, Wallets and Other. The effective configuration captured at issue
+governs; an organization administrator must repair missing pricing and issue a
+new envelope.
 
 The internal margins `fx_spread`, `settlement_spread` and `swap_spread` do not
 appear in the account-facing `fill_snapshot` or the PDF pricing appendix. The
@@ -73,8 +76,9 @@ organization-admin view retains the complete pricing snapshot for audit.
 
 Use `GET /v1/me/contracts/envelopes` and then
     `GET /v1/me/contracts/envelopes/{envelopeID}`. The list uses `page` and
-    `page_size` (default 50, maximum 200). The detail includes the append-only
-    event trail.
+    `page_size` (default 50, maximum 200). The list response uses `items`;
+    the detail response includes append-only `events`, with each event name in
+    `event`.
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/me/contracts/envelopes?page=1&page_size=50" \
@@ -121,6 +125,14 @@ resource again and download the PDF so your system stores the final
 organization-admin audience. The completed client claim also automatically
 records the Client Journey milestone `contract_signed` with actor
 `system:contract-ceremony`; this is not a manual admin milestone.
+## Signing notification
+
+When an envelope is issued or reissued, the account receives a notification
+email with the pre-signed PDF attached. When the portal URL is configured, the
+email includes a **Review and sign** button and the same `/contracts/{id}`
+deep-link as plain text. Email delivery is best-effort; use the envelope
+resource and its events as the source of truth.
+
 ## Response examples
 
 List response:
@@ -131,7 +143,7 @@ List response:
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.2",
+      "template_version": "v13.3",
       "lang": "en",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -151,7 +163,7 @@ Completed response:
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.2",
+  "template_version": "v13.3",
   "lang": "en",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",

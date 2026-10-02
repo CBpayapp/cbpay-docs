@@ -5,7 +5,28 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.144 · 1 version - October 2, 2026
+## v2.145 · 2 versions - October 2, 2026
+### v2.145
+**Added**
+
+- Added the verified-company contract view in the account portal: envelope
+  lists use the existing `items` collection, while details expose the
+  append-only `events` collection and each event's `event` name.
+- Contract notification emails now include a **Review and sign** button and
+  the plain-text portal link `/contracts/{envelopeID}`; the pre-signed PDF
+  remains attached.
+
+**Changed**
+
+- Redesigned contract PDFs with organization branding, a full-bleed cover,
+  status badge and page footers.
+- Updated the Grupo CB framework agreement to template `v13.3`. The agreement
+  body no longer presents a flat fixed-price table; Appendix A points to the
+  current Client Fee Schedule/Program and groups applicable entries with
+  localized labels matching the pricing dashboard, including Fiat payments,
+  Compliance, Cards, Banking, Wallets and Other.
+- No API paths, response keys, error codes or webhook types changed.
+
 ### v2.144
 **Changed**
 
