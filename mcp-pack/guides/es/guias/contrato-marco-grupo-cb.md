@@ -46,8 +46,27 @@ No existen los estados `draft` ni `pending`.
 
 Para `lang=en`, la organización debe tener
 `contract_counsel_approved_en=true`. La emisión en español no requiere ese
-gate de counsel en inglés. La plantilla es `v13.1`; el hash y la versión de
+gate de counsel en inglés. La plantilla es `v13.2`; el hash y la versión de
 firma de CBPay quedan congelados en el snapshot del sobre.
+
+## Cobertura de precios y cifras mostradas
+
+El endpoint de emisión de la organización comprueba la cobertura de precios
+antes de crear el sobre. Si un servicio habilitado no tiene una fila de fee
+efectiva, responde HTTP 422 `contract_unfillable` con un array `missing` que
+usa valores de la forma `pricing:<flag>`. Una fila explícita de cero por ciento
+y cero fijo es una configuración gratuita válida. `transfers` y `swaps` están
+exentos de este gate de filas de fee.
+
+Operativamente, la nota general del §3 v13.2 significa que las cifras del
+Anexo A son ejemplos, no precios para conciliar o cobrar. Rige la configuración
+efectiva del Programa capturada al emitir; el admin debe corregir una cobertura
+faltante y emitir un sobre nuevo.
+
+Los márgenes internos `fx_spread`, `settlement_spread` y `swap_spread` no
+aparecen en el `fill_snapshot` visible para la cuenta ni en el apéndice de
+precios del PDF. La vista org-admin conserva el snapshot completo para
+auditoría.
 
 ## Ceremonia
 
@@ -99,7 +118,10 @@ curl -X POST \
 
 La respuesta exitosa devuelve el sobre en `completed`. Vuelve a leer el
 recurso y descarga el PDF para guardar el `final_hash`. El evento
-`contract_envelope_completed` llega a la audiencia org-admin.
+`contract_envelope_completed` llega a la audiencia org-admin. El claim
+completado también registra automáticamente el hito de Client Journey
+`contract_signed` con actor `system:contract-ceremony`; no es un hito
+manual del admin.
 ## Ejemplos de respuesta
 
 Respuesta de lista:
@@ -110,7 +132,7 @@ Respuesta de lista:
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.1",
+      "template_version": "v13.2",
       "lang": "es",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -130,7 +152,7 @@ Respuesta completada:
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.1",
+  "template_version": "v13.2",
   "lang": "es",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",
@@ -180,7 +202,7 @@ No infieras la finalización desde el email: usa el evento y el estado.
 | 409 | `contract_invalid_state` | Ya está completado o voided; no repitas la ceremonia. |
 | 422 | `invalid_lang` | Usa exactamente `es` o `en`. |
 | 422 | `contract_account_ineligible` | La cuenta no es empresa activa con KYB aprobado. |
-| 422 | `contract_unfillable` | Falta un dato verificable; corrige el expediente y emite un sobre nuevo. |
+| 422 | `contract_unfillable` | Falta un dato verificable o una cobertura de precios; revisa `missing` para `pricing:<flag>`, corrige la fuente y emite un sobre nuevo. |
 | 422 | `invalid_consent` | El body debe incluir `"consent": true`. |
 | 422 | `invalid_signer` | Nombre y cargo deben ser no vacíos y de máximo 120 caracteres. |
 | 502 | `storage_failed` | Falló el almacenamiento privado; lee y reconcilia el sobre antes de crear otra key. |

@@ -47,8 +47,25 @@ There is no `draft` or generic `pending` state.
 
 For `lang=en`, the organization must have the platform setting
 `contract_counsel_approved_en=true`. Spanish issuance does not require that
-English-counsel gate. The document template is version `v13.1`; its hash and
+English-counsel gate. The document template is version `v13.2`; its hash and
 the CBPay signature version are frozen in the envelope snapshot.
+
+## Pricing coverage and displayed amounts
+
+The organization issue endpoint checks pricing coverage before creating the
+envelope. If an enabled service has no effective fee row, it returns HTTP 422
+`contract_unfillable` with a `missing` array containing values in the form
+`pricing:<flag>`. An explicit zero-percent, zero-fixed row is a valid free
+configuration. `transfers` and `swaps` are exempt from this fee-row gate.
+
+Operationally, the v13.2 §3 blanket means figures in Appendix A are examples,
+not the prices to use for reconciliation or billing. The effective Program
+configuration captured at issue governs; an organization administrator must
+repair missing pricing and issue a new envelope.
+
+The internal margins `fx_spread`, `settlement_spread` and `swap_spread` do not
+appear in the account-facing `fill_snapshot` or the PDF pricing appendix. The
+organization-admin view retains the complete pricing snapshot for audit.
 
 ## Ceremony
 
@@ -101,7 +118,9 @@ curl -X POST \
 A successful response returns the envelope in `completed`. Read the
 resource again and download the PDF so your system stores the final
 `final_hash`. The `contract_envelope_completed` event is delivered to the
-organization-admin audience.
+organization-admin audience. The completed client claim also automatically
+records the Client Journey milestone `contract_signed` with actor
+`system:contract-ceremony`; this is not a manual admin milestone.
 ## Response examples
 
 List response:
@@ -112,7 +131,7 @@ List response:
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.1",
+      "template_version": "v13.2",
       "lang": "en",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -132,7 +151,7 @@ Completed response:
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.1",
+  "template_version": "v13.2",
   "lang": "en",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",
@@ -195,7 +214,7 @@ state.
 | 409 | `contract_invalid_state` | The envelope is already completed or voided; do not retry the ceremony. |
 | 422 | `invalid_lang` | Use `es` or `en` exactly. |
 | 422 | `contract_account_ineligible` | The account is not an active company with approved KYB. |
-| 422 | `contract_unfillable` | A verified identity, address, signature or pricing value is missing; fix the source data and issue a new envelope. |
+| 422 | `contract_unfillable` | A verified identity, address, signature or pricing value is missing; inspect `missing` for `pricing:<flag>`, fix the source data and issue a new envelope. |
 | 422 | `invalid_consent` | The JSON body must contain `"consent": true`. |
 | 422 | `invalid_signer` | Send a non-empty signer name and title, each no longer than 120 characters. |
 | 502 | `storage_failed` | Private document storage failed; do not create a new ceremony key until the envelope is read and reconciled. |
