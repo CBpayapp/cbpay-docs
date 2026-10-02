@@ -106,6 +106,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_request` | 缺少 `country`/`currency` |
 | `invalid_purpose` | `purpose` 必须是 `fondeo` 或 `banking`；请选择受支持的 Banking 走廊 |
 | `idempotency_key_required` | 缺少幂等键 |
+| `unsupported_document_type` | 不支持的文档类型；请使用受支持的文档类型 |
+| `invalid_document_file` | 文档文件无效；请上传有效的 PDF、JPEG 或 PNG 文件 |
 | `reserved_idempotency_key` | 幂等键使用了系统保留前缀（`payin-convert:` 或 `checkout-swap:`，属于自动转换）——请改用其他键 |
 | `beneficiary_required` | 缺少付款收款人信息 |
 | `invalid_cuit` | 阿根廷（`AR`）payout 要求 `beneficiary.tax_id` 为 11 位 CUIT 或 CUIL — 请发送收款人的 11 位标识；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts) |
@@ -509,6 +511,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 403 | `account_blocked` | 账户不是 active；请管理员恢复。 |
 | 401 | `invalid_otp` | OTP 无效、过期或已使用；在 `X-OTP-Token` 中发送新的 token。 |
 | 409 | `contract_invalid_state` | 信封已经 completed 或 voided；不要重复操作。 |
+| 422 | `contract_template_superseded` | 信封使用旧版模板签发；签署前请先重新签发。 |
 | 413 | `file_too_large` | raw 上传超过 5 MiB，或规范化图片超过 8 MiB。 |
 | 422 | `invalid_lang` | 只能使用 `es` 或 `en`。 |
 | 422 | `contract_account_ineligible` | 目标必须是 KYB 已批准的 active 企业账户。 |

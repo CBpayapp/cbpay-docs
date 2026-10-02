@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.146"
+  version: "2.147"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -212,10 +212,16 @@ paths:
             application/json:
               example: { error: contract_invalid_state, message: the contract envelope cannot be signed in its current state }
         "422":
-          description: 同意或签署人信息无效。
+          description: 同意或签署人信息无效，或信封模板已被取代。
           content:
             application/json:
-              example: { error: invalid_consent, message: consent must be true }
+              examples:
+                invalid_consent:
+                  summary: 缺少同意或同意为假
+                  value: { error: invalid_consent, message: consent must be true }
+                template_superseded:
+                  summary: 信封使用旧版模板签发
+                  value: { error: contract_template_superseded, message: the envelope template changed since issuance; reissue the envelope before signing }
   /v1/me/contracts/envelopes/{envelopeID}/pdf:
     get:
       tags:
@@ -14882,6 +14888,23 @@ paths:
               example:
                 error: no_banking_customer
                 message: create your banking customer first (POST /v1/banking/customer)
+        '400':
+          description: 文档类型或附件文件无效。
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                unsupported_document_type:
+                  value:
+                    error:
+                      code: unsupported_document_type
+                      message: 不支持该文档类型。
+                invalid_document_file:
+                  value:
+                    error:
+                      code: invalid_document_file
+                      message: 附件文件无法读取。
         '502':
           description: 银行通道错误;所有费用已退款(banking_request_failed)。
           content:

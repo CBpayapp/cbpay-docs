@@ -5,7 +5,13 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.146 · 3 个版本 - 2026年10月2日
+## v2.147 · 4 个版本 - 2026年10月2日
+### v2.147
+**新增**
+
+- 新增组织管理员对 KYC/KYB 提交资料更新 banking intent 的支持。
+- 银行客户文档上传新增公开错误 `unsupported_document_type` 和
+  `invalid_document_file`。
 ### v2.146
 **新增**
 

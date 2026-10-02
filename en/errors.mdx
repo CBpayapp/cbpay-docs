@@ -184,6 +184,8 @@ part of the replay identity. Read the live status with
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
+| 400 | `unsupported_document_type` | The banking document type is not supported. Use one of the document types in the banking document allowlist. |
+| 400 | `invalid_document_file` | The banking document file is empty, unreadable, corrupt, or not a PDF, JPEG, or PNG. Upload a valid file. |
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | `core_rejected` | The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` ; the processor can also reject an Argentina alias payout before debit when the alias cannot be resolved or a USD alias resolves to a CVU; correct the beneficiary and retry with a new idempotency key. |
 | 400 | `invalid_payload` | For `method: "card"`, `expires_at` must be RFC3339, at least 5 minutes ahead and no more than 48 hours ahead |
@@ -534,6 +536,7 @@ code is the stable integration contract.
 | 403 | `account_blocked` | The account is not active; ask an administrator to restore it. |
 | 401 | `invalid_otp` | The one-time OTP is invalid, expired or already used; send a fresh token in `X-OTP-Token`. |
 | 409 | `contract_invalid_state` | The envelope is already completed or voided; do not repeat the operation. |
+| 422 | `contract_template_superseded` | The envelope was issued on an older template version; ask for reissue before signing. |
 | 413 | `file_too_large` | The raw upload is over 5 MiB, or the normalized signature image is over 8 MiB. |
 | 422 | `invalid_lang` | Use only `es` or `en`; invalid values are rejected. |
 | 422 | `contract_account_ineligible` | The target must be an active company account with approved KYB. |

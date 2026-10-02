@@ -1,5 +1,5 @@
 {
-  "count": 308,
+  "count": 311,
   "errors": [
     {
       "category": {
@@ -1637,6 +1637,34 @@
         "en": "The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key",
         "es": "El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva",
         "zh": "customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "校验（400）"
+      },
+      "code": "unsupported_document_type",
+      "http": 400,
+      "meaning": {
+        "en": "The banking document type is not supported. Use one of the document types in the banking document allowlist.",
+        "es": "El tipo de documento bancario no está admitido. Usa uno de los tipos incluidos en la allowlist de documentos bancarios.",
+        "zh": "不支持的文档类型；请使用受支持的文档类型"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "校验（400）"
+      },
+      "code": "invalid_document_file",
+      "http": 400,
+      "meaning": {
+        "en": "The banking document file is empty, unreadable, corrupt, or not a PDF, JPEG, or PNG. Upload a valid file.",
+        "es": "El archivo del documento bancario está vacío, no se puede leer, está corrupto o no es PDF, JPEG ni PNG. Sube un archivo válido.",
+        "zh": "文档文件无效；请上传有效的 PDF、JPEG 或 PNG 文件"
       }
     },
     {
@@ -4219,6 +4247,20 @@
         "en": "The envelope is already completed or voided; do not repeat the operation.",
         "es": "El sobre ya está completado o voided; no repitas la operación.",
         "zh": "信封已经 completed 或 voided；不要重复操作。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "contract_template_superseded",
+      "http": 422,
+      "meaning": {
+        "en": "The envelope was issued on an older template version; ask for reissue before signing.",
+        "es": "El sobre se emitió con una versión anterior de la plantilla; pide reemisión antes de firmar.",
+        "zh": "信封使用旧版模板签发；签署前请先重新签发。"
       }
     },
     {
