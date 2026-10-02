@@ -43,7 +43,7 @@ sequenceDiagram
 系统不存在 `draft` 或通用的 `pending` 状态。
 
 当 `lang=en` 时，组织必须设置 `contract_counsel_approved_en=true`。西班牙语
-签发不需要该英文 counsel gate。模板版本为 `v13.2`，模板哈希和 CBPay
+签发不需要该英文 counsel gate。模板版本为 `v13.3`，模板哈希和 CBPay
 签名版本会冻结在信封快照中。
 
 ## 价格覆盖与显示金额
@@ -54,9 +54,10 @@ effective fee row，系统返回 HTTP 422 `contract_unfillable`，并在
 费用表示有效的免费配置；没有 row 不满足覆盖。`transfers` 和 `swaps`
 豁免此 fee-row gate。
 
-在运营上，v13.2 的 §3 总说明表示附件 A 的数字只是示例，不是对账或收费
-价格。签发时以 Program 的 effective 配置为准；组织管理员应修复缺少的
-价格覆盖后重新签发信封。
+在运营上，v13.3 正文不再嵌入固定价格表。附录 A 指向客户当前有效的佣金
+计划，并按照与门户/管理员定价面板一致的本地化类别对适用条目分组，例如
+法币支付、合规、卡片、银行业务、钱包和其他。签发时以 effective 配置为
+准；组织管理员应修复缺少的价格覆盖后重新签发信封。
 
 内部 margin `fx_spread`、`settlement_spread` 和 `swap_spread` 不会出现在
 账户侧 `fill_snapshot` 或 PDF 价格附录中。org-admin 视图仍保留完整价格
@@ -68,7 +69,8 @@ snapshot 供审计。
 
 调用 `GET /v1/me/contracts/envelopes`，再调用
     `GET /v1/me/contracts/envelopes/{envelopeID}`。列表支持 `page` 和
-    `page_size`（默认 50，最大 200）。详情包含 append-only 时间线。
+    `page_size`（默认 50，最大 200）。列表响应使用 `items`；详情包含只
+    追加的 `events`，每条事件的名称位于 `event`。
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/me/contracts/envelopes?page=1&page_size=50" \
@@ -113,6 +115,13 @@ curl -X POST \
 audience。客户 claim 成功后，平台还会自动记录 Client Journey
 milestone `contract_signed`，actor 为 `system:contract-ceremony`；
 这不是管理员手工 milestone。
+## 签署通知
+
+签发或重新签发信封时，账户会收到通知邮件，邮件附带预签署 PDF。配置门户
+URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and sign”（英语）** 按钮，并在纯文本中包含相同的
+`/contracts/{id}` deep-link。邮件发送是 best-effort；请以信封资源和事件
+作为事实来源。
+
 ## 响应示例
 
 列表响应：
@@ -123,7 +132,7 @@ milestone `contract_signed`，actor 为 `system:contract-ceremony`；
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.2",
+      "template_version": "v13.3",
       "lang": "zh",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -143,7 +152,7 @@ milestone `contract_signed`，actor 为 `system:contract-ceremony`；
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.2",
+  "template_version": "v13.3",
   "lang": "zh",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",

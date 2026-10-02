@@ -5,7 +5,28 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.144 · 1 versión - 2 de octubre de 2026
+## v2.145 · 2 versiones - 2 de octubre de 2026
+### v2.145
+**Agregado**
+
+- Se agregó la vista del Contrato Marco para empresas verificadas en el portal:
+  las listas de sobres usan la colección existente `items` y el detalle expone
+  la colección append-only `events`, con el nombre de cada evento en `event`.
+- El email de notificación del sobre ahora incluye el botón **Ir a firmar** y
+  el enlace del portal en texto plano `/contracts/{envelopeID}`; el PDF
+  prefirmado sigue adjunto.
+
+**Cambiado**
+
+- Se rediseñaron los PDFs contractuales con branding de la organización,
+  portada de página completa, badge de estado y pies de página.
+- El Contrato Marco Grupo CB ahora usa la plantilla `v13.3`. El cuerpo ya no
+  presenta una tabla plana de precios fijos; el Anexo A apunta al Programa de
+  Comisiones vigente del Cliente y agrupa las entradas aplicables con labels
+  localizados como Pagos fiat, Compliance, Tarjetas, Banking, Wallets y Otros.
+- No cambiaron las rutas API, llaves de respuesta, códigos de error ni tipos
+  de webhook.
+
 ### v2.144
 **Cambiado**
 

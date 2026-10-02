@@ -46,7 +46,7 @@ No existen los estados `draft` ni `pending`.
 
 Para `lang=en`, la organización debe tener
 `contract_counsel_approved_en=true`. La emisión en español no requiere ese
-gate de counsel en inglés. La plantilla es `v13.2`; el hash y la versión de
+gate de counsel en inglés. La plantilla es `v13.3`; el hash y la versión de
 firma de CBPay quedan congelados en el snapshot del sobre.
 
 ## Cobertura de precios y cifras mostradas
@@ -58,10 +58,12 @@ usa valores de la forma `pricing:<flag>`. Una fila explícita de cero por ciento
 y cero fijo es una configuración gratuita válida. `transfers` y `swaps` están
 exentos de este gate de filas de fee.
 
-Operativamente, la nota general del §3 v13.2 significa que las cifras del
-Anexo A son ejemplos, no precios para conciliar o cobrar. Rige la configuración
-efectiva del Programa capturada al emitir; el admin debe corregir una cobertura
-faltante y emitir un sobre nuevo.
+Operativamente, el cuerpo v13.3 ya no incluye una tabla plana de precios fijos.
+El Anexo A apunta al Programa de Comisiones vigente del Cliente y agrupa las
+entradas aplicables con labels localizados como Pagos fiat, Compliance,
+Tarjetas, Banking, Wallets y Otros, igual que el tablero de precios. Rige la
+configuración efectiva capturada al emitir; el admin debe corregir una
+cobertura faltante y emitir un sobre nuevo.
 
 Los márgenes internos `fx_spread`, `settlement_spread` y `swap_spread` no
 aparecen en el `fill_snapshot` visible para la cuenta ni en el apéndice de
@@ -74,8 +76,9 @@ auditoría.
 
 Usa `GET /v1/me/contracts/envelopes` y luego
     `GET /v1/me/contracts/envelopes/{envelopeID}`. La lista usa `page` y
-    `page_size` (default 50, máximo 200). El detalle incluye el timeline
-    append-only.
+    `page_size` (default 50, máximo 200). La respuesta de lista usa `items`;
+    el detalle incluye `events` append-only y el nombre de cada evento en
+    `event`.
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/me/contracts/envelopes?page=1&page_size=50" \
@@ -122,6 +125,14 @@ recurso y descarga el PDF para guardar el `final_hash`. El evento
 completado también registra automáticamente el hito de Client Journey
 `contract_signed` con actor `system:contract-ceremony`; no es un hito
 manual del admin.
+## Notificación de firma
+
+Al emitir o reemitir un sobre, la cuenta recibe un email de notificación con el
+PDF prefirmado adjunto. Cuando está configurada la URL del portal, incluye el
+botón **Ir a firmar** y el mismo deep-link `/contracts/{id}` en texto plano.
+La entrega del email es best-effort: la fuente de verdad es el recurso y sus
+eventos.
+
 ## Ejemplos de respuesta
 
 Respuesta de lista:
@@ -132,7 +143,7 @@ Respuesta de lista:
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.2",
+      "template_version": "v13.3",
       "lang": "es",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -152,7 +163,7 @@ Respuesta completada:
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.2",
+  "template_version": "v13.3",
   "lang": "es",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",
