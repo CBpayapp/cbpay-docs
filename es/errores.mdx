@@ -184,6 +184,8 @@ de la identidad del replay. Consulta el estado vivo con
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
+| 400 | `unsupported_document_type` | El tipo de documento bancario no está admitido. Usa uno de los tipos incluidos en la allowlist de documentos bancarios. |
+| 400 | `invalid_document_file` | El archivo del documento bancario está vacío, no se puede leer, está corrupto o no es PDF, JPEG ni PNG. Sube un archivo válido. |
 | 422 | `currency_not_supported` | Sin tasa FX para esa moneda |
 | 422 | `core_rejected` | El procesador rechazó la operación — cuando el mensaje reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` ; el procesador también puede rechazar un payout argentino antes del débito si el alias no resuelve o si un alias USD resuelve a CVU; corrige el beneficiario y reintenta con una clave de idempotencia nueva. |
 | 400 | `invalid_payload` | En `method: "card"`, `expires_at` debe ser RFC3339, quedar al menos 5 minutos hacia adelante y no superar 48 horas |
@@ -535,6 +537,7 @@ código es el contrato estable para la integración.
 | 403 | `account_blocked` | La cuenta no está activa; pide al admin restaurarla. |
 | 401 | `invalid_otp` | OTP inválido, vencido o ya usado; envía uno nuevo en `X-OTP-Token`. |
 | 409 | `contract_invalid_state` | El sobre ya está completado o voided; no repitas la operación. |
+| 422 | `contract_template_superseded` | El sobre se emitió con una versión anterior de la plantilla; pide reemisión antes de firmar. |
 | 413 | `file_too_large` | La carga raw supera 5 MiB o la imagen normalizada supera 8 MiB. |
 | 422 | `invalid_lang` | Usa solo `es` o `en`; los demás valores se rechazan. |
 | 422 | `contract_account_ineligible` | El destino debe ser una empresa activa con KYB aprobado. |

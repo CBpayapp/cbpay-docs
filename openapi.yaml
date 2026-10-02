@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.146"
+  version: "2.147"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -243,10 +243,16 @@ paths:
             application/json:
               example: { error: contract_invalid_state, message: the contract envelope cannot be signed in its current state }
         "422":
-          description: Consent or signer data is invalid.
+          description: Consent or signer data is invalid, or the envelope template was superseded.
           content:
             application/json:
-              example: { error: invalid_consent, message: consent must be true }
+              examples:
+                invalid_consent:
+                  summary: Consent missing or false
+                  value: { error: invalid_consent, message: consent must be true }
+                template_superseded:
+                  summary: Envelope issued on an older template version
+                  value: { error: contract_template_superseded, message: the envelope template changed since issuance; reissue the envelope before signing }
   /v1/me/contracts/envelopes/{envelopeID}/pdf:
     get:
       tags:
@@ -15502,6 +15508,23 @@ paths:
                 status: draft
                 data:
                   documentId: DOC-1129
+        '400':
+          description: The document type or attached file is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                unsupported_document_type:
+                  value:
+                    error:
+                      code: unsupported_document_type
+                      message: The document type is not supported.
+                invalid_document_file:
+                  value:
+                    error:
+                      code: invalid_document_file
+                      message: The attached file is not readable.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '409':

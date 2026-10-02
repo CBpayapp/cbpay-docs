@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.146"
+  version: "2.147"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -247,10 +247,16 @@ paths:
             application/json:
               example: { error: contract_invalid_state, message: the contract envelope cannot be signed in its current state }
         "422":
-          description: Consentimiento o firmante inválido.
+          description: Consentimiento o firmante inválido, o la plantilla del sobre fue reemplazada.
           content:
             application/json:
-              example: { error: invalid_consent, message: consent must be true }
+              examples:
+                invalid_consent:
+                  summary: Falta el consentimiento o es falso
+                  value: { error: invalid_consent, message: consent must be true }
+                template_superseded:
+                  summary: Sobre emitido con una versión anterior de la plantilla
+                  value: { error: contract_template_superseded, message: the envelope template changed since issuance; reissue the envelope before signing }
   /v1/me/contracts/envelopes/{envelopeID}/pdf:
     get:
       tags:
@@ -15314,6 +15320,23 @@ paths:
                 status: draft
                 data:
                   documentId: DOC-1129
+        '400':
+          description: El tipo de documento o el archivo adjunto no es válido.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                unsupported_document_type:
+                  value:
+                    error:
+                      code: unsupported_document_type
+                      message: El tipo de documento no está soportado.
+                invalid_document_file:
+                  value:
+                    error:
+                      code: invalid_document_file
+                      message: El archivo adjunto no se puede leer.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '409':

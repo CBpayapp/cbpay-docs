@@ -5,7 +5,14 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.146 · 3 versiones - 2 de octubre de 2026
+## v2.147 · 4 versiones - 2 de octubre de 2026
+### v2.147
+**Agregado**
+
+- Se agregaron actualizaciones del banking intent para submissions KYC/KYB
+  administradas por la organización.
+- Se agregaron los errores públicos `unsupported_document_type` e
+  `invalid_document_file` para cargas de documentos bancarios.
 ### v2.146
 **Agregado**
 
