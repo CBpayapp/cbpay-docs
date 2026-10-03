@@ -5,6 +5,8 @@ slug: en/concepts/fees
 lang: en
 source_url: https://docs.cbpayapp.com/en/concepts/fees
 ---
+> **Audience**
+Integrators who need to understand how CBPay charges each service and where each fee surface lives.
 Fees are configured by CBPay per **service, country and asset**. When
 nothing is configured for a combination, the fee is **0**.
 
@@ -246,3 +248,12 @@ The following service identifiers are present in the product configuration:
 Amounts, payer, settlement timing and provider onboarding terms remain
 configuration-dependent. No fee is implied when the organization has no
 matching configuration.
+
+## FAQ
+
+#### Where do I configure the fees my customers pay?
+In the admin panel, under fees — percent plus fixed per service, with the dimensions each service accepts (asset for payouts, purpose for payins).
+#### Are fees charged on failed operations?
+No. Fees are only charged when the operation is created and accepted; failed validations never create a charge.
+#### How do I know which fee was applied?
+Responses and webhooks expose the fee breakdown, and statements itemize fees per operation.

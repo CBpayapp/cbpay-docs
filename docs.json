@@ -35,7 +35,7 @@
     }
   },
   "search": {
-    "prompt": "Search the docs / Busca en la documentación..."
+    "prompt": "Search the docs / Busca en la documentación / 搜索文档…"
   },
   "metadata": {
     "timestamp": true

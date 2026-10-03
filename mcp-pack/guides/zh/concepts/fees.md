@@ -5,6 +5,8 @@ slug: zh/concepts/fees
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/concepts/fees
 ---
+> **受众**
+需要了解 CBPay 每项服务如何收费以及每个费用界面位置的集成方。
 费用由 CBPay 按**服务、国家和资产**配置。若某个组合未配置任何费用，
 则费用为 **0**。
 
@@ -228,3 +230,12 @@ The following service identifiers are present in the product configuration:
 Amounts, payer, settlement timing and provider onboarding terms remain
 configuration-dependent. No fee is implied when the organization has no
 matching configuration.
+
+## 常见问题
+
+#### 我在何处配置客户支付的费用？
+在管理后台的费用部分：按服务设置百分比加固定费用，并使用各服务接受的维度（payouts 用资产，payins 用途）。
+#### 失败的操作会收费吗？
+不会。仅在操作创建并被接受时收费；失败的验证绝不会产生费用。
+#### 我如何知道应用了哪项费用？
+响应和 webhook 会公开费用明细，账单也会按操作逐项列出。

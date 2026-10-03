@@ -4,6 +4,12 @@ icon: "percent"
 description: "How each service is charged and where to check your terms"
 ---
 
+import { AudienceCallout } from "/snippets/audience-callout.jsx";
+
+<AudienceCallout>
+Integrators who need to understand how CBPay charges each service and where each fee surface lives.
+</AudienceCallout>
+
 Fees are configured by CBPay per **service, country and asset**. When
 nothing is configured for a combination, the fee is **0**.
 
@@ -251,3 +257,17 @@ The following service identifiers are present in the product configuration:
 Amounts, payer, settlement timing and provider onboarding terms remain
 configuration-dependent. No fee is implied when the organization has no
 matching configuration.
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Where do I configure the fees my customers pay?">
+In the admin panel, under fees — percent plus fixed per service, with the dimensions each service accepts (asset for payouts, purpose for payins).
+</Accordion>
+<Accordion title="Are fees charged on failed operations?">
+No. Fees are only charged when the operation is created and accepted; failed validations never create a charge.
+</Accordion>
+<Accordion title="How do I know which fee was applied?">
+Responses and webhooks expose the fee breakdown, and statements itemize fees per operation.
+</Accordion>
+</AccordionGroup>

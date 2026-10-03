@@ -5,6 +5,8 @@ slug: es/concepts/fees
 lang: es
 source_url: https://docs.cbpayapp.com/es/concepts/fees
 ---
+> **Audiencia**
+Integradores que necesitan entender cómo cobra CBPay cada servicio y dónde vive cada superficie de comisiones.
 Las comisiones las configura CBPay por **servicio, país y activo**.
 Si no hay nada configurado para una combinación, la comisión es **0**.
 
@@ -249,3 +251,12 @@ The following service identifiers are present in the product configuration:
 Amounts, payer, settlement timing and provider onboarding terms remain
 configuration-dependent. No fee is implied when the organization has no
 matching configuration.
+
+## Preguntas frecuentes
+
+#### ¿Dónde configuro las comisiones que pagan mis clientes?
+En el panel admin, en comisiones: porcentaje más fijo por servicio, con las dimensiones que cada servicio acepta (activo para payouts, propósito para payins).
+#### ¿Se cobran comisiones en operaciones fallidas?
+No. Las comisiones solo se cobran cuando la operación se crea y acepta; las validaciones fallidas jamás crean un cobro.
+#### ¿Cómo sé qué comisión se aplicó?
+Las respuestas y webhooks exponen el desglose de comisiones, y las cartolas las itemizan por operación.
