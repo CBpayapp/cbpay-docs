@@ -60,7 +60,7 @@ de las tasas de tu cuenta para ese país. Cotizado = cobrado, siempre.
 | `banking_transfer_swift` | `%` + fijo sobre el monto, en la moneda de la operación | Al despachar una transferencia SWIFT |
 | `banking_transfer_wire` | `%` + fijo sobre el monto, en la moneda de la operación | Al despachar una transferencia wire (Fedwire) |
 | `banking_transfer_sepa` | `%` + fijo sobre el monto, en la moneda de la operación | Al despachar una transferencia SEPA |
-| `banking_operation` | Fijo por pago — fallback legacy, se cobra solo cuando el riel no tiene configuración específica | Al enviar cada pago bancario (cotizar con `prepare` es gratis) |
+| `banking_operation` | Fijo por pago — fallback predeterminado, se cobra solo cuando el riel no tiene configuración específica | Al enviar cada pago bancario (cotizar con `prepare` es gratis) |
 | `card_creation_virtual` | Fijo por tarjeta | Al emitir una tarjeta virtual ([tarjetas](https://docs.cbpayapp.com/es/guides/cards)) |
 | `card_creation_physical` | Fijo por tarjeta | Al emitir una tarjeta física |
 | `card_monthly` | Fijo mensual | Mensualidad por tarjeta activa (sin saldo, la tarjeta se congela — sin deuda) |
@@ -149,7 +149,7 @@ mueve):
   Si la transferencia es rechazada en forma definitiva después, el fee se
   reembolsa.
 - **Fallback**: un riel sin configuración propia (ni en tu cuenta ni por
-  defecto) usa el fee fijo legacy `banking_operation` en USDT. Un riel
+  defecto) usa el fee fijo `banking_operation` predeterminado en USDT. Un riel
   configurado con `0%` + `0` fijo es **explícitamente gratis** — no cae
   al fallback.
 

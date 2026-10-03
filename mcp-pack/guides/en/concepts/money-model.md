@@ -12,7 +12,7 @@ Every account holds **ten virtual balances, one per asset**:
 | Asset | What it is | Decimals | How it is funded |
 |---|---|---|---|
 | `USD` | US dollars — **the principal balance** | 2 | Fiat payins, swaps, transfers, adjustments |
-| `USDT` | USD stablecoin — legacy principal balance | 6 | Fiat payins, on-chain deposits (TRON/Ethereum), transfers |
+| `USDT` | USD stablecoin — existing principal balance | 6 | Fiat payins, on-chain deposits (TRON/Ethereum), transfers |
 | `USDC` | USD stablecoin | 6 | On-chain deposits (Ethereum), transfers |
 | `BTC` | Bitcoin | 8 (satoshis) | On-chain deposits, operator credits and internal transfers |
 | `GOLD` | Grams of fine gold, custodian-backed | 6 | Operator credits and internal transfers |
@@ -89,7 +89,7 @@ Multi-asset settlement rules:
 | Idempotency | Replaying with the same key returns the original amount; the price is never recomputed. |
 | Per-operation limit | Volatile assets (BTC/GOLD/SILVER/PLATINUM) have a per-operation limit (USDT equivalent, visible in `GET /v1/settlement`); exceeding it returns `422 settlement_limit_exceeded`. |
 | Per-account daily limit | Volatile assets also have a rolling 24h volume cap (`volatile_daily_limit_usdt` in `GET /v1/settlement`); exceeding it returns `422 settlement_daily_limit_exceeded`. Settle in USD/USDT/USDC or retry later. |
-| USD | The default for new accounts; legacy accounts with explicit USDT remain unchanged. USD settles 1:1 with USDT, exact to the cent. |
+| USD | The default for new accounts; existing accounts with explicit USDT remain unchanged. USD settles 1:1 with USDT, exact to the cent. |
 
 The `settlement` block of `GET /v1/rates` shows the effective per-asset
 price (spread included) so you can estimate before operating, and the
@@ -99,7 +99,7 @@ payout response records `settlement_asset`, `settlement_amount` and
 ## Choose which balance receives your payins
 
 For a new account, **payins** (QR, bank transfer, collect, and card) credit
-the USD balance directly in cents. A legacy account with an explicit USDT
+the USD balance directly in cents. An existing account with an explicit USDT
 setting keeps USDT. If you configure another payin asset, the net amount
 follows the post-credit conversion flow at the real price, with no extra
 swap spread; the payin already paid its fee and rate. The same limits as a
@@ -114,7 +114,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 | Rule | Detail |
 |---|---|
-| Post-credit conversion | The payin credits in the account's principal asset (USD for new accounts, USDT for legacy) and the conversion runs right after, as a swap (you will see `swap_out`/`swap_in` in your statement). |
+| Post-credit conversion | The payin credits in the account's principal asset (USD for new accounts, USDT for existing) and the conversion runs right after, as a swap (you will see `swap_out`/`swap_in` in your statement). |
 | Price and limits | The conversion executes **at the real price, with no swap spread** (no double cost: the payin already paid its fee and rate). The per-operation/24h limits of volatile assets (BTC/GOLD/SILVER/PLATINUM) apply. |
 | If the conversion fails | The payin stays credited in the principal asset with `conversion_status: pending_retry` and the system retries automatically — funds are never lost or double-converted. |
 | Checkout and POS | Each link keeps the `settlement_asset` chosen at creation; this setting never re-converts them. A link created **without** `settlement_asset` uses your `default_payin_asset`. |

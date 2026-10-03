@@ -114,7 +114,7 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
 The request shape is identical for every combination (person or company,
 in any direction) — only the calling credential changes. `asset` is
 optional and defaults to the **sender's settlement asset** (`USD` for new
-accounts, `USDT` for legacy); it accepts any of the ten ledger assets
+accounts, `USDT` for existing accounts); it accepts any of the ten ledger assets
 (`USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`, `BOB`, `MXN`,
 `ARS`), and the destination receives **in that same currency**.
 

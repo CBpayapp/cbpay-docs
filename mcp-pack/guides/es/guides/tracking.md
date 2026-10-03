@@ -188,7 +188,7 @@ La página y el PDF son completamente trilingües — **inglés, español y chin
 - La API JSON traduce las etiquetas de `fields`/`amounts` en el servidor con el mismo parámetro.
 - El PDF se renderiza completamente en el idioma pedido, chino incluido.
 
-## Endpoint legacy de verificación (sin cambios)
+## Endpoint original de verificación (sin cambios)
 
 `GET /platform/v1/verify/receipts/{code}` **sigue vivo** — no hay nada que migrar:
 
@@ -216,7 +216,7 @@ Revisa la [referencia de errores](https://docs.cbpayapp.com/es/errors) para el s
     `processing` cubre todos los estados transitorios, incluida la revisión interna de compliance. La página pública intencionalmente no distingue estados de revisión — la operación pasará a `completed` o `failed` cuando se resuelva.
 #### ¿La línea de tiempo muestra alguna vez fechas estimadas?
     Nunca. Solo se renderizan timestamps reales: cuándo se creó la transacción y cuándo alcanzó su paso terminal actual. Los pasos intermedios no muestran fecha.
-#### ¿El link legacy /verify/receipts que ya integré se va a romper?
+#### ¿El link original /verify/receipts que ya integré se va a romper?
     No. Sigue devolviendo JSON para clientes API y ahora redirige los navegadores a la página del tracker. Ambos comportamientos son permanentes.
 #### ¿Puedo ocultar el tracker y quedarme solo con la verificación JSON?
     El tracker es la cara pública del mismo código firmado y está habilitado para toda la plataforma. Si prefieres no exponer la página hospedada, simplemente no compartas la URL — el endpoint JSON sigue funcionando igual.

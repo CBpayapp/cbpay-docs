@@ -15559,7 +15559,7 @@ paths:
                   description: EUR SEPA 个人受益人的可选中间名；其他银行通道可选。
                 beneficiary_name:
                   type: string
-                  description: EUR SEPA 企业受益人的公司名称必填；多词值也可作为 legacy 个人姓名 fallback。其他银行通道可选。
+                  description: EUR SEPA 企业受益人的公司名称必填；多词值也可作为个人姓名兼容 fallback。其他银行通道可选。
                 idempotency_key:
                   type: string
             examples:
@@ -21759,7 +21759,7 @@ paths:
       tags: [Corridors]
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with legacy or v2, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
       security:
         - bearerAuth: []
       responses:

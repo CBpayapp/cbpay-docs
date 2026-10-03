@@ -60,7 +60,7 @@ depends on your account's rates for that country. Quoted = charged, always.
 | `banking_transfer_swift` | `%` + fixed over the amount, in the operation currency | When a SWIFT transfer is dispatched |
 | `banking_transfer_wire` | `%` + fixed over the amount, in the operation currency | When a wire (Fedwire) transfer is dispatched |
 | `banking_transfer_sepa` | `%` + fixed over the amount, in the operation currency | When a SEPA transfer is dispatched |
-| `banking_operation` | Fixed per payment — legacy fallback, charged only when the rail has no specific configuration | When sending each bank payment (quoting with `prepare` is free) |
+| `banking_operation` | Fixed per payment — default fallback, charged only when the rail has no specific configuration | When sending each bank payment (quoting with `prepare` is free) |
 | `card_creation_virtual` | Fixed per card | When issuing a virtual card ([cards](https://docs.cbpayapp.com/en/guides/cards)) |
 | `card_creation_physical` | Fixed per card | When issuing a physical card |
 | `card_monthly` | Fixed monthly | Monthly fee per active card (with no balance the card is frozen — no debt) |
@@ -147,7 +147,7 @@ Banking operations carry **transactional fees in the operation currency**
   insufficient_funds`. If the transfer is definitively rejected
   afterwards, the fee is refunded.
 - **Fallback**: a rail without its own configuration (neither on your
-  account nor as a default) uses the legacy `banking_operation` fixed fee
+  account nor as a default) uses the default `banking_operation` fixed fee
   in USDT. A rail configured with `0%` + `0` fixed is **explicitly free**
   — it does not fall back.
 

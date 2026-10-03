@@ -3702,7 +3702,7 @@ paths:
 
 
         **Paga desde cualquier saldo**: por defecto el débito sale del asset de settlement predeterminado
-        de tu cuenta (`default_settlement_asset` — USD en cuentas nuevas, USDT en cuentas legacy; cámbialo con `PUT /v1/settlement`). Envía `settlement_asset` (USD, USDT,
+        de tu cuenta (`default_settlement_asset` — USD en cuentas nuevas, USDT en cuentas existentes; cámbialo con `PUT /v1/settlement`). Envía `settlement_asset` (USD, USDT,
         USDC, BTC, GOLD, SILVER o PLATINUM) para pagar esta operación puntual desde otro saldo: el total se convierte
         a ese asset al precio efectivo de settlement del momento (ver el bloque `settlement` de `GET /v1/rates`)
         y el débito, la retención y — si falla — el reembolso viven en ese asset por el monto exacto.
@@ -3871,7 +3871,7 @@ paths:
                   - MXN
                   - ARS
                   description: 'Saldo virtual a debitar para esta operación. La ejecución en fiat devuelve hoy 503 pricing_unavailable. Omítelo para usar el asset
-                    de settlement predeterminado de tu cuenta (USD en cuentas nuevas; cuentas legacy con USDT explícito conservan USDT).'
+                    de settlement predeterminado de tu cuenta (USD en cuentas nuevas; cuentas existentes con USDT explícito conservan USDT).'
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -6199,7 +6199,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD en cuentas nuevas, USDT en cuentas legacy).
+                  description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD en cuentas nuevas, USDT en cuentas existentes).
                 amount:
                   type: string
                   description: String decimal positivo, hasta los decimales de la moneda (2 para USD/BOB/MXN/ARS, 6 para USDT/USDC/GOLD/SILVER/PLATINUM,
@@ -16024,7 +16024,7 @@ paths:
                   description: Segundo nombre opcional del beneficiario individual EUR por SEPA; opcional para otros rieles bancarios.
                 beneficiary_name:
                   type: string
-                  description: Razón social obligatoria para un beneficiario corporativo EUR por SEPA; también se acepta un valor de varias palabras como fallback legacy para personas. Opcional para otros rieles bancarios.
+                  description: Razón social obligatoria para un beneficiario corporativo EUR por SEPA; también se acepta un valor de varias palabras como fallback de compatibilidad para personas. Opcional para otros rieles bancarios.
                 idempotency_key:
                   type: string
             examples:
@@ -16528,7 +16528,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: Saldo desde el que gasta la tarjeta. Si se omite, se usa el asset de liquidación de la cuenta (USD en cuentas nuevas, USDT en cuentas legacy). USD/USDT/USDC van a la par del USD (1:1
+                  description: Saldo desde el que gasta la tarjeta. Si se omite, se usa el asset de liquidación de la cuenta (USD en cuentas nuevas, USDT en cuentas existentes). USD/USDT/USDC van a la par del USD (1:1
                     exacto, sin comisión de conversión). BTC/GOLD/SILVER/PLATINUM se convierten al precio efectivo del
                     momento de cada evento, con colchón de reserva en la autorización (pricing fail-closed
                     y límites de assets volátiles compartidos con payouts).
@@ -18488,7 +18488,7 @@ paths:
       summary: Obtener el avatar de una cuenta
       description: Sirve la imagen de avatar de una cuenta de la misma organización (se usa en la vista
         previa del destinatario en transferencias y contactos). Los avatares publicados en el CDN público
-        responden con un `302` hacia la URL del CDN; los legados se sirven directo.
+        responden con un `302` hacia la URL del CDN; los anteriores se sirven directo.
       parameters:
       - name: accountID
         in: path
@@ -22483,7 +22483,7 @@ paths:
       tags: [Corridors]
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with legacy or v2, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
       security:
         - bearerAuth: []
       responses:
@@ -24296,7 +24296,7 @@ components:
           - SILVER
           - PLATINUM
           description: Saldo en que se acreditan por defecto los payins. El crédito entra en el asset
-            principal de la cuenta (USD en cuentas nuevas, USDT en legacy); cuando se configura otro
+            principal de la cuenta (USD en cuentas nuevas, USDT en existentes); cuando se configura otro
             asset, el neto se auto-convierte vía el motor de swaps al precio real, sin spread de swap
             adicional. Checkout/POS conservan el asset de su link.
         enabled_assets:
@@ -24434,7 +24434,7 @@ components:
         instrument_id:
           type: string
           format: uuid
-          description: Instrumento de depósito dedicado que recibió el payin; se omite en cobros genéricos y payins legados.
+          description: Instrumento de depósito dedicado que recibió el payin; se omite en cobros genéricos y payins históricos.
         instrument:
           $ref: '#/components/schemas/PayinInstrument'
           description: Metadatos del instrumento dedicado, presentes cuando existe la fila del instrumento.
@@ -25051,7 +25051,7 @@ components:
           format: date-time
     PayinInstrument:
       type: object
-      description: Instrumento de depósito dedicado que recibió el payin. Se omite en cobros genéricos y payins legados.
+      description: Instrumento de depósito dedicado que recibió el payin. Se omite en cobros genéricos y payins históricos.
       properties:
         instrument_id:
           type: string

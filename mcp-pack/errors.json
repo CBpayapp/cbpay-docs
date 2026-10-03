@@ -1578,8 +1578,8 @@
       "code": "no_banking_customer",
       "http": 409,
       "meaning": {
-        "en": "Legacy Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow",
-        "es": "Operación Banking legacy sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo",
+        "en": "Classic Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow",
+        "es": "Operación Banking clásica sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo",
         "zh": "传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程"
       }
     },
@@ -2334,9 +2334,9 @@
       "code": "deposit_account_limit_reached",
       "http": 422,
       "meaning": {
-        "en": "Person accounts and unsupported or legacy corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted",
-        "es": "Las cuentas persona y los corredores no soportados o legados conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar",
-        "zh": "个人账户以及未支持或 legacy 通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除"
+        "en": "Person accounts and unsupported or existing corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted",
+        "es": "Las cuentas persona y los corredores no soportados o existentes conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar",
+        "zh": "个人账户以及未支持或既有通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除"
       }
     },
     {

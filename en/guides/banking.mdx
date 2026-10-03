@@ -14,7 +14,7 @@ depending on the currency), hold fiat balances and send payments to third
 parties. It is a separate product from your CBPay balances: **banking money
 lives in your bank accounts**, not in your USDT or USD balance.
 
-For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD for new accounts, USDT for legacy accounts). Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
+For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD for new accounts, USDT for existing accounts). Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
 | Concept | Where it lives | Queried with |
 |---|---|---|
 | CBPay balances | CBPay ledger | `GET /v1/balances` |
@@ -24,7 +24,7 @@ For local fiat corridors, create a destination with `purpose: "banking"` to reta
 Banking fees come in two shapes. **Standalone fixed fees**
 (`banking_customer`, `banking_account`, `banking_operation`) are debited
 from your **default settlement asset balance** — USD for new accounts,
-USDT for legacy accounts — when each operation executes and **refunded
+USDT for existing accounts — when each operation executes and **refunded
 automatically** if it fails. **Transactional rail fees**
 (`banking_deposit`, `banking_transfer_ach`, `banking_transfer_swift`,
 `banking_transfer_wire`, `banking_transfer_sepa`) are a percentage plus a
@@ -153,7 +153,7 @@ parties you register (`customer_kind: third_party`, with their
 
 ## 3. Open bank accounts
 
-With the profile `approved`, create the legacy Banking customer account for **USD** only (ACH/Fedwire/SWIFT rails). EUR is not opened here; request a `banking_eur` virtual IBAN directly in the [EUR virtual IBAN flow](#eur-virtual-ibans).
+With the profile `approved`, create the classic Banking customer account for **USD** only (ACH/Fedwire/SWIFT rails). EUR is not opened here; request a `banking_eur` virtual IBAN directly in the [EUR virtual IBAN flow](#eur-virtual-ibans).
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \
@@ -404,7 +404,7 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/operations/prepare \
   }'
 ```
 
-Execute with an idempotency key (the rail fee — or the legacy
+Execute with an idempotency key (the rail fee — or the default
 `banking_operation` fee when the rail has no configuration — is charged
 here):
 
@@ -459,7 +459,7 @@ Response `202`:
 
 `banking_fee` and `banking_fee_asset` only appear when a fee was charged.
 With a per-rail fee the asset is the operation currency (`BANK_USD` /
-`BANK_EUR`); with the legacy fallback it is `USDT`.
+`BANK_EUR`); with the default fallback it is `USDT`.
 
 - The final state arrives through the `banking_operation_status_changed`
   webhook (`completed` / `failed`); you can also poll
@@ -686,7 +686,7 @@ The platform strips caller-supplied ordering-party fields and stamps `payer`
 server-side from the selected vIBAN's `registrant` (unless a more-specific
 server-side company-wallet payer is present). Individual registrants provide
 first and last name; corporate registrants provide the registered company
-name and registration data. For active legacy rows without a usable
+name and registration data. For active earlier rows without a usable
 registrant, the platform derives the ordering names from the current
 verified profile. If that profile cannot be read, the request returns
 `503 funding_account_unavailable`; if the resulting identity is incomplete,
@@ -782,12 +782,12 @@ For **transfers** the available balance must cover `amount + fee` — if it
 does not, the API answers `402 insufficient_funds` and the operation is
 **not created**. If the operation is definitively rejected right after
 dispatch, the fee is **refunded automatically** (same discipline as the
-legacy fee).
+default fee).
 
 **Fallback:** if the rail has no specific configuration (neither at account
-nor at platform level), the legacy `banking_operation` fee (fixed, in USDT)
+nor at platform level), the default `banking_operation` fee (fixed, in USDT)
 applies. A rail configured with 0% + 0 fixed is **explicitly free** — it
-does *not* fall back to the legacy fee.
+does *not* fall back to the default fee.
 
 ## Operation statuses
 
@@ -804,7 +804,7 @@ does *not* fall back to the legacy fee.
 | HTTP | `error` | What to do |
 |---|---|---|
 | 400 | `idempotency_key_required` | Send the key in body or header |
-| 402 | `insufficient_funds` | Not enough balance: with a per-rail fee the check is `balance ≥ amount + fee` in the **operation currency** (`BANK_USD`/`BANK_EUR`); with the legacy fallback it is your USDT balance |
+| 402 | `insufficient_funds` | Not enough balance: with a per-rail fee the check is `balance ≥ amount + fee` in the **operation currency** (`BANK_USD`/`BANK_EUR`); with the default fallback it is your USDT balance |
 | 403 | `account_blocked` | The account is not active; contact the CBPay team |
 | 409 | `banking_customer_exists` | Your account already has a banking profile (`GET /v1/banking/customer`) |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and do not create a second profile |
@@ -831,7 +831,7 @@ contract in [Company wallets](/en/guides/company-wallets).
 <AccordionGroup>
 <Accordion title="Does banking money show up in my USDT balance?">
 A `funding_usdt` inbound converts into USDT through the funding payin chain. A `banking_eur` inbound is credited to the Banking EUR mirror after the terminal event and ledger processing. The provider remains authoritative for the bank balance. **Per-rail fees** are charged in the
-operation currency (your `BANK_USD`/`BANK_EUR` balance); only the legacy
+operation currency (your `BANK_USD`/`BANK_EUR` balance); only the default
 `banking_operation` fallback fee is debited from your USDT balance.
 </Accordion>
 <Accordion title="What happens to the fee if an operation fails?">

@@ -21,7 +21,7 @@ links that already exist remain payable, passive deposits already received
 remain processable, org-admin assignment remains operational, and
 system-created deposit instruments are not blocked.
 A payin is a fiat collection: your customer pays in local currency and a new
-USD-principal account is credited directly in USD cents. Legacy accounts with an
+USD-principal account is credited directly in USD cents. Existing accounts with an
 explicit USDT setting keep USDT. When another asset is configured, the net follows
 the post-credit conversion flow at **your payin rate** (`payin_rate` in
 `GET /v1/rates`) minus the fixed payin fee. In USDT v1, `payin_rate_source` tells you whether
@@ -39,7 +39,7 @@ flowchart LR
     announced["Announced transfer<br/>(CL, PE, MX, PY, US)"] --> pay
     clabe["Dedicated receiving account<br/>(BO, MX, AR)"] --> pay
     pay --> conv["FX conversion at your<br/>payin_rate − fixed fee"]
-    conv --> credit(("USD credit for new accounts<br/>or legacy USDT balance"))
+    conv --> credit(("USD credit for new accounts<br/>or existing USDT balance"))
     credit --> wh["Webhook payin_credited"]
 ```
 
@@ -91,7 +91,7 @@ live corridor. Outgoing payments to Venezuela (`pago_movil`,
 `bank_transfer`) are unchanged: see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
 Availability may vary; the catalog (`GET /v1/payins/methods`) is always the
 source of truth. For a new USD-principal account, the net credit is written directly in USD cents.
-Legacy USDT accounts keep the historical USDT path; configured non-USD targets use
+Existing USDT accounts keep the historical USDT path; configured non-USD targets use
 the documented post-credit conversion. The quoted `payin_rate` and fixed fee still
 apply.
 Payin lots are consumed FIFO when the credit is applied. If enabled inventory
@@ -142,7 +142,7 @@ Response `201`:
 
 Share the `payment_url` with the payer (link, redirect or WebView). Once
 the payment is confirmed your account is credited in USD for new accounts
-(or USDT for an explicit legacy account) and you receive
+(or USDT for an account with explicit USDT) and you receive
 the `payin_credited` webhook. The CLP amount must be an integer (the
 Chilean peso has no decimals) and the payment session expires after 24
 hours by default. A retry with the same `idempotency_key` returns the same
@@ -260,7 +260,7 @@ List your accounts with `GET /v1/payins/deposit-accounts`.
 Deposit destinations have an explicit `purpose`:
 
 - `fondeo` is the default: incoming fiat is converted to your account's
-  principal asset (USD for new accounts, USDT for legacy accounts) and
+  principal asset (USD for new accounts, USDT for existing accounts) and
   credited to the CBPay balance.
 - `banking` keeps the incoming amount in its local fiat balance so it can be
   used for fiat payouts. It is currently available only for
@@ -282,7 +282,7 @@ The slot is deterministic per account, corridor, and purpose: replaying the
 same idempotency key returns the original resource with
 `idempotency_hit: true`; it never creates a second destination.
 
-`fiat_hold_local` is a legacy fallback for deposits that arrive without a
+`fiat_hold_local` is a default fallback for deposits that arrive without a
 bound instrument. It does not replace the explicit purpose on a destination.
 **Company accounts and multiple deposit destinations.** A company account can
 create multiple immutable deposit accounts in enabled additional corridors.
@@ -290,7 +290,7 @@ The current additional corridors are `MX`/`MXN`/`bank_transfer` (CLABE) and
 `BO`/`BOB`/`bank_transfer` (BOB receiving account). Every destination remains
 bound to the same CBPay account; incoming transfers are credited by the
 destination instrument. Person accounts keep one deposit account per
-corridor, and the same one-per-corridor rule applies to other or legacy
+corridor, and the same one-per-corridor rule applies to other or existing
 corridors.
 
 Funding-account provisioning starts only after the account's own verification
@@ -443,7 +443,7 @@ so the payment can be captured.
 machine-readable `failure_code` when a payment attempt fails and translates it
 to a payer message in English, Spanish or Chinese. The stable values are
 `declined`, `authentication_failed`, `provider_unavailable`, `invalid_data`,
-`card_unavailable`, `expired`, `needs_review` and `unknown`. The legacy
+`card_unavailable`, `expired`, `needs_review` and `unknown`. The historical
 `failure_reason` text remains available to the hosted page for compatibility;
 integrations should branch on the stable code, never on free text. A
 `needs_review` result is ambiguous: do not submit a new payment or create a
@@ -1132,7 +1132,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | Status | Meaning |
 |---|---|
 | `pending` | Charge created, waiting for the payment |
-| `credited` | Payment received and credited in USD for new accounts; explicit legacy USDT remains USDT |
+| `credited` | Payment received and credited in USD for new accounts; explicit USDT remains USDT |
 | `unassigned` | Deposit received without an automatic match (routed by the administrator) |
 | `expired` | The charge expired unpaid |
 | `failed` | The collection failed |
@@ -1194,7 +1194,7 @@ at credit time. Check `payin_rate_source`: `lot` means enabled USDT payin
 inventory backed the quote, while `spot` means the spot path was used. Your
 agreed spread is already inside the rate — it is never itemized.
 #### Can payins land in a balance other than USDT?
-Yes — set `default_payin_asset` with `PUT /v1/settlement`. New accounts credit directly in USD cents. Explicit legacy USDT accounts keep
+Yes — set `default_payin_asset` with `PUT /v1/settlement`. New accounts credit directly in USD cents. Accounts with explicit USDT keep
 USDT; another configured target uses the post-credit conversion flow and
 `conversion_status` reports `done` or `pending_retry`.
 #### What happens when a charge (QR, checkout) expires unpaid?
@@ -1246,7 +1246,7 @@ themselves. Don't build a scan-and-pay flow around it; show it next to the
 plain-text fields so the payer can always type them manually.
 ## Card payin settlement timing
 
-For card payins, the `settlement_hours` setting controls when the balance becomes available after the payment is confirmed. It accepts `0` or a multiple of `24`: `0` makes the balance available immediately, while `24` is one US business day and `48` is two US business days. Business days are Monday through Friday excluding observed US federal holidays, evaluated in your organization's timezone. For example, Friday at 15:00 plus `48` hours settles Tuesday at 15:00 when no holiday intervenes; Saturday plus `48` hours also settles Tuesday. A value such as `27` is rejected with HTTP `400 invalid_settlement_hours`. The payment is confirmed as `credited` immediately; only balance availability waits for `settle_at`. Existing `settle_at` timestamps and legacy non-multiple configurations retain calendar-hour semantics.
+For card payins, the `settlement_hours` setting controls when the balance becomes available after the payment is confirmed. It accepts `0` or a multiple of `24`: `0` makes the balance available immediately, while `24` is one US business day and `48` is two US business days. Business days are Monday through Friday excluding observed US federal holidays, evaluated in your organization's timezone. For example, Friday at 15:00 plus `48` hours settles Tuesday at 15:00 when no holiday intervenes; Saturday plus `48` hours also settles Tuesday. A value such as `27` is rejected with HTTP `400 invalid_settlement_hours`. The payment is confirmed as `credited` immediately; only balance availability waits for `settle_at`. Existing `settle_at` timestamps and earlier non-multiple configurations retain calendar-hour semantics.
 
 ## Local-fiat payin hold
 
@@ -1270,7 +1270,7 @@ when the credit is fiat.
 ## USD as the principal ledger asset
 
 New accounts are created with `USD` as the default for `settlement_asset` and
-`payin_settlement_asset`. Existing accounts with an explicit legacy `USDT`
+`payin_settlement_asset`. Existing accounts with an explicit `USDT`
 setting keep it; in-flight operations are never re-quoted.
 
 USD ledger amounts use cents (two decimal places). Direct credits and debits,
@@ -1282,6 +1282,6 @@ assets; v1 money-out pricing for those assets remains unavailable.
 A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
 remains the USD-equivalent reporting field. A controversy hold follows the
-credited asset: new USD credits use `hold_asset: USD`, while legacy USDT
+credited asset: new USD credits use `hold_asset: USD`, while existing USDT
 cases remain USDT. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.

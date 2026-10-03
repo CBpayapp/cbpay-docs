@@ -61,7 +61,7 @@ bulk 或不支持的来源），因此按 `unavailable` 处理，并可能产生
 （`live` 或 `unavailable`）。当 on-demand fetch 不可用时，已持久化的征信
 记录不会被当作新鲜身份证据展示。
 
-Legacy 例外：由 consent links 派生的 `Source: open_finance` 记录可能没有
+原有记录例外：由 consent links 派生的 `Source: open_finance` 记录可能没有
 `ingest_run_id`。它们不算新鲜的个人征信证据，不应标记 `FetchedThisRun`，
 也不代表个人欺诈来源。
 
