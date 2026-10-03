@@ -13,7 +13,7 @@ mantienes saldo en moneda fiat y envías pagos a terceros. Es un
 producto distinto de tus saldos CBPay: **el dinero de banking vive en tus cuentas
 bancarias**, no en tu saldo USDT ni en tu saldo USD.
 
-Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a tu asset principal (USD en cuentas nuevas, USDT en cuentas legacy). Banking admite solo `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
+Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a tu asset principal (USD en cuentas nuevas, USDT en cuentas existentes). Banking admite solo `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
 | Concepto | Dónde vive | Se consulta con |
 |---|---|---|
 | Saldos CBPay | Ledger CBPay | `GET /v1/balances` |
@@ -23,7 +23,7 @@ Para los corredores fiat locales, crea un destino con `purpose: "banking"` para 
 Las comisiones de banking vienen en dos formas. Las **fijas standalone**
 (`banking_customer`, `banking_account`, `banking_operation`) se debitan de tu
 **asset de settlement por defecto** —USD en cuentas nuevas, USDT en cuentas
-legacy— al ejecutar cada operación y se **reembolsan automáticamente**
+existentes— al ejecutar cada operación y se **reembolsan automáticamente**
 si falla. Las **transaccionales por riel** (`banking_deposit`,
 `banking_transfer_ach`, `banking_transfer_swift`, `banking_transfer_wire`,
 `banking_transfer_sepa`) son un porcentaje más un monto fijo cobrado **en la
@@ -147,7 +147,7 @@ Estados del perfil: `draft` → `submitted` → `under_review` →
 
 ## 3. Abre cuentas bancarias
 
-Con el perfil `approved`, crea la cuenta del Banking legado solo para **USD** (rieles ACH/Fedwire/SWIFT). EUR no se abre aquí: solicita un vIBAN `banking_eur` directamente en el [flujo de vIBAN EUR](#viban-eur).
+Con el perfil `approved`, crea la cuenta del Banking clásico solo para **USD** (rieles ACH/Fedwire/SWIFT). EUR no se abre aquí: solicita un vIBAN `banking_eur` directamente en el [flujo de vIBAN EUR](#viban-eur).
 
 ```bash Cuenta USD
 curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \
@@ -518,7 +518,7 @@ Lo que comparten ambas puertas:
   caller y estampa `payer` server-side desde el `registrant` del vIBAN
   seleccionado, salvo que exista un payer de wallet corporativa más
   específico y también server-side.
-- En filas activas legacy sin registrant utilizable, la plataforma deriva
+- En filas activas anteriores sin registrant utilizable, la plataforma deriva
   los nombres desde el perfil verificado vigente. Si el perfil es ilegible,
   la operación falla con `503 funding_account_unavailable`; si la identidad
   queda incompleta, falla con `422 registrant_incomplete`.
@@ -625,7 +625,7 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/operations/prepare \
 ```
 
 Ejecuta con clave de idempotencia (aquí se cobra la comisión del riel — o la
-legacy `banking_operation` cuando el riel no tiene configuración):
+`banking_operation` predeterminada cuando el riel no tiene configuración):
 
 ```bash WITHDRAW (a un beneficiario)
 curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
@@ -674,7 +674,7 @@ Respuesta `202`:
 
 `banking_fee` y `banking_fee_asset` solo aparecen cuando se cobró una
 comisión. Con una comisión por riel el asset es la moneda de la operación
-(`BANK_USD` / `BANK_EUR`); con el fallback legacy es `USDT`.
+(`BANK_USD` / `BANK_EUR`); con el fallback predeterminado es `USDT`.
 
 - El estado final llega por el webhook `banking_operation_status_changed`
   (`completed` / `failed`); también puedes consultar
@@ -744,10 +744,10 @@ En las **transferencias** el saldo disponible debe cubrir `monto + comisión`
 — si no alcanza, la API responde `402 insufficient_funds` y la operación
 **no se crea**. Si la operación es rechazada de forma definitiva justo
 después del despacho, la comisión se **reembolsa automáticamente** (la misma
-disciplina de la comisión legacy).
+disciplina de la comisión predeterminada).
 
 **Fallback:** si el riel no tiene configuración específica (ni a nivel cuenta
-ni plataforma), se cobra la legacy `banking_operation` (fija, en USDT). Un
+ni plataforma), se cobra la `banking_operation` predeterminada (fija, en USDT). Un
 riel configurado con 0% + 0 fijo queda **explícitamente gratis** — NO cae al
 fallback.
 
@@ -765,7 +765,7 @@ fallback.
 | HTTP | `error` | Qué hacer |
 |---|---|---|
 | 400 | `idempotency_key_required` | Envía la clave en body o header |
-| 402 | `insufficient_funds` | Saldo insuficiente: con comisión por riel el chequeo es `saldo ≥ monto + comisión` en la **moneda de la operación** (`BANK_USD`/`BANK_EUR`); con el fallback legacy es tu saldo USDT |
+| 402 | `insufficient_funds` | Saldo insuficiente: con comisión por riel el chequeo es `saldo ≥ monto + comisión` en la **moneda de la operación** (`BANK_USD`/`BANK_EUR`); con el fallback predeterminado es tu saldo USDT |
 | 403 | `account_blocked` | La cuenta no está activa; contacta al equipo de CBPay |
 | 409 | `banking_customer_exists` | Tu cuenta ya tiene perfil bancario (`GET /v1/banking/customer`) |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y no crees un segundo perfil |
@@ -792,7 +792,7 @@ No. El dinero banking vive en tus cuentas bancarias y se consulta con
 `GET /v1/banking/accounts/{id}/balance`. El saldo autoritativo es el del
 banco; tu [cartola](https://docs.cbpayapp.com/es/guides/statement) lo concilia en los saldos espejo
 `BANK_USD`/`BANK_EUR`. Las **comisiones por riel** se cobran en la moneda de
-la operación (tu saldo `BANK_USD`/`BANK_EUR`); solo la comisión legacy
+la operación (tu saldo `BANK_USD`/`BANK_EUR`); solo la comisión predeterminada
 `banking_operation` se debita de tu saldo USDT.
 #### ¿Qué pasa con la comisión si una operación falla?
 Se reembolsa automáticamente — comisiones de perfil, cuenta y operación por

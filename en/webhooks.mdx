@@ -746,7 +746,7 @@ Every delivery is a JSON `POST` with these headers:
 | `X-Webhook-Event-ID` | Unique event ID |
 | `X-Webhook-Delivery-ID` | This delivery's ID (changes across retries) |
 | `X-Webhook-Timestamp` | Unix timestamp (seconds, UTC) |
-| `X-Webhook-Signature` | Legacy V1 HMAC signature (see below) |
+| `X-Webhook-Signature` | Original V1 HMAC signature (see below) |
 | `X-Webhook-Signature-V2` | V2 HMAC signature (see below) |
 
 ## Verify the signatures

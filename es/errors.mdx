@@ -179,7 +179,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 409 | `already_verified` | Pediste link de onboarding con la cuenta ya verificada |
 | 409 | `identity_locked` | Con la verificación aprobada, `display_name`, `tax_id` y `country` vienen de la identidad verificada y no se cambian por `PATCH /v1/me`; contacta al soporte |
 | 409 | `no_screening` | Rescreen/monitoreo AML sin un screening previo |
-| 409 | `no_banking_customer` | Operación Banking legacy sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
+| 409 | `no_banking_customer` | Operación Banking clásica sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
 | 400 | `banking_eur_requires_viban` | Las cuentas Banking EUR se abren como vIBAN. Solicita `purpose: "banking_eur"` desde Operar EUR en vez de crear un customer Banking genérico |
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
@@ -239,7 +239,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 422 | `refund_exceeds_received` | La devolución supera lo recibido menos lo ya devuelto del cobro [QR Crypto POS](/es/guides/qr-pos) |
 | 503 | `refund_recovery_pending` | El vínculo de la devolución está temporalmente no disponible; reintenta con la misma clave de idempotencia y no origines otro retiro |
 | 400 | `to_address_required` | La devolución [QR Crypto POS](/es/guides/qr-pos) (y el retiro crypto) exige la dirección destino explícita |
-| 422 | `deposit_account_limit_reached` | Las cuentas persona y los corredores no soportados o legados conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar |
+| 422 | `deposit_account_limit_reached` | Las cuentas persona y los corredores no soportados o existentes conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar |
 | 409 | `deposit_account_conflict` | El core devolvió un destino de depósito ya asignado a otra organización — reconcilia antes de reintentar |
 
 | 422 | `deposit_account_not_recoverable` | El destino pendiente no es un instrumento MX/MXN/bank_transfer recuperable |

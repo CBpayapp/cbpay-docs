@@ -11,7 +11,7 @@ Cada cuenta mantiene **diez saldos virtuales, uno por asset**:
 | Asset | Qué es | Decimales | Cómo se fondea |
 |---|---|---|---|
 | `USD` | Dólares — **el saldo principal** | 2 | Payins fiat, swaps, transferencias, ajustes |
-| `USDT` | Stablecoin USD — saldo principal legacy | 6 | Payins fiat, depósitos on-chain (TRON/Ethereum), transferencias |
+| `USDT` | Stablecoin USD — saldo principal existente | 6 | Payins fiat, depósitos on-chain (TRON/Ethereum), transferencias |
 | `USDC` | Stablecoin USD | 6 | Depósitos on-chain (Ethereum), transferencias |
 | `BTC` | Bitcoin | 8 (satoshis) | Depósitos on-chain, abonos del operador y transferencias internas |
 | `GOLD` | Gramos de oro fino, respaldados por custodio | 6 | Abonos del operador y transferencias internas |
@@ -90,7 +90,7 @@ Reglas del settlement multi-asset:
 | Idempotencia | El replay con la misma llave devuelve el monto original; el precio no se recalcula. |
 | Límite por operación | Los assets volátiles (BTC/GOLD/SILVER/PLATINUM) tienen un límite por operación (equivalente USDT, visible en `GET /v1/settlement`); si lo superas: `422 settlement_limit_exceeded`. |
 | Límite diario por cuenta | Los assets volátiles también tienen un tope de volumen en 24 h móviles (`volatile_daily_limit_usdt` en `GET /v1/settlement`); al superarlo: `422 settlement_daily_limit_exceeded`. Paga en USD/USDT/USDC o reintenta más tarde. |
-| USD | Es el default de las cuentas nuevas; las cuentas legacy con USDT explícito no cambian. USD liquida 1:1 con USDT, exacto al centavo. |
+| USD | Es el default de las cuentas nuevas; las cuentas existentes con USDT explícito no cambian. USD liquida 1:1 con USDT, exacto al centavo. |
 
 El bloque `settlement` de `GET /v1/rates` muestra el precio efectivo por
 asset (spread incluido) para estimar antes de operar, y la respuesta del
@@ -100,7 +100,7 @@ payout registra `settlement_asset`, `settlement_amount` y
 ## Elige en qué saldo se acreditan tus payins
 
 En una cuenta nueva, los **payins** (QR, transferencia, collect y tarjeta)
-acreditan directamente al saldo USD en centavos. Una cuenta legacy con USDT
+acreditan directamente al saldo USD en centavos. Una cuenta existente con USDT
 explícito conserva USDT. Si configuras otro `default_payin_asset`, el neto
 sigue el flujo de conversión posterior al crédito al precio real, sin
 spread adicional; el payin ya pagó su comisión y su tasa. Aplican los
@@ -115,7 +115,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 | Regla | Detalle |
 |---|---|
-| Conversión post-crédito | El payin acredita en el asset principal de la cuenta (USD en cuentas nuevas, USDT en legacy) y la conversión corre inmediatamente después como un swap (verás `swap_out`/`swap_in` en tu cartola). |
+| Conversión post-crédito | El payin acredita en el asset principal de la cuenta (USD en cuentas nuevas, USDT en existentes) y la conversión corre inmediatamente después como un swap (verás `swap_out`/`swap_in` en tu cartola). |
 | Precio y límites | La conversión ejecuta **al precio real, sin spread de swap** (no hay doble costo: el payin ya pagó su comisión y su tasa). Aplican los límites por operación/24 h de los assets volátiles (BTC/GOLD/SILVER/PLATINUM). |
 | Si la conversión falla | El payin queda acreditado en el asset principal con `conversion_status: pending_retry` y el sistema reintenta automático — el saldo jamás se pierde ni se convierte doble. |
 | Checkout y POS | Cada link conserva el `settlement_asset` elegido al crearlo; esta configuración no los re-convierte. Un link creado **sin** `settlement_asset` usa tu `default_payin_asset`. |

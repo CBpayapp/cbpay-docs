@@ -191,7 +191,7 @@ The page and the PDF are fully trilingual — **English, Spanish and Simplified 
 - The JSON API translates `fields`/`amounts` labels server-side with the same parameter.
 - The PDF renders entirely in the requested language, Chinese included.
 
-## Legacy verification endpoint (unchanged)
+## Original verification endpoint (unchanged)
 
 `GET /platform/v1/verify/receipts/{code}` **stays alive** — nothing to migrate:
 
@@ -224,7 +224,7 @@ See the [errors reference](/en/errors) for the global error shape.
   <Accordion title="Does the timeline ever show estimated dates?">
     Never. Only real timestamps are rendered: when the transaction was created and when it reached its current terminal step. Intermediate steps show no date.
   </Accordion>
-  <Accordion title="Is the legacy /verify/receipts link I already integrated going to break?">
+  <Accordion title="Is the original /verify/receipts link I already integrated going to break?">
     No. It keeps returning JSON for API clients and now redirects browsers to the tracker page. Both behaviors are permanent.
   </Accordion>
   <Accordion title="Can I hide the tracker and keep only the JSON verification?">

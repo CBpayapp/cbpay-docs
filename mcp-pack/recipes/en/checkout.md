@@ -310,12 +310,12 @@ Yes — retry `POST /v1/payins` with the **same** `idempotency_key` and you
 get the same link back. A new key creates a new, independent link.
 ## Card payin settlement timing
 
-For card payins, the `settlement_hours` setting controls when the balance becomes available after the payment is confirmed. It accepts `0` or a multiple of `24`: `0` makes the balance available immediately, while `24` is one US business day and `48` is two US business days. Business days are Monday through Friday excluding observed US federal holidays, evaluated in your organization's timezone. For example, Friday at 15:00 plus `48` hours settles Tuesday at 15:00 when no holiday intervenes; Saturday plus `48` hours also settles Tuesday. A value such as `27` is rejected with HTTP `400 invalid_settlement_hours`. The payment is confirmed as `credited` immediately; only balance availability waits for `settle_at`. Existing `settle_at` timestamps and legacy non-multiple configurations retain calendar-hour semantics.
+For card payins, the `settlement_hours` setting controls when the balance becomes available after the payment is confirmed. It accepts `0` or a multiple of `24`: `0` makes the balance available immediately, while `24` is one US business day and `48` is two US business days. Business days are Monday through Friday excluding observed US federal holidays, evaluated in your organization's timezone. For example, Friday at 15:00 plus `48` hours settles Tuesday at 15:00 when no holiday intervenes; Saturday plus `48` hours also settles Tuesday. A value such as `27` is rejected with HTTP `400 invalid_settlement_hours`. The payment is confirmed as `credited` immediately; only balance availability waits for `settle_at`. Existing `settle_at` timestamps and earlier non-multiple configurations retain calendar-hour semantics.
 
 ## USD as the principal ledger asset
 
 New accounts are created with `USD` as the default for `settlement_asset` and
-`payin_settlement_asset`. Existing accounts with an explicit legacy `USDT`
+`payin_settlement_asset`. Existing accounts with an explicit `USDT`
 setting keep it; in-flight operations are never re-quoted.
 
 USD ledger amounts use cents (two decimal places). Direct credits and debits,
@@ -327,6 +327,6 @@ assets; v1 money-out pricing for those assets remains unavailable.
 A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
 remains the USD-equivalent reporting field. A controversy hold follows the
-credited asset: new USD credits use `hold_asset: USD`, while legacy USDT
+credited asset: new USD credits use `hold_asset: USD`, while existing USDT
 cases remain USDT. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.

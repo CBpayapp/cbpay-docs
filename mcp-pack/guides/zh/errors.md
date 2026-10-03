@@ -233,7 +233,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `refund_exceeds_received` | 退款超过 [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 收款已收金额减去已退金额 |
 | 503 | `refund_recovery_pending` | 退款关联暂时不可用；请使用相同的幂等键重试，不要发起第二笔提现 |
 | 400 | `to_address_required` | [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 退款（及加密货币提现）必须显式提供目标地址 |
-| 422 | `deposit_account_limit_reached` | 个人账户以及未支持或 legacy 通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除 |
+| 422 | `deposit_account_limit_reached` | 个人账户以及未支持或既有通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除 |
 | 409 | `deposit_account_conflict` | core 返回的充值目的地已分配给其他组织——先完成对账再重试 |
 
 | 422 | `deposit_account_not_recoverable` | 待处理目的地不是可恢复的 MX/MXN/bank_transfer 工具 |

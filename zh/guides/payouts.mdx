@@ -189,7 +189,7 @@ Payout 响应和 `payout_status_changed` 会包含两个新增且不绑定具体
 
 ### 从其他余额支付（`settlement_asset`）
 
-对于新账户，扣款默认来自 USD。带有显式 USDT 设置的 legacy 账户保持 USDT；使用 `PUT /v1/settlement` 更改。若要让单笔操作从其他余额支付，请在请求中加入
+对于新账户，扣款默认来自 USD。带有显式 USDT 设置的 既有账户保持 USDT；使用 `PUT /v1/settlement` 更改。若要让单笔操作从其他余额支付，请在请求中加入
 `settlement_asset`。示例：一笔 100,000 CLP 的出金从 BTC 余额支付，会经过
 四次转换，全部记录在响应中：
 

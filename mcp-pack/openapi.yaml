@@ -45,10 +45,10 @@ tags:
 - name: Balances
   description: Balances, movement history and FX rates.
 - name: Payouts
-  description: Fiat dispersals debited from the settlement balance of your choice (USD for new accounts; USDT for legacy accounts).
+  description: Fiat dispersals debited from the settlement balance of your choice (USD for new accounts; USDT for existing accounts).
 - name: Payins
   description: Fiat top-ups (QR, transfers, dedicated accounts, pull collections, cards, checkout links)
-    credited automatically — in USD for new accounts; USDT for legacy accounts, or auto-converted to the settlement asset of your choice.
+    credited automatically — in USD for new accounts; USDT for existing accounts, or auto-converted to the settlement asset of your choice.
 - name: Checkout
   description: >-
     Universal checkout links (`POST /v1/payins` with `method: "checkout"`) and the public
@@ -3731,7 +3731,7 @@ paths:
 
 
         **Pay from any balance**: by default the debit comes from your account''s default settlement asset
-        (`default_settlement_asset` — USD on new accounts, USDT on legacy accounts; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM)
+        (`default_settlement_asset` — USD on new accounts, USDT on existing accounts; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM)
         to pay this specific operation from another balance: the total converts to that asset at
         the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and
         the debit, hold and — if it fails — the refund all live in that asset for the exact same amount.
@@ -3906,7 +3906,7 @@ paths:
                   - MXN
                   - ARS
                   description: Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN and ARS. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's
-                    default settlement asset (USD for new accounts; legacy accounts with an explicit USDT setting keep USDT).
+                    default settlement asset (USD for new accounts; existing accounts with an explicit USDT setting keep USDT).
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -6161,7 +6161,7 @@ paths:
       summary: Create an internal transfer
       description: 'Moves balance between two CBPay accounts, atomically and always free of charge — any
         combination works: person to person, person to company, company to person or company to company.
-        Works with the ten virtual balances (`USD` for new accounts; `USDT` for legacy accounts, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`, `BOB`, `MXN`, `ARS`) and always between
+        Works with the ten virtual balances (`USD` for new accounts; `USDT` for existing accounts, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`, `BOB`, `MXN`, `ARS`) and always between
         balances of the **same currency** (no conversion). The destination is resolved by `to_account_id`,
         `to_email`, `to_phone` (OTP-verified phones only) or `to_contact_id`. Every transfer saves the
         recipient as a contact automatically (opt out with `save_contact: false`). The recipient''s webhook
@@ -6219,7 +6219,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: Balance currency to move (any of USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN or ARS); the destination receives in this same currency. When omitted it resolves to the sender's settlement asset (USD for new accounts, USDT for legacy accounts).
+                  description: Balance currency to move (any of USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN or ARS); the destination receives in this same currency. When omitted it resolves to the sender's settlement asset (USD for new accounts, USDT for existing accounts).
                 amount:
                   type: string
                   description: Positive decimal string, up to the currency's decimals (2 for USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM,
@@ -15359,7 +15359,7 @@ paths:
         >-
         Opens the account's banking profile (once per account). Omitted `type`/`name`/`email`
         autofill from the CBPay account. Billed as the fixed `banking_customer` fee from your settlement
-        asset (USD for new accounts; USDT for legacy accounts); refunded if the corridor rejects.
+        asset (USD for new accounts; USDT for existing accounts); refunded if the corridor rejects.
         The platform derives a deterministic core idempotency claim for this account/profile. Repeating the same request returns the original customer with `idempotency_hit: true` and never creates a second profile or charges a second profile fee. A payload change for the same account returns `409 idempotency_conflict`. If the upstream outcome is ambiguous, the response is `503 banking_recovery_pending`; do not retry with a new key.
       requestBody:
         required: true
@@ -16204,7 +16204,7 @@ paths:
                   description: Optional middle name for an individual EUR SEPA beneficiary; optional for other banking rails.
                 beneficiary_name:
                   type: string
-                  description: Required company name for a corporate EUR SEPA beneficiary; a multi-word value is also accepted as the legacy individual-name fallback. Optional for other banking rails.
+                  description: Required company name for a corporate EUR SEPA beneficiary; a multi-word value is also accepted as a compatibility fallback for individual names. Optional for other banking rails.
                 idempotency_key:
                   type: string
             examples:
@@ -16673,7 +16673,7 @@ paths:
       summary: Create a card
       description: 'Issues a card (virtual or physical) that spends Just-In-Time from the account''s central
         balance in the card''s spending asset (`spending_asset`: USDT/USDC 1:1 with the USD, or BTC/GOLD/SILVER/PLATINUM
-        converted at the price of the moment of each event; USD for new accounts; USDT for legacy accounts) — no prefunding: every purchase
+        converted at the price of the moment of each event; USD for new accounts; USDT for existing accounts) — no prefunding: every purchase
         is authorized in real time against the available balance and the card''s own limits. Person accounts
         can hold **1 live card total and 1 open application**; company accounts can create **unlimited**
         cards. New physical issuance is temporarily unavailable; existing physical cards continue operating.
@@ -16707,7 +16707,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: Balance the card spends from. When omitted it uses the account's settlement asset (USD for new accounts, USDT for legacy accounts). USD/USDT/USDC are at par (exact
+                  description: Balance the card spends from. When omitted it uses the account's settlement asset (USD for new accounts, USDT for existing accounts). USD/USDT/USDC are at par (exact
                     1:1, no conversion fee). BTC/GOLD/SILVER/PLATINUM convert at the effective price of the moment of
                     each event, with a reserve cushion at authorization (fail-closed pricing, per-operation
                     and 24h volatile limits shared with payouts).
@@ -18664,7 +18664,7 @@ paths:
       summary: Get an account's avatar
       description: Serves the avatar image of an account in the same organization (used for the recipient
         preview in transfers and contacts). Avatars published to the public CDN answer with a `302` redirect
-        to the CDN URL; legacy avatars are served directly.
+        to the CDN URL; previously uploaded avatars are served directly.
       parameters:
       - name: accountID
         in: path
@@ -22643,7 +22643,7 @@ paths:
       tags: [Corridors]
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with legacy or v2, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
       security:
         - bearerAuth: []
       responses:
@@ -23837,7 +23837,7 @@ components:
           - SILVER
           - PLATINUM
           description: Balance the card's purchases spend from. USDT/USDC 1:1 with the USD; BTC/GOLD/SILVER/PLATINUM converted
-            at the price of the moment of each event. USD for new accounts; USDT for legacy accounts. Changing it only affects future
+            at the price of the moment of each event. USD for new accounts; USDT for existing accounts. Changing it only affects future
             purchases.
         limits:
           type: object
@@ -24463,7 +24463,7 @@ components:
           - SILVER
           - PLATINUM
           description: Balance payins settle into by default. Credits land in the account's principal
-            asset (USD on new accounts, USDT on legacy); when set to a different asset, the net
+            asset (USD on new accounts, USDT on existing); when set to a different asset, the net
             amount is auto-converted via the swap engine at the real price, with no extra swap
             spread. Checkout/POS payins keep their per-link asset.
         enabled_assets:
@@ -24600,7 +24600,7 @@ components:
         instrument_id:
           type: string
           format: uuid
-          description: Dedicated deposit instrument that received the payin; omitted for generic collections and legacy payins.
+          description: Dedicated deposit instrument that received the payin; omitted for generic collections and historical payins.
         instrument:
           $ref: '#/components/schemas/PayinInstrument'
           description: Dedicated instrument metadata, returned when the instrument row is available.
@@ -25216,7 +25216,7 @@ components:
           format: date-time
     PayinInstrument:
       type: object
-      description: Dedicated deposit instrument that received the payin. Omitted for generic collections and legacy payins.
+      description: Dedicated deposit instrument that received the payin. Omitted for generic collections and historical payins.
       properties:
         instrument_id:
           type: string

@@ -17,7 +17,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/payins
 该关卡仅适用于认证账户创建。已经创建的公开支付链接仍可支付，已经收到的被动入账
 仍可处理，org-admin 的运营分配仍可用，系统创建的入金工具不受阻止。
 在收款中，客户以当地货币付款。新账户直接以 USD 入账，精度为 2 位小数；
-带有显式 USDT 设置的 legacy 账户保持 USDT。若配置其他资产，则净额按
+带有显式 USDT 设置的 既有账户保持 USDT。若配置其他资产，则净额按
 `payin_rate`（`GET /v1/rates`）和固定手续费执行入账后的转换。
 
 无论采用哪种模式，每条路径的终点都相同 —— 自动入账 + webhook：
@@ -30,7 +30,7 @@ flowchart LR
     announced["预告转账<br/>（CL、PE、MX、PY、US）"] --> pay
     clabe["专属收款账户<br/>（BO、MX、AR）"] --> pay
     pay --> conv["按您的 payin_rate 进行<br/>外汇折算 − 固定费用"]
-    conv --> credit(("新账户 USD 入账<br/>或 legacy USDT 余额"))
+    conv --> credit(("新账户 USD 入账<br/>或既有 USDT 余额"))
     credit --> wh["Webhook payin_credited"]
 ```
 
@@ -230,7 +230,7 @@ BO/BOB 账户）。使用 `GET /v1/payins/deposit-accounts` 列出您的账户�
 `MX`/`MXN`/`bank_transfer`（CLABE）和
 `BO`/`BOB`/`bank_transfer`（BOB 收款账户）。每个目的地仍绑定到同一个
 CBPay 账户；入账会根据目的地 instrument 归属。个人账户仍然遵循每个
-走廊一个充值账户的规则，其他通道和 legacy 通道也一样。
+走廊一个充值账户的规则，其他通道和既有通道也一样。
 
 充值账户只有在账户自身验证通过后才会 provisioning：个人需要 KYC，企业
 需要 KYB。注册本身不会创建充值账户。对于 AR/ARS 银行转账，平台要求调用方显式提供用户选择的 `bank_alias`；它不同于内部账户标签和根据已验证姓名派生的个人资料别名。其他收款账户展示字段是可选的，不会被推断。
@@ -263,7 +263,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 创建响应和 `GET /v1/payins/deposit-accounts` 都会返回 `purpose`。槽位按
 账户、走廊和目的确定；使用相同 key 重试会返回原始资源并带有
 `idempotency_hit: true`。`fiat_hold_local` 只是没有绑定 instrument 时的
-legacy fallback，不会替代目的字段。
+默认 fallback，不会替代目的字段。
 
 您也可以使用一次性的**预告银行转账**
 （`POST /v1/payins`，`method: "bank_transfer"`、`country: "MX"`）。
@@ -1026,7 +1026,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | 状态 | 含义 |
 |---|---|
 | `pending` | 收款已创建，等待付款 |
-| `credited` | 新账户以 USD 入账；显式 legacy USDT 账户仍以 USDT 入账 |
+| `credited` | 新账户以 USD 入账；已有明确 USDT 设置的账户仍以 USDT 入账 |
 | `unassigned` | 收到的存款未能自动匹配（由管理员路由分配） |
 | `expired` | 收款过期且未支付 |
 | `failed` | 收款失败 |
@@ -1081,7 +1081,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 `spot` 表示使用 spot 路径。您约定的点差已包含在汇率中 —— 绝不会单独列示。
 #### payin 可以落在 USDT 以外的余额吗？
 可以 —— 用 `PUT /v1/settlement` 设置 `default_payin_asset`。新账户直接以 USD
-分入账。显式 USDT 的 legacy 账户保持 USDT；其他已配置目标使用入账后转换流程，
+分入账。显式 USDT 的 既有账户保持 USDT；其他已配置目标使用入账后转换流程，
 `conversion_status` 报告 `done` 或 `pending_retry`。
 #### 收款（QR、checkout）过期未支付会怎样？
 你会收到 `payin_expired`，该 payin 关闭且不发生任何资金变动。创建一个新
@@ -1127,7 +1127,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 
 ## 保留本地法币
 
-使用 `PATCH /v1/accounts/{accountID}` 设置 `fiat_hold_local: true`，未来 BOB、MXN、ARS 收款保留为本地余额，历史入账不变。`credit_asset` 始终返回，`fiat_credited` 仅用于本地法币，`usdt_credited` 仍是等值 USDT。银行卡对新账户使用 USD（显式 legacy USDT 账户仍使用 USDT），自动转换、checkout swap 和 OTC 报价跳过保留收款。
+使用 `PATCH /v1/accounts/{accountID}` 设置 `fiat_hold_local: true`，未来 BOB、MXN、ARS 收款保留为本地余额，历史入账不变。`credit_asset` 始终返回，`fiat_credited` 仅用于本地法币，`usdt_credited` 仍是等值 USDT。银行卡对新账户使用 USD（已有明确 USDT 设置的账户仍使用 USDT），自动转换、checkout swap 和 OTC 报价跳过保留收款。
 
 > **重要**
 `refunded_amount` 使用 `credit_asset` 的单位（USDT 使用微型 USDT，BOB/MXN/ARS
@@ -1137,7 +1137,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 ## USD 作为主账本资产
 
 新账户创建时，`settlement_asset` 与 `payin_settlement_asset` 的默认值为
-`USD`。已有账户如果明确使用 legacy `USDT`，仍保持该设置；进行中的操作
+`USD`。已有账户如果明确使用 `USDT`，仍保持该设置；进行中的操作
 不会重新报价。
 
 USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
@@ -1147,6 +1147,6 @@ USD 账本金额使用美分（两位小数）。直接入账、扣账、费用�
 
 USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
-跟随实际入账资产：新的 USD 入账使用 `hold_asset: USD`，legacy USDT
+跟随实际入账资产：新的 USD 入账使用 `hold_asset: USD`，既有 USDT
 案件仍使用 USDT。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。

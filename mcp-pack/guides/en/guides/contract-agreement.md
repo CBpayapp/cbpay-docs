@@ -140,7 +140,7 @@ pixels, and at least 200 ink pixels. A failure returns HTTP 422
 After a successful claim, the PNG is embedded in the Client signature block
 of the final PDF. List and detail responses expose only the boolean
 `has_client_signature`; the signature bytes and storage key are never returned.
-Legacy envelopes without a stored image continue to render the textual
+Earlier envelopes without a stored image continue to render the textual
 signature block.
 
 ## Signing notification

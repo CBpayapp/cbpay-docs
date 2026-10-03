@@ -179,7 +179,7 @@ part of the replay identity. Read the live status with
 | 409 | `already_verified` | Onboarding link requested with an already-verified account |
 | 409 | `identity_locked` | With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support |
 | 409 | `no_screening` | AML rescreen/monitoring without a prior screening |
-| 409 | `no_banking_customer` | Legacy Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
+| 409 | `no_banking_customer` | Classic Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
 | 400 | `banking_eur_requires_viban` | EUR Banking accounts are opened as virtual IBANs. Request `purpose: "banking_eur"` from Operar EUR instead of creating a generic banking customer |
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
@@ -238,7 +238,7 @@ part of the replay identity. Read the live status with
 | 422 | `refund_exceeds_received` | The refund exceeds what the [QR Crypto POS](/en/guides/qr-pos) charge received minus prior refunds |
 | 503 | `refund_recovery_pending` | The refund linkage is temporarily unavailable; retry with the same idempotency key and do not originate a second withdrawal |
 | 400 | `to_address_required` | The [QR Crypto POS](/en/guides/qr-pos) refund (and crypto withdrawals) require an explicit destination address |
-| 422 | `deposit_account_limit_reached` | Person accounts and unsupported or legacy corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted |
+| 422 | `deposit_account_limit_reached` | Person accounts and unsupported or existing corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted |
 | 409 | `deposit_account_conflict` | The core returned a deposit destination already assigned to another organization — reconcile before retrying |
 
 | 422 | `deposit_account_not_recoverable` | The pending destination is not an MX/MXN/bank_transfer instrument that can be recovered |

@@ -174,7 +174,7 @@ CSV export and the statement. Payout responses, webhooks, CSV and receipts also 
 </Note>
 ### Paying from another balance (`settlement_asset`)
 
-For new accounts, the default debit comes from USD. Legacy accounts with
+For new accounts, the default debit comes from USD. Existing accounts with
 an explicit USDT setting keep USDT; use `PUT /v1/settlement` to change it. To pay a single operation from
 another balance, add `settlement_asset` to the request. Example: a 100,000
 CLP payout paid from the BTC balance goes through four transformations,

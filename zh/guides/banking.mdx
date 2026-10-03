@@ -458,7 +458,7 @@ curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8
 
 - 来源在请求顶层用 `source_virtual_iban_id` 选择。如果账户只有一个与入口对应用途的 active vIBAN，可以省略该字段。没有 active 来源返回 `422 funding_account_required`；有多个 active 来源但没有明确 UUID 返回 `422 ambiguous_source_viban`。
 - 平台会删除调用方提交的付款人身份字段，并从所选 vIBAN 的 `registrant` 由服务端写入 `payer`；如果存在更具体的服务端企业 wallet payer，则优先使用它。
-- 对于没有可用 registrant 的 active legacy 行，平台会从当前已验证 profile 推导付款人姓名。若 profile 暂时无法读取，返回 `503 funding_account_unavailable`；若最终身份不完整，返回 `422 registrant_incomplete`。
+- 对于没有可用 registrant 的 active 原有行，平台会从当前已验证 profile 推导付款人姓名。若 profile 暂时无法读取，返回 `503 funding_account_unavailable`；若最终身份不完整，返回 `422 registrant_incomplete`。
 - `source_virtual_iban_id` 是 EUR Banking 操作意图的一部分。使用同一幂等键会返回原操作；并发进行中的请求返回 `409 operation_in_progress`，请使用同一键重试。
 - 此流程没有按 vIBAN 设置的金额上限。EUR Banking 从账户的 `BANK_EUR` 余额扣款。
 - 这道来源门控上线前创建的 Banking operation hold 属于 grandfathered 记录：继续使用原有 dispatch 与 reconciliation 流程。

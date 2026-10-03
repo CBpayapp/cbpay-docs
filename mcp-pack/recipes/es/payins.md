@@ -22,7 +22,7 @@ procesables, la asignación operativa de org-admin sigue disponible y los
 instrumentos de depósito creados por el sistema no se bloquean.
 Un payin es un cobro fiat: tu cliente paga en moneda local y una cuenta
 nueva USD-principal se acredita directamente en USD con 2 decimales. Las cuentas
-legacy con USDT explícito conservan USDT. Si se configura otro asset, el neto sigue
+existentes con USDT explícito conservan USDT. Si se configura otro asset, el neto sigue
 la conversión post-crédito con tu **tasa de payin** (`payin_rate` en `GET /v1/rates`)
 menos la comisión fija.
 
@@ -37,7 +37,7 @@ flowchart LR
     anunciada["Transferencia anunciada<br/>(CL, PE, MX, PY, US)"] --> pago
     clabe["Cuenta dedicada CLABE / CVU<br/>(MX, AR)"] --> pago
     pago --> conv["Conversión FX a tu<br/>payin_rate − fee fijo"]
-    conv --> credito(("Abono USD para cuentas nuevas<br/>o saldo USDT legacy"))
+    conv --> credito(("Abono USD para cuentas nuevas<br/>o saldo USDT existente"))
     credito --> wh["Webhook payin_credited"]
 ```
 
@@ -138,7 +138,7 @@ Respuesta `201`:
 ```
 
 Comparte la `payment_url` con el pagador (link, redirección o WebView).
-Cuando el pago se confirma, una cuenta nueva se acredita en USD (o en USDT si tiene una configuración legacy explícita) y recibes el
+Cuando el pago se confirma, una cuenta nueva se acredita en USD (o en USDT si tiene una configuración explícita de USDT) y recibes el
 webhook `payin_credited`. El monto CLP debe ser entero (el peso chileno no
 usa decimales) y la sesión de pago vence en 24 horas por defecto. Un retry
 con la misma `idempotency_key` devuelve el mismo payin y la misma URL —
@@ -249,7 +249,7 @@ tus cuentas con `GET /v1/payins/deposit-accounts`.
 Cada destino de depósito tiene un `purpose` explícito:
 
 - `fondeo` es el valor por defecto: convierte el fiat recibido a tu asset
-  principal (USD en cuentas nuevas, USDT en cuentas legacy).
+  principal (USD en cuentas nuevas, USDT en cuentas existentes).
 - `banking` mantiene el fiat local para pagos fiat y hoy solo funciona en
   `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y
   `AR/ARS/bank_transfer`.
@@ -257,7 +257,7 @@ Cada destino de depósito tiene un `purpose` explícito:
 La respuesta de creación y `GET /v1/payins/deposit-accounts` incluyen
 `purpose`. El slot es determinista por cuenta, corredor y propósito; repetir
 la misma clave devuelve el recurso original con `idempotency_hit: true`.
-`fiat_hold_local` es un fallback legado para abonos sin instrumento asociado,
+`fiat_hold_local` es un fallback predeterminado para abonos sin instrumento asociado,
 no un reemplazo del propósito explícito.
 **Cuentas empresa y múltiples destinos de depósito.** Una cuenta empresa
 puede crear múltiples cuentas de depósito inmutables en corredores
@@ -266,7 +266,7 @@ adicionales habilitados. Hoy los corredores adicionales son
 receptora BOB). Cada destino sigue ligado a la misma cuenta CBPay y las
 transferencias entrantes se acreditan según el instrumento de destino. Las
 cuentas persona conservan una cuenta por corredor, igual que los corredores
-alternativos o legados.
+alternativos o anteriores.
 
 La provisión de cuentas de fondeo empieza solo después de aprobar la
 verificación propia: KYC para una persona o KYB para una empresa. El registro
@@ -1126,7 +1126,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | Estado | Significado |
 |---|---|
 | `pending` | Cargo creado, esperando el pago |
-| `credited` | Pago recibido y abonado en USD para cuentas nuevas; USDT legacy explícito permanece en USDT |
+| `credited` | Pago recibido y abonado en USD para cuentas nuevas; USDT explícito permanece en USDT |
 | `unassigned` | Depósito recibido sin match automático (lo asigna el administrador) |
 | `expired` | El cargo venció sin pago |
 | `failed` | El cobro falló |
@@ -1190,7 +1190,7 @@ payin habilitado respaldó la cotización; `spot` significa que se usó spot. Tu
 spread acordado ya viene dentro de la tasa — nunca se itemiza.
 #### ¿Los payins pueden caer en un saldo distinto de USDT?
 Sí — configura `default_payin_asset` con `PUT /v1/settlement`. Las cuentas
-nuevas acreditan directo en centavos USD. Las legacy con USDT explícito
+nuevas acreditan directo en centavos USD. Las existentes con USDT explícito
 conservan USDT; otro destino configurado usa el flujo de conversión post-crédito
 y `conversion_status` reporta `done` o `pending_retry`.
 #### ¿Qué pasa cuando un cobro (QR, checkout) expira sin pago?
@@ -1245,11 +1245,11 @@ esto; muéstralo junto a los campos en texto plano para que el pagador
 siempre pueda escribirlos a mano.
 ## Plazo de liquidación de payins con tarjeta
 
-En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible el saldo después de confirmar el pago. Acepta `0` o un múltiplo de `24`: `0` deja el saldo disponible de inmediato, mientras `24` equivale a un día hábil de EE. UU. y `48` a dos. Los días hábiles son de lunes a viernes, excluyendo feriados federales observados de EE. UU., según la zona horaria de tu organización. Por ejemplo, viernes a las 15:00 más `48` horas liquida el martes a las 15:00 si no interviene un feriado; sábado más `48` horas también liquida el martes. Un valor como `27` se rechaza con HTTP `400 invalid_settlement_hours`. El pago se confirma de inmediato como `credited`; solo el saldo espera hasta `settle_at`. Los valores `settle_at` existentes y las configuraciones legadas no múltiplo mantienen la semántica de horas calendario.
+En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible el saldo después de confirmar el pago. Acepta `0` o un múltiplo de `24`: `0` deja el saldo disponible de inmediato, mientras `24` equivale a un día hábil de EE. UU. y `48` a dos. Los días hábiles son de lunes a viernes, excluyendo feriados federales observados de EE. UU., según la zona horaria de tu organización. Por ejemplo, viernes a las 15:00 más `48` horas liquida el martes a las 15:00 si no interviene un feriado; sábado más `48` horas también liquida el martes. Un valor como `27` se rechaza con HTTP `400 invalid_settlement_hours`. El pago se confirma de inmediato como `credited`; solo el saldo espera hasta `settle_at`. Los valores `settle_at` existentes y las configuraciones anteriores no múltiplo mantienen la semántica de horas calendario.
 
 ## Retención de fiat local
 
-Activa `fiat_hold_local: true` con `PATCH /v1/accounts/{accountID}` para que los créditos futuros BOB, MXN o ARS permanezcan en su saldo local. Los créditos existentes no se modifican. `credit_asset` siempre aparece y `fiat_credited` solo para fiat local; `usdt_credited` sigue siendo el equivalente USDT. Las tarjetas liquidan en USD para cuentas nuevas (o en USDT para cuentas legacy explícitas) y las conversiones, swaps de checkout y ofertas OTC saltan los payins retenidos.
+Activa `fiat_hold_local: true` con `PATCH /v1/accounts/{accountID}` para que los créditos futuros BOB, MXN o ARS permanezcan en su saldo local. Los créditos existentes no se modifican. `credit_asset` siempre aparece y `fiat_credited` solo para fiat local; `usdt_credited` sigue siendo el equivalente USDT. Las tarjetas liquidan en USD para cuentas nuevas (o en USDT para cuentas existentes con USDT explícito) y las conversiones, swaps de checkout y ofertas OTC saltan los payins retenidos.
 
 > **Importante**
 `refunded_amount` usa las unidades de `credit_asset` (micro-USDT para USDT y
@@ -1260,7 +1260,7 @@ micro-USDT. Ramifica por `credit_asset`; jamás calcules
 
 Las cuentas nuevas nacen con `USD` como valor predeterminado de
 `settlement_asset` y `payin_settlement_asset`. Las cuentas existentes con una
-configuración legacy explícita en `USDT` la conservan; las operaciones en
+configuración explícita en `USDT` la conservan; las operaciones en
 vuelo nunca se vuelven a cotizar.
 
 Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
@@ -1274,6 +1274,6 @@ Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
 sigue siendo el equivalente USD para reportes. El hold de una controversia
 sigue el activo acreditado: un crédito USD nuevo usa `hold_asset: USD`,
-mientras un caso legacy en USDT conserva USDT. `disputed` y `held` usan las
+mientras un caso existente en USDT conserva USDT. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.

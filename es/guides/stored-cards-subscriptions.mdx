@@ -172,7 +172,7 @@ código postal, país y **estado/región** cuando el país lo exige — ver
 así que **no envías nada extra** en el request.
 
 - **Tarjetas guardadas con billing completo** — operan sin cambios.
-- **Tarjetas legacy sin billing completo** — el cobro se rechaza con
+- **Tarjetas antiguas sin billing completo** — el cobro se rechaza con
   `422 core_rejected` (dirección de facturación incompleta) **sin mover
   plata**. Pide al pagador guardar la tarjeta de nuevo con
   `save_card: true` (la página de pago captura la dirección completa,

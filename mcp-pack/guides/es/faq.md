@@ -56,7 +56,7 @@ Ver [Idioma y locale](https://docs.cbpayapp.com/es/guides/locale).
 #### ¿En qué moneda está mi saldo?
 Tu cuenta mantiene **diez saldos independientes**: USD (la moneda principal
 de las cuentas nuevas, 2 decimales), USDT, USDC, BTC, GOLD, SILVER, PLATINUM,
-BOB, MXN y ARS. Las cuentas legacy conservan USDT como moneda principal.
+BOB, MXN y ARS. Las cuentas existentes conservan USDT como moneda principal.
 Las operaciones fiat (payouts
 en CLP, cobros en BOB…) se convierten a/desde tu asset principal con las tasas de tu
 cuenta al momento de ejecutar (`rate` para payouts, `payin_rate` para
