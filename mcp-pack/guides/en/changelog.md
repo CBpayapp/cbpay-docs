@@ -5,6 +5,17 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.150 · 1 version - October 3, 2026
+### v2.150
+**Added**
+
+- Added handwritten client signatures to contract envelopes. The signing
+  endpoint accepts the required Base64 PNG `signature_png` value, including an
+  optional `data:image/png;base64,` prefix, and returns
+  `422 invalid_signature_image` for invalid or blank images and for violations
+  of the size, dimension or ink-pixel limits. Valid signatures are embedded in
+  the Client block of the final PDF; envelope details expose only the boolean
+  `has_client_signature`, and legacy envelopes keep their text rendering.
 ## v2.149 · 6 versions - October 2, 2026
 ### v2.149
 **Added**

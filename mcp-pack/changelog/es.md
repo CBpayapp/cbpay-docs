@@ -5,6 +5,17 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.150 · 1 versión - 3 de octubre de 2026
+### v2.150
+**Agregado**
+
+- Se agregaron firmas manuscritas del cliente a los sobres contractuales. El
+  endpoint de firma acepta el PNG Base64 requerido `signature_png`, con prefijo
+  opcional `data:image/png;base64,`, y devuelve `422 invalid_signature_image`
+  para imágenes inválidas o en blanco y para incumplimientos de tamaño,
+  dimensiones o píxeles con tinta. Las firmas válidas se incrustan en el
+  bloque Cliente del PDF final; el detalle del sobre solo expone el booleano
+  `has_client_signature` y los sobres legacy conservan su render textual.
 ## v2.149 · 6 versiones - 2 de octubre de 2026
 ### v2.149
 **Agregado**

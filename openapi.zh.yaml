@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.149"
+  version: "2.150"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
 
@@ -117,9 +117,10 @@ paths:
                 items:
                 - id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
                   account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
-                  template_version: v13.4
+                  template_version: v13.2
                   lang: zh
                   status: pending_client
+                  has_client_signature: false
                   created_at: "2026-10-01T14:00:00Z"
                   updated_at: "2026-10-01T14:00:00Z"
                 page: 1
@@ -148,9 +149,10 @@ paths:
               example:
                 id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
                 account_id: 8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f
-                template_version: v13.4
+                template_version: v13.2
                 lang: zh
                 status: completed
+                has_client_signature: true
                 final_hash: sha256-of-the-final-pdf
                 signer_name: Jordan Lee
                 signer_title: Chief Executive Officer
@@ -182,15 +184,21 @@ paths:
           application/json:
             schema:
               type: object
-              required: [signer_name, signer_title, consent]
+              required: [signer_name, signer_title, consent, signature_png]
               properties:
                 signer_name: { type: string, minLength: 1, maxLength: 120 }
                 signer_title: { type: string, minLength: 1, maxLength: 120 }
                 consent: { type: boolean, const: true }
+                signature_png:
+                  type: string
+                  format: byte
+                  minLength: 1
+                  description: "使用 Base64 编码的 PNG 签名；可选 data:image/png;base64, 前缀。"
             example:
               signer_name: Jordan Lee
               signer_title: Chief Executive Officer
               consent: true
+              signature_png: <PNG_BASE64_SIGNATURE>
       responses:
         "200":
           description: 已完成的信封。
@@ -212,7 +220,7 @@ paths:
             application/json:
               example: { error: contract_invalid_state, message: the contract envelope cannot be signed in its current state }
         "422":
-          description: 同意或签署人信息无效，或信封模板已被取代。
+          description: 同意、签署人或签名图片无效，或信封模板已被取代。
           content:
             application/json:
               examples:
@@ -222,6 +230,9 @@ paths:
                 template_superseded:
                   summary: 信封使用旧版模板签发
                   value: { error: contract_template_superseded, message: the envelope template changed since issuance; reissue the envelope before signing }
+                invalid_signature_image:
+                  summary: 签名图片被拒绝
+                  value: { error: invalid_signature_image, message: signature image must be PNG }
   /v1/me/contracts/envelopes/{envelopeID}/pdf:
     get:
       tags:

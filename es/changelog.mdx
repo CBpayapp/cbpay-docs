@@ -4,6 +4,19 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="3 de octubre de 2026" description="v2.150 · 1 versión">
+### v2.150
+**Agregado**
+
+- Se agregaron firmas manuscritas del cliente a los sobres contractuales. El
+  endpoint de firma acepta el PNG Base64 requerido `signature_png`, con prefijo
+  opcional `data:image/png;base64,`, y devuelve `422 invalid_signature_image`
+  para imágenes inválidas o en blanco y para incumplimientos de tamaño,
+  dimensiones o píxeles con tinta. Las firmas válidas se incrustan en el
+  bloque Cliente del PDF final; el detalle del sobre solo expone el booleano
+  `has_client_signature` y los sobres legacy conservan su render textual.
+</Update>
+
 <Update label="2 de octubre de 2026" description="v2.149 · 6 versiones">
 ### v2.149
 **Agregado**

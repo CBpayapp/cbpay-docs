@@ -4,6 +4,19 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="October 3, 2026" description="v2.150 · 1 version">
+### v2.150
+**Added**
+
+- Added handwritten client signatures to contract envelopes. The signing
+  endpoint accepts the required Base64 PNG `signature_png` value, including an
+  optional `data:image/png;base64,` prefix, and returns
+  `422 invalid_signature_image` for invalid or blank images and for violations
+  of the size, dimension or ink-pixel limits. Valid signatures are embedded in
+  the Client block of the final PDF; envelope details expose only the boolean
+  `has_client_signature`, and legacy envelopes keep their text rendering.
+</Update>
+
 <Update label="October 2, 2026" description="v2.149 · 6 versions">
 ### v2.149
 **Added**
