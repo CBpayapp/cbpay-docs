@@ -1,5 +1,5 @@
 {
-  "count": 311,
+  "count": 312,
   "errors": [
     {
       "category": {
@@ -4317,6 +4317,20 @@
         "en": "Signer name/title are empty or exceed the permitted length; use a human owner/operator.",
         "es": "Nombre/cargo vacíos o demasiado largos; usa owner/operator humano.",
         "zh": "姓名/职务为空或过长；使用 owner/operator 人工签署人。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_signature_image",
+      "http": 422,
+      "meaning": {
+        "en": "`signature_png` is not a valid, non-blank PNG, exceeds the encoded or decoded size limit, or is below the minimum dimensions; send a valid signature image and retry with a fresh OTP.",
+        "es": "`signature_png` no es un PNG válido o no está entintado, supera el límite de tamaño codificado/decodificado o no alcanza las dimensiones mínimas; envía una imagen válida y reintenta con un OTP nuevo.",
+        "zh": "`signature_png` 不是有效或有墨迹的 PNG，超过编码/解码大小限制，或未达到最小尺寸；发送有效签名图片并使用新 OTP 重试。"
       }
     },
     {
