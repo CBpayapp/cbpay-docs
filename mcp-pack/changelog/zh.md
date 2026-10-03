@@ -5,6 +5,15 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.150 · 1 个版本 - 2026年10月3日
+### v2.150
+**新增**
+
+- 合同信封新增客户手写签名。签署 endpoint 接受必填的 Base64 PNG
+  `signature_png`，可带 `data:image/png;base64,` 前缀；无效或空白图片以及
+  超过大小、尺寸或墨迹像素限制时返回 `422 invalid_signature_image`。
+  有效签名会嵌入最终 PDF 的客户区块；信封详情只返回布尔值
+  `has_client_signature`，legacy 信封继续使用文字签名渲染。
 ## v2.149 · 6 个版本 - 2026年10月2日
 ### v2.149
 **新增**
