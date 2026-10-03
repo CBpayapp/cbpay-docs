@@ -384,6 +384,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 代码 | HTTP | 含义与处理 |
 |---|---:|---|
 | `claim_identity_mismatch` | 422 | 提供商客户身份与原始 banking 请求不匹配。停止恢复并检查 claim。 |
+| `idempotency_failed` | 409 | claim 已彻底失败。检查失败原因后，使用新 key 发起新操作。 |
 | `claim_not_pending` | 409 | claim 已不再处于待处理状态。读取最终结果，不要重复恢复。 |
 | `claim_customer_owned_elsewhere` | 409 | 提供商客户已归属于其他账户。停止并检查所有权。 |
 | `banking_recovery_pending` | 503 | 提供商结果仍不明确。使用管理员恢复路由，不要再次发起创建请求。 |
@@ -526,3 +527,26 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 502 | `storage_failed` | 私有 storage 失败；重试前先协调信封状态。 |
 | 502 | `email_failed` | 签署后邮件失败；已完成信封仍然有效。 |
 | 503 | `storage_unavailable` | 私有 storage 不可用；恢复后重试。 |
+
+## 环境切换
+
+| HTTP | `error` | 含义与处理 |
+|---|---|---|
+| 401 | `invalid_handoff` | 缺少 handoff token、已过期、已消费，或签发给另一个环境。请签发新的 handoff 并在同一环境兑换。 |
+| 401 | `handoff_replayed` | 该 token 已被消费（一次性）。请签发新的 handoff。 |
+
+## 双因素与 passkey
+
+| HTTP | `error` | 含义与处理 |
+|---|---|---|
+| 403 | `channel_locked_by_org` | 组织策略仅允许 TOTP，禁止该账户注册 passkey。请联系 org 管理员修改策略。 |
+| 409 | `passkey_exists` | 该 credential ID 已注册在此账户。请用现有 passkey 登录。 |
+| 409 | `totp_already_enrolled` | 该账户已激活 TOTP。请用现有 secret 认证。 |
+
+## Checkout 与 payout 文档
+
+| HTTP | `error` | 含义与处理 |
+|---|---|---|
+| 409 | `materializing` | 该 checkout 链接的另一笔实例化正在进行中。请等待完成后重试。 |
+| 400 | `invalid_file_name` | 文件名为空、过长，或含路径字符（`/`、`\`、`..`）。请发送纯文件名。 |
+| 415 | `unsupported_media_type` | Content-Type 不是可接受的文档类型。请发送 PDF、JPEG 或 PNG。 |

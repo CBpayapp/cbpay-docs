@@ -1,5 +1,5 @@
 {
-  "count": 312,
+  "count": 320,
   "errors": [
     {
       "category": {
@@ -3460,13 +3460,15 @@
     {
       "category": {
         "en": "Service (5xx)",
-        "es": "Servicio (5xx)"
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
       },
       "code": "idempotency_failed",
       "http": null,
       "meaning": {
         "en": "409 — Fix: The claim is terminally failed. Start a new operation with a new key after reviewing the failure.",
-        "es": "409 — Fix: The claim is terminally failed. Start a new operation with a new key after reviewing the failure."
+        "es": "409 — Fix: The claim is terminally failed. Start a new operation with a new key after reviewing the failure.",
+        "zh": "409 — Fix: claim 已彻底失败。检查失败原因后，使用新 key 发起新操作。"
       }
     },
     {
@@ -4359,6 +4361,118 @@
         "en": "Completion email delivery failed after signing; the completed envelope remains authoritative.",
         "es": "Falló el email posterior a la firma; el sobre completado sigue siendo válido.",
         "zh": "签署后邮件失败；已完成信封仍然有效。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_handoff",
+      "http": 401,
+      "meaning": {
+        "en": "The handoff token is missing, expired, already consumed, or was issued for the other environment. Mint a fresh handoff and exchange it in the same environment.",
+        "es": "Falta el token de handoff, expiró, ya fue consumido, o se emitió para el otro ambiente. Emite un handoff fresco y canjéalo en el mismo ambiente.",
+        "zh": "缺少 handoff token、已过期、已消费，或签发给另一个环境。请签发新的 handoff 并在同一环境兑换。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "handoff_replayed",
+      "http": 401,
+      "meaning": {
+        "en": "This handoff token was already consumed (single use). Mint a fresh handoff.",
+        "es": "Este token ya fue consumido (un solo uso). Emite un handoff fresco.",
+        "zh": "该 token 已被消费（一次性）。请签发新的 handoff。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "channel_locked_by_org",
+      "http": 403,
+      "meaning": {
+        "en": "The organization policy enables TOTP only and blocks passkey registration for this account. Contact an org admin to change the policy.",
+        "es": "La política de la org solo permite TOTP y bloquea el registro de passkeys en esta cuenta. Pide a un org admin que cambie la política.",
+        "zh": "组织策略仅允许 TOTP，禁止该账户注册 passkey。请联系 org 管理员修改策略。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "passkey_exists",
+      "http": 409,
+      "meaning": {
+        "en": "The credential ID is already registered on this account. Sign in with the existing passkey.",
+        "es": "El credential ID ya está registrado en esta cuenta. Inicia sesión con la passkey existente.",
+        "zh": "该 credential ID 已注册在此账户。请用现有 passkey 登录。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "totp_already_enrolled",
+      "http": 409,
+      "meaning": {
+        "en": "TOTP is already active on this account. Authenticate with the existing secret.",
+        "es": "El TOTP ya está activo en esta cuenta. Autentícate con el secret existente.",
+        "zh": "该账户已激活 TOTP。请用现有 secret 认证。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "materializing",
+      "http": 409,
+      "meaning": {
+        "en": "Another materialization for this checkout link is in flight. Retry after it finishes.",
+        "es": "Otra materialización de este link de checkout está en curso. Reintenta cuando termine.",
+        "zh": "该 checkout 链接的另一笔实例化正在进行中。请等待完成后重试。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_file_name",
+      "http": 400,
+      "meaning": {
+        "en": "The file name is empty, too long, or contains path characters (`/`, `\\`, `..`). Send a plain file name.",
+        "es": "El nombre de archivo está vacío, es muy largo o trae caracteres de path (`/`, `\\`, `..`). Envía un nombre de archivo plano.",
+        "zh": "文件名为空、过长，或含路径字符（`/`、`\\`、`..`）。请发送纯文件名。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "unsupported_media_type",
+      "http": 415,
+      "meaning": {
+        "en": "The Content-Type is not an accepted document type. Send PDF, JPEG or PNG.",
+        "es": "El Content-Type no es un tipo de documento aceptado. Envía PDF, JPEG o PNG.",
+        "zh": "Content-Type 不是可接受的文档类型。请发送 PDF、JPEG 或 PNG。"
       }
     }
   ]

@@ -547,3 +547,26 @@ code is the stable integration contract.
 | 502 | `storage_failed` | Private storage failed while creating the final artifact; reconcile the envelope before retrying. |
 | 502 | `email_failed` | Completion email delivery failed after signing; the completed envelope remains authoritative. |
 | 503 | `storage_unavailable` | Private storage is unavailable; retry after the service recovers. |
+
+## Environment handoff
+
+| HTTP | `error` | Meaning and fix |
+|---|---|---|
+| 401 | `invalid_handoff` | The handoff token is missing, expired, already consumed, or was issued for the other environment. Mint a fresh handoff and exchange it in the same environment. |
+| 401 | `handoff_replayed` | This handoff token was already consumed (single use). Mint a fresh handoff. |
+
+## 2FA and passkeys
+
+| HTTP | `error` | Meaning and fix |
+|---|---|---|
+| 403 | `channel_locked_by_org` | The organization policy enables TOTP only and blocks passkey registration for this account. Contact an org admin to change the policy. |
+| 409 | `passkey_exists` | The credential ID is already registered on this account. Sign in with the existing passkey. |
+| 409 | `totp_already_enrolled` | TOTP is already active on this account. Authenticate with the existing secret. |
+
+## Checkout and payout documents
+
+| HTTP | `error` | Meaning and fix |
+|---|---|---|
+| 409 | `materializing` | Another materialization for this checkout link is in flight. Retry after it finishes. |
+| 400 | `invalid_file_name` | The file name is empty, too long, or contains path characters (`/`, `\`, `..`). Send a plain file name. |
+| 415 | `unsupported_media_type` | The Content-Type is not an accepted document type. Send PDF, JPEG or PNG. |
