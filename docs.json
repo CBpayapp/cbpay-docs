@@ -64,139 +64,6 @@
   "navigation": {
     "languages": [
       {
-        "language": "es",
-        "tabs": [
-          {
-            "tab": "Guías",
-            "groups": [
-              {
-                "group": "Comenzar",
-                "pages": [
-                  "es/introduccion",
-                  "es/inicio-rapido",
-                  "es/autenticacion",
-                  "es/guias/login-social",
-                  "es/entorno-y-pruebas"
-                ]
-              },
-              {
-                "group": "Conceptos",
-                "pages": [
-                  "es/conceptos/modelo-de-dinero",
-                  "es/conceptos/comisiones",
-                  "es/conceptos/idempotencia",
-                  "es/conceptos/personas-y-empresas",
-                  "es/conceptos/servicios",
-                  "es/conceptos/estados",
-                  "es/conceptos/movimientos-y-conciliacion"
-                ]
-              },
-              {
-                "group": "Flujos de integración",
-                "pages": [
-                  "es/flujos"
-                ]
-              },
-              {
-                "group": "Productos",
-                "pages": [
-                  {
-                    "group": "Cobrar (money in)",
-                    "pages": [
-                      "es/guias/payins",
-                      "es/guias/payins-qr",
-                      "es/guias/bob-virtual-accounts",
-                      "es/guias/checkout",
-                      "es/guias/stored-cards-subscriptions",
-                      "es/guias/qr-pos",
-                      "es/guias/devoluciones"
-                    ]
-                  },
-                  {
-                    "group": "Pagar (money out)",
-                    "pages": [
-                      "es/guias/payouts",
-                      "es/guias/fiat-settlement",
-                      "es/guias/sepa-instant-payouts",
-                      "es/guias/payout-rate-sources",
-                      "es/guias/qr-payout"
-                    ]
-                  },
-                  {
-                    "group": "Saldos y cuenta",
-                    "pages": [
-                      "es/guias/accounts",
-                      "es/guias/contrato-marco-grupo-cb",
-                      "es/guias/transferencias",
-                      "es/guias/swaps",
-                      "es/guias/crypto",
-                  "es/guias/wallets-segregadas",
-                  "es/guias/pruebas-de-firma",
-                  "es/guias/tarjetas",
-                      "es/guias/banking",
-                      "es/guias/company-wallets",
-                      "es/guias/cartola",
-                      "es/guias/comprobantes",
-                      "es/guias/seguimiento",
-                      "es/guias/analytics",
-                  "es/guides/fiat-ledger-assets"
-                    ]
-                  },
-                  {
-                    "group": "Identidad y compliance",
-                    "pages": [
-                      "es/guias/kyc",
-                      "es/guias/aml",
-                      "es/guias/screenings",
-                      "es/guias/qscore",
-                      "es/guias/qscore-batch",
-                      "es/guias/qscore-consents",
-                      "es/guias/qscore-seal",
-                      "es/guias/qscore-fraud",
-                      "es/guias/qscore-index",
-                      "es/guias/revisiones-operaciones",
-                  "es/guias/disputas"
-                    ]
-                  },
-                  {
-                    "group": "Experiencia",
-                    "pages": [
-                      "es/guias/contactos",
-                      "es/guias/perfil",
-                      "es/guias/idioma"
-                    ]
-                  }
-                ]
-              },
-              {
-                "group": "Integración",
-                "pages": [
-                  "es/seguridad-2fa",
-                  "es/webhooks",
-                  "es/guias/integrations",
-                  "es/eventos-tiempo-real",
-                  "es/estado-del-servicio",
-                  "es/errores",
-                  "es/faq"
-                ]
-              },
-              {
-                "group": "Recursos",
-                "pages": [
-                  "es/postman",
-                  "es/mcp",
-                  "es/changelog"
-                ]
-              }
-            ]
-          },
-          {
-            "tab": "API Reference",
-            "openapi": "openapi.es.yaml"
-          }
-        ]
-      },
-      {
         "language": "en",
         "default": true,
         "tabs": [
@@ -327,6 +194,139 @@
           {
             "tab": "API Reference",
             "openapi": "openapi.yaml"
+          }
+        ]
+      },
+      {
+        "language": "es",
+        "tabs": [
+          {
+            "tab": "Guías",
+            "groups": [
+              {
+                "group": "Comenzar",
+                "pages": [
+                  "es/introduccion",
+                  "es/inicio-rapido",
+                  "es/autenticacion",
+                  "es/guias/login-social",
+                  "es/entorno-y-pruebas"
+                ]
+              },
+              {
+                "group": "Conceptos",
+                "pages": [
+                  "es/conceptos/modelo-de-dinero",
+                  "es/conceptos/comisiones",
+                  "es/conceptos/idempotencia",
+                  "es/conceptos/personas-y-empresas",
+                  "es/conceptos/servicios",
+                  "es/conceptos/estados",
+                  "es/conceptos/movimientos-y-conciliacion"
+                ]
+              },
+              {
+                "group": "Flujos de integración",
+                "pages": [
+                  "es/flujos"
+                ]
+              },
+              {
+                "group": "Productos",
+                "pages": [
+                  {
+                    "group": "Cobrar (money in)",
+                    "pages": [
+                      "es/guias/payins",
+                      "es/guias/payins-qr",
+                      "es/guias/bob-virtual-accounts",
+                      "es/guias/checkout",
+                      "es/guias/stored-cards-subscriptions",
+                      "es/guias/qr-pos",
+                      "es/guias/devoluciones"
+                    ]
+                  },
+                  {
+                    "group": "Pagar (money out)",
+                    "pages": [
+                      "es/guias/payouts",
+                      "es/guias/fiat-settlement",
+                      "es/guias/sepa-instant-payouts",
+                      "es/guias/payout-rate-sources",
+                      "es/guias/qr-payout"
+                    ]
+                  },
+                  {
+                    "group": "Saldos y cuenta",
+                    "pages": [
+                      "es/guias/accounts",
+                      "es/guias/contrato-marco-grupo-cb",
+                      "es/guias/transferencias",
+                      "es/guias/swaps",
+                      "es/guias/crypto",
+                  "es/guias/wallets-segregadas",
+                  "es/guias/pruebas-de-firma",
+                  "es/guias/tarjetas",
+                      "es/guias/banking",
+                      "es/guias/company-wallets",
+                      "es/guias/cartola",
+                      "es/guias/comprobantes",
+                      "es/guias/seguimiento",
+                      "es/guias/analytics",
+                  "es/guides/fiat-ledger-assets"
+                    ]
+                  },
+                  {
+                    "group": "Identidad y compliance",
+                    "pages": [
+                      "es/guias/kyc",
+                      "es/guias/aml",
+                      "es/guias/screenings",
+                      "es/guias/qscore",
+                      "es/guias/qscore-batch",
+                      "es/guias/qscore-consents",
+                      "es/guias/qscore-seal",
+                      "es/guias/qscore-fraud",
+                      "es/guias/qscore-index",
+                      "es/guias/revisiones-operaciones",
+                  "es/guias/disputas"
+                    ]
+                  },
+                  {
+                    "group": "Experiencia",
+                    "pages": [
+                      "es/guias/contactos",
+                      "es/guias/perfil",
+                      "es/guias/idioma"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Integración",
+                "pages": [
+                  "es/seguridad-2fa",
+                  "es/webhooks",
+                  "es/guias/integrations",
+                  "es/eventos-tiempo-real",
+                  "es/estado-del-servicio",
+                  "es/errores",
+                  "es/faq"
+                ]
+              },
+              {
+                "group": "Recursos",
+                "pages": [
+                  "es/postman",
+                  "es/mcp",
+                  "es/changelog"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "API Reference",
+            "openapi": "openapi.es.yaml"
           }
         ]
       },
