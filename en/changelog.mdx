@@ -4,7 +4,17 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 2, 2026" description="v2.147 · 4 versions">
+<Update label="October 2, 2026" description="v2.148 · 5 versions">
+### v2.148
+**Changed**
+
+- CL/CLP bank-transfer payouts now reject non-whole amounts with HTTP `400`
+  `invalid_amount` and the message `amount must be a whole number of CLP
+  (this currency has no minor unit)` before any debit, hold, payout resource
+  or dispatch. Whole-number inputs such as `30000` and `30000.00` remain
+  accepted. This replaces the previous post-debit `core_rejected` /
+  `invalid payload` outcome for this validation case.
+
 ### v2.147
 **Added**
 

@@ -392,7 +392,7 @@ curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&sta
 
 #### 智利
 
-以 CLP 进行银行转账。需要 RUT、银行和账户：
+以 CLP 进行银行转账。需要 RUT、银行和账户：智利比索没有小数单位，因此 CLP payout 金额必须为整数（例如 `30000` 或 `30000.00`）。
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
