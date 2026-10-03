@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds six independent\nvirtual balances — USDT (the operating currency), USDC, BTC, GOLD, SILVER and PLATINUM\n(grams of fine gold) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the six balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (6 decimals\nfor USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-02 19:34 UTC",
-    "_content_sha256": "d472d210beafbc5c6fb8137de22354a38340f30dfe7b5f15bf728537a9f5cf99"
+    "_generated_at": "2026-10-03 03:54 UTC",
+    "_content_sha256": "9976a1cd14da9c08ace7e96823bad210103ca14727e00f5f82d1f57f132c583e"
   },
   "auth": {
     "type": "bearer",
@@ -104,7 +104,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n      \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n      \"template_version\": \"v13.2\",\n      \"lang\": \"es\",\n      \"status\": \"pending_client\",\n      \"created_at\": \"2026-10-01T14:00:00Z\",\n      \"updated_at\": \"2026-10-01T14:00:00Z\"\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n      \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n      \"template_version\": \"v13.4\",\n      \"lang\": \"es\",\n      \"status\": \"pending_client\",\n      \"created_at\": \"2026-10-01T14:00:00Z\",\n      \"updated_at\": \"2026-10-01T14:00:00Z\"\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50\n}"
             }
           ]
         },
@@ -168,7 +168,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n  \"template_version\": \"v13.2\",\n  \"lang\": \"es\",\n  \"status\": \"completed\",\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\",\n  \"events\": [\n    {\n      \"event\": \"completed\",\n      \"created_at\": \"2026-10-01T14:03:12Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n  \"template_version\": \"v13.4\",\n  \"lang\": \"es\",\n  \"status\": \"completed\",\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\",\n  \"events\": [\n    {\n      \"event\": \"completed\",\n      \"created_at\": \"2026-10-01T14:03:12Z\"\n    }\n  ]\n}"
             }
           ]
         },

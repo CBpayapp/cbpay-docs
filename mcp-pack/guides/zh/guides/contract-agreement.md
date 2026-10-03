@@ -43,8 +43,23 @@ sequenceDiagram
 系统不存在 `draft` 或通用的 `pending` 状态。
 
 当 `lang=en` 时，组织必须设置 `contract_counsel_approved_en=true`。西班牙语
-签发不需要该英文 counsel gate。模板版本为 `v13.3`，模板哈希和 CBPay
-签名版本会冻结在信封快照中。
+签发不需要该英文 counsel gate。西班牙语 v13.4 是当前生效的法律来源；
+英语 v13.4 仍是等待外部审阅的 draft。信封快照会冻结模板版本和模板
+SHA。
+
+## v13.4 法律与渲染基线
+
+西班牙语 v13.4 删除了哥伦比亚，加入 PIX 行，并规定 API 指令接收确认的
+p95 小于 2 秒、p99 小于 5 秒；每日切点为创建后下一日的 `00:00 UTC`。
+英语文档在外部审阅完成前仍按 draft 处理。
+
+每份 PDF 都使用签发组织的 branding：logo、颜色、封面、footer 和水印
+来自组织配置；CBPay 只是默认 branding。信封快照冻结
+`template_version` 和模板 SHA，因此可以审计签署人实际审阅的字节。
+
+如果当前模板版本或 SHA 与快照不一致，签署会 fail-closed，返回 HTTP 422
+`contract_template_superseded`。不要签署旧文本：先用原因 void
+`pending_client` 信封，再使用新的幂等 key 签发新信封并重新审阅 PDF。
 
 ## 价格覆盖与显示金额
 
@@ -132,7 +147,7 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.3",
+      "template_version": "v13.4",
       "lang": "zh",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -152,7 +167,7 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.3",
+  "template_version": "v13.4",
   "lang": "zh",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",
@@ -163,7 +178,17 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
   "signed_at": "2026-10-01T14:03:12Z",
   "otp_channel": "otp",
   "created_at": "2026-10-01T14:00:00Z",
-  "updated_at": "2026-10-01T14:03:12Z"
+  "updated_at": "2026-10-01T14:03:12Z",
+  "events": [
+    {
+      "event": "completed",
+      "actor": "jordan@example.com",
+      "created_at": "2026-10-01T14:03:12Z",
+      "detail": {
+        "final_hash": "sha256-of-the-final-pdf"
+      }
+    }
+  ]
 }
 ```
 
@@ -186,7 +211,10 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
 ```
 
 签署时间和语言仍可从信封详情读取。不要用 email 到达作为完成判据；应
-使用事件和资源状态。
+使用事件和资源状态。详情中的 `events` 是 append-only；事件名包括
+`created`、`viewed_client`、`signed_cbpay`、`notified`、`signed_client`、
+`completed`、`resent` 和 `voided`。详情还会显示冻结的
+`template_version`；账户侧 snapshot 含模板 SHA，但不暴露内部运营者身份。
 
 ## 错误与解决方案
 
@@ -200,6 +228,7 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
 | 401 | `invalid_otp` | OTP 缺失、过期或已使用；申请新的 token 并放入 `X-OTP-Token`。 |
 | 404 | `not_found` | 信封不存在或属于其他账户；使用自己列表中的 ID。 |
 | 409 | `contract_invalid_state` | 信封已完成或已 void；不要重复仪式。 |
+| 422 | `contract_template_superseded` | 信封基于旧模板；先 void，再签发新信封后签署。 |
 | 422 | `invalid_lang` | 只使用 `es` 或 `en`。 |
 | 422 | `contract_account_ineligible` | 账户不是 KYB 已批准的活动企业账户。 |
 | 422 | `contract_unfillable` | 缺少可信数据或价格覆盖；检查 `missing` 中的 `pricing:<flag>`，修正资料后签发新信封。 |
@@ -224,3 +253,7 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
 #### 可以重试签署吗？
     可以使用同一信封和新的 OTP。原子 claim 会阻止第二次签署；完成的信封
     返回 `contract_invalid_state`。
+#### 如果模板已经过时怎么办？
+    签署会返回 `contract_template_superseded`。使用原因将
+    `pending_client` 信封 void，使用新的幂等 key 签发新信封，并在签署前
+    审阅新的 PDF。

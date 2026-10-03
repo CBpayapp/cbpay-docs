@@ -5,7 +5,24 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.148 · 5 versions - October 2, 2026
+## v2.149 · 6 versions - October 2, 2026
+### v2.149
+**Added**
+
+- Added the Grupo CB framework agreement template `v13.4` to the account
+  contract flow. The Spanish version is the current version; the English
+  version remains a draft pending external review.
+- Contract details expose the frozen `template_version` and append-only
+  lifecycle `events`. Signing now fails closed with `422
+  contract_template_superseded` when the envelope was issued from an older
+  template; void the envelope and issue a new one instead of signing it.
+
+**Changed**
+
+- The Spanish legal agreement now removes Colombia, adds the PIX row, documents
+  API instruction-receipt latency at p95/p99, and states the daily cutoff as
+  `00:00 UTC` for the following day.
+
 ### v2.148
 **Changed**
 

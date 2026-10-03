@@ -4,7 +4,21 @@ icon: "clock-rotate-left"
 description: "API 与文档变更历史"
 ---
 
-<Update label="2026年10月2日" description="v2.148 · 5 个版本">
+<Update label="2026年10月2日" description="v2.149 · 6 个版本">
+### v2.149
+**新增**
+
+- 将 Grupo CB 主协议 `v13.4` 纳入账户合同流程。西班牙语版本为当前生效
+  版本；英语版本仍是等待外部审核的 draft。
+- 合同详情现在返回冻结的 `template_version` 以及只追加的生命周期 `events`。
+  如果信封签发时使用了旧模板，签署会 fail-closed 并返回
+  `422 contract_template_superseded`；应先作废信封并重新签发，不能继续签署。
+
+**变更**
+
+- 西班牙语法律合同删除哥伦比亚，新增 PIX 行，记录 API 指令接收回执的
+  p95/p99 延迟，并将每日截止时间固定为次日 `00:00 UTC`。
+
 ### v2.148
 **变更**
 

@@ -47,8 +47,28 @@ There is no `draft` or generic `pending` state.
 
 For `lang=en`, the organization must have the platform setting
 `contract_counsel_approved_en=true`. Spanish issuance does not require that
-English-counsel gate. The document template is version `v13.3`; its hash and
-the CBPay signature version are frozen in the envelope snapshot.
+English-counsel gate. The current legal source is the Spanish Grupo CB
+agreement v13.4. The English v13.4 wording is a draft pending external
+review; English issuance remains gated by counsel approval.
+
+## v13.4 legal and rendering baseline
+
+The Spanish v13.4 agreement is the operative version. Its legal surgery
+removes Colombia, includes a PIX row, defines the API instruction-receipt
+target as p95 below 2 seconds and p99 below 5 seconds, and uses a daily
+cut-off at 00:00 UTC on the day after creation. The English documentation
+describes the draft only until external counsel completes its review.
+
+Every generated PDF is rendered with the issuing organization's branding:
+logo, primary colors, cover, footer and watermark come from the organization's
+branding configuration. CBPay is only the default branding. The envelope
+freezes `template_version` and the template SHA in its snapshot, so the PDF
+and the signed artifact can be audited against the exact template bytes.
+
+If the current template version or SHA no longer matches the snapshot, signing
+fails closed with HTTP 422 `contract_template_superseded`. Do not sign the old
+text. Void the pending envelope with a reason and issue a new envelope with a
+new idempotency key; the new envelope must be reviewed before signing.
 
 ## Pricing coverage and displayed amounts
 
@@ -143,7 +163,7 @@ List response:
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.3",
+      "template_version": "v13.4",
       "lang": "en",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -163,7 +183,7 @@ Completed response:
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.3",
+  "template_version": "v13.4",
   "lang": "en",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",
@@ -212,6 +232,12 @@ The signed timestamp and language remain available from the envelope detail.
 Do not infer completion from email delivery: use the event and the resource
 state.
 
+The detail `events` collection is append-only. Its `event` values are
+`created`, `viewed_client`, `signed_cbpay`, `notified`, `signed_client`,
+`completed`, `resent` and `voided`. The detail also exposes the frozen
+`template_version`; the account-facing snapshot contains the template SHA
+without exposing internal operator identities.
+
 ## Errors and solutions
 
 | HTTP | Code | Cause and solution |
@@ -224,6 +250,7 @@ state.
 | 401 | `invalid_otp` | The OTP is missing, expired or already consumed; request a fresh token and send it in `X-OTP-Token`. |
 | 404 | `not_found` | The envelope is unknown or belongs to another account; use the account's own list and ID. |
 | 409 | `contract_invalid_state` | The envelope is already completed or voided; do not retry the ceremony. |
+| 422 | `contract_template_superseded` | The envelope was issued from an older template; void it and issue a new envelope before signing. |
 | 422 | `invalid_lang` | Use `es` or `en` exactly. |
 | 422 | `contract_account_ineligible` | The account is not an active company with approved KYB. |
 | 422 | `contract_unfillable` | A verified identity, address, signature or pricing value is missing; inspect `missing` for `pricing:<flag>`, fix the source data and issue a new envelope. |
@@ -249,3 +276,7 @@ state.
 #### Can I retry the sign request?
     Yes, but use the same envelope and a fresh OTP. The atomic claim prevents
     a second signature; a completed envelope returns `contract_invalid_state`.
+#### What if the template was superseded after issuance?
+    Signing is blocked with `contract_template_superseded`. Void the
+    `pending_client` envelope with a reason, issue a new envelope with a new
+    idempotency key, and review the new PDF before signing.
