@@ -5,7 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.147 · 4 versiones - 2 de octubre de 2026
+## v2.148 · 5 versiones - 2 de octubre de 2026
+### v2.148
+**Cambiado**
+
+- Los payouts por transferencia bancaria CL/CLP ahora rechazan los montos no
+  enteros con HTTP `400`, código `invalid_amount` y el mensaje
+  `amount must be a whole number of CLP (this currency has no minor unit)`
+  antes de cualquier débito, retención, recurso payout o despacho. Los montos
+  enteros como `30000` y `30000.00` siguen siendo aceptados. Esto reemplaza el
+  resultado anterior `core_rejected` / `invalid payload` posterior al débito
+  para este caso de validación.
+
 ### v2.147
 **Agregado**
 

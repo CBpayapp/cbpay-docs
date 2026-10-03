@@ -388,7 +388,7 @@ las de tu cuenta en `GET /v1/rates`; el débito es `usdt_amount + fee`
 
 #### Chile
 
-Transferencia bancaria en CLP. Requiere RUT, banco y cuenta:
+Transferencia bancaria en CLP. Requiere RUT, banco y cuenta: el peso chileno no tiene unidad menor, por lo que los montos de payouts CLP deben ser enteros (por ejemplo, `30000` o `30000.00`).
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \

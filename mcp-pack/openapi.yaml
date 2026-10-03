@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.147"
+  version: "2.148"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -4397,7 +4397,21 @@ paths:
                 updated_at: '2026-07-07T12:00:00Z'
                 idempotency_hit: true
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: >-
+            Invalid request (`idempotency_key_required`, `invalid_payload`, or
+            `invalid_amount`). For CL/CLP bank-transfer payouts, a non-whole
+            amount is rejected before any debit, hold, payout resource
+            creation, or dispatch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_amount:
+                  summary: Fractional CLP amount
+                  value:
+                    error: invalid_amount
+                    message: amount must be a whole number of CLP (this currency has no minor unit)
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':

@@ -395,7 +395,7 @@ when configured; `0.30` here).
 <Tabs>
 <Tab title="Chile">
 
-Bank transfer in CLP. Requires RUT, bank and account:
+Bank transfer in CLP. Requires RUT, bank and account: the Chilean peso has no minor unit, so CLP payout amounts must be whole numbers (for example, `30000` or `30000.00`).
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \

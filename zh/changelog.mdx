@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "API 与文档变更历史"
 ---
 
-<Update label="2026年10月2日" description="v2.147 · 4 个版本">
+<Update label="2026年10月2日" description="v2.148 · 5 个版本">
+### v2.148
+**变更**
+
+- CL/CLP 银行转账 payout 现在会在任何扣款、冻结、payout 资源创建或派发
+  之前，使用 HTTP `400` 和 `invalid_amount` 拒绝非整数金额，并返回消息
+  `amount must be a whole number of CLP (this currency has no minor unit)`。
+  `30000` 和 `30000.00` 等整数金额仍然接受。对于此类校验失败，不再出现
+  之前扣款后的 `core_rejected` / `invalid payload` 结果。
+
 ### v2.147
 **新增**
 
