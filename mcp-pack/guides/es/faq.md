@@ -54,13 +54,15 @@ Ver [Idioma y locale](https://docs.cbpayapp.com/es/guides/locale).
 ## Dinero y tasas
 
 #### ¿En qué moneda está mi saldo?
-Tu cuenta mantiene **seis saldos independientes**: USDT (la moneda
-operativa, 6 decimales), USDC, BTC y GOLD. Las operaciones fiat (payouts
-en CLP, cobros en BOB…) se convierten a/desde USDT con las tasas de tu
+Tu cuenta mantiene **diez saldos independientes**: USD (la moneda principal
+de las cuentas nuevas, 2 decimales), USDT, USDC, BTC, GOLD, SILVER, PLATINUM,
+BOB, MXN y ARS. Las cuentas legacy conservan USDT como moneda principal.
+Las operaciones fiat (payouts
+en CLP, cobros en BOB…) se convierten a/desde tu asset principal con las tasas de tu
 cuenta al momento de ejecutar (`rate` para payouts, `payin_rate` para
 payins); también puedes liquidar payouts desde otro saldo
 (`settlement_asset`) y quedarte con tus payins en el asset que elijas
-(`default_payin_asset`). Ver
+(`default_payin_asset`). El pricing sigue cotizándose en USDT por dentro. Ver
 [modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model).
 #### ¿Cómo sé cuánto me va a costar un payout antes de crearlo?
 Consulta `GET /v1/rates` (devuelve **tu** tasa por país) y calcula:

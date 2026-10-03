@@ -100,10 +100,10 @@ Sections:
 
 1. **`summary`** — opening balance, inflows, outflows, closing balance,
    fees by service and the `balanced` flag of the **USDT balance** (the
-   operating currency).
+   main summary always reconciles USDT).
 2. **`assets`** — one reconciled section per non-USDT balance with activity
-   or balance (USDC, BTC, GOLD and, if you use Banking, the
-   `BANK_USD`/`BANK_EUR` mirrors of your bank accounts): opening/closing
+   or balance (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS and,
+   if you use Banking, the `BANK_USD`/`BANK_EUR` mirrors of your bank accounts): opening/closing
    balance, inflows, outflows and its own `balanced` flag, in each
    currency's precision, WITHOUT raw detail in the client view; the raw
    per-asset detail lives only in the org-admin statement. Empty if you
@@ -179,7 +179,8 @@ On demand — every request builds it live from the ledger for the `from`/`to`
 range you pass (both required, `YYYY-MM-DD`, organization timezone).
 #### What does balanced: true mean?
 Each asset reconciles independently: `opening + credits − debits = closing`
-for USDT, USDC, BTC, GOLD and the banking mirrors. If any asset does not
+for USDT, USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS and the
+banking mirrors. If any asset does not
 balance the flag is `false` — report it to your CBPay team.
 #### Why do I see BANK_USD / BANK_EUR balances?
 They mirror your banking money inside the statement so the account

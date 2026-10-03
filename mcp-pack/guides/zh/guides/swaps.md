@@ -1,13 +1,13 @@
 ---
 title: "兑换"
-description: "在你的 USDT、USDC、BTC、GOLD、SILVER 和 PLATINUM 余额之间即时兑换，可提前询价并按当下的执行汇率成交"
+description: "在你的 USD、USDT、USDC、BTC、GOLD、SILVER 和 PLATINUM 余额之间即时兑换，可提前询价并按当下的执行汇率成交"
 slug: zh/guides/swaps
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/swaps
 ---
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
-**兑换（Swaps）**在你的四种货币 — `USDT`、`USDC`、`BTC` 和 `GOLD` — 之间**同步、即时**地转换余额，资金始终不离开你的账户。任意币对均可（包括 `BTC` ↔ `GOLD` 直接兑换）。你在报价中看到的汇率就是执行汇率：**没有额外手续费** — 报价即到账。
+**兑换（Swaps）**在你的七种资产 — `USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER` 和 `PLATINUM` — 之间**同步、即时**地转换余额，资金始终不离开你的账户。任意币对均可（包括 `BTC` ↔ `GOLD` 直接兑换，以及 `USD` ↔ `USDT` 精确 1:1）；本地法币（`BOB`、`MXN`、`ARS`）暂不支持兑换（`invalid_pair`）。你在报价中看到的汇率就是执行汇率：**没有额外手续费** — 报价即到账。
 
 ```mermaid
 flowchart LR

@@ -8,19 +8,19 @@ source_url: https://docs.cbpayapp.com/zh/guides/fiat-ledger-assets
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 CBPay 账户现在支持三种法币账本资产：**BOB**、**MXN** 和 **ARS**。它们
-是独立余额，使用两位小数（最小单位）存储，并与 USDT、USDC、BTC、GOLD、
+是独立余额，使用两位小数（最小单位）存储，并与 USD、USDT、USDC、BTC、GOLD、
 SILVER 和 PLATINUM 一起返回。
 
 ```mermaid
 flowchart LR
-  balances["GET /v1/balances"] --> ledger["9 ledger assets"]
+  balances["GET /v1/balances"] --> ledger["10 ledger assets"]
   history["GET /v1/balances/history"] --> ledger
   analytics["GET /v1/analytics/summary"] --> valuation["feed price or unpriced"]
 ```
 
 ## 法币资产出现在哪里
 
-- `GET /v1/balances`：始终返回九种账本资产，包括余额为零的行。法币使用
+- `GET /v1/balances`：始终返回十种账本资产，包括余额为零的行。法币使用
   两位小数，例如 `"125.40"`。
 - `GET /v1/balances/history`：为每种法币提供每日序列。序列跟踪
   `available`，当前快照包含 held。

@@ -1,15 +1,17 @@
 ---
 title: "Swaps"
-description: "Convert between your USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances instantly, with a prior quote and the execution rate of the moment"
+description: "Convert between your USD, USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances instantly, with a prior quote and the execution rate of the moment"
 slug: en/guides/swaps
 lang: en
 source_url: https://docs.cbpayapp.com/en/guides/swaps
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-**Swaps** convert balance between your six currencies — `USDT`, `USDC`,
-`BTC` and `GOLD` — **synchronously and instantly**, without the money ever
-leaving your account. Any pair works (including direct `BTC` ↔ `GOLD`).
+**Swaps** convert balance between your seven assets — `USD`, `USDT`, `USDC`,
+`BTC`, `GOLD`, `SILVER` and `PLATINUM` — **synchronously and instantly**, without the money ever
+leaving your account. Any pair works (including direct `BTC` ↔ `GOLD`,
+and `USD` ↔ `USDT` at exact 1:1); local fiat (`BOB`, `MXN`, `ARS`) is not
+swappable yet (`invalid_pair`).
 The rate you see in the quote is the rate you execute at: **no separate
 fees** — quoted = received.
 

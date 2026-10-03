@@ -95,8 +95,8 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 
 分区：
 
-1. **`summary`** — 期初余额、流入、流出、期末余额、按服务分类的手续费，以及 **USDT 余额**（运营货币）的 `balanced` 标志。
-2. **`assets`** — 每个有活动或余额的非 USDT 币种各有一个已对账的分区（USDC、BTC、GOLD，以及若使用 Banking，则包括你银行账户的 `BANK_USD`/`BANK_EUR` 镜像）：期初/期末余额、流入、流出和各自的 `balanced` 标志，按各币种的精度呈现；客户端视图不含原始明细，各资产的原始明细仅见于 org-admin 对账单。如果你只使用 USDT，此分区为空。
+1. **`summary`** — 期初余额、流入、流出、期末余额、按服务分类的手续费，以及 **USDT 余额**（主汇总始终对账 USDT）的 `balanced` 标志。
+2. **`assets`** — 每个有活动或余额的非 USDT 资产各有一个已对账的分区（USD、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS，以及若使用 Banking，则包括你银行账户的 `BANK_USD`/`BANK_EUR` 镜像）：期初/期末余额、流入、流出和各自的 `balanced` 标志，按各资产的精度呈现；客户端视图不含原始明细，各资产的原始明细仅见于 org-admin 对账单。如果你只使用 USDT，此分区为空。
 3. **`breakdown`** — 按产品、按国家（出款和入款，含本地金额和 USDT）、按法币币种和按月份。
 4. **按产品的明细** — 出款（收款人、汇率和扣款）、入款（按模式）、加密货币（含 `tx_id` 及其 `asset`）、转账（含对手方和 `asset`）、银行卡消费（`card_transactions`，含商户和消费余额）、余额兑换（`swaps`）、银行业务操作（`banking_operations`）和服务费（含退款）。
 5. **产品分区与审计路径** — 客户对账单省略原始账本 `movements`、各资产的 `assets[].movements` 以及 `summary.counts.movements`。请按产品分区核对，并使用费用和加密货币充值中的 `balance_after`。如需深入审计，请使用 org-admin 对账单或 `GET /v1/movements`。

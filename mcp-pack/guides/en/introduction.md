@@ -7,14 +7,14 @@ source_url: https://docs.cbpayapp.com/en/introduction
 ---
 # CBPay API documentation
 
-Move money across Latin America: payouts, payins, cards, crypto and banking — one API, six balances.
+Move money across Latin America: payouts, payins, cards, crypto and banking — one API, ten balances.
 
 ## Start integrating
 
 - **Quickstart** - Your first API call in five minutes: keys, sandbox, and a test payout.
 - **Authentication** - API keys, scopes, and how requests are signed.
 - **Sandbox & testing** - Test mode, magic values, and simulated rails.
-- **Money model** - Six independent balances and how money moves between them.
+- **Money model** - Ten independent balances and how money moves between them.
 ## Build products
 
 - **Fiat payouts** - Send money to local bank accounts across the region.

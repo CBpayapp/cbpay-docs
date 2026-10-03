@@ -22,7 +22,7 @@ It is the mirror image of a payin: a payin credits, a refund debits.
 |---|---|
 | Method | Card payins only (`method: "card"`, including checkout paid by card and MIT charges on a stored card) |
 | Status | The payin must be `credited` **with its balance already available** — a card payin under a settlement delay (`settlement_pending: true`, balance landing at `settle_at`) cannot be refunded until the settlement releases |
-| Balance | You need enough **USDT balance** at the time you request it |
+| Balance | You need enough balance **in the credited asset** (`USD` on new accounts, `USDT` on legacy accounts) at the time you request it |
 | Amount | Full or partial; several partials on the same payin add up to the cap |
 
 QR, announced transfer, dedicated deposit account and collect payins
@@ -33,9 +33,11 @@ refunded through the crypto rail with
 
 > **Important**
 **Fees and the FX margin are not refundable.** We debit the value the
-payin brought in (gross), not the net that was credited: if you charged
-100.00 USD and we credited 97.10 USDT after a 2.90 fee, refunding the
-full amount debits **100.000000 USDT**. You cover the difference, just
+payin brought in (gross), not the net that was credited: on a legacy
+account, if you charged 100.00 USD and we credited 97.10 USDT after a 2.90
+fee, refunding the full amount debits **100.000000 USDT** — on a new
+USD-principal account the same case debits **100.00 USD**. You cover the
+difference, just
 like with any card processor.
 ## Lifecycle
 
@@ -342,10 +344,13 @@ would be a second real refund. Repeat the request with the **same**
 `idempotency_key` (we return the same object) or wait for the
 `payin_refunded` webhook.
 #### Which currency is debited?
-Always **USDT**, the currency the payin was credited in, even if your
-account has a different default settlement asset for payins. We never
-convert on your behalf: if you do not have enough USDT, we answer
-`insufficient_funds`.
+The **asset the payin was credited in** (`credit_asset`): `USD` for new
+accounts, `USDT` for legacy accounts, or `BOB`/`MXN`/`ARS` for payins held
+in local fiat — regardless of your current default settlement asset. We
+never convert on your behalf: if you do not have enough of that asset, we
+answer `insufficient_funds`. The response and the `payin_refunded` webhook
+carry the authoritative `debited_asset` and `debited_amount` (see
+[Actual debit asset](#actual-debit-asset)).
 #### Can I refund a payin from months ago?
 As long as the payin is `credited` and has refundable value left, yes on
 our side. The real limit comes from the processor and the card scheme

@@ -72,12 +72,16 @@ See [Locale and language](/en/guides/locale).
 <AccordionGroup>
 
 <Accordion title="What currency is my balance in?">
-Your account holds **four independent balances**: USDT (the operating
-currency, 6 decimals), USDC, BTC and GOLD. Fiat operations (payouts in
-CLP, collections in BOB…) convert to/from USDT at your account's rates at
+Your account holds **ten independent balances**: USD (the principal
+currency of new accounts, 2 decimals), USDT, USDC, BTC, GOLD, SILVER,
+PLATINUM, BOB, MXN and ARS. Legacy accounts keep USDT as their principal
+currency. Fiat operations (payouts in
+CLP, collections in BOB…) convert to/from your principal asset at your
+account's rates at
 execution time (`rate` for payouts, `payin_rate` for payins); you can
 also settle payouts from another balance (`settlement_asset`) and keep
-your payins in the asset you choose (`default_payin_asset`). See the
+your payins in the asset you choose (`default_payin_asset`). Pricing is
+still quoted in USDT behind the scenes. See the
 [money model](/en/concepts/money-model).
 </Accordion>
 

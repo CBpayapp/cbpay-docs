@@ -149,18 +149,13 @@ specific active `funding_usdt` virtual IBAN:
 - An explicit UUID that is not owned by the account or is not active returns
   `404 not_found` or `422 funding_account_required`.
 
-The ordering identity is stamped server-side from the selected vIBAN's
-persisted `registrant`: an individual uses its first and last name, while a
-company uses its registered company name and registration data. Caller-supplied
-`payer` or `cj_payer_*` fields cannot replace it.
+The funding purposes, how to request and read virtual IBANs, and how the
+ordering identity is stamped and repaired all live in one place: see
+[Euros: funding direction and EUR banking, in one place](https://docs.cbpayapp.com/en/guides/banking#euros-funding-direction-and-eur-banking-in-one-place). This page keeps only the payout contract above.
 
-For active legacy rows without a usable persisted registrant, the platform
-derives the ordering names from the current verified profile. If that profile
-cannot be read, the API returns `503 funding_account_unavailable`; if the
-resulting identity is incomplete, it returns `422 registrant_incomplete`.
-
-There is no per-vIBAN amount cap. The payout debits the account's normal USDT
-settlement balance; `BANK_EUR` is used by EUR Banking operations, not customer
+There is no per-vIBAN amount cap. The payout debits the account's normal
+settlement balance (the settlement asset — USD for new accounts, USDT for
+legacy accounts); `BANK_EUR` is used by EUR Banking operations, not customer
 payouts.
 
 > **Note**

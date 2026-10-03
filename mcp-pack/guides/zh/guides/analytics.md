@@ -316,7 +316,7 @@ curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-
 - `assets` 还包含银行账户镜像（`BANK_USD`、`BANK_EUR`），以其自身
   货币（2 位小数）作为独立序列提供——适合在图表上做"Bank USD"/
   "Bank EUR"筛选项。它们**不**计入 `total_usd` 聚合，该聚合仅覆盖
-  运营余额。
+  十种账本余额。
 - `total_usd` 按**每一天的历史价格**为 BTC/GOLD/SILVER/PLATINUM 估值。若某天尚无
   历史价格，则使用今日现货价格，并在 `spot_priced_dates` 中披露
   该日期（绝不虚构数值）。

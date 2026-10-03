@@ -19,7 +19,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/refunds
 |---|---|
 | 方式 | 仅限**银行卡**收款（`method: "card"`，含以卡支付的 Checkout 与已保存卡的 MIT 扣款） |
 | 状态 | 收款必须为 `credited` **且余额已可用** —— 处于结算延迟窗口内的银行卡收款（`settlement_pending: true`，余额在 `settle_at` 到账）在结算释放前无法退款 |
-| 余额 | 发起时需有足够的 **USDT 余额** |
+| 余额 | 发起时需在入账资产中有足够的余额（新账户为 `USD`，旧账户为 `USDT`） |
 | 金额 | 全额或部分；同一笔收款的多次部分退款会累计至上限 |
 
 二维码、报备转账、专属入金账户与 collect 类收款**无法**通过此接口退款
@@ -28,8 +28,8 @@ source_url: https://docs.cbpayapp.com/zh/guides/refunds
 
 > **重要**
 **手续费与汇率点差不予退还。** 我们扣除的是该笔收款带来的价值（毛额），
-而不是入账的净额：若你收款 100.00 USD、扣除 2.90 手续费后入账 97.10
-USDT，全额退款将扣除 **100.000000 USDT**。差额由你承担，这与任何银行卡
+而不是入账的净额：在旧账户上，若你收款 100.00 USD、扣除 2.90 手续费后入账 97.10
+USDT，全额退款将扣除 **100.000000 USDT**；在新的 USD 主资产账户上，同样的情形扣除 **100.00 USD**。差额由你承担，这与任何银行卡
 处理机构的做法一致。
 ## 生命周期
 
@@ -318,8 +318,10 @@ curl -L https://api.qbank.cl/platform/v1/payin-refunds/3a7d51c8-…/receipt \
 键重试会造成第二次真实退款。请用**相同**的 `idempotency_key` 重发请求
 （我们会返回同一对象），或等待 `payin_refunded` Webhook。
 #### 扣的是哪种币？
-始终是 **USDT**，即该笔收款入账的币种，即使你的账户为收款配置了其他默认
-结算资产。我们不会代你兑换：USDT 不足时返回 `insufficient_funds`。
+是该笔收款**入账的资产**（`credit_asset`）：新账户为 `USD`，旧账户为
+`USDT`，本地法币 hold 的收款为 `BOB`/`MXN`/`ARS`——与你当前的默认结算资产无关。
+我们不会代你兑换：该资产不足时返回 `insufficient_funds`。响应和
+`payin_refunded` webhook 会携带权威的 `debited_asset` 与 `debited_amount`。
 #### 几个月前的收款还能退吗？
 只要收款为 `credited` 且仍有可退额度，从我们这一侧可以。真正的限制来自
 处理机构与卡组织规则（通常 180 天）；超期后退款会以 `failed` 被拒，预留

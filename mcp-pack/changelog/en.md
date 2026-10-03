@@ -5,7 +5,12 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.151 · 2 versions - October 3, 2026
+## v2.152 · 3 versions - October 3, 2026
+### v2.152
+**Changed**
+
+- Rewrote the money model and related guides around the USD principal currency: new accounts settle in USD, legacy accounts keep USDT, and all ten ledger assets (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) are listed in canonical order with their real decimal places. Transfers, payins, checkout, refunds, swaps, statements, banking funding, analytics and the FAQ now describe the same behavior the API implements. Docs-only: no API behavior changed.
+- Consolidated every euro topic into one Banking EUR section: funding (`funding_usdt`) and banking (`banking_eur`) virtual IBANs, requesting and reading them, third-party requests, the `BANK_EUR` balance, SEPA sending and receiving, errors, and FAQ. The SEPA payout page and the company-wallet balance section now point to that single source instead of repeating it. Docs-only: no API behavior changed.
 ### v2.151
 **Added**
 

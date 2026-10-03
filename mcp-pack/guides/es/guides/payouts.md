@@ -170,8 +170,7 @@ su banco, y también aparece en el webhook `payout_status_changed`, el
 comprobante PDF, el export CSV de payouts y la cartola. Las respuestas, CSV, webhooks y comprobantes también incluyen `uetr` (UETR/SWIFT gpi) e `imad` (wire/ACH doméstico), vacíos hasta que el banco los reporte; usa el [tracker público](https://docs.cbpayapp.com/es/guides/tracking) para el estado vivo y el mismo comprobante.
 ### Pagar desde otro saldo (`settlement_asset`)
 
-Por defecto el débito sale de tu asset de settlement predeterminado (USDT
-salvo que lo cambies con `PUT /v1/settlement`). Para pagar una operación
+Por defecto el débito sale de USD en cuentas nuevas. Las cuentas legacy con USDT explícito conservan USDT; usa `PUT /v1/settlement` para cambiarlo. Para pagar una operación
 puntual desde otro saldo, agrega `settlement_asset` al request. Ejemplo:
 un payout de 100.000 CLP pagado desde el saldo BTC pasa por cuatro
 transformaciones, todas registradas en la respuesta:

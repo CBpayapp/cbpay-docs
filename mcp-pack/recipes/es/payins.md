@@ -248,7 +248,8 @@ tus cuentas con `GET /v1/payins/deposit-accounts`.
 
 Cada destino de depósito tiene un `purpose` explícito:
 
-- `fondeo` es el valor por defecto y convierte el fiat recibido a USDT.
+- `fondeo` es el valor por defecto: convierte el fiat recibido a tu asset
+  principal (USD en cuentas nuevas, USDT en cuentas legacy).
 - `banking` mantiene el fiat local para pagos fiat y hoy solo funciona en
   `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y
   `AR/ARS/bank_transfer`.
@@ -1188,9 +1189,10 @@ acreditar. Revisa `payin_rate_source`: `lot` significa que el inventario USDT
 payin habilitado respaldó la cotización; `spot` significa que se usó spot. Tu
 spread acordado ya viene dentro de la tasa — nunca se itemiza.
 #### ¿Los payins pueden caer en un saldo distinto de USDT?
-Sí — configura `default_payin_asset` con `PUT /v1/settlement`. El crédito
-sigue entrando en USDT y se convierte inmediatamente después a precio real;
-`conversion_status` reporta `done` o `pending_retry` (se reintenta solo).
+Sí — configura `default_payin_asset` con `PUT /v1/settlement`. Las cuentas
+nuevas acreditan directo en centavos USD. Las legacy con USDT explícito
+conservan USDT; otro destino configurado usa el flujo de conversión post-crédito
+y `conversion_status` reporta `done` o `pending_retry`.
 #### ¿Qué pasa cuando un cobro (QR, checkout) expira sin pago?
 Recibes `payin_expired` y el payin se cierra sin mover dinero. Crea un
 cobro nuevo — nada se debitó ni acreditó.

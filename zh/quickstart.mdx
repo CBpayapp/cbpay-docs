@@ -24,7 +24,7 @@ flowchart LR
 | **基础 URL（test）** | `https://cryptobank.qbank.cl/platform` —— 模拟资金，`pk_test_` 密钥 |
 | **认证方式** | `Authorization: Bearer <token>` 请求头（或 `X-API-Key`） |
 | **组织 slug** | `cbpay`（用于注册和登录） |
-| **余额币种** | 4 个独立余额：USDT（运营币种）、USDC、BTC 和 GOLD —— 金额始终为字符串（`"52.618258"`） |
+| **余额币种** | 10 个独立余额：USD（新账户的本位币种）、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 和 ARS —— 金额始终为字符串（`"52.618258"`） |
 | **环境** | 两个相互隔离的环境，同一套 API：先在 **test** 集成，再更换 URL + 密钥上线 —— [指南](/zh/environment-testing) |
 
 <Tip>

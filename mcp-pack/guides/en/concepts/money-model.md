@@ -5,47 +5,62 @@ slug: en/concepts/money-model
 lang: en
 source_url: https://docs.cbpayapp.com/en/concepts/money-model
 ---
-## Six independent virtual balances
+## Ten independent virtual balances
 
-Every account holds **six virtual balances, one per currency**. They are
-fully independent: they never mix and are never converted automatically.
+Every account holds **ten virtual balances, one per asset**:
 
-| Currency | What it is | Decimals | How it is funded |
+| Asset | What it is | Decimals | How it is funded |
 |---|---|---|---|
-| `USDT` | USD stablecoin — **the operating currency** | 6 | Fiat payins, on-chain deposits (TRON/Ethereum), transfers |
+| `USD` | US dollars — **the principal balance** | 2 | Fiat payins, swaps, transfers, adjustments |
+| `USDT` | USD stablecoin — legacy principal balance | 6 | Fiat payins, on-chain deposits (TRON/Ethereum), transfers |
 | `USDC` | USD stablecoin | 6 | On-chain deposits (Ethereum), transfers |
-| `BTC` | Bitcoin | 8 (satoshis) | Operator credits and internal transfers |
-| `GOLD` | **Grams of fine gold** backed by a custodian | 6 | Operator credits and internal transfers |
+| `BTC` | Bitcoin | 8 (satoshis) | On-chain deposits, operator credits and internal transfers |
+| `GOLD` | Grams of fine gold, custodian-backed | 6 | Operator credits and internal transfers |
+| `SILVER` | Grams of fine silver, custodian-backed | 6 | Operator credits and internal transfers |
+| `PLATINUM` | Grams of fine platinum, custodian-backed | 6 | Operator credits and internal transfers |
+| `BOB` | Bolivian bolivianos — local hold | 2 | Fiat payins with local hold, transfers, adjustments |
+| `MXN` | Mexican pesos — local hold | 2 | Fiat payins with local hold, transfers, adjustments |
+| `ARS` | Argentine pesos — local hold | 2 | Fiat payins with local hold, transfers, adjustments |
 
-`GET /v1/balances` always returns all six (zeros if you have not used that
-currency yet), as **decimal strings**:
+They are fully independent: they never mix and are never converted
+automatically. (`BANK_USD` and `BANK_EUR` are separate banking mirror
+balances — see [Banking](https://docs.cbpayapp.com/en/guides/banking).)
+
+`GET /v1/balances` always returns all ten (zeros if you have not used that
+asset yet), as **decimal strings**:
 
 ```json
 {
   "account_id": "…",
   "balances": [
+    { "asset": "USD", "available": "1000.00", "held": "0.00" },
     { "asset": "USDT", "available": "125.430000", "held": "10.000000" },
     { "asset": "USDC", "available": "50.000000", "held": "0.000000" },
     { "asset": "BTC", "available": "0.00060000", "held": "0.00000000" },
-    { "asset": "GOLD", "available": "12.500000", "held": "0.000000" }
+    { "asset": "GOLD", "available": "12.500000", "held": "0.000000" },
+    { "asset": "SILVER", "available": "0.000000", "held": "0.000000" },
+    { "asset": "PLATINUM", "available": "0.000000", "held": "0.000000" },
+    { "asset": "BOB", "available": "0.00", "held": "0.00" },
+    { "asset": "MXN", "available": "0.00", "held": "0.00" },
+    { "asset": "ARS", "available": "0.00", "held": "0.00" }
   ]
 }
 ```
 
 > **Note**
-Internally each amount is stored as an integer in its currency's minimal
-unit (micro-USDT, satoshis, micro-grams) and computed with exact rational
-arithmetic. There are no floats and no accumulated rounding errors.
-**USD is the principal balance for new accounts**: payouts, fiat payins,
-and service fees use USD when the account has no explicit legacy USDT
-setting. Legacy accounts with explicit USDT keep USDT. Payment can still
-come from any enabled balance — see [Choose which balance pays](#choose-which-balance-pays).
-Other balances are funded through the existing asset-specific flows.
+Internally each amount is stored as an integer in its asset's minimal
+unit (cents, micro-USDT, satoshis, micro-grams) and computed with exact
+rational arithmetic. There are no floats and no accumulated rounding
+errors.
+**USD is the principal balance for new accounts**: payouts, fiat payins
+and service fees use USD unless the account configures otherwise. Accounts
+created before the USD default carry USDT explicitly and keep operating in
+USDT. An empty asset setting normalizes to USD.
 
 ## Choose which balance pays
 
 **Payouts** and **service fees** (KYC, wallet creation, banking) can be
-debited from any of your six balances. The pricing pipeline does not
+debited from any of your ten balances. The pricing pipeline does not
 change: the operation is quoted in USDT as always, and at the end the total
 translates to the chosen asset at the **effective settlement price** of the
 moment.
@@ -73,8 +88,8 @@ Multi-asset settlement rules:
 | Debit, hold and refund | All three live in the chosen asset. If the payout fails, the **exact** `settlement_amount` is refunded — never re-quoted. |
 | Idempotency | Replaying with the same key returns the original amount; the price is never recomputed. |
 | Per-operation limit | Volatile assets (BTC/GOLD/SILVER/PLATINUM) have a per-operation limit (USDT equivalent, visible in `GET /v1/settlement`); exceeding it returns `422 settlement_limit_exceeded`. |
-| Per-account daily limit | Volatile assets also have a rolling 24h volume cap (`volatile_daily_limit_usdt` in `GET /v1/settlement`); exceeding it returns `422 settlement_daily_limit_exceeded`. Settle in USDT/USDC or retry later. |
-| USD | Is the default for new accounts; legacy accounts with explicit USDT remain unchanged. |
+| Per-account daily limit | Volatile assets also have a rolling 24h volume cap (`volatile_daily_limit_usdt` in `GET /v1/settlement`); exceeding it returns `422 settlement_daily_limit_exceeded`. Settle in USD/USDT/USDC or retry later. |
+| USD | The default for new accounts; legacy accounts with explicit USDT remain unchanged. USD settles 1:1 with USDT, exact to the cent. |
 
 The `settlement` block of `GET /v1/rates` shows the effective per-asset
 price (spread included) so you can estimate before operating, and the
@@ -84,10 +99,11 @@ payout response records `settlement_asset`, `settlement_amount` and
 ## Choose which balance receives your payins
 
 For a new account, **payins** (QR, bank transfer, collect, and card) credit
-the USD balance directly in cents. A legacy account with an explicit USDT setting
-keeps USDT. If you configure another payin asset, the net amount follows the
-post-credit conversion flow at the real price, with no extra swap spread; the payin
-already paid its fee and rate. The same limits as a regular swap apply.
+the USD balance directly in cents. A legacy account with an explicit USDT
+setting keeps USDT. If you configure another payin asset, the net amount
+follows the post-credit conversion flow at the real price, with no extra
+swap spread; the payin already paid its fee and rate. The same limits as a
+regular swap apply.
 
 ```bash
 # Credit my payins in USDC
@@ -98,9 +114,9 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 | Rule | Detail |
 |---|---|
-| Post-credit conversion | The payin credits in USDT and the conversion runs right after, as a swap (you will see `swap_out`/`swap_in` in your statement). |
+| Post-credit conversion | The payin credits in the account's principal asset (USD for new accounts, USDT for legacy) and the conversion runs right after, as a swap (you will see `swap_out`/`swap_in` in your statement). |
 | Price and limits | The conversion executes **at the real price, with no swap spread** (no double cost: the payin already paid its fee and rate). The per-operation/24h limits of volatile assets (BTC/GOLD/SILVER/PLATINUM) apply. |
-| If the conversion fails | The payin stays credited in USDT with `conversion_status: pending_retry` and the system retries automatically — funds are never lost or double-converted. |
+| If the conversion fails | The payin stays credited in the principal asset with `conversion_status: pending_retry` and the system retries automatically — funds are never lost or double-converted. |
 | Checkout and POS | Each link keeps the `settlement_asset` chosen at creation; this setting never re-converts them. A link created **without** `settlement_asset` uses your `default_payin_asset`. |
 | Surfaces | `GET /v1/payins`, the detail and the `payin_credited` webhook expose `settlement_asset` and `conversion_status` when a conversion applies. |
 
@@ -119,12 +135,14 @@ When you create a payout or withdrawal, the debit (`amount + fee`) leaves
 - **`completed`** → the hold is consumed; the money left.
 - **`failed`** → the full debit (amount + fee) is refunded to `available`.
 
-## FX conversion (fiat ↔ USDT)
+## FX conversion (fiat ↔ USDT, quoted)
 
-Fiat operations convert to USDT at **your account's rates** at execution
+Fiat operations are quoted in USDT at **your account's rates** at execution
 time (the same ones returned by `GET /v1/rates`, USD base): `rate` for
 payouts and `payin_rate` for payins. Conversion rounds **up** on debits and
-**down** on credits, with at most 1 micro-USDT of difference.
+**down** on credits, with at most 1 micro-USDT of difference. The quoted
+total then debits (or credits) in the settlement asset — USD-principal
+accounts settle 1:1 in USD cents.
 
 Example — a 50,000 CLP payout at a 950.25 rate:
 
@@ -145,14 +163,15 @@ The rate used is recorded on the object (`fx_rate`) for auditability.
 ## Reference and settlement prices
 
 `GET /v1/rates` includes an `asset_prices` block with the **USD reference
-price** of each currency (BTC per unit, GOLD per gram; USDT and USDC are 1
-by convention) to value your balances on screen, plus a `settlement` block
-with the **effective price** your balance would be valued at if you pay an
-operation from that asset (spread included):
+price** of each currency (BTC per unit; GOLD, SILVER and PLATINUM per gram;
+USD, USDT and USDC are 1 by convention) to value your balances on screen,
+plus a `settlement` block with the **effective price** your balance would
+be valued at if you pay an operation from that asset (spread included):
 
 ```json
 {
   "asset_prices": {
+    "USD": { "currency": "USD", "unit": "usd", "price": "1" },
     "USDT": { "currency": "USD", "unit": "usdt", "price": "1" },
     "USDC": { "currency": "USD", "unit": "usdc", "price": "1" },
     "BTC": { "currency": "USD", "unit": "btc", "price": "109853.24",
@@ -160,11 +179,18 @@ operation from that asset (spread included):
              "settlement_grade": true },
     "GOLD": { "currency": "USD", "unit": "gram", "price": "107.5341",
               "updated_at": "2026-07-07T09:12:05Z",
-              "settlement_grade": true }
+              "settlement_grade": true },
+    "SILVER": { "currency": "USD", "unit": "gram", "price": "1.2345",
+                "updated_at": "2026-07-07T09:12:05Z",
+                "settlement_grade": true },
+    "PLATINUM": { "currency": "USD", "unit": "gram", "price": "45.6789",
+                  "updated_at": "2026-07-07T09:12:05Z",
+                  "settlement_grade": true }
   },
   "settlement": {
     "default_asset": "USD",
     "assets": [
+      { "asset": "USD", "available": true, "settlement_rate": "1" },
       { "asset": "USDT", "available": true, "settlement_rate": "1" },
       { "asset": "USDC", "available": true, "settlement_rate": "0.99900000" },
       { "asset": "BTC", "available": true, "settlement_rate": "109029.34070000" },
@@ -226,4 +252,7 @@ polling required.
 
 ### Custody-backed metal balances
 
-`SILVER` and `PLATINUM` are ledger-only, custodian-backed balances measured in fine grams with six decimal places. Settlement and swaps use a price oracle and the fixed `31.1034768` grams-per-troy-ounce conversion; no on-chain metal deposit, withdrawal or spending rail is implied.
+`GOLD`, `SILVER` and `PLATINUM` are ledger-only, custodian-backed balances
+measured in fine grams with six decimal places. Settlement and swaps use a
+price oracle and the fixed `31.1034768` grams-per-troy-ounce conversion; no
+on-chain metal deposit, withdrawal or spending rail is implied.

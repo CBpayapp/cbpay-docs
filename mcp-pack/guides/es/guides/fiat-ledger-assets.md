@@ -9,18 +9,18 @@ source_url: https://docs.cbpayapp.com/es/guides/fiat-ledger-assets
 
 Las cuentas CBPay ahora exponen tres activos fiat del ledger: **BOB**, **MXN**
 y **ARS**. Son saldos independientes, almacenados con dos decimales (unidades
-menores), y aparecen junto a USDT, USDC, BTC, GOLD, SILVER y PLATINUM.
+menores), y aparecen junto a USD, USDT, USDC, BTC, GOLD, SILVER y PLATINUM.
 
 ```mermaid
 flowchart LR
-  balances["GET /v1/balances"] --> ledger["9 ledger assets"]
+  balances["GET /v1/balances"] --> ledger["10 ledger assets"]
   history["GET /v1/balances/history"] --> ledger
   analytics["GET /v1/analytics/summary"] --> valuation["feed price or unpriced"]
 ```
 
 ## Dónde aparecen
 
-- `GET /v1/balances`: siempre devuelve los nueve activos del ledger, incluso
+- `GET /v1/balances`: siempre devuelve los diez activos del ledger, incluso
   filas en cero. Los fiat usan dos decimales, por ejemplo `"125.40"`.
 - `GET /v1/balances/history`: incluye una serie diaria por cada activo fiat.
   La serie sigue `available`; los holds aparecen en el snapshot actual.

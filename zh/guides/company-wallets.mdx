@@ -121,24 +121,9 @@ curl "https://api.qbank.cl/platform/v1/banking/company-wallets/7d2c1a8e-4d3e-4f7
 
 ### Banking EUR 虚拟 IBAN 余额
 
-`GET /v1/banking/virtual-ibans/{virtualIBANID}/balance` 返回
-`received_total`，即该虚拟 IBAN 在平台镜像中收到的净金额。它不会返回
-`available`：EUR 出账在账户级别扣除 `BANK_EUR`，当前无法诚实地归属于
-某一个收款 IBAN。
-
-```json
-{
-  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-  "currency": "EUR",
-  "asset": "BANK_EUR",
-  "received_total": "1250.00",
-  "purpose": "banking_eur",
-  "source": "platform_ledger_reconciled_to_banking_provider"
-}
-```
-
-账户级余额才是可用资金来源。按 IBAN 分配出账是后续阶段；不要从
-`received_total` 中减去臆造金额。
+按 IBAN 的余额合约（request、`received_total`、为何暂时没有 `available`）只在
+一处记录：见[欧元：入金地址与欧元银行，集中在一处](/zh/guides/banking#欧元入金地址与欧元银行集中在一处)的“读取、关闭与列出 movement”部分。本页只讲为付款人命名的
+company-wallet 预留。
 
 ## 状态与错误
 

@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="3 de octubre de 2026" description="v2.151 · 2 versiones">
+<Update label="3 de octubre de 2026" description="v2.152 · 3 versiones">
+### v2.152
+**Cambiado**
+
+- Reescritura del modelo de dinero y guías relacionadas en torno a USD como moneda principal: las cuentas nuevas liquidan en USD, las legacy conservan USDT, y los diez assets del ledger (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) se listan en orden canónico con sus decimales reales. Transfers, payins, checkout, refunds, swaps, cartola, fondeo banking, analytics y el FAQ describen ahora el comportamiento que implementa la API. Solo documentación: sin cambios de comportamiento de la API.
+- Toda la temática euro consolidada en una sola sección Banking EUR: IBAN virtuales de fondeo (`funding_usdt`) y de banca (`banking_eur`), cómo solicitarlos y leerlos, solicitudes de terceros, el saldo `BANK_EUR`, envío y recepción SEPA, errores y FAQ. La página de payouts SEPA y la sección de saldo de company-wallets ahora apuntan a esa fuente única en vez de repetirla. Solo documentación: sin cambios de comportamiento de la API.
 ### v2.151
 **Agregado**
 

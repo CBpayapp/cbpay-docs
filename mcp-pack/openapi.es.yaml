@@ -1,29 +1,33 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.151"
+  version: "2.152"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
 
-    on-chain, y screening KYC. Cada cuenta mantiene seis saldos virtuales
+    on-chain, y screening KYC. Cada cuenta mantiene diez saldos virtuales
 
-    independientes — USDT (la moneda operativa), USDC, BTC y GOLD (gramos de
+    independientes — USD (la moneda principal de las cuentas nuevas; las cuentas
 
-    oro fino) — convertibles a demanda con swaps.
+    existentes mantienen USDT salvo que cambien su configuración), USDT, USDC, BTC y GOLD (gramos de
+
+    oro fino), SILVER, PLATINUM (gramos) y BOB, MXN, ARS (libro mayor fiat de 2 decimales) —
+
+    convertibles a demanda con swaps entre los siete assets convertibles. Los balances fiat (BOB/MXN/ARS) solo acumulan payins retenidos con el flag `fiat_hold_local` y débitos directos en misma moneda; no son intercambiables por swap.
 
     Los payouts y las comisiones de servicios pueden pagarse desde cualquiera
 
-    de los seis saldos (`PUT /v1/settlement` u override por payout con
+    de los siete saldos de liquidación (`PUT /v1/settlement` u override por payout con
 
-    `settlement_asset`), y los payins pueden auto-convertirse al asset que
+    `settlement_asset`), y los payins directos en USD se acreditan en USD; el resto de payins puede auto-convertirse al asset que
 
     elijas (`default_payin_asset`).
 
 
     Todos los montos son strings decimales en la precisión de cada moneda (6
 
-    decimales para USDT/USDC/GOLD/SILVER/PLATINUM, 8 para BTC). Los errores siempre devuelven
+    decimales para USD/BOB/MXN/ARS, 6 decimales para USDT/USDC/GOLD/SILVER/PLATINUM, 8 para BTC). Los errores siempre devuelven
 
     `{"error": "<code>", "message": "<detail>"}`.
 
@@ -109,8 +113,8 @@ tags:
 - name: Banking
   description: 'Cuentas bancarias reales: recibe, mantén y envía dinero por rieles bancarios internacionales.'
 - name: Cards
-  description: Tarjetas virtuales y físicas que gastan Just-In-Time del saldo que elijas (USDT, USDC,
-    BTC o GOLD), con límites de gasto por tarjeta.
+  description: Tarjetas virtuales y físicas que gastan Just-In-Time desde cualquiera de los siete
+    activos de gasto (USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM), con límites de gasto por tarjeta.
 - name: Seguridad (OTP)
   description: Códigos de verificación de un solo uso por SMS/WhatsApp/email que protegen acciones sensibles,
     más las preferencias de 2FA self-service. Aplican solo a sesiones de usuario — las API keys quedan
@@ -2818,8 +2822,9 @@ paths:
       - Saldos
       operationId: getBalances
       summary: Obtener saldos
-      description: Los seis saldos virtuales independientes de la cuenta que llama (USDT — la moneda
-        operativa —, USDC, BTC y GOLD en gramos de oro fino). Todos los activos soportados vienen siempre,
+      description: Los diez saldos virtuales independientes de la cuenta que llama (USD — la moneda
+        principal de las cuentas nuevas —, USDT, USDC, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos
+        y los saldos fiat BOB, MXN y ARS de 2 decimales). Todos los activos soportados vienen siempre,
         con ceros si la cuenta no ha usado esa moneda. Si la cuenta usa Banking, sus saldos espejo BANK_USD/BANK_EUR
         también se listan con el marcador `custody` en `banking` (el saldo autoritativo vive en el banco;
         estos saldos no son gastables dentro de la plataforma).
@@ -2870,7 +2875,7 @@ paths:
       summary: Obtener historial de saldos
       description: 'Evolución diaria de los saldos de la cuenta para gráficos de dashboard: una serie
         por asset (el saldo disponible de cierre de cada día, arrastrado en días sin movimientos) más
-        una serie agregada en USD que valoriza BTC/GOLD/SILVER/PLATINUM al precio de referencia histórico de cada día.
+        una serie agregada en USD que valoriza cada saldo al precio de referencia histórico de cada día (USDT/USDC a la par; BTC/GOLD/SILVER/PLATINUM y USD/BOB/MXN/ARS al precio del día).
         Incluye las entradas/salidas totales del período y el snapshot actual (available + held), para
         que el front arme una tarjeta de saldo estilo dashboard con su variación porcentual. La serie
         refleja el saldo **disponible** (los holds no tienen historia); `current` trae el `held` de hoy
@@ -2880,7 +2885,7 @@ paths:
 
         El mapa `assets` incluye también los espejos de las cuentas banking (`BANK_USD`, `BANK_EUR`) como
         serie propia en su propia moneda (2 decimales). **No** forman parte del agregado `total_usd`,
-        que cubre solo los saldos operativos (USDT, USDC, BTC, GOLD).
+        que cubre los diez saldos del libro mayor (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS).
 
         '
       parameters:
@@ -2920,8 +2925,9 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 'Una serie de saldo de cierre diario por asset. Incluye los saldos operativos
-                      (USDT, USDC, BTC, GOLD) y los espejos de las cuentas banking (BANK_USD, BANK_EUR)
+                    description: 'Una serie de saldo de cierre diario por asset. Incluye los diez saldos
+                      del ledger (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) y los
+                      espejos de las cuentas banking (BANK_USD, BANK_EUR)
                       en su propia moneda; las series banking quedan fuera de `total_usd`.
 
                       '
@@ -3696,8 +3702,8 @@ paths:
 
 
         **Paga desde cualquier saldo**: por defecto el débito sale del asset de settlement predeterminado
-        de tu cuenta (USDT salvo que lo cambies con `PUT /v1/settlement`). Envía `settlement_asset` (USDT,
-        USDC, BTC o GOLD) para pagar esta operación puntual desde otro saldo: el total en USDT se convierte
+        de tu cuenta (`default_settlement_asset` — USD en cuentas nuevas, USDT en cuentas legacy; cámbialo con `PUT /v1/settlement`). Envía `settlement_asset` (USD, USDT,
+        USDC, BTC, GOLD, SILVER o PLATINUM) para pagar esta operación puntual desde otro saldo: el total se convierte
         a ese asset al precio efectivo de settlement del momento (ver el bloque `settlement` de `GET /v1/rates`)
         y el débito, la retención y — si falla — el reembolso viven en ese asset por el monto exacto.
         Si el precio de ejecución de BTC/GOLD/SILVER/PLATINUM no está disponible, el request devuelve `503 pricing_unavailable`;
@@ -3864,8 +3870,8 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset
-                    de settlement predeterminado de tu cuenta (USDT salvo que lo cambies con `PUT /v1/settlement`).
+                  description: 'Saldo virtual a debitar para esta operación. La ejecución en fiat devuelve hoy 503 pricing_unavailable. Omítelo para usar el asset
+                    de settlement predeterminado de tu cuenta (USD en cuentas nuevas; cuentas legacy con USDT explícito conservan USDT).'
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -4918,7 +4924,7 @@ paths:
         puede desalojar una sesión `pending` sin intentos, responde
         `429 too_many_open_card_sessions`. Con `method: "checkout"` la respuesta trae
         una `checkout_url` pública — un link de cobro universal denominado en el saldo virtual que
-        elijas (`settlement_asset`: USDT, USDC, BTC, GOLD, SILVER o PLATINUM). El pagador elige cualquier país con
+        elijas (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM; el fiat BOB/MXN/ARS se rechaza). El pagador elige cualquier país con
         corredor de payin vivo (monto local cotizado), cualquiera de las 4 opciones crypto (dirección
         de depósito exclusiva con QR escaneable) o paga al instante desde la app CBPay vía el
         QR/alias del comercio; cada pago se convierte automático al asset de settlement salvo que se
@@ -5063,11 +5069,12 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  default: USDT
-                  description: Solo checkout — el saldo virtual en que se denomina y liquida el
+                  description: 'Solo checkout — el saldo virtual en que se denomina y liquida el
                     cobro. Todo pago se convierte automático a este asset al acreditar (pagos en el
                     mismo asset no convierten). Debe estar habilitado para tu organización
-                    (`422 settlement_asset_disabled` si no).
+                    (`422 settlement_asset_disabled` si no). Si se omite, se usa el asset de liquidación
+                    de payins de la cuenta (`payin_settlement_asset`, fallback USD). BOB, MXN y ARS se rechazan
+                    (`422 invalid_pair`): el checkout no liquida en fiat.'
                 save_card:
                   type: boolean
                   default: false
@@ -6134,7 +6141,7 @@ paths:
       summary: Crear una transferencia interna
       description: 'Mueve saldo entre dos cuentas CBPay, de forma atómica y siempre gratuita — funciona
         cualquier combinación: persona a persona, persona a empresa, empresa a persona o empresa a empresa.
-        Funciona con los seis saldos virtuales (`USD` for new accounts; `USDT` for legacy accounts, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) y siempre entre
+        Funciona con los diez saldos virtuales (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) y siempre entre
         saldos de la **misma moneda** (sin conversión). El destino se resuelve por `to_account_id`, `to_email`,
         `to_phone` (solo teléfonos verificados por OTP) o `to_contact_id`. Cada transferencia guarda al
         destinatario como contacto automáticamente (desactívalo con `save_contact: false`). Los suscriptores
@@ -6189,11 +6196,13 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  default: USDT
-                  description: Moneda del saldo a mover; el destino recibe en esta misma moneda.
+                  - BOB
+                  - MXN
+                  - ARS
+                  description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD en cuentas nuevas, USDT en cuentas legacy).
                 amount:
                   type: string
-                  description: String decimal positivo, hasta los decimales de la moneda (6 para USDT/USDC/GOLD/SILVER/PLATINUM,
+                  description: String decimal positivo, hasta los decimales de la moneda (2 para USD/BOB/MXN/ARS, 6 para USDT/USDC/GOLD/SILVER/PLATINUM,
                     8 para BTC).
                   example: '10.500000'
                 description:
@@ -16270,7 +16279,7 @@ paths:
       description: 'Consolida todos los movimientos del período — payouts, payins, depósitos y retiros
         crypto, transferencias internas y cargos por servicio — en una cartola auditable con cuadratura
         exacta: opening_balance + total_in − total_out = closing_balance, verificada contra el ledger
-        (`balanced`). El resumen cubre el saldo operativo USDT; cada otro saldo virtual (USDC, BTC, GOLD) con actividad se reconcilia de forma independiente dentro de `assets`. La respuesta del cliente omite el ledger crudo; usa las secciones de producto para cuadrar y `GET /v1/movements` para una auditoría profunda. Pide `format=pdf` o
+        (`balanced`). El resumen cubre el saldo USDT; cada otro saldo virtual (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) con actividad se reconcilia de forma independiente dentro de `assets`. La respuesta del cliente omite el ledger crudo; usa las secciones de producto para cuadrar y `GET /v1/movements` para una auditoría profunda. Pide `format=pdf` o
         `format=xlsx` para descargar el archivo con branding CBPay (Content-Disposition: attachment).'
       parameters:
       - name: from
@@ -16519,8 +16528,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  default: USDT
-                  description: Saldo desde el que gasta la tarjeta. USDT/USDC van a la par del USD (1:1
+                  description: Saldo desde el que gasta la tarjeta. Si se omite, se usa el asset de liquidación de la cuenta (USD en cuentas nuevas, USDT en cuentas legacy). USD/USDT/USDC van a la par del USD (1:1
                     exacto, sin comisión de conversión). BTC/GOLD/SILVER/PLATINUM se convierten al precio efectivo del
                     momento de cada evento, con colchón de reserva en la autorización (pricing fail-closed
                     y límites de assets volátiles compartidos con payouts).
@@ -17430,10 +17438,11 @@ paths:
       description: Cambia tus saldos predeterminados. `default_settlement_asset` es el saldo desde el
         que se debitan tus payouts y comisiones de servicios cuando el request no envía un
         `settlement_asset` explícito. `default_payin_asset` es el saldo en que se acreditan tus payins —
-        el crédito sigue entrando en USDT y el neto se auto-convierte vía el motor de swaps al precio
+        con `USD` (el default de las cuentas nuevas) el neto se acredita directo en centavos USD; con
+        cualquier otro objetivo el neto se auto-convierte vía el motor de swaps al precio
         real, sin spread de swap adicional (el payin ya pagó su comisión y su tasa; los payins de
         checkout y POS conservan el asset de su link). Cualquiera
-        de USDT, USDC, BTC, GOLD, SILVER o PLATINUM (si tu organización lo tiene habilitado). Envía uno o ambos campos. El
+        de USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM (si tu organización lo tiene habilitado). Envía uno o ambos campos. El
         cambio aplica solo a operaciones nuevas; nada en tránsito se re-cotiza.
       requestBody:
         required: true
@@ -17463,9 +17472,9 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: Saldo en que se acreditan por defecto los payins. El crédito entra en
-                    USDT y el neto se auto-convierte vía el motor de swaps al precio real (sin
-                    spread de swap adicional). Opcional.
+                  description: Saldo en que se acreditan por defecto los payins. Con `USD` el neto se
+                    acredita directo en centavos USD; con cualquier otro objetivo el neto se auto-convierte vía el
+                    motor de swaps al precio real (sin spread de swap adicional). Opcional.
             example:
               default_settlement_asset: BTC
               default_payin_asset: USDC
@@ -24286,8 +24295,9 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: Saldo en que se acreditan por defecto los payins. El crédito entra en USDT y el
-            neto se auto-convierte vía el motor de swaps al precio real, sin spread de swap
+          description: Saldo en que se acreditan por defecto los payins. El crédito entra en el asset
+            principal de la cuenta (USD en cuentas nuevas, USDT en legacy); cuando se configura otro
+            asset, el neto se auto-convierte vía el motor de swaps al precio real, sin spread de swap
             adicional. Checkout/POS conservan el asset de su link.
         enabled_assets:
           type: array
@@ -24463,8 +24473,9 @@ components:
           description: El saldo virtual en que se liquida el payin. Los payins de checkout y POS
             denominan el cobro en el asset de su link (sin `currency`/`local_amount` hasta que se
             usa un método de pago local; el monto del cobro es `asset_amount` en este asset). Los
-            demás payins acreditados lo traen cuando la cuenta configuró un `default_payin_asset`
-            distinto de USDT — el neto acreditado se auto-convierte a este asset.
+            demás payins acreditados lo traen cuando el asset de liquidación difiere del asset del
+            crédito (cuentas con un `default_payin_asset` distinto del asset acreditado; los payins
+            directos en USD y los retenidos en fiat local no convierten).
         asset_amount:
           type: string
           description: Solo payins de checkout y POS — el monto del cobro denominado en
@@ -24476,7 +24487,7 @@ components:
           - done
           description: Estado de la auto-conversión — en payins de checkout/POS cuando el pago
             llegó en un asset distinto de `settlement_asset`, y en los demás payins cuando la
-            cuenta configuró un `default_payin_asset` distinto de USDT. `pending_retry` se
+            cuenta configuró un `default_payin_asset` distinto del asset acreditado. `pending_retry` se
             reintenta automáticamente. Se omite cuando no aplica conversión.
         status:
           type: string
@@ -25223,11 +25234,11 @@ webhooks:
   payin_credited:
     post:
       summary: Payin acreditado
-      description: 'Se recibió un cobro fiat y se acreditó a la cuenta en USDT. Para links de cobro
+      description: 'Se recibió un cobro fiat y se acreditó a la cuenta. Para links de cobro
         universal (`kind: checkout`) el payload trae además `settled_via` (ej. `qr`,
         `crypto:tron:usdt`, `cbpay`), `settlement_asset` y `asset_amount`; los pagos crypto agregan
         `crypto_amount` y los pagos desde la app CBPay agregan `transfer_id`, `asset` y `amount`. Cuando
-        la cuenta configuró un `default_payin_asset` distinto de USDT, el payload trae además
+        la cuenta configuró un `default_payin_asset` distinto del asset acreditado, el payload trae además
         `settlement_asset` y `conversion_status` de la conversión automática post-crédito.
 
 
