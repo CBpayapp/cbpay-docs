@@ -222,7 +222,7 @@ con anticipación y quedan marcados como **Breaking**.
   `invalid_cuit` e `invalid_cbu` (HTTP 400). Envía un CUIT/CUIL de 11 dígitos
   en `beneficiary.tax_id` y un CBU/CVU de 22 dígitos en
   `beneficiary.account_number`; para USD se exige CBU. Consulta los
-  [errores de payouts](https://docs.cbpayapp.com/es/errores).
+  [errores de payouts](https://docs.cbpayapp.com/es/errors).
 
 ### v2.130
 
@@ -963,7 +963,7 @@ destino. La creación es idempotente: una clave nueva responde
   no la lleva. El recurso payin también la devuelve en
   `GET /v1/payins/{id}`. Ver
   [webhooks](https://docs.cbpayapp.com/es/webhooks#tu-idempotency-key-vuelve-en-el-payload) e
-  [idempotencia](https://docs.cbpayapp.com/es/conceptos/idempotencia).
+  [idempotencia](https://docs.cbpayapp.com/es/concepts/idempotency).
 
 ## v2.68 - 4 de septiembre de 2026
 
@@ -978,7 +978,7 @@ destino. La creación es idempotente: una clave nueva responde
   mantienen en la API marcados como deprecated. Los pagos salientes a
   Venezuela (`pago_movil`, `bank_transfer`) no cambian — y `pago_movil`
   sigue exigiendo `beneficiary.name` (sin cambios desde v2.66). Ver
-  [payins](https://docs.cbpayapp.com/es/guias/payins) y [checkout](https://docs.cbpayapp.com/es/guias/checkout).
+  [payins](https://docs.cbpayapp.com/es/guides/payins) y [checkout](https://docs.cbpayapp.com/es/guides/checkout).
 
 ## v2.67 · 2 versiones - 3 de septiembre de 2026
 
@@ -996,7 +996,7 @@ destino. La creación es idempotente: una clave nueva responde
   de tarjeta pero se acreditaban de inmediato. Los cobros por QR, crypto,
   app CBPay o fintoc siguen acreditándose al instante. No cambió ningún
   shape de API ni de webhook. Detalle en
-  [comisiones — settlement de payins con tarjeta](https://docs.cbpayapp.com/es/conceptos/comisiones#settlement-de-payins-con-tarjeta).
+  [comisiones — settlement de payins con tarjeta](https://docs.cbpayapp.com/es/concepts/fees#settlement-de-payins-con-tarjeta).
 
 ### v2.66
 
@@ -1004,7 +1004,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Los payouts de Venezuela `pago_movil` ahora exigen `beneficiary.name`**.
   El rail exige el nombre + primer apellido del beneficiario (tal como en la
-  cédula) — un solo token es rechazado. La [guía de payouts](https://docs.cbpayapp.com/es/guias/payouts)
+  cédula) — un solo token es rechazado. La [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)
   y los ejemplos de la referencia API ahora listan `name` primero entre los
   campos requeridos. Venezuela `bank_transfer` ya documentaba `name`; sin
   cambios ahí.
@@ -1030,7 +1030,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Pruebas de firma — firma de mensajes con wallets (EIP-191 / TIP-191).** Prueba el control de una wallet con una firma criptográfica sobre un sobre estructurado anti-phishing (dominio, propósito, cuenta, nonce y una ventana de validez de 10 minutos — nunca un mensaje libre). Dos flujos: firma server-side de una **wallet segregada** con `POST /v1/segregated-wallets/{walletID}/signatures` (con gate de OTP para sesiones de miembro) y **vinculación de wallet externa** (MetaMask, TronLink) por challenge firmado con `POST /v1/wallet-links/challenges` + `POST /v1/wallet-links/verify`. Guía: [Pruebas de firma](https://docs.cbpayapp.com/es/guias/pruebas-de-firma).
+- **Pruebas de firma — firma de mensajes con wallets (EIP-191 / TIP-191).** Prueba el control de una wallet con una firma criptográfica sobre un sobre estructurado anti-phishing (dominio, propósito, cuenta, nonce y una ventana de validez de 10 minutos — nunca un mensaje libre). Dos flujos: firma server-side de una **wallet segregada** con `POST /v1/segregated-wallets/{walletID}/signatures` (con gate de OTP para sesiones de miembro) y **vinculación de wallet externa** (MetaMask, TronLink) por challenge firmado con `POST /v1/wallet-links/challenges` + `POST /v1/wallet-links/verify`. Guía: [Pruebas de firma](https://docs.cbpayapp.com/es/guides/signature-proofs).
 - **Gestión de proofs.** `GET /v1/signature-proofs` (paginado, filtros `from`/`to`/`status`/`purpose`), `GET /v1/signature-proofs/{proofID}` y `POST /v1/signature-proofs/{proofID}/revoke`. Las wallets vinculadas se listan con `GET /v1/wallet-links` y se revocan con `DELETE /v1/wallet-links/{linkID}`.
 - **Verificación pública.** Cada proof lleva un `proof_code` y una `verify_url`; cualquiera puede verificarlo sin autenticación en `GET /v1/public/signature-proofs/{code}` — estado, ventana de validez, red, dirección y (cuando está firmado) la firma y el hash del mensaje.
 - **Webhooks `wallet_signature_created` y `wallet_linked`.** Se emiten al crear un proof y al vincular una wallet externa. Referencia: [Webhooks](https://docs.cbpayapp.com/es/webhooks).
@@ -1042,7 +1042,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Corregido**
 
-- **El mensaje de `verifications_unavailable` ya no afirma que se reembolsó una comisión.** Un 503 de verificación de identidad no implica reembolso: el endpoint de documentos de verificación nunca cobra comisión y el onboarding propio no tiene fee. El copy ahora solo pide reintentar más tarde. Referencia: [Errores](https://docs.cbpayapp.com/es/errores) y la [guía KYC](https://docs.cbpayapp.com/es/guias/kyc).
+- **El mensaje de `verifications_unavailable` ya no afirma que se reembolsó una comisión.** Un 503 de verificación de identidad no implica reembolso: el endpoint de documentos de verificación nunca cobra comisión y el onboarding propio no tiene fee. El copy ahora solo pide reintentar más tarde. Referencia: [Errores](https://docs.cbpayapp.com/es/errors) y la [guía KYC](https://docs.cbpayapp.com/es/guides/kyc).
 
 ## v2.62 - 19 de agosto de 2026
 
@@ -1050,8 +1050,8 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Cambiado**
 
-- **El estado/región de facturación ahora es obligatorio en la página hospedada de tarjetas cuando el país de facturación lo exige.** Los países cuyas subdivisiones ISO 3166-2 son obligatorias para capturar el cobro (p. ej. Estados Unidos, Canadá, Brasil) ahora muestran al pagador un campo **Estado / Región** requerido alimentado por el catálogo de subdivisiones; el valor viaja como `administrative_area` de la dirección de facturación. En los países sin subdivisiones obligatorias el campo sigue opcional. Guía: [Pagos con tarjeta](https://docs.cbpayapp.com/es/guias/payins).
-- **Los cargos con tarjeta guardada (MIT) validan la dirección de facturación antes de despachar el cobro.** Una tarjeta guardada con dirección completa sigue operando sin cambios. Si la tarjeta guardada no tiene una dirección utilizable en archivo, el cobro se rechaza con `422 core_rejected` y un mensaje que pide al pagador guardar la tarjeta de nuevo con `save_card: true` — sin mover plata. Guía: [Tarjetas guardadas y suscripciones](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions).
+- **El estado/región de facturación ahora es obligatorio en la página hospedada de tarjetas cuando el país de facturación lo exige.** Los países cuyas subdivisiones ISO 3166-2 son obligatorias para capturar el cobro (p. ej. Estados Unidos, Canadá, Brasil) ahora muestran al pagador un campo **Estado / Región** requerido alimentado por el catálogo de subdivisiones; el valor viaja como `administrative_area` de la dirección de facturación. En los países sin subdivisiones obligatorias el campo sigue opcional. Guía: [Pagos con tarjeta](https://docs.cbpayapp.com/es/guides/payins).
+- **Los cargos con tarjeta guardada (MIT) validan la dirección de facturación antes de despachar el cobro.** Una tarjeta guardada con dirección completa sigue operando sin cambios. Si la tarjeta guardada no tiene una dirección utilizable en archivo, el cobro se rechaza con `422 core_rejected` y un mensaje que pide al pagador guardar la tarjeta de nuevo con `save_card: true` — sin mover plata. Guía: [Tarjetas guardadas y suscripciones](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions).
 
 **Corregido**
 
@@ -1063,7 +1063,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Locale de cuenta `en` / `es` / `zh`.** `GET /v1/me` ahora devuelve `locale`. `PATCH /v1/me` con `{ "locale": "en" | "es" | "zh" }` lo persiste; el string vacío guarda inglés; cualquier otro valor no vacío responde `400 invalid_locale` (`"locale must be en, es or zh"`). Las cuentas nuevas eligen locale al nacer (body, luego `Accept-Language`, luego el `default_locale` de la org, luego inglés). Guía: [Idioma y locale](https://docs.cbpayapp.com/es/guias/idioma).
+- **Locale de cuenta `en` / `es` / `zh`.** `GET /v1/me` ahora devuelve `locale`. `PATCH /v1/me` con `{ "locale": "en" | "es" | "zh" }` lo persiste; el string vacío guarda inglés; cualquier otro valor no vacío responde `400 invalid_locale` (`"locale must be en, es or zh"`). Las cuentas nuevas eligen locale al nacer (body, luego `Accept-Language`, luego el `default_locale` de la org, luego inglés). Guía: [Idioma y locale](https://docs.cbpayapp.com/es/guides/locale).
 
 **Cambiado**
 
@@ -1086,7 +1086,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **Payouts USD por rail bancario: el beneficiario puede vivir en cualquier
-  país** ([guía de payouts](https://docs.cbpayapp.com/es/guias/payouts)): en transferencias `ach`,
+  país** ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)): en transferencias `ach`,
   `wire` y `swift` el `country_code` del beneficiario ya no está fijo en
   `US` — por ejemplo, un ACH a una cuenta de banco de EE. UU. para alguien
   que vive en Alemania. El banco receptor sigue en EE. UU. para
@@ -1110,7 +1110,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Los payins con tarjeta con liquidación diferida se confirman `credited`
   de inmediato**
-  ([comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones#settlement-de-payins-con-tarjeta)):
+  ([comisiones](https://docs.cbpayapp.com/es/concepts/fees#settlement-de-payins-con-tarjeta)):
   con `settlement_hours > 0`, un cobro con tarjeta pagado ahora pasa a
   `status: credited` **al momento del pago** — el webhook `payin_credited`
   se emite de inmediato y un link de checkout pagado con tarjeta cierra como
@@ -1131,7 +1131,7 @@ destino. La creación es idempotente: una clave nueva responde
 - **Nuevo error `settlement_pending`** (`422`): devolver un cobro con
   tarjeta cuyo saldo sigue programado para settlement se rechaza hasta que
   los fondos se liberen (al llegar `settle_at`, o antes por liberación de un
-  org-admin). Detalle en [devoluciones](https://docs.cbpayapp.com/es/guias/devoluciones).
+  org-admin). Detalle en [devoluciones](https://docs.cbpayapp.com/es/guides/refunds).
 
 ### v2.57
 
@@ -1173,7 +1173,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Settlement configurable de payins con tarjeta**
-  ([comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones#settlement-de-payins-con-tarjeta)):
+  ([comisiones](https://docs.cbpayapp.com/es/concepts/fees#settlement-de-payins-con-tarjeta)):
   la configuración de comisión del servicio `payin_card` ahora acepta
   `settlement_hours` (entero ≥ 0, default `0` = acreditación inmediata,
   exactamente como antes). Con un plazo configurado, un cobro con tarjeta
@@ -1186,7 +1186,7 @@ destino. La creación es idempotente: una clave nueva responde
   `settlement_hours` para cualquier otro servicio (o un valor negativo)
   responde `400 invalid_settlement_hours`.
 - **Comisiones banking por riel**
-  ([comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones#comisiones-banking-por-riel)):
+  ([comisiones](https://docs.cbpayapp.com/es/concepts/fees#comisiones-banking-por-riel)):
   cinco servicios de comisión transaccionales nuevos — `banking_deposit`,
   `banking_transfer_ach`, `banking_transfer_swift`,
   `banking_transfer_wire` y `banking_transfer_sepa` — porcentaje + fijo,
@@ -1221,7 +1221,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Sello público verificable Qscore** ([guía del sello](https://docs.cbpayapp.com/es/guias/qscore-seal)):
+- **Sello público verificable Qscore** ([guía del sello](https://docs.cbpayapp.com/es/guides/qscore-seal)):
   las cuentas empresa con banda A o B y una evaluación fresca (de no más de 90
   días) pueden activar un sello público verificable — `POST /v1/qscore/my-seal`
   (idempotente por diseño: un replay responde 200 con el sello vigente), lo
@@ -1242,7 +1242,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Links de consentimiento Qscore (autorización del titular)** ([guía de links de consentimiento](https://docs.cbpayapp.com/es/guias/qscore-consents)):
+- **Links de consentimiento Qscore (autorización del titular)** ([guía de links de consentimiento](https://docs.cbpayapp.com/es/guides/qscore-consents)):
   pídele a un sujeto que autorice el acceso de lectura a sus datos bancarios
   con un link compartible — `POST /v1/qscore/consents` (idempotente, con envío
   opcional del link al correo del titular con tu branding), y luego sigue el
@@ -1264,7 +1264,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Scoring Qscore por lote (portfolio scoring)** ([guía Scoring por lote](https://docs.cbpayapp.com/es/guias/qscore-batch)):
+- **Scoring Qscore por lote (portfolio scoring)** ([guía Scoring por lote](https://docs.cbpayapp.com/es/guides/qscore-batch)):
   sube un lote de sujetos con `POST /v1/qscore/batches` — un array JSON o un
   string CSV, hasta 5.000 sujetos por lote — y la plataforma emite un informe
   Qscore completo por sujeto de forma asíncrona. Las filas se validan al crear
@@ -1290,7 +1290,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Qscore — tu propio informe crediticio, gratis** ([guía Qscore](https://docs.cbpayapp.com/es/guias/qscore)):
+- **Qscore — tu propio informe crediticio, gratis** ([guía Qscore](https://docs.cbpayapp.com/es/guides/qscore)):
   el titular de una cuenta verificada ahora puede generar SU PROPIO informe
   crediticio Qscore — el derecho de acceso ARCO / de protección de datos —
   con `POST /v1/qscore/my-report` (opcional `{"lang":"es"|"en"|"zh"}`),
@@ -1307,19 +1307,19 @@ destino. La creación es idempotente: una clave nueva responde
   "self_access"`. El endpoint comercial `POST /v1/qscore/reports` ahora
   rechaza `purpose: "self_access"` con `400 invalid_purpose`. Nuevos códigos
   de error: `kyc_required`, `no_tax_id`, `invalid_tax_id`
-  ([errores](https://docs.cbpayapp.com/es/errores)).
+  ([errores](https://docs.cbpayapp.com/es/errors)).
 
 ### v2.48
 
 **Cambiado**
 
-- **Las solicitudes de banking y tarjetas ahora pueden quedar retenidas para revisión** ([guía banking](https://docs.cbpayapp.com/es/guias/banking), [guía de tarjetas](https://docs.cbpayapp.com/es/guias/tarjetas), [revisiones de operaciones](https://docs.cbpayapp.com/es/guias/revisiones-operaciones)): si tu organización activó la revisión de solicitudes, `POST /v1/banking/customer`, `POST /v1/banking/third-parties` y `POST /v1/cards` pueden responder **`202 Accepted`** con `{"status":"in_review","kind":"...","review_id":"..."}` en vez de crear el recurso de inmediato — nada se envía a procesamiento hasta que compliance apruebe la revisión. La comisión de apertura/emisión se cobra al retener la solicitud y se **reembolsa automáticamente** si se rechaza. Un reintento con la misma `idempotency_key` devuelve la misma revisión (`idempotency_hit: true`) y jamás cobra dos veces. Sigue el resultado con el webhook `txn_review_status_changed` o en [Revisiones de operaciones](https://docs.cbpayapp.com/es/guias/revisiones-operaciones) (kinds `banking_application` / `card_application`).
+- **Las solicitudes de banking y tarjetas ahora pueden quedar retenidas para revisión** ([guía banking](https://docs.cbpayapp.com/es/guides/banking), [guía de tarjetas](https://docs.cbpayapp.com/es/guides/cards), [revisiones de operaciones](https://docs.cbpayapp.com/es/guides/transaction-reviews)): si tu organización activó la revisión de solicitudes, `POST /v1/banking/customer`, `POST /v1/banking/third-parties` y `POST /v1/cards` pueden responder **`202 Accepted`** con `{"status":"in_review","kind":"...","review_id":"..."}` en vez de crear el recurso de inmediato — nada se envía a procesamiento hasta que compliance apruebe la revisión. La comisión de apertura/emisión se cobra al retener la solicitud y se **reembolsa automáticamente** si se rechaza. Un reintento con la misma `idempotency_key` devuelve la misma revisión (`idempotency_hit: true`) y jamás cobra dos veces. Sigue el resultado con el webhook `txn_review_status_changed` o en [Revisiones de operaciones](https://docs.cbpayapp.com/es/guides/transaction-reviews) (kinds `banking_application` / `card_application`).
 
 ### v2.47
 
 **Agregado**
 
-- **Qscore — monitoreo continuo de sujetos** ([guía Qscore](https://docs.cbpayapp.com/es/guias/qscore)):
+- **Qscore — monitoreo continuo de sujetos** ([guía Qscore](https://docs.cbpayapp.com/es/guides/qscore)):
   cuando ya tienes un informe `ready` de un sujeto, suscríbelo con `PUT
   /v1/qscore/subjects/{docID}/monitoring` y la plataforma lo re-evalúa cada
   ~5 minutos, emitiendo el nuevo webhook `risk_monitoring_alert` cuando el
@@ -1334,14 +1334,14 @@ destino. La creación es idempotente: una clave nueva responde
   informe comprado del sujeto: sin él la API responde `403
   report_required`, la misma respuesta que recibe un sujeto inexistente
   (por diseño, para que la existencia del sujeto no se pueda sondear).
-  Nuevo código de error: `report_required` ([errores](https://docs.cbpayapp.com/es/errores)).
+  Nuevo código de error: `report_required` ([errores](https://docs.cbpayapp.com/es/errors)).
 
 ### v2.46
 
 **Agregado**
 
 - **Referencia bancaria del payout, ahora visible en todas las superficies**
-  ([guía de payouts](https://docs.cbpayapp.com/es/guias/payouts)): todo payout expone
+  ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)): todo payout expone
   `bank_reference` — el id de transacción asignado por el banco/rail de
   destino — en las respuestas de `POST /v1/payouts`, `GET /v1/payouts` y
   `GET /v1/payouts/{payoutID}`, en el payload del webhook
@@ -1355,7 +1355,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Qscore — buró de crédito API-first** ([guía Qscore](https://docs.cbpayapp.com/es/guias/qscore)):
+- **Qscore — buró de crédito API-first** ([guía Qscore](https://docs.cbpayapp.com/es/guides/qscore)):
   compra informes crediticios de personas y empresas
   (`POST /v1/qscore/reports`), Chile primero. Cada informe agrega antecedentes
   negativos, laborales y previsionales, boletas impagas y publicaciones del
@@ -1374,7 +1374,7 @@ destino. La creación es idempotente: una clave nueva responde
   (clase de sujeto, banda, fecha de emisión) — sin PII.
 - Códigos de error nuevos: `purpose_required`, `invalid_purpose`,
   `invalid_doc_id`, `invalid_subject_type`, `no_score`, `pdf_not_ready`
-  ([errores](https://docs.cbpayapp.com/es/errores)).
+  ([errores](https://docs.cbpayapp.com/es/errors)).
 
 ### v2.44
 
@@ -1388,7 +1388,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Cambiado**
 
-- **Mejora de calidad del catálogo de ciudades** ([guía de catálogos AML](https://docs.cbpayapp.com/es/guias/aml)):
+- **Mejora de calidad del catálogo de ciudades** ([guía de catálogos AML](https://docs.cbpayapp.com/es/guides/aml)):
   las ciudades que sirve `GET /v1/aml/catalogs/cities?country=<CC>` fueron
   regeneradas con mejor cobertura y escritura correcta. Los nombres conservan
   su ortografía local (tildes, `ñ`, `ü` — "Alhué", "Coyoacán", "São Paulo"),
@@ -1404,7 +1404,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Link de seguimiento desde la API** ([guía de seguimiento](https://docs.cbpayapp.com/es/guias/seguimiento)): el nuevo
+- **Link de seguimiento desde la API** ([guía de seguimiento](https://docs.cbpayapp.com/es/guides/tracking)): el nuevo
   endpoint autenticado `GET /v1/track-link?kind=<kind>&id=<id>` devuelve el link público
   compartible de cualquier transacción de tu alcance de lectura — `{ "track_url", "code" }` —
   sin descargar el PDF del comprobante. Es la pieza base de un botón "Compartir link" en tu UI.
@@ -1418,7 +1418,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Link de seguimiento público para cada transacción**
-  ([guía de seguimiento](https://docs.cbpayapp.com/es/guias/seguimiento)): cada comprobante (payout, payin, refund,
+  ([guía de seguimiento](https://docs.cbpayapp.com/es/guides/tracking)): cada comprobante (payout, payin, refund,
   transferencia interna, swap, retiro o depósito crypto, operación banking, compra con tarjeta)
   tiene ahora un link público compartible — `https://business.cbpayapp.com/t/{code}`, con el
   mismo código firmado impreso en el comprobante — que abre una página de seguimiento estilo
@@ -1446,7 +1446,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Lookup del directorio bancario** ([guía de
-  payouts](https://docs.cbpayapp.com/es/guias/payouts)): el nuevo
+  payouts](https://docs.cbpayapp.com/es/guides/payouts)): el nuevo
   `GET /v1/payouts/bank-directory/lookup` autocompleta el banco
   beneficiario desde un directorio bancario público embebido — pasa
   exactamente uno de `routing_number` (9 dígitos, solo US) o `swift` (8 u
@@ -1457,7 +1457,7 @@ destino. La creación es idempotente: una clave nueva responde
   bank_not_found` solo significa que el código no está en el directorio:
   el formulario sigue manual. Data estática con `Cache-Control: public,
   max-age=86400`.
-- **Lookup por código postal** ([guía AML](https://docs.cbpayapp.com/es/guias/aml)): el nuevo
+- **Lookup por código postal** ([guía AML](https://docs.cbpayapp.com/es/guides/aml)): el nuevo
   `GET /v1/aml/catalogs/postal-code?country=US&code=33130` resuelve un ZIP
   de US a su `city` y `state`, así los formularios con dirección pueden
   autocompletar ambos campos mientras el usuario escribe el ZIP. Hoy solo
@@ -1477,7 +1477,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Catálogo de ciudades por país** ([guía AML](https://docs.cbpayapp.com/es/guias/aml)): el nuevo
+- **Catálogo de ciudades por país** ([guía AML](https://docs.cbpayapp.com/es/guides/aml)): el nuevo
   `GET /v1/aml/catalogs/cities?country=US` devuelve las ciudades de un
   país ISO 3166-1 alpha-2 agrupadas por subdivisión — las claves de
   `states` son los mismos códigos ISO 3166-2 de `country_subdivisions` del
@@ -1489,7 +1489,7 @@ destino. La creación es idempotente: una clave nueva responde
   `Cache-Control: public, max-age=86400` — una llamada por país y filtras
   por estado en el cliente.
 - **Los payins US/USD ahora publican dos rieles de depósito** ([guía de
-  payins](https://docs.cbpayapp.com/es/guias/payins)): el corredor de transferencia anunciada
+  payins](https://docs.cbpayapp.com/es/guides/payins)): el corredor de transferencia anunciada
   `bank_transfer` sirve una instrucción de **wire doméstico**
   (`routing_number` ABA) y una **SWIFT internacional** (BIC + banco
   corresponsal) lado a lado — el anuncio, las lecturas del payin y el
@@ -1506,7 +1506,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Rechazo automático por plazo de revisión** ([guía de revisiones](https://docs.cbpayapp.com/es/guias/revisiones-operaciones)) —
+- **Rechazo automático por plazo de revisión** ([guía de revisiones](https://docs.cbpayapp.com/es/guides/transaction-reviews)) —
   si tu organización configuró un plazo de revisión para el firewall
   transaccional, una revisión que nadie decide dentro de esa ventana
   (contada desde su último cambio de estado — subir evidencia reinicia el
@@ -1538,7 +1538,7 @@ destino. La creación es idempotente: una clave nueva responde
   organización tenga deposit instructions configuradas: anunciar sin ellas
   falla con `422 deposit_instructions_unavailable`. Tab de EE.UU. con
   ejemplos request/response completos, tabla de estados, errores y FAQ en la
-  [guía de Payins](https://docs.cbpayapp.com/es/guias/payins); el bloque `deposit_instructions` y el
+  [guía de Payins](https://docs.cbpayapp.com/es/guides/payins); el bloque `deposit_instructions` y el
   endpoint de preview quedaron actualizados en la referencia de API.
 
 ## v2.36 · 3 versiones - 6 de agosto de 2026
@@ -1556,7 +1556,7 @@ destino. La creación es idempotente: una clave nueva responde
   solicitados) y `GET .../files/{fileID}/download` (descarga tus propios
   archivos), además del nuevo webhook `txn_review_status_changed` (payload
   neutro — las razones internas nunca viajan). Nueva guía:
-  [Revisiones de operaciones](https://docs.cbpayapp.com/es/guias/revisiones-operaciones).
+  [Revisiones de operaciones](https://docs.cbpayapp.com/es/guides/transaction-reviews).
 
 ### v2.35
 
@@ -1579,7 +1579,7 @@ destino. La creación es idempotente: una clave nueva responde
   automático. Por operación puedes sobreescribir las declaraciones de
   propósito del riel en `options` (`purpose`, `crypto_activity`,
   `payment_gateway`). Tabla de corredores, tabla de campos por método,
-  ejemplos reales y FAQ en [Payouts](https://docs.cbpayapp.com/es/guias/payouts); ejemplos
+  ejemplos reales y FAQ en [Payouts](https://docs.cbpayapp.com/es/guides/payouts); ejemplos
   nombrados `us_ach`, `us_wire` y `us_swift` en la referencia API.
 
 ### v2.34
@@ -1625,7 +1625,7 @@ destino. La creación es idempotente: una clave nueva responde
   `decision_source` (`auto` o `admin`) en los webhooks
   `kyc_verification_status_changed` y `kyb_verification_status_changed`
   para que sepas cómo se decidió cada expediente. Detalle en
-  [KYC y KYB](https://docs.cbpayapp.com/es/guias/kyc).
+  [KYC y KYB](https://docs.cbpayapp.com/es/guides/kyc).
 - **Nuevo valor mágico `HOLDREVIEW` en el entorno de pruebas**: una
   submission KYC/KYB cuyo nombre del sujeto contiene `HOLDREVIEW` queda en
   revisión humana en vez de ser decidida automáticamente, para que puedas
@@ -1633,7 +1633,7 @@ destino. La creación es idempotente: una clave nueva responde
   `MANUALREVIEW` mantiene todas las señales limpias pero jamás resuelve la
   submission por su cuenta, para probar de forma determinista los caminos
   automáticos de aprobación/rechazo del motor. Ver
-  [entorno de pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas).
+  [entorno de pruebas](https://docs.cbpayapp.com/es/environment-testing).
 
 ## v2.31 · 4 versiones - 4 de agosto de 2026
 
@@ -1648,7 +1648,7 @@ destino. La creación es idempotente: una clave nueva responde
   entrantes y las comisiones descubiertas automáticamente en el listado de
   operaciones. El webhook `banking_operation_status_changed` no cambia por
   diseño (liviano + consulta de detalle). Detalles en
-  [banking](https://docs.cbpayapp.com/es/guias/banking).
+  [banking](https://docs.cbpayapp.com/es/guides/banking).
 
 ### v2.30
 
@@ -1672,7 +1672,7 @@ destino. La creación es idempotente: una clave nueva responde
   configuración no ven cambios), el comprobante de compra muestra la línea
   de comisión, y el ledger registra los movimientos como `card_fee` /
   `card_fee_refund`. Detalles en
-  [tarjetas](https://docs.cbpayapp.com/es/guias/tarjetas#comisión-por-compra-ciclo-de-vida).
+  [tarjetas](https://docs.cbpayapp.com/es/guides/cards#comisión-por-compra-ciclo-de-vida).
 
 ### v2.28
 
@@ -1686,7 +1686,7 @@ destino. La creación es idempotente: una clave nueva responde
   se revela sin verificar. Con **"Recordar este dispositivo"** (marcado por
   defecto) el pagador no repite el código por **30 días** en ese navegador.
   Al elegir una tarjeta paga con 3-D Secure sin re-digitarla. Detalle en
-  [tarjetas guardadas](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions#el-pagador-descubre-sus-tarjetas-en-la-página-de-pago).
+  [tarjetas guardadas](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions#el-pagador-descubre-sus-tarjetas-en-la-página-de-pago).
 
 **Cambiado**
 
@@ -1733,7 +1733,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Códigos de error de administración documentados**: se agregaron los
   códigos `global_treasury_access_disabled` e `invalid_value` al
-  [catálogo de errores](https://docs.cbpayapp.com/es/errores). Provienen de superficies de
+  [catálogo de errores](https://docs.cbpayapp.com/es/errors). Provienen de superficies de
   administración de organización (el panel CBPay Admin), no de la API a
   nivel cuenta — ver la nueva sección "Panel de administración de
   organización".
@@ -1743,7 +1743,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Instrucciones de depósito para transferencias anunciadas**
-  ([guía de payins](https://docs.cbpayapp.com/es/guias/payins)): crear un payin con
+  ([guía de payins](https://docs.cbpayapp.com/es/guides/payins)): crear un payin con
   `method: "bank_transfer"` en los corredores soportados ahora devuelve
   un bloque `deposit_instructions` con la cuenta de destino exacta —
   `bank_name`, `account_number`, `account_type`, `holder_name`,
@@ -1776,7 +1776,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **La prueba de vida ahora admite varias sesiones por sujeto**
-  ([verificación de identidad](https://docs.cbpayapp.com/es/guias/kyc)): el array `liveness[]` del
+  ([verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc)): el array `liveness[]` del
   informe de verificación puede traer más de una entrada por persona — el
   check de onboarding `gate` más una o más recapturas de evidencia
   `media_recapture` posteriores. Cada sesión ahora trae su propio
@@ -1794,7 +1794,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **Informe de verificación con portada navegable**
-  ([verificación de identidad](https://docs.cbpayapp.com/es/guias/kyc)): el PDF abre con un índice de
+  ([verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc)): el PDF abre con un índice de
   tarjetas **clicables** (icono, título y número de página) que saltan a su
   sección. Cada sección lleva su icono y su barra de acento, con el mismo
   lenguaje visual del informe AML.
@@ -1817,7 +1817,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Evidencia visual en el informe de verificación**
-  ([verificación de identidad](https://docs.cbpayapp.com/es/guias/kyc)): cuando el proveedor publica
+  ([verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc)): cuando el proveedor publica
   media de liveness (selfie / frames) o fotos del documento de identidad, el
   **PDF embebe las fotos** best-effort. Si no hay media o el enlace expiró,
   la sección de fotos se omite. El JSON del informe solo declara metadata
@@ -1832,7 +1832,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Informe de verificación completo, sin datos descartados**
-  ([verificación de identidad](https://docs.cbpayapp.com/es/guias/kyc)): el informe KYC/KYB pasó de
+  ([verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc)): el informe KYC/KYB pasó de
   resumen a expediente. Además de lo que ya traía, el JSON y el PDF ahora
   incluyen el **perfil económico declarado** (origen de fondos, propósito de
   la relación, volúmenes e ingresos esperados, cadenas esperadas), las
@@ -1870,7 +1870,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Corregido**
 
-- **Montos siempre en decimal plano** ([payins](https://docs.cbpayapp.com/es/guias/payins)): el campo
+- **Montos siempre en decimal plano** ([payins](https://docs.cbpayapp.com/es/guides/payins)): el campo
   `local_amount` de los payins (y el `amount` de los eventos de cobro) se
   devuelve siempre como texto decimal — por ejemplo `"5000000"` —, nunca en
   notación científica. En depósitos de montos altos en monedas sin decimales
@@ -1885,7 +1885,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Informe de verificación KYC/KYB descargable**
-  ([verificación de identidad](https://docs.cbpayapp.com/es/guias/kyc)): cada submission de KYC/KYB
+  ([verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc)): cada submission de KYC/KYB
   tiene ahora su informe de verificación generado por la plataforma, en
   `?format=pdf|json` y `?lang=en|es|zh`. Terceros: `GET
   /v1/kyc/submissions/{submissionID}/verification-report` y `GET
@@ -1906,7 +1906,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Corregido**
 
-- **Los cobros QR se acreditan siempre solos** ([payins](https://docs.cbpayapp.com/es/guias/payins)):
+- **Los cobros QR se acreditan siempre solos** ([payins](https://docs.cbpayapp.com/es/guides/payins)):
   un QR pagado podía quedar `pending` mientras el dinero entraba como
   depósito sin asignar, porque la transferencia del banco no trae la
   referencia del cobro y la conciliación por monto está reservada a las
@@ -1927,7 +1927,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Corregido**
 
 - **Las transferencias anunciadas ya respetan la idempotencia**
-  ([payins](https://docs.cbpayapp.com/es/guias/payins)): `POST /v1/payins` con
+  ([payins](https://docs.cbpayapp.com/es/guides/payins)): `POST /v1/payins` con
   `method: "bank_transfer"` aceptaba `idempotency_key` y la ignoraba, así que
   un reintento (timeout, doble clic) abría un segundo anuncio. Dos anuncios
   vivos con el mismo monto son justo el caso que la conciliación se niega a
@@ -1949,7 +1949,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Identificación del pagador en transferencias anunciadas**
-  ([payins](https://docs.cbpayapp.com/es/guias/payins)): `POST /v1/payins` con
+  ([payins](https://docs.cbpayapp.com/es/guides/payins)): `POST /v1/payins` con
   `method: "bank_transfer"` acepta los opcionales `payer_name`,
   `payer_document` y `payer_account`. Si no mandas `payer_document` y la cuenta
   es una persona verificada, se usa por defecto el documento del titular, así
@@ -1968,13 +1968,13 @@ destino. La creación es idempotente: una clave nueva responde
   al pagador, el depósito queda `unassigned` en vez de acreditarse a la cuenta
   equivocada (fail-closed). El match solo por monto sobrevive cuando hay
   exactamente UN candidato. Documentado en la sección nueva
-  [Cómo se concilia una transferencia anunciada](https://docs.cbpayapp.com/es/guias/payins).
+  [Cómo se concilia una transferencia anunciada](https://docs.cbpayapp.com/es/guides/payins).
 
 ### v2.13
 
 **Agregado**
 
-- **Cuota del handshake del stream de eventos** ([errores](https://docs.cbpayapp.com/es/errores)): abrir
+- **Cuota del handshake del stream de eventos** ([errores](https://docs.cbpayapp.com/es/errors)): abrir
   `GET /v1/events` demasiadas veces seguidas ahora responde
   `429 rate_limited`. Es un limite distinto de `too_many_streams`:
   `rate_limited` cuenta *intentos* de conexion por IP (600 por hora, de sobra
@@ -1986,7 +1986,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Stream de eventos en tiempo real** ([guía](https://docs.cbpayapp.com/es/eventos-tiempo-real)):
+- **Stream de eventos en tiempo real** ([guía](https://docs.cbpayapp.com/es/realtime-events)):
   `GET /v1/events` abre una conexión Server-Sent Events con todo lo que pasa
   en tu cuenta — los mismos eventos de los webhooks, entregados al navegador
   sin esperar un polling. Reconectas con el header `Last-Event-ID` y el
@@ -2000,7 +2000,7 @@ destino. La creación es idempotente: una clave nueva responde
   cuenta fue suspendida o reactivada) y `member_security_event` (inicios de
   sesión, cambios de contraseña o 2FA, sesiones revocadas). Llegan por webhook
   y por el stream.
-- **Códigos de error nuevos** ([errores](https://docs.cbpayapp.com/es/errores)): `too_many_streams`,
+- **Códigos de error nuevos** ([errores](https://docs.cbpayapp.com/es/errors)): `too_many_streams`,
   `stream_unavailable` y `streaming_unsupported`.
 
 ### v2.11
@@ -2008,7 +2008,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Devoluciones de cobros con tarjeta**
-  ([guía](https://docs.cbpayapp.com/es/guias/devoluciones)): `POST /v1/payins/{payinID}/refunds`
+  ([guía](https://docs.cbpayapp.com/es/guides/refunds)): `POST /v1/payins/{payinID}/refunds`
   devuelve un cobro con tarjeta completo o parcial y descuenta el monto de tu
   saldo en el momento. La devolución exige clave de idempotencia (el reintento
   con la misma clave nunca devuelve dos veces) y código OTP cuando la pides
@@ -2029,7 +2029,7 @@ destino. La creación es idempotente: una clave nueva responde
   se descuenta el bruto acreditado; lo que cobramos por procesar el pago se
   mantiene. Un contracargo notificado por el emisor se aplica automático y
   puede dejar tu saldo en negativo hasta que lo fondees.
-- **Códigos de error nuevos** ([errores](https://docs.cbpayapp.com/es/errores)):
+- **Códigos de error nuevos** ([errores](https://docs.cbpayapp.com/es/errors)):
   `payin_not_refundable`, `refund_not_supported`, `refund_exceeds_payin` e
   `invalid_amount`.
 
@@ -2038,7 +2038,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **Página pública de estado del servicio rediseñada**
-  ([guía](https://docs.cbpayapp.com/es/estado-del-servicio)): la página que entrega
+  ([guía](https://docs.cbpayapp.com/es/service-status)): la página que entrega
   `status_page_url` ahora muestra bandera por país, ícono por método de
   pago, una barra de disponibilidad día a día de los últimos 90 días, una
   tarjeta de resumen con el estado general y el uptime promedio, y una línea
@@ -2051,7 +2051,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Tarjetas internacionales en dólares** ([guía](https://docs.cbpayapp.com/es/guias/payins)):
+- **Tarjetas internacionales en dólares** ([guía](https://docs.cbpayapp.com/es/guides/payins)):
   `POST /v1/payins` con `country: "US"`, `currency: "USD"` y
   `method: "card"` devuelve una `payment_url` de checkout hosted con 3-D
   Secure y la marca de tu organización para cobrar con tarjetas Visa,
@@ -2061,7 +2061,7 @@ destino. La creación es idempotente: una clave nueva responde
   limitados y retry idempotente que devuelve la misma URL) y el guardado de
   tarjeta también: `save_card` + `payer_reference` guardan la tarjeta con el
   consentimiento del pagador para
-  [cobros posteriores y suscripciones](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions).
+  [cobros posteriores y suscripciones](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions).
   El 3-D Secure se ejecuta dentro de la página (si el emisor pide desafío,
   el pagador lo completa ahí mismo) y los datos de la tarjeta se ingresan en
   campos seguros del procesador: nunca pasan por tu integración. El corredor
@@ -2074,7 +2074,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Estado del servicio en tiempo real** ([guía](https://docs.cbpayapp.com/es/estado-del-servicio)):
+- **Estado del servicio en tiempo real** ([guía](https://docs.cbpayapp.com/es/service-status)):
   cada método de `GET /v1/payouts/methods` y `GET /v1/payins/methods` ahora
   trae el campo aditivo `availability` (`operational` / `degraded` /
   `down`), el nuevo webhook broadcast `corridor_status_changed` notifica
@@ -2109,7 +2109,7 @@ destino. La creación es idempotente: una clave nueva responde
 - **FAQ ancla en todas las guías de producto**: payouts, payins, checkout,
   transferencias, crypto, banking, tarjetas, cartola, QR payout y tarjetas
   guardadas + suscripciones cierran ahora con preguntas frecuentes y el
-  link directo al [catálogo de errores](https://docs.cbpayapp.com/es/errores).
+  link directo al [catálogo de errores](https://docs.cbpayapp.com/es/errors).
 - **Catálogo de errores y webhooks completado**: se documentaron códigos de
   error y eventos de webhook que existían en la API pero faltaban en las
   páginas de referencia. Sin cambio de contratos.
@@ -2131,12 +2131,12 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Guías propias por producto**, extraídas de los monolitos de
-  payins/payouts: [Checkout](https://docs.cbpayapp.com/es/guias/checkout),
-  [Tarjetas guardadas y suscripciones](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions)
-  y [Payout QR](https://docs.cbpayapp.com/es/guias/qr-payout). Las secciones originales conservan sus
+  payins/payouts: [Checkout](https://docs.cbpayapp.com/es/guides/checkout),
+  [Tarjetas guardadas y suscripciones](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions)
+  y [Payout QR](https://docs.cbpayapp.com/es/guides/qr-payout). Las secciones originales conservan sus
   encabezados y enlazan a las guías nuevas, así los anchors históricos
   siguen resolviendo.
-- **Flujos end-to-end nuevos** en [Flujos de integración](https://docs.cbpayapp.com/es/flujos):
+- **Flujos end-to-end nuevos** en [Flujos de integración](https://docs.cbpayapp.com/es/flows):
   checkout, tarjetas guardadas y suscripciones, cobros QR POS y swaps de
   saldos, cada uno con su diagrama de secuencia.
 
@@ -2145,8 +2145,8 @@ destino. La creación es idempotente: una clave nueva responde
 - **Navegación de Productos reorganizada por familia**: Cobrar (money in),
   Pagar (money out), Saldos y cuenta, Identidad y compliance, y
   Experiencia — en vez de una lista plana de 17 páginas.
-- [Perfil y seguridad](https://docs.cbpayapp.com/es/guias/perfil) y
-  [Seguridad y 2FA (OTP)](https://docs.cbpayapp.com/es/seguridad-2fa) ahora se cruzan y declaran sus
+- [Perfil y seguridad](https://docs.cbpayapp.com/es/guides/profile) y
+  [Seguridad y 2FA (OTP)](https://docs.cbpayapp.com/es/security-2fa) ahora se cruzan y declaran sus
   roles: la guía de perfil es la casa de los factores 2FA del usuario; la
   página OTP cubre el flujo de desafíos por acción.
 
@@ -2156,11 +2156,11 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Ambiente de pruebas visible en todo el sitio**: cada guía de producto
   ahora abre con las URLs base de test y live (snippet compartido), y el
-  [FAQ](https://docs.cbpayapp.com/es/faq), el [inicio rápido](https://docs.cbpayapp.com/es/inicio-rapido) y la
-  [introducción](https://docs.cbpayapp.com/es/introduccion) describen correctamente el ambiente de
+  [FAQ](https://docs.cbpayapp.com/es/faq), el [inicio rápido](https://docs.cbpayapp.com/es/quickstart) y la
+  [introducción](https://docs.cbpayapp.com/es/introduction) describen correctamente el ambiente de
   pruebas (`https://cryptobank.qbank.cl/platform`, keys `pk_test_`) —
   copias anteriores decían, erróneamente, que no había sandbox. Detalle
-  completo en [Entorno y pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas).
+  completo en [Entorno y pruebas](https://docs.cbpayapp.com/es/environment-testing).
 
 **Cambiado**
 
@@ -2183,7 +2183,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **La auto-conversión al `default_payin_asset` ejecuta al precio real,
-  sin spread de swap** ([modelo de dinero](https://docs.cbpayapp.com/es/conceptos/modelo-de-dinero)):
+  sin spread de swap** ([modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model)):
   el payin ya pagó su comisión y su tasa al acreditar, así que la
   conversión automática al saldo configurado no cobra un costo adicional
   — no existe doble conversión. Siguen aplicando los límites por
@@ -2195,7 +2195,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Código de error `reserved_idempotency_key` (400)** en `POST /v1/swaps`
-  ([errores](https://docs.cbpayapp.com/es/errores)): las claves de idempotencia con prefijo
+  ([errores](https://docs.cbpayapp.com/es/errors)): las claves de idempotencia con prefijo
   `payin-convert:` o `checkout-swap:` están reservadas para las
   auto-conversiones del sistema (saldo predeterminado de payins y
   checkout) y se rechazan. Usa cualquier otra clave para tus swaps.
@@ -2205,7 +2205,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Saldo predeterminado para payins (`default_payin_asset`)**
-  ([modelo de dinero](https://docs.cbpayapp.com/es/conceptos/modelo-de-dinero)): configura en qué
+  ([modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model)): configura en qué
   saldo quieres quedarte con tus cobros. `PUT /v1/settlement` acepta
   ahora `default_payin_asset` (USDT, USDC, BTC o GOLD) y `GET
   /v1/settlement` lo expone. El payin sigue acreditando en USDT
@@ -2226,7 +2226,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Comisión propia para cobros con tarjeta (`payin_card`)**
-  ([comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones)): los cobros acreditados con
+  ([comisiones](https://docs.cbpayapp.com/es/concepts/fees)): los cobros acreditados con
   tarjeta (payin directo `method: card`, links de checkout pagados con
   tarjeta y cobros recurrentes con tarjeta guardada) pueden llevar una
   comisión porcentual propia, configurable **por moneda** (ej. un % para
@@ -2239,7 +2239,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **`GET /v1/banking/accounts/{bankAccountID}`** ([guía banking](https://docs.cbpayapp.com/es/guias/banking)):
+- **`GET /v1/banking/accounts/{bankAccountID}`** ([guía banking](https://docs.cbpayapp.com/es/guides/banking)):
   detalle en vivo de una cuenta bancaria — nombre, moneda, estado y los
   requisitos para recibir fondos (rieles wire y locales) bajo `data`.
   Úsalo para mostrar las instrucciones de depósito de una cuenta
@@ -2270,7 +2270,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Nuevo corredor: Argentina** 🇦🇷 ([guía payouts](https://docs.cbpayapp.com/es/guias/payouts) · [guía payins](https://docs.cbpayapp.com/es/guias/payins)):
+- **Nuevo corredor: Argentina** 🇦🇷 ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts) · [guía payins](https://docs.cbpayapp.com/es/guides/payins)):
   - **Payouts** en **ARS** y **USD** por `bank_transfer` a cualquier **CBU o CVU** de 22 dígitos (cuentas bancarias y billeteras virtuales; USD solo CBU→CBU). Beneficiario con `name`, `tax_id` (CUIT/CUIL) y `account_number` — sin `bank_code`.
   - **Payins** en **ARS** con **cuenta CVU dedicada** por cuenta (`POST /v1/payins/deposit-accounts` con `country: "AR"`): toda transferencia entrante se acredita automáticamente, sin referencias. Las CVU son receive-only: los intentos de débito directo se rechazan automáticamente.
   - Disponible ya en el **ambiente de pruebas** (staging) con el simulador; la activación en producción se anunciará al completarse la certificación bancaria — el catálogo (`GET /v1/payouts/methods` y `GET /v1/payins/methods`) es siempre la fuente de verdad.
@@ -2279,7 +2279,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Facturación en archivo con la tarjeta guardada** ([guía payins](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions)): los datos de facturación que el pagador ingresa al guardar su tarjeta (nombre, dirección, ciudad, correo, teléfono) quedan guardados junto con la credencial. Al pagar de nuevo con esa tarjeta la página segura los aplica automáticamente — el pagador no re-tipea nada — y muestra solo un **resumen enmascarado** (nombre, correo parcial y ciudad) con un enlace "usar otros datos" por si quiere cambiarlos. Los datos completos jamás bajan al navegador: el servidor los aplica al autorizar.
+- **Facturación en archivo con la tarjeta guardada** ([guía payins](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions)): los datos de facturación que el pagador ingresa al guardar su tarjeta (nombre, dirección, ciudad, correo, teléfono) quedan guardados junto con la credencial. Al pagar de nuevo con esa tarjeta la página segura los aplica automáticamente — el pagador no re-tipea nada — y muestra solo un **resumen enmascarado** (nombre, correo parcial y ciudad) con un enlace "usar otros datos" por si quiere cambiarlos. Los datos completos jamás bajan al navegador: el servidor los aplica al autorizar.
 
 **Cambiado**
 
@@ -2289,7 +2289,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Corregido**
 
-- **Página de checkout — pago con tarjeta en 1 clic** ([guía payins](https://docs.cbpayapp.com/es/guias/checkout)): al continuar con tarjeta, la página pública ahora redirige directo a la página segura de pago — se eliminó el botón intermedio que exigía un segundo clic. Elegir una tarjeta guardada de la lista inicia el pago de inmediato.
+- **Página de checkout — pago con tarjeta en 1 clic** ([guía payins](https://docs.cbpayapp.com/es/guides/checkout)): al continuar con tarjeta, la página pública ahora redirige directo a la página segura de pago — se eliminó el botón intermedio que exigía un segundo clic. Elegir una tarjeta guardada de la lista inicia el pago de inmediato.
 - **Tarjeta guardada en el checkout**: elegir una tarjeta guardada ahora llega siempre a la página segura con la credencial aplicada (muestra marca y últimos 4 dígitos, sin pedir el número de nuevo). Antes, la re-validación del correo podía descartar la selección en silencio y la página pedía todos los datos otra vez. Además, cambiar la elección en el mismo link (guardada ↔ tarjeta nueva) regenera la sesión de pago correcta en vez de reusar la anterior.
 
 ## v1.93 · 3 versiones - 21 de julio de 2026
@@ -2298,25 +2298,25 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Corregido**
 
-- **Webhooks de banking para terceros** ([webhooks](https://docs.cbpayapp.com/es/webhooks), [guía banking](https://docs.cbpayapp.com/es/guias/banking)): el webhook `banking_customer_status_changed` ahora también se emite cuando cambia la verificación de un **tercero** registrado por tu cuenta (antes solo llegaba el del perfil propio). El payload agrega `customer_kind` (`self` | `third_party`) y, para terceros, `third_party_id` (el mismo id de `GET /v1/banking/third-parties/{id}`).
+- **Webhooks de banking para terceros** ([webhooks](https://docs.cbpayapp.com/es/webhooks), [guía banking](https://docs.cbpayapp.com/es/guides/banking)): el webhook `banking_customer_status_changed` ahora también se emite cuando cambia la verificación de un **tercero** registrado por tu cuenta (antes solo llegaba el del perfil propio). El payload agrega `customer_kind` (`self` | `third_party`) y, para terceros, `third_party_id` (el mismo id de `GET /v1/banking/third-parties/{id}`).
 
 ### v1.92
 
 **Corregido**
 
-- **Monto de los cobros checkout en el historial de payins** ([guía payins](https://docs.cbpayapp.com/es/guias/checkout)): `GET /v1/payins` y `GET /v1/payins/{payin_id}` ahora incluyen siempre la denominación de los payins de checkout y QR POS — `settlement_asset` + `asset_amount` (y `conversion_status` cuando aplica) — en todo estado, incluidos pendiente y vencido. Antes el monto solo aparecía al acreditarse y las filas pendientes salían sin monto. Además, un cobro liquidado en crypto o vía la app CBPay expone su `usdt_credited` aunque no lleve `fx_rate`. Los exports CSV/XLSX agregan las columnas `settlement_asset` y `asset_amount`.
+- **Monto de los cobros checkout en el historial de payins** ([guía payins](https://docs.cbpayapp.com/es/guides/checkout)): `GET /v1/payins` y `GET /v1/payins/{payin_id}` ahora incluyen siempre la denominación de los payins de checkout y QR POS — `settlement_asset` + `asset_amount` (y `conversion_status` cuando aplica) — en todo estado, incluidos pendiente y vencido. Antes el monto solo aparecía al acreditarse y las filas pendientes salían sin monto. Además, un cobro liquidado en crypto o vía la app CBPay expone su `usdt_credited` aunque no lleve `fx_rate`. Los exports CSV/XLSX agregan las columnas `settlement_asset` y `asset_amount`.
 
 ### v1.91
 
 **Agregado**
 
-- **Suscripciones (cobros recurrentes agendados)** ([guía payins](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions#suscripciones-cobros-recurrentes-agendados)): la plataforma lleva el calendario de los cobros sobre una tarjeta guardada. `POST /v1/subscriptions` (`interval` daily/weekly/monthly/yearly, `start_at` opcional para trial, `idempotency_key` obligatoria) cobra el primer período al crear y dispara los siguientes solos. Recurso completo `GET /v1/subscriptions` (+`/{id}`, filtros status/stored_card_id/payer_reference) y ciclo de vida `POST .../pause` · `/resume` · `/cancel`. Dunning ante declines (reintento diario ×3 ⇒ `past_due`), sin catch-up al reanudar, y cancelación automática al revocar la tarjeta. Cada cobro exitoso acredita como payin de tarjeta (`payin_credited` con `subscription_id`). Webhook nuevo `subscription_status_changed`.
+- **Suscripciones (cobros recurrentes agendados)** ([guía payins](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions#suscripciones-cobros-recurrentes-agendados)): la plataforma lleva el calendario de los cobros sobre una tarjeta guardada. `POST /v1/subscriptions` (`interval` daily/weekly/monthly/yearly, `start_at` opcional para trial, `idempotency_key` obligatoria) cobra el primer período al crear y dispara los siguientes solos. Recurso completo `GET /v1/subscriptions` (+`/{id}`, filtros status/stored_card_id/payer_reference) y ciclo de vida `POST .../pause` · `/resume` · `/cancel`. Dunning ante declines (reintento diario ×3 ⇒ `past_due`), sin catch-up al reanudar, y cancelación automática al revocar la tarjeta. Cada cobro exitoso acredita como payin de tarjeta (`payin_credited` con `subscription_id`). Webhook nuevo `subscription_status_changed`.
 
 ## v1.90 - 20 de julio de 2026
 
 **Agregado**
 
-- **Tarjetas guardadas y cobros recurrentes** ([guía payins](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions)): el método `card` ahora soporta credencial almacenada (mandato COF de las marcas). `POST /v1/payins` acepta `save_card` (checkbox de consentimiento en la página hosted), `payer_reference` (tu ID del cliente) y `stored_card_id` (pagar con una tarjeta guardada sin re-digitar el número; el 3-D Secure corre igual). Recurso nuevo `GET /v1/stored-cards` (+`/{id}`, `DELETE` para revocar) y **cobros iniciados por el comercio** sin el pagador presente: `POST /v1/stored-cards/{id}/charges` (`recurring` para suscripciones; `idempotency_key` obligatoria — un retry jamás cobra dos veces). El número de tarjeta jamás existe en la plataforma: solo display (marca, últimos 4, expiración). Webhooks nuevos `card_stored` y `stored_card_revoked`; error nuevo `422 stored_card_revoked` ([errores](https://docs.cbpayapp.com/es/errores)).
+- **Tarjetas guardadas y cobros recurrentes** ([guía payins](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions)): el método `card` ahora soporta credencial almacenada (mandato COF de las marcas). `POST /v1/payins` acepta `save_card` (checkbox de consentimiento en la página hosted), `payer_reference` (tu ID del cliente) y `stored_card_id` (pagar con una tarjeta guardada sin re-digitar el número; el 3-D Secure corre igual). Recurso nuevo `GET /v1/stored-cards` (+`/{id}`, `DELETE` para revocar) y **cobros iniciados por el comercio** sin el pagador presente: `POST /v1/stored-cards/{id}/charges` (`recurring` para suscripciones; `idempotency_key` obligatoria — un retry jamás cobra dos veces). El número de tarjeta jamás existe en la plataforma: solo display (marca, últimos 4, expiración). Webhooks nuevos `card_stored` y `stored_card_revoked`; error nuevo `422 stored_card_revoked` ([errores](https://docs.cbpayapp.com/es/errors)).
 
 ## v1.89 · 2 versiones - 18 de julio de 2026
 
@@ -2324,13 +2324,13 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Controles de cumplimiento en pagos salientes** ([guía payouts](https://docs.cbpayapp.com/es/guias/payouts), [errores](https://docs.cbpayapp.com/es/errores)): los payouts, los retiros crypto con nombre de beneficiario y los cobros collect ahora pasan por controles de cumplimiento adicionales **antes de mover fondos**. Errores documentados: `403 compliance_hold` (la operación fue retenida y NO se creó — sin débito; por política no se informa la razón exacta, contacta a soporte con el timestamp) y `503 compliance_check_unavailable` (la verificación no se pudo evaluar; la operación NO se creó — reintenta con la **misma** `idempotency_key`).
+- **Controles de cumplimiento en pagos salientes** ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts), [errores](https://docs.cbpayapp.com/es/errors)): los payouts, los retiros crypto con nombre de beneficiario y los cobros collect ahora pasan por controles de cumplimiento adicionales **antes de mover fondos**. Errores documentados: `403 compliance_hold` (la operación fue retenida y NO se creó — sin débito; por política no se informa la razón exacta, contacta a soporte con el timestamp) y `503 compliance_check_unavailable` (la verificación no se pudo evaluar; la operación NO se creó — reintenta con la **misma** `idempotency_key`).
 
 ### v1.88
 
 **Corregido**
 
-- **Shapes de persona del screening AML** ([guía](https://docs.cbpayapp.com/es/guias/aml)): el motor
+- **Shapes de persona del screening AML** ([guía](https://docs.cbpayapp.com/es/guides/aml)): el motor
   de screening exige `date_of_birth` como objeto `{year, month, day}` (el
   string `"YYYY-MM-DD"` responde `422`), `nationality` como **array** de
   códigos ISO-3166 y `personal_identification[]` como
@@ -2343,7 +2343,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **QR Crypto POS — cobros QR crypto con monto para procesadores** ([guía](https://docs.cbpayapp.com/es/guias/qr-pos)):
+- **QR Crypto POS — cobros QR crypto con monto para procesadores** ([guía](https://docs.cbpayapp.com/es/guides/qr-pos)):
   las cuentas empresa con POS físicos registran a sus comercios como
   merchants verificados (KYB/KYC de terceros aprobado) y generan cobros
   crypto (USDT, USDC, BTC) con dirección exclusiva y QR por venta.
@@ -2502,8 +2502,8 @@ destino. La creación es idempotente: una clave nueva responde
   `pix` con la llave del beneficiario.
   Disponible en el ambiente de pruebas con QRs de ejemplo y valores mágicos
   (montos `.99` fallan) — ver
-  [Entorno y pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas#qrs-pix-de-ejemplo). Detalle en
-  la [guía de payouts](https://docs.cbpayapp.com/es/guias/qr-payout).
+  [Entorno y pruebas](https://docs.cbpayapp.com/es/environment-testing#qrs-pix-de-ejemplo). Detalle en
+  la [guía de payouts](https://docs.cbpayapp.com/es/guides/qr-payout).
 
 ### v1.79
 
@@ -2528,7 +2528,7 @@ destino. La creación es idempotente: una clave nueva responde
   nuevo `GET {checkout_url}/quote` con el catálogo de países, dues crypto
   y dues CBPay. Errores nuevos `country_required`, `country_unavailable`,
   `settlement_asset_disabled` y `checkout_amount_mismatch`. Detalle en la
-  [guía de payins](https://docs.cbpayapp.com/es/guias/checkout).
+  [guía de payins](https://docs.cbpayapp.com/es/guides/checkout).
 
 ### v1.78
 
@@ -2541,7 +2541,7 @@ destino. La creación es idempotente: una clave nueva responde
   el mensaje concretos — visible en la respuesta síncrona del `POST`, en
   `GET /v1/payins/{id}` y en el webhook. Antes solo se veía el estado
   `failed` genérico. Detalle en la
-  [guía de payins](https://docs.cbpayapp.com/es/guias/payins).
+  [guía de payins](https://docs.cbpayapp.com/es/guides/payins).
 
 ### v1.77
 
@@ -2559,7 +2559,7 @@ destino. La creación es idempotente: una clave nueva responde
   (10 minutos a 7 días) e idempotencia (el retry devuelve el mismo link).
   Errores nuevos `already_paid`, `checkout_expired` y
   `method_unavailable`. Detalle en la
-  [guía de payins](https://docs.cbpayapp.com/es/guias/checkout).
+  [guía de payins](https://docs.cbpayapp.com/es/guides/checkout).
 
 ### v1.76
 
@@ -2574,7 +2574,7 @@ destino. La creación es idempotente: una clave nueva responde
   mejorar la tasa de aprobación de los bancos emisores. En el ambiente de
   test, el monto terminado en `.44` simula un intento rechazado por este
   filtro (tabla completa en
-  [Ambiente de pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas)).
+  [Ambiente de pruebas](https://docs.cbpayapp.com/es/environment-testing)).
 
 ### v1.75
 
@@ -2588,7 +2588,7 @@ destino. La creación es idempotente: una clave nueva responde
   `failure_url` y `expires_at`. El pago confirmado llega por el webhook
   `payin_received` y acredita el saldo como cualquier payin; si nadie paga,
   `payin_expired` cierra el cobro. Detalle en la
-  [guía de payins](https://docs.cbpayapp.com/es/guias/payins).
+  [guía de payins](https://docs.cbpayapp.com/es/guides/payins).
 
 ### v1.74
 
@@ -2612,10 +2612,10 @@ destino. La creación es idempotente: una clave nueva responde
   acreditan el saldo BTC (confirmación ~30 min, 3 bloques) y los retiros
   on-chain aceptan `chain: "btc"` (destinos bech32, taproot y legacy;
   el fee de red lo cubre la operación, el destinatario recibe el monto
-  exacto). Las [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas) también
+  exacto). Las [wallets segregadas](https://docs.cbpayapp.com/es/guides/segregated-wallets) también
   soportan el par `btc`/`btc` (sin gas: el fee sale del saldo de la
   wallet). Travel Rule aplica igual que en las demás redes, valorando el
-  monto a USD. Detalle en la [guía crypto](https://docs.cbpayapp.com/es/guias/crypto).
+  monto a USD. Detalle en la [guía crypto](https://docs.cbpayapp.com/es/guides/crypto).
 
 ### v1.72
 
@@ -2628,7 +2628,7 @@ destino. La creación es idempotente: una clave nueva responde
   en la respuesta del login. Sin factor alternativo el login responde
   `403 phone_binding_cooldown` hasta que venza el cooldown. El código
   jamás viaja a un número enlazado desde la propia sesión. Detalle en la
-  [guía de seguridad y 2FA](https://docs.cbpayapp.com/es/seguridad-2fa).
+  [guía de seguridad y 2FA](https://docs.cbpayapp.com/es/security-2fa).
 
 ### v1.71
 
@@ -2642,7 +2642,7 @@ destino. La creación es idempotente: una clave nueva responde
   `403 phone_binding_cooldown` queda solo para cuentas sin factor
   alternativo. Antes, el cooldown bloqueaba toda relajación del 2FA
   (incluso desactivar el canal email) aunque tuvieras factores más fuertes
-  disponibles. Detalle en la [guía de seguridad y 2FA](https://docs.cbpayapp.com/es/seguridad-2fa).
+  disponibles. Detalle en la [guía de seguridad y 2FA](https://docs.cbpayapp.com/es/security-2fa).
 
 ### v1.70
 
@@ -2652,14 +2652,14 @@ destino. La creación es idempotente: una clave nueva responde
   tu onboarding KYC/KYB, `display_name` (persona = nombre + apellido;
   empresa = razón social), `tax_id` y `country` se rellenan
   automáticamente desde la identidad verificada. Documentado en la
-  [guía de KYC](https://docs.cbpayapp.com/es/guias/kyc) y la [guía de perfil](https://docs.cbpayapp.com/es/guias/perfil).
+  [guía de KYC](https://docs.cbpayapp.com/es/guides/kyc) y la [guía de perfil](https://docs.cbpayapp.com/es/guides/profile).
 
 **Cambiado**
 
 - **`PATCH /v1/me` bloquea los campos de identidad tras verificar**: con
   `kyc_status: approved`, cambiar `display_name`, `tax_id` o `country`
   responde `409 identity_locked` (código nuevo en la página de
-  [errores](https://docs.cbpayapp.com/es/errores)). `phone` sigue editable con su propio flujo de
+  [errores](https://docs.cbpayapp.com/es/errors)). `phone` sigue editable con su propio flujo de
   verificación.
 
 ### v1.69
@@ -2673,10 +2673,10 @@ destino. La creación es idempotente: una clave nueva responde
   PEP, prensa adversa...), coincidencias consolidadas, alias, glosario y
   sección final de respaldo con las fuentes internacionales consultadas.
   Trilingüe vía `lang=en|es|zh` (default inglés). Lectura pura, sin
-  comisión. Sección nueva en la [guía AML](https://docs.cbpayapp.com/es/guias/aml#informe-pdf-del-screening).
+  comisión. Sección nueva en la [guía AML](https://docs.cbpayapp.com/es/guides/aml#informe-pdf-del-screening).
 - **Nuevo código de error `invalid_language`** (HTTP 400): el `lang` del
   informe PDF no es `en`, `es` ni `zh`. Documentado en la página de
-  [errores](https://docs.cbpayapp.com/es/errores).
+  [errores](https://docs.cbpayapp.com/es/errors).
 
 **Corregido**
 
@@ -2701,11 +2701,11 @@ destino. La creación es idempotente: una clave nueva responde
   (`given_name`/`first_surname`/...) o el split automático desde `name`, y
   un bloque opcional de remitente (`sender_name` o sus campos
   estructurados). Ejemplos por método en la
-  [guía de payouts](https://docs.cbpayapp.com/es/guias/payouts) y en el spec.
+  [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts) y en el spec.
 - **Nuevo código de error `channel_unavailable`** (HTTP 503): el canal de
   pago del corredor no está disponible temporalmente. Reintenta más tarde
   con la misma `idempotency_key`. Documentado en la página de
-  [errores](https://docs.cbpayapp.com/es/errores).
+  [errores](https://docs.cbpayapp.com/es/errors).
 
 ### v1.67
 
@@ -2722,7 +2722,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Ambientes 100% independientes**: los datos de test ya no se refrescan
   desde un snapshot de producción — nada se copia entre ambientes. Guía de
-  [entornos y pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas) actualizada.
+  [entornos y pruebas](https://docs.cbpayapp.com/es/environment-testing) actualizada.
 
 ### v1.66
 
@@ -2830,7 +2830,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
 - El `receipt_url` de respuestas, webhooks y emails de comprobantes de
   envíos/depósitos de wallets ahora apunta al path nuevo.
 - Por qué: el prefijo genérico `/v1/wallets` se confundía constantemente
-  con las **wallets de depósito** del producto [crypto](https://docs.cbpayapp.com/es/guias/crypto).
+  con las **wallets de depósito** del producto [crypto](https://docs.cbpayapp.com/es/guides/crypto).
   Esas no cambian y siguen viviendo en `/v1/crypto/wallets`.
 
 **Agregado — Discriminador `type` en toda respuesta de wallet**
@@ -2886,7 +2886,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   `POST /v1/auth/refresh` entrega un par nuevo y rota el token (30 días por
   rotación, tope absoluto de 90 días desde el login original). Detalle y
   reglas de seguridad en
-  [Autenticación → Renovación de sesión](https://docs.cbpayapp.com/es/autenticacion#renovacion-de-sesion-refresh-tokens).
+  [Autenticación → Renovación de sesión](https://docs.cbpayapp.com/es/authentication#renovacion-de-sesion-refresh-tokens).
 - **Rotación estricta y detección de robo**: canjear revoca el access token
   anterior del dispositivo; presentar un refresh token ya canjeado revoca la
   cadena completa y registra el evento `refresh_token_reuse` en
@@ -2905,7 +2905,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   operaciones completan solas en segundos y los **valores mágicos**
   (montos `.99`/`.77`, beneficiario `REJECT`, OTP `000000`, etc.) fuerzan
   cada resultado alternativo. Guía completa en
-  [Ambientes y pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas).
+  [Ambientes y pruebas](https://docs.cbpayapp.com/es/environment-testing).
 - **API keys por ambiente**: test emite y acepta solo keys `pk_test_`;
   live solo `pk_`. Una key del otro ambiente devuelve `401` — imposible
   cruzar ambientes por error.
@@ -2948,8 +2948,8 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   `travel_rule_beneficiary_required`, `travel_rule_address_mismatch`,
   `travel_rule_rejected`, `travel_rule_pending`,
   `travel_rule_incomplete_approval`, `travel_rule_unavailable`. Detalle en
-  la [guía crypto](https://docs.cbpayapp.com/es/guias/crypto) y la
-  [página de errores](https://docs.cbpayapp.com/es/errores).
+  la [guía crypto](https://docs.cbpayapp.com/es/guides/crypto) y la
+  [página de errores](https://docs.cbpayapp.com/es/errors).
 
 ### v1.53
 
@@ -2960,7 +2960,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   moneda (2 decimales), listas para graficarlas como un filtro más junto a
   USDT/USDC/BTC/GOLD. Siguen fuera del agregado `total_usd`, que cubre
   solo los saldos operativos. Guía de
-  [analytics](https://docs.cbpayapp.com/es/guias/analytics) actualizada.
+  [analytics](https://docs.cbpayapp.com/es/guides/analytics) actualizada.
 
 ### v1.52
 
@@ -2968,8 +2968,8 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
 
 - `GET /v1/payouts` y `GET /v1/payins` aceptan el filtro `country`
   (ISO 3166-1 alfa-2, ej. `?country=MX`), combinable con `status`,
-  `from`/`to` y la paginación. Guías de [payouts](https://docs.cbpayapp.com/es/guias/payouts) y
-  [payins](https://docs.cbpayapp.com/es/guias/payins) actualizadas.
+  `from`/`to` y la paginación. Guías de [payouts](https://docs.cbpayapp.com/es/guides/payouts) y
+  [payins](https://docs.cbpayapp.com/es/guides/payins) actualizadas.
 - El bloque `fees` de `GET /v1/rates` ahora devuelve la configuración
   de comisiones **efectiva** (defaults de la organización resueltos
   contra los overrides de la cuenta). Antes una cuenta sin overrides
@@ -2990,10 +2990,10 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   con límite de **1 por par** red/activo (la segunda responde `422
   wallet_limit_reached`). Las empresas siguen sin límite. El error `403
   company_required` ya no aplica a wallets segregadas.
-- Guías de [crypto](https://docs.cbpayapp.com/es/guias/crypto) y [wallets
-  segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas), página de [personas y
-  empresas](https://docs.cbpayapp.com/es/conceptos/personas-y-empresas) y
-  [errores](https://docs.cbpayapp.com/es/errores) actualizadas.
+- Guías de [crypto](https://docs.cbpayapp.com/es/guides/crypto) y [wallets
+  segregadas](https://docs.cbpayapp.com/es/guides/segregated-wallets), página de [personas y
+  empresas](https://docs.cbpayapp.com/es/concepts/persons-companies) y
+  [errores](https://docs.cbpayapp.com/es/errors) actualizadas.
 
 ### v1.50
 
@@ -3003,7 +3003,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   controles de cumplimiento de estándar bancario. Para la gran mayoría de
   los clientes esto es invisible: no cambia ningún flujo ni agrega latencia
   perceptible.
-- Códigos de error nuevos documentados en [errores](https://docs.cbpayapp.com/es/errores): `403
+- Códigos de error nuevos documentados en [errores](https://docs.cbpayapp.com/es/errors): `403
   compliance_hold` (operación retenida por cumplimiento), `403
   geo_restricted` (jurisdicción no soportada) y `503
   compliance_check_unavailable` (verificación temporalmente no disponible —
@@ -3036,7 +3036,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   depósitos entrantes evalúan al remitente antes de acreditar (severo ⇒
   retenido en revisión de compliance; alto ⇒ se acredita con alerta).
 - Webhooks nuevos: `crypto_deposit_held` y `crypto_deposit_alert`.
-- Guía nueva: [Screening de wallets](https://docs.cbpayapp.com/es/guias/screenings).
+- Guía nueva: [Screening de wallets](https://docs.cbpayapp.com/es/guides/screenings).
 
 ### v1.47
 
@@ -3055,7 +3055,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
   `qr_image` de siempre. Ideal para mostrarlo con un `` directo.
 
 Nada se rompe: todos los campos existentes se conservan; las URLs son
-aditivas. Guías: [Perfil](https://docs.cbpayapp.com/es/guias/perfil) y [Payins](https://docs.cbpayapp.com/es/guias/payins).
+aditivas. Guías: [Perfil](https://docs.cbpayapp.com/es/guides/profile) y [Payins](https://docs.cbpayapp.com/es/guides/payins).
 
 ## v1.46 · 7 versiones - 11 de julio de 2026
 
@@ -3074,7 +3074,7 @@ aditivas. Guías: [Perfil](https://docs.cbpayapp.com/es/guias/perfil) y [Payins]
   no incluye el campo interno `source`; usa `settlement_grade` y
   `updated_at` para saber si un precio es ejecutable y qué tan fresco está.
 
-Guía: [AML screening](https://docs.cbpayapp.com/es/guias/aml).
+Guía: [AML screening](https://docs.cbpayapp.com/es/guides/aml).
 
 ### v1.45
 
@@ -3095,7 +3095,7 @@ Guía: [AML screening](https://docs.cbpayapp.com/es/guias/aml).
 - El registro público de cuentas ahora tiene límite de velocidad por IP
   (`429 too_many_attempts`).
 
-Guía: [crypto](https://docs.cbpayapp.com/es/guias/crypto).
+Guía: [crypto](https://docs.cbpayapp.com/es/guides/crypto).
 
 ### v1.44
 
@@ -3127,9 +3127,9 @@ Guía: [crypto](https://docs.cbpayapp.com/es/guias/crypto).
   depósito→envío) en el detalle de cada envío. Los saldos espejo `BANK_*`
   también aparecen en `GET /v1/balances` con `custody: "banking"`.
 
-Guías: [cartola](https://docs.cbpayapp.com/es/guias/cartola), [banking](https://docs.cbpayapp.com/es/guias/banking),
-[wallets segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas),
-[comprobantes](https://docs.cbpayapp.com/es/guias/comprobantes) y [analytics](https://docs.cbpayapp.com/es/guias/analytics).
+Guías: [cartola](https://docs.cbpayapp.com/es/guides/statement), [banking](https://docs.cbpayapp.com/es/guides/banking),
+[wallets segregadas](https://docs.cbpayapp.com/es/guides/segregated-wallets),
+[comprobantes](https://docs.cbpayapp.com/es/guides/receipts) y [analytics](https://docs.cbpayapp.com/es/guides/analytics).
 
 ### v1.43
 
@@ -3148,7 +3148,7 @@ Guías: [cartola](https://docs.cbpayapp.com/es/guias/cartola), [banking](https:/
 - El historial de tasas nace con un backfill de ~90 días de tasas diarias y
   se registra continuamente hacia adelante.
 
-Ejemplos completos en [analytics](https://docs.cbpayapp.com/es/guias/analytics).
+Ejemplos completos en [analytics](https://docs.cbpayapp.com/es/guides/analytics).
 
 ### v1.42
 
@@ -3177,11 +3177,11 @@ Ejemplos completos en [analytics](https://docs.cbpayapp.com/es/guias/analytics).
 
 **Cambiado**
 
-- La [cartola](https://docs.cbpayapp.com/es/guias/cartola) PDF ahora sale con el **logo real** de la
+- La [cartola](https://docs.cbpayapp.com/es/guides/statement) PDF ahora sale con el **logo real** de la
   marca y tipografía Inter (antes wordmark tipográfico), y el Excel incluye
   el logo en la hoja resumen.
 
-Guía completa en [comprobantes](https://docs.cbpayapp.com/es/guias/comprobantes).
+Guía completa en [comprobantes](https://docs.cbpayapp.com/es/guides/receipts).
 
 ### v1.41
 
@@ -3200,10 +3200,10 @@ Guía completa en [comprobantes](https://docs.cbpayapp.com/es/guias/comprobantes
 - Fees nuevos: `wallet_import`, `wallet_export`, `wallet_send`.
 - Webhooks nuevos: `wallet_deposit_received`, `wallet_send_status_changed`,
   `wallet_key_exported`. Service flag nuevo: `wallets`.
-- La [cartola](https://docs.cbpayapp.com/es/guias/cartola) y el [dashboard](https://docs.cbpayapp.com/es/guias/analytics)
+- La [cartola](https://docs.cbpayapp.com/es/guides/statement) y el [dashboard](https://docs.cbpayapp.com/es/guides/analytics)
   incluyen una sección de wallets segregadas.
 
-Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas).
+Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guides/segregated-wallets).
 
 ### v1.40
 
@@ -3247,7 +3247,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 - La verificación KYC/KYB aprobada de un cliente pasa a ser su **identidad
   única** dentro de CBPay: sus datos y documentos se reutilizan en los
   demás productos sin volver a tipearlos ni re-subirlos. Guía:
-  [identidad reutilizable](https://docs.cbpayapp.com/es/guias/kyc#una-sola-verificacion-para-todo-identidad-reutilizable).
+  [identidad reutilizable](https://docs.cbpayapp.com/es/guides/kyc#una-sola-verificacion-para-todo-identidad-reutilizable).
 - **Tarjetas**: la primera emisión de tu cuenta completa la identidad y los
   documentos del titular **desde tu verificación aprobada** — solo envías
   `occupation` y `salary_usd`. Los campos explícitos siguen ganando.
@@ -3280,7 +3280,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   transferencias, swaps, tarjetas, banking, KYC/KYB, AML, contactos) con
   sus dimensiones (país, moneda, método, estado, chain, comercio). Además
   `spending` (lo que consumiste en fees por servicio) y `balances`
-  valorizados en USD. Guía nueva: [Resumen de tu cuenta](https://docs.cbpayapp.com/es/guias/analytics).
+  valorizados en USD. Guía nueva: [Resumen de tu cuenta](https://docs.cbpayapp.com/es/guides/analytics).
 - **Usuarios banking de terceros (solo empresas)**: `POST/GET
   /v1/banking/third-parties` (+documentos, submit, cuentas, saldo) para dar
   de alta a tus clientes finales como usuarios banking separados, con su
@@ -3315,7 +3315,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   precio no está fresco, el swap se rechaza con `503 pricing_unavailable`).
 - Las conversiones que tocan BTC/GOLD comparten los límites por operación
   y de volumen 24 h con payouts y compras con tarjeta
-  (`GET /v1/settlement`). Guía nueva: [Swaps](https://docs.cbpayapp.com/es/guias/swaps).
+  (`GET /v1/settlement`). Guía nueva: [Swaps](https://docs.cbpayapp.com/es/guides/swaps).
 
 ### v1.35
 
@@ -3335,7 +3335,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 - **Envío rápido a contactos**: `beneficiary_contact_id` en payouts (usa el
   beneficiario guardado del contacto) y `to_contact_id` en retiros crypto
   (usa su dirección guardada). Guía nueva:
-  [Contactos](https://docs.cbpayapp.com/es/guias/contactos).
+  [Contactos](https://docs.cbpayapp.com/es/guides/contacts).
 
 ### v1.34
 
@@ -3357,7 +3357,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 - 7 webhooks nuevos: `kyc/kyb_verification_status_changed`,
   `kyc/kyb_link_completed`, `kyc/kyb_document_validated`,
   `kyc_liveness_completed`. Guía completa en
-  [Verificación KYC y KYB](https://docs.cbpayapp.com/es/guias/kyc).
+  [Verificación KYC y KYB](https://docs.cbpayapp.com/es/guides/kyc).
 
 **Cambiado (BREAKING) — El screening pasa a AML**
 
@@ -3368,7 +3368,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   El error `no_kyc` pasa a `no_screening` y el screening ya no toca tu
   `kyc_status`. Nuevo webhook `aml_screening_updated` y nuevo service flag
   `aml` (el flag `kyc` ahora gatea la verificación de identidad). Guía:
-  [AML screening](https://docs.cbpayapp.com/es/guias/aml).
+  [AML screening](https://docs.cbpayapp.com/es/guides/aml).
 
 ### v1.33
 
@@ -3445,7 +3445,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   (USDT, USDC, BTC, GOLD). El pricing sigue cotizándose en USDT; el total
   se traduce al asset elegido con el precio efectivo de settlement del
   momento. Detalle en el
-  [modelo de dinero](https://docs.cbpayapp.com/es/conceptos/modelo-de-dinero#elige-desde-que-saldo-pagas).
+  [modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model#elige-desde-que-saldo-pagas).
 - Nuevo `GET/PUT /v1/settlement`: define el **saldo predeterminado** de tu
   cuenta (`default_settlement_asset`). Override puntual por operación con
   `settlement_asset` en `POST /v1/payouts` y en el confirm de QR.
@@ -3483,7 +3483,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   con `POST /v1/payins`, tu pagador transfiere (SIPAP o transferencia
   interna del banco receptor) con la `reference` en el concepto, y el
   abono llega automático en USDT a tu `payin_rate`, como en todos los
-  países. Guía en [payins](https://docs.cbpayapp.com/es/guias/payins).
+  países. Guía en [payins](https://docs.cbpayapp.com/es/guides/payins).
 - Los guaraníes no usan decimales: anuncia el **monto entero exacto**
   (ej. `"596000"`). El match de respaldo por monto+moneda aplica igual.
 - El corredor aparece en `GET /v1/payins/methods` con `delivery: polling`.
@@ -3496,7 +3496,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   `USDT` (la moneda operativa), `USDC`, `BTC` (8 decimales, satoshis) y
   `GOLD` (gramos de oro fino, 6 decimales, con respaldo en custodio).
   Nunca se mezclan ni se convierten automáticamente. Detalle en
-  [modelo de dinero](https://docs.cbpayapp.com/es/conceptos/modelo-de-dinero).
+  [modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model).
 - **`GET /v1/balances`** devuelve siempre los cuatro saldos (con ceros si
   no has operado esa moneda) y `GET /v1/movements` filtra por moneda con
   `?asset=`.
@@ -3505,7 +3505,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   la **misma moneda**, sin conversión y sin comisión.
 - **USDC on-chain**: crea wallets `eth`/`usdc`, deposita y retira USDC por
   Ethereum. Cada depósito acredita el saldo de su propio activo. Guía en
-  [crypto](https://docs.cbpayapp.com/es/guias/crypto).
+  [crypto](https://docs.cbpayapp.com/es/guides/crypto).
 - **Precios de referencia**: `GET /v1/rates` incluye `asset_prices` con el
   precio USD referencial de cada moneda (BTC por unidad, GOLD por gramo) —
   solo para valorizar, sin conversión ni spread.
@@ -3524,7 +3524,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 - **Registro e inicio de sesión sin contraseña** con Google, Apple,
   Microsoft y Facebook por token exchange: tu front obtiene la credencial
   con el SDK del proveedor y la intercambias en `POST /v1/auth/oauth` por la
-  sesión CBPay. Guía completa en [login social](https://docs.cbpayapp.com/es/guias/login-social).
+  sesión CBPay. Guía completa en [login social](https://docs.cbpayapp.com/es/guides/social-login).
 - **Endpoints nuevos**: `POST /v1/auth/oauth` (login + registro unificado),
   `GET /v1/auth/oauth/providers` (proveedores habilitados, público),
   `GET/POST /v1/me/identities` y `DELETE /v1/me/identities/{provider}`
@@ -3534,7 +3534,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 - **Multi-método**: una misma cuenta puede tener contraseña y varios
   proveedores; el auto-vínculo por email solo ocurre si el proveedor lo
   entrega verificado.
-- Códigos de error nuevos en el [catálogo](https://docs.cbpayapp.com/es/errores): `invalid_provider`,
+- Códigos de error nuevos en el [catálogo](https://docs.cbpayapp.com/es/errors): `invalid_provider`,
   `provider_not_configured`, `invalid_credential`, `email_conflict`,
   `identity_taken`, `last_login_method`.
 
@@ -3551,7 +3551,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   exigir un código de un solo uso (por SMS o WhatsApp) antes de login,
   payouts, retiros crypto, transferencias, pagos bancarios, revelar una
   tarjeta, emitir API keys, agregar miembros o cambiar el teléfono. Guía
-  completa en [seguridad y 2FA](https://docs.cbpayapp.com/es/seguridad-2fa).
+  completa en [seguridad y 2FA](https://docs.cbpayapp.com/es/security-2fa).
 - **Endpoints nuevos**: `POST /v1/otp/challenges` (envía el código),
   `POST /v1/otp/challenges/{id}/verify` (devuelve el `otp_token` de un solo
   uso para el header `X-OTP-Token`), `GET /v1/otp/challenges` (+ detalle) y
@@ -3561,7 +3561,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   `POST /v1/auth/login/otp`.
 - **Solo sesiones de usuario**: las API keys `pk_` quedan exentas — tus
   integraciones server-to-server no cambian.
-- Códigos de error nuevos en el [catálogo](https://docs.cbpayapp.com/es/errores): `otp_required`,
+- Códigos de error nuevos en el [catálogo](https://docs.cbpayapp.com/es/errors): `otp_required`,
   `otp_invalid`, `phone_required`, `phone_binding_cooldown`,
   `too_many_attempts` y más.
 
@@ -3569,7 +3569,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 
 **Documentación — persona vs empresa y guías unificadas**
 
-- **Nueva página [personas y empresas](https://docs.cbpayapp.com/es/conceptos/personas-y-empresas)**:
+- **Nueva página [personas y empresas](https://docs.cbpayapp.com/es/concepts/persons-companies)**:
   TODAS las diferencias entre los dos tipos de cuenta (wallets, tarjetas,
   miembros, KYC/KYB) en una sola tabla, con los errores que delata cada
   límite.
@@ -3593,13 +3593,13 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 
 - **Navegación nueva**: Comenzar → Conceptos → Flujos de integración →
   Productos → Integración → Recursos, con icono por página y breadcrumbs.
-- **Páginas nuevas**: [ambiente y pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas) (túnel
+- **Páginas nuevas**: [ambiente y pruebas](https://docs.cbpayapp.com/es/environment-testing) (túnel
   para webhooks en local + checklist de go-live),
-  [servicios habilitados](https://docs.cbpayapp.com/es/conceptos/servicios),
-  [estados y ciclo de vida](https://docs.cbpayapp.com/es/conceptos/estados) (incluye el catálogo de
+  [servicios habilitados](https://docs.cbpayapp.com/es/concepts/services),
+  [estados y ciclo de vida](https://docs.cbpayapp.com/es/concepts/statuses) (incluye el catálogo de
   `status_code` de payouts fallidos),
-  [movimientos y conciliación](https://docs.cbpayapp.com/es/conceptos/movimientos-y-conciliacion) y
-  [flujos de integración](https://docs.cbpayapp.com/es/flujos) con diagramas end-to-end.
+  [movimientos y conciliación](https://docs.cbpayapp.com/es/concepts/movements-reconciliation) y
+  [flujos de integración](https://docs.cbpayapp.com/es/flows) con diagramas end-to-end.
 - **Payouts y payins divididos**: guía general + referencia por país con el
   request y response real de cada corredor.
 - **Guías ampliadas**: quickstart cierra el ciclo con webhooks; perfil
@@ -3627,8 +3627,8 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   en tu `payin_rate` (la conversión del abono se hace exactamente a esa
   tasa) y la comisión de payin pasa a ser un **fijo por operación** — sin
   porcentajes aparte. El campo `fx_rate` de cada payin registra la tasa
-  aplicada. Ver [comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones) y la
-  [guía de payins](https://docs.cbpayapp.com/es/guias/payins).
+  aplicada. Ver [comisiones](https://docs.cbpayapp.com/es/concepts/fees) y la
+  [guía de payins](https://docs.cbpayapp.com/es/guides/payins).
 - La conversión de abonos redondea hacia abajo al micro-USDT (los débitos
   siguen redondeando hacia arriba), con diferencia máxima de 1 micro-USDT.
 
@@ -3639,7 +3639,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   mostraban los ejemplos (fecha de nacimiento, nacionalidades, documentos
   con país emisor, alias, domicilios, datos registrales de empresa…) y
   enviarlos hace el screening más preciso. La
-  [guía de KYC](https://docs.cbpayapp.com/es/guias/kyc) ahora documenta todos los campos, con
+  [guía de KYC](https://docs.cbpayapp.com/es/guides/kyc) ahora documenta todos los campos, con
   ejemplos de identidad completa y la regla de deduplicación.
 
 ### v1.20
@@ -3652,7 +3652,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   **código** del catálogo; para empresa, `kind_of_business` también. Un valor
   fuera de catálogo se rechaza con `400 invalid_occupation` /
   `400 invalid_kind_of_business` antes de tocar el emisor. Ver la
-  [guía de tarjetas](https://docs.cbpayapp.com/es/guias/tarjetas).
+  [guía de tarjetas](https://docs.cbpayapp.com/es/guides/cards).
 
 ### v1.19
 
@@ -3677,7 +3677,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   `GET/PATCH /v1/cards/{id}` (límites y congelar/descongelar),
   `POST /v1/cards/{id}/activate|cancel|reveal` y
   `GET /v1/cards/{id}/transactions`. Ver la
-  [guía de tarjetas](https://docs.cbpayapp.com/es/guias/tarjetas).
+  [guía de tarjetas](https://docs.cbpayapp.com/es/guides/cards).
 - **Nuevos servicios facturables** (fijos, configurables, pueden ser 0):
   `card_creation_virtual`, `card_creation_physical`, `card_monthly` (si no
   hay saldo, la tarjeta se congela — sin deuda) y `card_cancellation`.
@@ -3700,7 +3700,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   depósito se detecta, valida y acredita automáticamente en USDT con el
   webhook `payin_credited` de siempre. Soporta `idempotency_key` opcional:
   un reintento devuelve el mismo payin y la misma URL sin abrir otra sesión
-  de pago. Ver la [guía de payins](https://docs.cbpayapp.com/es/guias/payins).
+  de pago. Ver la [guía de payins](https://docs.cbpayapp.com/es/guides/payins).
 
 ### v1.16
 
@@ -3731,7 +3731,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
   multi-hoja con celdas numéricas, filtros y hoja de movimientos para
   auditores (`format=json|pdf|xlsx`, `lang=es|en`). El org admin puede
   generar la cartola de cualquiera de sus cuentas. Ver la
-  [guía](https://docs.cbpayapp.com/es/guias/cartola).
+  [guía](https://docs.cbpayapp.com/es/guides/statement).
 
 ### v1.15
 
@@ -3773,7 +3773,7 @@ Guía completa en [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallet
 - Comisiones nuevas (fijas, configurables, reembolsables si la operación
   falla): `banking_customer`, `banking_account`, `banking_operation` — el
   campo `banking_fee` de cada respuesta muestra lo cobrado.
-- Guía completa de [Banking](https://docs.cbpayapp.com/es/guias/banking) con el flujo end-to-end y
+- Guía completa de [Banking](https://docs.cbpayapp.com/es/guides/banking) con el flujo end-to-end y
   ejemplos de cada operación.
 
 ### v1.12

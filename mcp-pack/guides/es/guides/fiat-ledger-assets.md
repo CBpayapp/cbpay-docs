@@ -5,9 +5,18 @@ slug: es/guides/fiat-ledger-assets
 lang: es
 source_url: https://docs.cbpayapp.com/es/guides/fiat-ledger-assets
 ---
+> **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
 Las cuentas CBPay ahora exponen tres activos fiat del ledger: **BOB**, **MXN**
 y **ARS**. Son saldos independientes, almacenados con dos decimales (unidades
 menores), y aparecen junto a USDT, USDC, BTC, GOLD, SILVER y PLATINUM.
+
+```mermaid
+flowchart LR
+  balances["GET /v1/balances"] --> ledger["9 ledger assets"]
+  history["GET /v1/balances/history"] --> ledger
+  analytics["GET /v1/analytics/summary"] --> valuation["feed price or unpriced"]
+```
 
 ## Dónde aparecen
 

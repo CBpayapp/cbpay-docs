@@ -1,9 +1,9 @@
 ---
 recipe: payins
 title: "Payins"
-slug: es/guias/payins
+slug: es/guides/payins
 lang: es
-source_url: https://docs.cbpayapp.com/es/guias/payins
+source_url: https://docs.cbpayapp.com/es/guides/payins
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
@@ -86,7 +86,7 @@ pagador genera una `claveDinamica` en la app de su banco y te la entrega; tu
 integración la envía en el campo `otp` del collect. No existe una llamada
 previa a `/collect/otp` para C2P. `debito_inmediato` no es un corredor vivo.
 Los pagos salientes a Venezuela (`pago_movil`, `bank_transfer`) no cambian:
-ver [payouts](https://docs.cbpayapp.com/es/guias/payouts).
+ver [payouts](https://docs.cbpayapp.com/es/guides/payouts).
 La disponibilidad puede variar; el catálogo (`GET /v1/payins/methods`) es
 siempre la fuente de verdad. En todos los casos el abono llega igual: se
 convierte a USDT al `payin_rate` cotizado y se acredita neto de la comisión
@@ -95,7 +95,7 @@ inventario habilitado no alcanza, la cotización existente sigue siendo
 autoritativa y el faltante se registra como fallback spot con alerta operativa.
 Si prefieres quedarte con tus cobros en otro saldo
 (USDC, BTC o GOLD), configura `default_payin_asset` — ver
-[el modelo de dinero](https://docs.cbpayapp.com/es/conceptos/modelo-de-dinero#elige-en-que-saldo-se-acreditan-tus-payins).
+[el modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model#elige-en-que-saldo-se-acreditan-tus-payins).
 
 ## 2. Elige la modalidad y crea el cobro
 
@@ -328,7 +328,7 @@ verificado usa `reconcile`.
 #### Bolivia
 
 **Cuenta receptora BOB dedicada**: para el flujo de cuenta fija, usa la
-[guía de cuentas virtuales BOB](https://docs.cbpayapp.com/es/guias/bob-virtual-accounts). Una cuenta
+[guía de cuentas virtuales BOB](https://docs.cbpayapp.com/es/guides/bob-virtual-accounts). Una cuenta
 persona recibe un `instrument` estable por corredor; una empresa puede crear
 instrumentos BOB adicionales con claves de idempotencia distintas. El pagador
 transfiere BOB al número seleccionado y el abono se detecta por polling. No
@@ -336,7 +336,7 @@ requiere anuncio ni referencia del pagador.
 
 **QR de cobro** (estándar interoperable local): generas el QR y tu cliente
 lo escanea con su app bancaria. Consulta la [guía de payins
-QR](https://docs.cbpayapp.com/es/guias/payins-qr) para ver el request, la respuesta, los reintentos y
+QR](https://docs.cbpayapp.com/es/guides/payins-qr) para ver el request, la respuesta, los reintentos y
 los errores.
 
 **Página de pago con tarjeta (`card`)**: recibes una `payment_url` de un
@@ -459,7 +459,7 @@ idempotencia mientras sigue la conciliación.
   escribe su correo (primer campo), lo verifica con un código y paga con una
   de ellas sin re-digitarla — con "Recordar este dispositivo" no repite el
   código por 30 días. Detalle en
-  [tarjetas guardadas](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions#el-pagador-descubre-sus-tarjetas-en-la-página-de-pago).
+  [tarjetas guardadas](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions#el-pagador-descubre-sus-tarjetas-en-la-página-de-pago).
 - Funciona también en USD (`currency: "USD"`).
 - **Settlement diferido**: cuando la comisión de `payin_card` está
   configurada con `settlement_hours` sobre cero, un cobro aprobado confirma
@@ -471,9 +471,9 @@ idempotencia mientras sigue la conciliación.
   lleva `settled_at`. El webhook `payin_settlement_scheduled` se emite
   exactamente una vez al confirmarse el pago, con `status: "credited"` y
   los montos programados. La misma demora aplica cuando un
-  [link de checkout](https://docs.cbpayapp.com/es/guias/checkout) o un
-  [cobro POS](https://docs.cbpayapp.com/es/guias/qr-pos) se paga con tarjeta. Detalle en
-  [comisiones — settlement de payins con tarjeta](https://docs.cbpayapp.com/es/conceptos/comisiones#settlement-de-payins-con-tarjeta).
+  [link de checkout](https://docs.cbpayapp.com/es/guides/checkout) o un
+  [cobro POS](https://docs.cbpayapp.com/es/guides/qr-pos) se paga con tarjeta. Detalle en
+  [comisiones — settlement de payins con tarjeta](https://docs.cbpayapp.com/es/concepts/fees#settlement-de-payins-con-tarjeta).
 
 #### Paraguay
 
@@ -629,7 +629,7 @@ devuelve la misma `payment_url`). Diferencias propias del corredor internacional
   recibes `payin_credited` igual, solo con unos minutos de diferencia.
 - `save_card: true` + `payer_reference` guardan la tarjeta con el
   consentimiento del pagador para cobros posteriores (ver
-  [tarjetas guardadas y suscripciones](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions)).
+  [tarjetas guardadas y suscripciones](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions)).
 - Si el pagador ya tiene tarjetas guardadas, la página se las ofrece tras
   verificar su correo con un código (una sola vez por dispositivo si marca
   "Recordar este dispositivo", vigente 30 días) — paga con 3-D Secure sin
@@ -1065,7 +1065,7 @@ tu organización.
 
 Los pushes acreditados en una cuenta de depósito dedicada exponen
 `instrument_id`, un bloque `instrument` y el bloque `payer` del banco — forma
-completa en la [guía de cuentas virtuales BOB](https://docs.cbpayapp.com/es/guias/bob-virtual-accounts#campos-de-instrumento-y-pagador-en-pushes-acreditados).
+completa en la [guía de cuentas virtuales BOB](https://docs.cbpayapp.com/es/guides/bob-virtual-accounts#campos-de-instrumento-y-pagador-en-pushes-acreditados).
 Filtra el historial con `?instrument_id=<uuid>`.
 
 ## 3. Recibe el abono
@@ -1165,7 +1165,7 @@ o la clave de idempotencia.
 |---|---|---|
 | 400 | `invalid_request` | Revisa `method` (qr, bank_transfer, fintoc, card; collect va en su endpoint) |
 | 400 | `idempotency_key_required` | El collect exige clave de idempotencia (débito real al pagador) |
-| 403 | `service_disabled` | Payins no está habilitado para tu cuenta — ver [servicios](https://docs.cbpayapp.com/es/conceptos/servicios) |
+| 403 | `service_disabled` | Payins no está habilitado para tu cuenta — ver [servicios](https://docs.cbpayapp.com/es/concepts/services) |
 | 429 | `too_many_open_card_sessions` | La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o deja vencer una sesión existente antes de crear otra |
 | 503 | `card_reuse_unavailable` | La plataforma no pudo verificar un cobro con tarjeta abierto existente — reintenta la misma solicitud con la misma clave de idempotencia; no crees otro cobro |
 | 503 | `checkout_recovery_pending` | La opción de pago del checkout está en reconciliación — reintenta la misma materialización y no crees otra opción |

@@ -124,23 +124,28 @@
                     ]
                   },
                   {
-                    "group": "Balances & account",
+                    "group": "Accounts & balances",
                     "pages": [
                       "en/guides/accounts",
-                      "en/guides/contract-agreement",
                       "en/guides/transfers",
                       "en/guides/swaps",
                       "en/guides/crypto",
-                  "en/guides/segregated-wallets",
-                  "en/guides/signature-proofs",
-                  "en/guides/cards",
+                      "en/guides/segregated-wallets",
                       "en/guides/banking",
                       "en/guides/company-wallets",
+                      "en/guides/fiat-ledger-assets"
+                    ]
+                  },
+                  {
+                    "group": "Cards & records",
+                    "pages": [
+                      "en/guides/contract-agreement",
+                      "en/guides/signature-proofs",
+                      "en/guides/cards",
                       "en/guides/statement",
                       "en/guides/receipts",
                       "en/guides/tracking",
-                      "en/guides/analytics",
-                  "en/guides/fiat-ledger-assets"
+                      "en/guides/analytics"
                     ]
                   },
                   {
@@ -206,29 +211,29 @@
               {
                 "group": "Comenzar",
                 "pages": [
-                  "es/introduccion",
-                  "es/inicio-rapido",
-                  "es/autenticacion",
-                  "es/guias/login-social",
-                  "es/entorno-y-pruebas"
+                  "es/introduction",
+                  "es/quickstart",
+                  "es/authentication",
+                  "es/guides/social-login",
+                  "es/environment-testing"
                 ]
               },
               {
                 "group": "Conceptos",
                 "pages": [
-                  "es/conceptos/modelo-de-dinero",
-                  "es/conceptos/comisiones",
-                  "es/conceptos/idempotencia",
-                  "es/conceptos/personas-y-empresas",
-                  "es/conceptos/servicios",
-                  "es/conceptos/estados",
-                  "es/conceptos/movimientos-y-conciliacion"
+                  "es/concepts/money-model",
+                  "es/concepts/fees",
+                  "es/concepts/idempotency",
+                  "es/concepts/persons-companies",
+                  "es/concepts/services",
+                  "es/concepts/statuses",
+                  "es/concepts/movements-reconciliation"
                 ]
               },
               {
                 "group": "Flujos de integración",
                 "pages": [
-                  "es/flujos"
+                  "es/flows"
                 ]
               },
               {
@@ -237,67 +242,72 @@
                   {
                     "group": "Cobrar (money in)",
                     "pages": [
-                      "es/guias/payins",
-                      "es/guias/payins-qr",
-                      "es/guias/bob-virtual-accounts",
-                      "es/guias/checkout",
-                      "es/guias/stored-cards-subscriptions",
-                      "es/guias/qr-pos",
-                      "es/guias/devoluciones"
+                      "es/guides/payins",
+                      "es/guides/payins-qr",
+                      "es/guides/bob-virtual-accounts",
+                      "es/guides/checkout",
+                      "es/guides/stored-cards-subscriptions",
+                      "es/guides/qr-pos",
+                      "es/guides/refunds"
                     ]
                   },
                   {
                     "group": "Pagar (money out)",
                     "pages": [
-                      "es/guias/payouts",
-                      "es/guias/fiat-settlement",
-                      "es/guias/sepa-instant-payouts",
-                      "es/guias/payout-rate-sources",
-                      "es/guias/qr-payout"
+                      "es/guides/payouts",
+                      "es/guides/fiat-settlement",
+                      "es/guides/sepa-instant-payouts",
+                      "es/guides/payout-rate-sources",
+                      "es/guides/qr-payout"
                     ]
                   },
                   {
-                    "group": "Saldos y cuenta",
+                    "group": "Cuentas y saldos",
                     "pages": [
-                      "es/guias/accounts",
-                      "es/guias/contrato-marco-grupo-cb",
-                      "es/guias/transferencias",
-                      "es/guias/swaps",
-                      "es/guias/crypto",
-                  "es/guias/wallets-segregadas",
-                  "es/guias/pruebas-de-firma",
-                  "es/guias/tarjetas",
-                      "es/guias/banking",
-                      "es/guias/company-wallets",
-                      "es/guias/cartola",
-                      "es/guias/comprobantes",
-                      "es/guias/seguimiento",
-                      "es/guias/analytics",
-                  "es/guides/fiat-ledger-assets"
+                      "es/guides/accounts",
+                      "es/guides/transfers",
+                      "es/guides/swaps",
+                      "es/guides/crypto",
+                      "es/guides/segregated-wallets",
+                      "es/guides/banking",
+                      "es/guides/company-wallets",
+                      "es/guides/fiat-ledger-assets"
+                    ]
+                  },
+                  {
+                    "group": "Tarjetas y registros",
+                    "pages": [
+                      "es/guides/contract-agreement",
+                      "es/guides/signature-proofs",
+                      "es/guides/cards",
+                      "es/guides/statement",
+                      "es/guides/receipts",
+                      "es/guides/tracking",
+                      "es/guides/analytics"
                     ]
                   },
                   {
                     "group": "Identidad y compliance",
                     "pages": [
-                      "es/guias/kyc",
-                      "es/guias/aml",
-                      "es/guias/screenings",
-                      "es/guias/qscore",
-                      "es/guias/qscore-batch",
-                      "es/guias/qscore-consents",
-                      "es/guias/qscore-seal",
-                      "es/guias/qscore-fraud",
-                      "es/guias/qscore-index",
-                      "es/guias/revisiones-operaciones",
-                  "es/guias/disputas"
+                      "es/guides/kyc",
+                      "es/guides/aml",
+                      "es/guides/screenings",
+                      "es/guides/qscore",
+                      "es/guides/qscore-batch",
+                      "es/guides/qscore-consents",
+                      "es/guides/qscore-seal",
+                      "es/guides/qscore-fraud",
+                      "es/guides/qscore-index",
+                      "es/guides/transaction-reviews",
+                      "es/guides/disputes"
                     ]
                   },
                   {
                     "group": "Experiencia",
                     "pages": [
-                      "es/guias/contactos",
-                      "es/guias/perfil",
-                      "es/guias/idioma"
+                      "es/guides/contacts",
+                      "es/guides/profile",
+                      "es/guides/locale"
                     ]
                   }
                 ]
@@ -305,12 +315,12 @@
               {
                 "group": "Integración",
                 "pages": [
-                  "es/seguridad-2fa",
+                  "es/security-2fa",
                   "es/webhooks",
-                  "es/guias/integrations",
-                  "es/eventos-tiempo-real",
-                  "es/estado-del-servicio",
-                  "es/errores",
+                  "es/guides/integrations",
+                  "es/realtime-events",
+                  "es/service-status",
+                  "es/errors",
                   "es/faq"
                 ]
               },
@@ -390,23 +400,28 @@
                     ]
                   },
                   {
-                    "group": "余额与账户",
+                    "group": "账户与余额",
                     "pages": [
                       "zh/guides/accounts",
-                      "zh/guides/contract-agreement",
                       "zh/guides/transfers",
                       "zh/guides/swaps",
                       "zh/guides/crypto",
-                  "zh/guides/segregated-wallets",
-                  "zh/guides/signature-proofs",
-                  "zh/guides/cards",
+                      "zh/guides/segregated-wallets",
                       "zh/guides/banking",
                       "zh/guides/company-wallets",
+                      "zh/guides/fiat-ledger-assets"
+                    ]
+                  },
+                  {
+                    "group": "卡片与记录",
+                    "pages": [
+                      "zh/guides/contract-agreement",
+                      "zh/guides/signature-proofs",
+                      "zh/guides/cards",
                       "zh/guides/statement",
                       "zh/guides/receipts",
                       "zh/guides/tracking",
-                      "zh/guides/analytics",
-                  "zh/guides/fiat-ledger-assets"
+                      "zh/guides/analytics"
                     ]
                   },
                   {
@@ -473,11 +488,11 @@
   "redirects": [
     {
       "source": "/es/guias/payouts-por-pais",
-      "destination": "/es/guias/payouts"
+      "destination": "/es/guides/payouts"
     },
     {
       "source": "/es/guias/payins-por-pais",
-      "destination": "/es/guias/payins"
+      "destination": "/es/guides/payins"
     },
     {
       "source": "/en/guides/payouts-by-country",
@@ -486,6 +501,238 @@
     {
       "source": "/en/guides/payins-by-country",
       "destination": "/en/guides/payins"
+    },
+    {
+      "source": "/es/autenticacion",
+      "destination": "/es/authentication"
+    },
+    {
+      "source": "/es/conceptos/comisiones",
+      "destination": "/es/concepts/fees"
+    },
+    {
+      "source": "/es/conceptos/estados",
+      "destination": "/es/concepts/statuses"
+    },
+    {
+      "source": "/es/conceptos/idempotencia",
+      "destination": "/es/concepts/idempotency"
+    },
+    {
+      "source": "/es/conceptos/modelo-de-dinero",
+      "destination": "/es/concepts/money-model"
+    },
+    {
+      "source": "/es/conceptos/movimientos-y-conciliacion",
+      "destination": "/es/concepts/movements-reconciliation"
+    },
+    {
+      "source": "/es/conceptos/personas-y-empresas",
+      "destination": "/es/concepts/persons-companies"
+    },
+    {
+      "source": "/es/conceptos/servicios",
+      "destination": "/es/concepts/services"
+    },
+    {
+      "source": "/es/entorno-y-pruebas",
+      "destination": "/es/environment-testing"
+    },
+    {
+      "source": "/es/errores",
+      "destination": "/es/errors"
+    },
+    {
+      "source": "/es/estado-del-servicio",
+      "destination": "/es/service-status"
+    },
+    {
+      "source": "/es/eventos-tiempo-real",
+      "destination": "/es/realtime-events"
+    },
+    {
+      "source": "/es/flujos",
+      "destination": "/es/flows"
+    },
+    {
+      "source": "/es/guias/accounts",
+      "destination": "/es/guides/accounts"
+    },
+    {
+      "source": "/es/guias/aml",
+      "destination": "/es/guides/aml"
+    },
+    {
+      "source": "/es/guias/analytics",
+      "destination": "/es/guides/analytics"
+    },
+    {
+      "source": "/es/guias/banking",
+      "destination": "/es/guides/banking"
+    },
+    {
+      "source": "/es/guias/bob-virtual-accounts",
+      "destination": "/es/guides/bob-virtual-accounts"
+    },
+    {
+      "source": "/es/guias/cartola",
+      "destination": "/es/guides/statement"
+    },
+    {
+      "source": "/es/guias/checkout",
+      "destination": "/es/guides/checkout"
+    },
+    {
+      "source": "/es/guias/company-wallets",
+      "destination": "/es/guides/company-wallets"
+    },
+    {
+      "source": "/es/guias/comprobantes",
+      "destination": "/es/guides/receipts"
+    },
+    {
+      "source": "/es/guias/contactos",
+      "destination": "/es/guides/contacts"
+    },
+    {
+      "source": "/es/guias/contrato-marco-grupo-cb",
+      "destination": "/es/guides/contract-agreement"
+    },
+    {
+      "source": "/es/guias/crypto",
+      "destination": "/es/guides/crypto"
+    },
+    {
+      "source": "/es/guias/devoluciones",
+      "destination": "/es/guides/refunds"
+    },
+    {
+      "source": "/es/guias/disputas",
+      "destination": "/es/guides/disputes"
+    },
+    {
+      "source": "/es/guias/fiat-settlement",
+      "destination": "/es/guides/fiat-settlement"
+    },
+    {
+      "source": "/es/guias/idioma",
+      "destination": "/es/guides/locale"
+    },
+    {
+      "source": "/es/guias/integrations",
+      "destination": "/es/guides/integrations"
+    },
+    {
+      "source": "/es/guias/kyc",
+      "destination": "/es/guides/kyc"
+    },
+    {
+      "source": "/es/guias/login-social",
+      "destination": "/es/guides/social-login"
+    },
+    {
+      "source": "/es/guias/payins",
+      "destination": "/es/guides/payins"
+    },
+    {
+      "source": "/es/guias/payins-qr",
+      "destination": "/es/guides/payins-qr"
+    },
+    {
+      "source": "/es/guias/payout-rate-sources",
+      "destination": "/es/guides/payout-rate-sources"
+    },
+    {
+      "source": "/es/guias/payouts",
+      "destination": "/es/guides/payouts"
+    },
+    {
+      "source": "/es/guias/perfil",
+      "destination": "/es/guides/profile"
+    },
+    {
+      "source": "/es/guias/pruebas-de-firma",
+      "destination": "/es/guides/signature-proofs"
+    },
+    {
+      "source": "/es/guias/qr-payout",
+      "destination": "/es/guides/qr-payout"
+    },
+    {
+      "source": "/es/guias/qr-pos",
+      "destination": "/es/guides/qr-pos"
+    },
+    {
+      "source": "/es/guias/qscore",
+      "destination": "/es/guides/qscore"
+    },
+    {
+      "source": "/es/guias/qscore-batch",
+      "destination": "/es/guides/qscore-batch"
+    },
+    {
+      "source": "/es/guias/qscore-consents",
+      "destination": "/es/guides/qscore-consents"
+    },
+    {
+      "source": "/es/guias/qscore-fraud",
+      "destination": "/es/guides/qscore-fraud"
+    },
+    {
+      "source": "/es/guias/qscore-index",
+      "destination": "/es/guides/qscore-index"
+    },
+    {
+      "source": "/es/guias/qscore-seal",
+      "destination": "/es/guides/qscore-seal"
+    },
+    {
+      "source": "/es/guias/revisiones-operaciones",
+      "destination": "/es/guides/transaction-reviews"
+    },
+    {
+      "source": "/es/guias/screenings",
+      "destination": "/es/guides/screenings"
+    },
+    {
+      "source": "/es/guias/seguimiento",
+      "destination": "/es/guides/tracking"
+    },
+    {
+      "source": "/es/guias/sepa-instant-payouts",
+      "destination": "/es/guides/sepa-instant-payouts"
+    },
+    {
+      "source": "/es/guias/stored-cards-subscriptions",
+      "destination": "/es/guides/stored-cards-subscriptions"
+    },
+    {
+      "source": "/es/guias/swaps",
+      "destination": "/es/guides/swaps"
+    },
+    {
+      "source": "/es/guias/tarjetas",
+      "destination": "/es/guides/cards"
+    },
+    {
+      "source": "/es/guias/transferencias",
+      "destination": "/es/guides/transfers"
+    },
+    {
+      "source": "/es/guias/wallets-segregadas",
+      "destination": "/es/guides/segregated-wallets"
+    },
+    {
+      "source": "/es/inicio-rapido",
+      "destination": "/es/quickstart"
+    },
+    {
+      "source": "/es/introduccion",
+      "destination": "/es/introduction"
+    },
+    {
+      "source": "/es/seguridad-2fa",
+      "destination": "/es/security-2fa"
     }
   ]
 }

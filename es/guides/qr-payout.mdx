@@ -1,0 +1,225 @@
+---
+title: "Payout QR"
+icon: "qrcode"
+description: "Escanea un QR de cobro (Bolivia, PIX de Brasil) y pagalo en dos pasos: escaneo gratis, confirmacion con cobro"
+---
+
+import { EnvUrls } from "/snippets/env-urls.jsx";
+
+<EnvUrls lang="es" />
+
+En Bolivia (QR interoperable local) y en Brasil (**QR PIX**, incluido el
+código "copia e cola") también puedes **pagar a un QR de cobro** en dos
+pasos: escanear y confirmar. El escaneo es **gratis**; solo se cobra al
+confirmar, igual que un payout normal (tu tasa + fijo). Si no envías
+`country`/`currency`, se asume Bolivia (BOB); para Brasil envía
+`country: "BR"` y `currency: "BRL"`.
+
+```mermaid
+flowchart LR
+    scan["1. POST qr/scan<br/>(gratis)"] --> datos["Datos del destinatario<br/>+ provider_reference"]
+    datos --> confirmaUsuario{"¿El usuario<br/>confirma?"}
+    confirmaUsuario -->|"Sí"| confirm["2. POST qr/confirm<br/>(se cobra: tu tasa + fijo)"]
+    confirmaUsuario -->|"No"| fin["Nada se cobró"]
+    confirm --> resultado{"Resultado<br/>síncrono"}
+    resultado -->|"completed"| pagado["Pagado — débito consumido"]
+    resultado -->|"failed"| refund["Reembolso automático<br/>completo"]
+```
+
+## 1. Escanea el QR (gratis)
+
+<Tabs>
+<Tab title="Bolivia">
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/scan \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "qr_payload": "<contenido del QR>",
+    "currency": "BOB"
+  }'
+```
+
+Devuelve los datos del destinatario para que el usuario confirme a quién le
+paga:
+
+```json
+{
+  "scan_id": "…",
+  "provider_reference": "…",
+  "beneficiary_name": "Juan Quispe",
+  "destination_account": "…",
+  "amount": "700.00",
+  "currency": "BOB",
+  "glosa": "",
+  "status": "…"
+}
+```
+
+</Tab>
+<Tab title="Brasil (QR PIX)">
+
+`qr_payload` acepta el contenido crudo del QR PIX (BR Code EMV) **o el
+código "copia e cola"** — son el mismo string:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/scan \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "qr_payload": "00020126360014br.gov.bcb.pix0114+5511998765432520400005303986540575.005802BR5913LOJA DA MARIA6009SAO PAULO62110507PED423163040BF9"
+  }'
+```
+
+El escaneo decodifica el BR Code localmente (valida su checksum) y
+devuelve la llave PIX de destino, el nombre del comercio y el monto si el
+QR lo trae fijo:
+
+```json
+{
+  "scan_id": "PIXSCAN-…",
+  "provider_reference": "<el mismo payload EMV>",
+  "beneficiary_name": "LOJA DA MARIA",
+  "destination_account": "+5511998765432",
+  "amount": "75.00",
+  "currency": "BRL",
+  "glosa": "",
+  "status": "scanned"
+}
+```
+
+- `amount` vacío = QR de **monto abierto**: tú decides cuánto pagar en el
+  confirm. Con monto fijo, el confirm debe enviar exactamente ese monto.
+- Se soportan QR PIX **estáticos** (los impresos/reutilizables, con la
+  llave embebida). Un QR **dinámico** (payload con URL del PSP en vez de
+  llave) responde `400` con el mensaje
+  `dynamic pix qr codes are not supported yet` —   pídele al beneficiario su
+  llave PIX y usa el método [`pix`](/es/guides/payouts#ejemplos-por-pais).
+- Un payload alterado o incompleto responde `400` (checksum CRC inválido).
+
+</Tab>
+</Tabs>
+
+## 2. Confirma el pago (se cobra aquí)
+
+<Tabs>
+<Tab title="Bolivia">
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider_reference": "<del scan>",
+    "amount": "700.00",
+    "currency": "BOB",
+    "description": "Pago QR almuerzo",
+    "idempotency_key": "qr-2026-07-07-a"
+  }'
+```
+
+</Tab>
+<Tab title="Brasil (QR PIX)">
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "provider_reference": "<del scan>",
+    "amount": "75.00",
+    "description": "Pedido 4231",
+    "idempotency_key": "qr-br-2026-07-16-a"
+  }'
+```
+
+- `amount` siempre es obligatorio: si el QR trae monto fijo debe coincidir
+  exacto — si no, recibes `422` con el payout en `status: failed`
+  (`status_message: "amount mismatch: the qr requires exactly 75.00 BRL"`)
+  y el **reembolso ya aplicado**; corrige el monto y reintenta con clave
+  nueva. Si es de monto abierto, el que envíes es el que se paga.
+- Un QR PIX **estático es reutilizable por diseño** (el QR impreso de un
+  comercio se paga muchas veces): puedes pagarlo de nuevo con una
+  `idempotency_key` distinta. Un intento fallido **no inutiliza el QR**.
+- El pago sale por el mismo riel PIX del método `pix` (24/7); el `txid`
+  del QR viaja con el pago para que el comercio concilie automático.
+
+</Tab>
+</Tabs>
+
+- Se debita `usdt_amount + fijo` a **tu tasa**, igual que un
+  `bank_transfer`.
+- El resultado es **síncrono**: la respuesta ya trae el estado final
+  (`completed` o `failed` con reembolso automático) — sin esperas.
+- Reintentos con la misma `idempotency_key` devuelven el payout original.
+  En Bolivia la referencia del scan es de un solo uso (un QR escaneado solo
+  puede pagarse una vez); en Brasil el QR PIX estático es reutilizable y
+  cada pago lleva su propia clave.
+El confirm también acepta `settlement_asset` (`USDT`, `USDC`, `BTC`, `GOLD`,
+`SILVER` o `PLATINUM`) para elegir el saldo virtual que se debita; si se omite,
+se usa el activo predeterminado de la cuenta. El servidor genera los
+identificadores internos del pago: el integrador solo envía la referencia
+devuelta por `scan` y el monto con dos decimales.
+
+### Reconciliación del estado
+
+Si la respuesta síncrona no puede demostrar un estado terminal, el payout
+queda en `processing`. Consulta el recurso existente:
+
+```http
+GET /v1/payouts/{payoutID}
+```
+
+No crees otro payout ni uses una clave nueva. Repite la lectura hasta obtener
+`completed` o `failed`; un `failed` de confirmación implica que el débito ya
+fue reembolsado. Si el cliente repite el confirm con la misma clave, recibe
+el payout original con `idempotency_hit: true`.
+
+## Errores
+
+| HTTP | Código | Qué hacer |
+|---|---|---|
+| 400 | `invalid_qr_payload` | El QR es ilegible, está corrupto o es un QR dinámico (no soportado) — nada se creó y tu clave no se consumió; pide al pagador un QR estático |
+| 400 | `idempotency_key_required` | Los QR estáticos reusables exigen `idempotency_key` explícita en el confirm |
+| 402 | `insufficient_funds` | Fondea tu saldo y reintenta con la misma clave |
+| 403 | `compliance_hold` | El beneficiario no pasó el screening; el payout no se creó |
+| 422 | payout `failed` + refund | El monto no calza con un QR de monto fijo, o el riel rechazó el pago — el débito se reembolsa automáticamente |
+| 503 | `channel_unavailable` | Riel temporalmente no disponible; reintenta más tarde con la misma clave |
+
+El catálogo general de errores vive en [Errores](/es/errors).
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="¿Escanear un QR tiene costo?">
+No — el scan es una lectura local gratuita. Solo se cobra cuando el confirm
+crea el payout.
+</Accordion>
+<Accordion title="¿Puedo pagar el mismo QR dos veces?">
+Los QR de un solo uso (referencia fija) admiten un único pago. Los QR
+estáticos reusables pueden pagarse legítimamente más de una vez — por eso
+el confirm exige una `idempotency_key` explícita por pago.
+</Accordion>
+<Accordion title="¿Se soportan QR dinámicos?">
+Todavía no — un QR dinámico responde `invalid_qr_payload` (400) con la
+guía. Pide al pagador el QR estático del destino.
+</Accordion>
+<Accordion title="¿Qué tasa FX aplica?">
+La misma que un payout normal: la tasa cotizada en el confirm, congelada
+para esa operación, con tu spread ya incluido.
+</Accordion>
+<Accordion title="¿Y si el monto escaneado difiere de lo que quiero pagar?">
+Los QR de monto fijo se pagan exacto; un descalce falla el payout con
+reembolso automático. Los QR de monto abierto aceptan el monto que pases en
+el confirm.
+</Accordion>
+<Accordion title="¿Cómo reintento un confirm fallido sin riesgo?">
+Reintenta con la **misma** `idempotency_key` — el QR jamás se "quema" por
+errores de validación: nada se crea hasta que el payload valida.
+</Accordion>
+</AccordionGroup>

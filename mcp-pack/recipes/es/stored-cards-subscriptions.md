@@ -1,9 +1,9 @@
 ---
 recipe: stored-cards-subscriptions
 title: "Tarjetas guardadas y suscripciones"
-slug: es/guias/stored-cards-subscriptions
+slug: es/guides/stored-cards-subscriptions
 lang: es
-source_url: https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions
+source_url: https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
@@ -155,7 +155,7 @@ tarjetahabiente — el procesador la exige para capturar el cobro. La
 plataforma la toma automáticamente de los datos de facturación que el
 pagador ingresó al guardar la tarjeta (nombre, correo, dirección, ciudad,
 código postal, país y **estado/región** cuando el país lo exige — ver
-[estado/región de facturación por país](https://docs.cbpayapp.com/es/guias/payins#dirección-de-facturación-estadoregión-requerido-según-el-país)),
+[estado/región de facturación por país](https://docs.cbpayapp.com/es/guides/payins#dirección-de-facturación-estadoregión-requerido-según-el-país)),
 así que **no envías nada extra** en el request.
 
 - **Tarjetas guardadas con billing completo** — operan sin cambios.
@@ -295,7 +295,7 @@ automáticamente sus suscripciones (`cancel_reason: card_revoked`).
 | 422 | `stored_card_revoked` | La credencial de la tarjeta se revocó; pide al pagador guardarla de nuevo |
 | 422 | `core_rejected` | El riel rechazó el cobro — el mensaje trae el motivo. Cuando reporta una **dirección de facturación incompleta** (o estado/región faltante), la tarjeta guardada no tiene una dirección utilizable en archivo: pide al pagador guardarla de nuevo con `save_card: true` |
 
-El catálogo general de errores vive en [Errores](https://docs.cbpayapp.com/es/errores).
+El catálogo general de errores vive en [Errores](https://docs.cbpayapp.com/es/errors).
 
 ## FAQ
 

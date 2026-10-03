@@ -1,9 +1,9 @@
 ---
 recipe: checkout
 title: "Checkout"
-slug: es/guias/checkout
+slug: es/guides/checkout
 lang: es
-source_url: https://docs.cbpayapp.com/es/guias/checkout
+source_url: https://docs.cbpayapp.com/es/guides/checkout
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
@@ -132,7 +132,7 @@ y redirige a tu `success_url` si la configuraste.
   **tarjeta guardada**: escribe su correo, lo verifica con un código y
   elige — con "Recordar este dispositivo" no repite el código por 30 días
   (ver
-  [tarjetas guardadas](https://docs.cbpayapp.com/es/guias/stored-cards-subscriptions#el-pagador-descubre-sus-tarjetas-en-la-página-de-pago)).
+  [tarjetas guardadas](https://docs.cbpayapp.com/es/guides/stored-cards-subscriptions#el-pagador-descubre-sus-tarjetas-en-la-página-de-pago)).
 - **Vigencia del link para tarjeta**: para materializar una tarjeta, el link
   de checkout debe conservar al menos **5 minutos** de vigencia. Si queda
   menos, el endpoint público responde `422 checkout_expiring_soon`; pide al
@@ -245,7 +245,7 @@ se confirma `credited` y el link cierra como pagado al instante, pero el
 `settlement_pending: true` hasta entonces. Los cobros pagados por
 cualquier otro método (QR, crypto, app CBPay, fintoc) se acreditan de
 inmediato, como siempre. Detalle en
-[comisiones — settlement de payins con tarjeta](https://docs.cbpayapp.com/es/conceptos/comisiones#settlement-de-payins-con-tarjeta).
+[comisiones — settlement de payins con tarjeta](https://docs.cbpayapp.com/es/concepts/fees#settlement-de-payins-con-tarjeta).
 En `GET /v1/payins` y `GET /v1/payins/{payin_id}` los payins de checkout
 llevan siempre su denominación — `settlement_asset` + `asset_amount` — en
 todo estado (pendiente, vencido y abonado); `currency`/`local_amount`
@@ -276,7 +276,7 @@ Errores propios del link (los ve quien abre la página):
 
 La página hospedada de checkout sigue la cadena pública: `?lang=` / `?locale=` (un valor inválido se ignora),
 luego la cookie del pagador `cbpay_pay_locale`, luego la cuenta del comercio, luego el `default_locale` de la org, luego `Accept-Language`, luego inglés.
-El JSON de la API sigue en inglés. Detalle: [Idioma y locale](https://docs.cbpayapp.com/es/guias/idioma).
+El JSON de la API sigue en inglés. Detalle: [Idioma y locale](https://docs.cbpayapp.com/es/guides/locale).
 
 ## FAQ
 

@@ -1,0 +1,84 @@
+---
+title: "Personas y empresas"
+icon: "user-group"
+description: "Las diferencias entre los dos tipos de cuenta, producto por producto, en una sola página"
+---
+
+CBPay tiene dos tipos de cuenta — **persona** (`type: "person"`) y
+**empresa** (`type: "company"`) — que usan **la misma API** con los mismos
+endpoints. Esta página reúne TODAS las diferencias en un solo lugar, para
+que nunca tengas que adivinar cuál aplica.
+
+El tipo se define al crear la cuenta y no cambia. Lo ves en
+`GET /v1/me` → `type`.
+
+## Tabla completa de diferencias
+
+| Capacidad | Persona | Empresa |
+|---|---|---|
+| Saldo USDT, payouts, payins, transferencias, banking, cartola | Igual | Igual |
+| **Wallets de depósito** ([crypto](/es/guides/crypto)) por red+activo | **1** (nacen con la cuenta; solo reciben) | **1** (nacen con la cuenta; solo reciben) |
+| **Wallets segregadas** ([saldo propio on-chain](/es/guides/segregated-wallets)) | **1 por red+activo** | **Ilimitadas** (usa `label` para distinguirlas) |
+| **Tarjetas** | **1 virtual + 1 física**, solo para sí misma | **Ilimitadas**, para la empresa o para **personas designadas** (empleados) |
+| **Miembros con login** (`POST /v1/members`) | No (`403 company_only`) | Sí — roles `owner` / `operator` / `viewer` |
+| **Verificación de identidad** (`/v1/me/verification`) | Onboarding **KYC** (wizard con documentos + prueba de vida) | Onboarding **KYB** (wizard con documentos societarios) |
+| **Verificar a terceros** (`/v1/{kyc,kyb}/links` y submissions) | No (`403 company_account_required`) | Sí — links hosteados o datos por API, cobra `kyc_verification`/`kyb_verification` |
+| **AML screening** (`POST /v1/aml/screenings`) | Screening de **persona** (`customer.person`), cobra `compliance_person` | Screening de **empresa** (`customer.company`), cobra `compliance_company` |
+| Titular de tarjetas (primera emisión) | Datos personales + documentos de identidad | Datos societarios + documentos corporativos (o los de la persona designada) |
+| Registro | `type: "person"` | `type: "company"` (+ `tax_id` recomendado) |
+
+Todo lo demás — autenticación, idempotencia, webhooks, estados, errores,
+límites de gasto por tarjeta, servicios habilitados — funciona idéntico.
+
+## Cómo se ve en la práctica
+
+<Tabs>
+<Tab title="Cuenta persona">
+
+- Registro: `POST /v1/auth/register` con `type: "person"` (o la crea tu
+  operador).
+- Verificación: pide tu link KYC con `POST /v1/me/verification/link` y
+  completa el wizard — hasta aprobar solo puedes fondear
+  ([guía](/es/guides/kyc)).
+- Crypto: tus **wallets de depósito nacen con la cuenta** (una por
+  red+activo; solo reciben). ¿Necesitas una wallet con saldo propio?
+  Puedes tener **1 wallet segregada por red+activo**.
+- Tarjetas: hasta **1 virtual + 1 física**; la primera emisión lleva tus
+  datos y documentos — [guía](/es/guides/cards).
+- Sin miembros: tu login y tus API keys operan la cuenta.
+
+</Tab>
+<Tab title="Cuenta empresa">
+
+- Registro: `type: "company"`, idealmente con `tax_id`.
+- Verificación: pide tu link KYB con `POST /v1/me/verification/link` y
+  completa el wizard con los datos societarios; aprobada, puedes además
+  verificar a tus propios clientes ([guía](/es/guides/kyc)).
+- Crypto: tus **wallets de depósito nacen con la cuenta** (una por
+  red+activo; solo reciben). Para saldos separados on-chain crea
+  **wallets segregadas ilimitadas** (una por sucursal, por producto, por
+  proveedor…), con `label` descriptivo.
+- Tarjetas: **ilimitadas** — corporativas (titular = la empresa, con
+  documentos societarios en la primera) o para **empleados** (persona
+  designada con sus datos en cada designación) —
+  [guía](/es/guides/cards).
+- Miembros: agrega usuarios con login propio y permisos
+  (`owner`/`operator`/`viewer`) — [guía](/es/authentication#miembros-de-una-empresa).
+
+</Tab>
+</Tabs>
+
+## Errores que delatan el tipo de cuenta
+
+| `error` | Qué significa |
+|---|---|
+| `403 company_only` | Intentaste una función de empresa (miembros) desde una cuenta persona |
+| `422 wallet_limit_reached` | La cuenta ya tiene su wallet de esa combinación (depósito: todos; segregada: personas) |
+| `409 card_limit_reached` | La cuenta persona ya tiene una tarjeta viva o una solicitud de tarjeta abierta |
+| `400 physical_temporarily_unavailable` | La emisión física nueva está pausada; las tarjetas físicas existentes siguen operativas |
+
+<Note>
+¿Tu operación creció de persona a empresa? El tipo de cuenta no se cambia
+por API: pide a tu administrador CBPay crear la cuenta empresa y migrar el
+saldo con una transferencia interna (gratis e instantánea).
+</Note>
