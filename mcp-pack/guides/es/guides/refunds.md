@@ -22,7 +22,7 @@ Es lo contrario de un cobro: el cobro acredita, la devolución debita.
 |---|---|
 | Método | Solo cobros con **tarjeta** (`method: "card"`, incluye checkout pagado con tarjeta y cargos MIT sobre tarjeta guardada) |
 | Estado | El cobro debe estar `credited` **y con su saldo ya disponible** — un cobro con tarjeta bajo una ventana de settlement (`settlement_pending: true`, saldo que cae a `settle_at`) no se puede devolver hasta que se libere el settlement |
-| Saldo | Necesitas **saldo USDT** suficiente al momento de pedirla |
+| Saldo | Necesitas saldo suficiente **en el asset del crédito** (`USD` en cuentas nuevas, `USDT` en cuentas legacy) al momento de pedirla |
 | Monto | Total o parcial; varias parciales sobre el mismo cobro suman hasta el tope |
 
 Los cobros por QR, transferencia anunciada, cuenta de depósito dedicada
@@ -34,8 +34,9 @@ cobros POS se devuelven por el riel crypto con
 > **Importante**
 La **comisión y el margen de cambio no se reembolsan**. Se debita de tu
 saldo el valor que el cobro trajo (bruto), no el neto que se acreditó:
-si cobraste 100.00 USD y te acreditamos 97.10 USDT después de una
-comisión de 2.90, devolver el total debita **100.000000 USDT**. La
+en una cuenta legacy, si cobraste 100.00 USD y te acreditamos 97.10 USDT
+después de una comisión de 2.90, devolver el total debita **100.000000 USDT** —
+en una cuenta nueva con principal USD el mismo caso debita **100.00 USD**. La
 diferencia la pones tú, igual que en cualquier procesador de tarjetas.
 ## Ciclo de vida
 
@@ -342,10 +343,13 @@ nueva sería una segunda devolución real. Repite el request con la
 **misma** `idempotency_key` (te devolvemos el mismo objeto) o espera el
 webhook `payin_refunded`.
 #### ¿En qué moneda se debita?
-Siempre en **USDT**, la moneda en que se acreditó el cobro, aunque tu
-cuenta tenga configurado otro saldo predeterminado para los payins. No
-convertimos por tu cuenta: si no tienes USDT suficiente, respondemos
-`insufficient_funds`.
+En el **asset en que se acreditó el cobro** (`credit_asset`): `USD` en
+cuentas nuevas, `USDT` en cuentas legacy, o `BOB`/`MXN`/`ARS` en cobros
+retenidos en fiat local — sin importar tu default actual. No convertimos
+por tu cuenta: sin saldo suficiente de ese asset, respondemos
+`insufficient_funds`. La respuesta y el webhook `payin_refunded` traen el
+`debited_asset` y `debited_amount` autoritativos (ver
+[Activo debitado real](#activo-debitado-real)).
 #### ¿Puedo devolver un cobro de hace meses?
 Mientras el cobro esté `credited` y le quede saldo por devolver, sí por
 nuestra parte. El límite real lo pone el procesador y las reglas de las

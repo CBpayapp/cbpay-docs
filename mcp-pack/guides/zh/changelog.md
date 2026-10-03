@@ -5,7 +5,12 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.151 · 2 个版本 - 2026年10月3日
+## v2.152 · 3 个版本 - 2026年10月3日
+### v2.152
+**变更**
+
+- 围绕 USD 主结算币种重写货币模型及相关指南：新账户以 USD 结算，legacy 账户保留 USDT，十种 ledger 资产（USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS）按规范顺序列出并标注真实小数位。transfers、payins、checkout、refunds、swaps、对账单、banking 入金、analytics 与 FAQ 如今描述的都是 API 实际实现的行为。纯文档变更：API 行为不变。
+- 所有欧元主题合并为一个 Banking EUR 章节：入金（`funding_usdt`）与银行（`banking_eur`）虚拟 IBAN、申请与读取、第三方申请、`BANK_EUR` 余额、SEPA 发送与接收、错误与 FAQ。SEPA payout 页与 company-wallet 余额小节现指向该唯一来源，不再重复。纯文档变更：API 行为不变。
 ### v2.151
 **新增**
 

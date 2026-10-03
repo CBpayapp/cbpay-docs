@@ -7,14 +7,14 @@ source_url: https://docs.cbpayapp.com/es/introduction
 ---
 # Documentación de la API de CBPay
 
-Mueve dinero por Latinoamérica: payouts, payins, tarjetas, crypto y banking — una API, seis saldos.
+Mueve dinero por Latinoamérica: payouts, payins, tarjetas, crypto y banking — una API, diez saldos.
 
 ## Empieza a integrar
 
 - **Inicio rápido** - Tu primera llamada a la API en cinco minutos: claves, sandbox y un payout de prueba.
 - **Autenticación** - API keys, scopes y cómo se firman las peticiones.
 - **Sandbox y pruebas** - Modo de pruebas, valores mágicos y rieles simulados.
-- **Modelo de dinero** - Seis saldos independientes y cómo se mueve el dinero entre ellos.
+- **Modelo de dinero** - Diez saldos independientes y cómo se mueve el dinero entre ellos.
 ## Construye productos
 
 - **Payouts fiat** - Envía dinero a cuentas bancarias locales en la región.

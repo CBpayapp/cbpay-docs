@@ -1,15 +1,17 @@
 ---
 title: "Swaps"
-description: "Convierte entre tus saldos USDT, USDC, BTC, GOLD, SILVER y PLATINUM al instante, con cotización previa y a la tasa de ejecución del momento"
+description: "Convierte entre tus saldos USD, USDT, USDC, BTC, GOLD, SILVER y PLATINUM al instante, con cotización previa y a la tasa de ejecución del momento"
 slug: es/guides/swaps
 lang: es
 source_url: https://docs.cbpayapp.com/es/guides/swaps
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-Los **swaps** convierten saldo entre tus seis monedas — `USDT`, `USDC`,
-`BTC` y `GOLD` — de forma **síncrona e instantánea**, sin que la plata salga
-de tu cuenta. Cualquier par funciona (también `BTC` ↔ `GOLD` directo). La
+Los **swaps** convierten saldo entre tus siete activos — `USD`, `USDT`, `USDC`,
+`BTC`, `GOLD`, `SILVER` y `PLATINUM` — de forma **síncrona e instantánea**, sin que la plata salga
+de tu cuenta. Cualquier par funciona (también `BTC` ↔ `GOLD` directo,
+y `USD` ↔ `USDT` a 1:1 exacto); el fiat local (`BOB`, `MXN`, `ARS`) aún
+no es intercambiable (`invalid_pair`). La
 tasa que ves en la cotización es la tasa a la que se ejecuta: **no hay
 comisiones aparte** — cotizado = recibido.
 

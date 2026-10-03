@@ -100,10 +100,11 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 Secciones:
 
 1. **`summary`** — saldo inicial, entradas, salidas, saldo final, comisiones
-   por servicio y el flag `balanced` del **saldo USDT** (la moneda
-   operativa).
+   por servicio y el flag `balanced` del **saldo USDT** (el resumen
+   principal siempre concilia USDT).
 2. **`assets`** — una sección conciliada por cada saldo no-USDT con
-   actividad o saldo (USDC, BTC, GOLD y, si usas Banking, los espejos
+   actividad o saldo (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN,
+   ARS y, si usas Banking, los espejos
    `BANK_USD`/`BANK_EUR` de tus cuentas bancarias): saldo inicial/final,
    entradas, salidas y su propio flag `balanced`, en la precisión de cada
    moneda y SIN detalle crudo en la vista cliente; el detalle crudo por
@@ -180,7 +181,8 @@ Bajo demanda — cada consulta la construye en vivo desde el ledger para el
 rango `from`/`to` que pases (ambos obligatorios, `YYYY-MM-DD`, zona horaria de tu organización).
 #### ¿Qué significa balanced: true?
 Cada asset concilia de forma independiente: `apertura + abonos − cargos =
-cierre` para USDT, USDC, BTC, GOLD y los espejos banking. Si algún asset no
+cierre` para USDT, USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y
+los espejos banking. Si algún asset no
 cuadra el flag queda `false` — repórtalo a tu equipo CBPay.
 #### ¿Por qué veo saldos BANK_USD / BANK_EUR?
 Espejan tu dinero banking dentro de la cartola para que la cuenta se

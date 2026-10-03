@@ -113,8 +113,10 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
 
 La forma del request es idéntica en todas las combinaciones (persona o
 empresa, en cualquier dirección) — cambia solo la credencial que llama.
-`asset` es opcional y por defecto `USDT`; acepta `USDT`, `USDC`, `BTC` o
-`GOLD` y el destino recibe **en esa misma moneda**.
+`asset` es opcional y por defecto usa el **settlement asset del emisor**
+(`USD` en cuentas nuevas, `USDT` en legacy); acepta cualquiera de los diez
+assets del ledger (`USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`,
+`PLATINUM`, `BOB`, `MXN`, `ARS`) y el destino recibe **en esa misma moneda**.
 
 Respuesta `201` — la transferencia es **síncrona e inmediata**:
 

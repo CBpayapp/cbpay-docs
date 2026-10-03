@@ -324,8 +324,7 @@ curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-
 - `assets` also includes the banking account mirrors (`BANK_USD`,
   `BANK_EUR`) as their own series in their own currency (2 decimals) —
   handy for a "Bank USD"/"Bank EUR" chip on the chart. They are **not**
-  part of the `total_usd` aggregate, which only covers the operational
-  balances.
+  part of the `total_usd` aggregate, which covers the ten ledger balances only.
 - `total_usd` values BTC/GOLD/SILVER/PLATINUM at **each day's historical price**. When a
   day has no historical price yet, today's spot is used and that day is
   disclosed in `spot_priced_dates` (values are never invented).

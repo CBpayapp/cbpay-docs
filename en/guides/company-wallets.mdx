@@ -126,26 +126,11 @@ reservation.
 
 ### Banking EUR virtual IBAN balance
 
-`GET /v1/banking/virtual-ibans/{virtualIBANID}/balance` returns
-`received_total`, the net amount received by that virtual IBAN in the
-platform mirror. It intentionally does not return `available`: outgoing EUR
-payments debit the account-level `BANK_EUR` balance and cannot be attributed
-honestly to one receiving IBAN yet.
-
-```json
-{
-  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-  "currency": "EUR",
-  "asset": "BANK_EUR",
-  "received_total": "1250.00",
-  "purpose": "banking_eur",
-  "source": "platform_ledger_reconciled_to_banking_provider"
-}
-```
-
-The account-level balance is the source for spendable funds. The per-IBAN
-outflow attribution is a future phase; do not subtract an imagined amount
-from `received_total`.
+The per-IBAN balance contract (request, `received_total`, why there is no
+`available` yet) is documented once in [Euros: funding direction and EUR
+banking, in one place](/en/guides/banking#euros-funding-direction-and-eur-banking-in-one-place),
+in the "Reading, closing, and listing movements" block. This page covers only
+the company-wallet reservation that names the payer.
 
 ## States
 

@@ -124,26 +124,11 @@ upstream; conserva la reserva durable y reintenta la lectura, no la reserva.
 
 ### Saldo del IBAN virtual Banking EUR
 
-`GET /v1/banking/virtual-ibans/{virtualIBANID}/balance` devuelve
-`received_total`, el monto neto recibido por ese IBAN virtual en el espejo
-de la plataforma. Intencionalmente no devuelve `available`: los pagos EUR
-salientes descuentan el saldo `BANK_EUR` de la cuenta y todavía no se pueden
-atribuir honestamente a un IBAN receptor.
-
-```json
-{
-  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-  "currency": "EUR",
-  "asset": "BANK_EUR",
-  "received_total": "1250.00",
-  "purpose": "banking_eur",
-  "source": "platform_ledger_reconciled_to_banking_provider"
-}
-```
-
-El saldo de la cuenta es la fuente de fondos disponibles. La atribución de
-egresos por IBAN es una fase futura; no restes un monto inventado de
-`received_total`.
+El contrato del saldo por IBAN (request, `received_total`, por qué aún no hay
+`available`) se documenta una sola vez en [Euros: dirección de fondeo y banca
+EUR en un solo lugar](https://docs.cbpayapp.com/es/guides/banking#euros-dirección-de-fondeo-y-banca-eur-en-un-solo-lugar),
+en el bloque "Lectura, cierre y listado de movimientos". Esta página cubre solo
+la reserva company-wallet que nombra al pagador.
 
 ## Estados y errores
 

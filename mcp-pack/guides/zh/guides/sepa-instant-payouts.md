@@ -143,17 +143,12 @@ Banking 提现使用独立的 `banking_eur` 用途。
 - 明确指定的 UUID 不属于该账户或不是 active 时，返回
   `404 not_found` 或 `422 funding_account_required`。
 
-付款人身份由服务端从所选 vIBAN 持久化的 `registrant` 写入：个人使用名和
-姓，企业使用注册公司名称及注册信息。调用方提交的 `payer` 或
-`cj_payer_*` 字段不能替换该身份。
+入金用途、如何申请和读取虚拟 IBAN，以及付款人身份如何写入与修复，全部
+集中在一处：见[欧元：入金地址与欧元银行，集中在一处](https://docs.cbpayapp.com/zh/guides/banking#欧元入金地址与欧元银行集中在一处)。本页仅保留 payout 合约。
 
-对于没有可用持久化 registrant 的 active legacy 行，平台会从当前已验证
-profile 推导付款人姓名。若 profile 暂时无法读取，返回
-`503 funding_account_unavailable`；若最终身份不完整，返回
-`422 registrant_incomplete`。
-
-此流程没有按 vIBAN 设置的金额上限。Payout 从账户正常的 USDT 结算余额
-扣款；`BANK_EUR` 仅用于 EUR Banking 操作，不用于客户 payout。
+此流程没有按 vIBAN 设置的金额上限。Payout 从账户正常的结算余额扣款
+（settlement asset：新账户为 USD，legacy 账户为 USDT）；`BANK_EUR` 仅用于
+EUR Banking 操作，不用于客户 payout。
 
 > **注**
 这道来源门控上线前创建的 payout hold 属于 grandfathered 记录：继续使用

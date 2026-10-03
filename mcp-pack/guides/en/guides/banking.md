@@ -10,19 +10,20 @@ source_url: https://docs.cbpayapp.com/en/guides/banking
 Banking gives you **real bank accounts** in the name of your verified
 profile: you receive funds over international rails (SEPA, SWIFT, ACH
 depending on the currency), hold fiat balances and send payments to third
-parties. It is a separate product from your USDT balance: **banking money
-lives in your bank accounts**, not in the CBPay balance.
+parties. It is a separate product from your CBPay balances: **banking money
+lives in your bank accounts**, not in your USDT or USD balance.
 
-For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to USDT. Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
+For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD for new accounts, USDT for legacy accounts). Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
 | Concept | Where it lives | Queried with |
 |---|---|---|
-| CBPay USDT balance | CBPay ledger | `GET /v1/balances` |
+| CBPay balances | CBPay ledger | `GET /v1/balances` |
 | Bank balances | Your bank accounts | `GET /v1/banking/accounts/{id}/balance` |
 
 > **Note**
 Banking fees come in two shapes. **Standalone fixed fees**
 (`banking_customer`, `banking_account`, `banking_operation`) are debited
-from your **USDT balance** when each operation executes and **refunded
+from your **default settlement asset balance** — USD for new accounts,
+USDT for legacy accounts — when each operation executes and **refunded
 automatically** if it fails. **Transactional rail fees**
 (`banking_deposit`, `banking_transfer_ach`, `banking_transfer_swift`,
 `banking_transfer_wire`, `banking_transfer_sepa`) are a percentage plus a
@@ -487,11 +488,154 @@ it carries the identifiers and the new status only, never the enriched
 fields. When it fires, fetch the operation detail to read the direction,
 amount, counterparty and reference. See [webhooks](https://docs.cbpayapp.com/en/webhooks).
 
-## EUR SEPA operations and the source virtual IBAN
+## Euros: funding direction and EUR banking in one place
 
-For `currency: "EUR"` and a `WITHDRAW` using `paymentType: "SEPA_CT"`, the
-operation must resolve an allocated, active virtual IBAN with purpose
-`banking_eur`. The source is selected at the top level:
+Everything euro lives in this section. A virtual IBAN is an addressing and
+routing instrument, not a separate provider balance, and comes in two purposes:
+
+| Purpose | Default | Meaning |
+|---|---:|---|
+| `funding_usdt` | Yes | EUR funding address. Customer `sepa` payouts resolve their source here; inbound converts through the USDT payin chain. |
+| `banking_eur` | No | EUR banking address (requires the Banking product). EUR Banking operations debit `BANK_EUR`; inbound lands in the Banking ledger. |
+
+### Request a virtual IBAN
+
+The platform builds the provider registrant from the approved KYC/KYB
+profile. Request the default funding address with an idempotency key:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-funding-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"funding_usdt"}'
+```
+
+If a verified profile lacks a document issuing country or a document
+expiration date, an account request may send these optional top-level
+overrides (snake_case or camelCase aliases are accepted):
+
+```json
+{
+  "purpose": "funding_usdt",
+  "document_issued_country": "IT",
+  "document_expiration_date": "2035-06-01"
+}
+```
+
+For company accounts the equivalent optional fields are
+`incorporation_country` / `incorporationCountry` and
+`incorporation_date` / `incorporationDate`. These values are used only to
+complete the verified registrant; they do not bypass KYC/KYB.
+
+The request is accepted into the manual approval queue — every allocation is
+manually approved by organization operations before the core calls the
+banking rail:
+
+```json
+{
+  "virtual_iban": {
+    "id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "owner_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "manager_account_id": "",
+    "purpose": "funding_usdt",
+    "currency": "EUR",
+    "iban": "",
+    "iban_country": "",
+    "status": "pending_approval",
+    "client_order": "platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001",
+    "order_reference": "",
+    "created_at": "2026-09-10T12:00:00Z",
+    "updated_at": "2026-09-10T12:00:00Z"
+  },
+  "status": "pending_approval"
+}
+```
+
+`banking_eur` is requested explicitly with the same call and
+`{"purpose":"banking_eur"}` as the body (same idempotency contract).
+
+List the account's requests with the mandatory date window:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50&from=2026-09-01&to=2026-09-11&purpose=funding_usdt" \
+  -H "Authorization: Bearer <token>"
+```
+
+The list shape is `{page, page_size, virtual_ibans}`. Supported statuses are
+`pending_approval`, `pending`, `active`, `rejected`, `failed`, `disabled` and
+`closed`. Account-level responses show the full IBAN when one has been
+assigned; the organization-admin read surface masks it.
+
+> **Important**
+The banking corridor may require operations approval and a verified customer
+profile before a virtual IBAN can become active. Production host,
+certificate/mTLS, limits, commercial fees and activation details are
+configuration concerns and are not part of this provider-agnostic contract.
+Never infer them from examples.
+### Read, close and per-address operations
+
+Read one request, close it, or list the operations attributed to it
+(`from`/`to` are required on the operations listing):
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001 \
+  -H "Authorization: Bearer <token>"
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/close \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-close-2026-001"
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/operations?from=2026-09-01&to=2026-09-11" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Virtual IBANs for third parties
+
+Company accounts can request a `banking_eur` vIBAN for an owned third party
+after the third party has accepted the invitation and completed approved
+KYC/KYB. The third party is the balance owner; the company remains the
+relationship manager:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-0000-4000-8000-000000000001/virtual-ibans   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: third-party-viban-2026-001"   -H "Content-Type: application/json"   -d '{}'
+```
+
+The resulting request is `banking_eur` and follows the same manual approval
+and status lifecycle as an account-owned request.
+
+### BANK_EUR balance
+
+For a `banking_eur` request, query the reconciled balance explicitly:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+  "currency": "EUR",
+  "asset": "BANK_EUR",
+  "available": "80.00",
+  "held": "0.00",
+  "purpose": "banking_eur",
+  "source": "platform_ledger_reconciled_to_banking_provider"
+}
+```
+
+The route returns `409 balance_not_available` for `funding_usdt`, because that
+purpose converts through the USDT payin chain instead of holding `BANK_EUR`.
+
+### Sending euros out
+
+Both outbound paths resolve an allocated, active virtual IBAN as their
+source, each with its own purpose:
+
+| Outbound path | Source purpose | Debit |
+|---|---|---|
+| Customer payout (`POST /v1/payouts`, `EU`/`EUR`/`sepa`) — full method contract in [SEPA Instant payouts](https://docs.cbpayapp.com/en/guides/sepa-instant-payouts) | `funding_usdt` | The account's normal settlement balance (`BANK_EUR` is never touched). |
+| Banking operation (`POST /v1/banking/operations`, EUR `WITHDRAW` with `paymentType: "SEPA_CT"`) | `banking_eur` | The account's `BANK_EUR` balance. |
+
+Select the source with `source_virtual_iban_id` at the top level:
 
 ```json
 {
@@ -502,43 +646,90 @@ operation must resolve an allocated, active virtual IBAN with purpose
 }
 ```
 
-If the account has exactly one active `banking_eur` virtual IBAN, the field
-may be omitted. No active source returns `422 funding_account_required`;
-multiple active sources without an explicit UUID return
-`422 ambiguous_source_viban`. A malformed `source_virtual_iban_id` returns
-`400 invalid_request`; a valid UUID that is not found or does not belong to the
-account returns `404 not_found`. A temporary source lookup failure returns
-`503 funding_account_unavailable`.
+If the account has exactly one active virtual IBAN of the required purpose,
+the field may be omitted. No active source returns
+`422 funding_account_required`; multiple active sources without an explicit
+UUID return `422 ambiguous_source_viban`. A malformed
+`source_virtual_iban_id` returns `400 invalid_request`; a valid UUID that is
+not found or does not belong to the account returns `404 not_found`. A
+temporary source lookup failure returns `503 funding_account_unavailable`.
+The source check runs before any debit or provider dispatch.
 
 The platform strips caller-supplied ordering-party fields and stamps `payer`
 server-side from the selected vIBAN's `registrant` (unless a more-specific
 server-side company-wallet payer is present). Individual registrants provide
 first and last name; corporate registrants provide the registered company
-name and registration data.
+name and registration data. For active legacy rows without a usable
+registrant, the platform derives the ordering names from the current
+verified profile. If that profile cannot be read, the request returns
+`503 funding_account_unavailable`; if the resulting identity is incomplete,
+it returns `422 registrant_incomplete`.
 
-For active legacy rows without a usable registrant, the platform derives the
-ordering names from the current verified profile. If that profile cannot be
-read, the request returns `503 funding_account_unavailable`; if the resulting
-identity is incomplete, it returns `422 registrant_incomplete`.
-
-There is no per-vIBAN amount cap. EUR Banking debits the account's `BANK_EUR`
-balance; `funding_usdt` is a separate purpose used by the customer payout
-funding flow.
+There is no per-vIBAN amount cap. `source_virtual_iban_id` is part of the
+operation intent: if the active source set changes between sequential
+retries, the same idempotency key returns the original operation. A
+concurrent in-flight request returns `409 operation_in_progress`; retry with
+the same key. The key is the identity of the original operation — the core
+Banking replay does not compare payloads, so do not reuse a key for a
+materially different payload.
 
 > **Note**
-Banking operation holds created before this source gate are grandfathered:
-they continue through their existing dispatch and reconciliation path.
-## Idempotency and source vIBAN edge cases
+Operation holds created before this source gate are grandfathered: they
+continue through their existing dispatch and reconciliation path.
+### Receiving euros (inbound)
 
-`source_virtual_iban_id` is part of the Banking EUR operation intent. If the
-active source set changes between sequential retries, the same idempotency key
-returns the original operation. A concurrent in-flight request returns
-`409 operation_in_progress`; retry with the same key.
+When the banking provider sends a terminal inbound event, the core
+normalizes it into `banking_virtual_iban_inbound`. The platform resolves
+the owning vIBAN and applies its purpose:
 
-The core Banking replay does not compare the request payload with the original
-payload. The key is the identity of the original operation: do not reuse it for
-a materially different payload; use the existing operation and reconciliation
-path instead.
+- `funding_usdt` creates a `banking_funding` payin in EUR, applies the
+  marked EUR→USDT rate and the configured funding fee/spread, then follows
+  the normal payin firewall and credit chain.
+- `banking_eur` creates an inbound Banking mirror in `BANK_EUR`, uses the
+  Banking ledger path, emits KYT/operation status and queues the banking
+  receipt email.
+
+Only terminal statuses (`completed`, `success`, `settled`, `credited` or
+`succeeded`) apply the financial effect. Pending or unknown statuses remain
+reconcilable and do not credit a balance; `failed` and `rejected` are
+terminal negative outcomes that never create a credit (an uncredited funding
+payin is marked failed without a refund loop).
+
+The account operation detail can expose `payment_rail: "SEPA_INSTANT"`,
+`purpose` (`funding_usdt` or `banking_eur`) and the associated virtual IBAN
+reference when reported by the banking rail, preserving the product purpose
+through the mirror, statement and analytics.
+
+> **Note**
+Returns and recalls are handled as terminal `returned`, `recalled` or
+`reversed` events. A return before credit prevents a later completion replay
+from crediting. A credited `funding_usdt` payin creates the deterministic
+chargeback/refund path; a ledgered `banking_eur` operation receives an
+append-only reverse entry. A later completion event cannot resurrect a
+returned operation.
+### EUR errors
+
+| HTTP | Code | Action |
+|---:|---|---|
+| 400 | `invalid_json` | Send a JSON object. |
+| 400 | `invalid_purpose` | Use `funding_usdt` or `banking_eur`. |
+| 400 | `idempotency_key_required` | Send `Idempotency-Key` or `idempotency_key`. |
+| 400 | `invalid_request` | The `source_virtual_iban_id` is malformed. |
+| 404 | `not_found` | The vIBAN UUID is not found or belongs to another account. |
+| 409 | `virtual_iban_conflict` | Reuse the original request; do not create a second allocation. |
+| 409 | `balance_not_available` | Balance is only served for `banking_eur` requests. |
+| 409 | `operation_in_progress` | A concurrent request is in flight; retry with the same key. |
+| 422 | `registrant_incomplete` | The verified KYC/KYB profile is missing required registrant fields. Supply the optional document or incorporation overrides named in the message, then retry with the same idempotency key. |
+| 422 | `funding_account_required` / `ambiguous_source_viban` | No usable source of the required purpose, or several — send the selected source UUID explicitly. |
+| 403 | `verification_required` / service-gate error | Complete account verification and enable the required product. |
+| 503 | `banking_recovery_pending` / `funding_account_unavailable` | Durable request could not be checked, or temporary source lookup failure — reconcile, then retry with the same key. |
+
+### EUR FAQ
+
+#### Does requesting a virtual IBAN create a BANK_EUR balance?
+No. The purpose is recorded on the request, but a virtual IBAN is not an
+independent provider balance. Only `banking_eur` flows touch `BANK_EUR`;
+`funding_usdt` converts through the USDT payin chain.
 ## Rail fees (deposits and transfers)
 
 On top of the standalone fixed fees, banking supports **transactional fees
@@ -657,196 +848,3 @@ The core admin route
 account and finalizes the local mirror. The org-admin routes list claims,
 reconcile customer claims, and retry refunds. These operations are locked so
 concurrent reconciliation cannot originate duplicate money movement.
-
-## EUR virtual IBANs
-
-The platform can request a virtual IBAN for an active, verified account. A
-virtual IBAN is an addressing and routing instrument; it is not a separate
-provider balance. The account surface exposes the durable request and its
-status. Inbound processing and returns/recalls are implemented for both
-purposes below; provider customer-onboarding and production activation details
-remain outside the public contract.
-
-Two purposes are supported:
-
-| Purpose | Default | Meaning |
-|---|---:|---|
-| `funding_usdt` | Yes | EUR funding address associated with the USDT funding product. |
-| `banking_eur` | No | EUR banking address. The account must also have the Banking product enabled. |
-
-Request the default funding address with an idempotency key:
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
-  -H "Authorization: Bearer <token>" \
-  -H "Idempotency-Key: viban-funding-2026-001" \
-  -H "Content-Type: application/json" \
-  -d '{"purpose":"funding_usdt"}'
-```
-
-`funding_usdt` is the default purpose. The platform builds the provider
-registrant from the approved KYC/KYB profile. If a verified profile lacks a
-document issuing country or a document expiration date, an account request may
-send these optional top-level overrides (snake_case or camelCase aliases are
-accepted):
-
-```json
-{
-  "purpose": "funding_usdt",
-  "document_issued_country": "IT",
-  "document_expiration_date": "2035-06-01"
-}
-```
-
-For company accounts the equivalent optional fields are
-`incorporation_country` / `incorporationCountry` and
-`incorporation_date` / `incorporationDate`. These values are used only to
-complete the verified registrant; they do not bypass KYC/KYB.
-
-The request is accepted into the manual approval queue:
-
-```json
-{
-  "virtual_iban": {
-    "id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-    "owner_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-    "manager_account_id": "",
-    "purpose": "funding_usdt",
-    "currency": "EUR",
-    "iban": "",
-    "iban_country": "",
-    "status": "pending_approval",
-    "client_order": "platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001",
-    "order_reference": "",
-    "created_at": "2026-09-10T12:00:00Z",
-    "updated_at": "2026-09-10T12:00:00Z"
-  },
-  "status": "pending_approval"
-}
-```
-
-`banking_eur` is requested explicitly:
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
-  -H "Authorization: Bearer <token>" \
-  -H "Idempotency-Key: viban-eur-2026-001" \
-  -H "Content-Type: application/json" \
-  -d '{"purpose":"banking_eur"}'
-```
-
-List the account's requests with the mandatory date window:
-
-```bash
-curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50&from=2026-09-01&to=2026-09-11&purpose=funding_usdt" \
-  -H "Authorization: Bearer <token>"
-```
-
-The list shape is `{page, page_size, virtual_ibans}`. Supported statuses are
-`pending_approval`, `pending`, `active`, `rejected`, `failed`, `disabled` and
-`closed`. Account-level responses show the full IBAN when one has been
-assigned; the organization-admin read surface masks it.
-
-> **Important**
-The banking corridor may require operations approval and a verified customer
-profile before an EUR virtual IBAN can become active. Production host,
-certificate/mTLS, limits, commercial fees and activation details are
-configuration concerns and are not part of this provider-agnostic contract.
-Never infer them from examples.
-### Errors
-
-| HTTP | Code | Action |
-|---:|---|---|
-| 400 | `invalid_json` | Send a JSON object. |
-| 400 | `invalid_purpose` | Use `funding_usdt` or `banking_eur`. |
-| 400 | `idempotency_key_required` | Send `Idempotency-Key` or `idempotency_key`. |
-| 422 | `registrant_incomplete` | The verified KYC/KYB profile is missing required registrant fields. Supply the optional document or incorporation overrides named in the message, then retry with the same idempotency key. |
-| 403 | `verification_required` / service-gate error | Complete account verification and enable the required product. |
-| 409 | `virtual_iban_conflict` | Reuse the original request; do not create a second allocation. |
-| 503 | `banking_recovery_pending` | The durable request could not be checked or persisted; reconcile before retrying. |
-
-### FAQ
-
-#### Does requesting a virtual IBAN create a BANK_EUR balance?
-No. The purpose is recorded on the request, but a virtual IBAN is not an
-independent provider balance. The balance and financial treatment are
-documented only when the corresponding Banking EUR ledger flow is enabled.
-#### Can I retry after a timeout?
-Retry with the same idempotency key. A new key can create a new request and
-must not be used to guess the result of an ambiguous provider call.
-#### Why is the status pending_approval?
-Every allocation is manually approved by organization operations before the
-core calls the banking rail.
-## Verified inbound processing
-
-When the banking provider sends a terminal inbound event, the core normalizes
-it into `banking_virtual_iban_inbound`. The platform resolves the owning
-vIBAN and applies its purpose:
-
-- `funding_usdt` creates a `banking_funding` payin in EUR, applies the marked
-  EUR→USDT rate and the configured funding fee/spread, then follows the normal
-  payin firewall and credit chain.
-- `banking_eur` creates an inbound Banking mirror in `BANK_EUR`, uses the
-  Banking ledger path, emits KYT/operation status and queues the banking
-  receipt email.
-
-Only terminal statuses (`completed`, `success`, `settled`, `credited` or
-`succeeded`) apply the financial effect. Pending or unknown statuses remain
-reconcilable and do not credit a balance.
-
-`failed` and `rejected` are terminal negative outcomes. They do not create a
-credit; an uncredited funding payin is marked failed without a refund loop.
-
-> **Note**
-Returns and recalls are handled as terminal `returned`, `recalled` or
-`reversed` events. A return before credit prevents a later completion replay
-from crediting. A credited `funding_usdt` payin creates the deterministic
-chargeback/refund path; a ledgered `banking_eur` operation receives an
-append-only reverse entry. A later completion event cannot resurrect a returned
-operation.
-## EUR inbound traceability
-
-EUR virtual-IBAN inbound operations preserve their rail and product purpose
-through the banking mirror, statement and analytics. The account operation
-detail can expose `payment_rail: "SEPA_INSTANT"`, `purpose` (`funding_usdt` or
-`banking_eur`) and the associated virtual IBAN reference when reported by the
-banking rail. A `funding_usdt` terminal event enters the normal payin credit
-chain; a `banking_eur` terminal event is recorded as a `BANK_EUR` banking
-operation and receipt.
-
-## Virtual IBANs for third parties
-
-Company accounts can request a `banking_eur` vIBAN for an owned third party
-after the third party has accepted the invitation and completed approved
-KYC/KYB. The third party is the balance owner; the company remains the
-relationship manager:
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-0000-4000-8000-000000000001/virtual-ibans   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: third-party-viban-2026-001"   -H "Content-Type: application/json"   -d '{}'
-```
-
-The resulting request is `banking_eur` and follows the same manual approval
-and status lifecycle as an account-owned request.
-
-### BANK_EUR balance
-
-For a `banking_eur` request, query the reconciled balance explicitly:
-
-```bash
-curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
-  "currency": "EUR",
-  "asset": "BANK_EUR",
-  "available": "80.00",
-  "held": "0.00",
-  "purpose": "banking_eur",
-  "source": "platform_ledger_reconciled_to_banking_provider"
-}
-```
-
-The route returns `409 balance_not_available` for `funding_usdt`, because that
-purpose converts through the USDT payin chain instead of holding `BANK_EUR`.

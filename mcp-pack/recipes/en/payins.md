@@ -259,8 +259,9 @@ List your accounts with `GET /v1/payins/deposit-accounts`.
 
 Deposit destinations have an explicit `purpose`:
 
-- `fondeo` is the default and preserves the historical behavior: incoming
-  fiat is converted to USDT and credited to the CBPay balance.
+- `fondeo` is the default: incoming fiat is converted to your account's
+  principal asset (USD for new accounts, USDT for legacy accounts) and
+  credited to the CBPay balance.
 - `banking` keeps the incoming amount in its local fiat balance so it can be
   used for fiat payouts. It is currently available only for
   `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and

@@ -24,16 +24,18 @@ antes del gate. El pagador no necesita iniciar sesión en CBPay.
 Crea un **link de cobro universal**: un solo `POST /v1/payins` con
 `method: "checkout"` devuelve una URL pública brandeada donde el pagador
 elige cómo pagar. El cobro se denomina en el **saldo virtual que tú
-elijas** (`settlement_asset`: `USDT`, `USDC`, `BTC` o `GOLD`, default
-`USDT`) y todo pago se convierte **automáticamente** a ese saldo al
+elijas** (`settlement_asset`: `USD`, `USDT`, `USDC`, `BTC`, `GOLD`,
+`SILVER` o `PLATINUM`; si se omite usa tu `payin_settlement_asset`,
+`USD` en cuentas nuevas) y todo pago se convierte **automáticamente** a
+ese saldo al
 acreditarse — salvo que te paguen en el mismo asset, ahí no hay
-conversión.
+conversión. El fiat local (`BOB`, `MXN`, `ARS`) se rechaza aquí.
 
 La página organiza el pago en **cuatro pestañas**:
 
 - **CBPay** — pago directo con la app: el alias y el QR del comercio;
   quien escanea con la app paga al instante por transferencia interna,
-  en cualquiera de los 6 saldos.
+  en cualquiera de los 10 saldos.
 - **Crypto** — las monedas disponibles agrupadas por red (hoy USDT en
   TRON y Ethereum, USDC en Ethereum y BTC; redes nuevas aparecen solas
   al habilitarse), cada una con una dirección de depósito exclusiva de
@@ -155,7 +157,7 @@ y redirige a tu `success_url` si la configuraste.
   minutos.
 - **App CBPay**: el QR del comercio embebe el link
   (`cbpay:pay?to=…&checkout=…`). La app paga por transferencia interna en
-  cualquiera de los 6 saldos: mismo asset ⇒ meta exacta; distinto ⇒ due
+  cualquiera de los 10 saldos: mismo asset ⇒ meta exacta; distinto ⇒ due
   con la conversión incluida. El monto se valida server-side contra una
   cotización fresca — si no cubre el cobro responde `422
   checkout_amount_mismatch` con el monto vigente. Integradores: `POST

@@ -22,14 +22,14 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 创建一个**通用收款链接**：一次 `POST /v1/payins`（`method: "checkout"`）
 即可返回一个带品牌的公开 URL，付款人在页面上自行选择支付方式。收款以
-**你选择的虚拟余额**计价（`settlement_asset`：`USDT`、`USDC`、`BTC` 或
-`GOLD`，默认 `USDT`），每笔付款在入账时**自动转换**为该余额——除非付款
-人用同一资产支付，此时不发生转换。
+**你选择的虚拟余额**计价（`settlement_asset`：`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、
+`SILVER` 或 `PLATINUM`；省略时使用你的 `payin_settlement_asset`，新账户为 `USD`），每笔付款在入账时**自动转换**为该余额——除非付款
+人用同一资产支付，此时不发生转换。本地法币（`BOB`、`MXN`、`ARS`）会被拒绝。
 
 页面将支付方式组织为**四个标签页**：
 
 - **CBPay** —— 使用应用直接支付：显示商户别名和二维码；用应用扫码
-  即可通过内部转账即时付款，支持 4 种余额中的任意一种。
+  即可通过内部转账即时付款，支持 10 种余额中的任意一种。
 - **Crypto** —— 可用币种按网络分组（目前为 TRON 与以太坊上的 USDT、
   以太坊上的 USDC 以及 BTC；新网络启用后会自动出现），每笔收款专属
   充值地址，并附带**可扫描二维码**，兼容外部钱包（Trust Wallet、
@@ -133,7 +133,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   承担；你收到精确的目标金额）。部分支付会累加，页面显示剩余金额。
   涉及 BTC/GOLD/SILVER/PLATINUM 的报价每 15 分钟刷新。
 - **CBPay 应用**：商户二维码内嵌链接
-  （`cbpay:pay?to=…&checkout=…`）。应用通过内部转账以 4 种余额中的
+  （`cbpay:pay?to=…&checkout=…`）。应用通过内部转账以 10 种余额中的
   任意一种付款：同一资产 ⇒ 精确目标金额；不同 ⇒ 含转换的应付额。金额
   在服务端按新报价校验——不足以覆盖收款时返回
   `422 checkout_amount_mismatch` 及当前应付额。集成方：

@@ -24,16 +24,18 @@ link that was created before the gate. The payer does not need a CBPay login.
 Create a **universal checkout link**: a single `POST /v1/payins` with
 `method: "checkout"` returns a branded public URL where the payer chooses
 how to pay. The charge is denominated in the **virtual balance you
-choose** (`settlement_asset`: `USDT`, `USDC`, `BTC` or `GOLD`, default
-`USDT`) and every payment is converted **automatically** to that balance
+choose** (`settlement_asset`: `USD`, `USDT`, `USDC`, `BTC`, `GOLD`,
+`SILVER` or `PLATINUM`; when omitted it uses your `payin_settlement_asset`,
+`USD` for new accounts) and every payment is converted **automatically** to
+that balance
 when it credits — unless the payer pays in the same asset, in which case
-there is no conversion.
+there is no conversion. Local fiat (`BOB`, `MXN`, `ARS`) is rejected here.
 
 The page organizes the payment into **four tabs**:
 
 - **CBPay** — direct payment with the app: the merchant's alias and QR;
   scanning with the app pays instantly through an internal transfer, in
-  any of the 6 balances.
+  any of the 10 balances.
 - **Crypto** — the available coins grouped by network (today USDT on
   TRON and Ethereum, USDC on Ethereum and BTC; new networks show up on
   their own once enabled), each with a deposit address exclusive to that

@@ -1,18 +1,18 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.151"
-  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有六个相互独立的虚拟余额——USDT(运营货币)、USDC、BTC、
-    GOLD(纯金克数)、SILVER(纯银克数)和 PLATINUM(纯铂金克数)——可通过兑换(swap)按需转换。
+  version: "2.152"
+  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(新账户的记账本币;存量账户保持 USDT,除非自行更改)、USDT、USDC、BTC、
+    GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
-    payout 和服务费可从六个余额中的任意一个支付(用 `PUT /v1/settlement`
+    payout 和服务费可从七个结算余额中的任意一个支付(用 `PUT /v1/settlement`
 
     设置默认值,或在单笔 payout 中用 `settlement_asset` 覆盖);payin
 
     可自动兑换为你选择的资产(`default_payin_asset`)。
 
 
-    所有金额均为十进制字符串,遵循各货币的精度(USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。错误始终返回
+    所有金额均为十进制字符串,遵循各货币的精度(USD/BOB/MXN/ARS 为 2 位小数,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。错误始终返回
 
     `{"error": "<code>", "message": "<detail>"}`。
 
@@ -81,7 +81,7 @@ tags:
 - name: 银行服务
   description: 真实银行账户:通过国际银行通道接收、持有与发送资金。
 - name: 卡片
-  description: 以 Just-In-Time 方式从你选择的余额(USDT、USDC、BTC 或 GOLD)消费的虚拟卡与实体卡,支持按卡设置消费限额。
+  description: 以 Just-In-Time 方式从七种消费资产(USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM)中任选其一消费的虚拟卡与实体卡,支持按卡设置消费限额。
 - name: 安全(OTP)
   description: 通过 SMS/WhatsApp/email 发送的一次性验证码,保护敏感操作;并提供自助 2FA 偏好设置。仅适用于用户会话——API key 豁免。
 - name: 通行密钥
@@ -2679,7 +2679,7 @@ paths:
       - 余额
       operationId: getBalances
       summary: 获取余额
-      description: 调用账户的六个独立虚拟余额(USDT——运营货币——、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER 和以纯铂金克数计的 PLATINUM)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
+      description: 调用账户的十个独立虚拟余额(USD——新账户的记账本币——、USDT、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
         Banking,其 BANK_USD/BANK_EUR 镜像余额也会列出,`custody` 标记为 `banking`(权威余额在银行;这些余额在平台内不可消费)。
       responses:
         '200':
@@ -2726,12 +2726,12 @@ paths:
       - 余额
       operationId: getBalancesHistory
       summary: 获取余额历史
-      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对 BTC/GOLD/SILVER/PLATINUM 估值的 USD 汇总序列。包含期间总流入/流出及当前快照(可用
+      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对每个余额估值的 USD 汇总序列(USDT/USDC 按 1:1 平价;BTC/GOLD/SILVER/PLATINUM 与 USD/BOB/MXN/ARS 按当日价格)。包含期间总流入/流出及当前快照(可用
         + 冻结),前端可据此渲染 Mercury 风格的余额卡片及其百分比变化。序列跟踪**可用**余额(冻结没有历史);`current` 携带今日各资产的 `held`。在历史价格存在之前用今日现价估值的日期会在
         `spot_priced_dates` 中披露——绝不虚构数值。
 
 
-        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总仅覆盖运营余额(USDT、USDC、BTC、GOLD、SILVER、PLATINUM)。
+        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总覆盖十个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)。
 
         '
       parameters:
@@ -2771,7 +2771,7 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 每个资产一条每日收盘余额序列。包含运营余额(USDT、USDC、BTC、GOLD、SILVER、PLATINUM)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
+                    description: 每个资产一条每日收盘余额序列。包含十个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
                       `total_usd`。
                     additionalProperties:
                       type: object
@@ -3520,8 +3520,8 @@ paths:
       description: '向本地银行账户派发法币。本地金额按**你账户的汇率**(与 `GET /v1/rates` 返回的相同)转换为 USDT;扣除 `usdt_amount` 加固定费用(如有配置)并冻结,直到派发完成。若失败,全额退款。
 
 
-        **从任意余额支付**:默认从你账户的默认结算资产扣款(USDT,除非通过 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USDT、USDC、BTC
-        或 GOLD)可让这笔操作从其他余额支付:USDT 总额按当时的有效结算价格转换为该资产(见 `GET /v1/rates` 的 `settlement` 块),扣款、冻结以及失败时的退款都在该资产中且金额完全一致。若
+        **从任意余额支付**:默认从你账户的默认结算资产扣款(`default_settlement_asset`——新账户为 USD,存量账户为 USDT;用 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM)
+        可让这笔操作从其他余额支付:总额按当时的有效结算价格转换为该资产(见 `GET /v1/rates` 的 `settlement` 块),扣款、冻结以及失败时的退款都在该资产中且金额完全一致。若
         BTC/GOLD/SILVER/PLATINUM 的执行价格不可用,请求返回 `503 pricing_unavailable`;波动性资产还有单笔限额(`422 settlement_limit_exceeded`)。
 
 
@@ -3660,7 +3660,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产(USDT,除非通过 `PUT /v1/settlement` 更改)。
+                  description: 此操作要扣款的虚拟余额。可接受的值:USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 与 ARS。法币执行目前返回 503 pricing_unavailable。省略则使用账户的默认结算资产(`default_settlement_asset`——新账户为 USD,存量账户为 USDT)。
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -4678,8 +4678,8 @@ paths:
         携带 QR 图片和 "copia e cola" 载荷。使用 `method: "bank_transfer"` 会预告存款,响应携带付款人必须附上的参考号,以便到账转账被自动匹配入账——一个
         12 位字母数字短码,适配任何银行附言字段(部分通道上限 20 个字符且不允许特殊字符)。使用 `method: "fintoc"`(智利)响应携带托管 `payment_url`:付款人打开后可从任意智利银行或钱包转账;存款会被自动检测、校验并入账。使用
         `method: "card"` 响应携带一个托管 3-D Secure 银行卡收银台的 `payment_url`,页面带有您组织的品牌 —— 支持玻利维亚(BOB)与以美元结算的国际银行卡(`country: "US"`;任意国家发行的 Visa、Mastercard、American Express、Discover 与 Diners);银行卡数据绝不经过您的集成。使用
-        `method: "checkout"` 响应携带一个公开的 `checkout_url` —— 以您选择的虚拟余额计价的通用收款链接(`settlement_asset`:USDT、USDC、BTC
-        或 GOLD)。付款人可选择任何有可用 payin 走廊的国家(本地金额实时报价)、六个加密货币选项之一(带可扫描二维码的专属充值地址),或通过商户的
+        `method: "checkout"` 响应携带一个公开的 `checkout_url` —— 以您选择的虚拟余额计价的通用收款链接(`settlement_asset`:USD、USDT、USDC、
+        BTC、GOLD、SILVER 或 PLATINUM;法币 BOB/MXN/ARS 会被拒绝)。付款人可选择任何有可用 payin 走廊的国家(本地金额实时报价)、四个加密货币选项之一(带可扫描二维码的专属充值地址),或通过商户的
         CBPay 二维码/别名从 CBPay 应用即时付款;每笔付款自动兑换为结算资产(以相同资产付款则不兑换)。最先完成支付的方式生效。创建收款免费;存款入账时收取
         payin 费用。未发送 `stored_card_id` 时，开放的 `pending`/`challenge`
         银行卡会话可按同一账户、国家、币种、金额和 `payer_reference` 复用
@@ -4810,9 +4810,9 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  default: USDT
                   description: 仅 checkout —— 收款计价与结算的虚拟余额。每笔付款入账时自动兑换为该资产(以相同资产付款则不兑换)。须为您的组织启用(否则返回
-                    `422 settlement_asset_disabled`)。
+                    `422 settlement_asset_disabled`)。省略时使用账户的 payin 结算资产(`payin_settlement_asset`,回退为 USD)。BOB、MXN、ARS 会被拒绝
+                    (`422 invalid_pair`):checkout 不以法币结算。
                 save_card:
                   type: boolean
                   default: false
@@ -5854,7 +5854,7 @@ paths:
       - 转账
       operationId: createTransfer
       summary: 创建内部转账
-      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持六个虚拟余额(默认 `USDT`、`USDC`、`BTC`、`GOLD`),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
+      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持十个虚拟余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
         `to_account_id`、`to_email`、`to_phone`(仅 OTP 已验证的手机号)或 `to_contact_id` 解析。每笔转账都会自动把收款人保存为联系人(用
         `save_contact: false` 退出)。收款方的 webhook 订阅者会收到 `transfer_received`。'
       parameters:
@@ -5899,11 +5899,13 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  default: USDT
-                  description: 要划转的余额币种;接收方以同一币种入账。
+                  - BOB
+                  - MXN
+                  - ARS
+                  description: 要划转的余额币种;接收方以同一币种入账。省略时使用付款方的结算资产(新账户为 USD,存量账户为 USDT)。
                 amount:
                   type: string
-                  description: 正数十进制字符串,不超过该货币的小数位数(USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
+                  description: 正数十进制字符串,不超过该货币的小数位数(USD/BOB/MXN/ARS 为 2 位,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
                   example: '10.500000'
                 description:
                   type: string
@@ -15805,7 +15807,7 @@ paths:
       operationId: getAccountStatement
       summary: 账户对账单(JSON、PDF 或 Excel)
       description: '将期间内的全部流水——payouts、payins、加密充值与提现、内部转账及服务费——合并为一份可审计的对账单,并做精确对账:opening_balance +
-        total_in − total_out = closing_balance,与账本核验(`balanced`)。摘要覆盖 USDT 运营余额；其他有活动的虚拟余额（USDC、BTC、GOLD）在 `assets` 中独立核对。客户响应省略原始账本流水；请按产品分区对账，并使用 `GET /v1/movements` 进行深入审计。请求 `format=pdf` 或 `format=xlsx` 可下载 CBPay 品牌文件(Content-Disposition: attachment)。'
+        total_in − total_out = closing_balance,与账本核验(`balanced`)。摘要覆盖 USDT 余额；其他有活动的虚拟余额（USD、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS）在 `assets` 中独立核对。客户响应省略原始账本流水；请按产品分区对账，并使用 `GET /v1/movements` 进行深入审计。请求 `format=pdf` 或 `format=xlsx` 可下载 CBPay 品牌文件(Content-Disposition: attachment)。'
       parameters:
       - name: from
         in: query
@@ -16046,8 +16048,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  default: USDT
-                  description: 卡片消费扣款的余额。USDT/USDC 与 USD 等价(精确 1:1,无转换费)。BTC/GOLD/SILVER/PLATINUM 按每笔事件当时的有效价格转换,并在授权时预留缓冲(fail-closed
+                  description: 卡片消费扣款的余额。省略时使用账户的结算资产(新账户为 USD,存量账户为 USDT)。USD/USDT/USDC 与 USD 等价(精确 1:1,无转换费)。BTC/GOLD/SILVER/PLATINUM 按每笔事件当时的有效价格转换,并在授权时预留缓冲(fail-closed
                     定价,单笔及 24 小时波动限额与 payouts 共享)。
                 limits:
                   type: object
@@ -16915,7 +16916,7 @@ paths:
       - 账户
       operationId: updateSettlement
       summary: 设置我的默认余额(payouts 与 payins)
-      description: 更改你的默认余额。`default_settlement_asset` 是当请求未显式传 `settlement_asset` 时,payout 和服务费默认扣款的余额。`default_payin_asset` 是 payins 默认入账的余额——入账仍以 USDT 进行,净额通过 swap 引擎按真实价格自动兑换,不收取额外 swap 价差(payin 已支付其手续费与汇率;checkout 与 POS 收款保留其链接资产)。可为 USDT、USDC、BTC 或 GOLD(需组织启用)。可发送其中一个或两个字段。仅对新操作生效;进行中的操作不会重新计价。
+      description: 更改你的默认余额。`default_settlement_asset` 是当请求未显式传 `settlement_asset` 时,payout 和服务费默认扣款的余额。`default_payin_asset` 是 payins 默认入账的余额——`USD`(新账户默认值)直接以美分 USD 入账净额;其他目标则通过 swap 引擎按真实价格自动兑换净额,不收取额外 swap 价差(payin 已支付其手续费与汇率;checkout 与 POS 收款保留其链接资产)。可为 USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM(需组织启用)。可发送其中一个或两个字段。仅对新操作生效;进行中的操作不会重新计价。
       requestBody:
         required: true
         content:
@@ -16944,7 +16945,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: payins 默认入账的余额。入账仍以 USDT 进行,净额通过 swap 引擎按真实价格自动兑换(不收取额外 swap 价差)。可选。
+                  description: payins 默认入账的余额。`USD` 直接以美分 USD 入账净额;其他目标通过 swap 引擎按真实价格自动兑换净额(不收取额外 swap 价差)。可选。
             example:
               default_settlement_asset: BTC
               default_payin_asset: USDC
@@ -23644,7 +23645,7 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: payins 默认入账的余额。入账仍以 USDT 进行,净额通过 swap 引擎按真实价格自动兑换,不收取额外 swap 价差。checkout/POS 保留其链接资产。
+          description: payins 默认入账的余额。入账进入账户的主资产(新账户为 USD,旧账户为 USDT);设置为不同资产时,净额通过 swap 引擎按真实价格自动兑换,不收取额外 swap 价差。checkout/POS 保留其链接资产。
         enabled_assets:
           type: array
           items:
@@ -23813,7 +23814,7 @@ components:
           - PLATINUM
           description: payin 入账的虚拟余额。checkout 和 POS 收款以其链接资产计价(在使用本地支付方式之前没有
             `currency`/`local_amount`;收款金额为以该资产计价的 `asset_amount`)。其他已入账的 payins
-            在账户配置了非 USDT 的 `default_payin_asset` 时携带该字段——净入账金额会自动兑换为该资产。
+            在清算资产与入账资产不同时携带该字段(账户配置了不同于入账资产的 `default_payin_asset`;直接以 USD 入账或以本地法币留存的 payins 不兑换)。
         asset_amount:
           type: string
           description: 仅 checkout 和 POS 收款 — 以 `settlement_asset` 计价的收款金额（所有状态均返回，包括待支付和已过期）。
@@ -23823,7 +23824,7 @@ components:
           - pending_retry
           - done
           description: 自动兑换状态——checkout/POS 收款在付款资产与 `settlement_asset` 不同时出现;其他 payins
-            在账户配置了非 USDT 的 `default_payin_asset` 时出现。`pending_retry` 会自动重试。不适用时省略。
+            在账户配置了不同于入账资产的 `default_payin_asset` 时出现。`pending_retry` 会自动重试。不适用时省略。
         status:
           type: string
           enum:
@@ -24447,9 +24448,9 @@ webhooks:
   payin_credited:
     post:
       summary: payin 已入账
-      description: '已收到一笔法币收款并以 USDT 入账到账户。对于通用收款链接(`kind: checkout`),载荷还携带
+      description: '已收到一笔法币收款并入账到账户。对于通用收款链接(`kind: checkout`),载荷还携带
         `settled_via`(如 `qr`、`crypto:tron:usdt`、`cbpay`)、`settlement_asset` 与 `asset_amount`;加密货币支付附加
-        `crypto_amount`,CBPay 应用支付附加 `transfer_id`、`asset` 与 `amount`。当账户配置了非 USDT 的
+        `crypto_amount`,CBPay 应用支付附加 `transfer_id`、`asset` 与 `amount`。当账户配置了不同于入账资产的
         `default_payin_asset` 时,载荷还携带入账后自动兑换的 `settlement_asset` 与 `conversion_status`。
 
 
