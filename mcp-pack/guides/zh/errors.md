@@ -518,6 +518,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `contract_unfillable` | 请检查响应中的 `missing` 数组：其中可能列出身份资料、法律顾问批准，或表示已启用服务缺少有效价格行的 `pricing:<flag>`。 |
 | 422 | `invalid_consent` | body 必须包含 JSON 布尔值 `"consent": true`。 |
 | 422 | `invalid_signer` | 姓名/职务为空或过长；使用 owner/operator 人工签署人。 |
+| 422 | `invalid_signature_image` | `signature_png` 不是有效或有墨迹的 PNG，超过编码/解码大小限制，或未达到最小尺寸；发送有效签名图片并使用新 OTP 重试。 |
 | 502 | `storage_failed` | 私有 storage 失败；重试前先协调信封状态。 |
 | 502 | `email_failed` | 签署后邮件失败；已完成信封仍然有效。 |
 | 503 | `storage_unavailable` | 私有 storage 不可用；恢复后重试。 |

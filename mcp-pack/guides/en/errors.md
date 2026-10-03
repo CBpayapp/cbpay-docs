@@ -539,6 +539,7 @@ code is the stable integration contract.
 | 422 | `contract_unfillable` | Inspect the response `missing` array: it may list identity data, counsel approval, or `pricing:<flag>` when an enabled service has no effective price row. |
 | 422 | `invalid_consent` | The signing body must contain the JSON boolean `"consent": true`. |
 | 422 | `invalid_signer` | Signer name/title are empty or exceed the permitted length; use a human owner/operator. |
+| 422 | `invalid_signature_image` | `signature_png` is not a valid, non-blank PNG, exceeds the encoded or decoded size limit, or is below the minimum dimensions; send a valid signature image and retry with a fresh OTP. |
 | 502 | `storage_failed` | Private storage failed while creating the final artifact; reconcile the envelope before retrying. |
 | 502 | `email_failed` | Completion email delivery failed after signing; the completed envelope remains authoritative. |
 | 503 | `storage_unavailable` | Private storage is unavailable; retry after the service recovers. |
