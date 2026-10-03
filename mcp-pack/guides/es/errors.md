@@ -544,3 +544,26 @@ código es el contrato estable para la integración.
 | 502 | `storage_failed` | Falló el storage privado; reconcilia el sobre antes de reintentar. |
 | 502 | `email_failed` | Falló el email posterior a la firma; el sobre completado sigue siendo válido. |
 | 503 | `storage_unavailable` | Storage privado no disponible; reintenta cuando se recupere. |
+
+## Handoff de ambiente
+
+| HTTP | `error` | Significado y solución |
+|---|---|---|
+| 401 | `invalid_handoff` | Falta el token de handoff, expiró, ya fue consumido, o se emitió para el otro ambiente. Emite un handoff fresco y canjéalo en el mismo ambiente. |
+| 401 | `handoff_replayed` | Este token ya fue consumido (un solo uso). Emite un handoff fresco. |
+
+## 2FA y passkeys
+
+| HTTP | `error` | Significado y solución |
+|---|---|---|
+| 403 | `channel_locked_by_org` | La política de la org solo permite TOTP y bloquea el registro de passkeys en esta cuenta. Pide a un org admin que cambie la política. |
+| 409 | `passkey_exists` | El credential ID ya está registrado en esta cuenta. Inicia sesión con la passkey existente. |
+| 409 | `totp_already_enrolled` | El TOTP ya está activo en esta cuenta. Autentícate con el secret existente. |
+
+## Documentos de checkout y de payouts
+
+| HTTP | `error` | Significado y solución |
+|---|---|---|
+| 409 | `materializing` | Otra materialización de este link de checkout está en curso. Reintenta cuando termine. |
+| 400 | `invalid_file_name` | El nombre de archivo está vacío, es muy largo o trae caracteres de path (`/`, `\`, `..`). Envía un nombre de archivo plano. |
+| 415 | `unsupported_media_type` | El Content-Type no es un tipo de documento aceptado. Envía PDF, JPEG o PNG. |

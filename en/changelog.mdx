@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 3, 2026" description="v2.150 · 1 version">
+<Update label="October 3, 2026" description="v2.151 · 2 versions">
+### v2.151
+**Added**
+
+- Expanded the public error index to cover environment handoffs
+  (`invalid_handoff`, `handoff_replayed`), 2FA and passkeys
+  (`channel_locked_by_org`, `passkey_exists`, `totp_already_enrolled`)
+  and checkout/payout documents (`materializing`, `invalid_file_name`,
+  `unsupported_media_type`), each with its HTTP status and fix. Docs-only:
+  no API behavior changed.
 ### v2.150
 **Added**
 

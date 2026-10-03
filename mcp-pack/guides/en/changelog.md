@@ -5,7 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.150 · 1 version - October 3, 2026
+## v2.151 · 2 versions - October 3, 2026
+### v2.151
+**Added**
+
+- Expanded the public error index to cover environment handoffs
+  (`invalid_handoff`, `handoff_replayed`), 2FA and passkeys
+  (`channel_locked_by_org`, `passkey_exists`, `totp_already_enrolled`)
+  and checkout/payout documents (`materializing`, `invalid_file_name`,
+  `unsupported_media_type`), each with its HTTP status and fix. Docs-only:
+  no API behavior changed.
 ### v2.150
 **Added**
 

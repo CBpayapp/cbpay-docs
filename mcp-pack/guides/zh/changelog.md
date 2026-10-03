@@ -5,7 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.150 · 1 个版本 - 2026年10月3日
+## v2.151 · 2 个版本 - 2026年10月3日
+### v2.151
+**新增**
+
+- 公共错误索引扩充：环境 handoff（`invalid_handoff`、`handoff_replayed`）、2FA 与 passkey（`channel_locked_by_org`、`passkey_exists`、`totp_already_enrolled`）以及 checkout/payout 文档（`materializing`、`invalid_file_name`、`unsupported_media_type`），每项含 HTTP 状态与修复方法。纯文档变更：API 行为不变。
 ### v2.150
 **新增**
 
