@@ -40,7 +40,7 @@ curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \
 - `event_type`: uno de los eventos de la tabla siguiente, o `*` para todos.
 - `callback_url`: **HTTPS obligatorio**; se rechazan localhost e IPs
   privadas — para desarrollo local usa un
-  [túnel HTTPS](https://docs.cbpayapp.com/es/entorno-y-pruebas#probar-webhooks-en-desarrollo-local).
+  [túnel HTTPS](https://docs.cbpayapp.com/es/environment-testing#probar-webhooks-en-desarrollo-local).
 - `secret`: mínimo 16 caracteres; se usa para firmar cada entrega. Se
   almacena cifrado y no puede recuperarse.
 
@@ -111,19 +111,19 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 |---|---|
 | `payin_credited` | Un cobro fiat fue recibido y abonado |
 | `payin_expired` | Un cobro activo (QR / checkout) venció o falló sin recibir el pago |
-| `payin_refunded` | Una [devolución](https://docs.cbpayapp.com/es/guias/devoluciones) de un cobro con tarjeta llegó a estado final (incluye el contracargo impuesto por el emisor) |
+| `payin_refunded` | Una [devolución](https://docs.cbpayapp.com/es/guides/refunds) de un cobro con tarjeta llegó a estado final (incluye el contracargo impuesto por el emisor) |
 | `payin_settlement_scheduled` | Un cobro con tarjeta quedó confirmado (`credited`, se emitió `payin_credited`) y su saldo se programó para un `settle_at` futuro (espera de settlement configurada por la org). Se emite exactamente una vez al confirmarse el pago; el saldo queda disponible al vencimiento |
 | `payout_status_changed` | Un payout cambió de estado |
 | `transfer_received` | La cuenta recibió una transferencia interna |
 | `crypto_deposit_credited` | Un depósito on-chain fue confirmado y abonado |
-| `crypto_deposit_held` | Un depósito entrante quedó retenido por riesgo del remitente ([screening](https://docs.cbpayapp.com/es/guias/screenings)) |
+| `crypto_deposit_held` | Un depósito entrante quedó retenido por riesgo del remitente ([screening](https://docs.cbpayapp.com/es/guides/screenings)) |
 | `crypto_deposit_alert` | Un depósito se acreditó pero el remitente presenta riesgo alto (informativo) |
 | `crypto_withdrawal_status_changed` | Un retiro on-chain cambió de estado |
 | `banking_customer_status_changed` | Cambió la verificación de un perfil bancario (propio o de un tercero registrado — `customer_kind` lo distingue) |
 | `banking_operation_status_changed` | Un pago bancario cambió de estado |
 | `card_transaction` | Una compra con tarjeta fue autorizada, anulada o ajustada |
 | `card_status_changed` | Una tarjeta cambió de estado (incluye congelamiento automático) |
-| `card_stored` | La tarjeta de un pagador fue tokenizada y guardada con consentimiento ([tarjetas guardadas](https://docs.cbpayapp.com/es/guias/payins#tarjetas-guardadas)) |
+| `card_stored` | La tarjeta de un pagador fue tokenizada y guardada con consentimiento ([tarjetas guardadas](https://docs.cbpayapp.com/es/guides/payins#tarjetas-guardadas)) |
 | `stored_card_revoked` | Una credencial de tarjeta guardada fue revocada (los cobros iniciados por el comercio dejan de funcionar) |
 | `subscription_status_changed` | Una suscripción sobre una tarjeta guardada cambió de estado (`active` / `paused` / `past_due` / `canceled`) |
 | `kyc_verification_status_changed` / `kyb_verification_status_changed` | Una verificación de identidad cambió de estado (incluye tu propio onboarding, con `self_onboarding: true`) |
@@ -131,21 +131,21 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `kyc_document_validated` / `kyb_document_validated` | Terminó el OCR de un documento subido por API |
 | `kyc_liveness_completed` | Una prueba de vida fue completada desde un liveness link |
 | `aml_screening_updated` | Novedades del screening AML (resultado, casos, riesgo, transacción revisada) |
-| `risk_report_ready` | Un informe crediticio [Qscore](https://docs.cbpayapp.com/es/guias/qscore) terminó de generarse (lleva el score y la banda) |
+| `risk_report_ready` | Un informe crediticio [Qscore](https://docs.cbpayapp.com/es/guides/qscore) terminó de generarse (lleva el score y la banda) |
 | `risk_score_changed` | El score de un sujeto monitoreado se movió (re-evaluación tras nuevos datos del buró) |
-| `risk_monitoring_alert` | Un sujeto monitoreado de [Qscore](https://docs.cbpayapp.com/es/guias/qscore) gatilló una alerta: el score cayó bajo tu umbral, aparecieron registros nuevos en el buró o se eliminaron registros |
-| `risk_batch_completed` | Un [lote](https://docs.cbpayapp.com/es/guias/qscore-batch) de informes Qscore terminó de procesarse (exactamente un webhook por lote, con conteos — nunca uno por sujeto) |
-| `risk_consent_granted` | El titular autorizó un [link de autorización](https://docs.cbpayapp.com/es/guias/qscore-consents) — los hechos bancarios positivos fluyen a la ficha crediticia del sujeto |
-| `risk_consent_revoked` | El titular rechazó un [link de autorización](https://docs.cbpayapp.com/es/guias/qscore-consents) o tu cuenta lo revocó |
-| `wallet_deposit_received` | Llegó un depósito on-chain a una [wallet segregada](https://docs.cbpayapp.com/es/guias/wallets-segregadas) (no toca el ledger) |
+| `risk_monitoring_alert` | Un sujeto monitoreado de [Qscore](https://docs.cbpayapp.com/es/guides/qscore) gatilló una alerta: el score cayó bajo tu umbral, aparecieron registros nuevos en el buró o se eliminaron registros |
+| `risk_batch_completed` | Un [lote](https://docs.cbpayapp.com/es/guides/qscore-batch) de informes Qscore terminó de procesarse (exactamente un webhook por lote, con conteos — nunca uno por sujeto) |
+| `risk_consent_granted` | El titular autorizó un [link de autorización](https://docs.cbpayapp.com/es/guides/qscore-consents) — los hechos bancarios positivos fluyen a la ficha crediticia del sujeto |
+| `risk_consent_revoked` | El titular rechazó un [link de autorización](https://docs.cbpayapp.com/es/guides/qscore-consents) o tu cuenta lo revocó |
+| `wallet_deposit_received` | Llegó un depósito on-chain a una [wallet segregada](https://docs.cbpayapp.com/es/guides/segregated-wallets) (no toca el ledger) |
 | `wallet_send_status_changed` | Un envío desde una wallet segregada cambió de estado |
 | `wallet_key_exported` | Se exportó la llave privada de una wallet segregada (alerta de seguridad) |
 | `wallet_external_movement` | Movimiento on-chain de una wallet segregada que no pasó por la plataforma (esperable en custodia `client`) |
 | `wallet_key_compromise_suspected` | **Alarma crítica**: salida externa desde una wallet con custodia `cbpay` — posible llave comprometida |
 | `wallet_signature_created` | Se creó una prueba de firma con una wallet segregada (firma de mensajes EIP-191 / TIP-191) |
 | `wallet_linked` | Se vinculó una wallet externa (`custody=client`) a la cuenta mediante un desafío nonce firmado |
-| `txn_review_status_changed` | Una operación retenida por el [firewall transaccional](https://docs.cbpayapp.com/es/guias/revisiones-operaciones) cambió de estado de revisión (`in_review` / `info_requested` / `released` / `rejected`) — payload neutro, sin motivos internos; un rechazo también puede venir del barrido automático por plazo (auto-rechazo) |
-| `corridor_status_changed` | Un corredor de pago cambió su disponibilidad (`operational` / `degraded` / `down`) — broadcast, ver la [guía de estado del servicio](https://docs.cbpayapp.com/es/estado-del-servicio) |
+| `txn_review_status_changed` | Una operación retenida por el [firewall transaccional](https://docs.cbpayapp.com/es/guides/transaction-reviews) cambió de estado de revisión (`in_review` / `info_requested` / `released` / `rejected`) — payload neutro, sin motivos internos; un rechazo también puede venir del barrido automático por plazo (auto-rechazo) |
+| `corridor_status_changed` | Un corredor de pago cambió su disponibilidad (`operational` / `degraded` / `down`) — broadcast, ver la [guía de estado del servicio](https://docs.cbpayapp.com/es/service-status) |
 | `balance_adjusted` | Un administrador aplicó un abono o cargo manual sobre un saldo |
 | `account_status_changed` | El estado administrativo de la cuenta cambió (`active` / `blocked` / `closed`) |
 | `member_security_event` | Hecho de seguridad de un usuario de la cuenta (inicio de sesión, cambio de credenciales, factor nuevo, sesión revocada) |
@@ -885,4 +885,4 @@ cuenta. Es texto plano localizado, nunca HTML:
 El evento solo se entrega a la cuenta seleccionada por la campaña. Puede
 recibirse mediante una suscripción webhook de cuenta o el event stream;
 deduplica las entregas por `X-Webhook-Event-ID`.
-`dispute_status_changed`: consulta la [guía de disputas](https://docs.cbpayapp.com/es/guias/disputas) para payload y transiciones firmadas.  Payins fiat locales: `payin_credited` lleva `credit_asset`/`fiat_credited`; `payin_refunded` lleva `debited_asset`/`debited_amount`.
+`dispute_status_changed`: consulta la [guía de disputas](https://docs.cbpayapp.com/es/guides/disputes) para payload y transiciones firmadas.  Payins fiat locales: `payin_credited` lleva `credit_asset`/`fiat_credited`; `payin_refunded` lleva `debited_asset`/`debited_amount`.

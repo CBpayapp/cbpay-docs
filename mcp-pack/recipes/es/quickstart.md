@@ -1,9 +1,9 @@
 ---
 recipe: quickstart
 title: "Inicio rápido"
-slug: es/inicio-rapido
+slug: es/quickstart
 lang: es
-source_url: https://docs.cbpayapp.com/es/inicio-rapido
+source_url: https://docs.cbpayapp.com/es/quickstart
 ---
 Este es el camino completo de una primera integración: registro → saldo →
 tasas → payout → webhook. Al terminar habrás cerrado el ciclo entero:
@@ -26,7 +26,7 @@ Antes de empezar, los datos que vas a necesitar en todos lados:
 | **Autenticación** | Header `Authorization: Bearer <token>` (o `X-API-Key`) |
 | **Slug de organización** | `cbpay` (para registro y login) |
 | **Monedas del saldo** | 6 saldos independientes: USDT (operativa), USDC, BTC y GOLD — montos siempre como string (`"52.618258"`) |
-| **Ambientes** | Dos ambientes aislados, misma API: integra primero en **test** y pasa a live cambiando URL + key — [guía](https://docs.cbpayapp.com/es/entorno-y-pruebas) |
+| **Ambientes** | Dos ambientes aislados, misma API: integra primero en **test** y pasa a live cambiando URL + key — [guía](https://docs.cbpayapp.com/es/environment-testing) |
 
 > **Tip**
 Corre este inicio rápido primero contra el **ambiente de test**
@@ -90,7 +90,7 @@ curl https://api.qbank.cl/platform/v1/me \
 
 Para integraciones servidor-a-servidor, emite una **API key permanente** con
 `POST /v1/api-keys` — se muestra una sola vez. Más detalles en
-[autenticación](https://docs.cbpayapp.com/es/autenticacion).
+[autenticación](https://docs.cbpayapp.com/es/authentication).
 
 ### Consulta tu saldo
 
@@ -111,8 +111,8 @@ curl https://api.qbank.cl/platform/v1/balances \
 }
 ```
 
-Para operar necesitas fondos: crea un [payin](https://docs.cbpayapp.com/es/guias/payins) o deposita
-USDT on-chain con [crypto funding](https://docs.cbpayapp.com/es/guias/crypto).
+Para operar necesitas fondos: crea un [payin](https://docs.cbpayapp.com/es/guides/payins) o deposita
+USDT on-chain con [crypto funding](https://docs.cbpayapp.com/es/guides/crypto).
 
 ### Revisa tasas y comisiones
 
@@ -186,11 +186,11 @@ llega por [webhook](https://docs.cbpayapp.com/es/webhooks) (`payout_status_chang
 Los campos de `beneficiary` dependen del país y método. Consulta
 `GET /v1/payouts/methods` y `GET /v1/payouts/banks?country=CL` para conocer
 los requisitos de cada corredor — la referencia completa está en
-los [ejemplos por país de la guía de payouts](https://docs.cbpayapp.com/es/guias/payouts#ejemplos-por-pais).
+los [ejemplos por país de la guía de payouts](https://docs.cbpayapp.com/es/guides/payouts#ejemplos-por-pais).
 ### Cierra el ciclo: suscríbete al webhook
 
 El estado final del payout llega por push. Suscribe tu endpoint HTTPS (en
-desarrollo usa un [túnel](https://docs.cbpayapp.com/es/entorno-y-pruebas#probar-webhooks-en-desarrollo-local)):
+desarrollo usa un [túnel](https://docs.cbpayapp.com/es/environment-testing#probar-webhooks-en-desarrollo-local)):
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \

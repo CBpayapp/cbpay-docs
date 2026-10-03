@@ -1,9 +1,9 @@
 ---
 recipe: transfers
 title: "Transferencias internas"
-slug: es/guias/transferencias
+slug: es/guides/transfers
 lang: es
-source_url: https://docs.cbpayapp.com/es/guias/transferencias
+source_url: https://docs.cbpayapp.com/es/guides/transfers
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
@@ -37,7 +37,7 @@ Funcionan entre **cualquier combinación de cuentas**:
 
 El destino se identifica por `to_account_id`, `to_email`, **`to_phone`**
 (teléfono verificado) o **`to_contact_id`** (un
-[contacto](https://docs.cbpayapp.com/es/guias/contactos) de tu libreta):
+[contacto](https://docs.cbpayapp.com/es/guides/contacts) de tu libreta):
 
 ```bash Por teléfono (verificado)
 curl -X POST https://api.qbank.cl/platform/v1/transfers \
@@ -147,7 +147,7 @@ El receptor puede enterarse por el webhook `transfer_received` y ambos ven
 el movimiento en su historial (`transfer_out` / `transfer_in`).
 
 > **Nota**
-Cada transferencia guarda al destinatario como [contacto](https://docs.cbpayapp.com/es/guias/contactos)
+Cada transferencia guarda al destinatario como [contacto](https://docs.cbpayapp.com/es/guides/contacts)
 automáticamente (envía `"save_contact": false` para no guardarlo). Por
 seguridad, `to_phone` solo resuelve cuentas con el teléfono **verificado
 por OTP**; si más de una cuenta comparte el número responde
@@ -203,7 +203,7 @@ No — las transferencias entre cuentas de tu organización son gratis e
 instantáneas.
 #### ¿Puedo transferir entre assets distintos?
 No — ambos lados mueven el **mismo** asset (USDT a USDT, USDC a USDC…).
-Para cambiar de asset, convierte primero con [Swaps](https://docs.cbpayapp.com/es/guias/swaps).
+Para cambiar de asset, convierte primero con [Swaps](https://docs.cbpayapp.com/es/guides/swaps).
 #### ¿Una transferencia se puede reversar?
 No — las transferencias son instantáneas e irreversibles. Si enviaste a la
 cuenta equivocada, coordina la devolución con la contraparte.
@@ -216,7 +216,7 @@ Destinatarios alternativos: el alias inmutable de la cuenta y el token de
 su QR de perfil (`GET /v1/me/qr`). Todos resuelven solo dentro de tu
 organización.
 #### ¿Para qué sirve checkout_token?
-Liquida un [link de cobro](https://docs.cbpayapp.com/es/guias/checkout) por transferencia interna:
+Liquida un [link de cobro](https://docs.cbpayapp.com/es/guides/checkout) por transferencia interna:
 el destino se fuerza a la cuenta del link y el monto debe cubrir el due
 cotizado (si no, `checkout_amount_mismatch`, 422).
 Los errores de límites money-out están en la referencia pública de errores.

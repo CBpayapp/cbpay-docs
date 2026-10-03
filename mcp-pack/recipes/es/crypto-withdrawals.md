@@ -1,9 +1,9 @@
 ---
 recipe: crypto-withdrawals
 title: "Crypto: wallets, depósitos y retiros"
-slug: es/guias/crypto
+slug: es/guides/crypto
 lang: es
-source_url: https://docs.cbpayapp.com/es/guias/crypto
+source_url: https://docs.cbpayapp.com/es/guides/crypto
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
@@ -70,7 +70,7 @@ pocos segundos.
 Las wallets de depósito son **puertas de entrada**, no billeteras
 operativas: solo sirven para **recibir** crypto que se abona a tu saldo
 virtual. No envían fondos, no se exportan ni se importan (para eso están
-las [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas)).
+las [wallets segregadas](https://docs.cbpayapp.com/es/guides/segregated-wallets)).
 
 > **Nota**
 Dos productos, dos rutas: las wallets de depósito viven en
@@ -111,7 +111,7 @@ Con el par ya provisionado — `422`:
   gratis; si la creación falla, el cargo se reembolsa automáticamente).
 - ¿Necesitas **varias wallets** con saldo propio (por cliente, por
   proyecto, por unidad de negocio)? Ese es el producto
-  [wallets segregadas](https://docs.cbpayapp.com/es/guias/wallets-segregadas): empresas sin límite,
+  [wallets segregadas](https://docs.cbpayapp.com/es/guides/segregated-wallets): empresas sin límite,
   personas 1 por combinación red+activo.
 
 ## Ver mis wallets
@@ -270,7 +270,7 @@ Respuesta `202` — se debita `amount + fee` y la transacción se transmite:
 ```
 
 > **Nota**
-Cada retiro guarda la dirección como [contacto](https://docs.cbpayapp.com/es/guias/contactos)
+Cada retiro guarda la dirección como [contacto](https://docs.cbpayapp.com/es/guides/contacts)
 automáticamente — nómbralo con `"contact_name"` en el body, o desactívalo
 con `"save_contact": false`. Para repetir un envío, usa
 `"to_contact_id"` en vez de `to_address` (se usa la dirección guardada del
@@ -304,7 +304,7 @@ curl https://api.qbank.cl/platform/v1/crypto/withdrawals/5e8c… \
 
 > **Nota**
 Para mover saldo a **otra cuenta CBPay** no uses la blockchain: las
-[transferencias internas](https://docs.cbpayapp.com/es/guias/transferencias) son instantáneas y
+[transferencias internas](https://docs.cbpayapp.com/es/guides/transfers) son instantáneas y
 gratis.
 ### Travel Rule (retiros sobre el umbral)
 
@@ -454,7 +454,7 @@ Los retiros sobre el umbral USD de Travel Rule de tu organización exigen
 (los errores 422 `travel_rule_*` te guían campo a campo).
 #### ¿Puedo retirar GOLD on-chain?
 No — GOLD es un saldo solo de ledger sin riel on-chain. Conviértelo primero
-con [Swaps](https://docs.cbpayapp.com/es/guias/swaps) a un asset retirable.
+con [Swaps](https://docs.cbpayapp.com/es/guides/swaps) a un asset retirable.
 #### ¿Por qué mi retiro se bloqueó con compliance_hold?
 La dirección de destino no pasó el screening de compliance. La operación
 queda registrada como fallida y tus fondos se reembolsan; contacta a tu

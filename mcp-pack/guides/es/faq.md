@@ -20,11 +20,11 @@ simulado) y **live** (`https://api.qbank.cl/platform`, keys `pk_...`,
 dinero real). Integra primero contra test: todos los corredores los sirve
 un simulador determinista con valores mágicos para forzar cada camino de
 falla, y pasar a live es solo cambiar la URL base y la key. Guía completa
-en [entorno y pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas).
+en [entorno y pruebas](https://docs.cbpayapp.com/es/environment-testing).
 #### ¿Cómo pongo saldo en mi cuenta para empezar?
 Dos caminos: (1) **deposita USDT on-chain** — crea una wallet con
 `POST /v1/crypto/wallets` y envía USDT a esa dirección (TRON o Ethereum);
-(2) **cobra fiat** con un [payin](https://docs.cbpayapp.com/es/guias/payins) (QR, transferencia
+(2) **cobra fiat** con un [payin](https://docs.cbpayapp.com/es/guides/payins) (QR, transferencia
 anunciada, etc.). En ambos casos el saldo se acredita solo y te llega un
 webhook.
 #### ¿Necesito pasar KYC/KYB antes de operar?
@@ -33,7 +33,7 @@ empresa = KYB) antes de mover dinero hacia afuera. Mientras tanto puedes
 **fondear** (payins, depósitos crypto, transferencias entrantes) y leer;
 las demás acciones responden `403 verification_required`. Pide tu link con
 `POST /v1/me/verification/link` y completa el wizard —
-[guía completa](https://docs.cbpayapp.com/es/guias/kyc). Si algo te responde `403 account_blocked`,
+[guía completa](https://docs.cbpayapp.com/es/guides/kyc). Si algo te responde `403 account_blocked`,
 contacta al equipo de CBPay.
 #### ¿Por qué una operación me responde 403 service_disabled?
 Ese servicio no está habilitado para tu cuenta (los servicios se activan por
@@ -50,7 +50,7 @@ inician sesión. Ambas van en `Authorization: Bearer <token>` (o
 Las cuentas existentes quedan preconfiguradas `locale=es` (one-shot en el deploy, no es un endpoint).
 Las cuentas nuevas nacen en inglés salvo body de registro, `Accept-Language` o `default_locale` de la org.
 Cámbialo con `PATCH /v1/me` `{ "locale": "en" }`. Las respuestas JSON de la API siguen en inglés.
-Ver [Idioma y locale](https://docs.cbpayapp.com/es/guias/idioma).
+Ver [Idioma y locale](https://docs.cbpayapp.com/es/guides/locale).
 ## Dinero y tasas
 
 #### ¿En qué moneda está mi saldo?
@@ -61,7 +61,7 @@ cuenta al momento de ejecutar (`rate` para payouts, `payin_rate` para
 payins); también puedes liquidar payouts desde otro saldo
 (`settlement_asset`) y quedarte con tus payins en el asset que elijas
 (`default_payin_asset`). Ver
-[modelo de dinero](https://docs.cbpayapp.com/es/conceptos/modelo-de-dinero).
+[modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model).
 #### ¿Cómo sé cuánto me va a costar un payout antes de crearlo?
 Consulta `GET /v1/rates` (devuelve **tu** tasa por país) y calcula:
 
@@ -86,7 +86,7 @@ Las define CBPay para tu cuenta: por servicio (payout, payin, funding,
 retiro, KYC, creación de wallet), por país y con componente % y/o fijo.
 `GET /v1/rates` devuelve tu lista efectiva en el campo `fees` (y los
 porcentajes de FX ya vienen dentro de la tasa cotizada). Detalle en
-[comisiones](https://docs.cbpayapp.com/es/conceptos/comisiones).
+[comisiones](https://docs.cbpayapp.com/es/concepts/fees).
 ## Payouts
 
 #### ¿Cuánto tarda un payout en llegar?
@@ -103,9 +103,9 @@ una `idempotency_key` **nueva**.
 Sí — ese es el propósito de la `idempotency_key`: si repites la misma
 clave, recibes el payout original (`idempotency_hit: true`) sin crear ni
 debitar nada nuevo. Usa una clave distinta solo cuando realmente quieras
-crear otro pago. Ver [idempotencia](https://docs.cbpayapp.com/es/conceptos/idempotencia).
+crear otro pago. Ver [idempotencia](https://docs.cbpayapp.com/es/concepts/idempotency).
 #### ¿Cómo sé qué campos lleva el beneficiary de cada país?
-En los [ejemplos por país](https://docs.cbpayapp.com/es/guias/payouts#ejemplos-por-pais) hay una tabla de campos
+En los [ejemplos por país](https://docs.cbpayapp.com/es/guides/payouts#ejemplos-por-pais) hay una tabla de campos
 y un ejemplo completo por país y método, y
 `GET /v1/payouts/banks?country=XX` te da los códigos de banco vigentes
 cuando aplican.
@@ -144,13 +144,13 @@ La detección es casi inmediata y el abono llega cuando la red confirma:
 congestión. El webhook `crypto_deposit_credited` cierra el ciclo con el
 `tx_id` para que lo verifiques en el explorador.
 #### ¿Cómo saco un estado de cuenta para mi contador?
-Con la [cartola](https://docs.cbpayapp.com/es/guias/cartola): un endpoint que consolida todos los
+Con la [cartola](https://docs.cbpayapp.com/es/guides/statement): un endpoint que consolida todos los
 movimientos del período (payouts, payins, crypto, transferencias y
 comisiones) con cuadratura contable exacta. Pide `format=pdf` o
 `format=xlsx` para descargar el documento con branding CBPay, o `json`
 para mostrarla en tu web.
 #### ¿El saldo de banking y mi saldo USDT son lo mismo?
-No. El dinero de [banking](https://docs.cbpayapp.com/es/guias/banking) vive en **tus cuentas
+No. El dinero de [banking](https://docs.cbpayapp.com/es/guides/banking) vive en **tus cuentas
 bancarias reales** (USD u otras monedas habilitadas) y se consulta con
 `GET /v1/banking/accounts/{id}/balance`. Tu saldo CBPay es USDT y solo se
 toca para cobrar las comisiones fijas de banking (que se reembolsan si la
@@ -169,13 +169,13 @@ API (`GET /v1/payouts/{id}`, `GET /v1/payins/{id}`…) en cualquier momento.
 #### ¿Cómo pruebo webhooks desde mi máquina (localhost)?
 Las URLs locales se rechazan por seguridad. Usa un túnel HTTPS gratuito
 (Cloudflare Tunnel o ngrok) y suscribe esa URL pública — receta paso a
-paso en [ambiente y pruebas](https://docs.cbpayapp.com/es/entorno-y-pruebas).
+paso en [ambiente y pruebas](https://docs.cbpayapp.com/es/environment-testing).
 #### ¿Cuál es la diferencia entre GET /v1/movements y la cartola?
 Leen el mismo ledger: `movements` es la vista programática paginada (para
 conciliación automática y tu UI); la cartola es el snapshot del período con
 totales, desgloses y cuadratura garantizada (para cierres contables).
 Nunca discrepan. Detalle en
-[movimientos y conciliación](https://docs.cbpayapp.com/es/conceptos/movimientos-y-conciliacion).
+[movimientos y conciliación](https://docs.cbpayapp.com/es/concepts/movements-reconciliation).
 #### ¿Por qué recibí el mismo webhook dos veces?
 Las entregas son **at-least-once**: ante timeouts se reintenta (hasta 5
 veces). Deduplica con el header `X-Webhook-Event-ID`, que es único por

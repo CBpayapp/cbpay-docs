@@ -1,9 +1,9 @@
 ---
 recipe: payouts
 title: "Payouts"
-slug: es/guias/payouts
+slug: es/guides/payouts
 lang: es
-source_url: https://docs.cbpayapp.com/es/guias/payouts
+source_url: https://docs.cbpayapp.com/es/guides/payouts
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
@@ -122,7 +122,7 @@ dependen del corredor (RUT y banco en Chile, CLABE en México, CCI en Perú,
 llave PIX en Brasil, etc.). El catálogo de métodos documenta los campos de
 cada uno.
 > **Nota**
-Cada payout guarda al beneficiario como [contacto](https://docs.cbpayapp.com/es/guias/contactos)
+Cada payout guarda al beneficiario como [contacto](https://docs.cbpayapp.com/es/guides/contacts)
 automáticamente (`"save_contact": false` para no guardarlo). Para repetirle
 un pago sin re-tipear sus datos, envía `"beneficiary_contact_id"` en vez de
 `beneficiary` — se usa su beneficiario guardado más reciente para ese país
@@ -167,7 +167,7 @@ el payout está en curso viene vacío (`""`); cuando el payout queda
 `completed`, lleva el id de transacción asignado por el banco/rail de
 destino. Es el valor que el beneficiario puede usar para cruzar el pago con
 su banco, y también aparece en el webhook `payout_status_changed`, el
-comprobante PDF, el export CSV de payouts y la cartola. Las respuestas, CSV, webhooks y comprobantes también incluyen `uetr` (UETR/SWIFT gpi) e `imad` (wire/ACH doméstico), vacíos hasta que el banco los reporte; usa el [tracker público](https://docs.cbpayapp.com/es/guias/seguimiento) para el estado vivo y el mismo comprobante.
+comprobante PDF, el export CSV de payouts y la cartola. Las respuestas, CSV, webhooks y comprobantes también incluyen `uetr` (UETR/SWIFT gpi) e `imad` (wire/ACH doméstico), vacíos hasta que el banco los reporte; usa el [tracker público](https://docs.cbpayapp.com/es/guides/tracking) para el estado vivo y el mismo comprobante.
 ### Pagar desde otro saldo (`settlement_asset`)
 
 Por defecto el débito sale de tu asset de settlement predeterminado (USDT
@@ -269,7 +269,7 @@ camino de débito, el mismo payout puede terminar `failed` con
 `payout_status_changed` omiten `receipt_url`, porque no hubo débito, hold ni
 comprobante que revertir. Es distinto de un `failed` posterior al débito,
 donde el débito exacto se reembolsa antes del evento terminal.
-Para conocer el origen de la tasa y las cotizaciones FIFO indicativas, revisa [Orígenes de tasa de payouts y cotizaciones FIFO](https://docs.cbpayapp.com/es/guias/payout-rate-sources).
+Para conocer el origen de la tasa y las cotizaciones FIFO indicativas, revisa [Orígenes de tasa de payouts y cotizaciones FIFO](https://docs.cbpayapp.com/es/guides/payout-rate-sources).
 
 ## 3. Recibe el estado final
 
@@ -1188,7 +1188,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 ## SEPA Instant en EUR
 
-Consulta la [guía dedicada de payouts SEPA Instant](https://docs.cbpayapp.com/es/guias/sepa-instant-payouts)
+Consulta la [guía dedicada de payouts SEPA Instant](https://docs.cbpayapp.com/es/guides/sepa-instant-payouts)
 para la única fila de enrutamiento Europa (`EU`)/EUR/`sepa`; el país real del
 beneficiario sale del IBAN. Los IBAN GB fallan rápido con HTTP 400 antes del
 despacho; SEPA Credit Transfer para GB es alcance futuro.
@@ -1264,8 +1264,8 @@ Pagar un QR de cobro (Bolivia, PIX de Brasil) ahora tiene su propia guía:
 | 400 | `invalid_document_key` | La `supporting_document_key` no pertenece a tu cuenta — sube el documento con tu propia sesión |
 | 402 | `insufficient_funds` | Fondea la cuenta; el payout no se creó |
 | 403 | `account_blocked` | La cuenta no está activa; contacta al equipo de CBPay |
-| 403 | `service_disabled` | Payouts no está habilitado para tu cuenta — ver [servicios](https://docs.cbpayapp.com/es/conceptos/servicios) |
-| 403 | `compliance_hold` | El payout fue retenido por los controles de cumplimiento de la plataforma y NO se creó (sin débito). Por política no se informa la razón exacta — contacta a soporte con el timestamp; ver [errores](https://docs.cbpayapp.com/es/errores) |
+| 403 | `service_disabled` | Payouts no está habilitado para tu cuenta — ver [servicios](https://docs.cbpayapp.com/es/concepts/services) |
+| 403 | `compliance_hold` | El payout fue retenido por los controles de cumplimiento de la plataforma y NO se creó (sin débito). Por política no se informa la razón exacta — contacta a soporte con el timestamp; ver [errores](https://docs.cbpayapp.com/es/errors) |
 | 422 | `currency_not_supported` | No hay tasa FX para esa moneda |
 | 422 | (payout con `status: failed`) | El corredor rechazó los datos; el débito ya fue reembolsado — corrige `beneficiary` y reintenta con clave nueva |
 | 503 | `channel_unavailable` | El canal de pago está temporalmente no disponible; reintenta más tarde con la MISMA `idempotency_key` |
@@ -1290,7 +1290,7 @@ webhook con `status: failed` y el reembolso automático en ese momento.
 
 En todos los casos el reembolso ya está aplicado — verifícalo con la
 entrada `payout_refund` en
-[movimientos](https://docs.cbpayapp.com/es/conceptos/movimientos-y-conciliacion).
+[movimientos](https://docs.cbpayapp.com/es/concepts/movements-reconciliation).
 
 > **Nota**
 Un payout en `processing` no se puede cancelar por API: el rail ya lo tiene.

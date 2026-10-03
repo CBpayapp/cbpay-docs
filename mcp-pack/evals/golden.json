@@ -61,7 +61,7 @@
       ],
       "must_not_contain": [],
       "question": "¿Cuál es la URL base del ambiente de pruebas y el prefijo de las API keys de test?",
-      "source_slug": "es/entorno-y-pruebas"
+      "source_slug": "es/environment-testing"
     },
     {
       "id": "g06-error-insufficient-funds",
@@ -82,7 +82,7 @@
       ],
       "must_not_contain": [],
       "question": "¿Qué significa el error idempotency_key_required?",
-      "source_slug": "es/errores"
+      "source_slug": "es/errors"
     },
     {
       "id": "g08-webhook-payin-credited",
@@ -155,7 +155,7 @@
         "PayCaddy"
       ],
       "question": "¿Cómo cobro de forma recurrente con una tarjeta guardada?",
-      "source_slug": "es/guias/stored-cards-subscriptions"
+      "source_slug": "es/guides/stored-cards-subscriptions"
     }
   ]
 }

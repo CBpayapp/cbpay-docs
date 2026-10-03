@@ -12,7 +12,7 @@ export const EnvUrls = ({ lang = "en" }) => {
       live: "Live",
       hint: "La misma API en ambos ambientes — construye primero contra test y pasa a live cambiando la URL base y la key.",
       guide: "Entorno y pruebas",
-      href: "/es/entorno-y-pruebas",
+      href: "/es/environment-testing",
     },
     zh: {
       test: "Test",
