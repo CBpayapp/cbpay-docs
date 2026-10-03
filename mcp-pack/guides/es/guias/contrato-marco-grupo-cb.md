@@ -46,8 +46,29 @@ No existen los estados `draft` ni `pending`.
 
 Para `lang=en`, la organización debe tener
 `contract_counsel_approved_en=true`. La emisión en español no requiere ese
-gate de counsel en inglés. La plantilla es `v13.3`; el hash y la versión de
-firma de CBPay quedan congelados en el snapshot del sobre.
+gate de counsel en inglés. La fuente legal vigente es el Contrato Marco
+Grupo CB en español, versión v13.4. El texto inglés v13.4 es un borrador
+pendiente de revisión externa; su emisión sigue protegida por el gate de
+counsel.
+
+## Base legal y de renderizado v13.4
+
+La versión española v13.4 es la vigente. La cirugía legal elimina Colombia,
+incorpora una fila PIX, fija el acuse de recepción de instrucción vía API en
+p95 menor a 2 segundos y p99 menor a 5 segundos, y usa un corte diario a las
+00:00 UTC del día siguiente a la creación. La documentación inglesa describe
+el borrador hasta completar la revisión externa.
+
+Cada PDF se renderiza con el branding de la organización emisora: logo,
+colores primarios, portada, footer y marca de agua salen de la configuración
+de branding de esa organización. CBPay es solo el branding por defecto. El
+sobre congela `template_version` y el SHA de la plantilla en su snapshot,
+para auditar exactamente qué bytes se revisaron y firmaron.
+
+Si la versión o el SHA actual ya no coinciden con el snapshot, la firma falla
+cerrado con HTTP 422 `contract_template_superseded`. No firmes el texto viejo:
+voida el sobre pendiente con un motivo y emite uno nuevo con una nueva
+idempotency key; el nuevo PDF debe revisarse antes de firmar.
 
 ## Cobertura de precios y cifras mostradas
 
@@ -143,7 +164,7 @@ Respuesta de lista:
     {
       "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
       "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-      "template_version": "v13.3",
+      "template_version": "v13.4",
       "lang": "es",
       "status": "pending_client",
       "doc_hash": "sha256-of-the-presigned-pdf",
@@ -163,7 +184,7 @@ Respuesta completada:
 {
   "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
   "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
-  "template_version": "v13.3",
+  "template_version": "v13.4",
   "lang": "es",
   "status": "completed",
   "doc_hash": "sha256-of-the-presigned-pdf",
@@ -174,7 +195,17 @@ Respuesta completada:
   "signed_at": "2026-10-01T14:03:12Z",
   "otp_channel": "otp",
   "created_at": "2026-10-01T14:00:00Z",
-  "updated_at": "2026-10-01T14:03:12Z"
+  "updated_at": "2026-10-01T14:03:12Z",
+  "events": [
+    {
+      "event": "completed",
+      "actor": "jordan@example.com",
+      "created_at": "2026-10-01T14:03:12Z",
+      "detail": {
+        "final_hash": "sha256-of-the-final-pdf"
+      }
+    }
+  ]
 }
 ```
 
@@ -199,6 +230,12 @@ PDF final por email y puede leerlo en sus endpoints de sobres.
 La hora de firma y el idioma siguen disponibles en el detalle del sobre.
 No infieras la finalización desde el email: usa el evento y el estado.
 
+La colección `events` del detalle es append-only. Sus valores `event` son
+`created`, `viewed_client`, `signed_cbpay`, `notified`, `signed_client`,
+`completed`, `resent` y `voided`. El detalle expone también el
+`template_version` congelado; el snapshot visible para la cuenta contiene el
+SHA de la plantilla sin exponer identidades internas de operadores.
+
 ## Errores y solución
 
 | HTTP | Código | Causa y solución |
@@ -211,6 +248,7 @@ No infieras la finalización desde el email: usa el evento y el estado.
 | 401 | `invalid_otp` | OTP ausente, vencido o consumido; solicita otro y envíalo en `X-OTP-Token`. |
 | 404 | `not_found` | El sobre no existe o pertenece a otra cuenta; usa un ID de tu lista. |
 | 409 | `contract_invalid_state` | Ya está completado o voided; no repitas la ceremonia. |
+| 422 | `contract_template_superseded` | El sobre usa una plantilla anterior; voida y emite un sobre nuevo antes de firmar. |
 | 422 | `invalid_lang` | Usa exactamente `es` o `en`. |
 | 422 | `contract_account_ineligible` | La cuenta no es empresa activa con KYB aprobado. |
 | 422 | `contract_unfillable` | Falta un dato verificable o una cobertura de precios; revisa `missing` para `pricing:<flag>`, corrige la fuente y emite un sobre nuevo. |
@@ -236,3 +274,7 @@ No infieras la finalización desde el email: usa el evento y el estado.
 #### ¿Puedo reintentar la firma?
     Sí, con el mismo sobre y un OTP nuevo. El claim atómico impide una segunda
     firma; un sobre completado responde `contract_invalid_state`.
+#### ¿Qué hago si la plantilla quedó obsoleta?
+    La firma devuelve `contract_template_superseded`. Vuelve a `voided` el
+    sobre `pending_client` con un motivo, emite un sobre nuevo con otra
+    idempotency key y revisa el PDF nuevo antes de firmar.

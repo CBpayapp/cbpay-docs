@@ -4,7 +4,24 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="2 de octubre de 2026" description="v2.148 · 5 versiones">
+<Update label="2 de octubre de 2026" description="v2.149 · 6 versiones">
+### v2.149
+**Agregado**
+
+- Se incorporó la plantilla `v13.4` del Contrato Marco Grupo CB al flujo de
+  contratos de cuenta. La versión en español es la vigente; la versión en
+  inglés sigue como draft pendiente de revisión externa.
+- El detalle del contrato expone `template_version` congelado y los `events`
+  append-only del ciclo de vida. Firmar falla cerrado con
+  `422 contract_template_superseded` si el sobre nació con una plantilla
+  anterior; se debe anular y emitir un sobre nuevo, no firmarlo.
+
+**Cambiado**
+
+- El contrato legal en español elimina Colombia, agrega la fila PIX, documenta
+  la latencia p95/p99 del acuse de recepción de instrucciones vía API y fija el
+  corte diario en `00:00 UTC` para el día siguiente.
+
 ### v2.148
 **Cambiado**
 
