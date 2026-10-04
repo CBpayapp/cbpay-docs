@@ -1,14 +1,14 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.152"
+  version: "2.153"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
 
     withdrawals, and KYC screening. Every account holds ten independent
 
-    virtual balances — USD (the principal currency of new accounts), USDT, USDC, BTC, GOLD,
+    virtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD,
     SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat
     with two decimals) — convertible on demand with swaps.
 
@@ -45,10 +45,10 @@ tags:
 - name: Balances
   description: Balances, movement history and FX rates.
 - name: Payouts
-  description: Fiat dispersals debited from the settlement balance of your choice (USD for new accounts; USDT for existing accounts).
+  description: Fiat dispersals debited from the settlement balance of your choice (USD is the principal balance).
 - name: Payins
   description: Fiat top-ups (QR, transfers, dedicated accounts, pull collections, cards, checkout links)
-    credited automatically — in USD for new accounts; USDT for existing accounts, or auto-converted to the settlement asset of your choice.
+    credited automatically — in USD, or auto-converted to the settlement asset of your choice.
 - name: Checkout
   description: >-
     Universal checkout links (`POST /v1/payins` with `method: "checkout"`) and the public
@@ -2854,7 +2854,7 @@ paths:
       operationId: getBalances
       summary: Get balances
       description: The ten independent virtual balances of the calling account (USD — the principal
-        currency of new accounts —, USDT, USDC, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver,
+        currency —, USDT, USDC, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver,
         PLATINUM in grams of fine platinum, and fiat BOB, MXN and ARS with two decimals). Every supported asset is always present,
         with zeros if the account has not used that currency yet. If the account uses Banking, its BANK_USD/BANK_EUR
         mirror balances are also listed with the `custody` marker set to `banking` (the authoritative
@@ -3731,7 +3731,7 @@ paths:
 
 
         **Pay from any balance**: by default the debit comes from your account''s default settlement asset
-        (`default_settlement_asset` — USD on new accounts, USDT on existing accounts; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM)
+        (`default_settlement_asset` — USD is the principal balance; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM)
         to pay this specific operation from another balance: the total converts to that asset at
         the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and
         the debit, hold and — if it fails — the refund all live in that asset for the exact same amount.
@@ -3906,7 +3906,7 @@ paths:
                   - MXN
                   - ARS
                   description: Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN and ARS. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's
-                    default settlement asset (USD for new accounts; existing accounts with an explicit USDT setting keep USDT).
+                    default settlement asset (USD is the principal balance).
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -5105,7 +5105,7 @@ paths:
                   - PLATINUM
                   description: Checkout only — the virtual balance the charge is denominated in and
                     settles into. When omitted it resolves to your `payin_settlement_asset`
-                    (`USD` for new accounts). Every payment is auto-converted to this asset on credit (same-asset
+                    (`USD` is the principal balance). Every payment is auto-converted to this asset on credit (same-asset
                     payments skip conversion). Local fiat (BOB, MXN, ARS) is rejected. Must be enabled for your organization
                     (`422 settlement_asset_disabled` otherwise).
                 save_card:
@@ -6161,7 +6161,7 @@ paths:
       summary: Create an internal transfer
       description: 'Moves balance between two CBPay accounts, atomically and always free of charge — any
         combination works: person to person, person to company, company to person or company to company.
-        Works with the ten virtual balances (`USD` for new accounts; `USDT` for existing accounts, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`, `BOB`, `MXN`, `ARS`) and always between
+        Works with the ten virtual balances (`USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`, `BOB`, `MXN`, `ARS`) and always between
         balances of the **same currency** (no conversion). The destination is resolved by `to_account_id`,
         `to_email`, `to_phone` (OTP-verified phones only) or `to_contact_id`. Every transfer saves the
         recipient as a contact automatically (opt out with `save_contact: false`). The recipient''s webhook
@@ -6219,7 +6219,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: Balance currency to move (any of USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN or ARS); the destination receives in this same currency. When omitted it resolves to the sender's settlement asset (USD for new accounts, USDT for existing accounts).
+                  description: Balance currency to move (any of USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN or ARS); the destination receives in this same currency. When omitted it resolves to the sender's settlement asset (USD is the principal balance).
                 amount:
                   type: string
                   description: Positive decimal string, up to the currency's decimals (2 for USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM,
@@ -15359,7 +15359,7 @@ paths:
         >-
         Opens the account's banking profile (once per account). Omitted `type`/`name`/`email`
         autofill from the CBPay account. Billed as the fixed `banking_customer` fee from your settlement
-        asset (USD for new accounts; USDT for existing accounts); refunded if the corridor rejects.
+        asset (USD is the principal balance); refunded if the corridor rejects.
         The platform derives a deterministic core idempotency claim for this account/profile. Repeating the same request returns the original customer with `idempotency_hit: true` and never creates a second profile or charges a second profile fee. A payload change for the same account returns `409 idempotency_conflict`. If the upstream outcome is ambiguous, the response is `503 banking_recovery_pending`; do not retry with a new key.
       requestBody:
         required: true
@@ -16673,7 +16673,7 @@ paths:
       summary: Create a card
       description: 'Issues a card (virtual or physical) that spends Just-In-Time from the account''s central
         balance in the card''s spending asset (`spending_asset`: USDT/USDC 1:1 with the USD, or BTC/GOLD/SILVER/PLATINUM
-        converted at the price of the moment of each event; USD for new accounts; USDT for existing accounts) — no prefunding: every purchase
+        converted at the price of the moment of each event) — no prefunding: every purchase
         is authorized in real time against the available balance and the card''s own limits. Person accounts
         can hold **1 live card total and 1 open application**; company accounts can create **unlimited**
         cards. New physical issuance is temporarily unavailable; existing physical cards continue operating.
@@ -16707,7 +16707,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: Balance the card spends from. When omitted it uses the account's settlement asset (USD for new accounts, USDT for existing accounts). USD/USDT/USDC are at par (exact
+                  description: Balance the card spends from. When omitted it uses the account's settlement asset (USD is the principal balance). USD/USDT/USDC are at par (exact
                     1:1, no conversion fee). BTC/GOLD/SILVER/PLATINUM convert at the effective price of the moment of
                     each event, with a reserve cushion at authorization (fail-closed pricing, per-operation
                     and 24h volatile limits shared with payouts).
@@ -23837,7 +23837,7 @@ components:
           - SILVER
           - PLATINUM
           description: Balance the card's purchases spend from. USDT/USDC 1:1 with the USD; BTC/GOLD/SILVER/PLATINUM converted
-            at the price of the moment of each event. USD for new accounts; USDT for existing accounts. Changing it only affects future
+            at the price of the moment of each event. Changing it only affects future
             purchases.
         limits:
           type: object
@@ -24463,7 +24463,7 @@ components:
           - SILVER
           - PLATINUM
           description: Balance payins settle into by default. Credits land in the account's principal
-            asset (USD on new accounts, USDT on existing); when set to a different asset, the net
+            asset (USD is the principal balance); when set to a different asset, the net
             amount is auto-converted via the swap engine at the real price, with no extra swap
             spread. Checkout/POS payins keep their per-link asset.
         enabled_assets:

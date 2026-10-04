@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.152"
-  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(新账户的记账本币;存量账户保持 USDT,除非自行更改)、USDT、USDC、BTC、
+  version: "2.153"
+  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从七个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -35,9 +35,9 @@ tags:
 - name: 余额
   description: 余额、流水历史与外汇汇率。
 - name: 付款(Payouts)
-  description: 从你选择的结算余额扣款的法币派发(默认 USDT)。
+  description: 从你选择的结算余额扣款的法币派发(USD 为主资产)。
 - name: 收款(Payins)
-  description: 法币充值(二维码、转账、专属账户、pull 收款、卡片、checkout 链接)自动入账——默认入账 USDT,也可自动兑换为你选择的结算资产。
+  description: 法币充值(二维码、转账、专属账户、pull 收款、卡片、checkout 链接)自动入账——以 USD 入账,也可自动兑换为你选择的结算资产。
 - name: 收银台(Checkout)
   description: >-
     通用收银台链接(`POST /v1/payins`,`method: "checkout"`)与公开支付页端点——多国法币、每个链接专属临时钱包的加密货币支付,以及
@@ -2679,7 +2679,7 @@ paths:
       - 余额
       operationId: getBalances
       summary: 获取余额
-      description: 调用账户的十个独立虚拟余额(USD——新账户的记账本币——、USDT、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
+      description: 调用账户的十个独立虚拟余额(USD(主资产)、USDT、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
         Banking,其 BANK_USD/BANK_EUR 镜像余额也会列出,`custody` 标记为 `banking`(权威余额在银行;这些余额在平台内不可消费)。
       responses:
         '200':
@@ -3520,7 +3520,7 @@ paths:
       description: '向本地银行账户派发法币。本地金额按**你账户的汇率**(与 `GET /v1/rates` 返回的相同)转换为 USDT;扣除 `usdt_amount` 加固定费用(如有配置)并冻结,直到派发完成。若失败,全额退款。
 
 
-        **从任意余额支付**:默认从你账户的默认结算资产扣款(`default_settlement_asset`——新账户为 USD,存量账户为 USDT;用 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM)
+        **从任意余额支付**:默认从你账户的默认结算资产扣款(`default_settlement_asset`——USD 为主资产;用 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM)
         可让这笔操作从其他余额支付:总额按当时的有效结算价格转换为该资产(见 `GET /v1/rates` 的 `settlement` 块),扣款、冻结以及失败时的退款都在该资产中且金额完全一致。若
         BTC/GOLD/SILVER/PLATINUM 的执行价格不可用,请求返回 `503 pricing_unavailable`;波动性资产还有单笔限额(`422 settlement_limit_exceeded`)。
 
@@ -3660,7 +3660,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: 此操作要扣款的虚拟余额。可接受的值:USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 与 ARS。法币执行目前返回 503 pricing_unavailable。省略则使用账户的默认结算资产(`default_settlement_asset`——新账户为 USD,存量账户为 USDT)。
+                  description: 此操作要扣款的虚拟余额。可接受的值:USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 与 ARS。法币执行目前返回 503 pricing_unavailable。省略则使用账户的默认结算资产(`default_settlement_asset`——USD 为主资产)。
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -5902,7 +5902,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: 要划转的余额币种;接收方以同一币种入账。省略时使用付款方的结算资产(新账户为 USD,存量账户为 USDT)。
+                  description: 要划转的余额币种;接收方以同一币种入账。省略时使用付款方的结算资产(USD 为主资产)。
                 amount:
                   type: string
                   description: 正数十进制字符串,不超过该货币的小数位数(USD/BOB/MXN/ARS 为 2 位,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
@@ -14729,7 +14729,7 @@ paths:
       summary: 创建我的银行档案
       description: >-
         开通账户的银行档案(每个账户一次)。省略的 `type`/`name`/`email` 从 CBPay 账户自动填充。按固定 `banking_customer` 费用从
-        你的结算资产(默认 USDT)计费;若通道拒绝则退款。
+        你的结算资产(USD 为主资产)计费;若通道拒绝则退款。
         平台会为该账户/档案在核心生成确定性的幂等 claim。重复相同请求会返回原 customer，并带有 `idempotency_hit: true`，不会创建第二个档案或再次收取档案费用。相同账户修改 payload 会返回 `409 idempotency_conflict`。如果上游结果不明确，返回 `503 banking_recovery_pending`；不要使用新密钥重试。
       requestBody:
         required: true
@@ -16021,7 +16021,7 @@ paths:
       operationId: createCard
       summary: 创建卡片
       description: 发行一张卡片(虚拟或实体),以 Just-In-Time 方式从账户中央余额按卡片的消费资产扣款(`spending_asset`:USDT/USDC 与 USD 1:1,或
-        BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换;默认 USDT)——无需预充值:每笔消费都实时对照可用余额和卡片自身限额授权。个人账户最多持有 **1 张有效卡并有 1 条开放申请**；新实体卡发行暂时不可用；已经发行的实体卡继续正常使用;企业账户可创建**不限数量**的卡片,为企业本身或指定人员(例如员工,传入其身份文件)。若配置了
+        BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换;默认 USD)——无需预充值:每笔消费都实时对照可用余额和卡片自身限额授权。个人账户最多持有 **1 张有效卡并有 1 条开放申请**；新实体卡发行暂时不可用；已经发行的实体卡继续正常使用;企业账户可创建**不限数量**的卡片,为企业本身或指定人员(例如员工,传入其身份文件)。若配置了
         `card_creation_virtual` / `card_creation_physical` 费用则在发卡时计费(0 = 免费);发卡失败自动退款。实体卡初始状态为 `pending_activation`,直到持卡人确认收到。
       requestBody:
         required: true
@@ -16048,7 +16048,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: 卡片消费扣款的余额。省略时使用账户的结算资产(新账户为 USD,存量账户为 USDT)。USD/USDT/USDC 与 USD 等价(精确 1:1,无转换费)。BTC/GOLD/SILVER/PLATINUM 按每笔事件当时的有效价格转换,并在授权时预留缓冲(fail-closed
+                  description: 卡片消费扣款的余额。省略时使用账户的结算资产(USD 为主资产)。USD/USDT/USDC 与 USD 等价(精确 1:1,无转换费)。BTC/GOLD/SILVER/PLATINUM 按每笔事件当时的有效价格转换,并在授权时预留缓冲(fail-closed
                     定价,单笔及 24 小时波动限额与 payouts 共享)。
                 limits:
                   type: object
@@ -16916,7 +16916,7 @@ paths:
       - 账户
       operationId: updateSettlement
       summary: 设置我的默认余额(payouts 与 payins)
-      description: 更改你的默认余额。`default_settlement_asset` 是当请求未显式传 `settlement_asset` 时,payout 和服务费默认扣款的余额。`default_payin_asset` 是 payins 默认入账的余额——`USD`(新账户默认值)直接以美分 USD 入账净额;其他目标则通过 swap 引擎按真实价格自动兑换净额,不收取额外 swap 价差(payin 已支付其手续费与汇率;checkout 与 POS 收款保留其链接资产)。可为 USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM(需组织启用)。可发送其中一个或两个字段。仅对新操作生效;进行中的操作不会重新计价。
+      description: 更改你的默认余额。`default_settlement_asset` 是当请求未显式传 `settlement_asset` 时,payout 和服务费默认扣款的余额。`default_payin_asset` 是 payins 默认入账的余额——`USD`(主资产)直接以美分 USD 入账净额;其他目标则通过 swap 引擎按真实价格自动兑换净额,不收取额外 swap 价差(payin 已支付其手续费与汇率;checkout 与 POS 收款保留其链接资产)。可为 USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM(需组织启用)。可发送其中一个或两个字段。仅对新操作生效;进行中的操作不会重新计价。
       requestBody:
         required: true
         content:
@@ -23031,7 +23031,7 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: 卡片消费扣款的余额。USDT/USDC 与 USD 1:1;BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换。默认 USDT。修改仅影响之后的消费。
+          description: 卡片消费扣款的余额。USDT/USDC 与 USD 1:1;BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换。默认 USD。修改仅影响之后的消费。
         limits:
           type: object
           description: 消费限额,始终以 USD 计,与消费资产无关。
@@ -23645,7 +23645,7 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: payins 默认入账的余额。入账进入账户的主资产(新账户为 USD,旧账户为 USDT);设置为不同资产时,净额通过 swap 引擎按真实价格自动兑换,不收取额外 swap 价差。checkout/POS 保留其链接资产。
+          description: payins 默认入账的余额。入账进入账户的主资产(USD 为主资产);设置为不同资产时,净额通过 swap 引擎按真实价格自动兑换,不收取额外 swap 价差。checkout/POS 保留其链接资产。
         enabled_assets:
           type: array
           items:

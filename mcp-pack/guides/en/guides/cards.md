@@ -1,6 +1,6 @@
 ---
 title: "Cards: virtual and physical"
-description: "Issue cards that spend straight from any of the account's balances (USDT, USDC, BTC or GOLD), with per-card limits"
+description: "Issue cards that spend straight from any of the account's balances (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM), with per-card limits"
 slug: en/guides/cards
 lang: en
 source_url: https://docs.cbpayapp.com/en/guides/cards
@@ -9,8 +9,8 @@ source_url: https://docs.cbpayapp.com/en/guides/cards
 
 CBPay cards spend **Just-In-Time from the account's central balance**: no
 prefunding, no moving balance around. Each card picks which balance it
-spends from (`spending_asset`: **USDT, USDC, BTC or GOLD**). USDT/USDC are
-1:1 with the USD; BTC and GOLD convert **at the price of the moment of each
+spends from (`spending_asset`: **USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM**, USD by default). USD, USDT and USDC are
+1:1 with the dollar; BTC and GOLD convert **at the price of the moment of each
 event**. Every purchase is authorized in real time against that asset's
 available balance and the card's own limits, and the debit shows up
 immediately in the movement history.
@@ -34,11 +34,11 @@ flowchart LR
 | Company | **Unlimited** | New physical issuance temporarily unavailable | Yes: designated persons (e.g. employees) |
 
 Each card spends from the **account's central balance in its configured
-asset** (`spending_asset`, USDT by default). Fine-grained control is
+asset** (`spending_asset`, USD by default). Fine-grained control is
 per-card spending limits (per transaction, daily, monthly), always measured
 in **USD**, which you can change at any time.
 
-## Choosing the spending balance (USDT, USDC, BTC or GOLD)
+## Choosing the spending balance (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM)
 
 Set `spending_asset` when creating the card or change it later with `PATCH`.
 It only affects future purchases: in-flight authorizations keep the asset
@@ -77,7 +77,7 @@ no exchange fee: a 25.00 USD purchase debits 25.000000 of the chosen asset.
 
 | Error / decline | Where | Cause | Solution |
 |---|---|---|---|
-| `spending_asset_unavailable` | 400 on PATCH / purchase decline | The asset does not exist or is not enabled for purchases | Use `USDT`, `USDC`, `BTC` or `GOLD` |
+| `spending_asset_unavailable` | 400 on PATCH / purchase decline | The asset does not exist or is not enabled for purchases | Use `USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER` or `PLATINUM` |
 | `settlement_asset_disabled` | 400 on PATCH | Your operator disabled that asset | Check `GET /v1/settlement` (`enabled_assets`) |
 | `pricing_unavailable` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | Execution price unavailable at authorization | Retry the purchase; if it persists, switch to USDT/USDC |
 | `settlement_limit_exceeded` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | The purchase exceeds the per-operation limit for volatile assets | Smaller purchase, or spend from USDT/USDC |
@@ -517,7 +517,7 @@ Response (same shape in every case):
 > **Note**
 **Application review.** If your organization enabled card application review, `POST /v1/cards` can answer **`202 Accepted`** with `{"status":"in_review","kind":"card_application","review_id":"…"}` instead of `201` — the card is issued only when compliance approves the review. The creation fee is charged when the application is held and **refunded automatically if it is rejected**. Track the result with the webhook `txn_review_status_changed` or in [Transaction reviews](https://docs.cbpayapp.com/en/guides/transaction-reviews).
 You can pin the spending balance from the start by adding
-`"spending_asset": "USDC"` to the creation body (USDT if omitted).
+`"spending_asset": "USDC"` to the creation body (USD if omitted).
 
 > **Important**
 Documents are **actually validated** by the issuer: URLs must point to
@@ -689,7 +689,7 @@ debits atomically: you can never spend more than the asset's available
 balance, no matter how many cards operate in parallel.
 #### In which currency are purchases debited?
 Purchases are processed in USD and debited from the card's configured
-balance (`spending_asset`). USDT/USDC are 1:1 with the dollar, with no
+balance (`spending_asset`). USD, USDT and USDC are 1:1 with the dollar, with no
 conversion fee; BTC and GOLD convert at the effective price of the moment
 of each event (the same one in the `settlement` block of `GET /v1/rates`).
 #### Can different cards spend from different balances?
@@ -737,9 +737,9 @@ The general error catalog lives in [Errors](https://docs.cbpayapp.com/en/errors)
 
 ## USD as the principal ledger asset
 
-New accounts are created with `USD` as the default for `settlement_asset` and
-`payin_settlement_asset`. Existing accounts with an explicit `USDT`
-setting keep it; in-flight operations are never re-quoted.
+Accounts use `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`; change it any time with `PUT /v1/settlement`.
+In-flight operations are never re-quoted.
 
 USD ledger amounts use cents (two decimal places). Direct credits and debits,
 fees, and supported payout, checkout, POS, and card paths use USD only where
@@ -750,6 +750,5 @@ assets; v1 money-out pricing for those assets remains unavailable.
 A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
 remains the USD-equivalent reporting field. A controversy hold follows the
-credited asset: new USD credits use `hold_asset: USD`, while existing USDT
-cases remain USDT. `disputed` and `held` use hold-asset units;
+credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.

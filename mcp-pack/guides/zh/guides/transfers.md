@@ -105,7 +105,7 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
   }'
 ```
 
-对于任何组合（个人或企业、任一方向），请求结构完全相同 — 只有调用凭据不同。`asset` 为可选，默认使用**发送方的 settlement 资产**（新账户为 `USD`，既有账户为 `USDT`）；它接受十种 ledger 资产中的任意一种（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`），目标账户会**以同一币种**收到。
+对于任何组合（个人或企业、任一方向），请求结构完全相同 — 只有调用凭据不同。`asset` 为可选，默认使用**发送方的 settlement 资产**（`USD` 为主资产）；它接受十种 ledger 资产中的任意一种（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`），目标账户会**以同一币种**收到。
 
 响应 `201` — 转账是**同步且即时**的：
 
@@ -161,7 +161,7 @@ curl https://api.qbank.cl/platform/v1/transfers/77b1… \
 - 双方始终为**同一币种**：余额之间没有兑换（`USDT`→`USDT`、`GOLD`→`GOLD`……）。
 - 不能给自己转账（`400 self_transfer`）。
 - 需要 `idempotency_key`（请求体或 `Idempotency-Key` 请求头）；重放返回 `200` 及 `idempotency_hit: true`。
-- `amount` 最多接受该币种的小数位数：`USDT`/`USDC`/`GOLD` 为 6 位，`BTC` 为 8 位。
+- `amount` 最多接受该币种的小数位数：`USD`/`BOB`/`MXN`/`ARS` 为 2 位，`USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM` 为 6 位，`BTC` 为 8 位。
 
 ## 错误
 

@@ -17,7 +17,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/checkout
 创建一个**通用收款链接**：一次 `POST /v1/payins`（`method: "checkout"`）
 即可返回一个带品牌的公开 URL，付款人在页面上自行选择支付方式。收款以
 **你选择的虚拟余额**计价（`settlement_asset`：`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、
-`SILVER` 或 `PLATINUM`；省略时使用你的 `payin_settlement_asset`，新账户为 `USD`），每笔付款在入账时**自动转换**为该余额——除非付款
+`SILVER` 或 `PLATINUM`；省略时使用你的 `payin_settlement_asset`（`USD` 为主资产），每笔付款在入账时**自动转换**为该余额——除非付款
 人用同一资产支付，此时不发生转换。本地法币（`BOB`、`MXN`、`ARS`）会被拒绝。
 
 页面将支付方式组织为**四个标签页**：
@@ -254,7 +254,7 @@ API 的 JSON 仍为英语。详见[语言与 locale](https://docs.cbpayapp.com/z
 `expires_in` 介于 600 秒和 7 天之间（默认 24 小时）。过期时你会收到
 `payin_expired` webhook，公开页面返回 `checkout_expired`（410）。
 #### 转换到我的结算资产失败了会怎样？
-资金安全地保留在 USDT 中，payin 报告
+资金安全地保留在收到时的资产中，payin 报告
 `conversion_status: pending_retry`；平台会自动重试直到兑换成功 ——
 你的钱不会丢失，也不会被重复转换。
 #### 付款人选定支付方式后还能更换吗？
@@ -269,9 +269,8 @@ API 的 JSON 仍为英语。详见[语言与 locale](https://docs.cbpayapp.com/z
 
 ## USD 作为主账本资产
 
-新账户创建时，`settlement_asset` 与 `payin_settlement_asset` 的默认值为
-`USD`。已有账户如果明确使用 `USDT`，仍保持该设置；进行中的操作
-不会重新报价。
+账户的 `settlement_asset` 与 `payin_settlement_asset` 默认值为 `USD`，可随时用
+`PUT /v1/settlement` 更改；进行中的操作不会重新报价。
 
 USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
 资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
@@ -280,6 +279,5 @@ USD 账本金额使用美分（两位小数）。直接入账、扣账、费用�
 
 USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
-跟随实际入账资产：新的 USD 入账使用 `hold_asset: USD`，既有 USDT
-案件仍使用 USDT。`disputed` 与 `held` 使用 hold 资产的单位；
+跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。

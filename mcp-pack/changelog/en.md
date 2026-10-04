@@ -5,6 +5,12 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.153 · 1 version - October 4, 2026
+### v2.153
+**Changed**
+
+- Restructured the Banking guide around the two kinds of local-fiat destinations: funding accounts (purpose `fondeo`, auto-converted to your principal balance) versus Banking accounts (purpose `banking`, which keep BOB, MXN and ARS balances locally for payouts), followed by one section per currency (USD, EUR, BOB, MXN, ARS) with cross-links to payins, payouts, SEPA, vIBANs and the account views. USD is documented everywhere as the principal balance, changeable any time with `PUT /v1/settlement`. Docs-only: no API behavior changed.
+- Corrected related guides and specs against the implemented behavior: the statement is requested only with the `format` parameter (no `Accept` header support); a failed conversion keeps funds in the received asset; approved card collections settle in USD; and the card-session open cap is 10,000. Docs-only: no API behavior changed.
 ## v2.152 · 3 versions - October 3, 2026
 ### v2.152
 **Changed**

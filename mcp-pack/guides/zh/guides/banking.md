@@ -11,17 +11,66 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 
 对于本地法币走廊，请创建带有 `purpose: "banking"` 的充值目的地。
 该目的会保留本地法币，用于法币付款。默认的 `fondeo` 目的会把入账
-法币转换为您账户的主资产（新账户为 USD，旧账户为 USDT）。Banking 目前仅支持
+法币转换为您账户的主资产(USD 为主资产)。Banking 目前仅支持
 `BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和
 `AR/ARS/bank_transfer`。
+
+## 两类本地法币目的地
+
+对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`），每个 payin 目的地都带有
+`purpose`，决定入账资金的去向：
+
+| Purpose | 含义 |
+|---|---|
+| `fondeo`（默认） | **入金账户。** 所有到账资金自动转换为您账户的主资产——USD 为主资产。 |
+| `banking` | **Banking 账户。** 入账法币以其本地货币保留，用于付款，各币种有独立余额。 |
+
+请创建第二个 `purpose: "banking"` 的目的地来持有本地法币用于付款；未指定
+目的地的目的地保留历史 `fondeo` 行为。Banking 目的仅支持
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和 `AR/ARS/bank_transfer`。
 
 | 概念 | 存放位置 | 查询方式 |
 |---|---|---|
 | CBPay 余额 | CBPay 账本 | `GET /v1/balances` |
 | 银行余额 | 您的银行账户 | `GET /v1/banking/accounts/{id}/balance` |
 
+## 按货币划分的 Banking
+
+### 🇺🇸 USD — 美元
+
+按本指南的档案 → 账户 → 操作流程开立经典 Banking 客户账户（ACH、Fedwire
+和 SWIFT 通道，见下文「开立银行账户」一节）。通过 Banking 收到的 USD 保留
+用于付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）；发送到您 CBPay 余额的 USD 落入
+您的主资产（USD 为主资产）。
+
+### 🇪🇺 EUR — 欧元
+
+所有欧元业务都通过虚拟 IBAN：申请 `funding_usdt` 地址将入账欧元转换为您的
+主资产，或申请 `banking_eur` 地址持有 `BANK_EUR` 用于 SEPA 付款（见下文
+「欧元：入金地址与欧元银行，集中在一处」一节）。向第三方发送欧元见
+[SEPA 即时付款](https://docs.cbpayapp.com/zh/guides/sepa-instant-payouts)。
+
+### 🇧🇴 BOB — 玻利维亚诺
+
+通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收玻利维亚诺：
+`fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
+保留 BOB 用于本地付款。另见[BO 虚拟账户](https://docs.cbpayapp.com/zh/guides/bob-virtual-accounts)
+中的入金流程。
+
+### 🇲🇽 MXN — 墨西哥比索
+
+通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收比索：
+`fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
+保留 MXN 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+
+### 🇦🇷 ARS — 阿根廷比索
+
+通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收比索：
+`fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
+保留 ARS 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+
 > **注**
-银行服务费用有两种形式。**独立固定费用**（`banking_customer`、`banking_account`、`banking_operation`）在每笔操作执行时从您的**默认结算资产余额**（新账户为 USD，旧账户为 USDT）扣除，若操作失败则**自动退款**。**按通道的交易费用**（`banking_deposit`、`banking_transfer_ach`、`banking_transfer_swift`、`banking_transfer_wire`、`banking_transfer_sepa`）为百分比加固定金额，**以操作货币**（您的 `BANK_USD` / `BANK_EUR` 余额）计收——参见下文「通道费用（存款与转账）」一节。费用为 0（默认值）时服务免费。每个响应中的 `banking_fee` 和 `banking_fee_asset` 字段显示实际扣费金额及币种。
+银行服务费用有两种形式。**独立固定费用**（`banking_customer`、`banking_account`、`banking_operation`）在每笔操作执行时从您的**默认结算资产余额**(USD 为主资产)扣除，若操作失败则**自动退款**。**按通道的交易费用**（`banking_deposit`、`banking_transfer_ach`、`banking_transfer_swift`、`banking_transfer_wire`、`banking_transfer_sepa`）为百分比加固定金额，**以操作货币**（您的 `BANK_USD` / `BANK_EUR` 余额）计收——参见下文「通道费用（存款与转账）」一节。费用为 0（默认值）时服务免费。每个响应中的 `banking_fee` 和 `banking_fee_asset` 字段显示实际扣费金额及币种。
 ## 完整流程
 
 ```mermaid
@@ -322,7 +371,7 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/counterparties \
 
 | 用途 | 默认 | 含义 |
 |---|---|---|
-| `funding_usdt` | 是 | 与 USDT 入金产品关联的 EUR 地址。到账资金经 payin credit 链记为 USDT。 |
+| `funding_usdt` | 是 | 与入金产品关联的 EUR 地址。到账资金经 payin credit 链记入您的主资产。 |
 | `banking_eur` | 否 | Banking EUR 地址；账户还必须启用 Banking 产品。到账资金在账户的 `BANK_EUR` 余额中对账。 |
 
 ### 申请 vIBAN
@@ -423,7 +472,7 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-000
 curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
 ```
 
-响应包含 `asset: "BANK_EUR"`、`available`、`held`、`purpose` 和 `source`。对 `funding_usdt` 会返回 `409 balance_not_available`，因为该用途进入 USDT credit 链，而不会持有 `BANK_EUR`。
+响应包含 `asset: "BANK_EUR"`、`available`、`held`、`purpose` 和 `source`。对 `funding_usdt` 会返回 `409 balance_not_available`，因为该用途经 payin credit 链记入您的主资产，而不会持有 `BANK_EUR`。
 
 ### 发送欧元：payout 与 Banking 操作
 
@@ -480,7 +529,7 @@ EUR 虚拟 IBAN 入金会在 banking 镜像、对账单和 analytics 中保留�
 ### EUR 常见问题
 
 #### 申请虚拟 IBAN 会创建 BANK_EUR 余额吗？
-不会。用途会记录在申请中，但虚拟 IBAN 不是供应商的独立余额。只有 `banking_eur` 地址才暴露已对账的 `BANK_EUR` 余额；`funding_usdt` 经 payin 链记为 USDT。
+不会。用途会记录在申请中，但虚拟 IBAN 不是供应商的独立余额。只有 `banking_eur` 地址才暴露已对账的 `BANK_EUR` 余额；`funding_usdt` 经 payin 链记入您的主资产。
 #### 超时后可以重试吗？
 使用相同幂等键重试。新的键会创建新的申请，不能用来猜测一次不明确的供应商请求结果。
 #### 为什么状态是 pending_approval？
@@ -559,7 +608,7 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
 }
 ```
 
-`banking_fee` 和 `banking_fee_asset` 仅在收取费用时出现。按通道计费时，币种为操作货币（`BANK_USD` / `BANK_EUR`）；使用旧版回退时为 `USDT`。
+`banking_fee` 和 `banking_fee_asset` 仅在收取费用时出现。按通道计费时，币种为操作货币（`BANK_USD` / `BANK_EUR`）；使用旧版回退时为您的默认结算资产。
 
 - 最终状态通过 `banking_operation_status_changed` webhook 送达（`completed` / `failed`）；您也可以轮询 `GET /v1/banking/operations/{id}`。操作达到最终状态后，webhook 中会包含其 `receipt_url`，并可通过 `GET /v1/banking/operations/{id}/receipt` 下载 PDF 凭证（[凭证](https://docs.cbpayapp.com/zh/guides/receipts)）。
 - 使用相同 `Idempotency-Key` 的重试会返回原始操作（`idempotency_hit: true`），**不会再次收取费用**。
@@ -614,7 +663,7 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 明确同步拒绝，费用将**自动退还**（与旧版费用相同的纪律）。
 
 **回退规则：** 如果通道没有专属配置（账户级和平台级都没有），则适用旧的
-`banking_operation` 费用（固定金额，USDT）。通道配置为 0% + 0 固定费用表示
+`banking_operation` 费用（固定金额，从您的默认结算资产扣除）。通道配置为 0% + 0 固定费用表示
 **明确免费**——*不会*回退到旧版费用。
 
 ## 操作状态
@@ -632,7 +681,7 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 | HTTP | `error` | 处理方式 |
 |---|---|---|
 | 400 | `idempotency_key_required` | 在请求体或请求头中发送该 key |
-| 402 | `insufficient_funds` | 余额不足：按通道计费时校验为 `余额 ≥ 金额 + 费用`，以**操作货币**（`BANK_USD`/`BANK_EUR`）计；使用旧版回退时为您的 USDT 余额 |
+| 402 | `insufficient_funds` | 余额不足：按通道计费时校验为 `余额 ≥ 金额 + 费用`，以**操作货币**（`BANK_USD`/`BANK_EUR`）计；使用旧版回退时为您的默认结算资产余额 |
 | 403 | `account_blocked` | 账户未处于活跃状态；请联系 CBPay 团队 |
 | 409 | `banking_customer_exists` | 您的账户已有银行客户档案（`GET /v1/banking/customer`） |
 | 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
@@ -659,7 +708,7 @@ contract in [Company wallets](https://docs.cbpayapp.com/zh/guides/company-wallet
 `GET /v1/banking/accounts/{id}/balance` 查询。权威余额始终以银行为准；你的
 [对账单](https://docs.cbpayapp.com/zh/guides/statement) 会在 `BANK_USD`/`BANK_EUR` 镜像余额中对其
 进行核对。**按通道的费用**以操作货币计收（您的 `BANK_USD`/`BANK_EUR` 余额）；
-只有旧的 `banking_operation` 回退费用才从您的 USDT 余额中扣除。
+只有旧的 `banking_operation` 回退费用才从您的默认结算资产余额中扣除。
 #### 操作失败时手续费会怎样？
 自动退款 —— 档案、账户和操作的手续费一视同仁，包括按通道的费用
 （在明确同步拒绝时退还）。使用相同的

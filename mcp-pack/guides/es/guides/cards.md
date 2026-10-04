@@ -1,6 +1,6 @@
 ---
 title: "Tarjetas: virtuales y físicas"
-description: "Emite tarjetas que gastan directo de cualquier saldo de la cuenta (USDT, USDC, BTC, GOLD, SILVER o PLATINUM), con límites por tarjeta"
+description: "Emite tarjetas que gastan directo de cualquier saldo de la cuenta (USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM), con límites por tarjeta"
 slug: es/guides/cards
 lang: es
 source_url: https://docs.cbpayapp.com/es/guides/cards
@@ -9,8 +9,8 @@ source_url: https://docs.cbpayapp.com/es/guides/cards
 
 Las tarjetas CBPay gastan **Just-In-Time del saldo central de la cuenta**:
 no hay que prefondearlas ni moverles saldo. Cada tarjeta elige desde qué
-saldo gasta (`spending_asset`: **USDT, USDC, BTC, GOLD, SILVER o PLATINUM**). USDT/USDC van
-1:1 con el USD; BTC y GOLD se convierten **al precio del momento de cada
+saldo gasta (`spending_asset`: **USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM**, USD por defecto). USD, USDT y USDC van
+1:1 con el dólar; BTC y GOLD se convierten **al precio del momento de cada
 evento**. Cada compra se autoriza en tiempo real contra el saldo disponible
 de ese asset y los límites propios de la tarjeta, y el débito queda de
 inmediato en el historial de movimientos.
@@ -34,11 +34,11 @@ flowchart LR
 | Empresa | **Ilimitadas** | Nueva emisión física temporalmente no disponible | Sí: personas designadas (ej. empleados) |
 
 Cada tarjeta gasta del **saldo central de la cuenta en el asset que tenga
-configurado** (`spending_asset`, USDT por defecto). El control fino es por
+configurado** (`spending_asset`, USD por defecto). El control fino es por
 límites de gasto de cada tarjeta (por transacción, diario, mensual), que
 siempre se miden en **USD** y puedes cambiar en cualquier momento.
 
-## Elegir el saldo de gasto (USDT, USDC, BTC, GOLD, SILVER o PLATINUM)
+## Elegir el saldo de gasto (USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM)
 
 Define `spending_asset` al crear la tarjeta o cámbialo después con `PATCH`.
 Solo afecta compras futuras: las autorizaciones en vuelo conservan el asset
@@ -51,7 +51,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
   -d '{ "spending_asset": "BTC" }'
 ```
 
-**USDT y USDC** valen 1 USD, así que la conversión es exacta 1:1 y sin
+**USD, USDT y USDC** van 1:1 con el dólar, así que la conversión es exacta y sin
 comisión de cambio: una compra de 25.00 USD debita 25.000000 del asset
 elegido.
 
@@ -78,7 +78,7 @@ evento (el mismo precio de settlement que ves en `GET /v1/rates`, bloque
 
 | Error / rechazo | Dónde | Causa | Solución |
 |---|---|---|---|
-| `spending_asset_unavailable` | 400 en PATCH / rechazo de compra | El asset no existe o no está habilitado para compras | Usa `USDT`, `USDC`, `BTC` o `GOLD` |
+| `spending_asset_unavailable` | 400 en PATCH / rechazo de compra | El asset no existe o no está habilitado para compras | Usa `USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER` o `PLATINUM` |
 | `settlement_asset_disabled` | 400 en PATCH | Tu operador deshabilitó ese asset | Consulta `GET /v1/settlement` (`enabled_assets`) |
 | `pricing_unavailable` | Rechazo de compra (BTC/GOLD/SILVER/PLATINUM) | Precio de ejecución no disponible al autorizar | Reintenta la compra; si persiste, cambia a USDT/USDC |
 | `settlement_limit_exceeded` | Rechazo de compra (BTC/GOLD/SILVER/PLATINUM) | La compra excede el límite por operación de assets volátiles | Compra menor o gasta desde USDT/USDC |
@@ -488,7 +488,7 @@ Respuesta (misma forma en todos los casos):
 > **Nota**
 **Revisión de solicitudes.** Si tu organización activó la revisión de solicitudes de tarjetas, `POST /v1/cards` puede responder **`202 Accepted`** con `{"status":"in_review","kind":"card_application","review_id":"…"}` en vez de `201` — la tarjeta se emite solo cuando compliance aprueba la revisión. El fee de creación se cobra al retener la solicitud y **se reembolsa automáticamente si se rechaza**. Sigue el resultado con el webhook `txn_review_status_changed` o en [Revisiones de operaciones](https://docs.cbpayapp.com/es/guides/transaction-reviews).
 Puedes fijar el saldo de gasto desde el inicio agregando
-`"spending_asset": "USDC"` al body de creación (USDT si no lo mandas).
+`"spending_asset": "USDC"` al body de creación (USD si no lo mandas).
 
 > **Importante**
 Los documentos **se validan de verdad** por el emisor: las URLs deben
@@ -659,7 +659,7 @@ de forma atómica: nunca se aprueba más que el saldo disponible del asset,
 sin importar cuántas tarjetas operen en paralelo.
 #### ¿En qué moneda se debita?
 Las compras se procesan en USD y se debitan del saldo que la tarjeta tenga
-configurado (`spending_asset`). USDT/USDC van 1:1 con el dólar, sin
+configurado (`spending_asset`). USD, USDT y USDC van 1:1 con el dólar, sin
 comisión de conversión; BTC y GOLD se convierten con el precio efectivo del
 momento de cada evento (el mismo del bloque `settlement` de
 `GET /v1/rates`).
@@ -708,10 +708,9 @@ El catálogo general de errores vive en [Errores](https://docs.cbpayapp.com/es/e
 
 ## USD como activo principal del ledger
 
-Las cuentas nuevas nacen con `USD` como valor predeterminado de
-`settlement_asset` y `payin_settlement_asset`. Las cuentas existentes con una
-configuración explícita en `USDT` la conservan; las operaciones en
-vuelo nunca se vuelven a cotizar.
+Las cuentas usan `USD` como valor predeterminado de `settlement_asset` y
+`payin_settlement_asset`; cámbialo cuando quieras con `PUT /v1/settlement`.
+Las operaciones en vuelo nunca se vuelven a cotizar.
 
 Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
 los débitos directos, las comisiones y los flujos de payout, checkout, POS y
@@ -723,7 +722,6 @@ de money-out para esos activos sigue no disponible.
 Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
 sigue siendo el equivalente USD para reportes. El hold de una controversia
-sigue el activo acreditado: un crédito USD nuevo usa `hold_asset: USD`,
-mientras un caso existente en USDT conserva USDT. `disputed` y `held` usan las
+sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.

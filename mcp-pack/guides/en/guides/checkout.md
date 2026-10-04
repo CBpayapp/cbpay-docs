@@ -20,7 +20,7 @@ Create a **universal checkout link**: a single `POST /v1/payins` with
 how to pay. The charge is denominated in the **virtual balance you
 choose** (`settlement_asset`: `USD`, `USDT`, `USDC`, `BTC`, `GOLD`,
 `SILVER` or `PLATINUM`; when omitted it uses your `payin_settlement_asset`,
-`USD` for new accounts) and every payment is converted **automatically** to
+`USD` is the principal balance) and every payment is converted **automatically** to
 that balance
 when it credits — unless the payer pays in the same asset, in which case
 there is no conversion. Local fiat (`BOB`, `MXN`, `ARS`) is rejected here.
@@ -298,7 +298,7 @@ expired still credit your account.
 receive the `payin_expired` webhook and the public page answers
 `checkout_expired` (410).
 #### What happens if the conversion to my settlement asset fails?
-The funds stay safe in USDT and the payin reports
+The funds stay safe in the received asset and the payin reports
 `conversion_status: pending_retry`; the platform retries automatically until
 the swap succeeds — you never lose money nor get converted twice.
 #### Can the payer switch payment method after choosing one?
@@ -314,9 +314,9 @@ For card payins, the `settlement_hours` setting controls when the balance become
 
 ## USD as the principal ledger asset
 
-New accounts are created with `USD` as the default for `settlement_asset` and
-`payin_settlement_asset`. Existing accounts with an explicit `USDT`
-setting keep it; in-flight operations are never re-quoted.
+Accounts use `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`; change it any time with `PUT /v1/settlement`.
+In-flight operations are never re-quoted.
 
 USD ledger amounts use cents (two decimal places). Direct credits and debits,
 fees, and supported payout, checkout, POS, and card paths use USD only where
@@ -327,6 +327,5 @@ assets; v1 money-out pricing for those assets remains unavailable.
 A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
 remains the USD-equivalent reporting field. A controversy hold follows the
-credited asset: new USD credits use `hold_asset: USD`, while existing USDT
-cases remain USDT. `disputed` and `held` use hold-asset units;
+credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.

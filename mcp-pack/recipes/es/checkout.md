@@ -20,7 +20,7 @@ Crea un **link de cobro universal**: un solo `POST /v1/payins` con
 elige cómo pagar. El cobro se denomina en el **saldo virtual que tú
 elijas** (`settlement_asset`: `USD`, `USDT`, `USDC`, `BTC`, `GOLD`,
 `SILVER` o `PLATINUM`; si se omite usa tu `payin_settlement_asset`,
-`USD` en cuentas nuevas) y todo pago se convierte **automáticamente** a
+`USD` es el saldo principal) y todo pago se convierte **automáticamente** a
 ese saldo al
 acreditarse — salvo que te paguen en el mismo asset, ahí no hay
 conversión. El fiat local (`BOB`, `MXN`, `ARS`) se rechaza aquí.
@@ -311,10 +311,9 @@ En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible 
 
 ## USD como activo principal del ledger
 
-Las cuentas nuevas nacen con `USD` como valor predeterminado de
-`settlement_asset` y `payin_settlement_asset`. Las cuentas existentes con una
-configuración explícita en `USDT` la conservan; las operaciones en
-vuelo nunca se vuelven a cotizar.
+Las cuentas usan `USD` como valor predeterminado de `settlement_asset` y
+`payin_settlement_asset`; cámbialo cuando quieras con `PUT /v1/settlement`.
+Las operaciones en vuelo nunca se vuelven a cotizar.
 
 Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
 d débitos directos, las comisiones y los flujos de payout, checkout, POS y
@@ -326,7 +325,6 @@ de money-out para esos activos sigue no disponible.
 Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
 sigue siendo el equivalente USD para reportes. El hold de una controversia
-sigue el activo acreditado: un crédito USD nuevo usa `hold_asset: USD`,
-mientras un caso existente en USDT conserva USDT. `disputed` y `held` usan las
+sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.

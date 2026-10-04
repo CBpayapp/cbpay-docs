@@ -13,17 +13,75 @@ mantienes saldo en moneda fiat y envías pagos a terceros. Es un
 producto distinto de tus saldos CBPay: **el dinero de banking vive en tus cuentas
 bancarias**, no en tu saldo USDT ni en tu saldo USD.
 
-Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a tu asset principal (USD en cuentas nuevas, USDT en cuentas existentes). Banking admite solo `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
+Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a tu asset principal (USD es el saldo principal). Banking admite solo `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
+
+## Dos clases de destinos fiat locales
+
+Para los corredores fiat locales (`BO/BOB`, `MX/MXN`, `AR/ARS`), cada
+destino de payin lleva un `purpose` que decide dónde aterriza el dinero
+entrante:
+
+| Purpose | Significado |
+|---|---|
+| `fondeo` (por defecto) | **Cuenta de fondeo.** Todo lo recibido se convierte automáticamente al asset principal de tu cuenta — USD es el saldo principal. |
+| `banking` | **Cuenta banking.** El fiat entrante se conserva en su moneda local para payouts, con saldos individuales por moneda. |
+
+Crea un segundo destino con `purpose: "banking"` para mantener fiat local
+para payouts; los destinos creados sin propósito conservan el comportamiento
+histórico `fondeo`. El propósito banking solo se admite en
+`BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
+
 | Concepto | Dónde vive | Se consulta con |
 |---|---|---|
 | Saldos CBPay | Ledger CBPay | `GET /v1/balances` |
 | Saldos bancarios | Tus cuentas bancarias | `GET /v1/banking/accounts/{id}/balance` |
 
+## Banking por moneda
+
+### 🇺🇸 USD — dólar estadounidense
+
+Abre una cuenta Banking clásica (rieles ACH, Fedwire y SWIFT) con el flujo
+perfil → cuentas → operaciones de esta guía
+([abrir cuentas bancarias](#3-abre-cuentas-bancarias)). Los USD recibidos por
+Banking se mantienen para payouts ([payouts](https://docs.cbpayapp.com/es/guides/payouts)); los USD
+enviados a tus saldos CBPay aterrizan en tu asset principal (USD es el saldo
+principal).
+
+### 🇪🇺 EUR — euro
+
+Todo lo euro pasa por un IBAN virtual: solicita una dirección `funding_usdt`
+para convertir los euros entrantes a tu asset principal, o una dirección
+`banking_eur` para mantener `BANK_EUR` para payouts SEPA
+([dirección de fondeo y banca EUR](#euros-direccion-de-fondeo-y-banca-eur-en-un-solo-lugar)).
+Enviar euros a terceros se cubre en
+[payouts SEPA Instant](https://docs.cbpayapp.com/es/guides/sepa-instant-payouts).
+
+### 🇧🇴 BOB — boliviano
+
+Recibe bolivianos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
+`purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
+(USD es el saldo principal); `banking` conserva BOB para payouts locales.
+Ver también [cuentas virtuales BO](https://docs.cbpayapp.com/es/guides/bob-virtual-accounts) para el
+flujo de fondeo.
+
+### 🇲🇽 MXN — peso mexicano
+
+Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
+`purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
+(USD es el saldo principal); `banking` conserva MXN para payouts locales
+([payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+
+### 🇦🇷 ARS — peso argentino
+
+Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
+`purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
+(USD es el saldo principal); `banking` conserva ARS para payouts locales
+([payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+
 > **Nota**
 Las comisiones de banking vienen en dos formas. Las **fijas standalone**
 (`banking_customer`, `banking_account`, `banking_operation`) se debitan de tu
-**asset de settlement por defecto** —USD en cuentas nuevas, USDT en cuentas
-existentes— al ejecutar cada operación y se **reembolsan automáticamente**
+**asset de settlement por defecto** —USD es el saldo principal— al ejecutar cada operación y se **reembolsan automáticamente**
 si falla. Las **transaccionales por riel** (`banking_deposit`,
 `banking_transfer_ach`, `banking_transfer_swift`, `banking_transfer_wire`,
 `banking_transfer_sepa`) son un porcentaje más un monto fijo cobrado **en la
@@ -373,7 +431,7 @@ provider-agnostic.
 
 | Propósito | Por defecto | Significado |
 |---|---|---|
-| `funding_usdt` | Sí | Dirección EUR asociada al producto de fondeo USDT. El dinero que llega se acredita como USDT vía la cadena de crédito de payin. |
+| `funding_usdt` | Sí | Dirección EUR asociada al producto de fondeo. El dinero que llega se acredita a tu asset principal vía la cadena de crédito de payin. |
 | `banking_eur` | No | Dirección de Banking EUR. La cuenta debe tener habilitado Banking. El dinero que llega se concilia en el saldo `BANK_EUR` de la cuenta. |
 
 ### Solicitar un vIBAN
@@ -495,7 +553,7 @@ curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8
 
 La respuesta lleva `asset: "BANK_EUR"`, `available`, `held`, `purpose` y
 `source`. Para `funding_usdt` responde `409 balance_not_available`, porque
-ese propósito entra a la cadena de crédito USDT y no mantiene `BANK_EUR`.
+ese propósito entra a la cadena de crédito de payin hacia tu asset principal y no mantiene `BANK_EUR`.
 
 ### Enviar euros: payouts y operaciones Banking
 
@@ -587,7 +645,7 @@ y la referencia del vIBAN cuando el riel la informa.
 
 #### ¿Solicitar un vIBAN crea un saldo BANK_EUR?
 No. El propósito queda guardado en la solicitud, pero el vIBAN no es un saldo independiente del proveedor. Solo las direcciones `banking_eur` exponen
-un saldo `BANK_EUR` conciliado; `funding_usdt` acredita USDT por la cadena de
+un saldo `BANK_EUR` conciliado; `funding_usdt` acredita a tu asset principal por la cadena de
 payin.
 #### ¿Puedo reintentar después de un timeout?
 Reintenta con la misma clave idempotente. Una clave nueva crea otra
@@ -674,7 +732,7 @@ Respuesta `202`:
 
 `banking_fee` y `banking_fee_asset` solo aparecen cuando se cobró una
 comisión. Con una comisión por riel el asset es la moneda de la operación
-(`BANK_USD` / `BANK_EUR`); con el fallback predeterminado es `USDT`.
+(`BANK_USD` / `BANK_EUR`); con el fallback predeterminado es tu asset de settlement por defecto.
 
 - El estado final llega por el webhook `banking_operation_status_changed`
   (`completed` / `failed`); también puedes consultar
@@ -747,7 +805,7 @@ después del despacho, la comisión se **reembolsa automáticamente** (la misma
 disciplina de la comisión predeterminada).
 
 **Fallback:** si el riel no tiene configuración específica (ni a nivel cuenta
-ni plataforma), se cobra la `banking_operation` predeterminada (fija, en USDT). Un
+ni plataforma), se cobra la `banking_operation` predeterminada (fija, debitada de tu asset de settlement por defecto). Un
 riel configurado con 0% + 0 fijo queda **explícitamente gratis** — NO cae al
 fallback.
 
@@ -765,7 +823,7 @@ fallback.
 | HTTP | `error` | Qué hacer |
 |---|---|---|
 | 400 | `idempotency_key_required` | Envía la clave en body o header |
-| 402 | `insufficient_funds` | Saldo insuficiente: con comisión por riel el chequeo es `saldo ≥ monto + comisión` en la **moneda de la operación** (`BANK_USD`/`BANK_EUR`); con el fallback predeterminado es tu saldo USDT |
+| 402 | `insufficient_funds` | Saldo insuficiente: con comisión por riel el chequeo es `saldo ≥ monto + comisión` en la **moneda de la operación** (`BANK_USD`/`BANK_EUR`); con el fallback predeterminado es tu asset de settlement por defecto |
 | 403 | `account_blocked` | La cuenta no está activa; contacta al equipo de CBPay |
 | 409 | `banking_customer_exists` | Tu cuenta ya tiene perfil bancario (`GET /v1/banking/customer`) |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y no crees un segundo perfil |
@@ -793,7 +851,7 @@ No. El dinero banking vive en tus cuentas bancarias y se consulta con
 banco; tu [cartola](https://docs.cbpayapp.com/es/guides/statement) lo concilia en los saldos espejo
 `BANK_USD`/`BANK_EUR`. Las **comisiones por riel** se cobran en la moneda de
 la operación (tu saldo `BANK_USD`/`BANK_EUR`); solo la comisión predeterminada
-`banking_operation` se debita de tu saldo USDT.
+`banking_operation` se debita de tu asset de settlement por defecto.
 #### ¿Qué pasa con la comisión si una operación falla?
 Se reembolsa automáticamente — comisiones de perfil, cuenta y operación por
 igual, incluidas las comisiones por riel (reembolsadas en el rechazo

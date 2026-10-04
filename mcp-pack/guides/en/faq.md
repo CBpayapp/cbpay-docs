@@ -53,10 +53,8 @@ See [Locale and language](https://docs.cbpayapp.com/en/guides/locale).
 ## Money and rates
 
 #### What currency is my balance in?
-Your account holds **ten independent balances**: USD (the principal
-currency of new accounts, 2 decimals), USDT, USDC, BTC, GOLD, SILVER,
-PLATINUM, BOB, MXN and ARS. Existing accounts keep USDT as their principal
-currency. Fiat operations (payouts in
+Your account holds **ten independent balances**: USD (the principal currency, 2 decimals), USDT, USDC, BTC, GOLD, SILVER,
+PLATINUM, BOB, MXN and ARS. Fiat operations (payouts in
 CLP, collections in BOB…) convert to/from your principal asset at your
 account's rates at
 execution time (`rate` for payouts, `payin_rate` for payins); you can

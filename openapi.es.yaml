@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.152"
+  version: "2.153"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -51,10 +51,10 @@ tags:
 - name: Saldos
   description: Saldos, historial de movimientos y tasas de cambio.
 - name: Payouts
-  description: Dispersiones fiat que se debitan del saldo de settlement que elijas (USDT por defecto).
+  description: Dispersiones fiat que se debitan del saldo de settlement que elijas (USD es el saldo principal).
 - name: Payins
   description: Recargas fiat (QR, transferencias, cuentas dedicadas, cobros pull, tarjetas, links de
-    checkout) que se acreditan automáticamente — en USDT por defecto, o convertidas al settlement asset
+    checkout) que se acreditan automáticamente — en USD, o convertidas al settlement asset
     que elijas.
 - name: Checkout
   description: >-
@@ -2823,7 +2823,7 @@ paths:
       operationId: getBalances
       summary: Obtener saldos
       description: Los diez saldos virtuales independientes de la cuenta que llama (USD — la moneda
-        principal de las cuentas nuevas —, USDT, USDC, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos
+        principal —, USDT, USDC, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos
         y los saldos fiat BOB, MXN y ARS de 2 decimales). Todos los activos soportados vienen siempre,
         con ceros si la cuenta no ha usado esa moneda. Si la cuenta usa Banking, sus saldos espejo BANK_USD/BANK_EUR
         también se listan con el marcador `custody` en `banking` (el saldo autoritativo vive en el banco;
@@ -3702,7 +3702,7 @@ paths:
 
 
         **Paga desde cualquier saldo**: por defecto el débito sale del asset de settlement predeterminado
-        de tu cuenta (`default_settlement_asset` — USD en cuentas nuevas, USDT en cuentas existentes; cámbialo con `PUT /v1/settlement`). Envía `settlement_asset` (USD, USDT,
+        de tu cuenta (`default_settlement_asset` — USD es el saldo principal; cámbialo con `PUT /v1/settlement`). Envía `settlement_asset` (USD, USDT,
         USDC, BTC, GOLD, SILVER o PLATINUM) para pagar esta operación puntual desde otro saldo: el total se convierte
         a ese asset al precio efectivo de settlement del momento (ver el bloque `settlement` de `GET /v1/rates`)
         y el débito, la retención y — si falla — el reembolso viven en ese asset por el monto exacto.
@@ -3871,7 +3871,7 @@ paths:
                   - MXN
                   - ARS
                   description: 'Saldo virtual a debitar para esta operación. La ejecución en fiat devuelve hoy 503 pricing_unavailable. Omítelo para usar el asset
-                    de settlement predeterminado de tu cuenta (USD en cuentas nuevas; cuentas existentes con USDT explícito conservan USDT).'
+                    de settlement predeterminado de tu cuenta (USD es el saldo principal).'
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -6199,7 +6199,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
-                  description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD en cuentas nuevas, USDT en cuentas existentes).
+                  description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD es el saldo principal).
                 amount:
                   type: string
                   description: String decimal positivo, hasta los decimales de la moneda (2 para USD/BOB/MXN/ARS, 6 para USDT/USDC/GOLD/SILVER/PLATINUM,
@@ -15177,7 +15177,7 @@ paths:
       description: >-
         Abre el perfil bancario de la cuenta (una vez por cuenta). Si omites `type`/`name`/`email`,
         se completan desde tu cuenta CBPay. Se cobra la comisión fija `banking_customer` desde tu settlement
-        asset (USDT por defecto); se reembolsa si el corredor rechaza.
+        asset (USD por defecto); se reembolsa si el corredor rechaza.
         La plataforma deriva un claim de idempotencia determinista en el core para esta cuenta/perfil. Repetir la misma solicitud devuelve el customer original con `idempotency_hit: true`, sin crear otro perfil ni cobrar otro fee. Cambiar el payload para la misma cuenta responde `409 idempotency_conflict`. Si el resultado upstream es ambiguo, responde `503 banking_recovery_pending`; no reintentes con una clave nueva.
       requestBody:
         required: true
@@ -16495,7 +16495,7 @@ paths:
       summary: Crear una tarjeta
       description: 'Emite una tarjeta (virtual o física) que gasta Just-In-Time del saldo central de la
         cuenta en el asset de gasto de la tarjeta (`spending_asset`: USDT/USDC 1:1 con el USD, o BTC/GOLD/SILVER/PLATINUM
-        convertidos al precio del momento de cada evento; USDT por defecto) — sin prefondeo: cada compra
+        convertidos al precio del momento de cada evento; USD por defecto) — sin prefondeo: cada compra
         se autoriza en tiempo real contra el saldo disponible y los límites propios de la tarjeta. Las
         cuentas persona pueden tener **1 tarjeta viva total y 1 solicitud abierta**; la emisión física nueva está temporalmente no disponible; las físicas existentes siguen operativas. Empresa: tarjetas ilimitadas; las cuentas empresa crean tarjetas **ilimitadas**,
         para la empresa o para personas designadas (ej. empleados, pasando sus documentos de identidad).
@@ -16528,7 +16528,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: Saldo desde el que gasta la tarjeta. Si se omite, se usa el asset de liquidación de la cuenta (USD en cuentas nuevas, USDT en cuentas existentes). USD/USDT/USDC van a la par del USD (1:1
+                  description: Saldo desde el que gasta la tarjeta. Si se omite, se usa el asset de liquidación de la cuenta (USD es el saldo principal). USD/USDT/USDC van a la par del USD (1:1
                     exacto, sin comisión de conversión). BTC/GOLD/SILVER/PLATINUM se convierten al precio efectivo del
                     momento de cada evento, con colchón de reserva en la autorización (pricing fail-closed
                     y límites de assets volátiles compartidos con payouts).
@@ -17438,7 +17438,7 @@ paths:
       description: Cambia tus saldos predeterminados. `default_settlement_asset` es el saldo desde el
         que se debitan tus payouts y comisiones de servicios cuando el request no envía un
         `settlement_asset` explícito. `default_payin_asset` es el saldo en que se acreditan tus payins —
-        con `USD` (el default de las cuentas nuevas) el neto se acredita directo en centavos USD; con
+        con `USD` (el saldo principal) el neto se acredita directo en centavos USD; con
         cualquier otro objetivo el neto se auto-convierte vía el motor de swaps al precio
         real, sin spread de swap adicional (el payin ya pagó su comisión y su tasa; los payins de
         checkout y POS conservan el asset de su link). Cualquiera
@@ -23675,7 +23675,7 @@ components:
           - SILVER
           - PLATINUM
           description: Saldo desde el que gastan las compras de la tarjeta. USDT/USDC 1:1 con el USD;
-            BTC/GOLD/SILVER/PLATINUM convertidos al precio del momento de cada evento. USDT por defecto. Cambiarlo solo
+            BTC/GOLD/SILVER/PLATINUM convertidos al precio del momento de cada evento. USD por defecto. Cambiarlo solo
             afecta compras futuras.
         limits:
           type: object
@@ -24296,7 +24296,7 @@ components:
           - SILVER
           - PLATINUM
           description: Saldo en que se acreditan por defecto los payins. El crédito entra en el asset
-            principal de la cuenta (USD en cuentas nuevas, USDT en existentes); cuando se configura otro
+            principal de la cuenta (USD es el saldo principal); cuando se configura otro
             asset, el neto se auto-convierte vía el motor de swaps al precio real, sin spread de swap
             adicional. Checkout/POS conservan el asset de su link.
         enabled_assets:

@@ -160,8 +160,7 @@ CBPay 团队。
 以银行为准（`GET /v1/banking/accounts/{id}/balance`）；这些镜像余额永远
 不可支出。
 #### 有哪些可用格式？
-JSON（集成）、PDF 和 XLSX —— 后两者均带有你组织的品牌标识。使用
-`Accept` 请求头或端点的格式参数。
+JSON（集成）、PDF 和 XLSX —— 后两者均带有你组织的品牌标识。使用端点的 `format` 参数（`format=json|pdf|xlsx`）。
 #### fee_model: fixed 是什么？
 独立服务收费（验证、筛查、钱包服务）为纯固定费用，在对账单中标注为
 "Fixed Com" —— 区别于百分比+固定的交易型手续费。
