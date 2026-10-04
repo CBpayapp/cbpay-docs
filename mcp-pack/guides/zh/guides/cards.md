@@ -1,13 +1,13 @@
 ---
 title: "卡片：虚拟卡与实体卡"
-description: "发行直接从账户任一余额（USDT、USDC、BTC 或 GOLD）消费的卡片，并支持按卡设置限额"
+description: "发行直接从账户任一余额（USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM）消费的卡片，并支持按卡设置限额"
 slug: zh/guides/cards
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/cards
 ---
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
-CBPay 卡片以 **Just-In-Time 方式直接从账户的中央余额消费**：无需预充值，也无需在余额之间搬动资金。每张卡选择其消费来源余额（`spending_asset`：**USDT、USDC、BTC 或 GOLD**）。USDT/USDC 与美元 1:1；BTC 和 GOLD 则**按每个事件发生时刻的价格**换算。每笔消费都会实时针对该资产的可用余额及该卡自身的限额进行授权，扣款会立即出现在流水记录中。
+CBPay 卡片以 **Just-In-Time 方式直接从账户的中央余额消费**：无需预充值，也无需在余额之间搬动资金。每张卡选择其消费来源余额（`spending_asset`：**USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM**，默认为 USD）。USD、USDT 和 USDC 与美元 1:1；BTC 和 GOLD 则**按每个事件发生时刻的价格**换算。每笔消费都会实时针对该资产的可用余额及该卡自身的限额进行授权，扣款会立即出现在流水记录中。
 
 ```mermaid
 flowchart LR
@@ -27,9 +27,9 @@ flowchart LR
 | 个人 | **总计 1 张有效卡** | 新实体卡发行暂时不可用 | 否 |
 | 企业 | **不限** | 新实体卡发行暂时不可用 | 可以：指定人员（如员工） |
 
-每张卡都从**账户在其所配置资产中的中央余额**消费（`spending_asset`，默认 USDT）。精细化控制通过按卡设置的消费限额实现（单笔、每日、每月），限额始终以**美元**计量，并可随时修改。
+每张卡都从**账户在其所配置资产中的中央余额**消费（`spending_asset`，默认 USD）。精细化控制通过按卡设置的消费限额实现（单笔、每日、每月），限额始终以**美元**计量，并可随时修改。
 
-## 选择消费余额（USDT、USDC、BTC 或 GOLD）
+## 选择消费余额（USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM）
 
 在创建卡片时设置 `spending_asset`，或之后通过 `PATCH` 修改。它只影响未来的消费：进行中的授权保持其原扣款资产（其撤销也会退回同一资产）。
 
@@ -40,7 +40,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
   -d '{ "spending_asset": "BTC" }'
 ```
 
-**USDT 和 USDC** 均等值 1 美元，因此换算为精确的 1:1，无兑换费：一笔 25.00 USD 的消费会扣除所选资产的 25.000000。
+**USD、USDT 和 USDC** 均与美元 1:1，因此换算为精确的 1:1，无兑换费：一笔 25.00 USD 的消费会扣除所选资产的 25.000000。
 
 **BTC 和 GOLD** 按每个事件发生时刻的有效价格换算（即您在 `GET /v1/rates` 的 `settlement` 区块中看到的同一结算价格）：
 
@@ -52,7 +52,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
 
 | 错误 / 拒绝 | 出现位置 | 原因 | 解决方案 |
 |---|---|---|---|
-| `spending_asset_unavailable` | PATCH 返回 400 / 消费被拒 | 该资产不存在或未启用消费 | 使用 `USDT`、`USDC`、`BTC` 或 `GOLD` |
+| `spending_asset_unavailable` | PATCH 返回 400 / 消费被拒 | 该资产不存在或未启用消费 | 使用 `USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER` 或 `PLATINUM` |
 | `settlement_asset_disabled` | PATCH 返回 400 | 您的运营方已禁用该资产 | 检查 `GET /v1/settlement`（`enabled_assets`） |
 | `pricing_unavailable` | 消费被拒（BTC/GOLD/SILVER/PLATINUM） | 授权时无法获得执行价格 | 重试该消费；若持续出现，切换到 USDT/USDC |
 | `settlement_limit_exceeded` | 消费被拒（BTC/GOLD/SILVER/PLATINUM） | 该消费超过波动性资产的单笔操作限额 | 减小消费金额，或改用 USDT/USDC 消费 |
@@ -409,7 +409,7 @@ request 重试；不要猜测 PEP 值。
 
 > **注**
 **申请审核。** 如果您的组织启用了开卡申请审核，`POST /v1/cards` 可能返回 **`202 Accepted`**（`{"status":"in_review","kind":"card_application","review_id":"…"}`）而不是 `201`——只有在合规团队批准审核后才会开卡。开卡费用在申请挂起时收取，**如果被拒绝则自动退还**。通过 webhook `txn_review_status_changed` 或[交易审核](https://docs.cbpayapp.com/zh/guides/transaction-reviews)跟踪结果。
-您可以在创建请求体中添加 `"spending_asset": "USDC"` 从一开始就固定消费余额（省略时为 USDT）。
+您可以在创建请求体中添加 `"spending_asset": "USDC"` 从一开始就固定消费余额（省略时为 USD）。
 
 > **重要**
 证件会由发卡方**实际校验**：URL 必须指向合法且可访问的文件。若证件缺失或不充分，发卡会失败（`422 core_rejected` 或 `409 cardholder_kyc_pending`），**费用会自动退款**，您可以用修正后的数据重试。
@@ -551,7 +551,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
 #### 如果我公司的多张卡同时消费会怎样？
 它们都从账户的中央余额消费。每次授权都以原子方式扣款：无论多少张卡并行操作，消费总额都不可能超过该资产的可用余额。
 #### 消费以什么货币扣款？
-消费以美元处理，并从卡片配置的余额（`spending_asset`）扣款。USDT/USDC 与美元 1:1，无兑换费；BTC 和 GOLD 按每个事件发生时刻的有效价格换算（与 `GET /v1/rates` 的 `settlement` 区块中的价格相同）。
+消费以美元处理，并从卡片配置的余额（`spending_asset`）扣款。USD、USDT 和 USDC 与美元 1:1，无兑换费；BTC 和 GOLD 按每个事件发生时刻的有效价格换算（与 `GET /v1/rates` 的 `settlement` 区块中的价格相同）。
 #### 不同的卡可以从不同的余额消费吗？
 可以：`spending_asset` 是按卡设置的。例如，一家企业可以让公司卡消费 USDT、员工卡消费 USDC、个人卡消费 BTC。通过 `PATCH` 修改只对未来的消费生效。
 #### BTC/GOLD/SILVER/PLATINUM 消费中我看到的预留缓冲额是什么？
@@ -568,9 +568,8 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
 企业账户可以为任何指定人员发卡。该人员必须拥有[已批准的 KYC 验证](https://docs.cbpayapp.com/zh/guides/kyc)——您在 `cardholder` 中传入其 `verification_id`，其数据和证件会自动填充。卡片始终从发卡企业账户的余额消费。
 ## USD 作为主账本资产
 
-新账户创建时，`settlement_asset` 与 `payin_settlement_asset` 的默认值为
-`USD`。已有账户如果明确使用 `USDT`，仍保持该设置；进行中的操作
-不会重新报价。
+账户的 `settlement_asset` 与 `payin_settlement_asset` 默认值为 `USD`，可随时用
+`PUT /v1/settlement` 更改；进行中的操作不会重新报价。
 
 USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
 资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
@@ -579,6 +578,5 @@ USD 账本金额使用美分（两位小数）。直接入账、扣账、费用�
 
 USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
-跟随实际入账资产：新的 USD 入账使用 `hold_asset: USD`，既有 USDT
-案件仍使用 USDT。`disputed` 与 `held` 使用 hold 资产的单位；
+跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。

@@ -37,7 +37,7 @@ flowchart LR
     anunciada["Transferencia anunciada<br/>(CL, PE, MX, PY, US)"] --> pago
     clabe["Cuenta dedicada CLABE / CVU<br/>(MX, AR)"] --> pago
     pago --> conv["Conversión FX a tu<br/>payin_rate − fee fijo"]
-    conv --> credito(("Abono USD para cuentas nuevas<br/>o saldo USDT existente"))
+    conv --> credito(("Abono USD al saldo principal"))
     credito --> wh["Webhook payin_credited"]
 ```
 
@@ -138,7 +138,7 @@ Respuesta `201`:
 ```
 
 Comparte la `payment_url` con el pagador (link, redirección o WebView).
-Cuando el pago se confirma, una cuenta nueva se acredita en USD (o en USDT si tiene una configuración explícita de USDT) y recibes el
+Cuando el pago se confirma, tu cuenta se acredita en USD y recibes el
 webhook `payin_credited`. El monto CLP debe ser entero (el peso chileno no
 usa decimales) y la sesión de pago vence en 24 horas por defecto. Un retry
 con la misma `idempotency_key` devuelve el mismo payin y la misma URL —
@@ -249,7 +249,7 @@ tus cuentas con `GET /v1/payins/deposit-accounts`.
 Cada destino de depósito tiene un `purpose` explícito:
 
 - `fondeo` es el valor por defecto: convierte el fiat recibido a tu asset
-  principal (USD en cuentas nuevas, USDT en cuentas existentes).
+  principal (USD es el saldo principal).
 - `banking` mantiene el fiat local para pagos fiat y hoy solo funciona en
   `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y
   `AR/ARS/bank_transfer`.
@@ -447,7 +447,7 @@ idempotencia mientras sigue la conciliación.
   `session_reused: true`, la `payment_url` existente y su `expires_at`; no
   se crea otro cargo ni otra sesión hosted. Sin una referencia o email
   confiable, se crea una sesión nueva.
-- Una cuenta puede tener como máximo **50 sesiones de tarjeta abiertas**.
+- Una cuenta puede tener como máximo **10,000 sesiones de tarjeta abiertas**.
   Al alcanzar el límite, solo se pueden desalojar sesiones `pending` sin
   intentos. Si no se puede liberar un cupo, la API responde
   `429 too_many_open_card_sessions`; es un límite de la cuenta, no una señal
@@ -1126,7 +1126,7 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | Estado | Significado |
 |---|---|
 | `pending` | Cargo creado, esperando el pago |
-| `credited` | Pago recibido y abonado en USD para cuentas nuevas; USDT explícito permanece en USDT |
+| `credited` | Pago recibido y abonado en USD |
 | `unassigned` | Depósito recibido sin match automático (lo asigna el administrador) |
 | `expired` | El cargo venció sin pago |
 | `failed` | El cobro falló |
@@ -1167,7 +1167,7 @@ o la clave de idempotencia.
 | 400 | `invalid_request` | Revisa `method` (qr, bank_transfer, fintoc, card; collect va en su endpoint) |
 | 400 | `idempotency_key_required` | El collect exige clave de idempotencia (débito real al pagador) |
 | 403 | `service_disabled` | Payins no está habilitado para tu cuenta — ver [servicios](https://docs.cbpayapp.com/es/concepts/services) |
-| 429 | `too_many_open_card_sessions` | La cuenta tiene 50 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o deja vencer una sesión existente antes de crear otra |
+| 429 | `too_many_open_card_sessions` | La cuenta tiene 10,000 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o deja vencer una sesión existente antes de crear otra |
 | 503 | `card_reuse_unavailable` | La plataforma no pudo verificar un cobro con tarjeta abierto existente — reintenta la misma solicitud con la misma clave de idempotencia; no crees otro cobro |
 | 503 | `checkout_recovery_pending` | La opción de pago del checkout está en reconciliación — reintenta la misma materialización y no crees otra opción |
 | 422 | `core_rejected` | El procesador rechazó el cargo; revisa el mensaje |
@@ -1249,7 +1249,7 @@ En los payins con tarjeta, `settlement_hours` controla cuándo queda disponible 
 
 ## Retención de fiat local
 
-Activa `fiat_hold_local: true` con `PATCH /v1/accounts/{accountID}` para que los créditos futuros BOB, MXN o ARS permanezcan en su saldo local. Los créditos existentes no se modifican. `credit_asset` siempre aparece y `fiat_credited` solo para fiat local; `usdt_credited` sigue siendo el equivalente USDT. Las tarjetas liquidan en USD para cuentas nuevas (o en USDT para cuentas existentes con USDT explícito) y las conversiones, swaps de checkout y ofertas OTC saltan los payins retenidos.
+Activa `fiat_hold_local: true` con `PATCH /v1/accounts/{accountID}` para que los créditos futuros BOB, MXN o ARS permanezcan en su saldo local. Los créditos existentes no se modifican. `credit_asset` siempre aparece y `fiat_credited` solo para fiat local; `usdt_credited` sigue siendo el equivalente USDT. Las tarjetas liquidan en USD y las conversiones, swaps de checkout y ofertas OTC saltan los payins retenidos.
 
 > **Importante**
 `refunded_amount` usa las unidades de `credit_asset` (micro-USDT para USDT y
@@ -1258,22 +1258,21 @@ micro-USDT. Ramifica por `credit_asset`; jamás calcules
 `usdt_credited - refunded_amount` cuando el crédito sea fiat.
 ## USD como activo principal del ledger
 
-Las cuentas nuevas nacen con `USD` como valor predeterminado de
-`settlement_asset` y `payin_settlement_asset`. Las cuentas existentes con una
-configuración explícita en `USDT` la conservan; las operaciones en
-vuelo nunca se vuelven a cotizar.
+Las cuentas usan `USD` como valor predeterminado de `settlement_asset` y
+`payin_settlement_asset`; cámbialo cuando quieras con `PUT /v1/settlement`.
+Las operaciones en vuelo nunca se vuelven a cotizar.
 
 Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
 d débitos directos, las comisiones y los flujos de payout, checkout, POS y
 tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
 swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
-MXN y ARS siguen siendo activos fiat separados del ledger; en v1 el pricing
-de money-out para esos activos sigue no disponible.
+MXN y ARS siguen siendo activos fiat separados del ledger; los payouts
+en la misma moneda debitan esos saldos directamente (ver
+[payouts](https://docs.cbpayapp.com/es/guides/payouts)).
 
 Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
 sigue siendo el equivalente USD para reportes. El hold de una controversia
-sigue el activo acreditado: un crédito USD nuevo usa `hold_asset: USD`,
-mientras un caso existente en USDT conserva USDT. `disputed` y `held` usan las
+sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.

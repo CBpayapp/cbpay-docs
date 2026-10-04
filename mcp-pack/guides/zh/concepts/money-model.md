@@ -12,7 +12,7 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 | 资产 | 说明 | 小数位 | 入金方式 |
 |---|---|---|---|
 | `USD` | 美元 — **主余额** | 2 | 法币收款（payin）、兑换、内部转账、调整 |
-| `USDT` | 美元稳定币 — 既有主余额 | 6 | 法币收款（payin）、链上充值（TRON/以太坊）、内部转账 |
+| `USDT` | 美元稳定币 | 6 | 法币收款（payin）、链上充值（TRON/以太坊）、内部转账 |
 | `USDC` | 美元稳定币 | 6 | 链上充值（以太坊）、内部转账 |
 | `BTC` | 比特币 | 8（聪） | 链上充值、运营方入账与内部转账 |
 | `GOLD` | 由托管方背书的纯金克数 | 6 | 运营方入账与内部转账 |
@@ -51,9 +51,8 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 在内部，每笔金额都以其资产的最小单位（分、微 USDT、聪、微克）存储为
 整数，并使用精确的有理数运算进行计算。不存在浮点数，也不存在累积的
 舍入误差。
-**USD 是新账户的主余额**：出款（payout）、法币收款（payin）与服务费
-默认使用 USD，除非账户另有配置。在 USD 默认之前创建的账户带有显式的
-USDT 设置并继续以 USDT 运作。空的资产设置会规范化为 USD。
+**USD 是主余额**：出款（payout）、法币收款（payin）与服务费
+默认使用 USD，除非账户另有配置。空的资产设置会规范化为 USD。
 
 ## 选择用哪个余额付款
 
@@ -83,7 +82,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 | 幂等性 | 使用相同的幂等键重放会返回原始金额；价格绝不会重新计算。 |
 | 单笔操作限额 | 波动性资产（BTC/GOLD/SILVER/PLATINUM）设有单笔操作限额（等值 USDT，可在 `GET /v1/settlement` 中查看）；超出时返回 `422 settlement_limit_exceeded`。 |
 | 账户级每日限额 | 波动性资产还设有 24 小时滚动交易量上限（见 `GET /v1/settlement` 中的 `volatile_daily_limit_usdt`）；超出时返回 `422 settlement_daily_limit_exceeded`。请改用 USD/USDT/USDC 结算或稍后重试。 |
-| USD | 是新账户的默认余额；显式 USDT 的 既有账户保持不变。USD 与 USDT 按 1:1 结算，精确到分。 |
+| USD | 是主余额。USD 与 USDT 按 1:1 结算，精确到分。 |
 
 `GET /v1/rates` 的 `settlement` 区块显示每个资产的有效价格（已含点差），
 供您在操作前估算；出款响应中会记录 `settlement_asset`、
@@ -91,8 +90,8 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 ## 选择收款入账到哪个余额
 
-对于新账户，**收款**（QR、银行转账、collect、银行卡）直接以 USD 分入账，
-精度为 2 位小数。带有显式 USDT 设置的 既有账户保持 USDT。若配置其他
+**收款**（QR、银行转账、collect、银行卡）直接以 USD 分入账，
+精度为 2 位小数。若配置其他
 `default_payin_asset`，净额按真实价格走入账后的转换流程，不收取额外 swap
 点差；收款已经支付手续费和汇率。适用普通兑换的相同限额。
 
@@ -105,7 +104,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 | 规则 | 详情 |
 |---|---|
-| 入账后兑换 | 收款先入账到账户的主资产（新账户为 USD，既有账户为 USDT），兑换随即作为一笔 swap 运行（您会在对账单中看到 `swap_out`/`swap_in`）。 |
+| 入账后兑换 | 收款先入账到账户的主资产(USD 为主资产)，兑换随即作为一笔 swap 运行（您会在对账单中看到 `swap_out`/`swap_in`）。 |
 | 价格与限额 | 兑换**按真实价格执行，不收取兑换点差**（不存在双重成本：收款已支付其手续费与汇率）。适用波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔/24 小时限额。 |
 | 兑换失败时 | 收款保持以主资产入账，`conversion_status: pending_retry`，系统自动重试 — 资金绝不丢失、绝不重复兑换。 |
 | Checkout 与 POS | 每个链接保留创建时选择的 `settlement_asset`；此配置不会再次兑换它们。**未**指定 `settlement_asset` 创建的链接会使用您的 `default_payin_asset`。 |
@@ -137,7 +136,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 示例 — 一笔 50,000 CLP 的出款，汇率为 950.25：
 
 ```
-usdt_amount = ceil(50000 / 950.25 × 10^6) / 10^6 = 52.618258 USDT
+usdt_amount = ceil(50000 / 950.25 × 10^6) / 10^6 = 52.617733 USDT
 total_debit = usdt_amount + fee
 ```
 
@@ -152,7 +151,7 @@ usdt_credited = usdt_gross − fee
 
 ## 参考价格与结算价格
 
-`GET /v1/rates` 包含一个 `asset_prices` 区块，提供每个币种的
+`GET /v1/rates` 包含一个 `asset_prices` 区块，提供 USD、USDT、USDC、BTC 及贵金属的
 **USD 参考价格**（BTC 按单位；GOLD、SILVER 和 PLATINUM 按克；
 USD、USDT 和 USDC 约定为 1），用于在界面上为您的余额估值；
 还包含一个 `settlement` 区块，提供若您用该资产支付某笔操作时

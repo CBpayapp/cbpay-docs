@@ -1,7 +1,7 @@
 ---
 title: "Payouts"
 icon: "money-bill-transfer"
-description: "Dispersa fiat a cuentas bancarias locales debitando tu saldo USDT"
+description: "Dispersa fiat a cuentas bancarias locales debitando tu saldo USD"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
@@ -176,7 +176,7 @@ comprobante PDF, el export CSV de payouts y la cartola. Las respuestas, CSV, web
 </Note>
 ### Pagar desde otro saldo (`settlement_asset`)
 
-Por defecto el débito sale de USD en cuentas nuevas. Las cuentas existentes con USDT explícito conservan USDT; usa `PUT /v1/settlement` para cambiarlo. Para pagar una operación
+Por defecto el débito sale de USD; usa `PUT /v1/settlement` para cambiarlo. Para pagar una operación
 puntual desde otro saldo, agrega `settlement_asset` al request. Ejemplo:
 un payout de 100.000 CLP pagado desde el saldo BTC pasa por cuatro
 transformaciones, todas registradas en la respuesta:

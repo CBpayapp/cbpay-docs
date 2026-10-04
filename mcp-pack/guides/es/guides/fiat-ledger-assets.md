@@ -72,7 +72,7 @@ válida en forma y aun así responder `503 pricing_unavailable` hasta que se
 implemente el camino de payout fiat.
 
 #### ¿Agregar fiat cambia mi settlement asset por defecto?
-No. Las cuentas existentes conservan su default actual. El fiat se usa solo
+No. Tu default no cambia. El fiat se usa solo
 cuando el activo está habilitado y el gate del producto lo acepta.
 #### ¿Puedo usar un saldo fiat para pagar una compra con tarjeta?
 No. Las tarjetas rechazan assets fiat en v1; el saldo sigue visible y usable

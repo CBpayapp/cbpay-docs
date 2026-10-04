@@ -4,6 +4,14 @@ icon: "clock-rotate-left"
 description: "API 与文档变更历史"
 ---
 
+<Update label="2026年10月4日" description="v2.153 · 1 个版本">
+### v2.153
+**变更**
+
+- 围绕两种本地法币目的地重构了 Banking 指南：注资账户（purpose `fondeo`，自动转换为你的主资产余额）与 Banking 账户（purpose `banking`，本地保留 BOB、MXN 和 ARS 余额用于 payouts），随后是每种货币一个小节（USD、EUR、BOB、MXN、ARS），并交叉链接到 payins、payouts、SEPA、vIBAN 和账户视图。USD 在所有文档中被描述为主资产，可随时用 `PUT /v1/settlement` 更改。仅文档：API 行为无变化。
+- 对照已实现的行为修正了相关指南和 spec：对账单只能用 `format` 参数请求（不支持 `Accept` 请求头）；失败的转换将资金保留在收到时的资产中；已批准的卡收款以 USD 结算；卡会话打开上限为 10,000。仅文档：API 行为无变化。
+</Update>
+
 <Update label="2026年10月3日" description="v2.152 · 3 个版本">
 ### v2.152
 **变更**

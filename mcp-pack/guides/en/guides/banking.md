@@ -13,17 +13,73 @@ depending on the currency), hold fiat balances and send payments to third
 parties. It is a separate product from your CBPay balances: **banking money
 lives in your bank accounts**, not in your USDT or USD balance.
 
-For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD for new accounts, USDT for existing accounts). Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
+For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD is the principal balance). Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
+
+## Two kinds of local-fiat destinations
+
+For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`), every payin
+destination carries a `purpose` that decides where inbound money lands:
+
+| Purpose | Meaning |
+|---|---|
+| `fondeo` (default) | **Funding account.** Everything received converts automatically to your account's principal asset — USD is the principal balance. |
+| `banking` | **Banking account.** Inbound fiat is retained in its local currency for payouts, with individual balances per currency. |
+
+Create a second destination with `purpose: "banking"` to hold local fiat for
+payouts; destinations created without a purpose keep the historical `fondeo`
+behavior. Banking purpose is only supported in `BO/BOB/bank_transfer`,
+`MX/MXN/bank_transfer` and `AR/ARS/bank_transfer`.
+
 | Concept | Where it lives | Queried with |
 |---|---|---|
 | CBPay balances | CBPay ledger | `GET /v1/balances` |
 | Bank balances | Your bank accounts | `GET /v1/banking/accounts/{id}/balance` |
 
+## Banking by currency
+
+### 🇺🇸 USD — US dollar
+
+Open a classic Banking customer account (ACH, Fedwire and SWIFT rails) with
+the profile → accounts → operations flow in this guide
+([open bank accounts](#3-open-bank-accounts)). USD received through Banking
+is held for payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)); USD sent to your CBPay
+balances lands in your principal asset (USD is the principal balance).
+
+### 🇪🇺 EUR — euro
+
+Everything euro goes through a virtual IBAN: request a `funding_usdt`
+address to convert inbound euros to your principal asset, or a `banking_eur`
+address to hold `BANK_EUR` for SEPA payouts
+([funding direction and EUR banking](#euros-funding-direction-and-eur-banking-in-one-place)).
+Sending euros to third parties is covered in
+[SEPA Instant payouts](https://docs.cbpayapp.com/en/guides/sepa-instant-payouts).
+
+### 🇧🇴 BOB — Bolivian boliviano
+
+Receive bolivianos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
+`purpose`: `fondeo` (default) auto-converts the credit to your principal
+asset (USD is the principal balance); `banking` retains BOB for local
+payouts. See also [BO virtual accounts](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts)
+for the funding flow.
+
+### 🇲🇽 MXN — Mexican peso
+
+Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
+`purpose`: `fondeo` (default) auto-converts the credit to your principal
+asset (USD is the principal balance); `banking` retains MXN for local
+payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+
+### 🇦🇷 ARS — Argentine peso
+
+Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
+`purpose`: `fondeo` (default) auto-converts the credit to your principal
+asset (USD is the principal balance); `banking` retains ARS for local
+payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+
 > **Note**
 Banking fees come in two shapes. **Standalone fixed fees**
 (`banking_customer`, `banking_account`, `banking_operation`) are debited
-from your **default settlement asset balance** — USD for new accounts,
-USDT for existing accounts — when each operation executes and **refunded
+from your **default settlement asset balance** — USD is the principal balance — when each operation executes and **refunded
 automatically** if it fails. **Transactional rail fees**
 (`banking_deposit`, `banking_transfer_ach`, `banking_transfer_swift`,
 `banking_transfer_wire`, `banking_transfer_sepa`) are a percentage plus a
@@ -438,7 +494,7 @@ Response `202`:
 
 `banking_fee` and `banking_fee_asset` only appear when a fee was charged.
 With a per-rail fee the asset is the operation currency (`BANK_USD` /
-`BANK_EUR`); with the default fallback it is `USDT`.
+`BANK_EUR`); with the default fallback it is your default settlement asset.
 
 - The final state arrives through the `banking_operation_status_changed`
   webhook (`completed` / `failed`); you can also poll
@@ -495,7 +551,7 @@ routing instrument, not a separate provider balance, and comes in two purposes:
 
 | Purpose | Default | Meaning |
 |---|---:|---|
-| `funding_usdt` | Yes | EUR funding address. Customer `sepa` payouts resolve their source here; inbound converts through the USDT payin chain. |
+| `funding_usdt` | Yes | EUR funding address. Customer `sepa` payouts resolve their source here; inbound converts to your principal asset through the payin credit chain. |
 | `banking_eur` | No | EUR banking address (requires the Banking product). EUR Banking operations debit `BANK_EUR`; inbound lands in the Banking ledger. |
 
 ### Request a virtual IBAN
@@ -623,7 +679,7 @@ curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8
 ```
 
 The route returns `409 balance_not_available` for `funding_usdt`, because that
-purpose converts through the USDT payin chain instead of holding `BANK_EUR`.
+purpose converts to your principal asset through the payin credit chain instead of holding `BANK_EUR`.
 
 ### Sending euros out
 
@@ -729,7 +785,7 @@ returned operation.
 #### Does requesting a virtual IBAN create a BANK_EUR balance?
 No. The purpose is recorded on the request, but a virtual IBAN is not an
 independent provider balance. Only `banking_eur` flows touch `BANK_EUR`;
-`funding_usdt` converts through the USDT payin chain.
+`funding_usdt` converts to your principal asset through the payin credit chain.
 ## Rail fees (deposits and transfers)
 
 On top of the standalone fixed fees, banking supports **transactional fees
@@ -751,7 +807,7 @@ dispatch, the fee is **refunded automatically** (same discipline as the
 default fee).
 
 **Fallback:** if the rail has no specific configuration (neither at account
-nor at platform level), the default `banking_operation` fee (fixed, in USDT)
+nor at platform level), the default `banking_operation` fee (fixed, debited from your default settlement asset)
 applies. A rail configured with 0% + 0 fixed is **explicitly free** — it
 does *not* fall back to the default fee.
 
@@ -770,7 +826,7 @@ does *not* fall back to the default fee.
 | HTTP | `error` | What to do |
 |---|---|---|
 | 400 | `idempotency_key_required` | Send the key in body or header |
-| 402 | `insufficient_funds` | Not enough balance: with a per-rail fee the check is `balance ≥ amount + fee` in the **operation currency** (`BANK_USD`/`BANK_EUR`); with the default fallback it is your USDT balance |
+| 402 | `insufficient_funds` | Not enough balance: with a per-rail fee the check is `balance ≥ amount + fee` in the **operation currency** (`BANK_USD`/`BANK_EUR`); with the default fallback it is your default settlement asset balance |
 | 403 | `account_blocked` | The account is not active; contact the CBPay team |
 | 409 | `banking_customer_exists` | Your account already has a banking profile (`GET /v1/banking/customer`) |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and do not create a second profile |
@@ -795,9 +851,9 @@ contract in [Company wallets](https://docs.cbpayapp.com/en/guides/company-wallet
 ## FAQ
 
 #### Does banking money show up in my USDT balance?
-A `funding_usdt` inbound converts into USDT through the funding payin chain. A `banking_eur` inbound is credited to the Banking EUR mirror after the terminal event and ledger processing. The provider remains authoritative for the bank balance. **Per-rail fees** are charged in the
+A `funding_usdt` inbound converts to your principal asset through the funding payin chain (USD is the principal balance). A `banking_eur` inbound is credited to the Banking EUR mirror after the terminal event and ledger processing. The provider remains authoritative for the bank balance. **Per-rail fees** are charged in the
 operation currency (your `BANK_USD`/`BANK_EUR` balance); only the default
-`banking_operation` fallback fee is debited from your USDT balance.
+`banking_operation` fallback fee is debited from your default settlement asset balance.
 #### What happens to the fee if an operation fails?
 It is refunded automatically — profile, account and operation fees alike,
 including per-rail fees (refunded on the definitive synchronous rejection).

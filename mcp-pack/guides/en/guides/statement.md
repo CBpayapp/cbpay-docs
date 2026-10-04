@@ -189,7 +189,7 @@ reconstructs completely. The authoritative balance is always the bank's
 spendable.
 #### Which formats are available?
 JSON (integration), PDF and XLSX — both branded with your organization's
-identity. Use the `Accept` header or the format parameter of the endpoint.
+identity. Use the `format` parameter of the endpoint (`format=json|pdf|xlsx`).
 #### What is fee_model: fixed?
 Standalone service charges (verifications, screenings, wallet services) are
 fixed-only fees, labeled "Fixed Com" in the statement — as opposed to

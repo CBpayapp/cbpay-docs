@@ -11,7 +11,7 @@ Cada cuenta mantiene **diez saldos virtuales, uno por asset**:
 | Asset | Qué es | Decimales | Cómo se fondea |
 |---|---|---|---|
 | `USD` | Dólares — **el saldo principal** | 2 | Payins fiat, swaps, transferencias, ajustes |
-| `USDT` | Stablecoin USD — saldo principal existente | 6 | Payins fiat, depósitos on-chain (TRON/Ethereum), transferencias |
+| `USDT` | Stablecoin USD | 6 | Payins fiat, depósitos on-chain (TRON/Ethereum), transferencias |
 | `USDC` | Stablecoin USD | 6 | Depósitos on-chain (Ethereum), transferencias |
 | `BTC` | Bitcoin | 8 (satoshis) | Depósitos on-chain, abonos del operador y transferencias internas |
 | `GOLD` | Gramos de oro fino, respaldados por custodio | 6 | Abonos del operador y transferencias internas |
@@ -53,10 +53,8 @@ aritmética racional exacta. Nunca hay floats ni errores de redondeo
 acumulados.
 </Note>
 
-**USD es el saldo principal de las cuentas nuevas**: payouts, payins fiat
-y comisiones usan USD salvo que la cuenta configure otra cosa. Las cuentas
-creadas antes del default USD llevan USDT explícito y siguen operando en
-USDT. Un asset vacío se normaliza a USD.
+**USD es el saldo principal**: payouts, payins fiat
+y comisiones usan USD salvo que la cuenta configure otra cosa. Un asset vacío se normaliza a USD.
 
 ## Elige desde qué saldo pagas
 
@@ -90,7 +88,7 @@ Reglas del settlement multi-asset:
 | Idempotencia | El replay con la misma llave devuelve el monto original; el precio no se recalcula. |
 | Límite por operación | Los assets volátiles (BTC/GOLD/SILVER/PLATINUM) tienen un límite por operación (equivalente USDT, visible en `GET /v1/settlement`); si lo superas: `422 settlement_limit_exceeded`. |
 | Límite diario por cuenta | Los assets volátiles también tienen un tope de volumen en 24 h móviles (`volatile_daily_limit_usdt` en `GET /v1/settlement`); al superarlo: `422 settlement_daily_limit_exceeded`. Paga en USD/USDT/USDC o reintenta más tarde. |
-| USD | Es el default de las cuentas nuevas; las cuentas existentes con USDT explícito no cambian. USD liquida 1:1 con USDT, exacto al centavo. |
+| USD | Es el saldo principal. USD liquida 1:1 con USDT, exacto al centavo. |
 
 El bloque `settlement` de `GET /v1/rates` muestra el precio efectivo por
 asset (spread incluido) para estimar antes de operar, y la respuesta del
@@ -115,7 +113,7 @@ curl -X PUT "https://api.qbank.cl/platform/v1/settlement" \
 
 | Regla | Detalle |
 |---|---|
-| Conversión post-crédito | El payin acredita en el asset principal de la cuenta (USD en cuentas nuevas, USDT en existentes) y la conversión corre inmediatamente después como un swap (verás `swap_out`/`swap_in` en tu cartola). |
+| Conversión post-crédito | El payin acredita en el asset principal de la cuenta (USD es el saldo principal) y la conversión corre inmediatamente después como un swap (verás `swap_out`/`swap_in` en tu cartola). |
 | Precio y límites | La conversión ejecuta **al precio real, sin spread de swap** (no hay doble costo: el payin ya pagó su comisión y su tasa). Aplican los límites por operación/24 h de los assets volátiles (BTC/GOLD/SILVER/PLATINUM). |
 | Si la conversión falla | El payin queda acreditado en el asset principal con `conversion_status: pending_retry` y el sistema reintenta automático — el saldo jamás se pierde ni se convierte doble. |
 | Checkout y POS | Cada link conserva el `settlement_asset` elegido al crearlo; esta configuración no los re-convierte. Un link creado **sin** `settlement_asset` usa tu `default_payin_asset`. |
@@ -150,7 +148,7 @@ liquidan 1:1 en centavos USD.
 Ejemplo de un payout de 50.000 CLP con tasa 950.25:
 
 ```
-usdt_amount = ceil(50000 / 950.25 × 10^6) / 10^6 = 52.618258 USDT
+usdt_amount = ceil(50000 / 950.25 × 10^6) / 10^6 = 52.617733 USDT
 total_debit = usdt_amount + fee
 ```
 
@@ -166,7 +164,7 @@ La tasa usada queda registrada en el objeto (`fx_rate`) para auditoría.
 ## Precios de referencia y de settlement
 
 `GET /v1/rates` incluye un bloque `asset_prices` con el **precio USD de
-referencia** de cada moneda (BTC por unidad; GOLD, SILVER y PLATINUM por
+referencia** de USD, USDT, USDC, BTC y los metales (BTC por unidad; GOLD, SILVER y PLATINUM por
 gramo; USD, USDT y USDC valen 1 por convención), para valorizar tus saldos
 en pantalla, y un bloque `settlement` con el **precio efectivo** al que se
 valoraría tu saldo si pagas una operación desde ese asset (spread incluido):

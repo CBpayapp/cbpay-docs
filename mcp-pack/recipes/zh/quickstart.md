@@ -25,7 +25,7 @@ flowchart LR
 | **基础 URL（test）** | `https://cryptobank.qbank.cl/platform` —— 模拟资金，`pk_test_` 密钥 |
 | **认证方式** | `Authorization: Bearer <token>` 请求头（或 `X-API-Key`） |
 | **组织 slug** | `cbpay`（用于注册和登录） |
-| **余额币种** | 10 个独立余额：USD（新账户的本位币种）、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 和 ARS —— 金额始终为字符串（`"52.618258"`） |
+| **余额币种** | 10 个独立余额：USD（主资产）、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 和 ARS —— 金额始终为字符串（`"52.617733"`） |
 | **环境** | 两个相互隔离的环境，同一套 API：先在 **test** 集成，再更换 URL + 密钥上线 —— [指南](https://docs.cbpayapp.com/zh/environment-testing) |
 
 > **提示**
@@ -169,7 +169,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "status": "processing",
   "local_amount": "50000",
   "fx_rate": "950.25",
-  "usdt_amount": "52.618258",
+  "usdt_amount": "52.617733",
   "fee": "0.500000",
   "total_debit": "53.118258",
   "status_code": "",
@@ -206,7 +206,7 @@ curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \
   "payout_id": "…",
   "status": "completed",
   "local_amount": "50000",
-  "usdt_amount": "52.618258",
+  "usdt_amount": "52.617733",
   "total_debit": "53.118258",
   "status_code": "",
   "status_message": ""

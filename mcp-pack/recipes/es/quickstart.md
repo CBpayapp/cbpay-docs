@@ -25,7 +25,7 @@ Antes de empezar, los datos que vas a necesitar en todos lados:
 | **URL base (test)** | `https://cryptobank.qbank.cl/platform` — dinero simulado, keys `pk_test_` |
 | **Autenticación** | Header `Authorization: Bearer <token>` (o `X-API-Key`) |
 | **Slug de organización** | `cbpay` (para registro y login) |
-| **Monedas del saldo** | 10 saldos independientes: USD (el saldo principal de cuentas nuevas), USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN y ARS — montos siempre como string (`"52.618258"`) |
+| **Monedas del saldo** | 10 saldos independientes: USD (el saldo principal), USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN y ARS — montos siempre como string (`"52.617733"`) |
 | **Ambientes** | Dos ambientes aislados, misma API: integra primero en **test** y pasa a live cambiando URL + key — [guía](https://docs.cbpayapp.com/es/environment-testing) |
 
 > **Tip**
@@ -174,7 +174,7 @@ llega por [webhook](https://docs.cbpayapp.com/es/webhooks) (`payout_status_chang
   "status": "processing",
   "local_amount": "50000",
   "fx_rate": "950.25",
-  "usdt_amount": "52.618258",
+  "usdt_amount": "52.617733",
   "fee": "0.500000",
   "total_debit": "53.118258",
   "status_code": "",
@@ -210,7 +210,7 @@ Minutos después recibirás el cierre del payout del paso 5:
   "payout_id": "…",
   "status": "completed",
   "local_amount": "50000",
-  "usdt_amount": "52.618258",
+  "usdt_amount": "52.617733",
   "total_debit": "53.118258",
   "status_code": "",
   "status_message": ""

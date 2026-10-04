@@ -154,8 +154,7 @@ ordering identity is stamped and repaired all live in one place: see
 [Euros: funding direction and EUR banking, in one place](https://docs.cbpayapp.com/en/guides/banking#euros-funding-direction-and-eur-banking-in-one-place). This page keeps only the payout contract above.
 
 There is no per-vIBAN amount cap. The payout debits the account's normal
-settlement balance (the settlement asset — USD for new accounts, USDT for
-existing accounts); `BANK_EUR` is used by EUR Banking operations, not customer
+settlement balance (the settlement asset (USD is the principal balance); `BANK_EUR` is used by EUR Banking operations, not customer
 payouts.
 
 > **Note**

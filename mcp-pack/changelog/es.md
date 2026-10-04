@@ -5,6 +5,12 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.153 · 1 versión - 4 de octubre de 2026
+### v2.153
+**Cambiado**
+
+- Reestructurada la guía Banking alrededor de los dos tipos de destino fiat local: cuentas de fondeo (purpose `fondeo`, conversión automática a tu saldo principal) versus cuentas Banking (purpose `banking`, que conservan saldos BOB, MXN y ARS para payouts), seguida de una sección por moneda (USD, EUR, BOB, MXN, ARS) con enlaces a payins, payouts, SEPA, vIBANs y las vistas de cuenta. USD se documenta en todas partes como el saldo principal, cambiable cuando quieras con `PUT /v1/settlement`. Solo docs: ningún cambio de comportamiento en la API.
+- Corregidas guías y specs contra el comportamiento implementado: el estado de cuenta solo se pide con el parámetro `format` (sin header `Accept`); una conversión fallida conserva los fondos en el asset recibido; los cobros con tarjeta aprobados se liquidan en USD; y el tope de sesiones de tarjeta abiertas es 10.000. Solo docs: ningún cambio de comportamiento en la API.
 ## v2.152 · 3 versiones - 3 de octubre de 2026
 ### v2.152
 **Cambiado**

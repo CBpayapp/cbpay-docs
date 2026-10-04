@@ -191,8 +191,7 @@ reconstruya completa. El saldo autoritativo siempre es el del banco
 gastables.
 #### ¿Qué formatos hay disponibles?
 JSON (integración), PDF y XLSX — ambos brandeados con la identidad de tu
-organización. Usa el header `Accept` o el parámetro de formato del
-endpoint.
+organización. Usa el parámetro `format` del endpoint (`format=json|pdf|xlsx`).
 #### ¿Qué es fee_model: fixed?
 Los cargos standalone de servicios (verificaciones, screenings, servicios
 de wallet) son comisiones solo-fijas, etiquetadas "Fixed Com" en la

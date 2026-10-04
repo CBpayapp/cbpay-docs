@@ -22,7 +22,7 @@ It is the mirror image of a payin: a payin credits, a refund debits.
 |---|---|
 | Method | Card payins only (`method: "card"`, including checkout paid by card and MIT charges on a stored card) |
 | Status | The payin must be `credited` **with its balance already available** — a card payin under a settlement delay (`settlement_pending: true`, balance landing at `settle_at`) cannot be refunded until the settlement releases |
-| Balance | You need enough balance **in the credited asset** (`USD` on new accounts, `USDT` on existing accounts) at the time you request it |
+| Balance | You need enough balance **in the credited asset** (`USD` is the principal balance) at the time you request it |
 | Amount | Full or partial; several partials on the same payin add up to the cap |
 
 QR, announced transfer, dedicated deposit account and collect payins
@@ -344,8 +344,7 @@ would be a second real refund. Repeat the request with the **same**
 `idempotency_key` (we return the same object) or wait for the
 `payin_refunded` webhook.
 #### Which currency is debited?
-The **asset the payin was credited in** (`credit_asset`): `USD` for new
-accounts, `USDT` for existing accounts, or `BOB`/`MXN`/`ARS` for payins held
+The **asset the payin was credited in** (`credit_asset`): `USD`, or `BOB`/`MXN`/`ARS` for payins held
 in local fiat — regardless of your current default settlement asset. We
 never convert on your behalf: if you do not have enough of that asset, we
 answer `insufficient_funds`. The response and the `payin_refunded` webhook

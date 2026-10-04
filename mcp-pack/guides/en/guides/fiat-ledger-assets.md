@@ -75,7 +75,7 @@ but still return `503 pricing_unavailable` until the fiat payout settlement
 path is implemented.
 
 #### Does adding a fiat asset change my default settlement asset?
-No. Existing accounts keep their current default. A fiat asset is only used
+No. Your default is unchanged. A fiat asset is only used
 when explicitly enabled and accepted by the relevant product gate.
 #### Can I use a fiat balance to pay a card purchase?
 No. Cards reject fiat spending assets in v1; the balance remains visible and
