@@ -59,8 +59,7 @@ Sending euros to third parties is covered in
 Receive bolivianos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
 `purpose`: `fondeo` (default) auto-converts the credit to your principal
 asset (USD is the principal balance); `banking` retains BOB for local
-payouts. See also [BO virtual accounts](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts)
-for the funding flow.
+payouts. See [Funding](https://docs.cbpayapp.com/en/guides/funding) for the funding flow.
 
 ### 🇲🇽 MXN — Mexican peso
 
@@ -843,14 +842,9 @@ does *not* fall back to the default fee.
 
 The general error catalog lives in [Errors](https://docs.cbpayapp.com/en/errors).
 
-## Company wallets
-
-Dedicated EUR wallets for verified business accounts. See the complete reservation, balance, statement and error
-contract in [Company wallets](https://docs.cbpayapp.com/en/guides/company-wallets).
-
 ## FAQ
 
-#### Does banking money show up in my USDT balance?
+#### Does banking money show up in my USD balance?
 A `funding_usdt` inbound converts to your principal asset through the funding payin chain (USD is the principal balance). A `banking_eur` inbound is credited to the Banking EUR mirror after the terminal event and ledger processing. The provider remains authoritative for the bank balance. **Per-rail fees** are charged in the
 operation currency (your `BANK_USD`/`BANK_EUR` balance); only the default
 `banking_operation` fallback fee is debited from your default settlement asset balance.

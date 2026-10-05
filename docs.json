@@ -106,7 +106,7 @@
                     "pages": [
                       "en/guides/payins",
                       "en/guides/payins-qr",
-                      "en/guides/bob-virtual-accounts",
+                      "en/guides/funding",
                       "en/guides/checkout",
                       "en/guides/stored-cards-subscriptions",
                       "en/guides/qr-pos",
@@ -132,7 +132,6 @@
                       "en/guides/crypto",
                       "en/guides/segregated-wallets",
                       "en/guides/banking",
-                      "en/guides/company-wallets",
                       "en/guides/fiat-ledger-assets"
                     ]
                   },
@@ -244,7 +243,7 @@
                     "pages": [
                       "es/guides/payins",
                       "es/guides/payins-qr",
-                      "es/guides/bob-virtual-accounts",
+                      "es/guides/funding",
                       "es/guides/checkout",
                       "es/guides/stored-cards-subscriptions",
                       "es/guides/qr-pos",
@@ -270,7 +269,6 @@
                       "es/guides/crypto",
                       "es/guides/segregated-wallets",
                       "es/guides/banking",
-                      "es/guides/company-wallets",
                       "es/guides/fiat-ledger-assets"
                     ]
                   },
@@ -382,7 +380,7 @@
                     "pages": [
                       "zh/guides/payins",
                       "zh/guides/payins-qr",
-                      "zh/guides/bob-virtual-accounts",
+                      "zh/guides/funding",
                       "zh/guides/checkout",
                       "zh/guides/stored-cards-subscriptions",
                       "zh/guides/qr-pos",
@@ -408,7 +406,6 @@
                       "zh/guides/crypto",
                       "zh/guides/segregated-wallets",
                       "zh/guides/banking",
-                      "zh/guides/company-wallets",
                       "zh/guides/fiat-ledger-assets"
                     ]
                   },
@@ -572,7 +569,7 @@
     },
     {
       "source": "/es/guias/bob-virtual-accounts",
-      "destination": "/es/guides/bob-virtual-accounts"
+      "destination": "/es/guides/funding"
     },
     {
       "source": "/es/guias/cartola",
@@ -584,7 +581,7 @@
     },
     {
       "source": "/es/guias/company-wallets",
-      "destination": "/es/guides/company-wallets"
+      "destination": "/es/guides/banking"
     },
     {
       "source": "/es/guias/comprobantes",
@@ -733,6 +730,30 @@
     {
       "source": "/es/seguridad-2fa",
       "destination": "/es/security-2fa"
+    },
+    {
+      "source": "/en/guides/bob-virtual-accounts",
+      "destination": "/en/guides/funding"
+    },
+    {
+      "source": "/es/guides/bob-virtual-accounts",
+      "destination": "/es/guides/funding"
+    },
+    {
+      "source": "/zh/guides/bob-virtual-accounts",
+      "destination": "/zh/guides/funding"
+    },
+    {
+      "source": "/en/guides/company-wallets",
+      "destination": "/en/guides/banking"
+    },
+    {
+      "source": "/es/guides/company-wallets",
+      "destination": "/es/guides/banking"
+    },
+    {
+      "source": "/zh/guides/company-wallets",
+      "destination": "/zh/guides/banking"
     }
   ]
 }

@@ -272,9 +272,7 @@ la misma clave devuelve el recurso original con `idempotency_hit: true`.
 no un reemplazo del propósito explícito.
 **Cuentas empresa y múltiples destinos de depósito.** Una cuenta empresa
 puede crear múltiples cuentas de depósito inmutables en corredores
-adicionales habilitados. Hoy los corredores adicionales son
-`MX`/`MXN`/`bank_transfer` (CLABE) y `BO`/`BOB`/`bank_transfer` (cuenta
-receptora BOB). Cada destino sigue ligado a la misma cuenta CBPay y las
+adicionales habilitados. Hoy los corredores adicionales son `MX`/`MXN`/`bank_transfer` (CLABE), `BO`/`BOB`/`bank_transfer` (cuenta receptora BOB) y `AR`/`ARS`/`bank_transfer` (CVU). Cada destino sigue ligado a la misma cuenta CBPay y las
 transferencias entrantes se acreditan según el instrumento de destino. Las
 cuentas persona conservan una cuenta por corredor, igual que los corredores
 alternativos o anteriores.
@@ -342,7 +340,7 @@ verificado usa `reconcile`.
 <Tab title="Bolivia">
 
 **Cuenta receptora BOB dedicada**: para el flujo de cuenta fija, usa la
-[guía de cuentas virtuales BOB](/es/guides/bob-virtual-accounts). Una cuenta
+[guía de Fondeo](/es/guides/funding). Una cuenta
 persona recibe un `instrument` estable por corredor; una empresa puede crear
 instrumentos BOB adicionales con claves de idempotencia distintas. El pagador
 transfiere BOB al número seleccionado y el abono se detecta por polling. No
@@ -1126,7 +1124,7 @@ tu organización.
 
 Los pushes acreditados en una cuenta de depósito dedicada exponen
 `instrument_id`, un bloque `instrument` y el bloque `payer` del banco — forma
-completa en la [guía de cuentas virtuales BOB](/es/guides/bob-virtual-accounts#campos-de-instrumento-y-pagador-en-pushes-acreditados).
+completa en la [guía de Fondeo](/es/guides/funding#campos-de-instrumento-y-pagador-en-pushes-acreditados).
 Filtra el historial con `?instrument_id=<uuid>`.
 
 ## 3. Recibe el abono

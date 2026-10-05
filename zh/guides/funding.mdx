@@ -1,35 +1,94 @@
 ---
-title: "BOB 虚拟收款账户"
-icon: "building-columns"
-description: "通过专属银行转账账户接收玻利维亚诺"
+title: "资金账户"
+icon: "wallet"
+description: "按币种的资金账户：自动转换为USD（你的主余额）的充值目的地"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
-## 产品说明
+**资金账户**是某一本地币种的充值目的地，其唯一工作就是收款：每笔到账
+都会自动转换为USD——你的主余额。它是 deposit account 的默认
+`purpose: "fondeo"`：按走廊创建一个，并把 instrument（账号、CLABE、
+别名、IBAN）分享给你的付款人。
 
-BOB 虚拟收款账户是绑定到一个 CBPay 账户的固定收款目的地。付款人向
-该目的地发起普通的玻利维亚诺银行转账；CBPay 检测到账、核对银行报告的
-账户，并通过标准 payin 流程入账。
+如果你需要**保留**本地法币用于 payout 而不是转换，那就是
+[Banking](/zh/guides/banking)：用 `purpose: "banking"` 再创建一个目的地。
+资金账户负责转换，Banking 负责保留。
 
-该账户仅用于收款。它不是钱包，不会创建支付会话，付款人也不需要填写
-公告转账参考号。
+## 资金账户 vs Banking
+
+对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`），每个 payin 目的地都
+带一个 `purpose`，决定入账资金的去向：
+
+| Purpose | 含义 |
+|---|---|
+| `fondeo`（默认） | **资金账户。**所有到账自动转换为USD——你的主余额。 |
+| `banking` | **Banking 账户。**入账法币按本地币种保留，用于 payout，每个币种有独立余额。 |
+
+不带 purpose 创建的目的地保留历史 `fondeo` 行为。banking purpose 仅支持
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和 `AR/ARS/bank_transfer`；
+其余一律是资金账户。
+
+## 按币种的资金账户
+
+### 🇦🇷 ARS — 阿根廷比索
+
+通过专用 CVU 收款。CVU 在创建时使用**你选择的**银行别名
+（`bank_alias` 必填）。入账比索自动转换为USD——你的主余额。
+
+完整 deposit account 契约见 [payins](/zh/guides/payins)；要付款出去见
+[payouts](/zh/guides/payouts)。
+
+### 🇧🇴 BOB — 玻利维亚诺
+
+通过专用银行转账账户收款。入账 BOB 自动转换为USD——你的主余额。
+
+要付款出去（BOB 或 USD 银行转账，外加 QR），见
+[payouts](/zh/guides/payouts) 中的玻利维亚页签。
+
+### 🇲🇽 MXN — 墨西哥比索
+
+通过专用 CLABE 收款。入账 MXN 自动转换为USD——你的主余额。
+
+完整 deposit account 契约见 [payins](/zh/guides/payins)；要付款出去见
+[payouts](/zh/guides/payouts)。
+
+### 🇪🇺 EUR — 欧元
+
+通过 `funding_usdt` 虚拟 IBAN 收款：入账欧元自动转换为USD——你的主
+余额。（而 `banking_eur` IBAN 保留 `BANK_EUR` 用于 SEPA payout——那是
+[Banking](/zh/guides/banking)。）
+
+在 [Banking](/zh/guides/banking) 中申请和读取 IBAN；要付款出去见
+[SEPA Instant payouts](/zh/guides/sepa-instant-payouts)。
+
+## 资金流程
 
 ```mermaid
 sequenceDiagram
-  participant A as 您的账户
+  participant A as 你的账户
   participant C as CBPay
   participant B as 付款人银行
-  A->>CBPay: GET payin 方法
-  CBPay-->>A: BO/BOB/bank_transfer
-  A->>CBPay: POST deposit-accounts
-  CBPay-->>A: 固定收款工具
-  B->>CBPay: 向该工具转账
-  CBPay->>CBPay: 轮询并核对到账
-  CBPay-->>A: payin_credited webhook
+  A->>C: GET payin 方法
+  C-->>A: BO/BOB/bank_transfer
+  A->>C: POST deposit-accounts
+  C-->>A: 固定收款工具
+  B->>C: 向该工具转账
+  C->>C: 轮询并核对到账
+  C-->>A: payin_credited webhook
 ```
+
+1. **确认走廊**（`GET /v1/payins/methods`）——在应用中启用付款选项前，
+始终读取实时目录。
+2. **创建或修复收款账户**（`POST /v1/payins/deposit-accounts`）——已验证
+账户自动获得第一个目的地；企业可在已启用的走廊中添加更多。
+3. **分享 instrument**——付款人发起普通的银行转账。
+4. **接收到账**——CBPay 核对银行到账并发出 `payin_credited`；净额记入
+USD——你的主余额。
+
+该模式没有公告步骤：付款人永远不需要填写 `POST /v1/payins` 参考号。
 
 ## 1. 确认走廊
 
@@ -55,7 +114,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 
 ## 2. 创建或修复收款账户
 
-只有在账户自身的验证通过后，平台才会 provisioning 初始 BOB 收款工具：
+只有在账户自身的验证通过后，平台才会提供初始收款工具：
 个人需要 KYC，企业需要 KYB。注册本身不会创建充值账户。已通过验证的
 账户缺少工具时，也可以调用以下接口修复：
 
@@ -98,11 +157,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 缺失的可选字段不会被推断。
 
 个人账户在每个国家/币种/方法上最多只有一个活动充值账户。企业账户只有
-在已启用的走廊中才能创建不可变的额外目的地；目前支持的额外走廊是
-`MX/MXN/bank_transfer` 和 `BO/BOB/bank_transfer`。每个目的地仍绑定到
+在已启用的走廊中才能创建不可变的额外目的地；目前支持的额外走廊是 `MX/MXN/bank_transfer`、`BO/BOB/bank_transfer` 和 `AR/ARS/bank_transfer`。每个目的地仍绑定到
 同一个 CBPay 账户，到账按目的地 instrument 进行匹配。
 
-验证通过后，账户的第一个走廊工具会自动 provisioning。前面的请求也可
+验证通过后，账户的第一个走廊工具会自动提供。前面的请求也可
 用于修复验证通过后缺失的工具。收款账户展示字段是可选的，不会被推断。该 BOB 流程不会创建用户选择的银行别名；AR/ARS 银行别名是 payins 指南中的独立契约。企业创建额外 BOB 目的地时，每个
 目的地都必须使用新的幂等键：
 
@@ -126,7 +184,7 @@ instrument 以及 `idempotency_hit: true`；仍在处理中的并发重放可能
 
 ## 3. 列出收款工具
 
-列表已分页，并隐藏尚未得到真实收款号码的 provisioning claim：
+列表已分页，并隐藏尚未得到真实收款号码的创建认领：
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts?page=1&page_size=50" \
@@ -175,39 +233,12 @@ curl "https://api.qbank.cl/platform/v1/payins?country=BO&status=credited&from=20
 `payer_source: "bank_event"` 和银行报告的 `payer` 区块。银行未报告的数据
 会省略，历史付款人不会被补造，现有 screening 可能使入账进入审核。
 
-## BOB payout
-
-BOB payout 继续使用与供应商无关的合同：
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Idempotency-Key: bo-payout-2026-001" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "BO",
-    "currency": "BOB",
-    "method": "bank_transfer",
-    "amount": "1382.00",
-    "beneficiary": {
-      "name": "Juan Quispe Mamani",
-      "tax_id": "4567890",
-      "bank_code": "1016",
-      "account_number": "1234567890"
-    },
-    "description": "Supplier payment"
-  }'
-```
-
-组织配置决定内部使用的 rail 版本。该选择不是客户可控制的字段，并会保存在
-操作中，使后续轮询继续使用正确的版本。响应和 webhook 保持 provider-agnostic。
-
 ## 状态与恢复
 
 | 状态 | 含义 | 操作 |
 |---|---|---|
 | `active` | 收款账户可以提供给付款人 | 使用 `instrument` |
-| `pending` | provisioning 或核对仍在进行 | 不要创建第二个账户 |
+| `pending` | 配给或核对仍在进行 | 不要创建第二个账户 |
 | `credited` | 转账已核对并入账 | 处理 `payin_credited` |
 | `unassigned` | 到账无法路由到唯一账户 | 在运营页面中处理 |
 
@@ -241,5 +272,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 </Accordion>
 <Accordion title="转账什么时候入账？">
 该走廊使用轮询。最终时间取决于银行何时登记该笔流水；核对完成后才会发送 webhook。
+</Accordion>
+<Accordion title="资金账户还是 Banking——我需要哪一个？">
+当每笔充值都应记入USD（你的主余额）时，选择默认的资金账户。当你需要为
+payout 保留 BOB、MXN 或 ARS 本地余额时，选择带 `purpose: "banking"` 的
+[Banking](/zh/guides/banking)。
 </Accordion>
 </AccordionGroup>

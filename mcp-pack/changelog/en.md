@@ -5,6 +5,14 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.154 · 1 version - October 5, 2026
+### v2.154
+**Added**
+
+- New Funding hub: one guide for every funding account by currency (ARS, BOB, MXN, EUR), with the funding-vs-banking split, creation and reading.
+**Changed**
+
+- Merged the BO virtual-accounts deposit content into the Funding hub; the BOB payout section moved to the payouts guide. Removed the standalone BO and company-wallet guides; redirects point to the new homes. Docs-only: no API behavior changed.
 ## v2.153 · 1 version - October 4, 2026
 ### v2.153
 **Changed**

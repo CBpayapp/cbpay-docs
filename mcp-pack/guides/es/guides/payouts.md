@@ -659,7 +659,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 }
 ```
 
-Para USD envía `currency: "USD"` con la misma estructura.
+Para USD envía `currency: "USD"` con la misma estructura. La configuración de riel de la organización decide qué versión interna atiende los payouts de Bolivia; la elección se guarda en la operación para que el sondeo posterior siga usando la versión correcta, y respuestas y webhooks se mantienen provider-agnostic.
 
 #### Brasil
 
