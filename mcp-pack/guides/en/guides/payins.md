@@ -282,8 +282,7 @@ same idempotency key returns the original resource with
 bound instrument. It does not replace the explicit purpose on a destination.
 **Company accounts and multiple deposit destinations.** A company account can
 create multiple immutable deposit accounts in enabled additional corridors.
-The current additional corridors are `MX`/`MXN`/`bank_transfer` (CLABE) and
-`BO`/`BOB`/`bank_transfer` (BOB receiving account). Every destination remains
+The current additional corridors are `MX`/`MXN`/`bank_transfer` (CLABE), `BO`/`BOB`/`bank_transfer` (BOB receiving account), and `AR`/`ARS`/`bank_transfer` (CVU). Every destination remains
 bound to the same CBPay account; incoming transfers are credited by the
 destination instrument. Person accounts keep one deposit account per
 corridor, and the same one-per-corridor rule applies to other or existing
@@ -347,7 +346,7 @@ is no longer pending and recoverable it returns the same `422`; use
 #### Bolivia
 
 **Dedicated BOB receiving account**: for the fixed-account flow, use the
-[BOB virtual accounts guide](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts). A person
+[Funding guide](https://docs.cbpayapp.com/en/guides/funding). A person
 account receives one stable `instrument` for the corridor; a company can
 create additional BOB instruments with distinct idempotency keys. The payer
 transfers BOB to the selected number and the credit is detected by polling.
@@ -1069,7 +1068,7 @@ for your organization.
 
 ## Dedicated-account metadata and payer identity
 
-Pushes credited to a dedicated deposit account expose `instrument_id`, an `instrument` block and the bank-reported `payer` block — full shape in the [BOB virtual accounts guide](https://docs.cbpayapp.com/en/guides/bob-virtual-accounts#instrument-and-payer-fields-on-credited-pushes). Filter the history with `?instrument_id=<uuid>`.
+Pushes credited to a dedicated deposit account expose `instrument_id`, an `instrument` block and the bank-reported `payer` block — full shape in the [Funding guide](https://docs.cbpayapp.com/en/guides/funding#instrument-and-payer-fields-on-credited-pushes). Filter the history with `?instrument_id=<uuid>`.
 
 ## 3. Receiving the credit
 

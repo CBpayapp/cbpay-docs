@@ -667,6 +667,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 如需 USD，请发送 `currency: "USD"`，结构相同。
 
+组织配置决定内部使用的 rail 版本。该选择不是客户可控制的字段，并会保存在
+操作中，使后续轮询继续使用正确的版本。响应和 webhook 保持 provider-agnostic。
+
 #### 巴西
 
 按密钥进行 PIX 转账（此外还有 [PIX QR](#qr-出金)）：

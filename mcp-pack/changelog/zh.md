@@ -5,6 +5,14 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.154 · 1 个版本 - 2026年10月5日
+### v2.154
+**新增**
+
+- 新增资金账户中心：按币种（ARS、BOB、MXN、EUR）统一说明每个注资账户，含注资与 Banking 的区分、创建与读取。
+**变更**
+
+- BO 虚拟账户的充值内容已并入资金账户中心；BOB payout 章节移至 payouts 指南。已删除独立的 BO 与 company-wallet 指南；重定向指向新位置。仅文档：API 行为无变化。
 ## v2.153 · 1 个版本 - 2026年10月4日
 ### v2.153
 **变更**

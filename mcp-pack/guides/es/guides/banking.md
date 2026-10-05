@@ -61,8 +61,7 @@ Enviar euros a terceros se cubre en
 Recibe bolivianos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
 `purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
 (USD es el saldo principal); `banking` conserva BOB para payouts locales.
-Ver también [cuentas virtuales BO](https://docs.cbpayapp.com/es/guides/bob-virtual-accounts) para el
-flujo de fondeo.
+Ver [Fondeo](https://docs.cbpayapp.com/es/guides/funding) para el flujo de fondeo.
 
 ### 🇲🇽 MXN — peso mexicano
 
@@ -838,14 +837,9 @@ fallback.
 | 404 | `not_found` | El tercero (o la verificación) no existe o no pertenece a tu cuenta |
 | 502 | `banking_request_failed` | Error del corredor bancario; la comisión se reembolsó — reintenta |
 
-## Wallets de empresa
-
-Wallets EUR dedicadas para cuentas empresa verificadas. See the complete reservation, balance, statement and error
-contract in [Company wallets](https://docs.cbpayapp.com/es/guides/company-wallets).
-
 ## FAQ
 
-#### ¿El dinero banking aparece en mi saldo USDT?
+#### ¿El dinero banking aparece en mi saldo USD?
 No. El dinero banking vive en tus cuentas bancarias y se consulta con
 `GET /v1/banking/accounts/{id}/balance`. El saldo autoritativo es el del
 banco; tu [cartola](https://docs.cbpayapp.com/es/guides/statement) lo concilia en los saldos espejo

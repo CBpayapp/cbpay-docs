@@ -681,7 +681,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 }
 ```
 
-For USD send `currency: "USD"` with the same structure.
+For USD send `currency: "USD"` with the same structure. The organization's rail configuration decides which internal version handles Bolivia payouts; the choice is saved on the operation so later polling keeps using the right version, and responses and webhooks stay provider-agnostic.
 
 </Tab>
 <Tab title="Brazil">

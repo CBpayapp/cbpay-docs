@@ -54,8 +54,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 
 通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收玻利维亚诺：
 `fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
-保留 BOB 用于本地付款。另见[BO 虚拟账户](https://docs.cbpayapp.com/zh/guides/bob-virtual-accounts)
-中的入金流程。
+保留 BOB 用于本地付款。入金流程见[资金账户](https://docs.cbpayapp.com/zh/guides/funding)。
 
 ### 🇲🇽 MXN — 墨西哥比索
 
@@ -696,14 +695,9 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 | 404 | `not_found` | 第三方（或验证）不存在或不属于您的账户 |
 | 502 | `banking_request_failed` | 银行通道错误；费用已退款——请重试 |
 
-## 企业钱包
-
-为已验证企业账户提供专用 EUR 钱包. See the complete reservation, balance, statement and error
-contract in [Company wallets](https://docs.cbpayapp.com/zh/guides/company-wallets).
-
 ## 常见问题
 
-#### Banking 资金会显示在我的 USDT 余额里吗？
+#### Banking 资金会显示在我的 USD 余额里吗？
 不会。Banking 资金存放在你的银行账户中，通过
 `GET /v1/banking/accounts/{id}/balance` 查询。权威余额始终以银行为准；你的
 [对账单](https://docs.cbpayapp.com/zh/guides/statement) 会在 `BANK_USD`/`BANK_EUR` 镜像余额中对其

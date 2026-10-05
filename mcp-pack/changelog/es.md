@@ -5,6 +5,14 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.154 · 1 versión - 5 de octubre de 2026
+### v2.154
+**Agregado**
+
+- Nuevo hub de Fondeo: una guía para cada cuenta de fondeo por moneda (ARS, BOB, MXN, EUR), con la separación fondeo-vs-banking, creación y lectura.
+**Cambiado**
+
+- Contenido de depósito de cuentas virtuales BO fusionado al hub de Fondeo; la sección de payouts BOB se movió a la guía de payouts. Removidas las guías standalone de BO y de company-wallets; los redirects apuntan a los nuevos hogares. Solo docs: ningún cambio de comportamiento en la API.
 ## v2.153 · 1 versión - 4 de octubre de 2026
 ### v2.153
 **Cambiado**
