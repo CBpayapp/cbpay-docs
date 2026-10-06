@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-04 04:35 UTC",
-    "_content_sha256": "e22355ae1236d17d341534124a50dec48b583983ff163281df398269a1c2d150"
+    "_generated_at": "2026-10-06 00:59 UTC",
+    "_content_sha256": "4c3a22fa5b7c9c68f602a4b991e270ef329dd970c5afe43be05b045493ac4666"
   },
   "auth": {
     "type": "bearer",
@@ -168,7 +168,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n  \"template_version\": \"v13.2\",\n  \"lang\": \"es\",\n  \"status\": \"completed\",\n  \"has_client_signature\": true,\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\",\n  \"events\": [\n    {\n      \"event\": \"completed\",\n      \"created_at\": \"2026-10-01T14:03:12Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n  \"template_version\": \"v13.2\",\n  \"lang\": \"es\",\n  \"status\": \"completed\",\n  \"has_client_signature\": true,\n  \"verify_code\": \"K3f9a2b7c4d1e8f0a6b5c9d2e4f7a1b3d6e8f0a2b4c6d8e0f2a4b\",\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\",\n  \"events\": [\n    {\n      \"event\": \"completed\",\n      \"created_at\": \"2026-10-01T14:03:12Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -284,6 +284,69 @@
             },
             "description": ""
           }
+        },
+        {
+          "name": "Verify a contract by its public verification code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/verify/contracts/:code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "verify",
+                "contracts",
+                ":code"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Public oracle for Grupo CB framework contract authenticity. No credentials required. The code is the letter K followed by an HMAC of the envelope ID, printed in the verification block of the final PDF and exposed as verify_code in the envelope JSON. Responds JSON by default, or a human HTML page when the Accept header includes text/html. Invalid codes return a generic 404 that does not reveal whether a contract exists. Rate-limited per IP.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Contract authenticity statement.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/verify/contracts/:code",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "verify",
+                    "contracts",
+                    ":code"
+                  ],
+                  "variable": [
+                    {
+                      "key": "code",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Contract authenticity statement.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"valid\": true,\n  \"type\": \"contract\",\n  \"status\": \"ok\",\n  \"raw_status\": \"completed\",\n  \"org\": \"cbpay\",\n  \"client\": \"Acme SpA\",\n  \"template_version\": \"v13.2\",\n  \"lang\": \"es\",\n  \"envelope\": \"7c9e2f1a\",\n  \"doc_hash\": \"9f2c4e1ab7334d1e8840f6a2c5d7e8b190a3c6d4f5e7b8192a3c4d5e6f708192\",\n  \"final_hash\": \"41bd7e09c2f58a136d47b09e3c8f1a52b7e4d6091f3a8c5de07294b6183af5c0\",\n  \"created_at\": \"2026-10-01T14:03:12Z\",\n  \"signed_at\": \"2026-10-02T11:22:40Z\",\n  \"has_cb_signature\": true,\n  \"has_client_signature\": true,\n  \"issued_by\": \"CBPay\"\n}"
+            }
+          ]
         }
       ]
     },

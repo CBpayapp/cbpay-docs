@@ -225,6 +225,59 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
 | 502 | `storage_failed` | 私有存储失败；先读取并对账信封，再创建新的 key。 |
 | 503 | `storage_unavailable` | 私有存储不可用；恢复后再重试。 |
 
+## 合同公开验证
+
+每份最终 PDF 都在签署页带有验证区块：含公开 oracle URL 的二维码，外加
+同一 URL 和 12 位短文档哈希的说明。任何持有该代码的人都可以确认文件真伪，
+无需账户或 API key。
+
+`verify_code` 随附在信封详情（`GET
+/v1/me/contracts/envelopes/{envelopeID}`）和 organization-admin
+信封详情中，因此客户随时可以找回链接。代码以 `K` 开头，后接信封标识和
+截断的 HMAC（`1+32+20` 个字符）；无法伪造或枚举。
+
+浏览器收到品牌 HTML 卡片；API 客户端发送
+`Accept: application/json`（或不带 `Accept` 头）并收到 JSON：
+
+```bash
+curl -H "Accept: application/json" \
+  "https://api.qbank.cl/platform/verify/contracts/K3f9a2b7c4d1e5f60817293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c"
+```
+
+```json
+{
+  "valid": true,
+  "type": "contract",
+  "status": "ok",
+  "raw_status": "completed",
+  "org": "CBPay",
+  "client": "Acme SpA",
+  "template_version": "v13.3",
+  "lang": "es",
+  "envelope": "7c9e2f1a",
+  "doc_hash": "9d4e6f1a8b3c2d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e",
+  "final_hash": "c1d2e3f4a5b60718293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "created_at": "2026-10-05T14:20:00Z",
+  "signed_at": "2026-10-05T15:02:11Z",
+  "has_cb_signature": true,
+  "has_client_signature": true,
+  "issued_by": "CBPay"
+}
+```
+
+该 oracle 仅公开验证事实：有效性、类别、信封状态、签发方、客户法定名称、
+模板版本、语言、信封短 ID、两个哈希、时间戳以及双方签署情况。条款、
+价格、地址、邮箱及任何其他运营数据绝不离开服务器。被篡改或虚构的代码
+返回 HTTP 404 及通用消息 `this verification code does not correspond to
+any contract issued by this platform`；请求按 IP 限流（`429
+too_many_attempts`）。
+
+| `status` | `raw_status` | 徽章（EN / ES / 中文） | 含义 |
+|---|---|---|---|
+| `ok` | `completed` | Signed / Firmado / 已签署 | 协议已签署并生效；`final_hash` 覆盖该 PDF。 |
+| `pending` | `pending_client` | Pending signature / Pendiente de firma / 待签署 | 信封存在，等待客户签署。 |
+| `failed` | `voided` | Voided / Anulado / 已作废 | 信封已附原因作废；保留用于审计。 |
+
 ## 常见问题
 
 #### 个人账户可以签署吗？
@@ -241,3 +294,11 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
 #### 可以重试签署吗？
     可以使用同一信封和新的 OTP。原子 claim 会阻止第二次签署；完成的信封
     返回 `contract_invalid_state`。
+#### 验证链接返回 404，我的合同丢了吗？
+    没有。HTTP 404 及 `this verification code does not correspond to any
+    contract issued by this platform` 表示代码复制错误或属于另一个信封。
+    请从信封详情重新读取 `verify_code`，或扫描签署页上打印的二维码；该
+    oracle 从不确认或否认其他信封的存在。
+#### 验证码会过期吗？
+    不会。代码在信封的整个生命周期内有效。如果信封被作废，同一代码将返回
+    `failed` 而不是 `ok`。

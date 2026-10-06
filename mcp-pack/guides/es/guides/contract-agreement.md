@@ -239,6 +239,63 @@ No infieras la finalización desde el email: usa el evento y el estado.
 | 502 | `storage_failed` | Falló el almacenamiento privado; lee y reconcilia el sobre antes de crear otra key. |
 | 503 | `storage_unavailable` | Storage privado no disponible; reintenta cuando operaciones lo restaure. |
 
+## Verificación pública del contrato
+
+Todo PDF final lleva en la página de firmas un bloque de verificación: un
+código QR con la URL pública del oráculo más un caption con la misma URL y
+el hash corto del documento (12 hex). Cualquiera con el código puede
+confirmar que el documento es genuino, sin cuenta ni API key.
+
+El `verify_code` viaja en el detalle del sobre (`GET
+/v1/me/contracts/envelopes/{envelopeID}`) y en el detalle
+organization-admin, así el cliente siempre puede recuperar el link. El
+código empieza con `K`, seguida de la identidad del sobre y un HMAC
+truncado (`1+32+20` caracteres); no se puede falsificar ni enumerar.
+
+Los navegadores reciben una tarjeta HTML brandeada; los clientes API envían
+`Accept: application/json` (o ningún header `Accept`) y reciben JSON:
+
+```bash
+curl -H "Accept: application/json" \
+  "https://api.qbank.cl/platform/verify/contracts/K3f9a2b7c4d1e5f60817293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c"
+```
+
+```json
+{
+  "valid": true,
+  "type": "contract",
+  "status": "ok",
+  "raw_status": "completed",
+  "org": "CBPay",
+  "client": "Acme SpA",
+  "template_version": "v13.3",
+  "lang": "es",
+  "envelope": "7c9e2f1a",
+  "doc_hash": "9d4e6f1a8b3c2d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e",
+  "final_hash": "c1d2e3f4a5b60718293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "created_at": "2026-10-05T14:20:00Z",
+  "signed_at": "2026-10-05T15:02:11Z",
+  "has_cb_signature": true,
+  "has_client_signature": true,
+  "issued_by": "CBPay"
+}
+```
+
+El oráculo expone solo hechos de verificación: validez, clase, estado del
+sobre, emisor, nombre legal del cliente, versión de plantilla, idioma, ID
+corto del sobre, ambos hashes, timestamps y qué firmas están presentes.
+Términos, precios, domicilios, emails y cualquier otro dato operativo jamás
+salen del servidor. Un código alterado o inventado responde HTTP 404 con el
+mensaje genérico `this verification code does not correspond to any
+contract issued by this platform`; las peticiones tienen rate-limit por IP
+(`429 too_many_attempts`).
+
+| `status` | `raw_status` | Badge (EN / ES / 中文) | Significado |
+|---|---|---|---|
+| `ok` | `completed` | Signed / Firmado / 已签署 | El acuerdo está firmado y es final; `final_hash` cubre el PDF. |
+| `pending` | `pending_client` | Pending signature / Pendiente de firma / 待签署 | El sobre existe y espera la firma del cliente. |
+| `failed` | `voided` | Voided / Anulado / 已作废 | El sobre se anuló con motivo; se conserva para auditoría. |
+
 ## Preguntas frecuentes
 
 #### ¿Puede firmar una cuenta persona?
@@ -256,3 +313,12 @@ No infieras la finalización desde el email: usa el evento y el estado.
 #### ¿Puedo reintentar la firma?
     Sí, con el mismo sobre y un OTP nuevo. El claim atómico impide una segunda
     firma; un sobre completado responde `contract_invalid_state`.
+#### El link de verificación responde 404. ¿Se perdió mi contrato?
+    No. HTTP 404 con `this verification code does not correspond to any
+    contract issued by this platform` significa que el código se copió mal o
+    pertenece a otro sobre. Lee `verify_code` de nuevo desde el detalle del
+    sobre o escanea el QR impreso en la página de firmas; el oráculo jamás
+    confirma ni niega la existencia de otros sobres.
+#### ¿El código de verificación expira?
+    No. El código sigue válido durante la vida del sobre. Si el sobre se
+    anula, el mismo código responde `failed` en vez de `ok`.
