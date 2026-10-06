@@ -571,3 +571,14 @@ código es el contrato estable para la integración.
 | 409 | `materializing` | Otra materialización de este link de checkout está en curso. Reintenta cuando termine. |
 | 400 | `invalid_file_name` | El nombre de archivo está vacío, es muy largo o trae caracteres de path (`/`, `\`, `..`). Envía un nombre de archivo plano. |
 | 415 | `unsupported_media_type` | El Content-Type no es un tipo de documento aceptado. Envía PDF, JPEG o PNG. |
+
+## `destination_recently_rejected`
+
+| HTTP | Código | Significado | Qué hacer |
+|---:|---|---|---|
+| 422 | `destination_recently_rejected` | El banco rechazó recientemente el mismo destino normalizado para esta cuenta. No se crea el payout, no se debita saldo y la clave de idempotencia no se consume. | Primero repite la solicitud original con la misma clave. Si quieres reintentar de forma deliberada, usa una clave de idempotencia nueva y envía `options.destination_retry_ack` con el ID del payout rechazado más reciente. |
+
+El acuse solo es válido para el rechazo más reciente de ese destino. Reutilizar
+la misma clave con `options` diferentes devuelve `idempotency_conflict`
+(`409`). Los demás métodos y los destinos sin un rechazo reciente siguen su
+flujo normal de validación y despacho.

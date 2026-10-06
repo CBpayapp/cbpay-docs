@@ -117,6 +117,7 @@
                     "group": "Money out",
                     "pages": [
                       "en/guides/payouts",
+                      "en/guides/payout-destination-retries",
                       "en/guides/fiat-settlement",
                       "en/guides/sepa-instant-payouts",
                       "en/guides/payout-rate-sources",
@@ -254,6 +255,7 @@
                     "group": "Pagar (money out)",
                     "pages": [
                       "es/guides/payouts",
+                      "es/guides/payout-destination-retries",
                       "es/guides/fiat-settlement",
                       "es/guides/sepa-instant-payouts",
                       "es/guides/payout-rate-sources",
@@ -391,6 +393,7 @@
                     "group": "付款（Money out）",
                     "pages": [
                       "zh/guides/payouts",
+                      "zh/guides/payout-destination-retries",
                       "zh/guides/fiat-settlement",
                       "zh/guides/sepa-instant-payouts",
                       "zh/guides/payout-rate-sources",

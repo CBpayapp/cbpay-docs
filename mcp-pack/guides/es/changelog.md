@@ -5,9 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.155 · 2 versiones - 5 de octubre de 2026
-### v2.155
+## v2.156 · 3 versiones - 5 de octubre de 2026
+### v2.156
 **Agregado**
+
+- Se agregó protección provider-agnostic ante rechazos recientes del destino: un rechazo bancario devuelve `422 destination_recently_rejected` antes de crear o debitar; un reintento deliberado usa una clave nueva y `options.destination_retry_ack`.
 
 - Verificación pública de contratos: `GET /verify/contracts/{code}` devuelve una declaración de autenticidad firmada para un contrato marco de Grupo CB (JSON por defecto, página HTML humana con `Accept: text/html`). Sin credenciales; los códigos inválidos responden un 404 genérico; limitado por IP. Ver `/es/guides/contract-agreement`.
 - El JSON del sobre del contrato (detalle de cuenta y de org) ahora expone `verify_code`: el código público impreso en el bloque de verificación del PDF final (QR + caption con el hash corto del documento).

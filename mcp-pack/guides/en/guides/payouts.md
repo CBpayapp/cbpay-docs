@@ -1332,4 +1332,5 @@ US bank-rail payouts are paid by the operator by hand. Create already
 returns the CBF in `bank_reference` and stays `processing` until the bank
 confirms. Listen to `payout_status_changed` for the final state; a failure
 refunds the debit automatically.
-Money-out limit errors are listed in the public error reference.
+For payout errors and the `422 destination_recently_rejected` retry sequence, see
+[Errors](../errors) and [Destination rejection protection](payout-destination-retries).
