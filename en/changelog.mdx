@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 5, 2026" description="v2.154 · 1 version">
+<Update label="October 5, 2026" description="v2.155 · 2 versions">
+### v2.155
+**Added**
+
+- Public contract verification: `GET /verify/contracts/{code}` returns a signed authenticity statement for a Grupo CB framework contract (JSON by default, human HTML page with `Accept: text/html`). No credentials; invalid codes answer a generic 404; rate-limited per IP. See `/en/guides/contract-agreement`.
+- Contract envelope JSON (account and org detail) now exposes `verify_code`: the public code printed in the verification block of the final PDF (QR + caption with the short document hash).
 ### v2.154
 **Added**
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.154"
+  version: "2.155"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -153,6 +153,7 @@ paths:
                 lang: zh
                 status: completed
                 has_client_signature: true
+                verify_code: K3f9a2b7c4d1e8f0a6b5c9d2e4f7a1b3d6e8f0a2b4c6d8e0f2a4b
                 final_hash: sha256-of-the-final-pdf
                 signer_name: Jordan Lee
                 signer_title: Chief Executive Officer
@@ -727,6 +728,60 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many verification attempts; wait a moment and retry
+  /verify/contracts/{code}:
+    get:
+      security: []
+      tags:
+      - 合同
+      operationId: verifyContract
+      summary: 按公共验证码核验合同
+      description: Grupo CB 框架合同真伪公开验证。无需凭证。验证码为字母 K 后接信封 ID 的
+        HMAC，印在最终 PDF 的验证区中，并以 verify_code 形式出现在信封 JSON 里。默认返回 JSON；当
+        Accept 头包含 text/html 时返回人工可读的 HTML 页面。无效验证码返回通用 404，不透露合同是否存在。按
+        IP 限流。
+      parameters:
+      - name: code
+        in: path
+        required: true
+        description: 合同的公共验证码（K + HMAC）。
+        schema: { type: string }
+      responses:
+        "200":
+          description: 合同真伪声明。
+          content:
+            application/json:
+              example:
+                valid: true
+                type: contract
+                status: ok
+                raw_status: completed
+                org: cbpay
+                client: Acme SpA
+                template_version: v13.2
+                lang: zh
+                envelope: 7c9e2f1a
+                doc_hash: 9f2c4e1ab7334d1e8840f6a2c5d7e8b190a3c6d4f5e7b8192a3c4d5e6f708192
+                final_hash: 41bd7e09c2f58a136d47b09e3c8f1a52b7e4d6091f3a8c5de07294b6183af5c0
+                created_at: "2026-10-01T14:03:12Z"
+                signed_at: "2026-10-02T11:22:40Z"
+                has_cb_signature: true
+                has_client_signature: true
+                issued_by: CBPay
+        '404':
+          description: 验证码无效或未知。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this verification code does not correspond to any contract issued by this platform
+        '429':
+          description: 来自此 IP 的验证尝试过多。
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many requests; wait a moment and retry
+
   /v1/track-link:
     get:
       tags:

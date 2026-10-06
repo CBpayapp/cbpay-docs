@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.154"
+  version: "2.155"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -192,6 +192,7 @@ paths:
                 lang: es
                 status: completed
                 has_client_signature: true
+                verify_code: K3f9a2b7c4d1e8f0a6b5c9d2e4f7a1b3d6e8f0a2b4c6d8e0f2a4b
                 final_hash: sha256-of-the-final-pdf
                 signer_name: Jordan Lee
                 signer_title: Chief Executive Officer
@@ -791,6 +792,63 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many verification attempts; wait a moment and retry
+  /verify/contracts/{code}:
+    get:
+      security: []
+      tags:
+      - Contratos
+      operationId: verifyContract
+      summary: Verifica un contrato por su código público de verificación
+      description: Oráculo público de autenticidad de contratos marco de Grupo CB. No
+        requiere credenciales. El código es la letra K seguida de un HMAC del ID
+        del sobre, impreso en el bloque de verificación del PDF final y expuesto
+        como verify_code en el JSON del sobre. Responde JSON por defecto, o una
+        página HTML humana cuando el header Accept incluye text/html. Los códigos
+        inválidos devuelven un 404 genérico que no revela si existe un contrato.
+        Limitado por IP.
+      parameters:
+      - name: code
+        in: path
+        required: true
+        description: Código público de verificación del contrato (K + HMAC).
+        schema: { type: string }
+      responses:
+        "200":
+          description: Declaración de autenticidad del contrato.
+          content:
+            application/json:
+              example:
+                valid: true
+                type: contract
+                status: ok
+                raw_status: completed
+                org: cbpay
+                client: Acme SpA
+                template_version: v13.2
+                lang: es
+                envelope: 7c9e2f1a
+                doc_hash: 9f2c4e1ab7334d1e8840f6a2c5d7e8b190a3c6d4f5e7b8192a3c4d5e6f708192
+                final_hash: 41bd7e09c2f58a136d47b09e3c8f1a52b7e4d6091f3a8c5de07294b6183af5c0
+                created_at: "2026-10-01T14:03:12Z"
+                signed_at: "2026-10-02T11:22:40Z"
+                has_cb_signature: true
+                has_client_signature: true
+                issued_by: CBPay
+        '404':
+          description: Código de verificación inválido o desconocido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this verification code does not correspond to any contract issued by this platform
+        '429':
+          description: Demasiados intentos de verificación desde esta IP.
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many requests; wait a moment and retry
+
   /v1/track-link:
     get:
       tags:

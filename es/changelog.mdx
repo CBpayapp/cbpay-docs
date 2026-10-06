@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="5 de octubre de 2026" description="v2.154 · 1 versión">
+<Update label="5 de octubre de 2026" description="v2.155 · 2 versiones">
+### v2.155
+**Agregado**
+
+- Verificación pública de contratos: `GET /verify/contracts/{code}` devuelve una declaración de autenticidad firmada para un contrato marco de Grupo CB (JSON por defecto, página HTML humana con `Accept: text/html`). Sin credenciales; los códigos inválidos responden un 404 genérico; limitado por IP. Ver `/es/guides/contract-agreement`.
+- El JSON del sobre del contrato (detalle de cuenta y de org) ahora expone `verify_code`: el código público impreso en el bloque de verificación del PDF final (QR + caption con el hash corto del documento).
 ### v2.154
 **Agregado**
 

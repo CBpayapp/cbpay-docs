@@ -5,7 +5,12 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.154 · 1 个版本 - 2026年10月5日
+## v2.155 · 2 个版本 - 2026年10月5日
+### v2.155
+**新增**
+
+- 合同公开验证：`GET /verify/contracts/{code}` 返回 Grupo CB 框架合同的已签署真伪声明（默认 JSON；`Accept: text/html` 时返回人工可读的 HTML 页面）。无需凭证；无效验证码返回通用 404；按 IP 限流。见 `/zh/guides/contract-agreement`。
+- 合同信封 JSON（账户与组织详情）新增 `verify_code`：印在最终 PDF 验证区中的公共验证码（二维码 + 含文档短哈希的说明）。
 ### v2.154
 **新增**
 
