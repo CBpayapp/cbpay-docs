@@ -4,9 +4,11 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 5, 2026" description="v2.155 · 2 versions">
-### v2.155
+<Update label="October 5, 2026" description="v2.156 · 3 versions">
+### v2.156
 **Added**
+
+- Added provider-agnostic destination rejection protection to payouts: a recent bank rejection returns `422 destination_recently_rejected` before creation or debit; an intentional retry uses a new idempotency key and `options.destination_retry_ack`.
 
 - Public contract verification: `GET /verify/contracts/{code}` returns a signed authenticity statement for a Grupo CB framework contract (JSON by default, human HTML page with `Accept: text/html`). No credentials; invalid codes answer a generic 404; rate-limited per IP. See `/en/guides/contract-agreement`.
 - Contract envelope JSON (account and org detail) now exposes `verify_code`: the public code printed in the verification block of the final PDF (QR + caption with the short document hash).

@@ -1299,3 +1299,14 @@ payout。
 创建时就已经返回 `bank_reference`（CBF）。payout 保持 `processing`，直到银行确认人工付款。
 监听 `payout_status_changed` 以获得 `completed` 或 `failed`（已退款）。该通道没有额外的收款人 AML hold。
 出金限额错误见公开错误参考。
+
+## 目的地拒绝保护
+
+部分银行通道会在银行近期拒绝某个目的地后保护该目的地。API 会在创建
+payout、扣除余额或消耗幂等键之前返回
+`422 destination_recently_rejected`。明确重试使用新幂等键和
+`options.destination_retry_ack`；完全相同的请求使用原幂等键重放。目的地
+会被规范化，因此改变格式不能绕过保护。
+
+详见[目的地拒绝保护与安全重试](https://docs.cbpayapp.com/zh/guides/payout-destination-retries)，
+其中包含完整请求、响应、状态和恢复顺序。

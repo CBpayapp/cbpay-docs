@@ -566,3 +566,14 @@ code is the stable integration contract.
 | 409 | `materializing` | Another materialization for this checkout link is in flight. Retry after it finishes. |
 | 400 | `invalid_file_name` | The file name is empty, too long, or contains path characters (`/`, `\`, `..`). Send a plain file name. |
 | 415 | `unsupported_media_type` | The Content-Type is not an accepted document type. Send PDF, JPEG or PNG. |
+
+## `destination_recently_rejected`
+
+| HTTP | Code | Meaning | What to do |
+|---:|---|---|---|
+| 422 | `destination_recently_rejected` | The bank recently rejected the same normalized destination for this account. No payout is created, no balance is debited, and the idempotency key is not consumed. | Replay the original request with the same key first. If you intentionally retry, use a new idempotency key and set `options.destination_retry_ack` to the most recent rejected payout ID. |
+
+The acknowledgement is valid only for the most recent rejection of that
+destination. A retry with the same key but different `options` is an
+`idempotency_conflict` (`409`). Other payout methods and destinations without
+a recent rejection continue through their normal validation and dispatch path.

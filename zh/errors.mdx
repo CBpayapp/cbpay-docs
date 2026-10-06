@@ -550,3 +550,13 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `materializing` | 该 checkout 链接的另一笔实例化正在进行中。请等待完成后重试。 |
 | 400 | `invalid_file_name` | 文件名为空、过长，或含路径字符（`/`、`\`、`..`）。请发送纯文件名。 |
 | 415 | `unsupported_media_type` | Content-Type 不是可接受的文档类型。请发送 PDF、JPEG 或 PNG。 |
+
+## `destination_recently_rejected`
+
+| HTTP | 代码 | 含义 | 处理方式 |
+|---:|---|---|---|
+| 422 | `destination_recently_rejected` | 银行最近拒绝了此账户的同一规范化收款目的地。系统不会创建 payout、不会扣除余额，也不会消耗幂等键。 | 先使用相同的幂等键重放原始请求。如需明确重试，请使用新的幂等键，并将 `options.destination_retry_ack` 设置为最近一次被拒 payout 的 ID。 |
+
+确认值只对该目的地最近一次拒绝有效。使用相同幂等键但修改
+`options` 会返回 `idempotency_conflict`（`409`）。其他 payout 方式以及没有
+近期拒绝记录的目的地继续走正常的校验和发送流程。

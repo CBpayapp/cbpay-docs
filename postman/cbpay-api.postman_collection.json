@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-06 00:59 UTC",
-    "_content_sha256": "4c3a22fa5b7c9c68f602a4b991e270ef329dd970c5afe43be05b045493ac4666"
+    "_generated_at": "2026-10-06 04:16 UTC",
+    "_content_sha256": "ee41876c3dc2cfbcb85602603b3c2148345224dc136b1c8a04c1361ab07693ec"
   },
   "auth": {
     "type": "bearer",
@@ -9984,6 +9984,71 @@
                 }
               ],
               "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"payouts\": [\n    {\n      \"payout_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"idempotency_key\": \"invoice-8841\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"local_amount\": \"1500.00\",\n      \"fx_rate\": \"17.50\",\n      \"rate_source\": \"lot\",\n      \"usdt_amount\": \"85.714286\",\n      \"fee\": \"0.300000\",\n      \"total_debit\": \"86.014286\",\n      \"settlement_asset\": \"USDT\",\n      \"settlement_amount\": \"86.014286\",\n      \"settlement_rate\": \"1\",\n      \"beneficiary\": {\n        \"name\": \"Maria Lopez\",\n        \"account_type\": \"clabe\",\n        \"account_number\": \"012180001234567895\"\n      },\n      \"description\": \"Invoice 8841\",\n      \"status\": \"processing\",\n      \"status_code\": \"\",\n      \"status_message\": \"\",\n      \"funds_debited\": true,\n      \"compliance_pending\": false,\n      \"bank_reference\": \"\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create a payout — Deliberate retry after a recent bank rejection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payouts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payouts"
+              ]
+            },
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (`default_settlement_asset` — USD is the principal balance; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM) to pay this specific operation from another balance: the total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD/SILVER/PLATINUM is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the technical screening queue is available, the response is `202` with a payout resource in `status: pending`, `status_code: compliance_pending`, `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch. After screening returns `process`, the same resource can remain `pending` with `compliance_dispatch_pending`, `compliance_dispatching` or `core_unreachable` while `funds_debited` is true; keep the same idempotency key and wait for reconciliation. A terminal screening failure before the debit path can return `failed` with `predebit_failure: true` and `funds_debited: false`; it has no `receipt_url`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"1000.00\",\n  \"beneficiary\": {\n    \"name\": \"Example Recipient\",\n    \"bank_code\": \"012\",\n    \"account_number\": \"123456789\",\n    \"tax_id\": \"11111111-1\"\n  },\n  \"options\": {\n    \"destination_retry_ack\": \"11111111-1111-4111-8111-111111111111\"\n  },\n  \"idempotency_key\": \"payout-retry-0001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Idempotency replay of an existing payout....",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payouts",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payouts"
+                  ]
+                }
+              },
+              "status": "Idempotency replay of an existing payout....",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payout_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"idempotency_key\": \"invoice-8841\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"local_amount\": \"1500.00\",\n  \"fx_rate\": \"17.50\",\n  \"usdt_amount\": \"85.714286\",\n  \"fee\": \"0.300000\",\n  \"total_debit\": \"86.014286\",\n  \"settlement_asset\": \"USDT\",\n  \"settlement_amount\": \"86.014286\",\n  \"settlement_rate\": \"1\",\n  \"beneficiary\": {\n    \"name\": \"Maria Lopez\",\n    \"account_type\": \"clabe\",\n    \"account_number\": \"012180001234567895\"\n  },\n  \"description\": \"Invoice 8841\",\n  \"status\": \"processing\",\n  \"status_code\": \"\",\n  \"status_message\": \"\",\n  \"bank_reference\": \"\",\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-07-07T12:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },

@@ -1,5 +1,5 @@
 {
-  "count": 320,
+  "count": 321,
   "errors": [
     {
       "category": {
@@ -4473,6 +4473,20 @@
         "en": "The Content-Type is not an accepted document type. Send PDF, JPEG or PNG.",
         "es": "El Content-Type no es un tipo de documento aceptado. Envía PDF, JPEG o PNG.",
         "zh": "Content-Type 不是可接受的文档类型。请发送 PDF、JPEG 或 PNG。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "destination_recently_rejected",
+      "http": 422,
+      "meaning": {
+        "en": "The bank recently rejected the same normalized destination for this account. No payout is created, no balance is debited, and the idempotency key is not consumed. — Fix: Replay the original request with the same key first. If you intentionally retry, use a new idempotency key and set `options.destination_retry_ack` to the most recent rejected payout ID.",
+        "es": "El banco rechazó recientemente el mismo destino normalizado para esta cuenta. No se crea el payout, no se debita saldo y la clave de idempotencia no se consume. — Fix: Primero repite la solicitud original con la misma clave. Si quieres reintentar de forma deliberada, usa una clave de idempotencia nueva y envía `options.destination_retry_ack` con el ID del payout rechazado más reciente.",
+        "zh": "银行最近拒绝了此账户的同一规范化收款目的地。系统不会创建 payout、不会扣除余额，也不会消耗幂等键。 — Fix: 先使用相同的幂等键重放原始请求。如需明确重试，请使用新的幂等键，并将 `options.destination_retry_ack` 设置为最近一次被拒 payout 的 ID。"
       }
     }
   ]

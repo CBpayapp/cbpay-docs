@@ -4,9 +4,11 @@ icon: "clock-rotate-left"
 description: "API 与文档变更历史"
 ---
 
-<Update label="2026年10月5日" description="v2.155 · 2 个版本">
-### v2.155
+<Update label="2026年10月5日" description="v2.156 · 3 个版本">
+### v2.156
 **新增**
+
+- 为 payout 增加 provider-agnostic 的目的地拒绝保护：近期银行拒绝会在创建或扣款前返回 `422 destination_recently_rejected`；明确重试使用新的幂等键和 `options.destination_retry_ack`。
 
 - 合同公开验证：`GET /verify/contracts/{code}` 返回 Grupo CB 框架合同的已签署真伪声明（默认 JSON；`Accept: text/html` 时返回人工可读的 HTML 页面）。无需凭证；无效验证码返回通用 404；按 IP 限流。见 `/zh/guides/contract-agreement`。
 - 合同信封 JSON（账户与组织详情）新增 `verify_code`：印在最终 PDF 验证区中的公共验证码（二维码 + 含文档短哈希的说明）。

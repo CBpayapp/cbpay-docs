@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.155"
+  version: "2.156"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -3936,7 +3936,35 @@ paths:
                   description: IBAN virtual `funding_usdt` activo opcional que financia un payout SEPA de cliente. Omítelo solo cuando la cuenta tenga exactamente una fuente EUR activa; envíalo si hay varias. La identidad ordenante se lee del registrant del vIBAN.
                 idempotency_key:
                   type: string
+                options:
+                  type: object
+                  description: >-
+                    Optional rail-specific options. For a deliberate retry after a recent
+                    bank rejection, set destination_retry_ack to the most recent prior case ID.
+                  additionalProperties:
+                    type: string
+                  properties:
+                    destination_retry_ack:
+                      type: string
+                      format: uuid
+                      description: Most recent prior rejected payout ID acknowledged for a deliberate retry.
+
             examples:
+              destination_retry_ack:
+                summary: Deliberate retry after a recent bank rejection
+                value:
+                  country: CL
+                  currency: CLP
+                  method: bank_transfer
+                  amount: '1000.00'
+                  beneficiary:
+                    name: Example Recipient
+                    bank_code: '012'
+                    account_number: '123456789'
+                    tax_id: '11111111-1'
+                  options:
+                    destination_retry_ack: 11111111-1111-4111-8111-111111111111
+                  idempotency_key: payout-retry-0001
               cl_bank_transfer:
                 summary: Chile — transferencia bancaria (CLP)
                 value:
@@ -4468,29 +4496,36 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/Error'
                 - $ref: '#/components/schemas/Payout'
-              example:
-                payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                idempotency_key: invoice-8841
-                country: MX
-                currency: MXN
-                method: bank_transfer
-                local_amount: '1500.00'
-                fx_rate: '17.50'
-                usdt_amount: '85.714286'
-                fee: '0.300000'
-                total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
-                settlement_rate: '1'
-                beneficiary: *id004
-                description: Invoice 8841
-                status: failed
-                status_code: core_rejected
-                status_message: beneficiary account is invalid
-                bank_reference: ''
-                created_at: '2026-07-07T12:00:00Z'
-                updated_at: '2026-07-07T12:00:00Z'
+              examples:
+                payout_failed:
+                  value:
+                    payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: invoice-8841
+                    country: MX
+                    currency: MXN
+                    method: bank_transfer
+                    local_amount: '1500.00'
+                    fx_rate: '17.50'
+                    usdt_amount: '85.714286'
+                    fee: '0.300000'
+                    total_debit: '86.014286'
+                    settlement_asset: USDT
+                    settlement_amount: '86.014286'
+                    settlement_rate: '1'
+                    beneficiary: *id004
+                    description: Invoice 8841
+                    status: failed
+                    status_code: core_rejected
+                    status_message: beneficiary account is invalid
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:00Z'
+                destination_recently_rejected:
+                  summary: Recent bank rejection for the same destination
+                  value:
+                    error: destination_recently_rejected
+                    message: 'destination was rejected by the bank on 2026-01-15 (prior case <prior_case_id>, code <prior_code>); retry with a new idempotency_key and options.destination_retry_ack=<prior_case_id> to confirm'
           x-money-out-errors:
           - amount_below_minimum
           - amount_above_maximum
