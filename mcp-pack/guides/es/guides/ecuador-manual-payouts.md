@@ -1,0 +1,218 @@
+---
+title: "Pagos manuales USD en Ecuador"
+description: "Usa el corredor bancario USD de Ecuador cuando un operador completa el pago manualmente."
+slug: es/guides/ecuador-manual-payouts
+lang: es
+source_url: https://docs.cbpayapp.com/es/guides/ecuador-manual-payouts
+---
+> **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+## Alcance
+
+Este corredor se limita a `country=EC`, `currency=USD` y
+`method=bank_transfer`. Usa el modo de despacho manual: el payout queda en
+`processing` con `status_code=manual_dispatch` hasta que un operador autorizado
+lo pague en el portal bancario y confirme el resultado. CBPay no llama ni
+concilia automáticamente un banco en esta ruta.
+
+La selección del proveedor y sus credenciales son asuntos de despliegue; no
+forman parte del contrato público de CBPay.
+
+## Ambientes
+
+Prueba primero en staging, con rieles simulados y beneficiarios sintéticos.
+Verifica staging antes de probar producción. Las verificaciones en producción
+requieren datos operativos y autorización explícita del ambiente y del alcance.
+
+## Flujo
+
+```mermaid
+sequenceDiagram
+  participant I as Integrador
+  participant C as CBPay
+  participant O as Operador
+  participant B as Portal bancario
+  I->>C: Crear payout EC/USD bank_transfer
+  C-->>I: processing / manual_dispatch
+  O->>B: Pagar al beneficiario manualmente
+  O->>C: Confirmar con la referencia bancaria
+  C-->>I: completed / manual_confirmed
+```
+
+## Crear y leer un payout
+
+Usa los endpoints normales de payouts con un beneficiario sintético:
+
+```http
+POST /v1/payouts
+Authorization: Bearer <API_KEY>
+Content-Type: application/json
+Idempotency-Key: ec-manual-<unique-key>
+```
+
+```json
+{
+  "country": "EC",
+  "currency": "USD",
+  "method": "bank_transfer",
+  "amount": "125.00",
+  "beneficiary": {
+    "name": "Example Recipient",
+    "document_value": "0900000000",
+    "bank_code": "000000",
+    "account_number": "0000000000",
+    "account_type": "CACC",
+    "country_code": "EC",
+    "sender_name": "Example Sender"
+  },
+  "description": "Invoice 1001",
+  "idempotency_key": "ec-manual-<unique-key>"
+}
+```
+
+El monto permitido es USD `1.00` a `10000.00`, inclusive, con máximo dos
+decimales por valor. Usa strings decimales, nunca floating point.
+
+```http
+GET /v1/payouts/{payoutID}
+Authorization: Bearer <API_KEY>
+```
+
+El corredor Ecuador manual genera una referencia bancaria con el formato `ECM`
+seguido de 13 dígitos secuenciales. Es un formato propio de este corredor, no
+una restricción general para todas las referencias bancarias. La respuesta
+inicial normalmente incluye:
+
+```json
+{
+  "payout_id": "00000000-0000-4000-8000-000000000001",
+  "status": "processing",
+  "status_code": "manual_dispatch",
+  "idempotency_hit": false
+}
+```
+
+## Confirmar el pago bancario
+
+El operador del core confirma el payout pagado manualmente:
+
+```http
+POST /v1/ops/payouts/{payoutID}/confirm-manual-paid
+Authorization: Bearer <CORE_ADMIN_KEY>
+Content-Type: application/json
+Idempotency-Key: confirm-ec-<unique-key>
+```
+
+Los administradores de plataforma usan el proxy del core:
+
+```http
+POST /v1/admin/core/payouts/{payoutID}/confirm-manual-paid
+Authorization: Bearer <PLATFORM_ADMIN_KEY>
+Content-Type: application/json
+Idempotency-Key: confirm-ec-<unique-key>
+```
+
+Los administradores de la organización usan el proxy org:
+
+```http
+POST /v1/org/treasury/manual-payouts/{payoutID}/confirm-manual-paid
+Authorization: Bearer <ORG_ADMIN_KEY>
+Content-Type: application/json
+Idempotency-Key: confirm-ec-<unique-key>
+```
+
+El body contiene `bank_reference`, `paid_amount` y `reason`. La confirmación
+mediante `POST /v1/ops/payouts/{payoutID}/confirm-manual-paid` exige
+`Idempotency-Key`; se recomienda enviarla en el header, o puedes incluir
+`idempotency_key` en el JSON. Sin una key, el endpoint responde `400
+idempotency_key_required`. La confirmación es idempotente: después de un
+timeout, vuelve a leer el payout primero. Si el resultado sigue incierto,
+reintenta la misma confirmación con la misma key y evidencia idéntica. El
+replay devuelve el original con `idempotency_hit: true`; una evidencia
+distinta devuelve `409 idempotency_conflict`. Nunca uses una key nueva para la
+misma acción bancaria.
+
+## Payins manuales
+
+Para un payin anunciado `EC/USD/push/bank_transfer`, un operador de la
+organización con `org_operations`/`ops:write` confirma la recepción:
+
+```http
+POST /v1/payins/{payinID}/confirm-received
+Authorization: Bearer <ORG_ADMIN_KEY>
+Content-Type: application/json
+```
+
+```json
+{
+  "bank_reference": "ECM0000000000001",
+  "received_amount": "125.00"
+}
+```
+
+Esta confirmación no usa una clave de idempotencia del cliente. Confirma el
+payin existente y nunca crea otro. Tras un timeout, lee primero el payin y, si
+sigue pendiente, reintenta con el mismo `bank_reference` y
+`received_amount`. Si ya está acreditado con la misma evidencia, el replay
+devuelve el original con `idempotency_hit: true`; una evidencia distinta
+devuelve `409 invalid_state`.
+
+## Instrucciones de depósito
+
+Lee las instrucciones del instrumento payin existente:
+
+```http
+GET /v1/payins/deposit-instructions
+Authorization: Bearer <API_KEY>
+```
+
+La respuesta es provider-clean y solo contiene instrucciones aplicables a la
+cuenta y al corredor. No infieras datos bancarios desde un payout.
+
+Para los códigos bancarios de Ecuador, usa el catálogo vivo:
+
+```http
+GET /v1/payouts/banks?country=EC
+Authorization: Bearer <API_KEY>
+```
+
+Devuelve `{ "items": [{ "code": "...", "name": "..." }], "meta": {
+"retrieved": 1 } }`, donde `retrieved` es el número de elementos devueltos.
+Usa un `code` devuelto por el catálogo como `beneficiary.bank_code`.
+
+## Reglas operativas
+
+- El operador paga en el portal bancario y registra la referencia bancaria.
+- No reenvíes una acción bancaria ambigua con una key nueva.
+- Para `confirm-received`, tras un timeout lee primero el payin; no asumas que
+  una nueva clave de idempotencia vuelve segura la confirmación.
+- Los ejemplos son sintéticos; reemplaza placeholders solo con datos
+  operativos autorizados.
+
+## Estados y errores
+
+| Estado o código | Significado | Acción |
+|---|---|---|
+| `processing` + `manual_dispatch` | El payout espera que el operador complete la acción bancaria. | Paga una sola vez en el portal bancario y confirma el payout existente. |
+| `completed` + `manual_confirmed` | El operador confirmó el pago bancario. | Vuelve a leer el payout y conserva la referencia bancaria. |
+| `invalid_payload` | Falta un campo o un monto, cuenta o dato de confirmación no es válido. | Corrige la solicitud; no crees un reemplazo para la misma operación. |
+| `idempotency_conflict` | La misma key se reutilizó con datos distintos o un estado incompatible. | Lee el recurso original y usa una key nueva solo para una operación realmente nueva. |
+| `treasury_check_unavailable` | No se pudo completar el control de ownership o conflicto de tesorería del payin. | No acredites el payin; reintenta cuando la dependencia se recupere. |
+| `deposit_settled_treasury_trade` | La referencia bancaria pertenece a una liquidación de tesorería. | No lo asignes ni lo acredites como payin de cliente. |
+
+Consulta el [catálogo completo de errores](https://docs.cbpayapp.com/es/errors) para el formato común
+de respuestas y las reglas de manejo.
+
+## Preguntas frecuentes
+
+#### ¿CBPay envía automáticamente la transferencia de Ecuador?
+    No. El operador completa la acción bancaria y confirma el payout existente
+    en CBPay.
+#### ¿Qué significa `manual_dispatch`?
+    Significa que el payout sigue en procesamiento y espera que un operador
+    autorizado complete y confirme la acción bancaria.
+#### ¿Qué hago después de un timeout?
+    Lee primero el recurso correspondiente. Para un payout, reintenta la misma
+    solicitud con la misma key de idempotencia. Para
+    `confirm-received`, lee primero el payin y no reenvíes la confirmación con
+    una nueva key sin verificar qué ocurrió en el banco.

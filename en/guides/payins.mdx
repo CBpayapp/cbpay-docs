@@ -84,6 +84,7 @@ Collection corridors and modes:
 | Argentina | ARS | Dedicated CVU account |
 | Venezuela | VES | Active collection (`c2p`) |
 | United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT) |
+| Ecuador | USD | Announced bank transfer |
 
 <Note>
 **Venezuela (VES)**: active collection is available through `c2p`. The payer
@@ -789,6 +790,17 @@ without announcing with
 
 </Tab>
 </Tabs>
+
+## Manual Ecuador USD operations
+
+The `EC/USD/bank_transfer` corridor supports announced payins and
+provider-agnostic manual payouts. Follow the dedicated guide for the bank
+confirmation endpoints, evidence requirements, states, and idempotent retries:
+
+<Card title="Manual Ecuador USD operations" icon="hand-coins" href="/en/guides/ecuador-manual-payouts" horizontal>
+  Announce or confirm a USD bank transfer, or confirm a payout paid manually by
+  an authorized operator.
+</Card>
 
 ## Active collection (pull)
 

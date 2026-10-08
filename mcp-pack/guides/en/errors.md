@@ -183,6 +183,8 @@ part of the replay identity. Read the live status with
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
+| 409 | `bank_ref_conflict` | The bank reference is already claimed by another operation (the response names it with `claimed_by`/`claimed_kind` when it belongs to your tenant) — fix the evidence instead of retrying with a different reference |
+| 503 | `bank_ref_recovery_pending` | A previous confirmation left the bank reference in an ambiguous state and the platform is reconciling the durable claim — retry the same confirmation (same reference and idempotency key); the retry resumes instead of duplicating |
 | 400 | `unsupported_document_type` | The banking document type is not supported. Use one of the document types in the banking document allowlist. |
 | 400 | `invalid_document_file` | The banking document file is empty, unreadable, corrupt, or not a PDF, JPEG, or PNG. Upload a valid file. |
 | 422 | `currency_not_supported` | No FX rate for that currency |

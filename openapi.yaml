@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.156"
+  version: "2.157"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5788,6 +5788,71 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/payins/{payinID}/confirm-received:
+    post:
+      tags:
+      - Payins
+      operationId: confirmAnnouncedPayinReceived
+      summary: "Confirm an announced bank deposit"
+      description: "Confirms an announced Ecuador USD bank deposit after the operator verifies the bank record. It only accepts EC/USD/bank_transfer announced payins."
+      parameters:
+      - name: payinID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [bank_reference, received_amount]
+              properties:
+                bank_reference:
+                  type: string
+                  pattern: '^ECM[0-9]{13}$'
+                  example: ECM1234567890123
+                received_amount:
+                  type: string
+                  pattern: '^[0-9]+(\\.[0-9]{1,2})?$'
+                  example: '1250.00'
+            examples:
+              confirm_received:
+                summary: "Confirm an announced bank deposit"
+                value:
+                  bank_reference: ECM1234567890123
+                  received_amount: '1250.00'
+      responses:
+        '200':
+          description: "Deposit confirmation accepted."
+          content:
+            application/json:
+              example:
+                payin_id: 11111111-2222-4333-8444-555555555555
+                status: credited
+                bank_reference: ECM1234567890123
+                received_amount: '1250.00'
+        '400':
+          description: "invalid_payload"
+          content:
+            application/json:
+              example:
+                error: invalid_payload
+                message: invalid received deposit payload
+        '401':
+          description: unauthorized
+        '403':
+          description: permission_denied
+        '404':
+          description: not_found
+        '409':
+          description: "invalid_state or deposit_settled_treasury_trade"
+        '502':
+          description: "treasury_check_unavailable, credit_failed, or payin_event_pending"
+
   /v1/payins/{payinID}:
     get:
       tags:

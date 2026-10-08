@@ -899,8 +899,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 **银行 alias**：对于 ARS 和 USD 的 `bank_transfer`，`beneficiary.account_number` 也接受长度为 6–20、由字母/数字/点/连字符组成且至少包含一个字母的银行 alias。纯数字值仍按 CBU/CVU 处理，而不是 alias。CBPay 会在发起前将有效 alias 解析为目标账户，wire 使用解析后的 CBU。ARS 可解析到 CBU 或 CVU；USD 仍仅支持 CBU 到 CBU。无法解析的 alias 会在扣款前拒绝，原始 alias 会保留在 payout 证据中。
 
-**银行 alias**：对于 ARS 和 USD 的 `bank_transfer`，`beneficiary.account_number` 也接受长度为 6–20、由字母/数字/点/连字符组成且至少包含一个字母的银行 alias。纯数字值仍按 CBU/CVU 处理，而不是 alias。CBPay 会在发起前将有效 alias 解析为目标账户，wire 使用解析后的 CBU。ARS 可解析到 CBU 或 CVU；USD 仍仅支持 CBU 到 CBU。无法解析的 alias 会在扣款前拒绝，原始 alias 会保留在 payout 证据中。
-
 以 **ARS** 或 **USD** 银行转账到任何 22 位的 **CBU 或 CVU**（银行账户和
 虚拟钱包）。无需 `bank_code`：CBU/CVU 本身即可识别银行。
 

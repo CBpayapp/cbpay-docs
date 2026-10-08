@@ -4,6 +4,14 @@ icon: "clock-rotate-left"
 description: "API 与文档变更历史"
 ---
 
+<Update label="2026年10月7日" description="v2.157 · 1 个版本">
+### v2.157
+**新增**
+
+- 新增手工 `EC/USD/bank_transfer` payout 支持。符合条件的 payout 会以 `processing` 和 `status_code=manual_dispatch` 创建；运营人员通过 `POST /v1/org/treasury/manual-payouts/{payoutID}/confirm-manual-paid` 提交 `bank_reference`、`paid_amount`、`reason` 和 `idempotency_key` 确认银行结算。已付金额必须精确匹配，使用相同幂等键重放是安全的。
+- 新增已申报的 `EC/USD/bank_transfer` payin 支持。运营人员通过 `POST /v1/payins/{payinID}/confirm-received` 提交银行参考号和收到的金额；只有符合条件的待处理已申报 payin 才能确认，等价重放会返回 `idempotency_hit: true`。
+</Update>
+
 <Update label="2026年10月5日" description="v2.156 · 3 个版本">
 ### v2.156
 **新增**

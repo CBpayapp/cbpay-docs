@@ -1,58 +1,58 @@
 {
-  "content_sha256": "7ebd4cea8d9ccfa0b23f8a516e0a5ced9ea71c9969ef58bac289fde0a8244aff",
+  "content_sha256": "53b10f2b24c55d7784da24146b7e535d716beb256040f5b379435a67fea71592",
   "counts": {
-    "chunks": 4245,
-    "errors": 321,
+    "chunks": 4296,
+    "errors": 323,
     "languages": [
       "en",
       "es",
       "zh"
     ],
-    "pages": 192,
+    "pages": 195,
     "webhook_events": 47
   },
-  "docs_version": "v2.156",
-  "docs_version_date": "October 5, 2026",
+  "docs_version": "v2.157",
+  "docs_version_date": "October 7, 2026",
   "files": {
     "changelog/en.md": {
-      "bytes": 192237,
-      "sha256": "ce854b9ffc7c75d522415f34245173bad5aa34e19316211276e2dae370a7fdff"
+      "bytes": 193001,
+      "sha256": "0b02ecdd3063ea5eac06be47dea56f67ac0f66147659ce00cdc7c8474f13f198"
     },
     "changelog/es.md": {
-      "bytes": 203817,
-      "sha256": "f0fb9dc29db714cfba2f4445dce369bb3e8d40ac89f7f4c21f368c55409cb017"
+      "bytes": 204651,
+      "sha256": "97b3f3e27c747c2e196cb4cfc92cb93ffb0fe672c404a9b491df9ec9f0e1463b"
     },
     "changelog/zh.md": {
-      "bytes": 182053,
-      "sha256": "3ce0ae97e2c02f2db81cb6c2c9ef3d224da447ec0722c8510ed37d4e33f131cd"
+      "bytes": 182794,
+      "sha256": "352c78921d9178c4858eb4445310fee169348c5bf586592adbf6aaaa59401cca"
     },
     "chunks/en.jsonl": {
-      "bytes": 1449065,
-      "sha256": "2b0ba9c233043f88e5f541cda38851e14315725585a8ca4d81f67d8f7a053abf"
+      "bytes": 1462962,
+      "sha256": "401dde3271df002048d450aa513fd9a30d9253c0eef0476fd0e8cfdac442af04"
     },
     "chunks/es.jsonl": {
-      "bytes": 1484962,
-      "sha256": "93430cdea4e95a4e46fd57280973f6af839cc41425e7365e42c38e86950b916c"
+      "bytes": 1499292,
+      "sha256": "ea242ea871f70bda2a31e800f5fa1fa8bf8a5a882876e822c63ef33b14694aab"
     },
     "chunks/zh.jsonl": {
-      "bytes": 1392721,
-      "sha256": "eab930a19f3ac53a8e2b9dc8c0c99f57a55d55dbac72418dd6ea4cb19e9deb30"
+      "bytes": 1405524,
+      "sha256": "f771c5fa1b273677d5adaf7e780ba9c5ae076b054fe9ab0296f5f5b7a34eadf8"
     },
     "errors.json": {
-      "bytes": 184295,
-      "sha256": "9b034b2db4125291d7997451adf3b2f1724975c1a5a0306f4318fbdeb72ec03f"
+      "bytes": 186290,
+      "sha256": "6e1e5e37bbadcbe93cfd315e430f4116793baa4342f0baffab030478028c6055"
     },
     "evals/golden.json": {
       "bytes": 4242,
-      "sha256": "b305e15755326ae95ddccad72c34fffb50e5aafd91198edd82b614b5a4a3fb07"
+      "sha256": "f3f365a0275b947fbff0c4bb6ee5091e93faf06ab22d261802aee4855b23a433"
     },
     "guides/en/authentication.md": {
       "bytes": 8486,
       "sha256": "be02405312c967303b6a29e9463d8a67951d9405c145e939995ad08e95a3a960"
     },
     "guides/en/changelog.md": {
-      "bytes": 192237,
-      "sha256": "ce854b9ffc7c75d522415f34245173bad5aa34e19316211276e2dae370a7fdff"
+      "bytes": 193001,
+      "sha256": "0b02ecdd3063ea5eac06be47dea56f67ac0f66147659ce00cdc7c8474f13f198"
     },
     "guides/en/concepts/fees.md": {
       "bytes": 14069,
@@ -87,8 +87,8 @@
       "sha256": "f1a292012ded21e5db333d2ecda8dfa4a98954c11fb995c07e99e46326fed2d0"
     },
     "guides/en/errors.md": {
-      "bytes": 52927,
-      "sha256": "c54579532849e8fcf8b1757c7cd34d5502b8363427eb83d20fa674f4182ccec2"
+      "bytes": 53445,
+      "sha256": "1c75b63d3ca6b29fc2b4e50777497575a2846ad31c4a3b91ec469f3a03e54de5"
     },
     "guides/en/faq.md": {
       "bytes": 10755,
@@ -138,6 +138,10 @@
       "bytes": 12536,
       "sha256": "06fd0671e4fe798ffbbc4c725377491b76f5424d69b1abd2b71f30b4f415a2ee"
     },
+    "guides/en/guides/ecuador-manual-payouts.md": {
+      "bytes": 7731,
+      "sha256": "82dfa60be81025b68c8414707aaa177a1dacd3e8955bb63f29e85e05654cf64e"
+    },
     "guides/en/guides/fiat-ledger-assets.md": {
       "bytes": 3387,
       "sha256": "38cf74d335631467fa7ca76fdd7f69623023b0e09902d78784542748792e63f7"
@@ -167,8 +171,8 @@
       "sha256": "f1365efa4c5f22b34ec4ba5e9215613d4883b1383020b42be07babfe855e7524"
     },
     "guides/en/guides/payins.md": {
-      "bytes": 57515,
-      "sha256": "12d5da510875bdecf4f1f57d6f8fe0aba2455776281eb577926c6f94ad495a4b"
+      "bytes": 57954,
+      "sha256": "a70c8e12f96fa1d58cf7b2f5cadf66ae4fa3620843f15f5e50f92cd99dbdefa2"
     },
     "guides/en/guides/payout-destination-retries.md": {
       "bytes": 5306,
@@ -280,7 +284,7 @@
     },
     "guides/en/postman.md": {
       "bytes": 1252,
-      "sha256": "ce6344cebc787b8bb00bd772f6a6276121daa01d10dd04651222785cea7f41ad"
+      "sha256": "33a8202d5c493f908e1f67e609ad1cd6d7a70f8d2ae4d9a5108cb1f41215907b"
     },
     "guides/en/quickstart.md": {
       "bytes": 7361,
@@ -307,8 +311,8 @@
       "sha256": "e7dd78a61b5913495ef86dff81df488053305df8ae41e865bbc067537d61a0bb"
     },
     "guides/es/changelog.md": {
-      "bytes": 203817,
-      "sha256": "f0fb9dc29db714cfba2f4445dce369bb3e8d40ac89f7f4c21f368c55409cb017"
+      "bytes": 204651,
+      "sha256": "97b3f3e27c747c2e196cb4cfc92cb93ffb0fe672c404a9b491df9ec9f0e1463b"
     },
     "guides/es/concepts/fees.md": {
       "bytes": 14505,
@@ -343,8 +347,8 @@
       "sha256": "25c30b1b6785f606c3e135422633b43d9e84790ed5dcd605367f443009fefc68"
     },
     "guides/es/errors.md": {
-      "bytes": 54401,
-      "sha256": "057c20a799a6008b390d08de7587903da1679e55a7d0c210dc36889a0ccbb9a0"
+      "bytes": 54918,
+      "sha256": "f862fd16c333e63a392794c2016b960dcec7599c96810a6da9d8f1089f0c1a70"
     },
     "guides/es/faq.md": {
       "bytes": 11137,
@@ -394,6 +398,10 @@
       "bytes": 11398,
       "sha256": "1b65c55f58a27cff3062477fc1977973aeb3e7cf876052c0b58275c6e342b5cf"
     },
+    "guides/es/guides/ecuador-manual-payouts.md": {
+      "bytes": 8012,
+      "sha256": "5695877c24b85ea3b4a411ffd4e5d2043de063a0b635e74872d2c67ea7e2322f"
+    },
     "guides/es/guides/fiat-ledger-assets.md": {
       "bytes": 3382,
       "sha256": "50267102a94540ffee76ba2bb380bf58e82308b0e2c9884059cd3ffcce47df5b"
@@ -423,8 +431,8 @@
       "sha256": "f78870e140ac74b528772826fe37550f1926a54b9c0ff8c224d44862839896cc"
     },
     "guides/es/guides/payins.md": {
-      "bytes": 58599,
-      "sha256": "2fb0526c67c3386d9e68406673123b2be822a519ac92063c12eb750c3e90c382"
+      "bytes": 58913,
+      "sha256": "1bfc6045674ede717223f0b7427a968631794b24cc640dd4e27204f7ff122e7b"
     },
     "guides/es/guides/payout-destination-retries.md": {
       "bytes": 5364,
@@ -536,7 +544,7 @@
     },
     "guides/es/postman.md": {
       "bytes": 1309,
-      "sha256": "3b58f874eceb8e49be8cf45e6e3b1dcf47f6afde35d7faf534eeeba5e82f33df"
+      "sha256": "aa3c156c9a617c4b64e9c9ef7f009063c42eac291c0647088abd4c77233c77ab"
     },
     "guides/es/quickstart.md": {
       "bytes": 7492,
@@ -563,8 +571,8 @@
       "sha256": "27ffeb409143f9520e4705bee7a3d91c629b3fda1ee1e38a79f974d93befb287"
     },
     "guides/zh/changelog.md": {
-      "bytes": 182053,
-      "sha256": "3ce0ae97e2c02f2db81cb6c2c9ef3d224da447ec0722c8510ed37d4e33f131cd"
+      "bytes": 182794,
+      "sha256": "352c78921d9178c4858eb4445310fee169348c5bf586592adbf6aaaa59401cca"
     },
     "guides/zh/concepts/fees.md": {
       "bytes": 13586,
@@ -599,8 +607,8 @@
       "sha256": "075d8a96a41115ef9982872483475fd019737fdeafc91049407c208f788c9d4a"
     },
     "guides/zh/errors.md": {
-      "bytes": 47264,
-      "sha256": "d78c78230386369c33ed791ebc4c4e4830980fcd9d336dc84a25c8c007380649"
+      "bytes": 47704,
+      "sha256": "30e10375f38641d4f49a42692fe4c2821a737d8ea90c42e2d0006ce6dadd19ba"
     },
     "guides/zh/faq.md": {
       "bytes": 10640,
@@ -650,6 +658,10 @@
       "bytes": 10246,
       "sha256": "004c64f1553724877a101ebd2079c0223f90da7b3ed76a8f539bffe945973160"
     },
+    "guides/zh/guides/ecuador-manual-payouts.md": {
+      "bytes": 7265,
+      "sha256": "23639eee7882947fdf0229e151d2ad9040cb45a77e2354ea78d6b42368929a72"
+    },
     "guides/zh/guides/fiat-ledger-assets.md": {
       "bytes": 2995,
       "sha256": "7e9dbe3203d0f46949096fdb351a67ee77d5adf6b24765e0e2f0321880de698d"
@@ -679,8 +691,8 @@
       "sha256": "17837ec8beefd3bb44ed53f9f924e4f73a1ea449475b1d4dfe24d4c665e5e907"
     },
     "guides/zh/guides/payins.md": {
-      "bytes": 54483,
-      "sha256": "fe6fb614d3656184bb76a275ed43f76ec683cf5bb9b404f2521a0187351c6cdb"
+      "bytes": 54784,
+      "sha256": "8b8126718aae18239c5c0ba6928dfd15f967de9092261d7c891bb1a170112b57"
     },
     "guides/zh/guides/payout-destination-retries.md": {
       "bytes": 4720,
@@ -691,8 +703,8 @@
       "sha256": "9c2058a6b2797d29ded21e14d185078f840374867f24786d0e07c139e760d46e"
     },
     "guides/zh/guides/payouts.md": {
-      "bytes": 47948,
-      "sha256": "065076d6d17566b2a70fae210eab6601b8f0c255be61d812c3e6636312eeb910"
+      "bytes": 47450,
+      "sha256": "79cbab557e56eae19b4d8adf707976bbbfde09dcd450ae4469e1b52eab5b7028"
     },
     "guides/zh/guides/profile.md": {
       "bytes": 10681,
@@ -792,7 +804,7 @@
     },
     "guides/zh/postman.md": {
       "bytes": 1202,
-      "sha256": "577d765d04602d5d3bd53d808f94e7fdf90bf004401d31d6465b7822f4f15bd7"
+      "sha256": "00cda064acc3c6b3dc08ffe31d3a5198351c24ff996d1d95f50ef36e76901700"
     },
     "guides/zh/quickstart.md": {
       "bytes": 7449,
@@ -815,16 +827,16 @@
       "sha256": "754de9d188507543589862d22a5ab33fce3a6defda0a14e3de81fab4cb737c64"
     },
     "openapi.es.yaml": {
-      "bytes": 1027262,
-      "sha256": "f366149d9dd2b37db1f1962a5c3265770d95591eb22025cf827d84f73fc3a64e"
+      "bytes": 1029521,
+      "sha256": "9132fdb83bf5bb21eec115bb4e219b22d632d71e26c2d470bc426468145824bd"
     },
     "openapi.yaml": {
-      "bytes": 1020573,
-      "sha256": "36c8063052dad34f6bd54d34152a93f7c05793034ccc2550643ea968c50e0a56"
+      "bytes": 1022784,
+      "sha256": "d2d894859a75b68049d774c971e9a40b9f0ee3b7c0b1ac56b8c4beeb09be0120"
     },
     "openapi.zh.yaml": {
-      "bytes": 983171,
-      "sha256": "2eff48348a31a76283e261a7cb1c37a4efc7d299e7d473d54ae38e7ee806fcc6"
+      "bytes": 985369,
+      "sha256": "dcda8fcacbb12e8da181974bf1e2152db24c56b136a3fbc6b9b457cc1c91ae15"
     },
     "recipes/en/checkout.md": {
       "bytes": 17979,
@@ -835,8 +847,8 @@
       "sha256": "e538bb731086fe9add51115060a07ded7a65efa9a2c134a6c2c771ad73f56a7e"
     },
     "recipes/en/payins.md": {
-      "bytes": 57450,
-      "sha256": "0f1510b2b8fafa76cb0c73f4eba6ccdbd5d969ae8d2b067183246c3c1ff2a57b"
+      "bytes": 57889,
+      "sha256": "85868aa1679f85d99893547b9c264340132db44d2566c80188fba40f284a528d"
     },
     "recipes/en/payouts.md": {
       "bytes": 47694,
@@ -863,8 +875,8 @@
       "sha256": "fdd0ec298086ef55ec699b54295ade132c8067287ec8636363a879e3d2545a2a"
     },
     "recipes/es/payins.md": {
-      "bytes": 58533,
-      "sha256": "6995c5ec165afd02f0c6d70a14a256221fae84334cab39afb2378c01c0ecc6ce"
+      "bytes": 58847,
+      "sha256": "68aead5bed47c765c24ba9de59145b0f186dd3becb7781807e742c45da7ad49a"
     },
     "recipes/es/payouts.md": {
       "bytes": 48660,
@@ -891,12 +903,12 @@
       "sha256": "f95048e05e8a1ca1042b58051050ac8cf6dc05273b37df35a32f930245dbd30c"
     },
     "recipes/zh/payins.md": {
-      "bytes": 54434,
-      "sha256": "3dca2af9b440903a15081dfa6b6bfd471120f88eb243bf3da70c8ed37393d77c"
+      "bytes": 54735,
+      "sha256": "703ea591c2f9dc7ff280fe84436e138f0afdfe5879ffb45b2c85eae5c3f05608"
     },
     "recipes/zh/payouts.md": {
-      "bytes": 47886,
-      "sha256": "9b5ebd47757154f9db82d136aff3884f55648ba1ad01ddabbbc482c1965006fc"
+      "bytes": 47388,
+      "sha256": "ebb60bd265a0821ef2f7b14c0711a656fbfbcd503b7f897ec09ea9ae80931792"
     },
     "recipes/zh/quickstart.md": {
       "bytes": 7370,
@@ -919,7 +931,7 @@
       "sha256": "a17e390542734803cac91334745f2c04d57a707e6df2b1387b2eac53402183a5"
     }
   },
-  "generated_at": "2026-10-06T04:30:15Z",
+  "generated_at": "2026-10-08T05:35:54Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
