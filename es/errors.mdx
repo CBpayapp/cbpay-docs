@@ -184,6 +184,8 @@ de la identidad del replay. Consulta el estado vivo con
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
+| 409 | `bank_ref_conflict` | La referencia bancaria ya fue reclamada por otra operación (la respuesta la nombra con `claimed_by`/`claimed_kind` cuando pertenece a tu tenant) — corrige la evidencia en vez de reintentar con otra referencia |
+| 503 | `bank_ref_recovery_pending` | Una confirmación anterior dejó la referencia en estado ambiguo y la plataforma está reconciliando el claim durable — reintenta la misma confirmación (misma referencia e idempotency key); el reintento reanuda en vez de duplicar |
 | 400 | `unsupported_document_type` | El tipo de documento bancario no está admitido. Usa uno de los tipos incluidos en la allowlist de documentos bancarios. |
 | 400 | `invalid_document_file` | El archivo del documento bancario está vacío, no se puede leer, está corrupto o no es PDF, JPEG ni PNG. Sube un archivo válido. |
 | 422 | `currency_not_supported` | Sin tasa FX para esa moneda |

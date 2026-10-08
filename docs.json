@@ -105,6 +105,7 @@
                     "group": "Money in",
                     "pages": [
                       "en/guides/payins",
+                      "en/guides/ecuador-manual-payouts",
                       "en/guides/payins-qr",
                       "en/guides/funding",
                       "en/guides/checkout",
@@ -243,6 +244,7 @@
                     "group": "Cobrar (money in)",
                     "pages": [
                       "es/guides/payins",
+                      "es/guides/ecuador-manual-payouts",
                       "es/guides/payins-qr",
                       "es/guides/funding",
                       "es/guides/checkout",
@@ -381,6 +383,7 @@
                     "group": "收款（Money in）",
                     "pages": [
                       "zh/guides/payins",
+                      "zh/guides/ecuador-manual-payouts",
                       "zh/guides/payins-qr",
                       "zh/guides/funding",
                       "zh/guides/checkout",

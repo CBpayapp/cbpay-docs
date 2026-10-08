@@ -181,6 +181,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
 | 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
+| 409 | `bank_ref_conflict` | 该银行参考号已被另一笔操作认领（属于你租户时，响应会用 `claimed_by`/`claimed_kind` 指明）——请修正证据，不要换参考号重试 |
+| 503 | `bank_ref_recovery_pending` | 上一次确认使该银行参考号处于不明确状态，平台正在核对持久 claim——请用相同的确认（相同的参考号和 idempotency key）重试；重试会恢复而不会重复 |
 | 422 | `currency_not_supported` | 该货币没有汇率 |
 | 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 ；处理方也可能在扣款前拒绝阿根廷 alias payout：alias 无法解析，或 USD alias 解析为 CVU；修正受益人后使用新的幂等键重试。 |
 | 400 | `invalid_payload` | 对于 `method: "card"`，`expires_at` 必须是 RFC3339，至少提前 5 分钟且不超过 48 小时 |

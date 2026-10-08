@@ -1,5 +1,5 @@
 {
-  "count": 321,
+  "count": 323,
   "errors": [
     {
       "category": {
@@ -1637,6 +1637,34 @@
         "en": "The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key",
         "es": "El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva",
         "zh": "customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "bank_ref_conflict",
+      "http": 409,
+      "meaning": {
+        "en": "The bank reference is already claimed by another operation (the response names it with `claimed_by`/`claimed_kind` when it belongs to your tenant) — fix the evidence instead of retrying with a different reference",
+        "es": "La referencia bancaria ya fue reclamada por otra operación (la respuesta la nombra con `claimed_by`/`claimed_kind` cuando pertenece a tu tenant) — corrige la evidencia en vez de reintentar con otra referencia",
+        "zh": "该银行参考号已被另一笔操作认领（属于你租户时，响应会用 `claimed_by`/`claimed_kind` 指明）——请修正证据，不要换参考号重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "bank_ref_recovery_pending",
+      "http": 503,
+      "meaning": {
+        "en": "A previous confirmation left the bank reference in an ambiguous state and the platform is reconciling the durable claim — retry the same confirmation (same reference and idempotency key); the retry resumes instead of duplicating",
+        "es": "Una confirmación anterior dejó la referencia en estado ambiguo y la plataforma está reconciliando el claim durable — reintenta la misma confirmación (misma referencia e idempotency key); el reintento reanuda en vez de duplicar",
+        "zh": "上一次确认使该银行参考号处于不明确状态，平台正在核对持久 claim——请用相同的确认（相同的参考号和 idempotency key）重试；重试会恢复而不会重复"
       }
     },
     {

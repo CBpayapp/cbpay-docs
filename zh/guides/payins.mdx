@@ -75,6 +75,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 | 阿根廷 | ARS | 专属 CVU 账户 |
 | 委内瑞拉 | VES | 主动收款（`c2p`） |
 | 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT） |
+| 厄瓜多尔 | USD | 预告银行转账，由授权运营人员手动确认 |
 
 <Note>
 **委内瑞拉（VES）**：现在可通过 `c2p` 进行主动收款。付款人先在其银行
@@ -539,6 +540,14 @@ curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrument
 该能力的通道返回 `422 alias_unsupported`；仍在创建中的账户返回
 `409 deposit_account_not_recoverable`。
 
+</Tab>
+<Tab title="厄瓜多尔">
+
+对于 `EC/USD/bank_transfer`，请参阅专门的手动操作指南：
+
+<Card title="厄瓜多尔 USD 手动操作" icon="hand-coins" href="/zh/guides/ecuador-manual-payouts" horizontal>
+  预告或确认 USD 银行转账，或确认授权运营人员已手动支付的 payout。
+</Card>
 </Tab>
 <Tab title="美国">
 

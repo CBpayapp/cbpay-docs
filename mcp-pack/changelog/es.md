@@ -5,6 +5,12 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.157 · 1 versión - 7 de octubre de 2026
+### v2.157
+**Agregado**
+
+- Se agregó soporte para payouts manuales `EC/USD/bank_transfer`. Los payouts elegibles nacen en `processing` con `status_code=manual_dispatch`; el operador confirma la liquidación bancaria mediante `POST /v1/org/treasury/manual-payouts/{payoutID}/confirm-manual-paid`, enviando `bank_reference`, `paid_amount`, `reason` e `idempotency_key`. El monto pagado debe coincidir exactamente y el replay con la misma clave es seguro.
+- Se agregó soporte para payins anunciados `EC/USD/bank_transfer`. Operaciones puede confirmar la recepción mediante `POST /v1/payins/{payinID}/confirm-received`, enviando la referencia bancaria y el monto recibido; solo se confirman payins anunciados pendientes elegibles y un replay equivalente devuelve `idempotency_hit: true`.
 ## v2.156 · 3 versiones - 5 de octubre de 2026
 ### v2.156
 **Agregado**

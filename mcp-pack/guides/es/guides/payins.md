@@ -78,6 +78,7 @@ Corredores y modalidades de cobro:
 | Brasil | BRL | QR PIX dinámico |
 | Argentina | ARS | Cuenta CVU dedicada |
 | Venezuela | VES | Cobro activo (`c2p`) |
+| Ecuador | USD | Transferencia anunciada con despacho manual |
 | Estados Unidos | USD | Página de pago con tarjeta internacional (`card`), transferencia anunciada (dos rieles: wire doméstico + SWIFT internacional) |
 
 > **Nota**
@@ -574,6 +575,11 @@ inválido es `400 invalid_alias`; un riel no compatible es `422
 alias_unsupported`; una provisión todavía pendiente es `409
 deposit_account_not_recoverable`.
 
+#### Ecuador
+
+Para `EC/USD/bank_transfer`, sigue la guía específica de operaciones manuales:
+
+- **Operaciones manuales USD de Ecuador** - Anuncia o confirma una transferencia USD, o confirma un payout pagado manualmente por un operador autorizado.
 #### Estados Unidos
 
 **Página de pago con tarjeta internacional (`card`)**: cobra en dólares con

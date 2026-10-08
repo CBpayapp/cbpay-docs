@@ -5,6 +5,12 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.157 · 1 version - October 7, 2026
+### v2.157
+**Added**
+
+- Added support for manual `EC/USD/bank_transfer` payouts. Eligible payouts are created in `processing` with `status_code=manual_dispatch`; operators confirm bank settlement through `POST /v1/org/treasury/manual-payouts/{payoutID}/confirm-manual-paid` with `bank_reference`, `paid_amount`, `reason`, and `idempotency_key`. The paid amount must match exactly, and a replay with the same key is safe.
+- Added support for announced `EC/USD/bank_transfer` payins. Operations can confirm receipt through `POST /v1/payins/{payinID}/confirm-received` with the bank reference and received amount; only eligible announced pending payins can be confirmed, and a matching replay returns `idempotency_hit: true`.
 ## v2.156 · 3 versions - October 5, 2026
 ### v2.156
 **Added**
