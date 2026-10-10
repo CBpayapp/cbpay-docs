@@ -85,6 +85,17 @@ curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
 }
 ```
 
+每次质询均可自选投递渠道：`sms`、`whatsapp`、`email` 或 `totp`：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "action": "payout", "channel": "whatsapp" }'
+```
+
+省略 `channel` 时由服务器解析：先用 member 设置，再用组织默认值，若都没有则回退到 SMS。响应始终告知实际使用的渠道及其掩码目的地（`phone`——掩码号码、掩码邮箱，或 TOTP 的字面值 `authenticator_app`）。校验使用有效底线——先用账户自身的策略，再用组织默认值：弱于底线的显式渠道将返回 `403 channel_locked_by_org`，而不会被静默升级。
+
 如果账户未绑定手机号：返回 `409 phone_required`（可通过 `PATCH /v1/me` 设置）。发送受每小时限额约束——超出限额将返回 `429 too_many_attempts`。
 
 ## 3. 验证验证码
@@ -161,16 +172,18 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 - **E.164** 格式（`+56912345678`），可在注册时、通过 `PATCH /v1/me` 或由您的运营方设置。
 - `phone_verified` 会在您首次成功验证质询时变为 `true`：这证明持有人手中确实握有该手机。
 - **更换手机号**（操作 `phone_change`）时，验证码将发送到**原有**号码进行校验——任何人在未持有您当前手机的情况下都无法劫持您的验证码。
-- 如果手机号是首次绑定（或未经验证即被更改），SMS/WhatsApp 质询将锁定 **24 小时**：这是防会话劫持的窗口期。冷却期内，若您已注册身份验证器应用或已验证邮箱，质询会自动改用该更强的因素发出（质询响应中会返回实际使用的渠道）；仅当没有任何替代因素时才会收到 `403 phone_binding_cooldown`。由运营方设置的手机号没有冷却期。
+- 如果手机号是首次绑定（或未经验证即被更改），SMS/WhatsApp 质询将锁定 **24 小时**：这是防会话劫持的窗口期。冷却期内，若您已注册身份验证器应用或已验证邮箱，质询会自动改用该更强的因素发出（质询响应中会返回实际使用的渠道）；仅当没有任何替代因素时才会收到 `403 phone_binding_cooldown`。由运营方设置的手机号没有冷却期。指定显式渠道会关闭自动回退：冷却期内的 `channel: sms` 即使已注册身份验证器应用，也会返回 `403 phone_binding_cooldown`。
 - **两步登录**遵循同样的规则：登录 2FA 为 SMS/WhatsApp 且手机号处于冷却期时，登录验证码会改由身份验证器应用或您的登录邮箱发出（登录响应中返回实际的 `channel`）——绝不会发送到最近绑定且未验证的号码。没有替代因素时，登录返回 `403 phone_binding_cooldown`，直到冷却期结束。
 
 ## 错误
 
 | HTTP | `error` | 含义 | 处理方式 |
 |---|---|---|---|
+| 400 | `invalid_channel` | 未知的 `channel` 取值 | 使用 `sms`、`whatsapp`、`email` 或 `totp` |
 | 403 | `otp_required` | 该操作需要 OTP，但未发送 `X-OTP-Token` | 创建并验证一个质询，携带该请求头重试 |
 | 403 | `otp_invalid` | 令牌无效、已过期或已被使用 | 验证一个新的质询 |
 | 403 | `session_required` | 使用 API 密钥请求了质询 | 质询仅适用于用户会话 |
+| 403 | `channel_locked_by_org` | 显式渠道弱于该操作的有效最低强度（先看账户策略，再看组织默认值） | 省略 `channel` 或选择更强的因素 |
 | 403 | `phone_binding_cooldown` | 手机号绑定未满 24 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱） | 注册身份验证器应用或验证邮箱；否则等待冷却期结束，或请您的运营方设置号码 |
 | 401 | `invalid_code` | 验证码不匹配 | 核对 SMS/WhatsApp 中的验证码并重试（5 次机会） |
 | 401 | `invalid_pending_token` | 登录中间令牌已过期 | 重新登录 |
@@ -185,7 +198,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 #### OTP 会影响我的服务器到服务器集成吗？
     不会。`pk_` API 密钥在设计上即被豁免：自动化流程永远不经过 OTP。请妥善保管您的密钥——签发新密钥本身可能需要 OTP（操作 `api_key_create`）。
 #### 我可以选择 SMS 还是 WhatsApp 吗？
-    渠道由您的运营方按操作配置（可按账户或整个组织配置）。您可以在 `GET /v1/otp/settings` 中查看。
+    可以——创建质询时传入 `channel`（`sms`、`whatsapp`、`email` 或 `totp`）。省略时沿用运营方按操作配置的渠道（可按账户或整个组织配置——在 `GET /v1/otp/settings` 中查看）。校验使用有效底线——先用账户策略，再用组织默认值：更弱的显式选择将返回 `403 channel_locked_by_org`，而不会被静默升级。
 #### 验证码有效期多长？我有多少次尝试机会？
     验证码与质询的有效期为 10 分钟。每个质询最多可验证 5 次，另有每小时发送限额。产生的 `otp_token` 为一次性使用。
 #### 我可以申请一个令牌并用于多个操作吗？

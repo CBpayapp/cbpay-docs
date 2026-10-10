@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.157"
+  version: "2.159"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5793,8 +5793,8 @@ paths:
       tags:
       - Payins
       operationId: confirmAnnouncedPayinReceived
-      summary: "Confirm an announced bank deposit"
-      description: "Confirms an announced Ecuador USD bank deposit after the operator verifies the bank record. It only accepts EC/USD/bank_transfer announced payins."
+      summary: "Request confirmation of an announced bank deposit (maker)"
+      description: "Maker step of the two-person confirmation for an announced EC/USD push bank_transfer manual payin. It only accepts EC/USD/bank_transfer announced payins. The caller is the maker: an org admin with `ops:write` in a human session (API keys are rejected). The payin stays `pending` and nothing is credited; a named god approves or cancels the request with the sibling endpoints."
       parameters:
       - name: payinID
         in: path
@@ -5813,45 +5813,137 @@ paths:
               properties:
                 bank_reference:
                   type: string
-                  pattern: '^ECM[0-9]{13}$'
+                  minLength: 1
+                  maxLength: 200
+                  description: "The bank reference of the received deposit, exactly as it appears in the bank record. Leading/trailing spaces are trimmed; it cannot be empty and is limited to 200 bytes."
                   example: ECM1234567890123
                 received_amount:
                   type: string
-                  pattern: '^[0-9]+(\\.[0-9]{1,2})?$'
+                  description: "The received amount as a decimal string. It must equal the announced amount by value."
                   example: '1250.00'
             examples:
               confirm_received:
-                summary: "Confirm an announced bank deposit"
+                summary: "Request confirmation of an announced bank deposit"
                 value:
                   bank_reference: ECM1234567890123
                   received_amount: '1250.00'
       responses:
         '200':
-          description: "Deposit confirmation accepted."
+          description: "Confirm request recorded; the payin stays pending until a checker approves it."
+          content:
+            application/json:
+              example:
+                payin_id: 11111111-2222-4333-8444-555555555555
+                status: pending
+                confirm_request:
+                  id: 22222222-3333-4444-9555-666666666666
+                  status: pending
+                  bank_reference: ECM1234567890123
+                  received_amount: '1250.00'
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  maker: admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c
+                  created_at: '2026-10-10T14:00:00Z'
+        '400':
+          description: "invalid_payload (a required field, amount, or confirmation field is invalid)"
+          content:
+            application/json:
+              example:
+                error: invalid_payload
+                message: bank_reference is required
+        '401':
+          description: unauthorized
+        '403':
+          description: "permission_denied (the caller is not an org admin with ops:write) or human_session_required (API keys are rejected; the maker must use a human admin session)"
+        '404':
+          description: not_found
+        '409':
+          description: "invalid_state (only pending payins can be confirmed here; without a declared account the payin must be assigned first) or confirm_request_conflict (a request with different evidence is already pending) or deposit_settled_treasury_trade (the bank movement already settled a treasury purchase)"
+        '422':
+          description: "invalid_payload — only announced EC/USD push bank_transfer payins can be confirmed here"
+        '503':
+          description: "treasury_check_unavailable, core_bank_ref_unavailable, or bank_ref_recovery_pending (retry after the dependency recovers; nothing was credited)"
+  /v1/payins/{payinID}/confirm-approve:
+    post:
+      tags:
+      - Payins
+      operationId: approveAnnouncedPayinReceived
+      summary: "Approve a confirm request and credit the payin (checker)"
+      description: "Checker step of the two-person confirmation: a named god different from the maker approves the pending request and credits the payin. No request body. Replaying after the approve returns the credited payin with `idempotency_hit: true` when the evidence matches."
+      parameters:
+      - name: payinID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: "Payin credited (or the honest replay of an already approved confirmation)."
           content:
             application/json:
               example:
                 payin_id: 11111111-2222-4333-8444-555555555555
                 status: credited
-                bank_reference: ECM1234567890123
-                received_amount: '1250.00'
-        '400':
-          description: "invalid_payload"
-          content:
-            application/json:
-              example:
-                error: invalid_payload
-                message: invalid received deposit payload
+                confirm_request:
+                  id: 22222222-3333-4444-9555-666666666666
+                  status: approved
+                  bank_reference: ECM1234567890123
+                  received_amount: '1250.00'
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  maker: admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c
+                  checker: admin:6a7b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d
+                  created_at: '2026-10-10T14:00:00Z'
+                  decided_at: '2026-10-10T14:05:00Z'
         '401':
           description: unauthorized
         '403':
-          description: permission_denied
+          description: "permission_denied, human_session_required, or named_admin_required (the checker must be a named god in a human session; super_admin, bootstrap and API keys are rejected)"
         '404':
           description: not_found
         '409':
-          description: "invalid_state or deposit_settled_treasury_trade"
-        '502':
-          description: "treasury_check_unavailable, credit_failed, or payin_event_pending"
+          description: "invalid_state (no pending confirm request for this payin; a credited payin with different evidence is reported through its request), second_approver_required (the checker must be a different god than the maker), confirm_account_mismatch (the payin account changed since the request; re-request), or bank_ref_conflict (the bank reference is already claimed by another operation)"
+        '500':
+          description: "credit_failed (the claim is released; replay the approve)"
+        '503':
+          description: "treasury_check_unavailable or bank_ref_recovery_pending (replay the approve to close it)"
+  /v1/payins/{payinID}/confirm-cancel:
+    post:
+      tags:
+      - Payins
+      operationId: cancelAnnouncedPayinConfirmRequest
+      summary: "Cancel a pending confirm request (maker or named god)"
+      description: "Cancels the pending confirm request. The maker cancels with their own credential; a named platform god cancels any request. No request body. Nothing is credited. The request has no expiry — cancel it explicitly when the evidence is wrong."
+      parameters:
+      - name: payinID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: "Confirm request cancelled; the payin stays pending."
+          content:
+            application/json:
+              example:
+                payin_id: 11111111-2222-4333-8444-555555555555
+                status: pending
+                confirm_request:
+                  id: 22222222-3333-4444-9555-666666666666
+                  status: cancelled
+                  bank_reference: ECM1234567890123
+                  received_amount: '1250.00'
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  maker: admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c
+                  created_at: '2026-10-10T14:00:00Z'
+        '401':
+          description: unauthorized
+        '403':
+          description: "permission_denied or named_admin_required (only the maker or a named platform god can cancel this request)"
+        '404':
+          description: not_found
+        '409':
+          description: "invalid_state (the payin is already credited, or no pending confirm request to cancel)"
 
   /v1/payins/{payinID}:
     get:
@@ -17512,11 +17604,22 @@ paths:
                   - api_key_create
                   - member_add
                   - phone_change
+                channel:
+                  type: string
+                  enum:
+                  - sms
+                  - whatsapp
+                  - email
+                  - totp
+                  description: Optional delivery channel. If omitted, the server resolves it from the member's
+                    OTP preferences, falling back to the org default. Matching is case-insensitive.
             example:
               action: payout
+              channel: whatsapp
       responses:
         '201':
-          description: Challenge created; the code is on its way.
+          description: Challenge created; the code is on its way. The resolved `channel` and its masked destination
+            (`phone`) come back in the body.
           content:
             application/json:
               schema:
@@ -17530,18 +17633,33 @@ paths:
                 status: pending
                 created_at: '2026-07-08T21:00:00Z'
                 expires_at: '2026-07-08T21:10:00Z'
-        '403':
-          description: API key credential (`session_required`) or recently linked, unverified phone with no alternative
-            factor (`phone_binding_cooldown`). With the phone in cooldown, the challenge automatically falls back to
-            the authenticator app (if enrolled) or the verified login email; the effective channel comes back in the
-            challenge response.
+        '400':
+          description: Unknown `channel` value.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: session_required
-                message: OTP verification requires a user session (JWT), not an API key
+              examples:
+                invalid_channel:
+                  summary: Channel outside the sms, whatsapp, email, totp set
+                  value: { error: invalid_channel, message: 'channel must be sms, whatsapp, email or totp' }
+        '403':
+          description: API key credential (`session_required`), channel weaker than the org floor (`channel_locked_by_org`),
+            or recently linked, unverified phone with no alternative factor (`phone_binding_cooldown`). With the phone
+            in cooldown and no explicit channel, the challenge automatically falls back to the authenticator app (if
+            enrolled) or the verified login email; the effective channel comes back in the challenge response. An
+            explicit channel is bound to your choice — it never falls back.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                session_required:
+                  summary: API key credential instead of a user session
+                  value: { error: session_required, message: OTP verification requires a user session (JWT), not an API key }
+                channel_locked_by_org:
+                  summary: Requested channel weaker than the org floor for the action
+                  value: { error: channel_locked_by_org, message: your organization requires a stronger channel for this action }
         '409':
           description: The account has no phone number (`phone_required`).
           content:
@@ -23939,9 +24057,11 @@ components:
           enum:
           - sms
           - whatsapp
+          - email
+          - totp
         phone:
           type: string
-          description: Masked phone the code was sent to.
+          description: Masked destination the code was sent to (phone or email), or `authenticator_app` for TOTP.
         status:
           type: string
           enum:

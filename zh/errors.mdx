@@ -59,7 +59,7 @@ description: "错误格式与完整的错误码目录"
 | 409 | `phone_verification_required` | 通过 SMS/WhatsApp 启用登录 2FA 前需先验证手机号（OTP 挑战） |
 | 401 | `invalid_code` | 验证码不匹配 |
 | 401 | `invalid_pending_token` | 登录中间令牌已过期；请重新登录 |
-| 400 | `invalid_action` / `invalid_channel` | 操作或渠道不在目录中 |
+| 400 | `invalid_action` / `invalid_channel` | 操作或渠道不在目录中（质询 `channel` 须为 `sms`、`whatsapp`、`email` 或 `totp` 之一） |
 | 409 | `phone_required` | 账户未绑定手机号（`PATCH /v1/me`） |
 | 409 | `otp_phone_missing` | 登录需要 OTP 但账户没有手机号；请联系您的运营方 |
 | 409 | `challenge_not_pending` | 质询已过期或已被使用；请创建一个新的 |
@@ -541,7 +541,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 
 | HTTP | `error` | 含义与处理 |
 |---|---|---|
-| 403 | `channel_locked_by_org` | 组织策略仅允许 TOTP，禁止该账户注册 passkey。请联系 org 管理员修改策略。 |
+| 403 | `channel_locked_by_org` | 组织策略仅允许 TOTP，禁止该账户注册 passkey；也会拒绝显式 `channel` 弱于组织底线的质询。请联系 org 管理员修改策略。 |
 | 409 | `passkey_exists` | 该 credential ID 已注册在此账户。请用现有 passkey 登录。 |
 | 409 | `totp_already_enrolled` | 该账户已激活 TOTP。请用现有 secret 认证。 |
 

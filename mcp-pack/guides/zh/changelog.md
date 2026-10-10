@@ -5,6 +5,15 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.159 · 2 个版本 - 2026年10月10日
+### v2.159
+**新增**
+- 手工 EC/USD push `bank_transfer` 收款确认现为两步 maker-checker：`POST /v1/payins/{payinID}/confirm-received` 创建待处理请求但不记账，`POST /v1/payins/{payinID}/confirm-approve` 由与 maker 不同的 god 批准并记账，`POST /v1/payins/{payinID}/confirm-cancel` 作废请求；新增 `confirm_request_conflict` 与 `confirm_account_mismatch` 错误码（HTTP 409）。
+### v2.158
+**新增**
+
+- `POST /v1/otp/challenges` 新增可选 `channel` 字段（`sms`、`whatsapp`、`email` 或 `totp`）。省略时服务器按你的 OTP 偏好、组织默认值或 SMS 解析。响应返回解析后的 `channel`，以及 `phone` 字段中的脱敏目的地（email 挑战脱敏地址；TOTP 挑战返回字面量 `authenticator_app`）。
+- 挑战创建新增两种错误：未知值返回 `400 invalid_channel`；显式通道弱于该操作组织下限时返回 `403 channel_locked_by_org`（下限只会提升通道，绝不会降低）。显式指定 `channel` 还会停用自动回退到其他通道。
 ## v2.157 · 1 个版本 - 2026年10月7日
 ### v2.157
 **新增**

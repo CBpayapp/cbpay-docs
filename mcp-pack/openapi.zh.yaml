@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.157"
+  version: "2.159"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -5492,8 +5492,8 @@ paths:
       tags:
       - Payins
       operationId: confirmAnnouncedPayinReceived
-      summary: "确认已公告的银行存款"
-      description: "操作员核对银行记录后，确认一笔已公告的厄瓜多尔美元银行存款。 It only accepts EC/USD/bank_transfer announced payins."
+      summary: "发起已公告银行存款的确认请求（maker）"
+      description: "两步确认的第一步：已公告的 EC/USD push bank_transfer 手动 payin。 It only accepts EC/USD/bank_transfer announced payins. 调用者是 maker：拥有 `ops:write` 的 org admin，且必须使用人工会话（API 密钥会被拒绝）。payin 保持 `pending`，不入账；由具名 god 通过兄弟接口批准或取消该请求。"
       parameters:
       - name: payinID
         in: path
@@ -5512,45 +5512,137 @@ paths:
               properties:
                 bank_reference:
                   type: string
-                  pattern: '^ECM[0-9]{13}$'
+                  minLength: 1
+                  maxLength: 200
+                  description: "已到账存款的银行参考号，与银行记录完全一致。首尾空格会被去除；不能为空，最多 200 字节。"
                   example: ECM1234567890123
                 received_amount:
                   type: string
-                  pattern: '^[0-9]+(\\.[0-9]{1,2})?$'
+                  description: "到账金额（十进制字符串）。必须与公告金额按数值相等。"
                   example: '1250.00'
             examples:
               confirm_received:
-                summary: "确认已公告的银行存款"
+                summary: "发起已公告银行存款的确认请求"
                 value:
                   bank_reference: ECM1234567890123
                   received_amount: '1250.00'
       responses:
         '200':
-          description: "已接受存款确认。"
+          description: "确认请求已记录；payin 保持 pending，等待 checker 批准。"
+          content:
+            application/json:
+              example:
+                payin_id: 11111111-2222-4333-8444-555555555555
+                status: pending
+                confirm_request:
+                  id: 22222222-3333-4444-9555-666666666666
+                  status: pending
+                  bank_reference: ECM1234567890123
+                  received_amount: '1250.00'
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  maker: admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c
+                  created_at: '2026-10-10T14:00:00Z'
+        '400':
+          description: "invalid_payload（缺少必填字段或字段无效）"
+          content:
+            application/json:
+              example:
+                error: invalid_payload
+                message: bank_reference is required
+        '401':
+          description: unauthorized
+        '403':
+          description: "permission_denied（调用者不是拥有 ops:write 的 org admin）或 human_session_required（拒绝 API 密钥；maker 必须使用人工会话）"
+        '404':
+          description: not_found
+        '409':
+          description: "invalid_state（只有 pending payin 才能确认；未声明账户需先分配）、confirm_request_conflict（已存在其他证据的待处理请求）或 deposit_settled_treasury_trade（该笔银行流水已结算一笔国库采购）"
+        '422':
+          description: "invalid_payload — only announced EC/USD push bank_transfer payins can be confirmed here"
+        '503':
+          description: "treasury_check_unavailable、core_bank_ref_unavailable 或 bank_ref_recovery_pending（依赖恢复后重试；未入账）"
+  /v1/payins/{payinID}/confirm-approve:
+    post:
+      tags:
+      - Payins
+      operationId: approveAnnouncedPayinReceived
+      summary: "批准确认请求并入账（checker）"
+      description: "两步确认的第二步：与 maker 不同的具名 god 批准待处理请求并入账。无 body。若证据一致，重放已批准的确认会返回已入账的 payin 及 `idempotency_hit: true`。"
+      parameters:
+      - name: payinID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: "Payin 已入账（或已批准确认的诚实重放）。"
           content:
             application/json:
               example:
                 payin_id: 11111111-2222-4333-8444-555555555555
                 status: credited
-                bank_reference: ECM1234567890123
-                received_amount: '1250.00'
-        '400':
-          description: "invalid_payload"
-          content:
-            application/json:
-              example:
-                error: invalid_payload
-                message: invalid received deposit payload
+                confirm_request:
+                  id: 22222222-3333-4444-9555-666666666666
+                  status: approved
+                  bank_reference: ECM1234567890123
+                  received_amount: '1250.00'
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  maker: admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c
+                  checker: admin:6a7b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d
+                  created_at: '2026-10-10T14:00:00Z'
+                  decided_at: '2026-10-10T14:05:00Z'
         '401':
           description: unauthorized
         '403':
-          description: permission_denied
+          description: "permission_denied、human_session_required 或 named_admin_required（checker 必须是人工会话中的具名 god；拒绝 super_admin、bootstrap 和 API 密钥）"
         '404':
           description: not_found
         '409':
-          description: "invalid_state or deposit_settled_treasury_trade"
-        '502':
-          description: "treasury_check_unavailable, credit_failed, or payin_event_pending"
+          description: "invalid_state（没有待处理的确认请求；证据不同的已入账 payin 通过其请求报告）、second_approver_required（checker 必须是另一位 god）、confirm_account_mismatch（请求后账户变更；重新发起）或 bank_ref_conflict（该银行参考号已被其他操作占用）"
+        '500':
+          description: "credit_failed（claim 已释放；重放 approve）"
+        '503':
+          description: "treasury_check_unavailable 或 bank_ref_recovery_pending（重放 approve 以完成）"
+  /v1/payins/{payinID}/confirm-cancel:
+    post:
+      tags:
+      - Payins
+      operationId: cancelAnnouncedPayinConfirmRequest
+      summary: "取消待处理的确认请求（maker 或具名 god）"
+      description: "取消待处理的确认请求。maker 用自己的凭证取消；具名 platform god 可取消任何请求。无 body。不入账。请求不会过期——证据有误请显式取消。"
+      parameters:
+      - name: payinID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: "请求已取消；payin 保持 pending。"
+          content:
+            application/json:
+              example:
+                payin_id: 11111111-2222-4333-8444-555555555555
+                status: pending
+                confirm_request:
+                  id: 22222222-3333-4444-9555-666666666666
+                  status: cancelled
+                  bank_reference: ECM1234567890123
+                  received_amount: '1250.00'
+                  account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  maker: admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c
+                  created_at: '2026-10-10T14:00:00Z'
+        '401':
+          description: unauthorized
+        '403':
+          description: "permission_denied 或 named_admin_required（只有 maker 或具名 platform god 可以取消）"
+        '404':
+          description: not_found
+        '409':
+          description: "invalid_state（payin 已入账，或没有待取消的请求）"
 
   /v1/payins/{payinID}:
     get:
@@ -16820,11 +16912,20 @@ paths:
                   - api_key_create
                   - member_add
                   - phone_change
+                channel:
+                  type: string
+                  enum:
+                  - sms
+                  - whatsapp
+                  - email
+                  - totp
+                  description: 可选的发送渠道。若省略，服务器将根据成员的 OTP 偏好解析渠道，并以组织默认值为后备。值不区分大小写。
             example:
               action: payout
+              channel: whatsapp
       responses:
         '201':
-          description: 挑战已创建;验证码正在发送。
+          description: 挑战已创建;验证码正在发送。解析后的 `channel` 及其掩码后的目标（`phone`）会在响应体中返回。
           content:
             application/json:
               schema:
@@ -16838,15 +16939,29 @@ paths:
                 status: pending
                 created_at: '2026-07-08T21:00:00Z'
                 expires_at: '2026-07-08T21:10:00Z'
-        '403':
-          description: API key 凭证(`session_required`)，或最近绑定且未验证的手机号且无替代因素(`phone_binding_cooldown`)。手机号处于冷却期时，质询会自动改用身份验证器应用（若已注册）或已验证的登录邮箱；实际使用的渠道会在质询响应中返回。
+        '400':
+          description: 未知的 `channel` 值。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: session_required
-                message: OTP verification requires a user session (JWT), not an API key
+              examples:
+                invalid_channel:
+                  summary: sms、whatsapp、email、totp 集合之外的渠道
+                  value: { error: invalid_channel, message: 'channel must be sms, whatsapp, email or totp' }
+        '403':
+          description: API key 凭证（`session_required`）、弱于组织下限的渠道（`channel_locked_by_org`），或最近绑定且未验证的手机号且无替代因素（`phone_binding_cooldown`）。未指定显式渠道且手机号处于冷却期时，质询会自动改用身份验证器应用（若已注册）或已验证的登录邮箱；实际使用的渠道会在质询响应中返回。显式渠道绑定你的选择——绝不会自动切换。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                session_required:
+                  summary: 使用 API key 凭证而非用户会话
+                  value: { error: session_required, message: OTP verification requires a user session (JWT), not an API key }
+                channel_locked_by_org:
+                  summary: 请求的渠道弱于该操作对应的组织下限
+                  value: { error: channel_locked_by_org, message: your organization requires a stronger channel for this action }
         '409':
           description: 该账户没有手机号(`phone_required`)。
           content:
@@ -23131,9 +23246,11 @@ components:
           enum:
           - sms
           - whatsapp
+          - email
+          - totp
         phone:
           type: string
-          description: 验证码发送到的打码手机号。
+          description: 验证码发送到的掩码目标（手机号或邮箱），TOTP 则为 `authenticator_app`。
         status:
           type: string
           enum:

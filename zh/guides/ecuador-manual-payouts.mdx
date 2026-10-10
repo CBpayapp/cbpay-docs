@@ -130,8 +130,13 @@ key。使用相同证据 replay 会返回原始结果并带有 `idempotency_hit:
 
 ## 人工 payin
 
-对于已公告的 `EC/USD/push/bank_transfer` payin，拥有
-`org_operations`/`ops:write` 权限的组织运营人员确认收款：
+确认已公告的 `EC/USD/push/bank_transfer` payin 收款是双人操作
+（maker-checker）。在第二个审批完成之前不划账。所有步骤都不使用客户端幂
+等键：调用通过 payin ID 和银行证据来识别操作，诚实重放会返回原始结果并
+带 `idempotency_hit: true`。
+
+**第 1 步 — 请求（maker）。**拥有 `org_operations`/`ops:write` 权限且使用
+人工会话的组织管理员登记银行证据。payin 保持 `pending`；此时不入账：
 
 ```http
 POST /v1/payins/{payinID}/confirm-received
@@ -146,11 +151,33 @@ Content-Type: application/json
 }
 ```
 
-该确认接口不使用客户端提供的幂等键。它只确认已有 payin，不会创建第二笔。
-请求超时后先读取 payin；如果仍为待处理状态，使用相同的
-`bank_reference` 和 `received_amount` 重试。如果已使用相同证据完成入账，
-重试会返回原始结果并 `idempotency_hit: true`；证据不同则返回
-`409 invalid_state`。
+响应是确认请求（`id`、`status`、`bank_reference`、`received_amount`、
+`account_id`、`maker`、`created_at`）。用相同证据重发该 maker 请求会重放
+原始请求并命中；证据不同则返回 `409 invalid_state`。请求不会过期：一直处
+于打开状态，直到 checker 批准或 maker（或任意 god 管理员）取消。
+
+**第 2 步 — 批准（checker）。**与 maker 不同的一名具名 god 管理员批准已打
+开的请求。批准接口无请求体：
+
+```http
+POST /v1/payins/{payinID}/confirm-approve
+Authorization: Bearer <GOD_ADMIN_KEY>
+Content-Type: application/json
+```
+
+批准后立即通过标准定价、防火墙与入账链路记账。同一管理员不能批准自己的请
+求（`409 second_approver_required`）。如果 payin 自请求以来发生变化
+（`confirm_account_mismatch`、`bank_ref_conflict`），或该参考号属于资金库
+结算（`deposit_settled_treasury_trade`），批准会诚实失败，payin 保持
+`pending`；请重读两个资源后再重试。
+
+**取消。**Maker 或任意 god 管理员可以用
+`POST /v1/payins/{payinID}/confirm-cancel`（同样无请求体）取消已打开的请
+求。已取消的请求永远不再记账；如需确认，只能发起新请求。
+
+任何超时之后先读取 payin。如果已用相同证据入账，重放会返回原始结果；如果
+仍为 pending，则重新读取确认请求并重试同一操作。不要尝试用不同证据去"推
+动"确认。
 
 ## 入金指令
 
@@ -179,7 +206,8 @@ Authorization: Bearer <API_KEY>
 
 - 运营人员在银行门户付款，并记录银行参考号。
 - 银行操作出现不确定结果时，不要使用新 key 重新发送。
-- timeout 后先读取资源；重试只能使用同一个 key。
+- 对于 `confirm-received`，请求与批准是两名管理员的两个独立步骤；timeout
+  后先读取 payin 与确认请求，再重试同一操作。
 - 以上示例均为合成数据；只能替换为经过授权的运营数据。
 
 ## 状态与错误
@@ -190,6 +218,9 @@ Authorization: Bearer <API_KEY>
 | `completed` + `manual_confirmed` | 运营人员已确认银行付款。 | 重新读取 payout 并保留银行参考号。 |
 | `invalid_payload` | 必填字段、金额、账户或确认字段无效。 | 修正请求；不要为同一操作创建替代请求。 |
 | `idempotency_conflict` | 同一 key 搭配不同数据或不兼容状态被重复使用。 | 读取原资源；只有真正的新操作才使用新 key。 |
+| `second_approver_required` | 批准人必须是与 maker 不同的管理员。 | 由另一名具名 god 管理员批准已打开的请求；maker 不能批准自己的请求。 |
+| `confirm_account_mismatch` | 自确认请求以来，payin 的账户发生了变化。 | 读取 payin 与请求；先取消，再用新证据发起新请求。 |
+| `confirm_request_conflict` | 该 payin 已有另一个打开的确认。 | 先读取已存在的请求并批准或取消，再创建新请求。 |
 | `treasury_check_unavailable` | 无法完成 payin 的 ownership 或资金库冲突检查。 | 不要贷记 payin；依赖恢复后再使用同一 key 重试。 |
 | `deposit_settled_treasury_trade` | 银行参考号属于资金库结算。 | 不要将其分配或贷记为客户 payin。 |
 

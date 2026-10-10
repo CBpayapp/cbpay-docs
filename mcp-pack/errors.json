@@ -360,9 +360,9 @@
       "code": "invalid_action",
       "http": 400,
       "meaning": {
-        "en": "Action or channel outside the catalog",
-        "es": "Acción o canal fuera de catálogo",
-        "zh": "操作或渠道不在目录中"
+        "en": "Action or channel outside the catalog (challenge `channel` must be `sms`, `whatsapp`, `email` or `totp`)",
+        "es": "Acción o canal fuera de catálogo (el `channel` del desafío debe ser `sms`, `whatsapp`, `email` o `totp`)",
+        "zh": "操作或渠道不在目录中（质询 `channel` 须为 `sms`、`whatsapp`、`email` 或 `totp` 之一）"
       }
     },
     {
@@ -374,9 +374,9 @@
       "code": "invalid_channel",
       "http": 400,
       "meaning": {
-        "en": "Action or channel outside the catalog",
-        "es": "Acción o canal fuera de catálogo",
-        "zh": "操作或渠道不在目录中"
+        "en": "Action or channel outside the catalog (challenge `channel` must be `sms`, `whatsapp`, `email` or `totp`)",
+        "es": "Acción o canal fuera de catálogo (el `channel` del desafío debe ser `sms`, `whatsapp`, `email` o `totp`)",
+        "zh": "操作或渠道不在目录中（质询 `channel` 须为 `sms`、`whatsapp`、`email` 或 `totp` 之一）"
       }
     },
     {
@@ -4428,9 +4428,9 @@
       "code": "channel_locked_by_org",
       "http": 403,
       "meaning": {
-        "en": "The organization policy enables TOTP only and blocks passkey registration for this account. Contact an org admin to change the policy.",
-        "es": "La política de la org solo permite TOTP y bloquea el registro de passkeys en esta cuenta. Pide a un org admin que cambie la política.",
-        "zh": "组织策略仅允许 TOTP，禁止该账户注册 passkey。请联系 org 管理员修改策略。"
+        "en": "The organization policy enables TOTP only and blocks passkey registration for this account; it also rejects challenges whose explicit `channel` is weaker than the org floor. Contact an org admin to change the policy.",
+        "es": "La política de la org solo permite TOTP y bloquea el registro de passkeys en esta cuenta; también rechaza desafíos cuyo `channel` explícito es más débil que el piso de la org. Pide a un org admin que cambie la política.",
+        "zh": "组织策略仅允许 TOTP，禁止该账户注册 passkey；也会拒绝显式 `channel` 弱于组织底线的质询。请联系 org 管理员修改策略。"
       }
     },
     {

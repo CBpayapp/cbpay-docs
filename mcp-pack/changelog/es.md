@@ -5,6 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.159 · 2 versiones - 10 de octubre de 2026
+### v2.159
+**Agregado**
+- La confirmación de recepción de payins manuales EC/USD push `bank_transfer` ahora es maker-checker de dos pasos: `POST /v1/payins/{payinID}/confirm-received` abre una solicitud pendiente sin acreditar, `POST /v1/payins/{payinID}/confirm-approve` la aprueba (god distinto del maker) y acredita, y `POST /v1/payins/{payinID}/confirm-cancel` la descarta; nuevos códigos `confirm_request_conflict` y `confirm_account_mismatch` (HTTP 409).
+### v2.158
+**Agregado**
+
+- `POST /v1/otp/challenges` acepta el campo opcional `channel` (`sms`, `whatsapp`, `email` o `totp`). Si se omite, el servidor lo resuelve desde tu preferencia OTP, el default de la organización o SMS. La respuesta devuelve el `channel` resuelto más el destino enmascarado en `phone` (email enmascara la dirección; TOTP devuelve el literal `authenticator_app`).
+- La creación del challenge ahora puede responder `400 invalid_channel` para valores desconocidos y `403 channel_locked_by_org` cuando el canal explícito es más débil que el piso de la org para la acción (el piso solo eleva el canal, nunca lo baja). Elegir `channel` explícito además desactiva el fallback automático a otro canal.
 ## v2.157 · 1 versión - 7 de octubre de 2026
 ### v2.157
 **Agregado**
