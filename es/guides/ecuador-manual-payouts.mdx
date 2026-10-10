@@ -135,8 +135,15 @@ misma acción bancaria.
 
 ## Payins manuales
 
-Para un payin anunciado `EC/USD/push/bank_transfer`, un operador de la
-organización con `org_operations`/`ops:write` confirma la recepción:
+Confirmar la recepción de un payin ya anunciado `EC/USD/push/bank_transfer`
+es una operación de dos personas (maker-checker). No se mueve dinero hasta la
+segunda aprobación. Ningún paso usa clave de idempotencia del cliente: la
+llamada identifica la operación por el payin ID y la evidencia bancaria, y los
+replays honestos devuelven el original con `idempotency_hit: true`.
+
+**Paso 1 — solicitud (maker).** Un operador autorizado de la organización
+con `org_operations`/`ops:write` y una sesión admin humana registra la
+evidencia bancaria. El payin sigue `pending`; nada se acredita aún:
 
 ```http
 POST /v1/payins/{payinID}/confirm-received
@@ -151,12 +158,40 @@ Content-Type: application/json
 }
 ```
 
-Esta confirmación no usa una clave de idempotencia del cliente. Confirma el
-payin existente y nunca crea otro. Tras un timeout, lee primero el payin y, si
-sigue pendiente, reintenta con el mismo `bank_reference` y
-`received_amount`. Si ya está acreditado con la misma evidencia, el replay
-devuelve el original con `idempotency_hit: true`; una evidencia distinta
-devuelve `409 invalid_state`.
+La respuesta es la solicitud de confirmación (`id`, `status`,
+`bank_reference`, `received_amount`, `account_id`, `maker`, `created_at`).
+Reintentar la misma solicitud del maker con evidencia idéntica reproduce la
+solicitud original con un hit; una evidencia distinta devuelve
+`409 invalid_state`. La solicitud no expira: queda abierta hasta que un
+checker la apruebe o el maker (o un admin god) la cancele.
+
+**Paso 2 — aprobación (checker).** Un segundo admin god nombrado, distinto
+del maker, aprueba la solicitud abierta. La solicitud no lleva body:
+
+```http
+POST /v1/payins/{payinID}/confirm-approve
+Authorization: Bearer <GOD_ADMIN_KEY>
+Content-Type: application/json
+```
+
+La aprobación acredita el payin de inmediato a través de la cadena normal de
+pricing, firewall y crédito. El mismo admin no puede aprobar su propia
+solicitud (`409 second_approver_required`). Si los datos del payin cambiaron
+desde la solicitud (`confirm_account_mismatch`, `bank_ref_conflict`), o la
+referencia pertenece a una liquidación de tesorería
+(`deposit_settled_treasury_trade`), la aprobación falla de forma honesta y el
+payin sigue `pending`; lee ambos recursos antes de reintentar.
+
+**Cancelación.** El maker o cualquier admin god puede cancelar una solicitud
+abierta con `POST /v1/payins/{payinID}/confirm-cancel` (también sin body).
+Una solicitud cancelada nunca acredita; para confirmar se necesita una
+solicitud nueva.
+
+Tras cualquier timeout, lee primero el payin. Si ya está acreditado con la
+misma evidencia, el replay devuelve el resultado original; si sigue
+pendiente, vuelve a leer la solicitud de confirmación y reintenta el mismo
+paso. Nunca intentes una confirmación con una evidencia distinta para
+"empujarla".
 
 ## Instrucciones de depósito
 
@@ -185,8 +220,9 @@ Usa un `code` devuelto por el catálogo como `beneficiary.bank_code`.
 
 - El operador paga en el portal bancario y registra la referencia bancaria.
 - No reenvíes una acción bancaria ambigua con una key nueva.
-- Para `confirm-received`, tras un timeout lee primero el payin; no asumas que
-  una nueva clave de idempotencia vuelve segura la confirmación.
+- Para la confirmación de payins manuales, la solicitud y la aprobación son dos
+  pasos separados de dos admins distintos; tras un timeout, lee el payin y la
+  solicitud de confirmación antes de reintentar el mismo paso.
 - Los ejemplos son sintéticos; reemplaza placeholders solo con datos
   operativos autorizados.
 
@@ -198,6 +234,9 @@ Usa un `code` devuelto por el catálogo como `beneficiary.bank_code`.
 | `completed` + `manual_confirmed` | El operador confirmó el pago bancario. | Vuelve a leer el payout y conserva la referencia bancaria. |
 | `invalid_payload` | Falta un campo o un monto, cuenta o dato de confirmación no es válido. | Corrige la solicitud; no crees un reemplazo para la misma operación. |
 | `idempotency_conflict` | La misma key se reutilizó con datos distintos o un estado incompatible. | Lee el recurso original y usa una key nueva solo para una operación realmente nueva. |
+| `second_approver_required` | El aprobador debe ser un admin distinto del maker. | Un segundo admin god nombrado aprueba la solicitud abierta; el maker no puede aprobarla. |
+| `confirm_account_mismatch` | La cuenta del payin cambió desde la solicitud de confirmación. | Lee el payin y la solicitud; cancela e inicia una solicitud nueva con evidencia fresca. |
+| `confirm_request_conflict` | Ya existe otra confirmación abierta para este payin. | Lee la solicitud existente y apruébala o cancélala antes de crear otra. |
 | `treasury_check_unavailable` | No se pudo completar el control de ownership o conflicto de tesorería del payin. | No acredites el payin; reintenta cuando la dependencia se recupere. |
 | `deposit_settled_treasury_trade` | La referencia bancaria pertenece a una liquidación de tesorería. | No lo asignes ni lo acredites como payin de cliente. |
 

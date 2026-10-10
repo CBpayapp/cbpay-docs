@@ -96,6 +96,26 @@ Respuesta `201` — el código ya viaja al teléfono de la cuenta:
 }
 ```
 
+El canal de entrega lo eliges por desafío: `sms`, `whatsapp`, `email`
+o `totp`:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "action": "payout", "channel": "whatsapp" }'
+```
+
+Si omites `channel`, el servidor lo resuelve: primero tus ajustes de
+member, luego el default de la org, y si no hay ninguno, SMS. La respuesta
+siempre dice
+qué canal se usó y su destino enmascarado (`phone` — un número
+enmascarado, un email enmascarado o el literal `authenticator_app`
+para TOTP). El chequeo corre contra el piso efectivo — la política de
+tu cuenta primero, luego el default de la org: un canal explícito más
+débil que el piso falla con `403 channel_locked_by_org` en vez de
+actualizarse en silencio.
+
 Si la cuenta no tiene teléfono: `409 phone_required` (cárgalo con
 `PATCH /v1/me`). Hay límites de envío por hora — si te pasas,
 `429 too_many_attempts`.
@@ -191,7 +211,9 @@ ya es un flujo de dos factores y no pide un código adicional.
   automáticamente por ese factor más fuerte (el canal llega en la respuesta
   del desafío); solo si no tienes ninguna alternativa recibes
   `403 phone_binding_cooldown`. El teléfono cargado por tu operador no tiene
-  cooldown.
+  cooldown. Fijar un canal explícito desactiva el fallback: `channel: sms`
+  en cooldown falla con `403 phone_binding_cooldown` aunque tengas la app
+  autenticadora enrolada.
 - El **login en dos pasos** respeta la misma regla: con 2FA de login por
   SMS/WhatsApp y el teléfono en cooldown, el código del login se emite por
   la app autenticadora o tu email de login (el `channel` efectivo llega en
@@ -203,9 +225,11 @@ ya es un flujo de dos factores y no pide un código adicional.
 
 | HTTP | `error` | Qué significa | Qué hacer |
 |---|---|---|---|
+| 400 | `invalid_channel` | Valor de `channel` desconocido | Usa `sms`, `whatsapp`, `email` o `totp` |
 | 403 | `otp_required` | La acción exige OTP y no enviaste `X-OTP-Token` | Crea y verifica un desafío, reintenta con el header |
 | 403 | `otp_invalid` | Token inválido, expirado o ya usado | Verifica un desafío nuevo |
 | 403 | `session_required` | Pediste un desafío con una API key | Los desafíos son solo para sesiones de usuario |
+| 403 | `channel_locked_by_org` | Tu canal explícito es más débil que el mínimo efectivo para esta acción (la política de tu cuenta primero, luego el default de la org) | Omite `channel` o elige un factor más fuerte |
 | 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 24 h sin verificación y sin factor alternativo (app autenticadora o email verificado) | Enrola la app autenticadora o verifica tu email; si no, espera el cooldown o pide a tu operador fijar el número |
 | 401 | `invalid_code` | El código no coincide | Revisa el SMS/WhatsApp y reintenta (5 intentos) |
 | 401 | `invalid_pending_token` | El token intermedio del login expiró | Vuelve a iniciar sesión |
@@ -222,8 +246,13 @@ ya es un flujo de dos factores y no pide un código adicional.
     pasa por OTP. Protege tus keys como corresponde — emitir una key nueva
     sí puede exigir OTP (acción `api_key_create`).
 #### ¿Puedo elegir SMS o WhatsApp?
-    El canal lo configura tu operador por acción (por cuenta o para toda la
-    organización). Lo ves en `GET /v1/otp/settings`.
+    Sí: pasa `channel` (`sms`, `whatsapp`, `email` o `totp`) al crear el
+    desafío. Si lo omites, aplica el canal configurado por tu operador por
+    acción (por cuenta o para toda la organización — lo ves en
+    `GET /v1/otp/settings`). El chequeo corre contra el piso efectivo —
+    la política de tu cuenta primero, luego el default de la org — así
+    que una elección explícita más débil falla con
+    `403 channel_locked_by_org` en vez de actualizarse en silencio.
 #### ¿Cuánto dura un código y cuántos intentos tengo?
     El código y el desafío duran 10 minutos. Tienes 5 verificaciones por
     desafío y un límite de envíos por hora. El `otp_token` resultante es de

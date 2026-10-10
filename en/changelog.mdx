@@ -4,6 +4,17 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="October 10, 2026" description="v2.159 · 2 versions">
+### v2.159
+**Added**
+- Manual EC/USD push `bank_transfer` receipt confirmation is now a two-step maker-checker: `POST /v1/payins/{payinID}/confirm-received` opens a pending request without crediting, `POST /v1/payins/{payinID}/confirm-approve` approves it (a god different from the maker) and credits, and `POST /v1/payins/{payinID}/confirm-cancel` discards it; new `confirm_request_conflict` and `confirm_account_mismatch` codes (HTTP 409).
+### v2.158
+**Added**
+
+- `POST /v1/otp/challenges` accepts an optional `channel` field (`sms`, `whatsapp`, `email` or `totp`). When omitted, the server resolves the channel from your OTP preference, the organization default, or SMS. The response returns the resolved `channel` plus the destination in masked `phone` form (email challenges mask the address; TOTP challenges return the literal `authenticator_app`).
+- Challenge creation can now answer `400 invalid_channel` for unknown values and `403 channel_locked_by_org` when the explicit channel is weaker than the org floor for the action (the floor only raises the channel, never lowers it). Picking `channel` explicitly also disables the automatic fallback to another channel.
+</Update>
+
 <Update label="October 7, 2026" description="v2.157 · 1 version">
 ### v2.157
 **Added**

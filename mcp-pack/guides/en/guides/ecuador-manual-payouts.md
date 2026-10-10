@@ -134,8 +134,15 @@ returns the original with `idempotency_hit: true`; different evidence returns
 
 ## Manual payins
 
-For an already announced `EC/USD/push/bank_transfer` payin, an authorized
-org operator with `org_operations`/`ops:write` confirms receipt:
+Confirming receipt of an already announced `EC/USD/push/bank_transfer`
+payin is a two-person operation (maker-checker). No money moves until the
+second approval. No client idempotency key is used on any step: the caller
+identifies the operation by the payin ID and the bank evidence, and honest
+replays return the original with `idempotency_hit: true`.
+
+**Step 1 — request (maker).** An authorized org operator with
+`org_operations`/`ops:write` and a human admin session records the bank
+evidence. The payin stays `pending`; nothing is credited yet:
 
 ```http
 POST /v1/payins/{payinID}/confirm-received
@@ -150,12 +157,38 @@ Content-Type: application/json
 }
 ```
 
-This confirmation does not use a client-supplied idempotency key. It confirms
-the existing payin and never creates a second one. After a timeout, read the
-payin first; if it remains pending, retry with the same `bank_reference` and
-`received_amount`. If it is already credited with the same evidence, the
-replay returns the original with `idempotency_hit: true`; different evidence
-returns `409 invalid_state`.
+The response is the confirmation request (`id`, `status`, `bank_reference`,
+`received_amount`, `account_id`, `maker`, `created_at`). Retrying the same
+maker request with identical evidence replays the original request with a
+hit; different evidence returns `409 invalid_state`. The request has no
+expiry: it stays open until a checker approves it or the maker (or a god
+admin) cancels it.
+
+**Step 2 — approve (checker).** A second, named god admin who is different
+from the maker approves the open request. The request carries no body:
+
+```http
+POST /v1/payins/{payinID}/confirm-approve
+Authorization: Bearer <GOD_ADMIN_KEY>
+Content-Type: application/json
+```
+
+Approval credits the payin immediately through the normal pricing, firewall
+and credit chain. The same admin cannot approve their own request
+(`409 second_approver_required`). If the payin details changed since the
+request (`confirm_account_mismatch`, `bank_ref_conflict`), or the reference
+belongs to a treasury settlement (`deposit_settled_treasury_trade`), the
+approval fails honestly and the payin stays `pending`; read both resources
+before retrying.
+
+**Cancel.** The maker or any god admin can cancel an open request with
+`POST /v1/payins/{payinID}/confirm-cancel` (also bodiless). A cancelled
+request never credits; confirming requires a new request.
+
+After any timeout, read the payin first. If it is credited with the same
+evidence, the replay returns the original result; if it is still pending,
+re-read the confirmation request and retry the same step. Never attempt a
+confirmation with different evidence to "push it through."
 
 ## Deposit instructions
 
@@ -184,8 +217,9 @@ returned `code` as `beneficiary.bank_code`.
 
 - The operator pays in the bank portal and records the bank reference.
 - Do not retry or resend an ambiguous bank action with a new key.
-- For `confirm-received`, read the payin first after a timeout; do not assume
-  that a new idempotency key can make the confirmation safe.
+- For manual payin confirmation, the request and the approval are two separate
+  steps by two different admins; after a timeout, read the payin and the
+  confirmation request before retrying the same step.
 - Examples above are synthetic; replace placeholders only with authorized
   operational data.
 
@@ -197,6 +231,9 @@ returned `code` as `beneficiary.bank_code`.
 | `completed` + `manual_confirmed` | The operator confirmed the bank payment. | Re-read the payout and retain the bank reference. |
 | `invalid_payload` | A required field, amount, account value, or confirmation field is invalid. | Correct the request; do not create a replacement for the same operation. |
 | `idempotency_conflict` | The same key was reused with different data or an incompatible existing state. | Read the original resource and use a new key only for a genuinely new operation. |
+| `second_approver_required` | The approver must be a different admin from the maker. | A second, named god admin approves the open request; the maker cannot approve it. |
+| `confirm_account_mismatch` | The payin account changed since the confirmation request. | Read the payin and the request; cancel and start a new request with fresh evidence. |
+| `confirm_request_conflict` | A different confirmation is already open for this payin. | Read the existing request and approve or cancel it before raising another. |
 | `treasury_check_unavailable` | The payin ownership or treasury conflict check could not complete. | Do not credit the payin; retry after the dependency recovers. |
 | `deposit_settled_treasury_trade` | The bank reference belongs to a treasury settlement. | Do not assign or credit it as a customer payin. |
 

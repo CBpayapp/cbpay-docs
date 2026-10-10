@@ -96,6 +96,25 @@ Response `201` — the code is already on its way to the account's phone:
 }
 ```
 
+You can pick the delivery channel per challenge — `sms`, `whatsapp`,
+`email` or `totp`:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "action": "payout", "channel": "whatsapp" }'
+```
+
+Omit `channel` and the server resolves it: your member settings first,
+then the org default, falling back to SMS. The response always tells you
+which channel
+fired and its masked destination (`phone` — a masked number, a masked
+email, or the literal `authenticator_app` for TOTP). The check runs
+against the effective floor — your account's policy first, then the org
+default: an explicit channel weaker than the floor fails with
+`403 channel_locked_by_org` instead of being silently upgraded.
+
 If the account has no phone: `409 phone_required` (set it with
 `PATCH /v1/me`). Hourly send limits apply — exceeding them returns
 `429 too_many_attempts`.
@@ -191,6 +210,9 @@ two-factor flow on its own and does not request a second code.
   automatically over that stronger factor (the channel comes back in the
   challenge response); you only get `403 phone_binding_cooldown` when no
   alternative factor exists. A phone set by your operator has no cooldown.
+  Pinning an explicit channel turns the fallback off: `channel: sms` in
+  cooldown fails with `403 phone_binding_cooldown` even with the
+  authenticator app enrolled.
 - The **two-step login** honors the same rule: with login 2FA over
   SMS/WhatsApp and the phone in cooldown, the login code is issued over the
   authenticator app or your login email instead (the effective `channel`
@@ -202,9 +224,11 @@ two-factor flow on its own and does not request a second code.
 
 | HTTP | `error` | What it means | What to do |
 |---|---|---|---|
+| 400 | `invalid_channel` | Unknown `channel` value | Use `sms`, `whatsapp`, `email` or `totp` |
 | 403 | `otp_required` | The action requires OTP and no `X-OTP-Token` was sent | Create and verify a challenge, retry with the header |
 | 403 | `otp_invalid` | Token invalid, expired or already used | Verify a new challenge |
 | 403 | `session_required` | You requested a challenge with an API key | Challenges are for user sessions only |
+| 403 | `channel_locked_by_org` | Your explicit channel is weaker than the effective minimum for this action (your account's policy first, then the org default) | Leave `channel` out or pick a stronger factor |
 | 403 | `phone_binding_cooldown` | Phone linked less than 24 h ago without verification and no alternative factor (authenticator app or verified email) | Enroll the authenticator app or verify your email; otherwise wait out the cooldown or ask your operator to set the number |
 | 401 | `invalid_code` | The code does not match | Check the SMS/WhatsApp and retry (5 attempts) |
 | 401 | `invalid_pending_token` | The intermediate login token expired | Log in again |
@@ -221,8 +245,13 @@ two-factor flow on its own and does not request a second code.
     OTP. Guard your keys accordingly — issuing a new key CAN require OTP
     (action `api_key_create`).
 #### Can I choose SMS or WhatsApp?
-    The channel is configured by your operator per action (per account or
-    for the whole organization). You see it in `GET /v1/otp/settings`.
+    Yes — pass `channel` (`sms`, `whatsapp`, `email` or `totp`) when you
+    create the challenge. Omit it and your operator's configured channel
+    applies per action (per account or for the whole organization — you
+    see it in `GET /v1/otp/settings`). The check runs against the
+    effective floor — your account's policy first, then the org default —
+    so a weaker explicit choice fails with `403 channel_locked_by_org`
+    instead of being silently upgraded.
 #### How long does a code last and how many attempts do I get?
     The code and challenge last 10 minutes. You get 5 verifications per
     challenge and an hourly send limit. The resulting `otp_token` is single

@@ -58,7 +58,7 @@ Detalle y flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/secur
 | 409 | `phone_verification_required` | Verifica tu teléfono (desafío OTP) antes de activar el 2FA de login por SMS/WhatsApp |
 | 401 | `invalid_code` | El código no coincide |
 | 401 | `invalid_pending_token` | El token intermedio del login expiró; vuelve a iniciar sesión |
-| 400 | `invalid_action` / `invalid_channel` | Acción o canal fuera de catálogo |
+| 400 | `invalid_action` / `invalid_channel` | Acción o canal fuera de catálogo (el `channel` del desafío debe ser `sms`, `whatsapp`, `email` o `totp`) |
 | 409 | `phone_required` | La cuenta no tiene teléfono (`PATCH /v1/me`) |
 | 409 | `otp_phone_missing` | El login exige OTP y la cuenta no tiene teléfono; contacta a tu operador |
 | 409 | `challenge_not_pending` | El desafío expiró o ya se usó; crea uno nuevo |
@@ -558,7 +558,7 @@ código es el contrato estable para la integración.
 
 | HTTP | `error` | Significado y solución |
 |---|---|---|
-| 403 | `channel_locked_by_org` | La política de la org solo permite TOTP y bloquea el registro de passkeys en esta cuenta. Pide a un org admin que cambie la política. |
+| 403 | `channel_locked_by_org` | La política de la org solo permite TOTP y bloquea el registro de passkeys en esta cuenta; también rechaza desafíos cuyo `channel` explícito es más débil que el piso de la org. Pide a un org admin que cambie la política. |
 | 409 | `passkey_exists` | El credential ID ya está registrado en esta cuenta. Inicia sesión con la passkey existente. |
 | 409 | `totp_already_enrolled` | El TOTP ya está activo en esta cuenta. Autentícate con el secret existente. |
 

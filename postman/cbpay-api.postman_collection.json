@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-07 22:13 UTC",
-    "_content_sha256": "d6b6f24940048590c7b1607cb442cef06a2016a11da9152c6ccb4f80ec0b6ca4"
+    "_generated_at": "2026-10-10 20:06 UTC",
+    "_content_sha256": "116f557df28d2f1b953076676617ced13b62ee55f30a51b5db9bf8a11bc02f5a"
   },
   "auth": {
     "type": "bearer",
@@ -12799,7 +12799,7 @@
           ]
         },
         {
-          "name": "Confirm an announced bank deposit",
+          "name": "Request confirmation of an announced bank deposit (maker)",
           "request": {
             "method": "POST",
             "header": [
@@ -12826,7 +12826,7 @@
                 }
               ]
             },
-            "description": "Confirms an announced Ecuador USD bank deposit after the operator verifies the bank record. It only accepts EC/USD/bank_transfer announced payins.",
+            "description": "Maker step of the two-person confirmation for an announced EC/USD push bank_transfer manual payin. It only accepts EC/USD/bank_transfer announced payins. The caller is the maker: an org admin with `ops:write` in a human session (API keys are rejected). The payin stays `pending` and nothing is credited; a named god approves or cancels the request with the sibling endpoints.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bank_reference\": \"ECM1234567890123\",\n  \"received_amount\": \"1250.00\"\n}",
@@ -12839,7 +12839,7 @@
           },
           "response": [
             {
-              "name": "200 Deposit confirmation accepted.",
+              "name": "200 Confirm request recorded; the payin stays pending until a ch",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -12861,7 +12861,7 @@
                   ]
                 }
               },
-              "status": "Deposit confirmation accepted.",
+              "status": "Confirm request recorded; the payin stays pending until a ch",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -12870,7 +12870,131 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"payin_id\": \"11111111-2222-4333-8444-555555555555\",\n  \"status\": \"credited\",\n  \"bank_reference\": \"ECM1234567890123\",\n  \"received_amount\": \"1250.00\"\n}"
+              "body": "{\n  \"payin_id\": \"11111111-2222-4333-8444-555555555555\",\n  \"status\": \"pending\",\n  \"confirm_request\": {\n    \"id\": \"22222222-3333-4444-9555-666666666666\",\n    \"status\": \"pending\",\n    \"bank_reference\": \"ECM1234567890123\",\n    \"received_amount\": \"1250.00\",\n    \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"maker\": \"admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c\",\n    \"created_at\": \"2026-10-10T14:00:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Approve a confirm request and credit the payin (checker)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payins/:payinID/confirm-approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payins",
+                ":payinID",
+                "confirm-approve"
+              ],
+              "variable": [
+                {
+                  "key": "payinID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Checker step of the two-person confirmation: a named god different from the maker approves the pending request and credits the payin. No request body. Replaying after the approve returns the credited payin with `idempotency_hit: true` when the evidence matches."
+          },
+          "response": [
+            {
+              "name": "200 Payin credited (or the honest replay of an already approved ",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payins/:payinID/confirm-approve",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payins",
+                    ":payinID",
+                    "confirm-approve"
+                  ],
+                  "variable": [
+                    {
+                      "key": "payinID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Payin credited (or the honest replay of an already approved ",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payin_id\": \"11111111-2222-4333-8444-555555555555\",\n  \"status\": \"credited\",\n  \"confirm_request\": {\n    \"id\": \"22222222-3333-4444-9555-666666666666\",\n    \"status\": \"approved\",\n    \"bank_reference\": \"ECM1234567890123\",\n    \"received_amount\": \"1250.00\",\n    \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"maker\": \"admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c\",\n    \"checker\": \"admin:6a7b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d\",\n    \"created_at\": \"2026-10-10T14:00:00Z\",\n    \"decided_at\": \"2026-10-10T14:05:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel a pending confirm request (maker or named god)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payins/:payinID/confirm-cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payins",
+                ":payinID",
+                "confirm-cancel"
+              ],
+              "variable": [
+                {
+                  "key": "payinID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Cancels the pending confirm request. The maker cancels with their own credential; a named platform god cancels any request. No request body. Nothing is credited. The request has no expiry — cancel it explicitly when the evidence is wrong."
+          },
+          "response": [
+            {
+              "name": "200 Confirm request cancelled; the payin stays pending.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payins/:payinID/confirm-cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payins",
+                    ":payinID",
+                    "confirm-cancel"
+                  ],
+                  "variable": [
+                    {
+                      "key": "payinID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Confirm request cancelled; the payin stays pending.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payin_id\": \"11111111-2222-4333-8444-555555555555\",\n  \"status\": \"pending\",\n  \"confirm_request\": {\n    \"id\": \"22222222-3333-4444-9555-666666666666\",\n    \"status\": \"cancelled\",\n    \"bank_reference\": \"ECM1234567890123\",\n    \"received_amount\": \"1250.00\",\n    \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"maker\": \"admin:5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c\",\n    \"created_at\": \"2026-10-10T14:00:00Z\"\n  }\n}"
             }
           ]
         },
@@ -24783,7 +24907,7 @@
             "description": "Sends a one-time code to the account's phone over the channel configured for the action. Requires a user session (JWT) — API keys receive `403 session_required`. Hourly send limits apply.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"action\": \"payout\"\n}",
+              "raw": "{\n  \"action\": \"payout\",\n  \"channel\": \"whatsapp\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -24793,7 +24917,7 @@
           },
           "response": [
             {
-              "name": "201 Challenge created; the code is on its way.",
+              "name": "201 Challenge created; the code is on its way. The resolved `cha",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -24808,7 +24932,7 @@
                   ]
                 }
               },
-              "status": "Challenge created; the code is on its way.",
+              "status": "Challenge created; the code is on its way. The resolved `cha",
               "code": 201,
               "_postman_previewlanguage": "json",
               "header": [
