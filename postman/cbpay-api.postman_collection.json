@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-10 20:06 UTC",
-    "_content_sha256": "116f557df28d2f1b953076676617ced13b62ee55f30a51b5db9bf8a11bc02f5a"
+    "_generated_at": "2026-10-12 15:20 UTC",
+    "_content_sha256": "dc04562181ecb1d2595868dd9e413c983cb9d4970139acfa84c0f28bcb70a969"
   },
   "auth": {
     "type": "bearer",
@@ -168,7 +168,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n  \"template_version\": \"v13.2\",\n  \"lang\": \"es\",\n  \"status\": \"completed\",\n  \"has_client_signature\": true,\n  \"verify_code\": \"K3f9a2b7c4d1e8f0a6b5c9d2e4f7a1b3d6e8f0a2b4c6d8e0f2a4b\",\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\",\n  \"events\": [\n    {\n      \"event\": \"completed\",\n      \"created_at\": \"2026-10-01T14:03:12Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"id\": \"7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f\",\n  \"account_id\": \"8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f\",\n  \"template_version\": \"v13.2\",\n  \"lang\": \"es\",\n  \"status\": \"completed\",\n  \"has_client_signature\": true,\n  \"available_langs\": [\n    \"es\",\n    \"en\"\n  ],\n  \"verify_code\": \"K3f9a2b7c4d1e8f0a6b5c9d2e4f7a1b3d6e8f0a2b4c6d8e0f2a4b\",\n  \"final_hash\": \"sha256-of-the-final-pdf\",\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"signed_at\": \"2026-10-01T14:03:12Z\",\n  \"events\": [\n    {\n      \"event\": \"completed\",\n      \"created_at\": \"2026-10-01T14:03:12Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -274,6 +274,14 @@
                 "envelopes",
                 ":envelopeID",
                 "pdf"
+              ],
+              "query": [
+                {
+                  "key": "lang",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional output language. Defaults to the envelope language; the other language is rendered from the frozen snapshot."
+                }
               ],
               "variable": [
                 {

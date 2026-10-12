@@ -333,4 +333,39 @@ contract issued by this platform`; las peticiones tienen rate-limit por IP
     anula, el mismo código responde `failed` en vez de `ok`.
   </Accordion>
 </AccordionGroup>
+## Descarga en ambos idiomas
 
+El detalle del sobre devuelve `available_langs`, empezando por el idioma de emisión — `["es"]` o `["es", "en"]` para un sobre emitido en español (espejado si se emitió en inglés). Este campo es la fuente de verdad de los botones del portal. El ingl?s exige aprobaci?n de counsel y plantilla vigente.
+
+```bash
+curl -o master-agreement.pdf "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/pdf?lang=en" -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+La respuesta PDF es binaria y usa `contrato-marco-<short>.pdf` en espa?ol o `master-agreement-<short>.pdf` en ingl?s. Pedir el otro idioma renderiza el mismo sobre desde su snapshot congelado; no se almacena ni hashea aparte. La portada identifica el PDF firmado, sus hashes, la prevalencia del espa?ol bajo ?11 y la URL del or?culo. La contrapartida no es un segundo documento firmado.
+
+```json
+{
+  "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+  "lang": "es",
+  "status": "completed",
+  "available_langs": ["es", "en"],
+  "doc_hash": "sha256-of-the-presigned-pdf",
+  "final_hash": "sha256-of-the-final-pdf"
+}
+```
+
+| HTTP | C?digo | Soluci?n |
+|---:|---|---|
+| 422 | `invalid_lang` | Usa `lang=es` o `lang=en`. |
+| 403 | `contract_counsel_required` | Aprueba counsel antes de pedir ingl?s. |
+| 422 | `contract_template_superseded` | Descarga solo el idioma de emisi?n y reemite. |
+| 502 | `storage_failed` | Reconcilia el sobre y reintenta; no crees otra ceremonia. |
+| 503 | `storage_unavailable` | Recupera el storage privado y reintenta. |
+
+Los emails de emisi?n y firma mencionan el otro idioma del portal solo cuando es servible; sin counsel se omite ingl?s.
+
+### FAQ
+<AccordionGroup>
+<Accordion title="?El PDF traducido vale como contrato firmado?">No. Es una contrapartida de lectura. El PDF del idioma de emisi?n sigue siendo el documento firmado y su hash es la referencia.</Accordion>
+<Accordion title="?Por qu? no veo ingl?s?">El ingl?s exige counsel y plantilla vigente. Revisa `available_langs`; el portal habilita los botones desde ese campo.</Accordion>
+</AccordionGroup>
