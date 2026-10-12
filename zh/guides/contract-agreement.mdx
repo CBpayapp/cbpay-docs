@@ -314,3 +314,26 @@ too_many_attempts`）。
   </Accordion>
 </AccordionGroup>
 
+## 双语下载 / Download in both languages
+
+`available_langs` 是门户按钮的权威来源；以签发语言开头——西语签发的信封为 `["es"]` 或 `["es", "en"]`（英语签发则镜像）。英文需要 counsel 批准和当前模板。
+
+```bash
+curl -o master-agreement.pdf "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/pdf?lang=en" -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+请求另一语言时，PDF 从冻结快照渲染，不会单独存储或计算哈希。封面说明签署 PDF、哈希、§11 的西班牙语优先规则和 oracle URL。它不是第二份签署文件。
+
+| HTTP | Code | 处理 |
+|---:|---|---|
+| 422 | `invalid_lang` | 使用 `lang=es` 或 `lang=en`。 |
+| 403 | `contract_counsel_required` | 请先批准 counsel。 |
+| 422 | `contract_template_superseded` | 只下载签发语言，然后重新签发。 |
+| 502 | `storage_failed` | 对账信封后重试，不要创建新流程。 |
+| 503 | `storage_unavailable` | 恢复私有存储后重试。 |
+
+### FAQ / 常见问题
+<AccordionGroup>
+<Accordion title="翻译 PDF 是否等同于已签署合同？">不是。签发语言 PDF 才是签署文件。</Accordion>
+<Accordion title="为什么看不到英文？">英文需要 counsel 和当前模板；请检查 `available_langs`。</Accordion>
+</AccordionGroup>

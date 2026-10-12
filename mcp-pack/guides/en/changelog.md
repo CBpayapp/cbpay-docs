@@ -5,6 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.160 ? 1 version - October 12, 2026
+### v2.160
+**Added**
+
+- Contract envelope PDF downloads accept `?lang=es|en`; details expose `available_langs`, counterparts render from the frozen snapshot without a separate hash, English requires counsel, and language-aware filenames and fail-closed storage errors are documented.
 ## v2.159 · 2 versions - October 10, 2026
 ### v2.159
 **Added**

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.159"
+  version: "2.160"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -153,6 +153,7 @@ paths:
                 lang: zh
                 status: completed
                 has_client_signature: true
+                available_langs: [es, en]
                 verify_code: K3f9a2b7c4d1e8f0a6b5c9d2e4f7a1b3d6e8f0a2b4c6d8e0f2a4b
                 final_hash: sha256-of-the-final-pdf
                 signer_name: Jordan Lee
@@ -245,6 +246,11 @@ paths:
         in: path
         required: true
         schema: { type: string, format: uuid }
+      - name: lang
+        in: query
+        required: false
+        description: ????????????????????????????
+        schema: { type: string, enum: [es, en] }
       responses:
         "200":
           description: PDF 二进制。
@@ -256,6 +262,33 @@ paths:
           content:
             application/json:
               example: { error: not_found, message: resource not found }
+        "403":
+          description: ?????????? counsel ???
+          content:
+            application/json:
+              example: { error: contract_counsel_required, message: the English text requires legal counsel approval before it can be downloaded }
+        "422":
+          description: Invalid language or superseded template.
+          content:
+            application/json:
+              examples:
+                invalid_lang:
+                  summary: PDF ???????? `es` ? `en`?
+                  value: { error: invalid_lang, message: lang must be es or en }
+                contract_template_superseded:
+                  summary: ???????????????????????
+                  value: { error: contract_template_superseded, message: the envelope was issued on template v13.3, current is v13.4; reissue the envelope for the counterpart language }
+        "502":
+          description: ???????????
+          content:
+            application/json:
+              example: { error: storage_failed, message: the document could not be read; retry }
+        "503":
+          description: ??????????
+          content:
+            application/json:
+              example: { error: storage_unavailable, message: private storage is not configured }
+
   /v1/payouts/{payoutID}/receipt:
     get:
       tags:

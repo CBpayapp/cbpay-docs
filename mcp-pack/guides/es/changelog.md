@@ -5,6 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.160 ? 1 version - 12 de octubre de 2026
+### v2.160
+**Agregado**
+
+- Las descargas PDF de sobres aceptan `?lang=es|en`; el detalle expone `available_langs`, las contrapartidas se renderizan desde el snapshot congelado sin hash aparte, el ingl?s exige counsel y se documentan filenames seg?n idioma y errores fail-closed de storage.
 ## v2.159 · 2 versiones - 10 de octubre de 2026
 ### v2.159
 **Agregado**

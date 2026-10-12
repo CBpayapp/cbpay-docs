@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.159"
+  version: "2.160"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -181,6 +181,7 @@ paths:
                 lang: es
                 status: completed
                 has_client_signature: true
+                available_langs: [es, en]
                 verify_code: K3f9a2b7c4d1e8f0a6b5c9d2e4f7a1b3d6e8f0a2b4c6d8e0f2a4b
                 final_hash: sha256-of-the-final-pdf
                 signer_name: Jordan Lee
@@ -276,6 +277,11 @@ paths:
         in: path
         required: true
         schema: { type: string, format: uuid }
+      - name: lang
+        in: query
+        required: false
+        description: Optional output language. Defaults to the envelope language; the other language is rendered from the frozen snapshot.
+        schema: { type: string, enum: [es, en] }
       responses:
         "200":
           description: PDF bytes.
@@ -287,6 +293,33 @@ paths:
           content:
             application/json:
               example: { error: not_found, message: resource not found }
+        "403":
+          description: English counterpart requires organization counsel approval.
+          content:
+            application/json:
+              example: { error: contract_counsel_required, message: the English text requires legal counsel approval before it can be downloaded }
+        "422":
+          description: Invalid language or superseded template.
+          content:
+            application/json:
+              examples:
+                invalid_lang:
+                  summary: Invalid PDF language. Use `es` or `en`.
+                  value: { error: invalid_lang, message: lang must be es or en }
+                contract_template_superseded:
+                  summary: The envelope uses an older template; reissue it before downloading the counterpart.
+                  value: { error: contract_template_superseded, message: the envelope was issued on template v13.3, current is v13.4; reissue the envelope for the counterpart language }
+        "502":
+          description: Private contract storage could not be read.
+          content:
+            application/json:
+              example: { error: storage_failed, message: the document could not be read; retry }
+        "503":
+          description: Private contract storage is not configured.
+          content:
+            application/json:
+              example: { error: storage_unavailable, message: private storage is not configured }
+
   /v1/payouts/{payoutID}/receipt:
     get:
       tags:

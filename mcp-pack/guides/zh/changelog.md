@@ -1,10 +1,15 @@
 ---
-title: "更新日志"
-description: "API 与文档变更历史"
+title: "Changelog"
+description: "API and documentation change history"
 slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.160 ? 1 version - October 12, 2026
+### 2.160
+**Added**
+
+- Contract PDF downloads support `?lang=es|en`, expose `available_langs`, render counterparts from the frozen snapshot without a separate hash, require counsel for English, and use language-aware filenames.
 ## v2.159 · 2 个版本 - 2026年10月10日
 ### v2.159
 **新增**

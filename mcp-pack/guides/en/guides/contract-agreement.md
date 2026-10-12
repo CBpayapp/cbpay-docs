@@ -310,7 +310,39 @@ too_many_attempts`).
 | `pending` | `pending_client` | Pending signature / Pendiente de firma / 待签署 | The envelope exists and awaits the client signature. |
 | `failed` | `voided` | Voided / Anulado / 已作废 | The envelope was voided with a reason; it is kept for audit. |
 
-## FAQ
+## Download in both languages
+
+The envelope detail returns `available_langs`, starting with the issued language — `["es"]` or `["es", "en"]` for a Spanish-issued envelope (mirrored for English-issued). This field is authoritative for portal buttons. English requires counsel approval and the current template.
+
+```bash
+curl -o master-agreement.pdf "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/pdf?lang=en" -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+The PDF response is binary and uses `contrato-marco-<short>.pdf` for Spanish or `master-agreement-<short>.pdf` for English. Requesting the other language renders the same envelope from its frozen snapshot; it is not stored or hashed separately. The cover identifies the signed PDF, its hashes, Spanish precedence under ?11 and the verification-oracle URL. The counterpart is not a second signed document.
+
+```json
+{
+  "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+  "lang": "es",
+  "status": "completed",
+  "available_langs": ["es", "en"],
+  "doc_hash": "sha256-of-the-presigned-pdf",
+  "final_hash": "sha256-of-the-final-pdf"
+}
+```
+
+| HTTP | Code | Solution |
+|---:|---|---|
+| 422 | `invalid_lang` | Use `lang=es` or `lang=en`. |
+| 403 | `contract_counsel_required` | Approve counsel before requesting English. |
+| 422 | `contract_template_superseded` | Download only the issued language, then reissue. |
+| 502 | `storage_failed` | Reconcile the envelope and retry; do not create a new ceremony. |
+| 503 | `storage_unavailable` | Restore private storage, then retry. |
+
+Issuance and signature emails mention the other portal language only when it is servable; English is omitted without counsel approval.
+
+### FAQ
+#### Does the translated PDF count as the signed agreement?No. It is a reading counterpart. The issued-language PDF remains the signed document and its hash is the verification reference.#### Why do I not see English?English requires counsel approval and the current template. Check `available_langs`; the portal enables buttons from that field.## FAQ
 
 #### Can a person account sign the agreement?
     No. The account must be an active company account with approved KYB, and
