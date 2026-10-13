@@ -1,7 +1,7 @@
 ---
-title: "Corredores de Paraguay, Colombia y Ecuador"
+title: "Corredores de Paraguay, Colombia, Ecuador y Brasil"
 icon: "globe"
-description: "Integra payouts bancarios y payins hosted o wallet en PY, CO y EC"
+description: "Integra payouts bancarios y payins hosted o wallet en PY, CO, EC y BR"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
@@ -19,6 +19,7 @@ en vivo es la fuente de verdad.
 | PY | PYG | `bank_transfer` | `bank_transfer`, `wallet` | Hasta 2 decimales |
 | CO | COP | `bank_transfer` | `bank_transfer`, `wallet` | Solo pesos enteros |
 | EC | USD | `bank_transfer` | `wallet` | Hasta 2 decimales |
+| BR | BRL | `pix`, `bank_transfer` | `pix` (redirect hosted) | Hasta 2 decimales |
 
 En payins hosted puedes enviar `payer_name`, `payer_document` y `payer_phone`
 cuando el método los exige. Para payouts, `flow_type` puede ser `B2C`, `B2B` o
@@ -42,6 +43,45 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 CO/COP/`wallet` es un collect push: no entrega URL. El pagador aprueba en su
 app y la confirmación llega por webhook, normalmente alrededor de 15 minutos.
 CO/COP/`bank_transfer` usa checkout hosted PSE. COP siempre debe ser entero.
+
+## Brasil
+
+Brasil expone dos métodos de payout y un payin PIX hosted. Usa
+`GET /v1/payouts/methods` y `GET /v1/payins/methods` como fuente de verdad.
+
+### Payout PIX y TED
+
+Para PIX, envía `method: "pix"` con una llave PIX: CPF, CNPJ, email,
+teléfono brasileño (`+55` más 10 dígitos fijo u 11 celular) o llave aleatoria EVP/UUID. CPF y
+CNPJ se validan con sus dígitos verificadores; no envíes banco ni cuenta.
+
+Para TED, usa `method: "bank_transfer"` con banco, agencia, tipo de cuenta,
+número de cuenta, nombre y CPF/CNPJ. El banco debe venir de
+`GET /v1/payouts/banks`; agencia y tipo de cuenta son obligatorios. El CPF/CNPJ
+se valida antes del despacho. Algunos bancos aceptan solo documentos que no
+sean CPF; sigue el catálogo y el error de validación del banco.
+
+Ambos métodos BRL aceptan hasta dos decimales. Ante un timeout ambiguo,
+consulta el payout con la misma clave y no crees un reemplazo.
+
+### Payin PIX hosted
+
+Crea `BR/BRL/pix` con mínimo `1` BRL, enviando `payer_name` y
+`payer_document`. La respuesta trae `payment_url` y queda `pending`; redirige
+al pagador a esa URL.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: br-pix-20261013-001" \
+  -d '{"country":"BR","currency":"BRL","method":"pix","amount":"25.00",
+       "payer_name":"Ana Torres","payer_document":"52998224725",
+       "idempotency_key":"br-pix-20261013-001"}'
+```
+
+El monto usa BRL con hasta dos decimales y el mínimo es `"1"`. Repite con la
+misma clave para recuperar el mismo cobro hosted.
 
 ## Payouts y seguridad operacional
 

@@ -81,7 +81,7 @@ Corredores y modalidades de cobro:
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
 | Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`) |
 | Paraguay | PYG | Transferencia anunciada |
-| Brasil | BRL | QR PIX dinámico |
+| Brasil | BRL | QR PIX dinámico (`qr`), redirect PIX hosted (`pix`) |
 | Argentina | ARS | Cuenta CVU dedicada |
 | Venezuela | VES | Cobro activo (`c2p`) |
 | Ecuador | USD | Transferencia anunciada con despacho manual |
@@ -535,7 +535,7 @@ respaldo — ver
 </Tab>
 <Tab title="Brasil">
 
-**QR PIX dinámico**: el mismo endpoint genera un QR PIX con el monto
+**QR PIX dinámico**: el método `qr` genera un QR PIX con el monto
 embebido.
 
 ```bash
@@ -552,16 +552,42 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-En la respuesta, `charge.qr_payload` es el código **"copia e cola"** de
-PIX, para que el pagador pueda pegarlo en su app bancaria si no escanea la
-imagen (`charge.qr_image` base64 o `charge.qr_image_url`, la URL pública de
-CDN). El QR expira según `expires_in` (default 1
-hora); el pago se acredita automáticamente al confirmarse en el rail
-(conciliación continua — consulta puntual con `GET /v1/payins/{charge_id}`).
+La respuesta trae `charge.qr_payload`, el código PIX **"copia e cola"**,
+que el pagador puede pegar en su app bancaria en vez de escanear la imagen
+(`charge.qr_image` base64 o `charge.qr_image_url`, URL pública del CDN).
+El QR expira según `expires_in` (default 1 hora) y el pago se acredita tras
+la confirmación y conciliación.
 
 <Note>
-En Brasil el cobro es únicamente por QR PIX dinámico (un QR = un pago, con
-monto exacto embebido). La transferencia anunciada llegará más adelante.
+El método `qr` genera un QR dinámico de un pago con el monto exacto embebido.
+</Note>
+
+**Redirect PIX hosted**: crea un payin `pix` y redirige al pagador a
+`payment_url`. El nombre y documento del pagador son obligatorios y el monto
+mínimo es 1 BRL.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "pix",
+    "amount": "120.00",
+    "payer_name": "Ana Torres",
+    "payer_document": "52998224725",
+    "idempotency_key": "br-pix-20261013-001"
+  }'
+```
+
+La respuesta trae `payment_url` y parte en `pending`. Redirige al pagador a
+la página hosted; la cuenta se acredita tras la confirmación firmada. Usa la
+misma clave para recuperar el cobro original.
+
+<Note>
+Brasil admite ambos métodos: `qr` (QR PIX dinámico) y `pix` (redirect hosted).
+El monto de `pix` usa BRL con hasta dos decimales y el mínimo es 1 BRL.
 </Note>
 
 </Tab>
@@ -1236,7 +1262,7 @@ o la clave de idempotencia.
 
 | HTTP | `error` | Qué hacer |
 |---|---|---|
-| 400 | `invalid_request` | Revisa `method` (qr, bank_transfer, fintoc, card; collect va en su endpoint) |
+| 400 | `invalid_request` | Revisa `method` (qr, bank_transfer, fintoc, pix, card; collect va en su endpoint) |
 | 400 | `idempotency_key_required` | El collect exige clave de idempotencia (débito real al pagador) |
 | 403 | `service_disabled` | Payins no está habilitado para tu cuenta — ver [servicios](/es/concepts/services) |
 | 429 | `too_many_open_card_sessions` | La cuenta tiene 10,000 sesiones de tarjeta abiertas y no hay una sesión `pending` sin intentos que se pueda desalojar — completa o deja vencer una sesión existente antes de crear otra |

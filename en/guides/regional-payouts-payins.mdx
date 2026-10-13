@@ -1,7 +1,7 @@
 ---
-title: "Paraguay, Colombia and Ecuador corridors"
+title: "Paraguay, Colombia, Ecuador and Brazil corridors"
 icon: "globe"
-description: "Integrate bank payouts and hosted or wallet payins in PY, CO and EC"
+description: "Integrate bank payouts and hosted or wallet payins in PY, CO, EC and BR"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
@@ -20,6 +20,7 @@ catalog is authoritative.
 | PY | PYG | `bank_transfer` | `bank_transfer`, `wallet` | Up to 2 decimals |
 | CO | COP | `bank_transfer` | `bank_transfer`, `wallet` | Whole pesos only |
 | EC | USD | `bank_transfer` | `wallet` | Up to 2 decimals |
+| BR | BRL | `pix`, `bank_transfer` | `pix` (hosted redirect) | Up to 2 decimals |
 
 Payouts use `flow_type` `B2C`, `B2B` or `P2P` through the server-controlled
 rail configuration. Payin checkout accepts `payer_name`, `payer_document` and
@@ -96,6 +97,60 @@ checkout.
 
 CO/COP/`bank_transfer` uses hosted PSE checkout. COP remains integer-only and
 the payer identity fields are required.
+
+## Brazil
+
+Brazil exposes two payout methods and one hosted payin method. Use
+`GET /v1/payouts/methods` and `GET /v1/payins/methods` as the availability
+source of truth.
+
+### PIX payout
+
+Send `method: "pix"` with a PIX key. The key can be a CPF, CNPJ, email,
+Brazilian phone number (`+55` plus 10 digits landline or 11 mobile), or random EVP/UUID key. CPF
+and CNPJ values are checked with their Brazilian check digits. No bank or
+account fields are used.
+
+### TED payout
+
+Send `method: "bank_transfer"` with the beneficiary bank, branch, account
+type, account number, name and CPF/CNPJ. The bank code must come from
+`GET /v1/payouts/banks`; the branch and account type are required. Account
+numbers accept digits with optional dots, dashes or spaces. CPF/CNPJ check
+digits are validated before dispatch. Some destination banks accept only
+non-CPF documents; follow the bank catalog and the validation error if the
+selected bank imposes that rule.
+
+Both BRL methods accept at most two decimal places. Always send an
+idempotency key and never create a replacement after an ambiguous timeout.
+
+### Hosted PIX payin
+
+Create `BR/BRL/pix` with an amount of at least `1` BRL and include both
+`payer_name` and `payer_document`. The response is initially `pending` and
+contains a `payment_url`; redirect the payer to that URL. The hosted page
+collects the payer identity required for the payment, and the account is
+credited after the signed payin event and reconciliation.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: br-pix-20261013-001" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "pix",
+    "amount": "25.00",
+    "payer_name": "Ana Torres",
+    "payer_document": "52998224725",
+    "idempotency_key": "br-pix-20261013-001"
+  }'
+```
+
+The amount uses two-decimal BRL notation and the minimum is `"1"` (or any
+larger value with at most two decimals). A retry uses the same idempotency
+key and returns the original hosted charge.
 
 ## Lifecycle and webhooks
 
