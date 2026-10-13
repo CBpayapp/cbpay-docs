@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.160"
+  version: "2.161"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -1822,59 +1822,29 @@ paths:
   /v1/auth/register:
     post:
       tags:
-      - 身份认证
+      - ......
       security: []
       operationId: register
-      summary: 注册账户
-      description: '创建个人或企业账户及其所有者登录成员,并返回会话令牌。两种类型共用一个端点:`type` 只是数据。
-
-        '
+      summary: ..................
+      description: ...................................................................................................................................................................................................
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-              - org
-              - type
-              - email
-              - password
-              - display_name
+              required: [org, type, email, password, display_name]
               properties:
-                org:
-                  type: string
-                  description: CBPay 组织 slug(`cbpay`)。
-                type:
-                  type: string
-                  enum:
-                  - person
-                  - company
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  minLength: 8
-                display_name:
-                  type: string
-                tax_id:
-                  type: string
-                phone:
-                  type: string
-                country:
-                  type: string
-                  description: ISO 3166-1 alpha-2 国家代码。
-                locale:
-                  type: string
-                  enum:
-                  - en
-                  - es
-                  - zh
-                  description: 注册时的首选 locale。省略时依次跟随 Accept-Language、组织默认值，最后为英语。
-                profile:
-                  type: object
-                  description: 自由格式的档案数据。
+                org: {type: string}
+                type: {type: string, enum: [person, company]}
+                email: {type: string, format: email}
+                password: {type: string, minLength: 8}
+                display_name: {type: string}
+                tax_id: {type: string}
+                phone: {type: string}
+                country: {type: string}
+                locale: {type: string, enum: [en, es, zh]}
+                profile: {type: object}
             example:
               org: cbpay
               type: person
@@ -1882,69 +1852,48 @@ paths:
               password: a-secure-password
               display_name: Ana Perez
               country: CL
-              locale: en
       responses:
         '201':
-          description: 账户已创建。
+          description: .......................................
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  account:
-                    $ref: '#/components/schemas/Account'
-                  access_token:
-                    type: string
-                    description: 会话 JWT,有效期 24 小时。
-                  expires_at:
-                    type: string
-                    format: date-time
-                  refresh_token:
-                    type: string
-                    description: 用于 `POST /v1/auth/refresh` 的一次性轮换刷新令牌。
-                  refresh_expires_at:
-                    type: string
-                    format: date-time
               example:
-                account: &id001
-                  id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                  org_id: 1c9e7a2b-5f6d-4e3a-8c1b-2a9d8e7f6a5b
-                  type: person
-                  status: active
-                  kyc_status: approved
-                  email: ana@example.com
-                  display_name: Ana Perez
-                  tax_id: 12345678-9
-                  phone: '+56912345678'
-                  country: CL
-                  locale: en
-                  profile: &id002 {}
-                  created_at: '2026-07-07T12:00:00Z'
-                  updated_at: '2026-07-07T12:00:00Z'
-                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…
-                expires_at: '2026-07-08T12:00:00Z'
-                refresh_token: rt_6a1e6c22-93a1-4f0e-a7d1-1f2e3c4b5a69.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                refresh_expires_at: '2026-08-06T12:00:00Z'
+                status: pending_verification
+                note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: invalid_type...invalid_email...invalid_display_name ... weak_password...
         '403':
-          description: 服务已暂停(`org_suspended`);请联系 CBPay 团队。
+          description: org_suspended...
+        '502':
+          description: otp_send_failed...
+  /v1/auth/register/confirm:
+    post:
+      tags: [......]
+      security: []
+      operationId: confirmRegistration
+      summary: .................................
+      description: ....................................................................................................................................
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [org, email, code]
+              properties:
+                org: {type: string}
+                email: {type: string, format: email}
+                code: {type: string}
+            example: {org: cbpay, email: ana@example.com, code: '123456'}
+      responses:
+        '201':
+          description: .................................
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: org_suspended
-                message: organization is not active
-        '409':
-          description: 已存在使用该邮箱的账户(`duplicate`)。
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: duplicate
-                message: resource already exists
+              example: {access_token: eyJ..., expires_at: '2026-10-13T12:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-12T12:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '400': {description: ........................... invalid_code...}
+        '401': {description: ................................................ invalid_code...}
+        '502': {description: otp_check_failed...}
   /v1/auth/environment-handoff:
     post:
       tags:
@@ -2563,7 +2512,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Account'
-              example: *id001
+              example: {}
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -2616,7 +2565,7 @@ paths:
                 phone: '+56987654321'
                 country: CL
                 locale: en
-                profile: *id002
+                profile: {}
                 created_at: '2026-07-07T12:00:00Z'
                 updated_at: '2026-07-07T12:00:00Z'
         '400':
@@ -4860,6 +4809,7 @@ paths:
                   - fintoc
                   - card
                   - checkout
+                  - wallet
                   default: qr
                   description: 收款模式。`qr` 通过处理方创建主动 QR 收款;`bank_transfer` 预告一笔入账存款并返回需附在转账附言中的参考号;`fintoc`(仅智利)返回托管
                     `payment_url`,付款人可从任意智利银行或钱包转账,存款自动检测;`card` 返回托管 3-D Secure 银行卡收银台的 `payment_url`
@@ -4967,6 +4917,10 @@ paths:
                     仅预告转账 — 付款人的税号或身份证件号（至少 5 个字符，其中至少一位为数字）。
                     可选：省略时使用账户持有人已验证的税号，因此即使付款人忘记填写参考号，
                     本人存款也能被识别。第三方付款时请填写。
+                payer_phone:
+                  type: string
+                  maxLength: 40
+                  description: Hosted 或 collect 付款人电话；部分 wallet 方法要求此字段。
                 payer_account:
                   type: string
                   maxLength: 40

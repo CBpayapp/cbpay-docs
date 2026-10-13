@@ -14,11 +14,41 @@ Authorization: Bearer <token>
 
 也可使用 `X-API-Key: <token>` 作为替代请求头。
 
+## 注册与邮箱验证
+
+注册采用先验证模式：绝不直接创建会话。公共端点对新邮箱和重复邮箱均返回 `201 pending_verification`，因此调用方无法利用它枚举账户。邮箱所有者会收到验证码；请使用 `POST /v1/auth/register/confirm` 完成流程。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","type":"person","email":"ana@example.com","password":"a-secure-password","display_name":"Ana","country":"CL"}'
+```
+
+```json
+{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
+```
+
+确认验证码以获取首个会话：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@example.com","code":"123456"}'
+```
+
+格式错误的验证码返回 `400 invalid_code`；无效或过期的验证码统一返回 `401 invalid_code`。如果无法查询验证服务，API 返回 `502 otp_check_failed`。确认成功后返回与登录相同的会话结构（`access_token`、`expires_at`、`refresh_token`、`refresh_expires_at` 和 `account`）。
+
+## 身份验证滥用限制
+
+登录失败按归一化账户（组织/邮箱）计数：15 分钟内失败 8 次后，窗口期内的后续尝试返回相同的 `401 invalid_credentials`，且不再执行 bcrypt。待验证的注册成员也会收到该统一响应，无法使用注册密码登录。
+
+密码找回特意防止枚举。`POST /v1/auth/password/forgot` 即使账户发送配额用尽也返回相同的 `200` 响应体；每个账户每小时最多发送 5 次真实验证码。`POST /v1/auth/password/reset` 允许每个账户每 15 分钟尝试 8 次验证码。通过邮箱成功重置会验证邮箱并清除 `register_pending`。
+
 ## 凭证类型
 
 #### JWT 会话（有登录的用户）
 
-通过 `POST /v1/auth/register` 或 `POST /v1/auth/login` 获取，有效期
+通过 `POST /v1/auth/login` 获取（注册需先确认邮箱，见下文），有效期
 **24 小时**。适用于用户需要登录的应用。除 `access_token` 外，您还会收到
 一个**刷新令牌（refresh token）**，无需再次输入密码即可续期会话 ——
 见[会话续期](#session-renewal-refresh-tokens)。

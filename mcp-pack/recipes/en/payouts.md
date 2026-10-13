@@ -71,6 +71,7 @@ Available corridors and methods:
 | Ecuador | USD | `bank_transfer`, `deuna`, `cash_pickup`, `cnb` |
 | Paraguay | PYG | `bank_transfer` |
 | Argentina | ARS / USD | `bank_transfer` (CBU or CVU) |
+| Colombia | COP | `bank_transfer` (integer amounts, no decimals) |
 | United States | USD | `ach`, `wire`, `swift` |
 
 Availability may vary; the catalog (`GET /v1/payouts/methods`) is always
