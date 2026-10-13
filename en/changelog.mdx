@@ -4,6 +4,14 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="October 13, 2026" description="v2.161 · 1 version">
+### v2.161
+**Changed**
+- Registration now returns `pending_verification` without a session; confirm the email with `POST /v1/auth/register/confirm` to receive the first session. Duplicate registrations use the same response.
+- Added account-scoped login, password-recovery and reset-attempt limits.
+
+</Update>
+
 <Update label="October 12, 2026" description="v2.160 ? 1 version">
 ### v2.160
 **Added**

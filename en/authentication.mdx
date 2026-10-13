@@ -14,12 +14,56 @@ Authorization: Bearer <token>
 
 `X-API-Key: <token>` is accepted as an alternative header.
 
+## Registration and email verification
+
+Registration is verify-first: it never creates a session. The public endpoint returns
+`201 pending_verification` for both a new email and a duplicate email, so callers
+cannot use it to enumerate accounts. The email owner receives a verification code;
+complete the flow with `POST /v1/auth/register/confirm`.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","type":"person","email":"ana@example.com","password":"a-secure-password","display_name":"Ana Perez","country":"CL"}'
+```
+
+```json
+{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
+```
+
+Confirm the code to receive the first session:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@example.com","code":"123456"}'
+```
+
+A code with the wrong shape returns `400 invalid_code`; an invalid or expired code
+returns `401 invalid_code` uniformly. If the verification service cannot be checked,
+the API returns `502 otp_check_failed`. A successful confirmation returns the same
+session shape as login (`access_token`, `expires_at`, `refresh_token`,
+`refresh_expires_at`, and `account`).
+
+## Authentication abuse limits
+
+Login failures are counted per normalized organization/email account: after 8 failures
+within 15 minutes, further attempts return the same `401 invalid_credentials` without
+running bcrypt until the window expires. Pending-registration members also receive
+that uniform response and cannot log in with the signup password.
+
+Password recovery is deliberately anti-enumeration. `POST /v1/auth/password/forgot`
+returns the same `200` body even when its account send budget is exhausted; at most 5
+real code sends per account are allowed per hour. `POST /v1/auth/password/reset`
+allows at most 8 code attempts per account in 15 minutes. A successful email reset
+verifies the email and clears `register_pending`.
+
 ## Credential types
 
 <Tabs>
 <Tab title="JWT session (users with login)">
 
-Obtained from `POST /v1/auth/register` or `POST /v1/auth/login`, valid for
+Obtained from `POST /v1/auth/login` (registration requires email confirmation first, see below), valid for
 **24 hours**. Meant for apps where users sign in. Along with the
 `access_token` you receive a **refresh token** to renew the session without
 asking for the password again — see
