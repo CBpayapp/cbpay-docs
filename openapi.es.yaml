@@ -5113,6 +5113,7 @@ paths:
                   - fintoc
                   - card
                   - checkout
+                  - wallet
                   default: qr
                   description: Modo de cobro. `qr` crea un cobro QR activo a través del procesador; `bank_transfer`
                     anuncia un depósito entrante y devuelve la referencia a incluir en la descripción
@@ -5240,6 +5241,10 @@ paths:
                     (al menos 5 caracteres, uno de ellos un dígito). Opcional: si lo omites se usa
                     el documento verificado del titular, así un depósito propio se reconoce aunque
                     el pagador olvide la referencia. Envíalo cuando paga un tercero.
+                payer_phone:
+                  type: string
+                  maxLength: 40
+                  description: Teléfono del pagador hosted o collect; algunos métodos wallet lo exigen.
                 payer_account:
                   type: string
                   maxLength: 40

@@ -5091,7 +5091,10 @@ paths:
         of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from
         the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset
         unless paid in the same asset. The first method that completes the payment wins. Charging is
-        free; the payin fee applies when the deposit is credited.'
+        free; the payin fee applies when the deposit is credited. The live catalog
+        may also expose PY/PYG, CO/COP and EC/USD regional corridors. COP is
+        integer-only; PYG and USD accept at most two decimals. `wallet` may be
+        hosted or collect-only depending on the corridor.'
       parameters:
       - name: Idempotency-Key
         in: header
@@ -5147,6 +5150,7 @@ paths:
                   - fintoc
                   - card
                   - checkout
+                  - wallet
                   default: qr
                   description: Collection mode. `qr` creates an active QR charge through the processor;
                     `bank_transfer` announces an incoming deposit and returns the reference to include
@@ -5156,7 +5160,8 @@ paths:
                     (Bolivia in BOB, or international cards in USD when `country` is `US`);
                     `checkout` returns a public `checkout_url` where the payer picks the
                     payment method (QR, card, bank transfer or crypto). Use /v1/payins/collect for pull
-                    collections.
+                    collections. `wallet` is hosted or collect-only depending on
+                    the corridor; collect-only flows do not return a payment URL.
                 idempotency_key:
                   type: string
                   maxLength: 256
@@ -5272,6 +5277,10 @@ paths:
                     characters, one of them a digit). Optional: when you omit it the account
                     holder's verified tax id is used, so a self-deposit is recognised even if the
                     payer forgets the reference. Send it when a third party pays.
+                payer_phone:
+                  type: string
+                  maxLength: 40
+                  description: Hosted or collect payer phone; required by some wallet methods.
                 payer_account:
                   type: string
                   maxLength: 40

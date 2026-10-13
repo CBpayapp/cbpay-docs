@@ -4860,6 +4860,7 @@ paths:
                   - fintoc
                   - card
                   - checkout
+                  - wallet
                   default: qr
                   description: 收款模式。`qr` 通过处理方创建主动 QR 收款;`bank_transfer` 预告一笔入账存款并返回需附在转账附言中的参考号;`fintoc`(仅智利)返回托管
                     `payment_url`,付款人可从任意智利银行或钱包转账,存款自动检测;`card` 返回托管 3-D Secure 银行卡收银台的 `payment_url`
@@ -4967,6 +4968,10 @@ paths:
                     仅预告转账 — 付款人的税号或身份证件号（至少 5 个字符，其中至少一位为数字）。
                     可选：省略时使用账户持有人已验证的税号，因此即使付款人忘记填写参考号，
                     本人存款也能被识别。第三方付款时请填写。
+                payer_phone:
+                  type: string
+                  maxLength: 40
+                  description: Hosted 或 collect 付款人电话；部分 wallet 方法要求此字段。
                 payer_account:
                   type: string
                   maxLength: 40
