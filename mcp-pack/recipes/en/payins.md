@@ -75,7 +75,7 @@ Collection corridors and modes:
 | Mexico | MXN | Dedicated CLABE account, announced bank transfer |
 | Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`) |
 | Paraguay | PYG | Announced bank transfer |
-| Brazil | BRL | Dynamic PIX QR |
+| Brazil | BRL | Dynamic PIX QR (`qr`), hosted PIX redirect (`pix`) |
 | Argentina | ARS | Dedicated CVU account |
 | Venezuela | VES | Active collection (`c2p`) |
 | United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT) |
@@ -524,7 +524,7 @@ putting it in the concept ensures the automatic match. Send
 [matching an announced transfer](#matching-an-announced-transfer).
 #### Brazil
 
-**Dynamic PIX QR**: the same endpoint generates a PIX QR with the amount
+**Dynamic PIX QR**: the `qr` method generates a PIX QR with the amount
 embedded.
 
 ```bash
@@ -541,17 +541,42 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-In the response, `charge.qr_payload` is the PIX **"copia e cola"** code,
-so the payer can paste it into their banking app instead of scanning the
+The response contains `charge.qr_payload`, the PIX **"copia e cola"** code,
+which the payer can paste into their banking app instead of scanning the
 image (`charge.qr_image` base64 or `charge.qr_image_url`, the public CDN
-URL). The QR expires per `expires_in` (default 1
-hour); the payment is credited automatically once confirmed on the rail
-(continuous reconciliation — check on demand with
-`GET /v1/payins/{charge_id}`).
+URL). The QR expires according to `expires_in` (default 1 hour); the payment
+is credited automatically after confirmation and reconciliation.
 
 > **Note**
-In Brazil collections work exclusively through dynamic PIX QR (one QR = one
-payment, exact amount embedded). Announced bank transfers will come later.
+The `qr` method is one payment per dynamic QR with the exact amount embedded.
+**Hosted PIX redirect**: create a `pix` payin and redirect the payer to the
+returned `payment_url`. The payer name and document are required, and the
+minimum amount is 1 BRL.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: br-pix-20261013-001" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "pix",
+    "amount": "120.00",
+    "payer_name": "Ana Torres",
+    "payer_document": "52998224725",
+    "idempotency_key": "br-pix-20261013-001"
+  }'
+```
+
+The response contains `payment_url` and starts as `pending`. Redirect the
+payer to the hosted page; the account is credited after signed confirmation.
+Use the same idempotency key to recover the original charge.
+
+> **Note**
+Brazil supports both `qr` (dynamic PIX QR) and `pix` (hosted redirect).
+The hosted `pix` amount is BRL with up to two decimal places and the minimum
+is 1 BRL.
 #### Argentina
 
 **Dedicated CVU account**: create a fixed CVU bound to your account.
@@ -1173,7 +1198,7 @@ case-insensitive partial match on the payin ID, reference or idempotency key.
 
 | HTTP | `error` | What to do |
 |---|---|---|
-| 400 | `invalid_request` | Check `method` (qr, bank_transfer, fintoc, card; collect has its own endpoint) |
+| 400 | `invalid_request` | Check `method` (qr, bank_transfer, fintoc, pix, card; collect has its own endpoint) |
 | 400 | `idempotency_key_required` | Collect requires an idempotency key (real debit against the payer) |
 | 403 | `service_disabled` | Payins is not enabled for your account — see [services](https://docs.cbpayapp.com/en/concepts/services) |
 | 429 | `too_many_open_card_sessions` | The account has 10,000 open card sessions and no unused, zero-attempt pending session can be evicted — complete or let an existing session expire before creating another |

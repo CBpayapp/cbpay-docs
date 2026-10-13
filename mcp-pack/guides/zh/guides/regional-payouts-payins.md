@@ -1,6 +1,6 @@
 ---
-title: "巴拉圭、哥伦比亚和厄瓜多尔通道"
-description: "在 PY、CO 和 EC 集成银行 payout 与 hosted 或 wallet payin"
+title: "巴拉圭、哥伦比亚、厄瓜多尔和巴西通道"
+description: "在 PY、CO、EC 和 BR 集成银行 payout 与 hosted 或 wallet payin"
 slug: zh/guides/regional-payouts-payins
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/regional-payouts-payins
@@ -17,6 +17,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/regional-payouts-payins
 | PY | PYG | `bank_transfer` | `bank_transfer`、`wallet` | 最多 2 位小数 |
 | CO | COP | `bank_transfer` | `bank_transfer`、`wallet` | 只能是整数 |
 | EC | USD | `bank_transfer` | `wallet` | 最多 2 位小数 |
+| BR | BRL | `pix`、`bank_transfer` | `pix`（hosted redirect） | 最多 2 位小数 |
 
 Hosted payin 在需要时接受 `payer_name`、`payer_document` 和
 `payer_phone`。Payout 的 `flow_type` 是 `B2C`、`B2B` 或 `P2P`，由服务端
@@ -40,6 +41,44 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 CO/COP/`wallet` 是 collect push，不返回 URL。付款人在钱包应用中批准，
 结果通过 webhook 返回，通常约 15 分钟。CO/COP/`bank_transfer` 使用
 hosted PSE checkout。COP 金额必须为整数。
+
+## 巴西
+
+巴西提供两个 payout 方法和一个 hosted PIX payin。请以
+`GET /v1/payouts/methods` 与 `GET /v1/payins/methods` 的实时结果为准。
+
+### PIX 与 TED payout
+
+PIX 使用 `method: "pix"` 和 PIX key：CPF、CNPJ、邮箱、巴西手机号
+（`+55` 加 10 位固话或 11 位手机号）或随机 EVP/UUID key。CPF 与 CNPJ 会校验巴西
+校验位；此方法不需要银行或账户字段。
+
+TED 使用 `method: "bank_transfer"`，并提供银行、分行、账户类型、账户
+号码、姓名和 CPF/CNPJ。银行代码必须来自 `GET /v1/payouts/banks`；
+分行和账户类型必填。CPF/CNPJ 会在发送前校验；部分目的银行只接受
+非 CPF 文档，请遵循目录和返回的校验错误。
+
+两种 BRL 方法最多接受两位小数。遇到不明确的 timeout 时，使用相同的
+幂等 key 查询原 payout，不要创建替代操作。
+
+### Hosted PIX payin
+
+创建 `BR/BRL/pix` 时金额至少为 `1` BRL，并发送 `payer_name` 与
+`payer_document`。响应包含 `payment_url`，初始状态为 `pending`；将
+付款人重定向到该 URL。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: br-pix-20261013-001" \
+  -d '{"country":"BR","currency":"BRL","method":"pix","amount":"25.00",
+       "payer_name":"Ana Torres","payer_document":"52998224725",
+       "idempotency_key":"br-pix-20261013-001"}'
+```
+
+BRL 使用最多两位小数，最小金额为 `"1"`。重试时使用相同 key 以获取
+原来的 hosted charge。
 
 ## Payout 与安全
 

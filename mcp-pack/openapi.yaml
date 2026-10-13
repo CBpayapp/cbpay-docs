@@ -1397,7 +1397,9 @@ paths:
         asset), and the CBPay direct payment dues per enabled balance. Each country lists its
         corridors in `options[]` — one row per method+currency (a country may offer the same
         method in several currencies, e.g. QR in BOB and USD) with `collect: true` on pull
-        methods that ask for the payer's data on the page (see `POST /pay/{token}/collect`).
+        methods that ask for the payer's data on the page (see `POST /pay/{token}/collect`),
+        and `payer_required: true` on hosted redirect methods whose materialization needs the
+        payer name and document in the POST body.
         With `?country=XX` it also returns the quoted local amount per option for that country.
         Materializing freezes the definitive quote. No credentials; rate limited per IP.
       parameters:
@@ -1545,7 +1547,9 @@ paths:
         blocks the others while nobody has paid. No credentials; rate limited per IP.
         Pull collection (`collect: true`) is available when the selected
         corridor exposes it; the final collect call screens the payer before
-        charging and may return `202 in_review`.
+        charging and may return `202 in_review`. Hosted redirect methods flagged with
+        `payer_required: true` in the quote need a JSON body with `payer_name` and
+        `payer_document`; other methods ignore the body.
       parameters:
       - name: token
         in: path
@@ -1559,7 +1563,7 @@ paths:
         schema:
           type: string
         description: Method to materialize — a fiat method from the multi-country catalog (`qr`,
-          `card`, `fintoc`, `bank_transfer`; requires `?country=XX`)
+          `card`, `fintoc`, `bank_transfer`, `wallet`, `pix`; requires `?country=XX`)
           or a crypto option (`crypto:tron:usdt`, `crypto:eth:usdt`, `crypto:eth:usdc`,
           `crypto:btc:btc`; no country).
       - name: country
@@ -5031,8 +5035,10 @@ paths:
         the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset
         unless paid in the same asset. The first method that completes the payment wins. Charging is
         free; the payin fee applies when the deposit is credited. The live catalog
-        may also expose PY/PYG, CO/COP and EC/USD regional corridors. COP is
-        integer-only; PYG and USD accept at most two decimals. `wallet` may be
+        may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is
+        integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix
+        is a hosted redirect and requires payer name and document; its minimum is
+        1 BRL. `wallet` may be
         hosted or collect-only depending on the corridor.'
       parameters:
       - name: Idempotency-Key
@@ -5090,12 +5096,14 @@ paths:
                   - card
                   - checkout
                   - wallet
+                  - pix
                   default: qr
                   description: Collection mode. `qr` creates an active QR charge through the processor;
                     `bank_transfer` announces an incoming deposit and returns the reference to include
                     in the transfer description; `fintoc` (Chile only) returns a hosted `payment_url`
                     where the payer transfers from any Chilean bank or wallet and the deposit is detected
-                    automatically; `card` returns a hosted `payment_url` for a 3-D Secure card checkout
+                    automatically; `pix` (Brazil only) returns a hosted `payment_url` for a PIX redirect
+                    checkout (`payer_name` and `payer_document` required, minimum 1 BRL); `card` returns a hosted `payment_url` for a 3-D Secure card checkout
                     (Bolivia in BOB, or international cards in USD when `country` is `US`);
                     `checkout` returns a public `checkout_url` where the payer picks the
                     payment method (QR, card, bank transfer or crypto). Use /v1/payins/collect for pull
@@ -5107,7 +5115,7 @@ paths:
                   pattern: '^[^\r\n]{1,256}$'
                   description: >-
                     For `method: "card"`, this key is required; send it in the body or as the
-                    `Idempotency-Key` header. It is optional for `qr`, `bank_transfer`, `fintoc` and
+                    `Idempotency-Key` header. It is optional for `qr`, `bank_transfer`, `fintoc`, `pix` and
                     `checkout` methods. A retry with the same key returns the original payin with
                     HTTP 200 and `idempotency_hit: true` — the
                     same `payment_url`/`checkout_url` for hosted methods, or the SAME `reference`
@@ -5206,14 +5214,16 @@ paths:
                   type: string
                   maxLength: 140
                   description: >-
-                    Announced bank transfer only — name of the person or company that will send
-                    the transfer, when it is NOT the account holder. Optional.
+                    Payer identity. Required for `pix` (Brazil hosted redirect); for announced
+                    bank transfers it is the optional name of the person or company that will
+                    send the transfer, when it is NOT the account holder.
                 payer_document:
                   type: string
                   maxLength: 40
                   description: >-
-                    Announced bank transfer only — tax or national ID of the sender (at least 5
-                    characters, one of them a digit). Optional: when you omit it the account
+                    Payer identity. Required for `pix` (Brazil hosted redirect); for announced
+                    bank transfers it is the optional tax or national ID of the sender (at least 5
+                    characters, one of them a digit): when you omit it the account
                     holder's verified tax id is used, so a self-deposit is recognised even if the
                     payer forgets the reference. Send it when a third party pays.
                 payer_phone:
@@ -22900,7 +22910,7 @@ paths:
       tags: [Corridors]
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, CL/CLP bank_transfer with direct or batched dispatch, and labeled payout aliases for PY/PYG, EC/USD and BR/BRL. Organization scope receives only neutral `rail_a`, `rail_b` or `rail_c` aliases. Payin routing uses corridor controls.
       security:
         - bearerAuth: []
       responses:

@@ -65,7 +65,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 | 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账 |
 | 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`） |
 | 巴拉圭 | PYG | 预告银行转账 |
-| 巴西 | BRL | 动态 PIX 二维码 |
+| 巴西 | BRL | 动态 PIX 二维码 (`qr`)、Hosted PIX redirect (`pix`) |
 | 阿根廷 | ARS | 专属 CVU 账户 |
 | 委内瑞拉 | VES | 主动收款（`c2p`） |
 | 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT） |
@@ -458,7 +458,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 参见[预告转账的匹配规则](#预告转账的匹配规则)。
 #### 巴西
 
-**动态 PIX 二维码**：同一端点生成内嵌金额的 PIX 二维码。
+**动态 PIX 二维码**：`qr` 方法生成内嵌金额的 PIX 二维码。
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -474,15 +474,37 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-响应中的 `charge.qr_payload` 就是 PIX 的 **"copia e cola"** 代码，
-付款人可将其粘贴到银行 App 中，而无需扫描图片（`charge.qr_image`
-base64 或 `charge.qr_image_url`，即公共 CDN URL）。二维码按
-`expires_in` 过期（默认 1 小时）；付款在通道确认后自动入账
-（持续对账 —— 可随时使用 `GET /v1/payins/{charge_id}` 查询）。
+响应包含 `charge.qr_payload`，即 PIX **“copia e cola”** 代码；付款人
+可以将其粘贴到银行 App，而无需扫描图片（`charge.qr_image` base64 或
+公共 CDN 的 `charge.qr_image_url`）。二维码按 `expires_in` 过期（默认
+1 小时），付款在确认和对账后自动入账。
 
 > **注**
-在巴西，收款仅通过动态 PIX 二维码进行（一个二维码 = 一笔付款，
-内嵌精确金额）。预告银行转账将在之后推出。
+`qr` 方法生成一个金额精确内嵌、一次支付使用的动态二维码。
+**Hosted PIX redirect**：创建 `pix` payin，并将付款人重定向到返回的
+`payment_url`。付款人姓名和证件必填，最低金额为 1 BRL。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "pix",
+    "amount": "120.00",
+    "payer_name": "Ana Torres",
+    "payer_document": "52998224725",
+    "idempotency_key": "br-pix-20261013-001"
+  }'
+```
+
+响应包含 `payment_url`，初始状态为 `pending`。将付款人重定向到 hosted
+页面；签名确认后账户自动入账。重试时使用相同 key 获取原 charge。
+
+> **注**
+巴西同时支持 `qr`（动态 PIX 二维码）和 `pix`（hosted redirect）。
+`pix` 金额使用 BRL，最多两位小数，最低金额为 1 BRL。
 #### 阿根廷
 
 **专属 CVU 账户**：创建绑定到你账户的固定 CVU。
@@ -1064,7 +1086,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 
 | HTTP | `error` | 应对方式 |
 |---|---|---|
-| 400 | `invalid_request` | 检查 `method`（qr、bank_transfer、fintoc、card；collect 有自己的端点） |
+| 400 | `invalid_request` | 检查 `method`（qr、bank_transfer、fintoc、pix、card；collect 有自己的端点） |
 | 400 | `idempotency_key_required` | Collect 需要幂等键（对付款人的真实扣款） |
 | 403 | `service_disabled` | 您的账户未启用入金服务 —— 参见[服务](https://docs.cbpayapp.com/zh/concepts/services) |
 | 429 | `too_many_open_card_sessions` | 账户已有 10,000 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |

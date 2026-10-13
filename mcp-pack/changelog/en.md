@@ -14,6 +14,8 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ## v2.160 ? 1 version - October 12, 2026
 ### v2.160
 **Added**
+- Added Brazil regional coverage: provider-agnostic BRL payouts via `pix` and `bank_transfer`, plus hosted `BR/BRL/pix` payins with a 1 BRL minimum and required payer name/document.
+- Documented BRL two-decimal amounts, PIX key formats, TED beneficiary fields, and the neutral organization rail selector.
 - Added provider-agnostic PY/PYG, CO/COP and EC/USD regional payout and payin
   guidance. The catalog now documents `wallet`, hosted checkout and collect
   behavior, including integer-only COP and payer identity fields.

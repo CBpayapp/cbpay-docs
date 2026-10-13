@@ -1375,7 +1375,8 @@ paths:
         Cada país lista sus corredores en `options[]` — una fila por método+moneda (un país
         puede ofrecer el mismo método en varias monedas, ej. QR en BOB y USD) con
         `collect: true` en los métodos pull que piden los datos del pagador en la página (ver
-        `POST /pay/{token}/collect`). Con `?country=XX` devuelve además el monto local cotizado
+        `POST /pay/{token}/collect`), y `payer_required: true` en los hosted redirect cuya
+        materialización necesita nombre y documento del pagador en el body del POST. Con `?country=XX` devuelve además el monto local cotizado
         por opción de ese país. La materialización congela la cotización definitiva. Sin
         credenciales; rate limit por IP.
       parameters:
@@ -1523,7 +1524,9 @@ paths:
         bloquea los demás mientras nadie pague. Sin credenciales; rate limit por IP.
         El cobro pull (`collect: true`) está disponible cuando el corredor lo
         expone; el collect final screenea al pagador antes del cobro y puede
-        responder `202 in_review`.
+        responder `202 in_review`. Los hosted redirect marcados con
+        `payer_required: true` en el quote necesitan un body JSON con
+        `payer_name` y `payer_document`; el resto ignora el body.
       parameters:
       - name: token
         in: path
@@ -1537,7 +1540,7 @@ paths:
         schema:
           type: string
         description: Método a materializar — un método fiat del catálogo multi-país (`qr`,
-          `card`, `fintoc`, `bank_transfer`; exige `?country=XX`)
+          `card`, `fintoc`, `bank_transfer`, `wallet`, `pix`; exige `?country=XX`)
           o una opción crypto (`crypto:tron:usdt`, `crypto:eth:usdt`, `crypto:eth:usdc`,
           `crypto:btc:btc`; sin país).
       - name: country
@@ -5063,12 +5066,14 @@ paths:
                   - card
                   - checkout
                   - wallet
+                  - pix
                   default: qr
                   description: Modo de cobro. `qr` crea un cobro QR activo a través del procesador; `bank_transfer`
                     anuncia un depósito entrante y devuelve la referencia a incluir en la descripción
                     de la transferencia; `fintoc` (solo Chile) devuelve una `payment_url` hosted donde
                     el pagador transfiere desde cualquier banco o billetera chilena y el depósito se detecta
-                    automáticamente; `card` devuelve una `payment_url` hosted de un checkout de tarjeta con
+                    automáticamente; `pix` (solo Brasil) devuelve una `payment_url` hosted de un checkout
+                    redirect PIX (`payer_name` y `payer_document` obligatorios, mínimo 1 BRL); `card` devuelve una `payment_url` hosted de un checkout de tarjeta con
                     3-D Secure (Bolivia en BOB, o tarjetas internacionales en USD cuando `country`
                     es `US`); `checkout` devuelve una `checkout_url` pública donde el pagador
                     elige el método de pago (QR, tarjeta, transferencia bancaria o crypto). Usa
@@ -5079,7 +5084,7 @@ paths:
                   pattern: '^[^\r\n]{1,256}$'
                   description: >-
                     Para `method: "card"`, esta clave es obligatoria: envíala en el body o como
-                    header `Idempotency-Key`. Es opcional para `qr`, `bank_transfer`, `fintoc` y
+                    header `Idempotency-Key`. Es opcional para `qr`, `bank_transfer`, `fintoc`, `pix` y
                     `checkout`. Un retry con la misma clave devuelve el payin original con HTTP
                     200 e `idempotency_hit: true` — la misma `payment_url`/`checkout_url` en los métodos
                     hosted, o la MISMA
@@ -5180,16 +5185,19 @@ paths:
                   type: string
                   maxLength: 140
                   description: >-
-                    Solo transferencia anunciada — nombre de la persona o empresa que hará la
-                    transferencia, cuando NO es el titular de la cuenta. Opcional.
+                    Identidad del pagador. Obligatorio para `pix` (redirect hosted Brasil);
+                    en transferencia anunciada es el nombre opcional de la persona o empresa
+                    que hará la transferencia, cuando NO es el titular de la cuenta.
                 payer_document:
                   type: string
                   maxLength: 40
                   description: >-
-                    Solo transferencia anunciada — documento tributario o de identidad del pagador
-                    (al menos 5 caracteres, uno de ellos un dígito). Opcional: si lo omites se usa
-                    el documento verificado del titular, así un depósito propio se reconoce aunque
-                    el pagador olvide la referencia. Envíalo cuando paga un tercero.
+                    Identidad del pagador. Obligatorio para `pix` (redirect hosted Brasil);
+                    en transferencia anunciada es el documento tributario o de identidad
+                    opcional del pagador (al menos 5 caracteres, uno de ellos un dígito):
+                    si lo omites se usa el documento verificado del titular, así un depósito
+                    propio se reconoce aunque el pagador olvide la referencia. Envíalo
+                    cuando paga un tercero.
                 payer_phone:
                   type: string
                   maxLength: 40
@@ -22746,7 +22754,7 @@ paths:
       tags: [Corridors]
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, and CL/CLP bank_transfer with direct or batched dispatch. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, CL/CLP bank_transfer with direct or batched dispatch, and labeled payout aliases for PY/PYG, EC/USD and BR/BRL. Organization scope receives only neutral `rail_a`, `rail_b` or `rail_c` aliases. Payin routing uses corridor controls.
       security:
         - bearerAuth: []
       responses:
