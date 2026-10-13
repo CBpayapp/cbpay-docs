@@ -14,12 +14,57 @@ Authorization: Bearer <token>
 
 También se acepta `X-API-Key: <token>` como header alternativo.
 
+## Registro y verificación del email
+
+El registro usa verificación primero: nunca crea una sesión directamente. El endpoint
+público responde `201 pending_verification` tanto para un email nuevo como para uno
+duplicado, por lo que no sirve para enumerar cuentas. El titular recibe un código y
+completa el flujo con `POST /v1/auth/register/confirm`.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","type":"person","email":"ana@ejemplo.com","password":"una-clave-segura","display_name":"Ana Pérez","country":"CL"}'
+```
+
+```json
+{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
+```
+
+Confirma el código para recibir la primera sesión:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@ejemplo.com","code":"123456"}'
+```
+
+Un código con forma inválida responde `400 invalid_code`; un código incorrecto o
+vencido responde uniformemente `401 invalid_code`. Si no se puede consultar el
+servicio de verificación, responde `502 otp_check_failed`. Una confirmación exitosa
+devuelve la misma forma de sesión que login (`access_token`, `expires_at`,
+`refresh_token`, `refresh_expires_at` y `account`).
+
+## Límites antiabuso de autenticación
+
+Los fallos de login se cuentan por cuenta normalizada (organización/email): después de
+8 fallos en 15 minutos, los intentos siguientes responden el mismo `401
+invalid_credentials` sin ejecutar bcrypt mientras dura la ventana. Los members con
+registro pendiente también reciben esa respuesta uniforme y no pueden entrar con la
+clave usada en el registro.
+
+La recuperación evita enumeración. `POST /v1/auth/password/forgot` mantiene el mismo
+`200` aunque se agote el presupuesto; permite como máximo 5 envíos reales por cuenta
+por hora. `POST /v1/auth/password/reset` permite como máximo 8 intentos de código por
+cuenta en 15 minutos. Un reset exitoso por email verifica el email y elimina
+`register_pending`.
+
 ## Tipos de credencial
 
 <Tabs>
 <Tab title="Sesión JWT (personas con login)">
 
-Se obtiene con `POST /v1/auth/register` o `POST /v1/auth/login` y dura
+Se obtiene con `POST /v1/auth/login` (el registro requiere confirmar el email primero, ver abajo) y dura
 **24 horas**. Pensada para apps con usuarios que inician sesión. Junto al
 `access_token` recibes un **refresh token** para renovar la sesión sin pedir
 la contraseña de nuevo — ver [renovación de sesión](#renovacion-de-sesion-refresh-tokens).

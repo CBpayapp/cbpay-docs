@@ -4,6 +4,13 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年10月13日" description="v2.161 · 1 个版本">
+### v2.161
+**Changed**
+- 注册现在返回不带会话的 `pending_verification`；请使用 `POST /v1/auth/register/confirm` 确认邮箱以获取首个会话。重复注册返回相同的响应。
+- 新增按账户划分的登录、密码找回与重置尝试限制。
+</Update>
+
 <Update label="October 12, 2026" description="v2.160 ? 1 version">
 ### 2.160
 **Added**
