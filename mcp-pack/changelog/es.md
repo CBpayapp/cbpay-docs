@@ -5,10 +5,17 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.161 · 2 versiones - 13 de octubre de 2026
+### v2.161
+**Cambiado**
+- El registro ahora devuelve `pending_verification` sin sesión; confirma el email con `POST /v1/auth/register/confirm`. Se documentaron también los límites por cuenta de login y recuperación.
+
 ## v2.160 ? 1 version - 12 de octubre de 2026
 ### v2.160
 **Agregado**
-
+- Nuevos corredores públicos provider-agnostic para PY/PYG, CO/COP y EC/USD:
+  payouts bancarios y payins hosted o wallet; COP es entero y se documentan
+  los campos de identidad del pagador.
 - Las descargas PDF de sobres aceptan `?lang=es|en`; el detalle expone `available_langs`, las contrapartidas se renderizan desde el snapshot congelado sin hash aparte, el ingl?s exige counsel y se documentan filenames seg?n idioma y errores fail-closed de storage.
 ## v2.159 · 2 versiones - 10 de octubre de 2026
 ### v2.159

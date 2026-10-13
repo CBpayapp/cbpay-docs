@@ -579,3 +579,14 @@ The acknowledgement is valid only for the most recent rejection of that
 destination. A retry with the same key but different `options` is an
 `idempotency_conflict` (`409`). Other payout methods and destinations without
 a recent rejection continue through their normal validation and dispatch path.
+
+## Authentication attack-hardening errors
+
+| HTTP | `error` | Meaning and action |
+|---:|---|---|
+| 400 | `invalid_code` | The registration or reset code is not 4–10 digits. Send the code in the expected shape. |
+| 401 | `invalid_code` | Registration confirmation or password-reset identity/code is invalid or expired. Use the latest code; the response is intentionally uniform. |
+| 401 | `invalid_credentials` | Login failed, the account is pending verification, or the account is temporarily blocked after 8 failures in 15 minutes. Wait for the window or confirm registration. |
+| 502 | `otp_check_failed` | The verification service could not be checked. Keep the same flow and retry later; do not create a second account or reset request. |
+
+`POST /v1/auth/password/forgot` always returns `200` to prevent enumeration. It silently stops real sends after 5 per account per hour; `POST /v1/auth/password/reset` allows 8 code attempts per account per 15 minutes.

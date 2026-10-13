@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.160"
+  version: "2.161"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -1938,131 +1938,80 @@ paths:
   /v1/auth/register:
     post:
       tags:
-      - Autenticación
+      - Autenticaci...n
       security: []
       operationId: register
-      summary: Registrar una cuenta
-      description: 'Crea una cuenta de persona o empresa con su miembro de acceso owner y
-
-        devuelve un token de sesión. Un solo endpoint para ambos tipos: `type` es un dato.
-
-        '
+      summary: Iniciar el registro de una cuenta
+      description: Crea una cuenta de persona o empresa en estado pendiente de verificaci...n. Nunca crea una sesi...n. Los emails nuevos y duplicados devuelven la misma respuesta para evitar enumeraci...n; al titular real se le avisa por email ante un duplicado.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-              - org
-              - type
-              - email
-              - password
-              - display_name
+              required: [org, type, email, password, display_name]
               properties:
-                org:
-                  type: string
-                  description: Slug de la organización CBPay (`cbpay`).
-                type:
-                  type: string
-                  enum:
-                  - person
-                  - company
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  minLength: 8
-                display_name:
-                  type: string
-                tax_id:
-                  type: string
-                phone:
-                  type: string
-                country:
-                  type: string
-                  description: Código de país ISO 3166-1 alpha-2.
-                locale:
-                  type: string
-                  enum:
-                  - en
-                  - es
-                  - zh
-                  description: Locale preferido al registrarse. Si se omite, sigue Accept-Language, luego el default de la org, luego ingles.
-                profile:
-                  type: object
-                  description: Datos de perfil de formato libre.
+                org: {type: string}
+                type: {type: string, enum: [person, company]}
+                email: {type: string, format: email}
+                password: {type: string, minLength: 8}
+                display_name: {type: string}
+                tax_id: {type: string}
+                phone: {type: string}
+                country: {type: string}
+                locale: {type: string, enum: [en, es, zh]}
+                profile: {type: object}
             example:
               org: cbpay
               type: person
-              email: ana@example.com
-              password: a-secure-password
+              email: ana@ejemplo.com
+              password: una-clave-segura
               display_name: Ana Perez
               country: CL
-              locale: en
       responses:
         '201':
-          description: Cuenta creada.
+          description: Registro iniciado; no se emite sesi...n.
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  account:
-                    $ref: '#/components/schemas/Account'
-                  access_token:
-                    type: string
-                    description: JWT de sesión, válido por 24 horas.
-                  expires_at:
-                    type: string
-                    format: date-time
-                  refresh_token:
-                    type: string
-                    description: Refresh token rotatorio de un solo uso para `POST /v1/auth/refresh`.
-                  refresh_expires_at:
-                    type: string
-                    format: date-time
               example:
-                account: &id001
-                  id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                  org_id: 1c9e7a2b-5f6d-4e3a-8c1b-2a9d8e7f6a5b
-                  type: person
-                  status: active
-                  kyc_status: approved
-                  email: ana@example.com
-                  display_name: Ana Perez
-                  tax_id: 12345678-9
-                  phone: '+56912345678'
-                  country: CL
-                  locale: en
-                  profile: &id002 {}
-                  created_at: '2026-07-07T12:00:00Z'
-                  updated_at: '2026-07-07T12:00:00Z'
-                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…
-                expires_at: '2026-07-08T12:00:00Z'
-                refresh_token: rt_6a1e6c22-93a1-4f0e-a7d1-1f2e3c4b5a69.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                refresh_expires_at: '2026-08-06T12:00:00Z'
+                status: pending_verification
+                note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: invalid_type, invalid_email, invalid_display_name o weak_password.
         '403':
-          description: Servicio suspendido (`org_suspended`); contacta al equipo de CBPay.
+          description: org_suspended.
+        '502':
+          description: otp_send_failed.
+  /v1/auth/register/confirm:
+    post:
+      tags: [Autenticaci...n]
+      security: []
+      operationId: confirmRegistration
+      summary: Confirmar el registro con el c...digo del email
+      description: Valida el c...digo del email, elimina el estado pendiente, provisiona la cuenta y emite la primera sesi...n. Las combinaciones de identidad/c...digo inv...lidas son uniformes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [org, email, code]
+              properties:
+                org: {type: string}
+                email: {type: string, format: email}
+                code: {type: string}
+            example: {org: cbpay, email: ana@ejemplo.com, code: '123456'}
+      responses:
+        '201':
+          description: Primera sesi...n emitida.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: org_suspended
-                message: organization is not active
-        '409':
-          description: Ya existe una cuenta con ese email (`duplicate`).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: duplicate
-                message: resource already exists
+              example: {access_token: eyJ..., expires_at: '2026-10-13T12:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-12T12:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '400':
+          description: invalid_code cuando la forma del codigo es invalida.
+        '401':
+          description: invalid_code para codigo invalido, vencido o sin coincidencia.
+        '502': {description: otp_check_failed.}
   /v1/auth/environment-handoff:
     post:
       tags:
@@ -2704,7 +2653,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Account'
-              example: *id001
+              example: {}
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -2758,7 +2707,7 @@ paths:
                 phone: '+56987654321'
                 country: CL
                 locale: en
-                profile: *id002
+                profile: {}
                 created_at: '2026-07-07T12:00:00Z'
                 updated_at: '2026-07-07T12:00:00Z'
         '400':
@@ -5113,6 +5062,7 @@ paths:
                   - fintoc
                   - card
                   - checkout
+                  - wallet
                   default: qr
                   description: Modo de cobro. `qr` crea un cobro QR activo a través del procesador; `bank_transfer`
                     anuncia un depósito entrante y devuelve la referencia a incluir en la descripción
@@ -5240,6 +5190,10 @@ paths:
                     (al menos 5 caracteres, uno de ellos un dígito). Opcional: si lo omites se usa
                     el documento verificado del titular, así un depósito propio se reconoce aunque
                     el pagador olvide la referencia. Envíalo cuando paga un tercero.
+                payer_phone:
+                  type: string
+                  maxLength: 40
+                  description: Teléfono del pagador hosted o collect; algunos métodos wallet lo exigen.
                 payer_account:
                   type: string
                   maxLength: 40

@@ -5,9 +5,18 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.161 · 1 version - October 13, 2026
+### v2.161
+**Changed**
+- Registration now returns `pending_verification` without a session; confirm the email with `POST /v1/auth/register/confirm` to receive the first session. Duplicate registrations use the same response.
+- Added account-scoped login, password-recovery and reset-attempt limits.
+
 ## v2.160 ? 1 version - October 12, 2026
 ### v2.160
 **Added**
+- Added provider-agnostic PY/PYG, CO/COP and EC/USD regional payout and payin
+  guidance. The catalog now documents `wallet`, hosted checkout and collect
+  behavior, including integer-only COP and payer identity fields.
 
 - Contract envelope PDF downloads accept `?lang=es|en`; details expose `available_langs`, counterparts render from the frozen snapshot without a separate hash, English requires counsel, and language-aware filenames and fail-closed storage errors are documented.
 ## v2.159 · 2 versions - October 10, 2026

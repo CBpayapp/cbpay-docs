@@ -5,10 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.161 · 1 个版本 - 2026年10月13日
+### v2.161
+**Changed**
+- 注册现在返回不带会话的 `pending_verification`；请使用 `POST /v1/auth/register/confirm` 确认邮箱以获取首个会话。重复注册返回相同的响应。
+- 新增按账户划分的登录、密码找回与重置尝试限制。
 ## v2.160 ? 1 version - October 12, 2026
 ### 2.160
 **Added**
-
+- 新增 PY/PYG、CO/COP 和 EC/USD 的供应商无关 payout 与 payin 通道说明；
+  COP 只能使用整数，并记录付款人身份字段与 wallet hosted/collect 行为。
 - Contract PDF downloads support `?lang=es|en`, expose `available_langs`, render counterparts from the frozen snapshot without a separate hash, require counsel for English, and use language-aware filenames.
 ## v2.159 · 2 个版本 - 2026年10月10日
 ### v2.159
