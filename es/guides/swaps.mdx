@@ -212,3 +212,7 @@ sigue siendo el equivalente USD para reportes. El hold de una controversia
 sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.
+
+El swap puede tener una cobertura interna de back-office. Esto no cambia el
+request ni la respuesta de `POST /v1/swaps`, la tasa de ejecución ni el
+contrato del ledger de la cuenta.
