@@ -217,6 +217,7 @@ part of the replay identity. Read the live status with
 | 400 | `settlement_asset_disabled` | Your organization disabled that asset as settlement source |
 | 422 | `settlement_limit_exceeded` | The operation exceeds the per-operation limit for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or split the operation |
 | 422 | `settlement_daily_limit_exceeded` | The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later |
+| 422 | `guard_diverged` | The BTC price reference diverged beyond the pre-trade guard; wait for convergence or split the operation, then retry with the same idempotency key |
 | 400 | `invalid_pair` | Swap with the same source and destination currency |
 | 400 | `amount_too_small` | The swap amount does not reach the destination currency's minimum unit |
 | 400 | `swap_asset_disabled` | One of the swap currencies is disabled for your organization |

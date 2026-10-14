@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.161"
+  version: "2.162"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -11450,16 +11450,21 @@ paths:
                 error: service_disabled
                 message: this service is not enabled for your account
         '422':
-          description: settlement_limit_exceeded / settlement_daily_limit_exceeded (volatile caps shared
-            with payouts and cards).
+          description: guard_diverged / settlement_limit_exceeded / settlement_daily_limit_exceeded.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: settlement_daily_limit_exceeded
-                message: the account exceeded its 24h volume for volatile assets; retry later or use smaller
-                  amounts
+              examples:
+                settlementDaily:
+                  value:
+                    error: settlement_daily_limit_exceeded
+                    message: the account exceeded its 24h volume for volatile assets; retry later or use smaller amounts
+                guardDiverged:
+                  summary: Reference price rejected by the pre-trade guard
+                  value:
+                    error: guard_diverged
+                    message: market price diverged from the reference; retry in a moment or split the operation
         '503':
           description: Execution price unavailable or stale (pricing_unavailable).
           content:

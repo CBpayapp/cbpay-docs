@@ -218,6 +218,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 400 | `settlement_asset_disabled` | Tu organización tiene deshabilitado ese asset como origen de settlement |
 | 422 | `settlement_limit_exceeded` | La operación supera el límite por operación de los assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o divide la operación |
 | 422 | `settlement_daily_limit_exceeded` | La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o reintenta más tarde |
+| 422 | `guard_diverged` | La referencia de precio BTC divergió más allá del price guard pre-trade; espera convergencia o divide la operación y reintenta con la misma clave de idempotencia |
 | 400 | `invalid_pair` | Swap con la misma moneda de origen y destino |
 | 400 | `amount_too_small` | El monto del swap no alcanza la unidad mínima de la moneda destino |
 | 400 | `swap_asset_disabled` | Una de las monedas del swap está deshabilitada para tu organización |

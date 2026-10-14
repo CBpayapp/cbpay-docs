@@ -142,6 +142,17 @@ own section.
 - Requires your approved [identity verification](/en/guides/kyc) and the
   `swaps` service enabled.
 
+### BTC price protection
+
+For BTC swaps valued at USD 1,000 or more, CBPay checks the execution
+reference against the current market book before the swap. If the divergence
+exceeds the configured threshold, the request returns `422 guard_diverged`;
+wait for convergence or split the operation and retry with the same
+`idempotency_key`. If market data is temporarily unavailable, the swap may
+continue with an operational alert and the execution-price safeguards still
+apply. This protection does not apply to internal checkout/payin conversions
+or OTC flows.
+
 ## Errors
 
 | HTTP | `error` | Cause | Solution |
@@ -156,6 +167,7 @@ own section.
 | 403 | `verification_required` / `service_disabled` | Unverified account or service off | Complete onboarding / contact your operator |
 | 422 | `settlement_limit_exceeded` | The swap exceeds the per-operation cap for volatile currencies | Split the operation |
 | 422 | `settlement_daily_limit_exceeded` | You exceeded your 24h volume for volatile currencies | Retry later |
+| 422 | `guard_diverged` | The BTC reference exceeded the pre-trade divergence threshold | Wait for convergence or split the operation; retry with the same idempotency key |
 | 503 | `pricing_unavailable` | Execution price unavailable or stale | Retry in a few minutes |
 
 ## FAQ

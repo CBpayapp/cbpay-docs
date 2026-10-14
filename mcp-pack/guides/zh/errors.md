@@ -213,6 +213,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 400 | `settlement_asset_disabled` | 您的组织已禁用该资产作为结算来源 |
 | 422 | `settlement_limit_exceeded` | 该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作 |
 | 422 | `settlement_daily_limit_exceeded` | 该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试 |
+| 422 | `guard_diverged` | BTC 价格参考值超出交易前价格保护的偏差上限；等待价格收敛或拆分操作，并使用相同幂等键重试 |
 | 400 | `invalid_pair` | 兑换（swap）的源货币与目标货币相同 |
 | 400 | `amount_too_small` | 兑换金额不足目标货币的最小单位 |
 | 400 | `swap_asset_disabled` | 兑换涉及的某一货币已被您的组织禁用 |

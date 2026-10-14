@@ -5,6 +5,14 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.162 · 1 个版本 - 2026年10月14日
+### v2.162
+**Changed**
+- 金额达到 1,000 USD 的 BTC swap 现在会在执行前使用市场价格保护。
+  价格偏差时返回 `422 guard_diverged`；市场数据不可用时会带运营告警继续，
+  同时保留现有的执行价格保护。
+- 在 swap 指南和错误目录中记录了该保护及错误码。checkout/payin 内部转换
+  和 OTC 流程不适用此保护。
 ## v2.161 · 1 个版本 - 2026年10月13日
 ### v2.161
 **Changed**

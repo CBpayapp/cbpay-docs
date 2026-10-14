@@ -137,6 +137,16 @@ de origen y `swap_in` en la de destino, cada uno cuadrando en su sección.
 - Requiere tu [verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc) aprobada y el
   servicio `swaps` habilitado.
 
+### Protección de precio BTC
+
+Para swaps BTC de USD 1.000 o más, CBPay compara la referencia de ejecución
+con el libro de mercado antes del swap. Si la divergencia supera el umbral
+configurado, responde `422 guard_diverged`; espera la convergencia o divide la
+operación y reintenta con la misma `idempotency_key`. Si el mercado no está
+disponible temporalmente, el swap puede continuar con una alerta operativa y
+siguen aplicando las protecciones del precio de ejecución. Esta protección no
+aplica a conversiones internas de checkout/payin ni a flujos OTC.
+
 ## Errores
 
 | HTTP | `error` | Causa | Solución |
@@ -151,6 +161,7 @@ de origen y `swap_in` en la de destino, cada uno cuadrando en su sección.
 | 403 | `verification_required` / `service_disabled` | Cuenta sin verificar o servicio apagado | Completa tu onboarding / contacta a tu operador |
 | 422 | `settlement_limit_exceeded` | El swap supera el tope por operación de monedas volátiles | Divide la operación |
 | 422 | `settlement_daily_limit_exceeded` | Superaste tu volumen 24 h en monedas volátiles | Reintenta más tarde |
+| 422 | `guard_diverged` | La referencia BTC superó el umbral de divergencia pre-trade | Espera la convergencia o divide la operación; reintenta con la misma idempotency key |
 | 503 | `pricing_unavailable` | Precio de ejecución no disponible o viejo | Reintenta en unos minutos |
 
 ## Preguntas frecuentes
@@ -199,3 +210,7 @@ sigue siendo el equivalente USD para reportes. El hold de una controversia
 sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.
+
+El swap puede tener una cobertura interna de back-office. Esto no cambia el
+request ni la respuesta de `POST /v1/swaps`, la tasa de ejecución ni el
+contrato del ledger de la cuenta.

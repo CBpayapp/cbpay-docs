@@ -137,6 +137,17 @@ own section.
 - Requires your approved [identity verification](https://docs.cbpayapp.com/en/guides/kyc) and the
   `swaps` service enabled.
 
+### BTC price protection
+
+For BTC swaps valued at USD 1,000 or more, CBPay checks the execution
+reference against the current market book before the swap. If the divergence
+exceeds the configured threshold, the request returns `422 guard_diverged`;
+wait for convergence or split the operation and retry with the same
+`idempotency_key`. If market data is temporarily unavailable, the swap may
+continue with an operational alert and the execution-price safeguards still
+apply. This protection does not apply to internal checkout/payin conversions
+or OTC flows.
+
 ## Errors
 
 | HTTP | `error` | Cause | Solution |
@@ -151,6 +162,7 @@ own section.
 | 403 | `verification_required` / `service_disabled` | Unverified account or service off | Complete onboarding / contact your operator |
 | 422 | `settlement_limit_exceeded` | The swap exceeds the per-operation cap for volatile currencies | Split the operation |
 | 422 | `settlement_daily_limit_exceeded` | You exceeded your 24h volume for volatile currencies | Retry later |
+| 422 | `guard_diverged` | The BTC reference exceeded the pre-trade divergence threshold | Wait for convergence or split the operation; retry with the same idempotency key |
 | 503 | `pricing_unavailable` | Execution price unavailable or stale | Retry in a few minutes |
 
 ## FAQ
@@ -190,6 +202,10 @@ fees, and supported payout, checkout, POS, and card paths use USD only where
 their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
 do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
 assets; v1 money-out pricing for those assets remains unavailable.
+
+Swap execution may have an internal back-office coverage workflow. This does
+not change the `POST /v1/swaps` request or response, the execution rate, or
+the account ledger contract.
 
 A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
