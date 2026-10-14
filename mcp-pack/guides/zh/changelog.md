@@ -8,6 +8,10 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 ## v2.161 · 1 个版本 - 2026年10月13日
 ### v2.161
 **Changed**
+- 新增管理员发起的成员密码恢复链接流程：`POST /v1/auth/password/reset-link`
+  兑换一次性、60 分钟有效的链接，验证成员邮箱、清除待注册状态并吊销所有
+  会话。门户已配置时，管理员触发接口返回 `link_sent`；未配置时诚实回退为
+  `code_sent`。
 - 注册现在返回不带会话的 `pending_verification`；请使用 `POST /v1/auth/register/confirm` 确认邮箱以获取首个会话。重复注册返回相同的响应。
 - 新增按账户划分的登录、密码找回与重置尝试限制。
 ## v2.160 ? 1 version - October 12, 2026

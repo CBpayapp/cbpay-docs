@@ -17850,6 +17850,81 @@ paths:
                 error: invalid_code
                 message: the code is invalid or expired
                 or no account matches: null
+  /v1/auth/password/reset-link:
+    post:
+      tags:
+      - 身份认证
+      security: []
+      operationId: resetPasswordLink
+      summary: 使用管理员恢复链接重置成员密码
+      description: >-
+        兑换组织管理员发送到成员邮箱的单次使用链接。Token 为 32 个随机字节并编码为
+        43 个字符的 base64url，只保存 hash，60 分钟后过期。兑换成功后会验证成员邮箱、
+        清除 `register_pending` 并吊销所有会话。对于无效、过期或已使用的链接，以及未知
+        组织、成员或封禁状态，`401 invalid_token` 保持完全相同。此端点仅用于成员恢复链接；
+        平台管理员的密码重置流程独立存在。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [org, token, new_password]
+              properties:
+                org: {type: string}
+                token:
+                  type: string
+                  minLength: 43
+                  maxLength: 43
+                  description: 恢复邮件中的单次使用 base64url token。
+                new_password:
+                  type: string
+                  minLength: 8
+            example:
+              org: cbpay
+              token: 2mJ5lYx1f7wQ9vH3kP0sN6aB4cD8eG1iR5tU7yI9oPq
+              new_password: my-new-strong-pass
+      responses:
+        '200':
+          description: 密码已重置；邮箱已验证、注册待处理状态已清除，所有会话已吊销。
+          content:
+            application/json:
+              example:
+                status: password_reset
+                note: all sessions were revoked; log in with the new password
+        '400':
+          description: Token 格式无效时返回 invalid_token；密码不符合策略时返回 weak_password。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_token:
+                  value:
+                    error: invalid_token
+                    message: token must be the link token from the recovery email
+                weak_password:
+                  value:
+                    error: weak_password
+                    message: password does not meet the organization's password policy
+        '401':
+          description: 链接无效、过期、已使用，或与组织/成员不匹配时返回 invalid_token。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_token
+                message: the link is invalid or expired
+        '429':
+          description: 来源 IP 超过验证 throttle 时返回 too_many_attempts。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
   /v1/auth/passkey/login/begin:
     post:
       tags:

@@ -44,6 +44,10 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
 
 密码找回特意防止枚举。`POST /v1/auth/password/forgot` 即使账户发送配额用尽也返回相同的 `200` 响应体；每个账户每小时最多发送 5 次真实验证码。`POST /v1/auth/password/reset` 允许每个账户每 15 分钟尝试 8 次验证码。通过邮箱成功重置会验证邮箱并清除 `register_pending`。
 
+企业成员也可能收到管理员发起的恢复链接。将其中的 `token` 与 `org`、
+`new_password` 提交到 `POST /v1/auth/password/reset-link`；链接只能使用
+一次，60 分钟后过期。此成员流程与平台管理员密码重置流程相互独立。
+
 ## 凭证类型
 
 #### JWT 会话（有登录的用户）

@@ -591,3 +591,13 @@ flujo normal de validación y despacho.
 | 502 | `otp_check_failed` | No se pudo consultar el servicio de verificación. Mantén el mismo flujo y reintenta después; no crees otra cuenta ni otra solicitud. |
 
 `POST /v1/auth/password/forgot` siempre responde `200` para evitar enumeración. Silencia envíos reales después de 5 por cuenta por hora; `POST /v1/auth/password/reset` permite 8 intentos de código por cuenta cada 15 minutos.
+
+## Links de recuperación de members
+
+| HTTP | `error` | Causa y acción |
+|---:|---|---|
+| 400 | `invalid_token` | El `token` no es el valor base64url de 43 caracteres del email de recuperación. Copia lo que sigue a `?token=` sin modificarlo. |
+| 400 | `weak_password` | La nueva contraseña no cumple la política del servidor. Elige una más fuerte y usa el mismo link mientras siga vigente. |
+| 401 | `invalid_token` | El link es inválido, venció, ya se usó o no corresponde a la org/member. Pide un link nuevo al admin de la organización. La respuesta es uniforme a propósito. |
+| 502 | `recovery_send_failed` | No se pudo entregar el email de recuperación iniciado por el admin. Pide al admin revisar la configuración de email y disparar un link nuevo. |
+| 429 | `too_many_attempts` | La IP superó el throttle de verificación. Espera un momento y reintenta; no automatices envíos repetidos. |

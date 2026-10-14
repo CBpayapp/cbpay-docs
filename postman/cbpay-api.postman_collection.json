@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-13 16:17 UTC",
-    "_content_sha256": "972065f2a191e4f7668a680a6e6d3fe3f870db698cbba9bdeb990421e3ee1c09"
+    "_generated_at": "2026-10-13 20:11 UTC",
+    "_content_sha256": "3d3e6a734bf53085515c26ccb956897c1bbcfae218138f5dc7698ff65234a3e7"
   },
   "auth": {
     "type": "bearer",
@@ -9049,6 +9049,73 @@
                 }
               },
               "status": "Password reset; all sessions revoked.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"password_reset\",\n  \"note\": \"all sessions were revoked; log in with the new password\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reset a member password with an admin recovery link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/password/reset-link",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "password",
+                "reset-link"
+              ]
+            },
+            "description": "Redeems the single-use link sent by an organization admin to a member's email. The token is 32 random bytes encoded as 43-character base64url, stored only as a hash, and expires after 60 minutes. A successful redemption verifies the member's email, clears `register_pending`, and revokes all sessions. The `401 invalid_token` response is intentionally identical for an invalid, expired or already-used link and for an unknown organization, member or ban. This endpoint is for member recovery links; the platform-admin reset flow is separate.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"org\": \"cbpay\",\n  \"token\": \"2mJ5lYx1f7wQ9vH3kP0sN6aB4cD8eG1iR5tU7yI9oPq\",\n  \"new_password\": \"my-new-strong-pass\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Password reset; email verified, registration pending cleared",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/auth/password/reset-link",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "auth",
+                    "password",
+                    "reset-link"
+                  ]
+                }
+              },
+              "status": "Password reset; email verified, registration pending cleared",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [

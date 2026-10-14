@@ -57,6 +57,10 @@ returns the same `200` body even when its account send budget is exhausted; at m
 real code sends per account are allowed per hour. `POST /v1/auth/password/reset`
 allows at most 8 code attempts per account in 15 minutes. A successful email reset
 verifies the email and clears `register_pending`.
+Company members may also receive an administrator-initiated recovery link.
+Redeem its `token` with `org` and `new_password` at
+`POST /v1/auth/password/reset-link`; the link is single-use and expires after
+60 minutes. This member flow is separate from the platform-admin reset.
 
 ## Credential types
 

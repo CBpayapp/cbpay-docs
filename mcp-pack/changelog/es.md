@@ -8,6 +8,11 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ## v2.161 · 2 versiones - 13 de octubre de 2026
 ### v2.161
 **Cambiado**
+- Se agregó la recuperación de contraseña de members iniciada por el admin:
+  `POST /v1/auth/password/reset-link` canjea un link de un solo uso de 60
+  minutos, verifica el email, limpia el registro pendiente y revoca todas las
+  sesiones. El trigger admin devuelve `link_sent` con el portal configurado y
+  conserva el fallback honesto `code_sent` cuando no lo está.
 - El registro ahora devuelve `pending_verification` sin sesión; confirma el email con `POST /v1/auth/register/confirm`. Se documentaron también los límites por cuenta de login y recuperación.
 
 ## v2.160 ? 1 version - 12 de octubre de 2026

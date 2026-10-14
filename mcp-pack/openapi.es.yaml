@@ -18405,6 +18405,84 @@ paths:
                 error: invalid_code
                 message: the code is invalid or expired
                 or no account matches: null
+  /v1/auth/password/reset-link:
+    post:
+      tags:
+      - Autenticación
+      security: []
+      operationId: resetPasswordLink
+      summary: Restablecer la contraseña de un miembro con un link de recuperación del admin
+      description: >-
+        Canjea el link de un solo uso enviado por un admin de la organización al email
+        del miembro. El token tiene 32 bytes aleatorios codificados en base64url de
+        43 caracteres, se guarda solo como hash y expira en 60 minutos. Un canje exitoso
+        verifica el email del miembro, limpia `register_pending` y revoca todas las
+        sesiones. `401 invalid_token` es deliberadamente idéntico para un link inválido,
+        expirado o ya usado y para una organización, miembro o baneo no válido.
+        Este endpoint es para links de recuperación de miembros; el reset de admins
+        de plataforma es independiente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [org, token, new_password]
+              properties:
+                org: {type: string}
+                token:
+                  type: string
+                  minLength: 43
+                  maxLength: 43
+                  description: Token base64url de un solo uso incluido en el email de recuperación.
+                new_password:
+                  type: string
+                  minLength: 8
+            example:
+              org: cbpay
+              token: 2mJ5lYx1f7wQ9vH3kP0sN6aB4cD8eG1iR5tU7yI9oPq
+              new_password: mi-nueva-clave-fuerte
+      responses:
+        '200':
+          description: Contraseña restablecida; email verificado, registro pendiente limpiado y todas las sesiones revocadas.
+          content:
+            application/json:
+              example:
+                status: password_reset
+                note: all sessions were revoked; log in with the new password
+        '400':
+          description: invalid_token si el formato del token es inválido o weak_password si la contraseña no cumple la política.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_token:
+                  value:
+                    error: invalid_token
+                    message: token must be the link token from the recovery email
+                weak_password:
+                  value:
+                    error: weak_password
+                    message: password does not meet the organization's password policy
+        '401':
+          description: invalid_token si el link es inválido, expiró, ya fue usado o no corresponde a la organización o miembro.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_token
+                message: the link is invalid or expired
+        '429':
+          description: too_many_attempts cuando la IP supera el throttle de verificación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
   /v1/auth/passkey/login/begin:
     post:
       tags:

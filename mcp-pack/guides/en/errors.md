@@ -590,3 +590,13 @@ a recent rejection continue through their normal validation and dispatch path.
 | 502 | `otp_check_failed` | The verification service could not be checked. Keep the same flow and retry later; do not create a second account or reset request. |
 
 `POST /v1/auth/password/forgot` always returns `200` to prevent enumeration. It silently stops real sends after 5 per account per hour; `POST /v1/auth/password/reset` allows 8 code attempts per account per 15 minutes.
+
+## Member recovery links
+
+| HTTP | `error` | Cause and action |
+|---:|---|---|
+| 400 | `invalid_token` | The `token` is not the 43-character base64url value from the recovery email. Copy the value after `?token=` without altering it. |
+| 400 | `weak_password` | The new password fails the server policy. Choose a stronger password and submit the same link while it remains valid. |
+| 401 | `invalid_token` | The link is invalid, expired, already used, or does not match the organization/member. Request a new link from the organization admin. The response is intentionally uniform. |
+| 502 | `recovery_send_failed` | The admin-triggered recovery email could not be delivered. Ask the organization admin to verify the email configuration and trigger a new link. |
+| 429 | `too_many_attempts` | The source IP exceeded the verification throttle. Wait briefly and retry; do not automate repeated submissions. |
