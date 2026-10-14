@@ -204,6 +204,10 @@ their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
 do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
 assets; v1 money-out pricing for those assets remains unavailable.
 
+Swap execution may have an internal back-office coverage workflow. This does
+not change the `POST /v1/swaps` request or response, the execution rate, or
+the account ledger contract.
+
 A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
 remains the USD-equivalent reporting field. A controversy hold follows the
