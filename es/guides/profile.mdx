@@ -81,6 +81,20 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/password/forgot \
 Luego `POST /v1/auth/password/reset` con `code` y `new_password`. Revoca todas
 las sesiones.
 </Step>
+<Step title="Usar un link de recuperación del admin">
+Si eres member de una cuenta empresa y tu admin inició la recuperación, usa el
+link enviado a tu email. Abre `/reset-password` en el portal y envía el
+`token` de la URL junto con el slug de la org y tu nueva contraseña a
+`POST /v1/auth/password/reset-link`. El link es de un solo uso y expira en
+60 minutos. Al canjearlo se verifica tu email, se limpia el registro pendiente
+y se revocan todas las sesiones.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/password/reset-link \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","token":"<token-del-link-del-email>","new_password":"mi-nueva-clave-fuerte"}'
+```
+</Step>
 </Steps>
 
 ## Email de login

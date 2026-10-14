@@ -7,6 +7,11 @@ description: "History of API and documentation changes"
 <Update label="October 13, 2026" description="v2.161 · 1 version">
 ### v2.161
 **Changed**
+- Added the administrator-initiated member password recovery link flow:
+  `POST /v1/auth/password/reset-link` redeems a single-use 60-minute link,
+  verifies the member email, clears pending registration and revokes all
+  sessions. Member admin triggers now return `link_sent` when the portal is
+  configured, with an honest `code_sent` fallback when it is not.
 - Registration now returns `pending_verification` without a session; confirm the email with `POST /v1/auth/register/confirm` to receive the first session. Duplicate registrations use the same response.
 - Added account-scoped login, password-recovery and reset-attempt limits.
 
