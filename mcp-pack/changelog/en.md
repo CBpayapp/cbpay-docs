@@ -5,6 +5,15 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.162 · 1 version - October 14, 2026
+### v2.162
+**Changed**
+- BTC swaps at or above USD 1,000 now use a pre-trade market-price guard.
+  Divergence returns `422 guard_diverged`; unavailable market data proceeds with
+  an operational alert and the existing execution-price safeguards.
+- Added the provider-agnostic explanation of the guard to the swaps guide and
+  error catalog. Internal checkout/payin conversions and OTC flows are outside
+  this guard.
 ## v2.161 · 1 version - October 13, 2026
 ### v2.161
 **Changed**
@@ -16,7 +25,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - Registration now returns `pending_verification` without a session; confirm the email with `POST /v1/auth/register/confirm` to receive the first session. Duplicate registrations use the same response.
 - Added account-scoped login, password-recovery and reset-attempt limits.
 
-## v2.160 ? 1 version - October 12, 2026
+## v2.160 · 1 version - October 12, 2026
 ### v2.160
 **Added**
 - Added Brazil regional coverage: provider-agnostic BRL payouts via `pix` and `bank_transfer`, plus hosted `BR/BRL/pix` payins with a 1 BRL minimum and required payer name/document.

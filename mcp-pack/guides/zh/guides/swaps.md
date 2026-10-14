@@ -117,6 +117,14 @@ curl https://api.qbank.cl/platform/v1/swaps/{swap_id} \
 - **波动性货币限额**（BTC/GOLD/SILVER/PLATINUM，与出款和银行卡消费共享）：每笔操作上限和每账户 24 小时滚动交易量上限（`GET /v1/settlement` 可查看你的限额）。USDT ↔ USDC 没有限额。
 - 需要你已通过的[身份核验](https://docs.cbpayapp.com/zh/guides/kyc)且已启用 `swaps` 服务。
 
+### BTC 价格保护
+
+对于金额达到 1,000 USD 的 BTC swap，CBPay 会在执行前将参考价格与当前
+市场订单簿比较。偏差超过配置阈值时返回 `422 guard_diverged`；请等待
+价格收敛或拆分操作，并使用相同的 `idempotency_key` 重试。市场数据暂时
+不可用时，swap 可能在产生运营告警的情况下继续执行，同时仍保留执行价格
+保护。此保护不适用于 checkout/payin 内部转换或 OTC 流程。
+
 ## 错误
 
 | HTTP | `error` | 原因 | 解决方案 |
@@ -131,6 +139,7 @@ curl https://api.qbank.cl/platform/v1/swaps/{swap_id} \
 | 403 | `verification_required` / `service_disabled` | 账户未核验或服务已关闭 | 完成入驻流程 / 联系你的运营方 |
 | 422 | `settlement_limit_exceeded` | 兑换超过波动性货币的单笔操作上限 | 拆分操作 |
 | 422 | `settlement_daily_limit_exceeded` | 你超过了波动性货币的 24 小时交易量 | 稍后重试 |
+| 422 | `guard_diverged` | BTC 参考价格超过交易前偏差上限 | 等待价格收敛或拆分操作，并使用相同幂等键重试 |
 | 503 | `pricing_unavailable` | 执行价格不可用或已过期 | 几分钟后重试 |
 
 ## 常见问题
@@ -159,3 +168,6 @@ USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
 跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。
+
+swap 可能有内部后台对冲流程。这不会改变 `POST /v1/swaps` 的请求、
+响应、执行汇率或账户 ledger 合同。

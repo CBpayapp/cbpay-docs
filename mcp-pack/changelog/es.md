@@ -5,6 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.162 · 1 versión - 14 de octubre de 2026
+### v2.162
+**Cambiado**
+- Los swaps BTC de USD 1.000 o más ahora usan un price guard antes de
+  ejecutar. Una divergencia responde `422 guard_diverged`; si el mercado no
+  está disponible, la operación sigue con alerta y conserva las protecciones
+  del precio de ejecución.
+- Se documentó el guard y su error en la guía y el catálogo de errores. Las
+  conversiones internas de checkout/payin y los flujos OTC quedan fuera.
 ## v2.161 · 2 versiones - 13 de octubre de 2026
 ### v2.161
 **Cambiado**

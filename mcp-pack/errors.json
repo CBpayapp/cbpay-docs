@@ -1,5 +1,5 @@
 {
-  "count": 326,
+  "count": 327,
   "errors": [
     {
       "category": {
@@ -2085,6 +2085,20 @@
         "en": "The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later",
         "es": "La cuenta superó su volumen de 24 h en assets volátiles (BTC/GOLD/SILVER/PLATINUM); usa USDT/USDC o reintenta más tarde",
         "zh": "该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "guard_diverged",
+      "http": 422,
+      "meaning": {
+        "en": "The BTC price reference diverged beyond the pre-trade guard; wait for convergence or split the operation, then retry with the same idempotency key",
+        "es": "La referencia de precio BTC divergió más allá del price guard pre-trade; espera convergencia o divide la operación y reintenta con la misma clave de idempotencia",
+        "zh": "BTC 价格参考值超出交易前价格保护的偏差上限；等待价格收敛或拆分操作，并使用相同幂等键重试"
       }
     },
     {
