@@ -1,5 +1,5 @@
 {
-  "count": 324,
+  "count": 326,
   "errors": [
     {
       "category": {
@@ -4529,6 +4529,34 @@
         "en": "The verification service could not be checked. Keep the same flow and retry later; do not create a second account or reset request.",
         "es": "No se pudo consultar el servicio de verificación. Mantén el mismo flujo y reintenta después; no crees otra cuenta ni otra solicitud.",
         "zh": "无法查询验证服务。请保持同一流程稍后重试；不要创建第二个账户或重置请求。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_token",
+      "http": 400,
+      "meaning": {
+        "en": "The `token` is not the 43-character base64url value from the recovery email. Copy the value after `?token=` without altering it.",
+        "es": "El `token` no es el valor base64url de 43 caracteres del email de recuperación. Copia lo que sigue a `?token=` sin modificarlo.",
+        "zh": "`token` 不是恢复邮件中 43 个字符的 base64url 值。请原样复制 `?token=` 后的值。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "recovery_send_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The admin-triggered recovery email could not be delivered. Ask the organization admin to verify the email configuration and trigger a new link.",
+        "es": "No se pudo entregar el email de recuperación iniciado por el admin. Pide al admin revisar la configuración de email y disparar un link nuevo.",
+        "zh": "管理员发起的恢复邮件无法送达。请组织管理员检查邮件配置并重新触发链接。"
       }
     }
   ]

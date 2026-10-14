@@ -62,6 +62,18 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/password/forgot \
 ```
 
 然后使用 `code` 和 `new_password` 调用 `POST /v1/auth/password/reset`。该操作会撤销所有会话。
+### 使用管理员发送的恢复链接
+
+如果你是企业账户成员，且管理员发起了恢复流程，请使用发送到你邮箱的
+链接。它会打开门户的 `/reset-password` 页面；将 URL 中的 `token`、组织
+slug 和新密码提交到 `POST /v1/auth/password/reset-link`。链接只能使用
+一次，60 分钟后过期。成功兑换后会验证邮箱、清除待注册状态并吊销所有会话。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/password/reset-link \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","token":"<token-from-email-link>","new_password":"my-new-strong-pass"}'
+```
 ## 登录邮箱
 
 邮箱可以更换，但**新邮箱始终需要验证**：验证码发送到新地址，只有确认后更换才会生效。这可以防止任何人将登录指向一个他并不控制的邮箱。

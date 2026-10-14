@@ -58,6 +58,10 @@ La recuperación evita enumeración. `POST /v1/auth/password/forgot` mantiene el
 por hora. `POST /v1/auth/password/reset` permite como máximo 8 intentos de código por
 cuenta en 15 minutos. Un reset exitoso por email verifica el email y elimina
 `register_pending`.
+Los members de una cuenta empresa también pueden recibir un link de recuperación
+iniciado por su admin. Canjea su `token` con `org` y `new_password` en
+`POST /v1/auth/password/reset-link`; el link es de un solo uso y expira en
+60 minutos. Este flujo de members es independiente del reset de admins de plataforma.
 
 ## Tipos de credencial
 
