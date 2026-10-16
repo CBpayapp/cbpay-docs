@@ -75,6 +75,105 @@ Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/pay
 asset (USD is the principal balance); `banking` retains ARS for local
 payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
 
+## Company multi-banking: operating accounts
+
+Company accounts can create multiple `purpose: "banking"` deposit accounts
+in each enabled local corridor: `BO/BOB`, `MX/MXN`, and `AR/ARS`, always with
+`method: "bank_transfer"`. Send a distinct `Idempotency-Key` for each
+destination; reusing it returns the same instrument and never provisions a
+second bank account. The soft operational limit is **50 banking instruments
+per company account and corridor** (`422 deposit_account_limit_reached`).
+Person accounts retain one banking instrument per corridor.
+
+```mermaid
+sequenceDiagram
+  participant App
+  participant CBPay
+  participant Bank
+  App->>CBPay: POST /v1/payins/deposit-accounts\npurpose=banking
+  CBPay->>Bank: Provision receiving destination
+  Bank-->>CBPay: Account number / CVU / CLABE
+  CBPay-->>App: 201 DepositInstrument
+  App->>CBPay: GET balance or movements
+```
+
+### Create and label an operating destination
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: bo-banking-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"BO","currency":"BOB","method":"bank_transfer","purpose":"banking","label":"La Paz collections"}'
+```
+
+Response `201`:
+
+```json
+{
+  "instrument_id": "a1d4b7c0-1234-5678-9abc-def012345678",
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "country": "BO",
+  "currency": "BOB",
+  "method": "bank_transfer",
+  "purpose": "banking",
+  "instrument": "1002003004",
+  "label": "La Paz collections",
+  "status": "active"
+}
+```
+
+`label` is a local nickname only and is optional; it is limited to 60
+characters. Change or clear it with:
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/a1d4b7c0-1234-5678-9abc-def012345678/label \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"label":"Collections BO"}'
+```
+
+### AR alias lifecycle
+
+For a company AR/ARS destination, the CVU can be created without
+`bank_alias`. It is then operationally `alias_pending`: creation succeeds,
+but balance and movements return `409 alias_pending` until the company sets
+the alias. Complete it with
+`PUT /v1/payins/deposit-accounts/{instrumentID}/bank-alias`. Person accounts
+keep the existing `400 missing_alias` creation rule.
+
+### Balance and movements
+
+Only `purpose: "banking"` instruments expose these operating views:
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/balance \
+  -H "Authorization: Bearer <token>"
+curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/movements?page=1&page_size=50&from=2026-10-01&to=2026-10-17" \
+  -H "Authorization: Bearer <token>"
+```
+
+The balance response uses exact minor-unit strings:
+
+```json
+{
+  "instrument_id": "a1d4b7c0-1234-5678-9abc-def012345678",
+  "currency": "BOB",
+  "funds_model": "retained",
+  "credited_in": "125000",
+  "paid_out": "40000",
+  "refunded_in": "0",
+  "refunded_out": "0",
+  "other_net": "0",
+  "derived_available": "85000",
+  "display_available": "850.00"
+}
+```
+
+`funds_model` is `retained` for BO and `centralized` for MX/AR. Movements
+are a paginated union of payins and payouts, with `kind`, `id`, `asset`,
+`amount_minor`, `direction`, `status`, optional `local_amount`, and
+`created_at`.
+
 > **Note**
 Banking fees come in two shapes. **Standalone fixed fees**
 (`banking_customer`, `banking_account`, `banking_operation`) are debited
@@ -538,6 +637,41 @@ discovered automatically from the bank — exposes its `direction` (`in` /
 `out`), net `amount`, `currency`, `counterparty` and `reference` whenever
 the bank reports them. These fields are optional and appear in
 `GET /v1/banking/operations` and `GET /v1/banking/operations/{id}`.
+## Banking destinations for verified third parties
+
+Company accounts can request a banking destination for an approved third-party
+KYC or KYB submission. The request is naturally idempotent per submission and
+corridor; approval triggers the destination automatically.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer"}'
+curl https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>"
+```
+
+The create response is `201` for a new intent and `200` for a replay:
+
+```json
+{
+  "intent_id": "7f2a0000-0000-4000-8000-000000000001",
+  "kind": "kyb",
+  "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "country": "MX",
+  "currency": "MXN",
+  "method": "bank_transfer",
+  "status": "pending",
+  "fulfilled_instrument_id": ""
+}
+```
+
+Statuses are `pending`, `fulfilled`, and `abandoned`. Approval creates the
+instrument and changes the intent to `fulfilled`; a rejected verification
+changes it to `abandoned`. A new request for an abandoned intent returns
+`409 intent_abandoned`; an own-onboarding verification returns
+`422 verification_invalid`.
+
 The `banking_operation_status_changed` webhook stays lightweight by design:
 it carries the identifiers and the new status only, never the enriched
 fields. When it fires, fetch the operation detail to read the direction,

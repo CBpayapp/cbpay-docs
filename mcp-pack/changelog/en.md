@@ -5,6 +5,17 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.163 · 1 version - October 16, 2026
+### v2.163
+**Added**
+- Company multi-banking deposit accounts for BO/BOB, MX/MXN and AR/ARS,
+  including labels, the 50-per-corridor soft cap, exact balance and movement
+  reads, and third-party KYC/KYB banking intents.
+- Explicit `source_instrument_id` selection for BO/BOB payouts and QR
+  confirmations, with fail-closed ownership and ambiguity errors.
+**Changed**
+- Company AR CVUs can defer bank-alias selection; operating reads remain
+  blocked with `alias_pending` until the alias is set.
 ## v2.162 · 1 version - October 14, 2026
 ### v2.162
 **Changed**

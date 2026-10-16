@@ -4,6 +4,18 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年10月16日" description="v2.163 · 1 个版本">
+### v2.163
+**Added**
+- 企业多银行存款账户支持 BO/BOB、MX/MXN 和 AR/ARS，包含本地 label、
+  每通道 50 个的软上限、精确余额与流水读取，以及第三方 KYC/KYB
+  banking intent。
+- BO/BOB payout 和 QR confirm 支持显式 `source_instrument_id`，并对
+  ownership 和来源歧义 fail-closed。
+**Changed**
+- AR 企业 CVU 可以延后设置 alias；设置前运营读取返回 `alias_pending`。
+</Update>
+
 <Update label="2026年10月14日" description="v2.162 · 1 个版本">
 ### v2.162
 **Changed**
