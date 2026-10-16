@@ -240,7 +240,13 @@ part of the replay identity. Read the live status with
 | 422 | `refund_exceeds_received` | The refund exceeds what the [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) charge received minus prior refunds |
 | 503 | `refund_recovery_pending` | The refund linkage is temporarily unavailable; retry with the same idempotency key and do not originate a second withdrawal |
 | 400 | `to_address_required` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) refund (and crypto withdrawals) require an explicit destination address |
-| 422 | `deposit_account_limit_reached` | Person accounts and unsupported or existing corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted |
+| 422 | `deposit_account_limit_reached` | Person accounts and unsupported or existing corridors keep one deposit account per corridor; company banking accounts support up to 50 per enabled corridor |
+| 400 | `invalid_label` | The local deposit-account nickname is longer than 60 characters; shorten it and retry |
+| 409 | `alias_pending` | The company AR/ARS banking CVU has no chosen bank alias; set it with the bank-alias PUT before reading balance or movements |
+| 422 | `purpose_not_supported` | Balance and movements are available only for `purpose: "banking"` instruments |
+| 422 | `ambiguous_source_instrument` | Several active BO/BOB banking sources exist; send the selected UUID in `source_instrument_id` |
+| 422 | `invalid_source_instrument` | The selected source is not an active BO/BOB banking instrument; choose an active banking destination |
+| 409 | `intent_abandoned` | The third-party verification was rejected; create a new verification link before requesting banking |
 | 409 | `deposit_account_conflict` | The core returned a deposit destination already assigned to another organization — reconcile before retrying |
 
 | 422 | `deposit_account_not_recoverable` | The pending destination is not an MX/MXN/bank_transfer instrument that can be recovered |

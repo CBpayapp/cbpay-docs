@@ -70,6 +70,57 @@ Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payi
 (USD es el saldo principal); `banking` conserva MXN para payouts locales
 ([payouts](https://docs.cbpayapp.com/es/guides/payouts)).
 
+## Multi-banking para empresas: cuentas operativas
+
+Las cuentas empresa pueden crear múltiples cuentas de depósito con
+`purpose: "banking"` en cada corredor local habilitado:
+`BO/BOB`, `MX/MXN` y `AR/ARS`, siempre con `method: "bank_transfer"`.
+Usa un `Idempotency-Key` distinto para cada destino; repetirlo devuelve el
+mismo instrumento. El tope operativo blando es de **50 instrumentos banking
+por cuenta empresa y corredor** (`422 deposit_account_limit_reached`).
+Las cuentas persona mantienen un instrumento banking por corredor.
+
+```mermaid
+sequenceDiagram
+  participant App
+  participant CBPay
+  participant Banco
+  App->>CBPay: POST /v1/payins/deposit-accounts\npurpose=banking
+  CBPay->>Banco: Provisionar destino receptor
+  Banco-->>CBPay: Número / CVU / CLABE
+  CBPay-->>App: 201 DepositInstrument
+  App->>CBPay: Consultar saldo o movimientos
+```
+
+El `label` es un apodo local opcional de hasta 60 caracteres y se puede
+cambiar o limpiar con `PUT /v1/payins/deposit-accounts/{instrumentID}/label`.
+En AR/ARS, una empresa puede crear la CVU sin `bank_alias`: queda en
+`alias_pending` y el saldo/movimientos responden `409 alias_pending` hasta
+completar `PUT /v1/payins/deposit-accounts/{instrumentID}/bank-alias`.
+La persona conserva `400 missing_alias` al crear.
+
+Las lecturas operativas son:
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/balance \
+  -H "Authorization: Bearer <token>"
+curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/movements?page=1&page_size=50&from=2026-10-01&to=2026-10-17" \
+  -H "Authorization: Bearer <token>"
+```
+
+El saldo devuelve `currency`, `funds_model` (`retained` en BO,
+`centralized` en MX/AR), y los montos exactos en minor units:
+`credited_in`, `paid_out`, `refunded_in`, `refunded_out`, `other_net`,
+`derived_available` y `display_available`. Movimientos es una unión paginada
+de payins y payouts; `from` y `to` son obligatorios.
+
+Para payouts BO/BOB puedes enviar `source_instrument_id` (UUID) en
+`POST /v1/payouts` o `POST /v1/payouts/qr/confirm`. Fuera de BO/BOB responde
+`400`; un instrumento ajeno responde `404 not_found`; uno no bancario o
+inactivo responde `422 invalid_source_instrument`. Sin UUID, varias fuentes
+activas responden `422 ambiguous_source_instrument`. MX/AR siguen usando la
+madre/centralizador.
+
 ### 🇦🇷 ARS — peso argentino
 
 Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
@@ -656,6 +707,26 @@ Cada puerta lee el propósito que le corresponde: los payouts SEPA ordenan
 desde tu dirección de fondeo y las operaciones Banking desde tu dirección de
 Banking. Un UUID explícito en `source_virtual_iban_id` siempre gana sobre la
 selección automática.
+## Banking para terceros verificados
+
+Una cuenta empresa puede solicitar un destino banking para una submission KYC
+o KYB aprobada de un tercero. El intento es idempotente por submission y
+corredor; al aprobarse la verificación se crea automáticamente el destino.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer"}'
+curl https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>"
+```
+
+La respuesta contiene `intent_id`, `kind`, `verification_id`, `country`,
+`currency`, `method`, `status` y `fulfilled_instrument_id`. Los estados son
+`pending`, `fulfilled` y `abandoned`; una verificación rechazada deja el
+intento abandonado y una repetición responde `409 intent_abandoned`.
+Referenciar el onboarding propio responde `422 verification_invalid`.
+
 ## 5. Envía pagos
 
 Dos tipos de operación:

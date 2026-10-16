@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.162"
+  version: "2.163"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3945,6 +3945,10 @@ paths:
                   type: string
                   format: uuid
                   description: Optional active `funding_usdt` virtual IBAN that funds a customer SEPA payout. Omit only when the account has exactly one active EUR funding account; send it when several are active. The ordering identity is read from the vIBAN registrant.
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: 'Optional active `purpose: banking` BO/BOB deposit instrument used as the payout source. Outside BO/BOB this field is rejected. Omit when the mother account should be used; multiple active BO sources require this UUID.'
                 idempotency_key:
                   type: string
                 options:
@@ -16433,6 +16437,10 @@ paths:
                   type: string
                   format: uuid
                   description: Optional active `banking_eur` virtual IBAN used to fund a EUR SEPA Banking withdrawal. Omit only when exactly one active source exists; several sources require this UUID. The platform stamps `payer` from the vIBAN registrant.
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: 'Optional active `purpose: banking` BO/BOB deposit instrument used as the QR payout source. Outside BO/BOB this field is rejected; multiple active BO sources require this UUID.'
                 beneficiary_type:
                   type: string
                   enum:
@@ -23817,6 +23825,208 @@ paths:
                     error: not_found
                     message: evidence not found
 
+  /v1/payins/deposit-accounts/{instrumentID}/label:
+    put:
+      tags: [Payins]
+      operationId: setDepositAccountLabel
+      summary: Set a local deposit-account label
+      parameters:
+        - name: instrumentID
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label]
+              properties:
+                label: {type: string, maxLength: 60}
+            example: {label: "Collections BO"}
+      responses:
+        '200':
+          description: Label updated; an empty label clears it.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DepositInstrument'}
+              example:
+                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
+                label: Collections BO
+                purpose: banking
+                status: active
+        '400':
+          description: Label is invalid or longer than 60 characters.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: invalid_label, message: label must be at most 60 characters}
+        '404':
+          description: Instrument is not owned by the caller.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: not_found, message: deposit account not found}
+  /v1/payins/deposit-accounts/{instrumentID}/balance:
+    get:
+      tags: [Payins]
+      operationId: getDepositAccountBalance
+      summary: Read a banking deposit-account balance
+      parameters:
+        - {name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Ledger-derived exact minor-unit balance.
+          content:
+            application/json:
+              example:
+                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
+                currency: BOB
+                funds_model: retained
+                credited_in: '125000'
+                paid_out: '40000'
+                refunded_in: '0'
+                refunded_out: '0'
+                other_net: '0'
+                derived_available: '85000'
+                display_available: '850.00'
+        '409':
+          description: Provisioning or AR alias is pending.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              examples:
+                alias_pending: {value: {error: alias_pending, message: choose the bank alias first}}
+                pending: {value: {error: deposit_account_not_recoverable, message: provisioning is still in flight}}
+        '422':
+          description: Instrument purpose is not banking.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: purpose_not_supported, message: per-instrument balance is only available for banking deposit accounts}
+  /v1/payins/deposit-accounts/{instrumentID}/movements:
+    get:
+      tags: [Payins]
+      operationId: listDepositAccountMovements
+      summary: List banking deposit-account movements
+      parameters:
+        - {name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: page, in: query, schema: {type: integer, default: 1}}
+        - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: Paginated payin/payout union.
+          content:
+            application/json:
+              example:
+                instrument_id: a1d4b7c0-1234-5678-9abc-def012345678
+                page: 1
+                page_size: 50
+                total: 1
+                movements:
+                  - {kind: payin, id: p-001, asset: BOB, amount_minor: '125000', direction: in, status: completed, created_at: '2026-10-16T12:00:00Z'}
+        '400':
+          description: Missing or invalid date window.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: invalid_date_range, message: from and to are required}
+        '409':
+          description: Provisioning or AR alias is pending.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: alias_pending, message: choose the bank alias first}
+        '422':
+          description: Instrument purpose is not banking.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: purpose_not_supported, message: per-instrument movements are only available for banking deposit accounts}
+  /v1/kyc/submissions/{submissionID}/banking-intents:
+    post:
+      tags: [KYC]
+      operationId: createKycBankingIntent
+      summary: Request banking for a verified third party
+      parameters:
+        - {name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {country: MX, currency: MXN, method: bank_transfer}
+      responses:
+        '201':
+          description: Intent created.
+          content:
+            application/json:
+              example: {intent_id: 7f2a0000-0000-4000-8000-000000000001, kind: kyc, verification_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f, country: MX, currency: MXN, method: bank_transfer, status: pending, fulfilled_instrument_id: ''}
+        '409':
+          description: Intent was abandoned after rejection.
+          content:
+            application/json:
+              example: {error: intent_abandoned, message: the verification was rejected}
+        '422':
+          description: Verification belongs to own onboarding.
+          content:
+            application/json:
+              example: {error: verification_invalid, message: third parties need their own verification}
+    get:
+      tags: [KYC]
+      operationId: listKycBankingIntents
+      summary: List third-party banking intents
+      parameters:
+        - {name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Intents for the submission.
+          content:
+            application/json:
+              example: {intents: []}
+  /v1/kyb/submissions/{submissionID}/banking-intents:
+    post:
+      tags: [KYB]
+      operationId: createKybBankingIntent
+      summary: Request banking for a verified third party company
+      parameters:
+        - {name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {country: MX, currency: MXN, method: bank_transfer}
+      responses:
+        '201':
+          description: Intent created.
+          content:
+            application/json:
+              example: {intent_id: 7f2a0000-0000-4000-8000-000000000001, kind: kyb, verification_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f, country: MX, currency: MXN, method: bank_transfer, status: pending, fulfilled_instrument_id: ''}
+        '409':
+          description: Intent was abandoned after rejection.
+          content:
+            application/json:
+              example: {error: intent_abandoned, message: the verification was rejected}
+        '422':
+          description: Verification belongs to own onboarding.
+          content:
+            application/json:
+              example: {error: verification_invalid, message: third parties need their own verification}
+    get:
+      tags: [KYB]
+      operationId: listKybBankingIntents
+      summary: List third-party company banking intents
+      parameters:
+        - {name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Intents for the submission.
+          content:
+            application/json:
+              example: {intents: []}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -25600,6 +25810,13 @@ components:
           type: string
           enum: [fondeo, banking]
           description: Deposit destination purpose.
+        label:
+          type: string
+          maxLength: 60
+          description: Optional local nickname for company operating destinations.
+        alias_pending:
+          type: boolean
+          description: True for an AR company CVU created before its bank alias is selected.
         instrument:
           type: string
           description: The deposit destination to share with payers (e.g. the CLABE).

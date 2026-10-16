@@ -68,6 +68,56 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 `fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
 保留 ARS 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
 
+## 企业多银行：运营账户
+
+企业账户可以在启用的本地通道中创建多个 `purpose: "banking"` 充值
+账户：`BO/BOB`、`MX/MXN` 和 `AR/ARS`，且 `method` 必须为
+`bank_transfer`。每个目的地使用不同的 `Idempotency-Key`；重复使用会
+返回原账户，不会再次开户。每个企业账户和通道最多保留 **50 个 banking
+工具**（超过时返回 `422 deposit_account_limit_reached`）。个人账户仍
+然每个通道只有一个 banking 工具。
+
+```mermaid
+sequenceDiagram
+  participant App
+  participant CBPay
+  participant Bank
+  App->>CBPay: POST /v1/payins/deposit-accounts\npurpose=banking
+  CBPay->>Bank: 创建收款目的地
+  Bank-->>CBPay: 账号 / CVU / CLABE
+  CBPay-->>App: 201 DepositInstrument
+  App->>CBPay: 查询余额或流水
+```
+
+`label` 是可选的本地昵称，最多 60 个字符，可通过
+`PUT /v1/payins/deposit-accounts/{instrumentID}/label` 修改或清除。
+对于 AR/ARS，企业可以先创建没有 `bank_alias` 的 CVU；此时状态为
+`alias_pending`，余额和流水会返回 `409 alias_pending`，直到调用
+`PUT /v1/payins/deposit-accounts/{instrumentID}/bank-alias`。个人账户
+创建时仍保留 `400 missing_alias` 规则。
+
+运营查询：
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/balance \
+  -H "Authorization: Bearer <token>"
+curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/movements?page=1&page_size=50&from=2026-10-01&to=2026-10-17" \
+  -H "Authorization: Bearer <token>"
+```
+
+余额返回 `currency`、`funds_model`（BO 为 `retained`，MX/AR 为
+`centralized`），以及精确的 minor 字符串：`credited_in`、`paid_out`、
+`refunded_in`、`refunded_out`、`other_net`、`derived_available` 和
+`display_available`。流水是 payin 与 payout 的分页联合结果；`from`
+和 `to` 必填。
+
+BO/BOB payout 可在 `POST /v1/payouts` 或
+`POST /v1/payouts/qr/confirm` 发送 UUID 字段 `source_instrument_id`。
+在其他通道发送会返回 `400`；不属于账户返回 `404 not_found`；非活跃
+或非 banking 工具返回 `422 invalid_source_instrument`。省略 UUID 时，
+多个活跃来源返回 `422 ambiguous_source_instrument`。MX/AR 继续从母账户
+或 centralizer 付款。
+
 > **注**
 银行服务费用有两种形式。**独立固定费用**（`banking_customer`、`banking_account`、`banking_operation`）在每笔操作执行时从您的**默认结算资产余额**(USD 为主资产)扣除，若操作失败则**自动退款**。**按通道的交易费用**（`banking_deposit`、`banking_transfer_ach`、`banking_transfer_swift`、`banking_transfer_wire`、`banking_transfer_sepa`）为百分比加固定金额，**以操作货币**（您的 `BANK_USD` / `BANK_EUR` 余额）计收——参见下文「通道费用（存款与转账）」一节。费用为 0（默认值）时服务免费。每个响应中的 `banking_fee` 和 `banking_fee_asset` 字段显示实际扣费金额及币种。
 ## 完整流程
@@ -535,6 +585,25 @@ EUR 虚拟 IBAN 入金会在 banking 镜像、对账单和 analytics 中保留�
 每个分配都需要组织运营人员在调用银行通道前进行人工审批。
 #### 同一个地址能用于 payout 和 Banking 操作吗？
 每个入口读取自己对应的用途：SEPA payout 从入金地址付款，Banking 操作从 Banking 地址付款。显式 `source_virtual_iban_id` 始终优先于自动选择。
+## 已验证第三方的 Banking
+
+企业账户可以为已批准的第三方 KYC 或 KYB submission 请求 banking
+目的地。请求按 submission 和通道自然幂等；验证批准后会自动创建目的地。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer"}'
+curl https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>"
+```
+
+响应包含 `intent_id`、`kind`、`verification_id`、`country`、`currency`、
+`method`、`status` 和 `fulfilled_instrument_id`。状态为 `pending`、
+`fulfilled` 或 `abandoned`；验证被拒绝后再次请求返回
+`409 intent_abandoned`。引用账户自身的 onboarding verification 返回
+`422 verification_invalid`。
+
 ## 5. 发送付款
 
 两种操作类型：

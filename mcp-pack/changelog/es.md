@@ -5,6 +5,17 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.163 · 1 versión - 16 de octubre de 2026
+### v2.163
+**Agregado**
+- Multi-banking empresa para cuentas de depósito BO/BOB, MX/MXN y AR/ARS,
+  con labels, tope blando de 50 por corredor, lecturas exactas de saldo y
+  movimientos, e intents banking para KYC/KYB de terceros.
+- Selección explícita de `source_instrument_id` para payouts y confirmaciones
+  QR BO/BOB, con errores fail-closed de ownership y ambigüedad.
+**Cambiado**
+- Las CVU empresa AR pueden diferir el alias; las lecturas operativas quedan
+  bloqueadas con `alias_pending` hasta definirlo.
 ## v2.162 · 1 versión - 14 de octubre de 2026
 ### v2.162
 **Cambiado**

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.162"
+  version: "2.163"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -3704,6 +3704,10 @@ paths:
                   type: string
                   format: uuid
                   description: 用于客户 SEPA payout 的 active `funding_usdt` 虚拟 IBAN，可选。只有一个 active EUR 来源时可省略；存在多个来源时必须发送。付款人身份来自 vIBAN registrant。
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: 可选的活跃 BO/BOB banking 工具；其他通道拒绝此字段，多个来源时必须发送 UUID。
                 idempotency_key:
                   type: string
                 options:
@@ -15787,6 +15791,10 @@ paths:
                   type: string
                   format: uuid
                   description: 用于 EUR SEPA Banking 提现的 active `banking_eur` 虚拟 IBAN，可选。只有一个 active 来源时可省略；多个来源时必须发送该 UUID。平台从 vIBAN registrant 写入 `payer`。
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: 用于 BO/BOB QR payout 的活跃 banking 工具 UUID。
                 beneficiary_type:
                   type: string
                   enum:
@@ -22921,6 +22929,173 @@ paths:
                   value:
                     error: not_found
                     message: evidence not found
+
+  /v1/payins/deposit-accounts/{instrumentID}/label:
+    put:
+      tags: [Payins]
+      operationId: setDepositAccountLabel
+      summary: 设置本地标签
+      parameters: [{name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [label], properties: {label: {type: string, maxLength: 60}}}
+            example: {label: "Collections BO"}
+      responses:
+        '200':
+          description: 标签已更新。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DepositInstrument'}
+              example: {instrument_id: a1d4b7c0-1234-5678-9abc-def012345678, label: "Collections BO", purpose: banking, status: active}
+        '400':
+          description: 标签无效。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: invalid_label, message: label must be at most 60 characters}
+        '404':
+          description: 工具不属于调用方。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: not_found, message: deposit account not found}
+  /v1/payins/deposit-accounts/{instrumentID}/balance:
+    get:
+      tags: [Payins]
+      operationId: getDepositAccountBalance
+      summary: 读取 banking 工具余额
+      parameters: [{name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses:
+        '200':
+          description: Ledger 派生的精确余额。
+          content:
+            application/json:
+              example: {instrument_id: a1d4b7c0-1234-5678-9abc-def012345678, currency: BOB, funds_model: retained, credited_in: '125000', paid_out: '40000', refunded_in: '0', refunded_out: '0', other_net: '0', derived_available: '85000', display_available: '850.00'}
+        '409':
+          description: alias 或 provision pending。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: alias_pending, message: choose the bank alias first}
+        '422':
+          description: purpose 不是 banking。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: purpose_not_supported, message: per-instrument balance is only available for banking deposit accounts}
+  /v1/payins/deposit-accounts/{instrumentID}/movements:
+    get:
+      tags: [Payins]
+      operationId: listDepositAccountMovements
+      summary: 列出 banking 工具流水
+      parameters:
+        - {name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: page, in: query, schema: {type: integer, default: 1}}
+        - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: 分页 payin/payout 联合结果。
+          content:
+            application/json:
+              example: {instrument_id: a1d4b7c0-1234-5678-9abc-def012345678, page: 1, page_size: 50, total: 0, movements: []}
+        '400':
+          description: 日期窗口无效。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: invalid_date_range, message: from and to are required}
+        '409':
+          description: alias 或 provision pending。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: alias_pending, message: choose the bank alias first}
+        '422':
+          description: purpose 不是 banking。
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {error: purpose_not_supported, message: per-instrument movements are only available for banking deposit accounts}
+  /v1/kyc/submissions/{submissionID}/banking-intents:
+    post:
+      tags: [KYC]
+      operationId: createKycBankingIntent
+      summary: 为已验证第三方请求 banking
+      parameters: [{name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {country: MX, currency: MXN, method: bank_transfer}
+      responses:
+        '201':
+          description: intent 已创建。
+          content:
+            application/json:
+              example: {intent_id: 7f2a0000-0000-4000-8000-000000000001, kind: kyc, verification_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f, country: MX, currency: MXN, method: bank_transfer, status: pending, fulfilled_instrument_id: ''}
+        '409':
+          description: intent 已放弃。
+          content:
+            application/json:
+              example: {error: intent_abandoned, message: the verification was rejected}
+        '422':
+          description: verification 无效。
+          content:
+            application/json:
+              example: {error: verification_invalid, message: third parties need their own verification}
+    get:
+      tags: [KYC]
+      operationId: listKycBankingIntents
+      summary: 列出第三方 banking intents
+      parameters: [{name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses:
+        '200':
+          description: submission 的 intents。
+          content:
+            application/json:
+              example: {intents: []}
+  /v1/kyb/submissions/{submissionID}/banking-intents:
+    post:
+      tags: [KYB]
+      operationId: createKybBankingIntent
+      summary: 为已验证企业请求 banking
+      parameters: [{name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {country: MX, currency: MXN, method: bank_transfer}
+      responses:
+        '201':
+          description: intent 已创建。
+          content:
+            application/json:
+              example: {intent_id: 7f2a0000-0000-4000-8000-000000000001, kind: kyb, verification_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f, country: MX, currency: MXN, method: bank_transfer, status: pending, fulfilled_instrument_id: ''}
+        '409':
+          description: intent 已放弃。
+          content:
+            application/json:
+              example: {error: intent_abandoned, message: the verification was rejected}
+        '422':
+          description: verification 无效。
+          content:
+            application/json:
+              example: {error: verification_invalid, message: third parties need their own verification}
+    get:
+      tags: [KYB]
+      operationId: listKybBankingIntents
+      summary: 列出企业 banking intents
+      parameters: [{name: submissionID, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses:
+        '200':
+          description: submission 的 intents。
+          content:
+            application/json:
+              example: {intents: []}
 
 components:
   securitySchemes:

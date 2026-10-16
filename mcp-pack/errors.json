@@ -1,5 +1,5 @@
 {
-  "count": 327,
+  "count": 333,
   "errors": [
     {
       "category": {
@@ -2376,9 +2376,93 @@
       "code": "deposit_account_limit_reached",
       "http": 422,
       "meaning": {
-        "en": "Person accounts and unsupported or existing corridors keep one deposit account per corridor (created automatically); it cannot be changed or deleted",
-        "es": "Las cuentas persona y los corredores no soportados o existentes conservan una cuenta de depósito por corredor (creada automáticamente); no se puede cambiar ni eliminar",
-        "zh": "个人账户以及未支持或既有通道每个通道只有一个充值账户（随账户自动创建）；不可更改或删除"
+        "en": "Person accounts and unsupported or existing corridors keep one deposit account per corridor; company banking accounts support up to 50 per enabled corridor",
+        "es": "Las cuentas persona y los corredores no soportados o existentes conservan una cuenta por corredor; una empresa admite hasta 50 cuentas banking por corredor habilitado",
+        "zh": "个人账户和未支持或既有通道每个通道只有一个账户；企业 banking 每个启用通道最多 50 个账户"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "invalid_label",
+      "http": 400,
+      "meaning": {
+        "en": "The local deposit-account nickname is longer than 60 characters; shorten it and retry",
+        "es": "El apodo local de la cuenta supera 60 caracteres; acórtalo y reintenta",
+        "zh": "本地充值账户昵称超过 60 个字符；缩短后重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "alias_pending",
+      "http": 409,
+      "meaning": {
+        "en": "The company AR/ARS banking CVU has no chosen bank alias; set it with the bank-alias PUT before reading balance or movements",
+        "es": "La CVU banking empresa AR/ARS aún no tiene alias; asígnalo con el PUT de bank-alias antes de leer saldo o movimientos",
+        "zh": "AR/ARS 企业 banking CVU 尚未设置银行 alias；先调用 bank-alias PUT，再读取余额或流水"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "purpose_not_supported",
+      "http": 422,
+      "meaning": {
+        "en": "Balance and movements are available only for `purpose: \"banking\"` instruments",
+        "es": "Saldo y movimientos solo están disponibles para instrumentos con `purpose: \"banking\"`",
+        "zh": "余额和流水仅适用于 `purpose: \"banking\"` 工具"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "ambiguous_source_instrument",
+      "http": 422,
+      "meaning": {
+        "en": "Several active BO/BOB banking sources exist; send the selected UUID in `source_instrument_id`",
+        "es": "Hay varias fuentes banking BO/BOB activas; envía el UUID elegido en `source_instrument_id`",
+        "zh": "存在多个活跃 BO/BOB banking 来源；在 `source_instrument_id` 中发送所选 UUID"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "invalid_source_instrument",
+      "http": 422,
+      "meaning": {
+        "en": "The selected source is not an active BO/BOB banking instrument; choose an active banking destination",
+        "es": "La fuente elegida no es un instrumento banking BO/BOB activo; selecciona un destino válido",
+        "zh": "所选来源不是活跃的 BO/BOB banking 工具；请选择有效目的地"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "intent_abandoned",
+      "http": 409,
+      "meaning": {
+        "en": "The third-party verification was rejected; create a new verification link before requesting banking",
+        "es": "La verificación del tercero fue rechazada; crea un nuevo vínculo de verificación antes de pedir banking",
+        "zh": "第三方验证被拒绝；请求 banking 前先创建新的验证链接"
       }
     },
     {
