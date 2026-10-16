@@ -5,7 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.163 · 1 version - October 16, 2026
+## v2.164 · 2 versions - October 16, 2026
+### v2.164
+**Changed**
+- vIBAN and company-wallet reads now retain an actionable, provider-agnostic
+  `last_error` detail when an upstream authorization failure is safely
+  available. HTTP status, error code, response shape and retry/reconciliation
+  rules are unchanged.
 ### v2.163
 **Added**
 - Company multi-banking deposit accounts for BO/BOB, MX/MXN and AR/ARS,

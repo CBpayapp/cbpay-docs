@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="16 de octubre de 2026" description="v2.163 · 1 versión">
+<Update label="16 de octubre de 2026" description="v2.164 · 2 versiones">
+### v2.164
+**Cambiado**
+- Las lecturas de vIBAN y wallets de empresa ahora conservan un `last_error`
+  accionable y agnóstico del proveedor cuando existe de forma segura una causa
+  upstream de autorización. No cambian el status HTTP, el código, la forma de
+  la respuesta ni las reglas de reintento y reconciliación.
 ### v2.163
 **Agregado**
 - Multi-banking empresa para cuentas de depósito BO/BOB, MX/MXN y AR/ARS,

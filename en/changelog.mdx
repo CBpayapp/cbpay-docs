@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 16, 2026" description="v2.163 · 1 version">
+<Update label="October 16, 2026" description="v2.164 · 2 versions">
+### v2.164
+**Changed**
+- vIBAN and company-wallet reads now retain an actionable, provider-agnostic
+  `last_error` detail when an upstream authorization failure is safely
+  available. HTTP status, error code, response shape and retry/reconciliation
+  rules are unchanged.
 ### v2.163
 **Added**
 - Company multi-banking deposit accounts for BO/BOB, MX/MXN and AR/ARS,
