@@ -5,7 +5,12 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.163 · 1 个版本 - 2026年10月16日
+## v2.164 · 2 个版本 - 2026年10月16日
+### v2.164
+**变更**
+- vIBAN 和企业钱包读取现在会在安全可用时保留可操作且不含服务商
+  身份的 `last_error` 上游授权原因。HTTP 状态、错误代码、响应结构以及
+  重试和对账规则均不变。
 ### v2.163
 **Added**
 - 企业多银行存款账户支持 BO/BOB、MX/MXN 和 AR/ARS，包含本地 label、
