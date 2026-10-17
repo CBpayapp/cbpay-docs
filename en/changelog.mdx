@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 16, 2026" description="v2.165 · 3 versions">
+<Update label="October 16, 2026" description="v2.166 · 4 versions">
+### v2.166
+**Added**
+- US/USD `ach`, `wire` and `swift` payouts now require an explicit payment-purpose catalog value, with `purpose_detail` only for `Other`; wire also requires `beneficiary.account_type`. Added actionable pre-debit validation codes and documented the breaking removal of the create-time purpose default.
+- Organization expense payments accept the purpose at pay time, and expense exports support audited, organization-branded XLSX downloads with the same filters as the list.
+**Fixed**
+- Replaced opaque `invalid_payload` responses for known beneficiary, amount, minimum, country and purpose failures with stable codes and field-specific messages.
 ### v2.165
 **Changed**
 - `BO/BOB/bank_transfer` payin detection is now push-first: bank transfer

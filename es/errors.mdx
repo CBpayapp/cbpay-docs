@@ -612,3 +612,17 @@ flujo normal de validación y despacho.
 | 401 | `invalid_token` | El link es inválido, venció, ya se usó o no corresponde a la org/member. Pide un link nuevo al admin de la organización. La respuesta es uniforme a propósito. |
 | 502 | `recovery_send_failed` | No se pudo entregar el email de recuperación iniciado por el admin. Pide al admin revisar la configuración de email y disparar un link nuevo. |
 | 429 | `too_many_attempts` | La IP superó el throttle de verificación. Espera un momento y reintenta; no automatices envíos repetidos. |
+
+## Validación de payouts US/USD
+
+Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
+
+| HTTP | `error` | Significado y solución |
+|---:|---|---|
+| 400 | `invalid_beneficiary` | Falta un campo requerido o es inválido; revisa `message`, por ejemplo `beneficiary.account_type`. |
+| 400 | `invalid_amount` | El monto no es un decimal positivo válido; corrígelo y crea una solicitud nueva. |
+| 422 | `amount_below_minimum` | Un `wire` o `swift` está bajo USD 25; usa al menos `25.00`. |
+| 422 | `prohibited_country` | El país del beneficiario o banco está en el Anexo B (`CU`, `IR`, `KP`, `SY`); usa un destino permitido. |
+| 400 | `purpose_required` | `options.purpose` es obligatorio en todo payout bancario US/USD; elige un valor del catálogo. |
+| 400 | `invalid_options` | Hay una opción desconocida o enviaste `purpose_detail` con un propósito distinto de `Other`; corrige `options`. |
+| 400 | `supporting_document_required` | Sube y envía la factura o recibo antes de crear el payout bancario USD. |

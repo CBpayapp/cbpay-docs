@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月16日" description="v2.165 · 3 个版本">
+<Update label="2026年10月16日" description="v2.166 · 4 个版本">
+### v2.166
+**新增**
+- US/USD `ach`、`wire` 和 `swift` 出金现在必须明确提供用途目录值，只有 `Other` 才需要 `purpose_detail`；`wire` 也要求 `beneficiary.account_type`。新增扣款前的可操作校验错误，并记录创建时用途默认值移除这一不兼容变更。
+- 组织费用支付支持在 pay 时提供用途；费用导出支持经审计、按组织品牌生成的 XLSX，并复用列表过滤器。
+**修复**
+- 已知的收款人、金额、最低金额、国家和用途错误不再返回不透明的 `invalid_payload`，而是返回稳定代码和字段级消息。
 ### v2.165
 **变更**
 - `BO/BOB/bank_transfer` payin 检测现为 push 优先：银行转账通知到达即确认入账，账单轮询作为幂等后备保留。`GET /v1/payins/methods` 在该走廊返回 `delivery: "push+polling"`。端点、字段、错误和 webhook 契约均无变化——集成继续收到相同的 `payin_credited` 事件。

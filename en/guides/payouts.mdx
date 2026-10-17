@@ -1398,3 +1398,51 @@ refunds the debit automatically.
 
 For payout errors and the `422 destination_recently_rejected` retry sequence, see
 [Errors](../errors) and [Destination rejection protection](payout-destination-retries).
+
+## US/USD payment purpose and validation
+For `US`/`USD` bank-rail payouts (`ach`, `wire` and `swift`), `options.purpose`
+is mandatory. The API accepts either the visible label or its code,
+case-insensitively. The accepted catalog is:
+
+| Visible label | Accepted code |
+|---|---|
+| Asset Purchase | `Asset_Purchase` |
+| Contract Payment | `Contract_Payment` |
+| Dividends | `Dividends` |
+| Education Payment | `Education_Payment` |
+| Gift/Donation | `Gift_Donation` |
+| Investment Purchase | `Investment_Purchase` |
+| Invoice Payment | `Invoice_Payment` |
+| Loan Payments | `Loan_Payments` |
+| Materials Purchase | `Materials_Purchase` |
+| Mortgage Payments | `Mortgage_Payments` |
+| Payroll | `Payroll` |
+| Personal/Family Payment | `Personal_Family_Payment` |
+| Professional Service Payments | `Professional_Service_Payments` |
+| Reimbursements | `Reimbursements` |
+| Remittance | `Remittance` |
+| Rent/Utility Payments | `Rent_Utility_Payments` |
+| Savings | `Savings` |
+| Settlement (Trade) | `Settlement_Trade` |
+| Tax Payments | `Tax_Payments` |
+| Treasury Movement | `Treasury_Movement` |
+| Other (describe below) | `Other` |
+`options.purpose_detail` is required only when `purpose` is `Other` and is
+limited to 140 characters. It is rejected for every other purpose. A create
+request without `purpose` now returns `400 purpose_required`; this is a
+breaking change for clients that relied on the former `Invoice_Payment`
+default.
+
+`beneficiary.account_type` is required for both `ach` and `wire` and must be
+`checking` or `savings` (case-insensitive). `swift` does not use this field.
+For `wire` and `swift`, amounts below USD 25 return
+`422 amount_below_minimum`. Annex-B beneficiary or bank countries (`CU`, `IR`,
+`KP`, `SY`) return `422 prohibited_country`. These checks happen before any
+debit.
+
+The normalized validation errors are `invalid_beneficiary`,
+`invalid_amount`, `amount_below_minimum`, `prohibited_country`,
+`purpose_required`, `invalid_options` and
+`supporting_document_required`. Read `message` for the exact field to fix.
+Do not retry a rejected request unchanged; after a timeout or 5xx, reuse the
+same idempotency key.

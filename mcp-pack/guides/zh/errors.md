@@ -586,3 +586,17 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 401 | `invalid_token` | 链接无效、已过期、已使用，或与组织/成员不匹配。请向组织管理员申请新链接；该响应有意保持统一。 |
 | 502 | `recovery_send_failed` | 管理员发起的恢复邮件无法送达。请组织管理员检查邮件配置并重新触发链接。 |
 | 429 | `too_many_attempts` | 来源 IP 超过验证 throttle。请稍等后重试，不要自动重复提交。 |
+
+## US/USD 出金校验
+
+以下错误会在 `ach`、`wire` 和 `swift` 出金扣款前返回：
+
+| HTTP | `error` | 含义与解决方案 |
+|---:|---|---|
+| 400 | `invalid_beneficiary` | 收款人必填字段缺失或格式错误；按 `message` 修正，例如 `beneficiary.account_type`。 |
+| 400 | `invalid_amount` | 金额不是有效的正小数；修正金额并创建新请求。 |
+| 422 | `amount_below_minimum` | `wire` 或 `swift` 低于 USD 25；使用至少 `25.00`。 |
+| 422 | `prohibited_country` | 收款人或银行位于附录 B（`CU`、`IR`、`KP`、`SY`）；改用允许的目的地。 |
+| 400 | `purpose_required` | 每笔 US/USD 银行通道出金都必须填写 `options.purpose`；请选择目录值。 |
+| 400 | `invalid_options` | 选项未知，或非 `Other` 用途提供了 `purpose_detail`；修正 `options`。 |
+| 400 | `supporting_document_required` | 创建 USD 银行通道出金前上传并传递发票或收据。 |

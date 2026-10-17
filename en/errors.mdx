@@ -602,6 +602,20 @@ a recent rejection continue through their normal validation and dispatch path.
 
 `POST /v1/auth/password/forgot` always returns `200` to prevent enumeration. It silently stops real sends after 5 per account per hour; `POST /v1/auth/password/reset` allows 8 code attempts per account per 15 minutes.
 
+## US/USD payout validation
+
+These errors are returned before debit for `ach`, `wire` and `swift` payouts:
+
+| HTTP | `error` | Meaning and solution |
+|---:|---|---|
+| 400 | `invalid_beneficiary` | A required beneficiary field is missing or malformed; read `message` for the exact field, such as `beneficiary.account_type`. |
+| 400 | `invalid_amount` | The amount is not a valid positive decimal; correct the amount and submit a new request. |
+| 422 | `amount_below_minimum` | A `wire` or `swift` amount is below USD 25; increase it to at least `25.00`. |
+| 422 | `prohibited_country` | The beneficiary or receiving bank country is in Annex B (`CU`, `IR`, `KP`, `SY`); use an allowed destination. |
+| 400 | `purpose_required` | `options.purpose` is required for every US/USD bank-rail payout; choose a catalog value. |
+| 400 | `invalid_options` | An option is unknown, or `purpose_detail` was sent with a purpose other than `Other`; correct the options object. |
+| 400 | `supporting_document_required` | Upload and pass the invoice or receipt document before creating the USD bank-rail payout. |
+
 ## Member recovery links
 
 | HTTP | `error` | Cause and action |
