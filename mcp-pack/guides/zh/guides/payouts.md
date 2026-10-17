@@ -1309,3 +1309,49 @@ payout、扣除余额或消耗幂等键之前返回
 
 详见[目的地拒绝保护与安全重试](https://docs.cbpayapp.com/zh/guides/payout-destination-retries)，
 其中包含完整请求、响应、状态和恢复顺序。
+
+## US/USD 付款用途与校验
+
+对于 `US`/`USD` 银行通道出金（`ach`、`wire` 和 `swift`），
+`options.purpose` 为必填。API 不区分大小写，接受下列可见标签或对应代码：
+
+| 可见标签 | 接受的代码 |
+|---|---|
+| Asset Purchase | `Asset_Purchase` |
+| Contract Payment | `Contract_Payment` |
+| Dividends | `Dividends` |
+| Education Payment | `Education_Payment` |
+| Gift/Donation | `Gift_Donation` |
+| Investment Purchase | `Investment_Purchase` |
+| Invoice Payment | `Invoice_Payment` |
+| Loan Payments | `Loan_Payments` |
+| Materials Purchase | `Materials_Purchase` |
+| Mortgage Payments | `Mortgage_Payments` |
+| Payroll | `Payroll` |
+| Personal/Family Payment | `Personal_Family_Payment` |
+| Professional Service Payments | `Professional_Service_Payments` |
+| Reimbursements | `Reimbursements` |
+| Remittance | `Remittance` |
+| Rent/Utility Payments | `Rent_Utility_Payments` |
+| Savings | `Savings` |
+| Settlement (Trade) | `Settlement_Trade` |
+| Tax Payments | `Tax_Payments` |
+| Treasury Movement | `Treasury_Movement` |
+| Other (describe below) | `Other` |
+
+只有当 `purpose` 为 `Other` 时才必须提供 `options.purpose_detail`，最长
+140 个字符；其他用途提供该字段会被拒绝。创建请求缺少 `purpose` 现在返回
+`400 purpose_required`，这是相对于过去默认 `Invoice_Payment` 的不兼容变更。
+
+`beneficiary.account_type` 对 `ach` 和 `wire` 都是必填，值必须为
+`checking` 或 `savings`（不区分大小写）；`swift` 不使用此字段。
+`wire` 和 `swift` 低于 USD 25 时返回 `422 amount_below_minimum`。
+收款人或银行位于附录 B 国家（`CU`、`IR`、`KP`、`SY`）时返回
+`422 prohibited_country`。这些校验都在扣款前完成。
+
+规范化错误包括 `invalid_beneficiary`、`invalid_amount`、
+`amount_below_minimum`、`prohibited_country`、`purpose_required`、
+`invalid_options` 和 `supporting_document_required`。请按 `message`
+修正具体字段；拒绝请求不要原样重试，timeout 或 5xx 时使用相同幂等键。
+
+OTC 派发路径仍在内部使用 `Invoice_Payment`，公共 payout 合约不变。

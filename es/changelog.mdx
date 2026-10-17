@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="16 de octubre de 2026" description="v2.165 · 3 versiones">
+<Update label="16 de octubre de 2026" description="v2.166 · 4 versiones">
+### v2.166
+**Agregado**
+- Los payouts US/USD `ach`, `wire` y `swift` ahora exigen un valor explícito del catálogo de propósito, con `purpose_detail` solo para `Other`; wire también exige `beneficiary.account_type`. Se agregan errores accionables pre-débito y se documenta la eliminación incompatible del default al crear.
+- Los pagos de gastos aceptan el propósito al pagar y las exportaciones de gastos soportan XLSX auditado y brandeado por organización, con los mismos filtros del listado.
+**Corregido**
+- Las fallas conocidas de beneficiario, monto, mínimo, país y propósito ya no salen como `invalid_payload` opaco: usan códigos estables y mensajes con el campo.
 ### v2.165
 **Cambiado**
 - La detección de payins `BO/BOB/bank_transfer` ahora es push-first: las

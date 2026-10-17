@@ -1398,3 +1398,51 @@ reembolsa el debito solo.
 
 Para errores de payouts y la secuencia de reintento `422 destination_recently_rejected`,
 consulta [Errores](../errors) y [Protección ante rechazo del destino](payout-destination-retries).
+
+## Propósito y validación de pagos US/USD
+
+En payouts bancarios `US`/`USD` (`ach`, `wire` y `swift`),
+`options.purpose` es obligatorio. La API acepta la etiqueta visible o su
+código, sin distinguir mayúsculas. El catálogo aceptado es:
+
+| Etiqueta visible | Código aceptado |
+|---|---|
+| Asset Purchase | `Asset_Purchase` |
+| Contract Payment | `Contract_Payment` |
+| Dividends | `Dividends` |
+| Education Payment | `Education_Payment` |
+| Gift/Donation | `Gift_Donation` |
+| Investment Purchase | `Investment_Purchase` |
+| Invoice Payment | `Invoice_Payment` |
+| Loan Payments | `Loan_Payments` |
+| Materials Purchase | `Materials_Purchase` |
+| Mortgage Payments | `Mortgage_Payments` |
+| Payroll | `Payroll` |
+| Personal/Family Payment | `Personal_Family_Payment` |
+| Professional Service Payments | `Professional_Service_Payments` |
+| Reimbursements | `Reimbursements` |
+| Remittance | `Remittance` |
+| Rent/Utility Payments | `Rent_Utility_Payments` |
+| Savings | `Savings` |
+| Settlement (Trade) | `Settlement_Trade` |
+| Tax Payments | `Tax_Payments` |
+| Treasury Movement | `Treasury_Movement` |
+| Other (describe below) | `Other` |
+
+`options.purpose_detail` es obligatorio solo cuando `purpose` es `Other` y
+acepta hasta 140 caracteres. Se rechaza con cualquier otro propósito. Crear
+sin `purpose` ahora responde `400 purpose_required`: es un cambio incompatible
+para clientes que dependían del antiguo default `Invoice_Payment`.
+
+`beneficiary.account_type` es obligatorio tanto para `ach` como para `wire` y
+debe ser `checking` o `savings` (sin distinguir mayúsculas). `swift` no usa
+este campo. Para `wire` y `swift`, montos menores a USD 25 responden
+`422 amount_below_minimum`. Países del beneficiario o banco del Anexo B
+(`CU`, `IR`, `KP`, `SY`) responden `422 prohibited_country`. Estas validaciones
+ocurren antes de debitar.
+
+Los errores normalizados son `invalid_beneficiary`, `invalid_amount`,
+`amount_below_minimum`, `prohibited_country`, `purpose_required`,
+`invalid_options` y `supporting_document_required`. Revisa `message` para
+corregir el campo exacto. No repitas una solicitud rechazada sin cambios; ante
+timeout o 5xx, reutiliza la misma clave de idempotencia.

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.165"
+  version: "2.166"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3872,7 +3872,7 @@ paths:
 
                     `ach`/`wire`, SWIFT BIC for `swift`); `account_type`
 
-                    (`CHECKING`/`SAVING`) is required for `ach`. The beneficiary
+                    (`CHECKING`/`SAVING`) is required for `ach` and `wire`. The beneficiary
 
                     may live in ANY country (`country_code` is free — e.g. an ACH
 
@@ -3956,9 +3956,28 @@ paths:
                   description: >-
                     Optional rail-specific options. For a deliberate retry after a recent
                     bank rejection, set destination_retry_ack to the most recent prior case ID.
+                    For US/USD `ach`, `wire` and `swift`, `purpose` is required and accepts
+                    one of the 21 payment-purpose labels or codes case-insensitively.
+                    `purpose_detail` is required only for `Other` and has a maximum length of 140.
                   additionalProperties:
                     type: string
                   properties:
+                    purpose:
+                      type: string
+                      maxLength: 140
+                      description: >-
+                        Required for US/USD ach, wire and swift payouts. Accepts the visible
+                        payment-purpose label or code, case-insensitively: Asset_Purchase,
+                        Contract_Payment, Dividends, Education_Payment, Gift_Donation,
+                        Investment_Purchase, Invoice_Payment, Loan_Payments, Materials_Purchase,
+                        Mortgage_Payments, Payroll, Personal_Family_Payment,
+                        Professional_Service_Payments, Reimbursements, Remittance,
+                        Rent_Utility_Payments, Savings, Settlement_Trade, Tax_Payments,
+                        Treasury_Movement or Other.
+                    purpose_detail:
+                      type: string
+                      maxLength: 140
+                      description: Required only when purpose is Other; rejected for every other purpose.
                     destination_retry_ack:
                       type: string
                       format: uuid
@@ -4476,8 +4495,11 @@ paths:
                 idempotency_hit: true
         '400':
           description: >-
-            Invalid request (`idempotency_key_required`, `invalid_payload`, or
-            `invalid_amount`). For CL/CLP bank-transfer payouts, a non-whole
+            Invalid request (`idempotency_key_required`, `invalid_options`,
+            `purpose_required`, `invalid_payload`, or `invalid_amount`). For
+            US/USD bank-rail payouts, known beneficiary, amount, purpose and
+            supporting-document failures use stable field-specific codes. For
+            CL/CLP bank-transfer payouts, a non-whole
             amount is rejected before any debit, hold, payout resource
             creation, or dispatch.
           content:

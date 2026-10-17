@@ -1,5 +1,5 @@
 {
-  "count": 333,
+  "count": 337,
   "errors": [
     {
       "category": {
@@ -4627,6 +4627,62 @@
         "en": "The verification service could not be checked. Keep the same flow and retry later; do not create a second account or reset request.",
         "es": "No se pudo consultar el servicio de verificación. Mantén el mismo flujo y reintenta después; no crees otra cuenta ni otra solicitud.",
         "zh": "无法查询验证服务。请保持同一流程稍后重试；不要创建第二个账户或重置请求。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_beneficiary",
+      "http": 400,
+      "meaning": {
+        "en": "A required beneficiary field is missing or malformed; read `message` for the exact field, such as `beneficiary.account_type`.",
+        "es": "Falta un campo requerido o es inválido; revisa `message`, por ejemplo `beneficiary.account_type`.",
+        "zh": "收款人必填字段缺失或格式错误；按 `message` 修正，例如 `beneficiary.account_type`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "prohibited_country",
+      "http": 422,
+      "meaning": {
+        "en": "The beneficiary or receiving bank country is in Annex B (`CU`, `IR`, `KP`, `SY`); use an allowed destination.",
+        "es": "El país del beneficiario o banco está en el Anexo B (`CU`, `IR`, `KP`, `SY`); usa un destino permitido.",
+        "zh": "收款人或银行位于附录 B（`CU`、`IR`、`KP`、`SY`）；改用允许的目的地。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "invalid_options",
+      "http": 400,
+      "meaning": {
+        "en": "An option is unknown, or `purpose_detail` was sent with a purpose other than `Other`; correct the options object.",
+        "es": "Hay una opción desconocida o enviaste `purpose_detail` con un propósito distinto de `Other`; corrige `options`.",
+        "zh": "选项未知，或非 `Other` 用途提供了 `purpose_detail`；修正 `options`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "supporting_document_required",
+      "http": 400,
+      "meaning": {
+        "en": "Upload and pass the invoice or receipt document before creating the USD bank-rail payout.",
+        "es": "Sube y envía la factura o recibo antes de crear el payout bancario USD.",
+        "zh": "创建 USD 银行通道出金前上传并传递发票或收据。"
       }
     },
     {
