@@ -246,8 +246,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 新 key 返回 `201` 并为所选走廊创建新的目的地。使用相同 key 重试会返回
 `200`、原始充值账户以及 `idempotency_hit: true`；如果原请求仍在
 处理中，并发重试可能返回 `409 idempotency_conflict`。创建免费；
-后续 payin 继续按正常入金费用计费。BOB 目的地仅用于收款并通过轮询
-对账；它不会创建或选择 payout 路由来源账户。使用
+后续 payin 继续按正常入金费用计费。BOB 目的地仅用于收款，采用
+push 优先、轮询后备的方式对账；它不会创建或选择 payout 路由来源账户。使用
 `GET /v1/payins/deposit-accounts?page=1&page_size=50` 分页查询目的地。
 ### 充值与 Banking 目的
 
@@ -297,7 +297,8 @@ pending 状态，会返回相同的 `422`；需要重放已核验的原始 fence
 **专属 BOB 收款账户**：固定账户流程请参阅
 [资金账户指南](https://docs.cbpayapp.com/zh/guides/funding)。个人账户每个走廊
 获得一个稳定的 `instrument`；企业账户可以使用不同的幂等 key 创建额外
-BOB instrument。付款人向所选号码转入 BOB，系统通过轮询检测到账。此流程
+BOB instrument。付款人向所选号码转入 BOB，系统 push 优先确认到账，
+账单轮询作为后备。此流程
 不需要公告或付款人参考号。
 
 **收款二维码**（本地互操作标准）：您生成二维码，客户用其银行 App

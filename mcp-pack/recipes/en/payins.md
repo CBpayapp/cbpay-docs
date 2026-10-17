@@ -308,8 +308,8 @@ Replaying the same key returns
 `200` with the original instrument and `idempotency_hit: true`; a
 concurrent in-flight replay can return `409 idempotency_conflict`.
 Creation is free; subsequent payins keep the normal payin fee. The BOB
-destination is receive-only and is reconciled by polling; it does not create
-or select a payout routing source account. List
+destination is receive-only and is reconciled push-first with a polling
+backstop; it does not create or select a payout routing source account. List
 destinations with `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 
 You can also use a one-off **announced bank transfer**
@@ -350,8 +350,8 @@ is no longer pending and recoverable it returns the same `422`; use
 [Funding guide](https://docs.cbpayapp.com/en/guides/funding). A person
 account receives one stable `instrument` for the corridor; a company can
 create additional BOB instruments with distinct idempotency keys. The payer
-transfers BOB to the selected number and the credit is detected by polling.
-No announcement or payer reference is required.
+transfers BOB to the selected number and the credit is confirmed push-first,
+with statement polling as the backstop. No announcement or payer reference is required.
 
 **Collection QR** (the local interoperable standard): you generate the QR
 and your customer scans it with their banking app. See the dedicated

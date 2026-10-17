@@ -80,7 +80,7 @@ sequenceDiagram
   A->>C: POST deposit-accounts
   C-->>A: fixed receiving instrument
   B->>C: bank transfer to it
-  C->>C: poll and reconcile the credit
+  C->>C: reconcile the credit (push, polling backstop)
   C-->>A: payin_credited webhook
 ```
 
@@ -112,7 +112,7 @@ A representative record:
   "country": "BO",
   "currency": "BOB",
   "method": "bank_transfer",
-  "delivery": "polling"
+  "delivery": "push+polling"
 }
 ```
 
@@ -231,9 +231,10 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts?page=1&page_size=
 ## 4. Receive and reconcile the transfer
 
 This mode never uses `POST /v1/payins` announcements. The payer transfers
-BOB to your `instrument`. The system polls the bank inside a bounded date
-window; completed credits deduplicate by bank reference, ACH order number
-or a deterministic fallback key.
+BOB to your `instrument`. Credits confirm push-first from the bank
+notification, with statement polling kept as an idempotent backstop inside
+a bounded date window; completed credits deduplicate by bank reference,
+ACH order number or a deterministic fallback key.
 
 Once the credit matches, subscribe to `payin_credited` and read the final
 amounts and status from the payin resource:
@@ -292,8 +293,9 @@ instrument active and the bank reporting the credit.
 No. Corridor instruments are immutable. If the bank reports an anomaly,
 contact operations instead of creating a substitute blindly.
 #### When is the transfer credited?
-This corridor polls. Final timing depends on when the bank posts the
-movement; the webhook fires only after reconciliation.
+This corridor is push-first with a polling backstop. Final timing depends
+on when the bank reports the movement; the webhook fires only after
+reconciliation.
 #### Funding or Banking — which one do I need?
 Choose funding (default) when every deposit should land in USD, your
 principal balance. Choose [Banking](https://docs.cbpayapp.com/en/guides/banking) with
