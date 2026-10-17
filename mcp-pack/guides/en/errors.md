@@ -621,3 +621,9 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 401 | `invalid_token` | The link is invalid, expired, already used, or does not match the organization/member. Request a new link from the organization admin. The response is intentionally uniform. |
 | 502 | `recovery_send_failed` | The admin-triggered recovery email could not be delivered. Ask the organization admin to verify the email configuration and trigger a new link. |
 | 429 | `too_many_attempts` | The source IP exceeded the verification throttle. Wait briefly and retry; do not automate repeated submissions. |
+
+## Resource identifier validation
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 400 | `invalid_id` | The resource identifier is empty or has an invalid format; send the identifier returned by the API. |

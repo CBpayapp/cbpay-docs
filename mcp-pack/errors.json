@@ -1,5 +1,5 @@
 {
-  "count": 337,
+  "count": 338,
   "errors": [
     {
       "category": {
@@ -4711,6 +4711,16 @@
         "en": "The admin-triggered recovery email could not be delivered. Ask the organization admin to verify the email configuration and trigger a new link.",
         "es": "No se pudo entregar el email de recuperación iniciado por el admin. Pide al admin revisar la configuración de email y disparar un link nuevo.",
         "zh": "管理员发起的恢复邮件无法送达。请组织管理员检查邮件配置并重新触发链接。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors"
+      },
+      "code": "invalid_id",
+      "http": 400,
+      "meaning": {
+        "en": "The resource identifier is empty or has an invalid format; send the identifier returned by the API."
       }
     }
   ]

@@ -1,8 +1,8 @@
 {
-  "content_sha256": "283cf59da87a73ca6a13569a047c96c152a9feee833a3e905d49656e0eb57e7c",
+  "content_sha256": "9fe58b14b174acb045c34b41b92699fa27a9671b60846eb061db7f8074400dff",
   "counts": {
-    "chunks": 4423,
-    "errors": 337,
+    "chunks": 4424,
+    "errors": 338,
     "languages": [
       "en",
       "es",
@@ -27,8 +27,8 @@
       "sha256": "b79410976b8c89ac2d31a75fc1e986d15cad4fde2be2ff021bafed4a30bf0935"
     },
     "chunks/en.jsonl": {
-      "bytes": 1511684,
-      "sha256": "c79439d531d0d768c87951c6ecb5de37a7c3cbac4f38c8e5821b2d98076a8c10"
+      "bytes": 1512122,
+      "sha256": "fce388876074227ebe0e1ac1530f168d7f1fbcc4768c20805a2a8124aa159a34"
     },
     "chunks/es.jsonl": {
       "bytes": 1542462,
@@ -39,8 +39,8 @@
       "sha256": "eea80c9816b27848363f5a55de8e4fabb4250e224e6503a7559eb504193f1e90"
     },
     "errors.json": {
-      "bytes": 195965,
-      "sha256": "82e084958db8d49a26606137247640885807094cc5593bea602b5c69bb4f5913"
+      "bytes": 196236,
+      "sha256": "b8e13302926caac5350fb46c596b9051b127785add5ef41e58e4083286e10ab5"
     },
     "evals/golden.json": {
       "bytes": 4242,
@@ -87,8 +87,8 @@
       "sha256": "f1a292012ded21e5db333d2ecda8dfa4a98954c11fb995c07e99e46326fed2d0"
     },
     "guides/en/errors.md": {
-      "bytes": 57535,
-      "sha256": "4245f3b503b11133dc49902936ef58a83e3711282f449ae2736f17dcbdca7c44"
+      "bytes": 57739,
+      "sha256": "d805e9a42e29fc3b7a69f75b52034202464858124c81bd030d88f99699303d32"
     },
     "guides/en/faq.md": {
       "bytes": 10755,
@@ -943,7 +943,7 @@
       "sha256": "a17e390542734803cac91334745f2c04d57a707e6df2b1387b2eac53402183a5"
     }
   },
-  "generated_at": "2026-10-17T02:52:04Z",
+  "generated_at": "2026-10-17T12:14:25Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
