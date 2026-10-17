@@ -1167,12 +1167,11 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - **最低金额**：`wire` 和 `swift` 至少 **USD 25.00**；低于该金额会在创建时
   被拒绝（`422`，`status_message` 为
   `"…payouts require an amount of at least USD 25"`）。ACH 无已验证的最低金额。
-- 通道要求每笔转账附带**付款用途声明**。除非在 `options` 中按笔覆盖，
-  否则使用默认值（值最长 140 字符）：
+- 通道要求每笔转账附带**付款用途声明**。`purpose` 为必填项（21 值目录——见下文）；其他声明除非在 `options` 中按笔覆盖，否则使用默认值（值最长 140 字符）：
 
   | `options` 键 | 声明内容 | 默认值 |
   |---|---|---|
-  | `purpose` | 付款用途 | `Invoice_Payment` |
+  | `purpose` | 付款用途（必填目录） | —（无；必填） |
   | `crypto_activity` | 该付款是否涉及加密货币买卖活动（`Yes`/`No`） | `No` |
   | `payment_gateway` | 入金网关声明 | 通道默认值 |
 

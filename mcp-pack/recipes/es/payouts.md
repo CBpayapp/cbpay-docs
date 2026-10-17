@@ -1177,12 +1177,13 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   `"…payouts require an amount of at least USD 25"`. ACH no tiene mínimo
   validado.
 - El riel pide una **declaración de propósito del pago** en cada
-  transferencia. Los defaults aplican salvo que los sobreescribas por
-  operación en `options` (valores de hasta 140 caracteres):
+  transferencia. `purpose` es obligatorio (catálogo de 21 valores — ver
+  abajo); las otras declaraciones usan su default salvo que las
+  sobreescribas por operación en `options` (valores de hasta 140 caracteres):
 
   | Clave de `options` | Qué declara | Default |
   |---|---|---|
-  | `purpose` | Propósito del pago | `Invoice_Payment` |
+  | `purpose` | Propósito del pago (catálogo obligatorio) | — (ninguno; requerido) |
   | `crypto_activity` | Si el pago se relaciona con compra/venta de cripto (`Yes`/`No`) | `No` |
   | `payment_gateway` | Declaración de gateway de depósito | default del riel |
 
