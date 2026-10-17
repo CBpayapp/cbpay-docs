@@ -1177,12 +1177,13 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   `"…payouts require an amount of at least USD 25"`. ACH has no validated
   minimum.
 - The rail asks for a **payment purpose declaration** on every transfer.
-  The defaults apply unless you override them per operation in `options`
+  `purpose` is mandatory (21-value catalog — see below); the other
+  declarations default unless you override them per operation in `options`
   (values up to 140 characters):
 
   | `options` key | What it declares | Default |
   |---|---|---|
-  | `purpose` | Payment purpose | `Invoice_Payment` |
+  | `purpose` | Payment purpose (mandatory catalog) | — (none; required) |
   | `crypto_activity` | Whether the payment relates to crypto buy/sell activity (`Yes`/`No`) | `No` |
   | `payment_gateway` | Deposit gateway declaration | rail default |
 
