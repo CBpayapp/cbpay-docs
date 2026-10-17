@@ -85,7 +85,7 @@ sequenceDiagram
   A->>C: POST deposit-accounts
   C-->>A: instrumento fijo de recepción
   B->>C: transferencia bancaria a ese instrumento
-  C->>C: sondea y concilia el abono
+  C->>C: concilia el abono (push, sondeo de respaldo)
   C-->>A: webhook payin_credited
 ```
 
@@ -119,7 +119,7 @@ Un registro representativo:
   "country": "BO",
   "currency": "BOB",
   "method": "bank_transfer",
-  "delivery": "polling"
+  "delivery": "push+polling"
 }
 ```
 
@@ -240,9 +240,11 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts?page=1&page_size=
 ## 4. Recibe y concilia la transferencia
 
 Este modo nunca usa anuncios `POST /v1/payins`. El pagador transfiere BOB
-a tu `instrument`. El sistema sondea el banco dentro de una ventana de
-fechas acotada; los abonos completados deduplican por referencia bancaria,
-número de orden ACH o una llave determinista de respaldo.
+a tu `instrument`. Los abonos se confirman push-first desde la
+notificación bancaria, con el sondeo de extractos como respaldo idempotente
+dentro de una ventana de fechas acotada; los abonos completados deduplican
+por referencia bancaria, número de orden ACH o una llave determinista de
+respaldo.
 
 Una vez que el abono calza, suscríbete a `payin_credited` y lee los montos
 y el estado finales desde el recurso payin:
@@ -302,8 +304,9 @@ solo necesita el instrumento activo y que el banco reporte el abono.
 No. Los instrumentos de un corredor son inmutables. Si el banco reporta una
 anomalía, contacta a operaciones en vez de crear un sustituto a ciegas.
 #### ¿Cuándo se acredita la transferencia?
-Este corredor sondea. El tiempo final depende de cuándo el banco registra
-el movimiento; el webhook se envía solo tras la conciliación.
+Este corredor es push-first con sondeo de respaldo. El tiempo final depende
+de cuándo el banco reporta el movimiento; el webhook se envía solo tras la
+conciliación.
 #### ¿Fondeo o Banking — cuál necesito?
 Elige fondeo (default) cuando cada depósito debe aterrizar en USD, tu
 saldo principal. Elige [Banking](https://docs.cbpayapp.com/es/guides/banking) con

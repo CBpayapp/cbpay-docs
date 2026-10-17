@@ -75,7 +75,7 @@ sequenceDiagram
   A->>C: POST deposit-accounts
   C-->>A: 固定收款工具
   B->>C: 向该工具转账
-  C->>C: 轮询并核对到账
+  C->>C: 核对到账（push 优先，轮询后备）
   C-->>A: payin_credited webhook
 ```
 
@@ -105,7 +105,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
   "country": "BO",
   "currency": "BOB",
   "method": "bank_transfer",
-  "delivery": "polling"
+  "delivery": "push+polling"
 }
 ```
 
@@ -212,7 +212,8 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts?page=1&page_size=
 ## 4. 接收并核对转账
 
 此模式不使用 `POST /v1/payins` 公告。付款人向 `instrument` 转入
-BOB。系统在有限日期窗口内轮询银行；已完成的到账会按银行参考号、ACH
+BOB。到账通过银行通知 push 优先确认，账单轮询作为幂等后备在有限
+日期窗口内保留；已完成的到账会按银行参考号、ACH
 订单号或确定性备用键去重。
 
 到账匹配后，订阅 `payin_credited`，并使用 payin 资源读取最终金额和状态：
@@ -266,7 +267,7 @@ curl "https://api.qbank.cl/platform/v1/payins?country=BO&status=credited&from=20
 #### 可以删除或轮换账户吗？
 不可以。该走廊的工具不可变更。若银行报告异常，请联系运营方，不要盲目创建替代账户。
 #### 转账什么时候入账？
-该走廊使用轮询。最终时间取决于银行何时登记该笔流水；核对完成后才会发送 webhook。
+该走廊 push 优先、轮询后备。最终时间取决于银行何时报告该笔流水；核对完成后才会发送 webhook。
 #### 资金账户还是 Banking——我需要哪一个？
 当每笔充值都应记入USD（你的主余额）时，选择默认的资金账户。当你需要为
 payout 保留 BOB、MXN 或 ARS 本地余额时，选择带 `purpose: "banking"` 的

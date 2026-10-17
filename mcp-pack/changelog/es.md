@@ -5,7 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.164 · 2 versiones - 16 de octubre de 2026
+## v2.165 · 3 versiones - 16 de octubre de 2026
+### v2.165
+**Cambiado**
+- La detección de payins `BO/BOB/bank_transfer` ahora es push-first: las
+  notificaciones de transferencia confirman los abonos al llegar, con el
+  sondeo de extractos como respaldo idempotente. `GET /v1/payins/methods`
+  reporta `delivery: "push+polling"` en este corredor. No cambió ningún
+  endpoint, campo, error ni webhook — las integraciones siguen recibiendo
+  el mismo evento `payin_credited`.
 ### v2.164
 **Cambiado**
 - Las lecturas de vIBAN y wallets de empresa ahora conservan un `last_error`

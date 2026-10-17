@@ -5,7 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.164 · 2 个版本 - 2026年10月16日
+## v2.165 · 3 个版本 - 2026年10月16日
+### v2.165
+**变更**
+- `BO/BOB/bank_transfer` payin 检测现为 push 优先：银行转账通知到达即确认入账，账单轮询作为幂等后备保留。`GET /v1/payins/methods` 在该走廊返回 `delivery: "push+polling"`。端点、字段、错误和 webhook 契约均无变化——集成继续收到相同的 `payin_credited` 事件。
 ### v2.164
 **变更**
 - vIBAN 和企业钱包读取现在会在安全可用时保留可操作且不含服务商
