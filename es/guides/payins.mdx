@@ -300,7 +300,8 @@ misma clave responde `200` con el instrumento original y
 `idempotency_hit: true`; una repetición concurrente mientras sigue
 en vuelo puede responder `409 idempotency_conflict`. Crear es gratis;
 los payins posteriores conservan la comisión normal. El destino BOB es solo
-receptor y se concilia por polling; no crea ni selecciona una cuenta de origen
+receptor y se concilia push-first con sondeo de respaldo; no crea ni
+selecciona una cuenta de origen
 para el ruteo de payouts. Lista los
 destinos con `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
 
@@ -344,7 +345,8 @@ verificado usa `reconcile`.
 [guía de Fondeo](/es/guides/funding). Una cuenta
 persona recibe un `instrument` estable por corredor; una empresa puede crear
 instrumentos BOB adicionales con claves de idempotencia distintas. El pagador
-transfiere BOB al número seleccionado y el abono se detecta por polling. No
+transfiere BOB al número seleccionado y el abono se confirma push-first,
+con el sondeo de extractos como respaldo. No
 requiere anuncio ni referencia del pagador.
 
 **QR de cobro** (estándar interoperable local): generas el QR y tu cliente
