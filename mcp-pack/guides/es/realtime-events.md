@@ -115,7 +115,7 @@ curl -N "https://api.qbank.cl/platform/v1/events?last_event_id=4821" \
 ```
 
 > **Nota**
-El replay tiene tope de **1.000 eventos**. Si estuviste desconectado el tiempo
+El replay tiene tope de **1,000 eventos**. Si estuviste desconectado el tiempo
 suficiente para perderte más, el stream emite un evento de control
 `replay_truncated` y conviene reconciliar con `?snapshot=true` o con
 [`GET /v1/events/history`](#historial-consultable) en vez de asumir
@@ -179,7 +179,7 @@ llevan `id:` (salvo `snapshot`), así que no mueven tu cursor de replay.
 | `snapshot` | Abriste con `?snapshot=true` | Reemplaza el estado local con el payload. |
 | `reconnect` | Se alcanzó la vida máxima (30 min) o se llenó el buffer del servidor | Reconecta con `Last-Event-ID`. |
 | `unauthorized` | Sesión revocada, key deshabilitada o cuenta bloqueada | Autentícate de nuevo. |
-| `replay_truncated` | Más de 1.000 eventos perdidos | Reconcilia con `?snapshot=true` o con el historial. |
+| `replay_truncated` | Más de 1,000 eventos perdidos | Reconcilia con `?snapshot=true` o con el historial. |
 | `error` | No se pudo construir el replay o el snapshot | Reintenta; cae a REST. |
 
 Cada 20 segundos llega un comentario `: ping` para que ningún proxy corte una

@@ -145,14 +145,14 @@ diferencia máxima de 1 micro-USDT. El total cotizado luego se debita (o se
 acredita) en el asset de settlement — las cuentas con principal USD
 liquidan 1:1 en centavos USD.
 
-Ejemplo de un payout de 50.000 CLP con tasa 950.25:
+Ejemplo de un payout de 50,000 CLP con tasa 950.25:
 
 ```
 usdt_amount = ceil(50000 / 950.25 × 10^6) / 10^6 = 52.617733 USDT
 total_debit = usdt_amount + fee
 ```
 
-Ejemplo de un payin de 50.000 CLP con `payin_rate` 955.10:
+Ejemplo de un payin de 50,000 CLP con `payin_rate` 955.10:
 
 ```
 usdt_gross    = floor(50000 / 955.10 × 10^6) / 10^6 = 52.350539 USDT

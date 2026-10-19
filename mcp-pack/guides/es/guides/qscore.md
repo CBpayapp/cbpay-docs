@@ -529,7 +529,7 @@ El payload de la alerta (`risk_monitoring_alert`) lleva los triggers (`score_dro
 
 ## 10. Scoring por lotes (carteras)
 
-Para evaluar una cartera completa en vez de un sujeto a la vez, sube un **lote** con `POST /v1/qscore/batches`: hasta 5.000 sujetos (JSON o CSV), un solo `country` y `purpose` para todo el lote, y un fee estimado calculado por adelantado. La API responde `202 Accepted` al instante y un worker en segundo plano genera los informes individuales uno por uno — cada ítem es un informe Qscore estándar con su propio PDF, su fee y su reembolso automático si la generación falla.
+Para evaluar una cartera completa en vez de un sujeto a la vez, sube un **lote** con `POST /v1/qscore/batches`: hasta 5,000 sujetos (JSON o CSV), un solo `country` y `purpose` para todo el lote, y un fee estimado calculado por adelantado. La API responde `202 Accepted` al instante y un worker en segundo plano genera los informes individuales uno por uno — cada ítem es un informe Qscore estándar con su propio PDF, su fee y su reembolso automático si la generación falla.
 
 - **Un solo aviso al final**: cuando el lote termina recibes exactamente **un** webhook `risk_batch_completed` y **un** email de resumen (nunca uno por sujeto).
 - **Seguimiento**: lista e inspecciona lotes, revisa sus ítems paginados y descarga el CSV consolidado en `GET /v1/qscore/batches/{id}/results.csv`.

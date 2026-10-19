@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.168"
+  version: "2.169"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -3204,7 +3204,7 @@ paths:
       - name: format
         in: query
         description: 'Exporta las mismas filas como archivo: `csv` o `xlsx` (descarga contable, hasta
-          10.000 filas; mismos filtros y rango). Omite para la vista JSON.'
+          10,000 filas; mismos filtros y rango). Omite para la vista JSON.'
         schema:
           type: string
           enum:
@@ -4656,7 +4656,7 @@ paths:
       - name: format
         in: query
         description: 'Exporta las mismas filas como archivo: `csv` o `xlsx` (descarga contable, hasta
-          10.000 filas; mismos filtros y rango). Omite para la vista JSON.'
+          10,000 filas; mismos filtros y rango). Omite para la vista JSON.'
         schema:
           type: string
           enum:
@@ -5759,7 +5759,7 @@ paths:
       - name: format
         in: query
         description: 'Exporta las mismas filas como archivo: `csv` o `xlsx` (descarga contable, hasta
-          10.000 filas; mismos filtros y rango). Omite para la vista JSON.'
+          10,000 filas; mismos filtros y rango). Omite para la vista JSON.'
         schema:
           type: string
           enum:
@@ -6676,7 +6676,7 @@ paths:
       - name: format
         in: query
         description: 'Exporta las mismas filas como archivo: `csv` o `xlsx` (descarga contable, hasta
-          10.000 filas; mismos filtros y rango). Omite para la vista JSON.'
+          10,000 filas; mismos filtros y rango). Omite para la vista JSON.'
         schema:
           type: string
           enum:
@@ -10321,7 +10321,7 @@ paths:
       - Contacts
       operationId: importContacts
       summary: Importar la agenda del celular
-      description: Sube hasta 1.000 contactos por request (pagina si hay más). Los teléfonos se normalizan
+      description: Sube hasta 1,000 contactos por request (pagina si hay más). Los teléfonos se normalizan
         a E.164; los contactos existentes no se duplican; `has_cbpay` te dice qué contactos ya tienen
         una cuenta activa de tu mismo operador (match por teléfono).
       requestBody:

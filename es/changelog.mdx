@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="19 de octubre de 2026" description="v2.168 · 2 versiones">
+<Update label="19 de octubre de 2026" description="v2.169 · 3 versiones">
+### v2.169
+**Cambiado**
+- Todos los números de dinero ahora se muestran en formato americano (miles con coma, decimales con punto: `1,234,567.89`) en el portal, comprobantes, trackers y cartola, para fiat y crypto en todos los países. Los valores de API, CSV y XLSX no cambian (formato máquina, sin separadores de miles).
+
 ### v2.168
 **Agregado**
 - Se agregó el endpoint de solo lectura
@@ -19,6 +23,7 @@ description: "Historial de cambios de la API y de esta documentación"
 ### v2.167
 **Corregido**
 - Los movimientos de cuentas de depósito banking aceptan límites de fecha `from`/`to` opcionales; omitir ambos lista todos los movimientos disponibles con paginación. Los formatos o rangos inválidos siguen respondiendo `400 invalid_range`.
+
 </Update>
 
 <Update label="16 de octubre de 2026" description="v2.166 · 4 versiones">
