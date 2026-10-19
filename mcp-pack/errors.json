@@ -1,5 +1,5 @@
 {
-  "count": 338,
+  "count": 340,
   "errors": [
     {
       "category": {
@@ -4229,12 +4229,12 @@
         "es": "Errores de límites money-out",
         "zh": "出金限额错误"
       },
-      "code": "missing_alias",
+      "code": "invalid_alias",
       "http": 400,
       "meaning": {
-        "en": "An AR/ARS platform deposit-account creation must include the caller-chosen `bank_alias`",
-        "es": "La creación de una cuenta de depósito AR/ARS en la plataforma debe incluir el `bank_alias` elegido por el caller",
-        "zh": "平台创建 AR/ARS 存款账户时必须提供调用方选择的 `bank_alias`"
+        "en": "The alias format is invalid; send the bank alias accepted by the AR rail.",
+        "es": "El formato del alias no es válido; envía un alias aceptado por el rail AR.",
+        "zh": "别名格式无效；请发送 AR 通道接受的银行别名。"
       }
     },
     {
@@ -4243,12 +4243,40 @@
         "es": "Errores de límites money-out",
         "zh": "出金限额错误"
       },
-      "code": "invalid_alias",
+      "code": "alias_unresolvable",
+      "http": 404,
+      "meaning": {
+        "en": "The alias does not exist or cannot be resolved; do not create a payout from this result.",
+        "es": "El alias no existe o no se puede resolver; no crees un payout con este resultado.",
+        "zh": "别名不存在或无法解析；不要使用此结果创建 payout。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "beneficiary_lookup_unavailable",
+      "http": 502,
+      "meaning": {
+        "en": "The bank lookup is temporarily unavailable; retry the read according to your backoff policy.",
+        "es": "La consulta bancaria está temporalmente indisponible; reintenta la lectura con backoff.",
+        "zh": "银行查询暂时不可用；按退避策略重试只读查询。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "missing_alias",
       "http": 400,
       "meaning": {
-        "en": "`bank_alias` must be 6–20 ASCII characters from `[A-Za-z0-9.-]` and contain at least one letter",
-        "es": "`bank_alias` debe tener 6–20 caracteres ASCII de `[A-Za-z0-9.-]` y al menos una letra",
-        "zh": "`bank_alias` 必须为 6–20 个 `[A-Za-z0-9.-]` ASCII 字符，并至少包含一个字母"
+        "en": "An AR/ARS platform deposit-account creation must include the caller-chosen `bank_alias`",
+        "es": "La creación de una cuenta de depósito AR/ARS en la plataforma debe incluir el `bank_alias` elegido por el caller",
+        "zh": "平台创建 AR/ARS 存款账户时必须提供调用方选择的 `bank_alias`"
       }
     },
     {

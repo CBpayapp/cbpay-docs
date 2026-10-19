@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.167"
+  version: "2.168"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3752,6 +3752,76 @@ paths:
                 message: could not fetch fx rate history
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/payouts/ar-alias/resolve:
+    get:
+      tags:
+      - Payouts
+      operationId: resolveArgentinaBankAlias
+      summary: Resolve an Argentine bank alias
+      description: Read-only, account-scoped lookup of an Argentine bank alias. The account is limited to 10 lookups per minute. Confirm the returned holder, then create the payout with account_number set to the original alias and the returned tax_id/name. The dispatch re-resolves the alias in fresh state and stamps destination_alias in the evidence. The response omits tax_id when the bank does not provide it.
+      parameters:
+      - name: alias
+        in: query
+        required: true
+        description: Argentine bank alias to resolve.
+        schema:
+          type: string
+          minLength: 1
+        example: julieta.fernandez
+      responses:
+        '200':
+          description: Resolved bank destination.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [alias, account_number, account_type]
+                properties:
+                  alias: { type: string }
+                  account_number: { type: string, pattern: '^[0-9]{22}$' }
+                  account_type: { type: string, enum: [CBU, CVU] }
+                  tax_id: { type: string, pattern: '^[0-9]{11}$' }
+                  holder_name: { type: string }
+              example:
+                alias: julieta.fernandez
+                account_number: '2850590940090418135201'
+                account_type: CBU
+                tax_id: '27234567891'
+                holder_name: Julieta Fernandez
+        '400':
+          description: Missing or malformed alias.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                invalid_alias:
+                  value: { error: invalid_alias, message: alias format is invalid }
+                query_required:
+                  value: { error: query_required, message: alias query parameter is required }
+        '403':
+          description: Account verification or tenant scope is required.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: verification_required, message: account verification is required }
+        '404':
+          description: Alias does not exist.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: alias_unresolvable, message: alias could not be resolved }
+        '429':
+          description: Account lookup throttle reached.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: too_many_attempts, message: alias lookup limit reached }
+        '502':
+          description: Bank lookup temporarily unavailable.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: beneficiary_lookup_unavailable, message: beneficiary lookup is temporarily unavailable }
   /v1/payouts:
     post:
       tags:

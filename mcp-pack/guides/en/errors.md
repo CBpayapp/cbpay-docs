@@ -509,6 +509,24 @@ is debited or dispatched:
 
 A dispute cannot be opened for a payin credited in locally held BOB, MXN or ARS. The funds remain in the local balance; use a supported USD or USDT credit or wait for the product to support local-fiat disputes.
 
+## Argentine bank-alias resolution
+
+These errors are returned by
+`GET /v1/payouts/ar-alias/resolve?alias=...`:
+
+| HTTP | `error` | Meaning and resolution |
+|---:|---|---|
+| 400 | `query_required` | Send the `alias` query parameter. |
+| 400 | `invalid_alias` | The alias format is invalid; send the bank alias accepted by the AR rail. |
+| 403 | `verification_required` | Complete the required account verification before resolving an alias. |
+| 404 | `alias_unresolvable` | The alias does not exist or cannot be resolved; do not create a payout from this result. |
+| 429 | `too_many_attempts` | The account exceeded the 10-per-minute lookup limit; wait before querying again. |
+| 502 | `beneficiary_lookup_unavailable` | The bank lookup is temporarily unavailable; retry the read according to your backoff policy. |
+
+The core may also return `user_scope_required` (403) when the request lacks
+tenant scope and `payout_corridor_unsupported` when AR bank payouts are not
+enabled. Provider identity is never exposed.
+
 ## Argentine bank aliases and profile aliases
 
 | HTTP | `error` | Meaning / action |
