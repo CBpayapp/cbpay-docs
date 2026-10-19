@@ -39,7 +39,7 @@ envío sale igual.
 
 ## Importar la agenda del celular
 
-Sube los contactos del teléfono (hasta **1.000 por request**; pagina si hay
+Sube los contactos del teléfono (hasta **1,000 por request**; pagina si hay
 más) y CBPay te dice **quién ya tiene cuenta** — el match es por número de
 teléfono y solo contra cuentas del mismo operador:
 
@@ -199,7 +199,7 @@ campos) y borrarlos (`DELETE .../destinations/{destination_id}`).
 | HTTP | `error` | Causa | Solución |
 |---|---|---|---|
 | 400 | `invalid_phone` | El teléfono no se pudo normalizar a E.164 | Envíalo como `+<país><número>` |
-| 400 | `batch_too_large` | Import con más de 1.000 contactos | Pagina la subida |
+| 400 | `batch_too_large` | Import con más de 1,000 contactos | Pagina la subida |
 | 404 | `not_found` | El contacto/destino no existe o no es tuyo | Verifica el id |
 | 404 | `recipient_not_found` | Ningún teléfono verificado coincide | Pide al destinatario verificar su teléfono, o usa email/account_id |
 | 409 | `duplicate` | Ya tienes un contacto con ese teléfono/email | Edita el existente |
@@ -225,7 +225,7 @@ y esos destinos también quedan guardados en el contacto.
 El envío por teléfono falla explícito con 422 recipient_ambiguous — nunca
 adivinamos un destino de dinero. Usa to_account_id o to_email en ese caso.
 #### ¿El import me puede servir para saber si un número cualquiera tiene CBPay?
-El match es solo contra cuentas de tu mismo operador, con un cap de 1.000
+El match es solo contra cuentas de tu mismo operador, con un cap de 1,000
 contactos por request y bajo el rate limit global de la API. No expone
 datos de la cuenta matcheada más allá del hecho de existir (necesario para
 poder transferirle).

@@ -134,7 +134,7 @@ curl -X POST \
 
 `signature_png` es obligatorio en toda solicitud de firma. La API acepta PNG
 codificado en Base64 con o sin el prefijo `data:image/png;base64,`. Antes de
-reclamar el sobre, decodifica y valida la imagen: máximo 700.000 caracteres
+reclamar el sobre, decodifica y valida la imagen: máximo 700,000 caracteres
 Base64, máximo 512 KiB decodificados, dimensiones mínimas de 64×16 píxeles y
 al menos 200 píxeles con tinta. Si falla, responde HTTP 422
 `invalid_signature_image`; el mensaje identifica la causa de validación.

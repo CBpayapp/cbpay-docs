@@ -179,7 +179,7 @@ comprobante PDF, el export CSV de payouts y la cartola. Las respuestas, CSV, web
 
 Por defecto el débito sale de USD; usa `PUT /v1/settlement` para cambiarlo. Para pagar una operación
 puntual desde otro saldo, agrega `settlement_asset` al request. Ejemplo:
-un payout de 100.000 CLP pagado desde el saldo BTC pasa por cuatro
+un payout de 100,000 CLP pagado desde el saldo BTC pasa por cuatro
 transformaciones, todas registradas en la respuesta:
 
 1. **CLP → USDT** a tu tasa: `100000 / 950.25 = 105.235465 USDT`.
@@ -188,7 +188,7 @@ transformaciones, todas registradas en la respuesta:
    `109029.34070000`): `105.535465 / 109029.3407 = 0.00096795 BTC`
    (redondeo hacia arriba al satoshi).
 4. **Débito y hold en BTC**: `settlement_amount` `0.00096795` sale de tu
-   saldo BTC; el beneficiario recibe sus 100.000 CLP igual que siempre.
+   saldo BTC; el beneficiario recibe sus 100,000 CLP igual que siempre.
 
 ```json
 {
@@ -764,7 +764,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 </Tab>
 <Tab title="Ecuador">
 
-Remesas en **USD** (1 a 10.000 por operación, máx. 2 decimales) con cuatro
+Remesas en **USD** (1 a 10,000 por operación, máx. 2 decimales) con cuatro
 métodos: transferencia bancaria, billetera **DE UNA** (por celular),
 retiro en **ventanilla** (`cash_pickup`) y retiro en **corresponsal no
 bancario** (`cnb`). Es un corredor de remesas: además del beneficiario, el

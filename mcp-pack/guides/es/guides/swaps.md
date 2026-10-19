@@ -139,7 +139,7 @@ de origen y `swap_in` en la de destino, cada uno cuadrando en su sección.
 
 ### Protección de precio BTC
 
-Para swaps BTC de USD 1.000 o más, CBPay compara la referencia de ejecución
+Para swaps BTC de USD 1,000 o más, CBPay compara la referencia de ejecución
 con el libro de mercado antes del swap. Si la divergencia supera el umbral
 configurado, responde `422 guard_diverged`; espera la convergencia o divide la
 operación y reintenta con la misma `idempotency_key`. Si el mercado no está

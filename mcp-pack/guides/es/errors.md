@@ -123,7 +123,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_language` | `lang` del informe PDF no es `en`, `es` ni `zh` (informe AML e informe de verificación) |
 | `invalid_locale` | `PATCH /v1/me` (o el registro) envió un locale no vacío fuera de `en` / `es` / `zh`. El string vacío guarda inglés. Distinto de `invalid_language` (`lang` de informe PDF) y del `invalid_value` de org-admin en `default_locale` |
 | `invalid_format` | `format` del informe de verificación no es `pdf` ni `json` |
-| `batch_too_large` | Import de contactos con más de 1.000 entradas (pagina la subida) |
+| `batch_too_large` | Import de contactos con más de 1,000 entradas (pagina la subida) |
 | `invalid_body` | No se pudo leer el body del request (subidas binarias, webhooks) |
 | `invalid_image` | El body del avatar está vacío o no es una imagen soportada (PNG/JPEG/WebP, máx 512 KB) |
 | `invalid_interval` | El `interval` de la suscripción debe ser `daily`, `weekly`, `monthly` o `yearly` |
@@ -298,7 +298,7 @@ Errores de los endpoints del buró de crédito ([guía](https://docs.cbpayapp.co
 | 422 | `unsupported_country` | Este flujo de fraude/identidad de Qscore no está disponible para el país seleccionado — usa un país compatible o contacta a soporte |
 | 503 | `recovery_pending` | El informe de fraude todavía se está finalizando — consulta el informe con las mismas credenciales y reintenta el PDF cuando llegue a `ready` |
 | 400 | `no_valid_items` | Todas las filas del lote fueron rechazadas (`invalid_doc_id` / `duplicate_in_batch`) y no se creó ningún lote — valida el archivo localmente (cada `doc_id` debe pasar el dígito verificador del país y ser único) y reenvía con una clave de idempotencia **nueva** |
-| 400 | `too_many_items` | Un lote acepta a lo más 5.000 sujetos — parte la cartera en varios lotes, cada uno con su propia clave de idempotencia |
+| 400 | `too_many_items` | Un lote acepta a lo más 5,000 sujetos — parte la cartera en varios lotes, cada uno con su propia clave de idempotencia |
 | 409 | `already_decided` | El link de consentimiento ya fue decidido (`granted`, `revoked` o `expired`) y no puede transicionar de nuevo — crea un link nuevo si necesitas otra autorización |
 | 409 | `link_inactive` | La conexión bancaria detrás del consentimiento no está `active` (la sesión del widget expiró o el vínculo se revocó) — el titular debe reconectar desde el mismo link |
 | 409 | `holder_mismatch` | El documento verificado por el banco no calza con el `doc_id` del sujeto — una cuenta de OTRO documento jamás otorga el consentimiento; verifica que creaste el link para el documento correcto |

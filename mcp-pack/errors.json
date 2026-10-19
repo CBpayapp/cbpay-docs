@@ -1103,7 +1103,7 @@
       "http": 400,
       "meaning": {
         "en": "Contact import with more than 1,000 entries (paginate the upload)",
-        "es": "Import de contactos con más de 1.000 entradas (pagina la subida)",
+        "es": "Import de contactos con más de 1,000 entradas (pagina la subida)",
         "zh": "联系人导入超过 1,000 条（请分批上传）"
       }
     },
@@ -2965,7 +2965,7 @@
       "http": 400,
       "meaning": {
         "en": "A batch accepts at most 5,000 subjects — split the portfolio into multiple batches, each with its own idempotency key",
-        "es": "Un lote acepta a lo más 5.000 sujetos — parte la cartera en varios lotes, cada uno con su propia clave de idempotencia",
+        "es": "Un lote acepta a lo más 5,000 sujetos — parte la cartera en varios lotes, cada uno con su propia clave de idempotencia",
         "zh": "单个批次最多接受 5,000 个主体 — 请将投资组合拆分为多个批次,每个批次使用各自的幂等键"
       }
     },

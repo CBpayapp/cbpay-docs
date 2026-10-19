@@ -1,6 +1,6 @@
 ---
 title: "Qscore por lote (scoring de carteras)"
-description: "Puntúa una cartera completa en un solo lote asíncrono: sube hasta 5.000 sujetos por JSON o CSV, recibe un webhook y un email cuando el lote termina, y descarga todos los scores en JSON o CSV."
+description: "Puntúa una cartera completa en un solo lote asíncrono: sube hasta 5,000 sujetos por JSON o CSV, recibe un webhook y un email cuando el lote termina, y descarga todos los scores en JSON o CSV."
 slug: es/guides/qscore-batch
 lang: es
 source_url: https://docs.cbpayapp.com/es/guides/qscore-batch
@@ -132,7 +132,7 @@ Las filas inválidas se **rechazan al crear** y se reportan en `rejected_items` 
 | `country` | string | Requerido. `CL` hoy. |
 | `purpose` | string | Requerido. Lista cerrada (Ley 20.575): `credit_evaluation`, `tenant_screening`, `hiring`, `supplier_onboarding`, `other`. `self_access` **no está permitido** en lotes — el informe del propio titular es gratis vía [my-report](https://docs.cbpayapp.com/es/guides/qscore). |
 | `lang` | string | `en` (default), `es` o `zh` — idioma de los PDF generados. |
-| `subjects` | array | 1–5.000 ítems: `{doc_id, subject_type?}`. Excluyente con `subjects_csv`. |
+| `subjects` | array | 1–5,000 ítems: `{doc_id, subject_type?}`. Excluyente con `subjects_csv`. |
 | `subjects_csv` | string | Texto CSV con encabezado `doc_id[,subject_type]`, hasta 5 MB. Excluyente con `subjects`. |
 | `subject_type` | string | Opcional por fila: `person` o `company`. Si se omite **o no se reconoce** para `CL`, se infiere de la serie del RUT (primer dígito 5–9 → `company`; cualquier otro → `person`). |
 | `idempotency_key` | string | **Requerida.** Única por lote; el replay nunca duplica. |
@@ -322,7 +322,7 @@ Cada ítem cobra el fee standalone configurado en tu cuenta (`risk_report_person
 | 400 | `idempotency_key_required` | Toda creación de lote necesita un `idempotency_key` |
 | 400 | `invalid_range` | En los listados, `from`/`to` deben ser fechas `YYYY-MM-DD` válidas |
 | 400 | `no_valid_items` | Todas las filas fueron rechazadas (`invalid_doc_id` / `duplicate_in_batch`) y **no se creó ningún lote** — valida el archivo localmente (cada `doc_id` debe pasar el dígito verificador del país y ser único) y reenvía con una clave de idempotencia **nueva** |
-| 400 | `too_many_items` | Un lote acepta a lo más 5.000 sujetos — parte la cartera en varios lotes, cada uno con su propia clave de idempotencia |
+| 400 | `too_many_items` | Un lote acepta a lo más 5,000 sujetos — parte la cartera en varios lotes, cada uno con su propia clave de idempotencia |
 | 401 | `unauthorized` | API key faltante o inválida |
 | 403 | `verification_required` | Tu cuenta aún no completa la verificación de identidad requerida para operar |
 | 403 | `service_disabled` | El producto `risk` no está habilitado en tu cuenta — contacta al admin de tu organización |
@@ -355,11 +355,11 @@ Content-Type: application/json
 ## Preguntas frecuentes
 
 #### ¿Cuánto tarda un lote?
-    Depende del tamaño y de qué tan fresca esté la data del buró para cada sujeto. Cada ítem es un informe completo (incluido el fetch on-demand al buró), así que estima unos segundos por ítem; un lote de 1.000 sujetos típicamente termina en menos de una hora. No necesitas esperar en línea — el webhook te avisa cuando termina.
+    Depende del tamaño y de qué tan fresca esté la data del buró para cada sujeto. Cada ítem es un informe completo (incluido el fetch on-demand al buró), así que estima unos segundos por ítem; un lote de 1,000 sujetos típicamente termina en menos de una hora. No necesitas esperar en línea — el webhook te avisa cuando termina.
 #### ¿Los scores del lote difieren de los del informe individual?
     No. El worker corre exactamente el mismo pipeline del informe individual, con la misma versión determinista del modelo. Puntuar al mismo sujeto individualmente o dentro de un lote da el mismo resultado en el mismo momento.
-#### ¿Qué pasa si mi cartera tiene más de 5.000 sujetos?
-    Pártela en varios lotes de hasta 5.000 cada uno, con un `idempotency_key` distinto por lote. Los lotes se procesan de forma independiente y cada uno envía su propio webhook de término.
+#### ¿Qué pasa si mi cartera tiene más de 5,000 sujetos?
+    Pártela en varios lotes de hasta 5,000 cada uno, con un `idempotency_key` distinto por lote. Los lotes se procesan de forma independiente y cada uno envía su propio webhook de término.
 #### ¿Puedo mezclar personas y empresas en un mismo lote?
     Sí. Declara `subject_type` por fila o deja que la API lo infiera de la serie del RUT chileno. Cada ítem se cobra con el fee que corresponde a su tipo.
 #### ¿Qué pasa si el worker se cae a mitad del lote?

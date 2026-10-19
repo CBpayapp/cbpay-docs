@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.168 · 2 versions - October 19, 2026
+## v2.169 · 3 versions - October 19, 2026
+### v2.169
+**Changed**
+- All money numbers now display in US format (thousands with comma, decimals with point: `1,234,567.89`) across the portal, receipts, trackers and statements, for fiat and crypto in every country. API, CSV and XLSX values are unchanged (machine format, no thousands separators).
+
 ### v2.168
 **Added**
 - Added the read-only Argentine bank-alias resolution endpoint
@@ -19,6 +23,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ### v2.167
 **Fixed**
 - Banking deposit-account movements accept optional `from`/`to` date bounds; omitting both lists all available movements with pagination. Invalid date formats or ranges still return `400 invalid_range`.
+
 ## v2.166 · 4 versions - October 16, 2026
 ### v2.166
 **Added**

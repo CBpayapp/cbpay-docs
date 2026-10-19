@@ -5,7 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.168 · 2 个版本 - 2026年10月19日
+## v2.169 · 3 个版本 - 2026年10月19日
+### v2.169
+**变更**
+- 所有金额数字现以美式格式显示（千分位逗号、小数点：`1,234,567.89`），覆盖门户、凭证、跟踪器和对账单，适用于所有国家的法币与加密货币。API、CSV 与 XLSX 的值不变（机器格式，无千分位分隔符）。
+
 ### v2.168
 **新增**
 - 新增只读接口 `GET /v1/payouts/ar-alias/resolve`，用于解析阿根廷银行
@@ -17,6 +21,7 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 ### v2.167
 **修复**
 - banking 存款账户流水现在接受可选的 `from`/`to` 日期边界；同时省略时会分页列出全部可用流水。日期格式或范围无效时仍返回 `400 invalid_range`。
+
 ## v2.166 · 4 个版本 - 2026年10月16日
 ### v2.166
 **新增**
