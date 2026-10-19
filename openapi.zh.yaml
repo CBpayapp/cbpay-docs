@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.167"
+  version: "2.168"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -3550,6 +3550,74 @@ paths:
                 message: could not fetch fx rate history
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/payouts/ar-alias/resolve:
+    get:
+      tags:
+      - Payouts
+      operationId: resolveArgentinaBankAlias
+      summary: 解析阿根廷银行别名
+      description: 按账户隔离的只读阿根廷银行别名查询。每个账户每分钟最多查询 10 次。请确认返回的持有人，然后使用原始别名作为 account_number，并使用返回的 tax_id/name 创建 payout。dispatch 会在最新状态下重新解析别名，并在证据中记录 destination_alias。如果银行未提供 tax_id，响应会诚实地省略该字段。
+      parameters:
+      - name: alias
+        in: query
+        required: true
+        description: 要解析的阿根廷银行别名。
+        schema:
+          type: string
+          minLength: 1
+        example: julieta.fernandez
+      responses:
+        '200':
+          description: 已解析的银行目的地。
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [alias, account_number, account_type]
+                properties:
+                  alias: { type: string }
+                  account_number: { type: string, pattern: '^[0-9]{22}$' }
+                  account_type: { type: string, enum: [CBU, CVU] }
+                  tax_id: { type: string, pattern: '^[0-9]{11}$' }
+                  holder_name: { type: string }
+              example:
+                alias: julieta.fernandez
+                account_number: '2850590940090418135201'
+                account_type: CBU
+                tax_id: '27234567891'
+                holder_name: Julieta Fernandez
+        '400':
+          description: 别名缺失或格式错误。
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                invalid_alias: { value: { error: invalid_alias, message: 别名格式无效 } }
+                query_required: { value: { error: query_required, message: 缺少 alias 查询参数 } }
+        '403':
+          description: 需要账户验证或租户范围。
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: verification_required, message: 需要验证账户 }
+        '404':
+          description: 别名不存在。
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: alias_unresolvable, message: 无法解析别名 }
+        '429':
+          description: 已达到账户查询限流。
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: too_many_attempts, message: 已达到查询限制 }
+        '502':
+          description: 银行查询暂时不可用。
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: beneficiary_lookup_unavailable, message: 银行查询暂时不可用 }
   /v1/payouts:
     post:
       tags:

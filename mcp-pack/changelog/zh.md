@@ -5,7 +5,15 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.167 · 1 个版本 - 2026年10月19日
+## v2.168 · 2 个版本 - 2026年10月19日
+### v2.168
+**新增**
+- 新增只读接口 `GET /v1/payouts/ar-alias/resolve`，用于解析阿根廷银行
+  别名。解析后请确认已验证的持有人，将原始别名作为 `account_number`，
+  并使用返回的 `tax_id` 和可选姓名创建正常 payout；dispatch 会重新解析
+  别名并记录 `destination_alias`。每个账户每分钟最多查询 10 次，
+  并返回稳定的校验、验证、不存在、限流和暂时不可用错误。
+
 ### v2.167
 **修复**
 - banking 存款账户流水现在接受可选的 `from`/`to` 日期边界；同时省略时会分页列出全部可用流水。日期格式或范围无效时仍返回 `400 invalid_range`。

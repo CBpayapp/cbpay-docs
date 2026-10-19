@@ -284,6 +284,26 @@ CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂�
 `failed` payout，后者会在终态事件前退回准确的扣款金额。
 有关汇率来源和 FIFO 指示性报价，请参阅 [Payout 汇率来源与 FIFO 指示性报价](/zh/guides/payout-rate-sources)。
 
+## 阿根廷：付款前解析银行别名
+
+对于 ARS 银行转账，请先解析别名、确认已验证的持有人，再使用返回的
+账户资料创建正常 payout。该查询按账户隔离，每分钟最多 10 次。
+
+```bash
+curl "https://api.qbank.cl/platform/v1/payouts/ar-alias/resolve?alias=julieta.fernandez" -H "Authorization: Bearer <token>"
+```
+
+```json
+{"alias":"julieta.fernandez","account_number":"2850590940090418135201","account_type":"CBU","tax_id":"27234567891","holder_name":"Julieta Fernandez"}
+```
+
+请在 `POST /v1/payouts` 中将原始别名作为 `account_number`，并使用返回的
+`tax_id`/`name`；dispatch 会在最新状态下重新解析别名，并在证据中记录
+`destination_alias`。`alias_unresolvable` 是确定性的，
+`beneficiary_lookup_unavailable` 是暂时性的；
+`invalid_alias`、`query_required`、`verification_required` 和
+`too_many_attempts` 都是可处理的查询错误。请参阅[错误码](/zh/errors)。
+
 ## 3. 接收最终状态
 
 订阅 `payout_status_changed` 事件（[webhooks](/zh/webhooks)）：

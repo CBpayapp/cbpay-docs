@@ -493,6 +493,24 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 
 本地保留 BOB、MXN 或 ARS 的 payin 暂不支持争议。请使用受支持的 USD 或 USDT 入账，或等待本地法币争议功能。
 
+## 阿根廷银行别名解析
+
+以下错误由
+`GET /v1/payouts/ar-alias/resolve?alias=...` 返回：
+
+| HTTP | `error` | 含义与处理方式 |
+|---:|---|---|
+| 400 | `query_required` | 发送 `alias` 查询参数。 |
+| 400 | `invalid_alias` | 别名格式无效；请发送 AR 通道接受的银行别名。 |
+| 403 | `verification_required` | 解析别名前完成账户所需的验证。 |
+| 404 | `alias_unresolvable` | 别名不存在或无法解析；不要使用此结果创建 payout。 |
+| 429 | `too_many_attempts` | 账户超过每分钟 10 次查询限制；等待后再查询。 |
+| 502 | `beneficiary_lookup_unavailable` | 银行查询暂时不可用；按退避策略重试只读查询。 |
+
+当缺少租户范围时，core 也可能返回 `user_scope_required`（403）；当
+阿根廷 payout 通道未启用时返回 `payout_corridor_unsupported`。系统不会
+暴露提供商身份。
+
 ## 阿根廷银行别名与个人资料别名
 
 | HTTP | `error` | 含义 / 处理方式 |

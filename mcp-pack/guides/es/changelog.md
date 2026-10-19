@@ -5,7 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.167 · 1 versión - 19 de octubre de 2026
+## v2.168 · 2 versiones - 19 de octubre de 2026
+### v2.168
+**Agregado**
+- Se agregó el endpoint de solo lectura
+  `GET /v1/payouts/ar-alias/resolve` para aliases bancarios argentinos.
+  Resuelve el alias, confirma el titular verificado y luego crea el payout
+  normal con `account_number` igual al alias original, más el `tax_id` y
+  nombre opcional devueltos; el dispatch vuelve a resolverlo y registra
+  `destination_alias`. Las
+  consultas tienen un límite de 10 por minuto y devuelven errores estables de
+  validación, verificación, inexistencia, límite y disponibilidad temporal.
+
 ### v2.167
 **Corregido**
 - Los movimientos de cuentas de depósito banking aceptan límites de fecha `from`/`to` opcionales; omitir ambos lista todos los movimientos disponibles con paginación. Los formatos o rangos inválidos siguen respondiendo `400 invalid_range`.

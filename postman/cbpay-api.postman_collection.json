@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-19 17:31 UTC",
-    "_content_sha256": "82a88dd829cc3b13a122714d2fdf5d8c936fcfc2ff754ec00a5694821b8a1985"
+    "_generated_at": "2026-10-19 18:26 UTC",
+    "_content_sha256": "886695b5c608ccf175941ad7d63a600ac3930c80ad3ec390fc752f1686cad346"
   },
   "auth": {
     "type": "bearer",
@@ -9975,6 +9975,72 @@
     {
       "name": "Payouts",
       "item": [
+        {
+          "name": "Resolve an Argentine bank alias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payouts/ar-alias/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payouts",
+                "ar-alias",
+                "resolve"
+              ],
+              "query": [
+                {
+                  "key": "alias",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Argentine bank alias to resolve."
+                }
+              ]
+            },
+            "description": "Read-only, account-scoped lookup of an Argentine bank alias. The account is limited to 10 lookups per minute. Confirm the returned holder, then create the payout with account_number set to the original alias and the returned tax_id/name. The dispatch re-resolves the alias in fresh state and stamps destination_alias in the evidence. The response omits tax_id when the bank does not provide it."
+          },
+          "response": [
+            {
+              "name": "200 Resolved bank destination.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payouts/ar-alias/resolve",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payouts",
+                    "ar-alias",
+                    "resolve"
+                  ],
+                  "query": [
+                    {
+                      "key": "alias",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Argentine bank alias to resolve."
+                    }
+                  ]
+                }
+              },
+              "status": "Resolved bank destination.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"alias\": \"julieta.fernandez\",\n  \"account_number\": \"2850590940090418135201\",\n  \"account_type\": \"CBU\",\n  \"tax_id\": \"27234567891\",\n  \"holder_name\": \"Julieta Fernandez\"\n}"
+            }
+          ]
+        },
         {
           "name": "List payouts",
           "request": {

@@ -218,7 +218,6 @@ assets volátiles tienen un límite por operación
 (`422 settlement_limit_exceeded`; consúltalo en `GET /v1/settlement`).
 Para settlement BOB, MXN o ARS en la misma moneda, consulta [Settlement de payouts fiat](./fiat-settlement).
 ### El screening técnico puede quedar pendiente
-
 CBPay screenea al beneficiario antes de debitar tu saldo o llamar al core. Si
 el servicio de screening está temporalmente no disponible **y la cola técnica
 de screening está disponible**, el payout se persiste y el create responde
@@ -268,7 +267,6 @@ esta cola. No reemplaza los contratos actuales de validación, seguridad ni
 `compliance_hold`.
 
 ### Un fallo antes del débito no es un reembolso
-
 Si el screening o un control duro de compliance falla antes de iniciar el
 camino de débito, el mismo payout puede terminar `failed` con
 `predebit_failure: true` y `funds_debited: false`. La respuesta y su evento
@@ -277,6 +275,8 @@ comprobante que revertir. Es distinto de un `failed` posterior al débito,
 donde el débito exacto se reembolsa antes del evento terminal.
 Para conocer el origen de la tasa y las cotizaciones FIFO indicativas, revisa [Orígenes de tasa de payouts y cotizaciones FIFO](/es/guides/payout-rate-sources).
 
+## Argentina: resuelve un alias bancario antes de pagar
+Resuelve y confirma el titular antes de crear el payout (10 consultas/minuto/cuenta). Request: `GET /v1/payouts/ar-alias/resolve?alias=julieta.fernandez`. Respuesta: `{"alias":"julieta.fernandez","account_number":"2850590940090418135201","account_type":"CBU","tax_id":"27234567891","holder_name":"Julieta Fernandez"}`. Crea `POST /v1/payouts` con `account_number` igual al alias original y el `tax_id`/`name` devueltos; el dispatch lo vuelve a resolver y registra `destination_alias` en la evidencia. `alias_unresolvable` es determinista y `beneficiary_lookup_unavailable` temporal. Consulta [Errores](/es/errors).
 ## 3. Recibe el estado final
 
 Suscríbete al evento `payout_status_changed` ([webhooks](/es/webhooks)):

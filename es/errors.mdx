@@ -514,6 +514,24 @@ una operación Banking EUR:
 
 No se puede abrir una controversia para un payin acreditado en BOB, MXN o ARS retenidos. Usa un crédito USDT soportado o espera soporte para controversias fiat.
 
+## Resolución de alias bancario argentino
+
+Estos errores los devuelve
+`GET /v1/payouts/ar-alias/resolve?alias=...`:
+
+| HTTP | `error` | Significado y solución |
+|---:|---|---|
+| 400 | `query_required` | Envía el parámetro de consulta `alias`. |
+| 400 | `invalid_alias` | El formato del alias no es válido; envía un alias aceptado por el rail AR. |
+| 403 | `verification_required` | Completa la verificación requerida de la cuenta antes de resolver el alias. |
+| 404 | `alias_unresolvable` | El alias no existe o no se puede resolver; no crees un payout con este resultado. |
+| 429 | `too_many_attempts` | La cuenta superó el límite de 10 consultas por minuto; espera antes de consultar otra vez. |
+| 502 | `beneficiary_lookup_unavailable` | La consulta bancaria está temporalmente indisponible; reintenta la lectura con backoff. |
+
+El core también puede devolver `user_scope_required` (403) cuando falta el
+alcance del tenant y `payout_corridor_unsupported` cuando los payouts AR no
+están habilitados. La identidad del proveedor nunca se expone.
+
 ## Aliases bancarios argentinos y alias del perfil
 
 | HTTP | `error` | Significado / acción |

@@ -5,7 +5,17 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.167 · 1 version - October 19, 2026
+## v2.168 · 2 versions - October 19, 2026
+### v2.168
+**Added**
+- Added the read-only Argentine bank-alias resolution endpoint
+  `GET /v1/payouts/ar-alias/resolve`. Resolve the alias, confirm the
+  verified holder, then create the normal payout with `account_number` set to
+  the original alias plus the returned `tax_id` and optional holder name;
+  dispatch re-resolves the alias and records `destination_alias`. Account lookups are
+  limited to 10 per minute and return stable validation, verification,
+  not-found, throttling and temporary lookup errors.
+
 ### v2.167
 **Fixed**
 - Banking deposit-account movements accept optional `from`/`to` date bounds; omitting both lists all available movements with pagination. Invalid date formats or ranges still return `400 invalid_range`.
