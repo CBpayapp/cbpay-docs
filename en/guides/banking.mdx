@@ -153,6 +153,10 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/mo
   -H "Authorization: Bearer <token>"
 ```
 
+`from` and `to` are optional inclusive `YYYY-MM-DD` bounds. Omit both to list
+all available movements; the response remains paginated. The dated example
+above is recommended when you only need a bounded reporting window.
+
 The balance response uses exact minor-unit strings:
 
 ```json

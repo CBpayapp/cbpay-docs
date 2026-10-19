@@ -5,6 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.167 · 1 个版本 - 2026年10月19日
+### v2.167
+**修复**
+- banking 存款账户流水现在接受可选的 `from`/`to` 日期边界；同时省略时会分页列出全部可用流水。日期格式或范围无效时仍返回 `400 invalid_range`。
 ## v2.166 · 4 个版本 - 2026年10月16日
 ### v2.166
 **新增**

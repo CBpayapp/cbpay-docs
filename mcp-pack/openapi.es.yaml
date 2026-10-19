@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.166"
+  version: "2.167"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -23737,8 +23737,8 @@ paths:
       summary: Listar movimientos de instrumento banking
       parameters:
         - {name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}
-        - {name: from, in: query, required: true, schema: {type: string, format: date}}
-        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: from, in: query, required: false, description: Fecha inicial inclusiva opcional (YYYY-MM-DD). Omítela junto con to para listar todos los movimientos., schema: {type: string, format: date}}
+        - {name: to, in: query, required: false, description: Fecha final inclusiva opcional (YYYY-MM-DD). Omítela junto con from para listar todos los movimientos., schema: {type: string, format: date}}
         - {name: page, in: query, schema: {type: integer, default: 1}}
         - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
       responses:
@@ -23748,11 +23748,11 @@ paths:
             application/json:
               example: {instrument_id: a1d4b7c0-1234-5678-9abc-def012345678, page: 1, page_size: 50, total: 0, movements: []}
         '400':
-          description: Ventana de fechas inválida.
+          description: Formato o rango de fechas inválido.
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Error'}
-              example: {error: invalid_date_range, message: from and to are required}
+              example: {error: invalid_range, message: from y to deben ser fechas válidas y from no puede ser posterior a to}
         '409':
           description: Alias o provisionamiento pendiente.
           content:
