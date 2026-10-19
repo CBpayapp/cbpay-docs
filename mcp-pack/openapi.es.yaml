@@ -9392,7 +9392,8 @@ paths:
       description: Página hosteada donde tu cliente completa SOLO la prueba de vida en video (gestos frente
         a la cámara + face match server-side contra el documento de identidad subido). Gratis — el servicio
         se cobró al crear la submission. Si hay un link vigente se devuelve el mismo; si la prueba ya
-        fue superada, 400 liveness_already_completed.
+        fue superada, 400 liveness_already_completed. En expedientes anteriores a la verificación nativa
+        devuelve 422 legacy_frozen; inicia una verificación nativa nueva.
       parameters:
       - name: submissionID
         in: path
@@ -9439,6 +9440,15 @@ paths:
               example:
                 error: liveness_already_completed
                 message: the liveness check already passed for this submission
+        '422':
+          description: legacy_frozen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: legacy_frozen
+                message: liveness sessions are only issued for native verifications; request a new native invite to continue
         '404':
           $ref: '#/components/responses/NotFound'
         '401':

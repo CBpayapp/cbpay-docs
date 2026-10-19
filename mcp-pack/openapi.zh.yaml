@@ -9011,7 +9011,7 @@ paths:
       operationId: createKycLivenessLink
       summary: 创建活体检测链接
       description: 托管页面,你的客户在此仅完成视频活体检测(摄像头手势 + 服务端与已上传身份文件的人脸比对)。免费——服务已在创建 submission 时计费。若存在开放链接则返回同一个;若检测已通过,返回
-        400 liveness_already_completed。
+        400 liveness_already_completed。对于原生验证之前的档案,返回 422 legacy_frozen,请发起新的原生验证。
       parameters:
       - name: submissionID
         in: path
@@ -9058,6 +9058,15 @@ paths:
               example:
                 error: liveness_already_completed
                 message: the liveness check already passed for this submission
+        '422':
+          description: legacy_frozen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: legacy_frozen
+                message: liveness sessions are only issued for native verifications; request a new native invite to continue
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
