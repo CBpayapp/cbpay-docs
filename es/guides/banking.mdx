@@ -109,6 +109,11 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/mo
   -H "Authorization: Bearer <token>"
 ```
 
+`from` y `to` son límites inclusivos opcionales en formato `YYYY-MM-DD`.
+Si omites ambos, lista todos los movimientos disponibles y mantiene la
+paginación. El ejemplo con fechas es la práctica recomendada cuando necesitas
+acotar el período.
+
 El saldo devuelve `currency`, `funds_model` (`retained` en BO,
 `centralized` en MX/AR), y los montos exactos en minor units:
 `credited_in`, `paid_out`, `refunded_in`, `refunded_out`, `other_net`,

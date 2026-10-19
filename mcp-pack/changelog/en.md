@@ -5,6 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.167 · 1 version - October 19, 2026
+### v2.167
+**Fixed**
+- Banking deposit-account movements accept optional `from`/`to` date bounds; omitting both lists all available movements with pagination. Invalid date formats or ranges still return `400 invalid_range`.
 ## v2.166 · 4 versions - October 16, 2026
 ### v2.166
 **Added**

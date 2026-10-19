@@ -5,6 +5,10 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.167 · 1 versión - 19 de octubre de 2026
+### v2.167
+**Corregido**
+- Los movimientos de cuentas de depósito banking aceptan límites de fecha `from`/`to` opcionales; omitir ambos lista todos los movimientos disponibles con paginación. Los formatos o rangos inválidos siguen respondiendo `400 invalid_range`.
 ## v2.166 · 4 versiones - 16 de octubre de 2026
 ### v2.166
 **Agregado**

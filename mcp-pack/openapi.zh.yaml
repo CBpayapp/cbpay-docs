@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.166"
+  version: "2.167"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -23000,8 +23000,8 @@ paths:
       summary: 列出 banking 工具流水
       parameters:
         - {name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}
-        - {name: from, in: query, required: true, schema: {type: string, format: date}}
-        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: from, in: query, required: false, description: 可选的包含边界起始日期（YYYY-MM-DD）。与 to 一起省略可列出全部流水。, schema: {type: string, format: date}}
+        - {name: to, in: query, required: false, description: 可选的包含边界结束日期（YYYY-MM-DD）。与 from 一起省略可列出全部流水。, schema: {type: string, format: date}}
         - {name: page, in: query, schema: {type: integer, default: 1}}
         - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
       responses:
@@ -23011,11 +23011,11 @@ paths:
             application/json:
               example: {instrument_id: a1d4b7c0-1234-5678-9abc-def012345678, page: 1, page_size: 50, total: 0, movements: []}
         '400':
-          description: 日期窗口无效。
+          description: 日期格式或范围无效。
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Error'}
-              example: {error: invalid_date_range, message: from and to are required}
+              example: {error: invalid_range, message: from 和 to 必须是有效日期，且 from 不能晚于 to}
         '409':
           description: alias 或 provision pending。
           content:

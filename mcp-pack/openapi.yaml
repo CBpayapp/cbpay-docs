@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.166"
+  version: "2.167"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -23934,8 +23934,8 @@ paths:
       summary: List banking deposit-account movements
       parameters:
         - {name: instrumentID, in: path, required: true, schema: {type: string, format: uuid}}
-        - {name: from, in: query, required: true, schema: {type: string, format: date}}
-        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+        - {name: from, in: query, required: false, description: Optional inclusive start date (YYYY-MM-DD). Omit with to to list all movements., schema: {type: string, format: date}}
+        - {name: to, in: query, required: false, description: Optional inclusive end date (YYYY-MM-DD). Omit with from to list all movements., schema: {type: string, format: date}}
         - {name: page, in: query, schema: {type: integer, default: 1}}
         - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
       responses:
@@ -23951,11 +23951,11 @@ paths:
                 movements:
                   - {kind: payin, id: p-001, asset: BOB, amount_minor: '125000', direction: in, status: completed, created_at: '2026-10-16T12:00:00Z'}
         '400':
-          description: Missing or invalid date window.
+          description: Invalid date format or range.
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Error'}
-              example: {error: invalid_date_range, message: from and to are required}
+              example: {error: invalid_range, message: from and to must be valid dates and from cannot be after to}
         '409':
           description: Provisioning or AR alias is pending.
           content:

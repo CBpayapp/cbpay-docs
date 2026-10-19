@@ -109,8 +109,9 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/mo
 余额返回 `currency`、`funds_model`（BO 为 `retained`，MX/AR 为
 `centralized`），以及精确的 minor 字符串：`credited_in`、`paid_out`、
 `refunded_in`、`refunded_out`、`other_net`、`derived_available` 和
-`display_available`。流水是 payin 与 payout 的分页联合结果；`from`
-和 `to` 必填。
+`display_available`。流水是 payin 与 payout 的分页联合结果；`from` 和
+`to` 是可选的、包含边界的 `YYYY-MM-DD` 日期。两者都省略时会列出所有
+可用流水，但仍按页返回。需要限定报表期间时，建议使用上面的日期示例。
 
 BO/BOB payout 可在 `POST /v1/payouts` 或
 `POST /v1/payouts/qr/confirm` 发送 UUID 字段 `source_instrument_id`。
