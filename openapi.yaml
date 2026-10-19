@@ -9425,7 +9425,8 @@ paths:
       description: Hosted page where your customer completes ONLY the video liveness check (camera gestures
         + server-side face match against the uploaded identity document). Free — the service was billed
         when the submission was created. If an open link exists the same one is returned; if the check
-        already passed, 400 liveness_already_completed.
+        already passed, 400 liveness_already_completed. On submissions predating native verification
+        it returns 422 legacy_frozen; request a new native invite instead.
       parameters:
       - name: submissionID
         in: path
@@ -9472,6 +9473,15 @@ paths:
               example:
                 error: liveness_already_completed
                 message: the liveness check already passed for this submission
+        '422':
+          description: legacy_frozen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: legacy_frozen
+                message: liveness sessions are only issued for native verifications; request a new native invite to continue
         '404':
           $ref: '#/components/responses/NotFound'
         '401':

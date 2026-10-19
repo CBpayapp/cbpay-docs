@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-19 18:26 UTC",
-    "_content_sha256": "886695b5c608ccf175941ad7d63a600ac3930c80ad3ec390fc752f1686cad346"
+    "_generated_at": "2026-10-19 20:22 UTC",
+    "_content_sha256": "dd535d0216dba3c1c233952b34e72fbd2ed88f31274d9dd932e2c3f45d841bd2"
   },
   "auth": {
     "type": "bearer",
@@ -2621,7 +2621,7 @@
                 }
               ]
             },
-            "description": "Hosted page where your customer completes ONLY the video liveness check (camera gestures + server-side face match against the uploaded identity document). Free — the service was billed when the submission was created. If an open link exists the same one is returned; if the check already passed, 400 liveness_already_completed.",
+            "description": "Hosted page where your customer completes ONLY the video liveness check (camera gestures + server-side face match against the uploaded identity document). Free — the service was billed when the submission was created. If an open link exists the same one is returned; if the check already passed, 400 liveness_already_completed. On submissions predating native verification it returns 422 legacy_frozen; request a new native invite instead.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"expires_in_days\": 7\n}",
