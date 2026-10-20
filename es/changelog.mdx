@@ -3,8 +3,11 @@ title: "Novedades"
 icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
-
-<Update label="19 de octubre de 2026" description="v2.169 · 3 versiones">
+<Update label="19 de octubre de 2026" description="v2.170 · 4 versiones">
+### v2.170
+**Agregado**
+- Documentada la remediación KYC/KYB: cooldown telefónico de cuatro horas, desbloqueo temprano con factor independiente, limpieza admin, firma tipeada, wizard KYB UK/genérico, correos con idioma del perfil, subidas nativas multipart/raw y badges `uploaded_after_request`.
+- Documentado el manejo seguro de `subject` y `rejection_reason`, además del carácter transitorio de `file_password`.
 ### v2.169
 **Cambiado**
 - Todos los números de dinero ahora se muestran en formato americano (miles con coma, decimales con punto: `1,234,567.89`) en el portal, comprobantes, trackers y cartola, para fiat y crypto en todos los países. Los valores de API, CSV y XLSX no cambian (formato máquina, sin separadores de miles).
@@ -27,6 +30,7 @@ description: "Historial de cambios de la API y de esta documentación"
 ### v2.167
 **Corregido**
 - Los movimientos de cuentas de depósito banking aceptan límites de fecha `from`/`to` opcionales; omitir ambos lista todos los movimientos disponibles con paginación. Los formatos o rangos inválidos siguen respondiendo `400 invalid_range`.
+
 
 </Update>
 

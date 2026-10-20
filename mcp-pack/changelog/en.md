@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.169 · 3 versions - October 19, 2026
+## v2.170 · 4 versions - October 19, 2026
+### v2.170
+**Added**
+- Documented KYC/KYB contract-signing remediation: four-hour phone-binding cooldown, independent-factor early unlock, administrator clear, typed signatures, UK and generic-country KYB wizard paths, locale-aware compliance emails, native multipart/raw uploads, and `uploaded_after_request` badges.
+- Documented customer-safe `subject` and `rejection_reason` handling plus transient `file_password` behavior.
 ### v2.169
 **Changed**
 - All money numbers now display in US format (thousands with comma, decimals with point: `1,234,567.89`) across the portal, receipts, trackers and statements, for fiat and crypto in every country. API, CSV and XLSX values are unchanged (machine format, no thousands separators).

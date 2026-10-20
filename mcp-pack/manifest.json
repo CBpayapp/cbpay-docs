@@ -1,42 +1,42 @@
 {
-  "content_sha256": "a3916fc95eb2c28b3caf9884fb1aae0711ad7f82252ed7c3daa0012fdc7fc914",
+  "content_sha256": "996ee74d8fc6df4a6d0565f8b7f77b39adc5d1773273ef0b39809162352bec92",
   "counts": {
-    "chunks": 4472,
+    "chunks": 4506,
     "errors": 354,
     "languages": [
       "en",
       "es",
       "zh"
     ],
-    "pages": 201,
+    "pages": 204,
     "webhook_events": 47
   },
-  "docs_version": "v2.169",
+  "docs_version": "v2.170",
   "docs_version_date": "October 19, 2026",
   "files": {
     "changelog/en.md": {
-      "bytes": 199509,
-      "sha256": "402bba14168384af1b46dc1cd5b7cda22c0ebd0cac026c90d99112dc538b563d"
+      "bytes": 199937,
+      "sha256": "c1d3b91026cd582399835ab25fd74ffd21191dec612b28f010d3305b30abf0f1"
     },
     "changelog/es.md": {
-      "bytes": 211384,
-      "sha256": "989c2d887e79f49e29679bfe9fb71e4bacc8cf1136b54f91bb5457582f6e4cc3"
+      "bytes": 211803,
+      "sha256": "ef9eae5c09abab65b82835a29423ea28f6a6779a36de7c0f966330838e7584eb"
     },
     "changelog/zh.md": {
-      "bytes": 188557,
-      "sha256": "46517d6b9cc92e3fcfb7653826ac531a43eada8fc88db5a7198b6262ffad2c1a"
+      "bytes": 188948,
+      "sha256": "1ec96c5ffca93e2cdde901ead121a606f61a28715bcd022b394dcf15e1296f36"
     },
     "chunks/en.jsonl": {
-      "bytes": 1526807,
-      "sha256": "b6db306620e63541181795aec97bc9aca3ce3b72c39a2d8f79abd610f1def961"
+      "bytes": 1538885,
+      "sha256": "58ce8dbb2811e4f70df4fa0c14cfd366495c07af485299cfadd94be1e81709ff"
     },
     "chunks/es.jsonl": {
-      "bytes": 1557235,
-      "sha256": "3b4e6043d794ed290026a2c989554d9aa9675f4774e71fc576c7d1bc7796843c"
+      "bytes": 1568324,
+      "sha256": "669e27da5670cb513884b9351c7a16afc5e3084ab576f0c6a7245776f40b92bb"
     },
     "chunks/zh.jsonl": {
-      "bytes": 1457866,
-      "sha256": "985506d57eb867fe9ab4cb34f291ad5bff214ba3b7faf8ef49710ac855792308"
+      "bytes": 1467398,
+      "sha256": "a42e86fef974e252ab971fc37abfd3669110c9ff691233565bfc879d02425693"
     },
     "errors.json": {
       "bytes": 204879,
@@ -44,15 +44,15 @@
     },
     "evals/golden.json": {
       "bytes": 4242,
-      "sha256": "bcef40b074ae413586997a08fd07e6d95a8bb0576683ee8ceb7bd53a1c749580"
+      "sha256": "9a472c705422ee53e9948dece59e662eb473b0081dac55e9ebe420b0c955970c"
     },
     "guides/en/authentication.md": {
       "bytes": 10892,
       "sha256": "fd9634e1e50913d95670b3c047a019e11747df50e16d3b46390f9121a4fe8b0b"
     },
     "guides/en/changelog.md": {
-      "bytes": 199509,
-      "sha256": "402bba14168384af1b46dc1cd5b7cda22c0ebd0cac026c90d99112dc538b563d"
+      "bytes": 199937,
+      "sha256": "c1d3b91026cd582399835ab25fd74ffd21191dec612b28f010d3305b30abf0f1"
     },
     "guides/en/concepts/fees.md": {
       "bytes": 14069,
@@ -127,8 +127,8 @@
       "sha256": "d7257eb2d9742590505c2513895bbafc2b375bff1a036fce86c18c0bf66019fd"
     },
     "guides/en/guides/contract-agreement.md": {
-      "bytes": 16889,
-      "sha256": "aa18277a22ec737195e9d0fe6f30e2b95ee8be8374f9c058c81fff174646376e"
+      "bytes": 17452,
+      "sha256": "c91ca934270caf07bf273095dbe76608f499b9540726b2b398ed9141310c1aa0"
     },
     "guides/en/guides/crypto.md": {
       "bytes": 16673,
@@ -157,6 +157,10 @@
     "guides/en/guides/integrations.md": {
       "bytes": 6694,
       "sha256": "bc0f34270659cbbd13963fd12810c7ce79f5a72ff931d748400b45d40e71ed3c"
+    },
+    "guides/en/guides/kyc-contract-remediation.md": {
+      "bytes": 7181,
+      "sha256": "515ae010431db43eca463fb5984e1114f699b132b5b26588d9dbbd2e1b9be196"
     },
     "guides/en/guides/kyc.md": {
       "bytes": 36891,
@@ -292,7 +296,7 @@
     },
     "guides/en/postman.md": {
       "bytes": 1252,
-      "sha256": "ac9a4433df078433fdd39fd19284438c16f289ab8a922a40c5d42c1c3777adec"
+      "sha256": "e32a5e134047b2108f084d42c3a4ac32635260d00296714376b7186bddd27c51"
     },
     "guides/en/quickstart.md": {
       "bytes": 7361,
@@ -319,8 +323,8 @@
       "sha256": "bb9c2ad9210933d29acd7e29f787b67cba01f9e9e2ac57ad7e57e227a98de096"
     },
     "guides/es/changelog.md": {
-      "bytes": 211384,
-      "sha256": "989c2d887e79f49e29679bfe9fb71e4bacc8cf1136b54f91bb5457582f6e4cc3"
+      "bytes": 211803,
+      "sha256": "ef9eae5c09abab65b82835a29423ea28f6a6779a36de7c0f966330838e7584eb"
     },
     "guides/es/concepts/fees.md": {
       "bytes": 14505,
@@ -395,8 +399,8 @@
       "sha256": "cb7d5012aa6593657529009254fe4f4562d4d2befe11aa9af060a1b62ecb869b"
     },
     "guides/es/guides/contract-agreement.md": {
-      "bytes": 16277,
-      "sha256": "23dc77764f794b996b08fccbd6065b94eb2c40cc8aa49cdfc458aba70ea2c794"
+      "bytes": 16857,
+      "sha256": "702bd2480f94c1ec2fa4881bdfaed6a753ce2bc7487cf15a1a4171010b67ddd9"
     },
     "guides/es/guides/crypto.md": {
       "bytes": 16759,
@@ -425,6 +429,10 @@
     "guides/es/guides/integrations.md": {
       "bytes": 6202,
       "sha256": "bf6874eddebc1ec4cbedc006953db5976bf60e4b3a8a9f2a8942376aec50922b"
+    },
+    "guides/es/guides/kyc-contract-remediation.md": {
+      "bytes": 6332,
+      "sha256": "708c46d61942de31ea8a91b517f6a332bcd57864f45b8f0f7d6e717983cebe44"
     },
     "guides/es/guides/kyc.md": {
       "bytes": 37811,
@@ -560,7 +568,7 @@
     },
     "guides/es/postman.md": {
       "bytes": 1309,
-      "sha256": "912989dcfcd663c1bc6cafa84e39cfc9536f49b18b7821347cb89111a4192f37"
+      "sha256": "2a7800115d0a5beb49a0a226bdaa567c31efa16d7296114e478ded214a67b70f"
     },
     "guides/es/quickstart.md": {
       "bytes": 7492,
@@ -587,8 +595,8 @@
       "sha256": "197ad92738d25747edb06d78977265cefe3e475e3ef6005d44b1a5685548bb27"
     },
     "guides/zh/changelog.md": {
-      "bytes": 188557,
-      "sha256": "46517d6b9cc92e3fcfb7653826ac531a43eada8fc88db5a7198b6262ffad2c1a"
+      "bytes": 188948,
+      "sha256": "1ec96c5ffca93e2cdde901ead121a606f61a28715bcd022b394dcf15e1296f36"
     },
     "guides/zh/concepts/fees.md": {
       "bytes": 13586,
@@ -663,8 +671,8 @@
       "sha256": "7009ce2a386773740b7bf8fc124d4330a6e301617d30f08044c3e292a98057b7"
     },
     "guides/zh/guides/contract-agreement.md": {
-      "bytes": 14423,
-      "sha256": "95461af5dcd68f9d45fb8ede989c917f5c9fc7eb689319d498f458b79f4209f3"
+      "bytes": 14959,
+      "sha256": "6d85e103cde8b021fe4c7f3cfc4a1d8afc46cd3fd615253384af1c26705e9f7a"
     },
     "guides/zh/guides/crypto.md": {
       "bytes": 15955,
@@ -693,6 +701,10 @@
     "guides/zh/guides/integrations.md": {
       "bytes": 5494,
       "sha256": "75fb9be0b597c56ddb4c055388240257996ef965536e8e6d7db64276f5e483a3"
+    },
+    "guides/zh/guides/kyc-contract-remediation.md": {
+      "bytes": 5198,
+      "sha256": "42fd20b8fdd6f5ca2cf7455a3d651190645cfe918a75430bccde8ebd09fd406f"
     },
     "guides/zh/guides/kyc.md": {
       "bytes": 36684,
@@ -828,7 +840,7 @@
     },
     "guides/zh/postman.md": {
       "bytes": 1202,
-      "sha256": "f0866a1d9cf888e02c6f289ce03aa4e835de026d42c99c68959580d3f98247e5"
+      "sha256": "9a71ad298fe333113953616645e94ec88f01ee3f1de2941c7f004b8c7aef131f"
     },
     "guides/zh/quickstart.md": {
       "bytes": 7449,
@@ -851,16 +863,16 @@
       "sha256": "754de9d188507543589862d22a5ab33fce3a6defda0a14e3de81fab4cb737c64"
     },
     "openapi.es.yaml": {
-      "bytes": 1066138,
-      "sha256": "9d7d3802ed275fa2ce261d36e444edf207e31799673303f0332d4c0a9096b0b2"
+      "bytes": 1069636,
+      "sha256": "e0027f402924e39b443bf2c97bdd3c05f8d83a34e8e1e53ac505e313fbc7cd1a"
     },
     "openapi.yaml": {
-      "bytes": 1062248,
-      "sha256": "78ba1be7d29d6cf5af210ce9e1a39d42bbbc75311924394afba661686c9e4ad5"
+      "bytes": 1065746,
+      "sha256": "42c5c5c7168f57f48e656e4171c7432bf399041546ae0a831dad6c7ba99be051"
     },
     "openapi.zh.yaml": {
-      "bytes": 1020456,
-      "sha256": "3021a0625dd4f359ce0e832dec15099e10f1133785182e2810ddbff6d98fddaf"
+      "bytes": 1023866,
+      "sha256": "65de1eacb699d14cb70889698bcd165bdccbbdbc290db330809693b223628797"
     },
     "recipes/en/checkout.md": {
       "bytes": 17979,
@@ -955,7 +967,7 @@
       "sha256": "a17e390542734803cac91334745f2c04d57a707e6df2b1387b2eac53402183a5"
     }
   },
-  "generated_at": "2026-10-20T01:45:19Z",
+  "generated_at": "2026-10-20T06:45:40Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"

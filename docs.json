@@ -154,6 +154,7 @@
                     "group": "Identity & compliance",
                     "pages": [
                       "en/guides/kyc",
+                      "en/guides/kyc-contract-remediation",
                       "en/guides/aml",
                   "en/guides/trust-center-nda",
                       "en/guides/screenings",
@@ -295,6 +296,7 @@
                     "group": "Identidad y compliance",
                     "pages": [
                       "es/guides/kyc",
+                      "es/guides/kyc-contract-remediation",
                       "es/guides/aml",
                   "es/guides/trust-center-nda",
                       "es/guides/screenings",
@@ -436,6 +438,7 @@
                     "group": "身份与合规",
                     "pages": [
                       "zh/guides/kyc",
+                      "zh/guides/kyc-contract-remediation",
                       "zh/guides/aml",
                   "zh/guides/trust-center-nda",
                       "zh/guides/screenings",

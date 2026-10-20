@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.169"
+  version: "2.170"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -9286,6 +9286,54 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/kyc/submissions/{submissionID}/documents/upload:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: uploadKycDocument
+      summary: Upload KYC document bytes (native multipart)
+      description: Step 2 of the document flow when the presign `shape` is `multipart` (native API path). Receives the file as multipart (`file` + `category`) and forwards it to the core with the org credential; the browser never touches the core directly. Use the `upload_url` from the presign response verbatim. Max 24 MiB (the core enforces 15 MiB per file).
+      parameters:
+      - name: submissionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Reserved upload key from the presign response.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                category:
+                  type: string
+      responses:
+        '201':
+          description: Document stored; confirm it to attach.
+          content:
+            application/json:
+              example:
+                document_id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                effective_outcome: REVIEW
+        '400':
+          description: key_required / file_required / invalid_body / file_too_large / invalid_document_key.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/kyb/submissions/{submissionID}/documents:
     post:
       tags:
@@ -9423,6 +9471,54 @@ paths:
               example:
                 status: received
                 ocr: queued
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/kyb/submissions/{submissionID}/documents/upload:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: uploadKybDocument
+      summary: Upload KYB document bytes (native multipart)
+      description: Step 2 of the document flow when the presign `shape` is `multipart` (native API path). Receives the file as multipart (`file` + `category`) and forwards it to the core with the org credential; the browser never touches the core directly. Use the `upload_url` from the presign response verbatim. Max 24 MiB (the core enforces 15 MiB per file).
+      parameters:
+      - name: submissionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: key
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Reserved upload key from the presign response.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                category:
+                  type: string
+      responses:
+        '201':
+          description: Document stored; confirm it to attach.
+          content:
+            application/json:
+              example:
+                document_id: 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f
+                effective_outcome: REVIEW
+        '400':
+          description: key_required / file_required / invalid_body / file_too_large / invalid_document_key.
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
