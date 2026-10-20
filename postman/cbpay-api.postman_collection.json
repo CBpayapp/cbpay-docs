@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-20 02:35 UTC",
-    "_content_sha256": "8c2eeb91e330e2484280594a9dcd2bd305b9657ac0183811f13e3dbca7ce6ca0"
+    "_generated_at": "2026-10-20 11:42 UTC",
+    "_content_sha256": "b7572313659a637ade781be0fc0d21947319b47e273428c06f403b3103ed45d0"
   },
   "auth": {
     "type": "bearer",
@@ -28079,7 +28079,7 @@
                 "nda-docs"
               ]
             },
-            "description": "Returns public metadata for the 11 currently available N2 compliance documents. It never returns document bytes; download requires a valid post-signature token.",
+            "description": "Returns public metadata for the 14 currently available N2 documents (7 first-party compliance programs + 7 vendor audit reports received by GRUPO CB LLC). It never returns document bytes; download requires a valid post-signature token.",
             "auth": {
               "type": "noauth"
             }

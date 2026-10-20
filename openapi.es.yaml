@@ -24131,7 +24131,7 @@ paths:
       tags: [Trust Center]
       operationId: listTrustNDADocuments
       summary: Listar metadatos de documentos restringidos del Trust Center
-      description: Returns public metadata for the 11 currently available N2 compliance documents. It never returns document bytes; download requires a valid post-signature token.
+      description: Returns public metadata for the 14 currently available N2 documents (7 first-party compliance programs + 7 vendor audit reports received by GRUPO CB LLC). It never returns document bytes; download requires a valid post-signature token.
       responses:
         '200':
           description: Public metadata for gated documents.

@@ -5,11 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.170 · 4 个版本 - 2026年10月19日
+## v2.170 · 1 个版本 - 2026年10月20日
 ### v2.170
-**新增**
-- 文档化 KYC/KYB 合同补交流程：四小时手机号冷却、独立因素提前解锁、管理员清除、键入签名、英国和通用国家 KYB 向导、按资料语言发送合规邮件、原生 multipart/raw 上传以及 `uploaded_after_request` badge。
-- 文档化安全的 `subject` 与 `rejection_reason` 处理，以及临时 `file_password` 行为。
+**变更**
+- Trust Center NDA 文件室现有 14 份文件：加拿大 FINTRAC 与 PSP 注册已完全公开（可直接从网站下载），另有 7 份供应商审计报告（Sophos C5、SOC 2、PCI AOC、医疗风险分析；Cloudflare C5、SOC 2、PCI AOC）加入文件室。指南：[Trust Center 与 NDA 文件室](https://docs.cbpayapp.com/zh/guides/trust-center-nda)。
+## v2.169 · 3 个版本 - 2026年10月19日
 ### v2.169
 **变更**
 - 所有金额数字现以美式格式显示（千分位逗号、小数点：`1,234,567.89`），覆盖门户、凭证、跟踪器和对账单，适用于所有国家的法币与加密货币。API、CSV 与 XLSX 的值不变（机器格式，无千分位分隔符）。

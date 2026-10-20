@@ -9,6 +9,8 @@ source_url: https://docs.cbpayapp.com/zh/guides/trust-center-nda
 
 公开 Trust Center 位于 [cbpayapp.com/trust](https://www.cbpayapp.com/trust)，展示公开合规记录并说明如何申请 N2 受限房间。受限文档与供应商无关；只有外部联系人签署 NDA 后才会提供文件内容。不需要 CBPay 账户。
 
+文件室共有 14 份文件：7 份自有计划（美国 AML 计划、秘鲁 SPLAFT 手册、智利 AML 审计 + 培训计划、玻利维亚 UIF + SEPREC、哥伦比亚存续证明）与 GRUPO CB LLC 收到的 7 份供应商审计报告（Sophos C5、SOC 2、PCI AOC、医疗风险分析；Cloudflare C5、SOC 2、PCI AOC）。加拿大 FINTRAC/PSP 注册完全公开，可直接从网站下载。
+
 ```mermaid
 sequenceDiagram
   participant I as 集成方
