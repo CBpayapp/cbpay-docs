@@ -9,7 +9,7 @@ source_url: https://docs.cbpayapp.com/es/guides/trust-center-nda
 
 El Trust Center público en [cbpayapp.com/trust](https://www.cbpayapp.com/trust) lista registros públicos y explica cómo pedir acceso a la sala N2 restringida. Los documentos son evidencia de cumplimiento agnóstica de proveedores; los bytes se entregan solo después de firmar el NDA. No se necesita una cuenta CBPay.
 
-La sala tiene 24 documentos: 7 programas propios (programa AML US, manual SPLAFT Perú, auditoría AML + plan Chile, UIF + SEPREC Bolivia, existencia Colombia), 7 reportes de auditoría de proveedores recibidos por GRUPO CB LLC (Sophos C5, SOC 2, PCI AOC, análisis healthcare; Cloudflare C5, SOC 2, PCI AOC) y 10 reportes PCI DSS/SAQ-A y escaneos ASV (Aperia, septiembre 2026). Los registros FINTRAC/PSP de Canadá son totalmente públicos y se descargan directo del sitio.
+La sala tiene 31 documentos: 7 programas propios (programa AML US, manual SPLAFT Perú, auditoría AML + plan Chile, UIF + SEPREC Bolivia, existencia Colombia), 14 reportes y certificados de proveedores recibidos por GRUPO CB LLC (Sophos C5, SOC 2, PCI AOC, análisis healthcare, ISO 27001, TX-RAMP Cloud/MDR, tarjetas NIST/CIS/PCI; Cloudflare C5, SOC 2, PCI AOC, ISO 27001) y 10 reportes PCI DSS/SAQ-A y escaneos ASV (Aperia, septiembre 2026). Los registros FINTRAC/PSP de Canadá son totalmente públicos y se descargan directo del sitio.
 
 Pide solo lo que necesites: envía `document_ids` con los IDs elegidos del catálogo (ver `GET /v1/trust/nda-docs`). Omitido significa todos; una lista explícitamente vacía se rechaza. Descargas, panel de estado y email de completitud respetan la selección — lo fuera de ella responde 404 como si no existiera.
 

@@ -5,7 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.173 · 4 个版本 - 2026年10月20日
+## v2.174 · 5 个版本 - 2026年10月20日
+### v2.174
+**新增**
+- Trust Center NDA 文件室现有 31 份文件：新增 7 份供应商证书（Sophos ISO 27001、TX-RAMP Cloud/MDR、NIST/CIS/PCI 对照卡；Cloudflare ISO 27001）。所有供应商 PDF 均可经 Trust Center 在 NDA 下申请。
 ### v2.173
 **新增**
 - Trust Center NDA 文件室现有 24 份文件：新增 10 份 PCI DSS/SAQ-A 与 ASV 扫描报告（Aperia，2026 年 9 月）。申请接受可选 `document_ids`（省略表示全部；显式空列表会被拒绝）；下载、状态与完成邮件均遵循该选择。
