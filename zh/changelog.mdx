@@ -3,8 +3,11 @@ title: "Changelog"
 icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
-
-<Update label="2026年10月19日" description="v2.169 · 3 个版本">
+<Update label="2026年10月19日" description="v2.170 · 4 个版本">
+### v2.170
+**新增**
+- 文档化 KYC/KYB 合同补交流程：四小时手机号冷却、独立因素提前解锁、管理员清除、键入签名、英国和通用国家 KYB 向导、按资料语言发送合规邮件、原生 multipart/raw 上传以及 `uploaded_after_request` badge。
+- 文档化安全的 `subject` 与 `rejection_reason` 处理，以及临时 `file_password` 行为。
 ### v2.169
 **变更**
 - 所有金额数字现以美式格式显示（千分位逗号、小数点：`1,234,567.89`），覆盖门户、凭证、跟踪器和对账单，适用于所有国家的法币与加密货币。API、CSV 与 XLSX 的值不变（机器格式，无千分位分隔符）。
@@ -24,6 +27,7 @@ description: "API and documentation change history"
 ### v2.167
 **修复**
 - banking 存款账户流水现在接受可选的 `from`/`to` 日期边界；同时省略时会分页列出全部可用流水。日期格式或范围无效时仍返回 `400 invalid_range`。
+
 
 </Update>
 

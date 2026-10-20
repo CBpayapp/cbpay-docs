@@ -368,3 +368,16 @@ Issuance and signature emails mention the other portal language only when it is 
 #### Does a verification code expire?
     No. The code stays valid for the life of the envelope. If the envelope is
     voided, the same code answers `failed` instead of `ok`.
+## Typed signature mode (portal and wizard)
+
+The portal's signature step offers a drawn pad or a typed full name. Both send
+`signature_png`; typed mode additionally sends `signature_mode: "typed"` and
+`typed_name`, which must exactly equal `signer_name`.
+
+```json
+{"signer_name":"Jordan Lee","signer_title":"Director","consent":true,
+ "signature_png":"<PNG_BASE64>","signature_mode":"typed","typed_name":"Jordan Lee"}
+```
+
+An unknown mode returns `422 invalid_signature_mode`; a mismatch returns
+`422 typed_name_mismatch`. The fresh OTP remains in `X-OTP-Token`.

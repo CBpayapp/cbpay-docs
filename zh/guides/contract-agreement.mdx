@@ -337,3 +337,18 @@ curl -o master-agreement.pdf "https://api.qbank.cl/platform/v1/me/contracts/enve
 <Accordion title="翻译 PDF 是否等同于已签署合同？">不是。签发语言 PDF 才是签署文件。</Accordion>
 <Accordion title="为什么看不到英文？">英文需要 counsel 和当前模板；请检查 `available_langs`。</Accordion>
 </AccordionGroup>
+
+
+## 键入签名模式（门户和向导）
+
+签名步骤提供绘制签名或键入全名。两者都发送 `signature_png`；键入模式
+还发送 `signature_mode: "typed"` 和 `typed_name`，后者必须与 `signer_name`
+完全一致。
+
+```json
+{"signer_name":"Jordan Lee","signer_title":"Director","consent":true,
+ "signature_png":"<PNG_BASE64>","signature_mode":"typed","typed_name":"Jordan Lee"}
+```
+
+未知模式返回 `422 invalid_signature_mode`；不一致返回
+`422 typed_name_mismatch`。新 OTP 仍放在 `X-OTP-Token`。
