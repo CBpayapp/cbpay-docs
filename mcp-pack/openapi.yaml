@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.173"
+  version: "2.174"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -24344,7 +24344,7 @@ paths:
       tags: [Trust Center]
       operationId: listTrustNDADocuments
       summary: List gated Trust Center document metadata
-      description: Returns public metadata for the 24 currently available N2 documents (7 first-party compliance programs + 7 vendor audit reports received by GRUPO CB LLC + 10 PCI DSS and ASV reports). It never returns document bytes; download requires a valid post-signature token.
+      description: Returns public metadata for the 31 currently available N2 documents (7 first-party compliance programs + 14 vendor audit reports and certificates received by GRUPO CB LLC + 10 PCI DSS and ASV reports). It never returns document bytes; download requires a valid post-signature token.
       responses:
         '200':
           description: Public metadata for gated documents.

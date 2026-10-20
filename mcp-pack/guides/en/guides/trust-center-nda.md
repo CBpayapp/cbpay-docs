@@ -9,7 +9,7 @@ source_url: https://docs.cbpayapp.com/en/guides/trust-center-nda
 
 The public Trust Center at [cbpayapp.com/trust](https://www.cbpayapp.com/trust) lists public compliance records and explains how to request the gated N2 room. The gated documents are provider-agnostic compliance evidence; bytes are released only after the external contact signs the NDA. No CBPay account is required.
 
-The room holds 24 documents: 7 first-party programs (US AML program, Peru SPLAFT manual, Chile AML audit + training plan, Bolivia UIF + SEPREC, Colombia existence), 7 vendor audit reports received by GRUPO CB LLC (Sophos C5, SOC 2, PCI AOC, healthcare risk analysis; Cloudflare C5, SOC 2, PCI AOC), and 10 PCI DSS/SAQ-A and ASV scan reports (Aperia, September 2026). The Canada FINTRAC/PSP registrations are fully public and download directly from the site.
+The room holds 31 documents: 7 first-party programs (US AML program, Peru SPLAFT manual, Chile AML audit + training plan, Bolivia UIF + SEPREC, Colombia existence), 14 vendor reports and certificates received by GRUPO CB LLC (Sophos C5, SOC 2, PCI AOC, healthcare risk analysis, ISO 27001, TX-RAMP Cloud/MDR, NIST/CIS/PCI cards; Cloudflare C5, SOC 2, PCI AOC, ISO 27001), and 10 PCI DSS/SAQ-A and ASV scan reports (Aperia, September 2026). The Canada FINTRAC/PSP registrations are fully public and download directly from the site.
 
 Request only what you need: pass `document_ids` with the chosen catalog IDs (see `GET /v1/trust/nda-docs`). Omitted means all documents; an explicitly empty list is rejected. Downloads, the status panel, and the completion email all honor the selection — documents outside it return 404 as if unknown.
 

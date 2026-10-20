@@ -9,7 +9,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/trust-center-nda
 
 公开 Trust Center 位于 [cbpayapp.com/trust](https://www.cbpayapp.com/trust)，展示公开合规记录并说明如何申请 N2 受限房间。受限文档与供应商无关；只有外部联系人签署 NDA 后才会提供文件内容。不需要 CBPay 账户。
 
-文件室共有 24 份文件：7 份自有计划（美国 AML 计划、秘鲁 SPLAFT 手册、智利 AML 审计 + 培训计划、玻利维亚 UIF + SEPREC、哥伦比亚存续证明）、GRUPO CB LLC 收到的 7 份供应商审计报告（Sophos C5、SOC 2、PCI AOC、医疗风险分析；Cloudflare C5、SOC 2、PCI AOC），以及 10 份 PCI DSS/SAQ-A 与 ASV 扫描报告（Aperia，2026 年 9 月）。加拿大 FINTRAC/PSP 注册完全公开，可直接从网站下载。
+文件室共有 31 份文件：7 份自有计划（美国 AML 计划、秘鲁 SPLAFT 手册、智利 AML 审计 + 培训计划、玻利维亚 UIF + SEPREC、哥伦比亚存续证明）、GRUPO CB LLC 收到的 14 份供应商报告与证书（Sophos C5、SOC 2、PCI AOC、医疗风险分析、ISO 27001、TX-RAMP Cloud/MDR、NIST/CIS/PCI 对照卡；Cloudflare C5、SOC 2、PCI AOC、ISO 27001），以及 10 份 PCI DSS/SAQ-A 与 ASV 扫描报告（Aperia，2026 年 9 月）。加拿大 FINTRAC/PSP 注册完全公开，可直接从网站下载。
 
 按需申请：用 `document_ids` 传入所选目录 ID（见 `GET /v1/trust/nda-docs`）。省略表示全部；显式空列表会被拒绝。下载、状态面板与完成邮件均遵循该选择——范围外的文件返回 404，视为不存在。
 

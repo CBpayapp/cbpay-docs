@@ -5,7 +5,10 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.173 · 4 versiones - 20 de octubre de 2026
+## v2.174 · 5 versiones - 20 de octubre de 2026
+### v2.174
+**Agregado**
+- La sala NDA del Trust Center ahora sirve 31 documentos: entraron 7 certificados de proveedores (Sophos ISO 27001, TX-RAMP Cloud/MDR, tarjetas NIST/CIS/PCI; Cloudflare ISO 27001). Todo PDF vendor ahora se solicita bajo NDA desde el Trust Center.
 ### v2.173
 **Agregado**
 - La sala NDA del Trust Center ahora sirve 24 documentos: entraron 10 reportes PCI DSS/SAQ-A y escaneos ASV (Aperia, septiembre 2026). La solicitud acepta `document_ids` opcional (omitido = todos; vacío explícito se rechaza); descargas, estado y email de completitud respetan la selección.
