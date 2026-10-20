@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.172 · 3 versions - October 20, 2026
+## v2.173 · 4 versions - October 20, 2026
+### v2.173
+**Added**
+- Trust Center NDA room now serves 24 documents: 10 PCI DSS/SAQ-A and ASV scan reports (Aperia, September 2026) joined the room. Requests accept an optional `document_ids` selection (omitted means all; explicitly empty is rejected); downloads, status, and the completion email honor the selection.
+- NDA signing captures a drawn or typed signature, printed on the signed NDA and attached to the completion email. The pre-signature branded PDF can be viewed and downloaded from the signing page (`GET /v1/trust/nda/sign/{token}/review.pdf`, signed copy at `.../signed.pdf`).
 ### v2.172
 **Fixed**
 - Verification reads on migrated legacy tombstones now return the live case data

@@ -661,3 +661,5 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 409 | `already_decided` | El enlace ya fue usado o cerrado; no lo envíes otra vez. |
 | 422 | `accept_required` | El firmante debe aceptar explícitamente el acuerdo. |
 | 503 | `email_unavailable` | El correo no está configurado; reintenta más tarde. |
+| 422 | `invalid_document_ids` | Uno o más IDs pedidos son desconocidos, o la lista viene explícitamente vacía; usa IDs de la lista de metadatos u omite el campo para todos. |
+| 410 | `not_signed` | El sobre aún no está firmado; fírmalo antes de descargar la copia firmada. |

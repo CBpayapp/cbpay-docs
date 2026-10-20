@@ -1,5 +1,5 @@
 {
-  "count": 355,
+  "count": 357,
   "errors": [
     {
       "category": {
@@ -4959,6 +4959,34 @@
         "en": "Email delivery is not configured; retry later.",
         "es": "El correo no está configurado; reintenta más tarde.",
         "zh": "邮件投递未配置；请稍后重试。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "invalid_document_ids",
+      "http": 422,
+      "meaning": {
+        "en": "One or more requested document IDs are unknown, or the list is explicitly empty; use IDs from the metadata list, or omit the field for all documents.",
+        "es": "Uno o más IDs pedidos son desconocidos, o la lista viene explícitamente vacía; usa IDs de la lista de metadatos u omite el campo para todos.",
+        "zh": "请求的一个或多个文件 ID 未知，或列表显式为空；请使用元数据列表中的 ID，或省略该字段以获取全部。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "not_signed",
+      "http": 410,
+      "meaning": {
+        "en": "The envelope is not signed yet; sign it before downloading the signed copy.",
+        "es": "El sobre aún no está firmado; fírmalo antes de descargar la copia firmada.",
+        "zh": "信封尚未签署；请先签署再下载已签署副本。"
       }
     }
   ]

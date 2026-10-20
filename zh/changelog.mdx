@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月20日" description="v2.172 · 3 个版本">
+<Update label="2026年10月20日" description="v2.173 · 4 个版本">
+### v2.173
+**新增**
+- Trust Center NDA 文件室现有 24 份文件：新增 10 份 PCI DSS/SAQ-A 与 ASV 扫描报告（Aperia，2026 年 9 月）。申请接受可选 `document_ids`（省略表示全部；显式空列表会被拒绝）；下载、状态与完成邮件均遵循该选择。
+- 签署采集手绘或手写签名，印在已签署 NDA 上并附于完成邮件。签署前可直接在签署页查看与下载品牌 PDF（`GET /v1/trust/nda/sign/{token}/review.pdf`，已签署副本在 `.../signed.pdf`）。
 ### v2.172
 **修复**
 - 迁移验证的读取现在返回活跃案件数据、`status: migrated`、迁移追踪字段

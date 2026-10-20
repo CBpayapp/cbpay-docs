@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.172"
+  version: "2.173"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -24273,7 +24273,7 @@ paths:
       tags: [Trust Center]
       operationId: createTrustNDARequest
       summary: Request access to gated Trust Center documents
-      description: Creates an external, tokenized NDA request. The same company and contact email while the request is pending return the existing request without creating a duplicate. The signing link is emailed and expires after 30 days. Requests remain unavailable until the NDA template has counsel approval.
+      description: Creates an external, tokenized NDA request. The same company and contact email while the request is pending return the existing request without creating a duplicate. The signing link is emailed and expires after 30 days. Requests remain unavailable until the NDA template has counsel approval. Optional document_ids restricts the grant to the chosen catalog IDs (omitted means all; an explicitly empty list is rejected); replays keep the original selection.
       requestBody:
         required: true
         content:
@@ -24288,6 +24288,7 @@ paths:
                 country: {type: string, maxLength: 60}
                 purpose: {type: string, maxLength: 500}
                 locale: {type: string, enum: [es, en, zh], default: es}
+                document_ids: {type: array, items: {type: string}, description: 'Chosen catalog IDs; omitted means all documents.'}
             example:
               company_name: Acme Payments Ltd
               contact_name: Jordan Lee
@@ -24295,6 +24296,7 @@ paths:
               country: US
               purpose: Evaluate compliance controls for a partnership
               locale: en
+              document_ids: [us-aml-program, pci-saqa]
       responses:
         '202':
           description: Request created and signing email attempted.
@@ -24342,7 +24344,7 @@ paths:
       tags: [Trust Center]
       operationId: listTrustNDADocuments
       summary: List gated Trust Center document metadata
-      description: Returns public metadata for the 14 currently available N2 documents (7 first-party compliance programs + 7 vendor audit reports received by GRUPO CB LLC). It never returns document bytes; download requires a valid post-signature token.
+      description: Returns public metadata for the 24 currently available N2 documents (7 first-party compliance programs + 7 vendor audit reports received by GRUPO CB LLC + 10 PCI DSS and ASV reports). It never returns document bytes; download requires a valid post-signature token.
       responses:
         '200':
           description: Public metadata for gated documents.
@@ -24390,7 +24392,7 @@ paths:
       tags: [Trust Center]
       operationId: signTrustNDA
       summary: Sign the Trust Center NDA
-      description: Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token.
+      description: Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA.
       parameters:
       - {name: token, in: path, required: true, schema: {type: string, minLength: 32, maxLength: 32}}
       requestBody:
@@ -24399,14 +24401,17 @@ paths:
           application/json:
             schema:
               type: object
-              required: [signer_name, company_reg, company_address, accept]
+              required: [signer_name, company_reg, company_address, accept, signature_png]
               properties:
                 signer_name: {type: string, minLength: 2, maxLength: 120}
                 signer_title: {type: string, maxLength: 120}
                 company_reg: {type: string, minLength: 2, maxLength: 120}
                 company_address: {type: string, minLength: 5, maxLength: 300}
                 accept: {type: boolean, const: true}
-            example: {signer_name: Jordan Lee, signer_title: Chief Compliance Officer, company_reg: US-123456, company_address: 1 Main Street, Boston MA, accept: true}
+                signature_png: {type: string, description: 'Drawn signature PNG, base64 with or without the data-URL prefix.'}
+                signature_mode: {type: string, enum: [drawn, typed], default: drawn}
+                typed_name: {type: string, maxLength: 120, description: 'Typed mode only; must exactly match signer_name.'}
+            example: {signer_name: Jordan Lee, signer_title: Chief Compliance Officer, company_reg: US-123456, company_address: 1 Main Street, Boston MA, accept: true, signature_png: 'data:image/png;base64,<signature-png>', signature_mode: drawn}
       responses:
         '200':
           description: NDA signed and download entitlement issued.
@@ -24424,10 +24429,42 @@ paths:
             application/json:
               example: {error: already_decided, message: this link was already used or expired}
         '422':
-          description: Acceptance or signer fields are invalid.
+          description: Acceptance, signer, company or signature fields are invalid.
           content:
             application/json:
               example: {error: accept_required, message: you must accept the agreement to sign}
+  /v1/trust/nda/sign/{token}/review.pdf:
+    get:
+      security: []
+      tags: [Trust Center]
+      operationId: getTrustNDAReviewPDF
+      summary: View the pre-signature branded NDA PDF
+      description: Renders the same branded pre-signature NDA PDF attached to the request email. Pending envelopes only; decided envelopes return an error and never another state's text.
+      parameters:
+      - {name: token, in: path, required: true, schema: {type: string, minLength: 32, maxLength: 32}}
+      responses:
+        '200':
+          description: Branded pre-signature NDA PDF (inline).
+          headers: {X-Checksum-Sha256: {schema: {type: string}}, Cache-Control: {schema: {type: string, example: no-store}}}
+          content: {application/pdf: {schema: {type: string, format: binary}}}
+        '404': {description: Unknown signing link.}
+        '410': {description: Envelope already decided.}
+  /v1/trust/nda/sign/{token}/signed.pdf:
+    get:
+      security: []
+      tags: [Trust Center]
+      operationId: getTrustNDASignedPDF
+      summary: Download the signed NDA PDF
+      description: Re-renders the signed NDA (sealed text plus the stored drawn signature) as an attachment. Signed envelopes only; the path token remains the envelope capability.
+      parameters:
+      - {name: token, in: path, required: true, schema: {type: string, minLength: 32, maxLength: 32}}
+      responses:
+        '200':
+          description: Signed NDA PDF with the drawn signature.
+          headers: {X-Checksum-Sha256: {schema: {type: string}}, Cache-Control: {schema: {type: string, example: no-store}}}
+          content: {application/pdf: {schema: {type: string, format: binary}}}
+        '404': {description: Unknown signing link.}
+        '410': {description: Envelope is not signed.}
   /v1/trust/nda-docs/{id}/download:
     get:
       tags: [Trust Center]
