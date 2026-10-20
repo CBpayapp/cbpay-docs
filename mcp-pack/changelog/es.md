@@ -5,11 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.170 · 4 versiones - 19 de octubre de 2026
+## v2.170 · 1 versión - 20 de octubre de 2026
 ### v2.170
-**Agregado**
-- Documentada la remediación KYC/KYB: cooldown telefónico de cuatro horas, desbloqueo temprano con factor independiente, limpieza admin, firma tipeada, wizard KYB UK/genérico, correos con idioma del perfil, subidas nativas multipart/raw y badges `uploaded_after_request`.
-- Documentado el manejo seguro de `subject` y `rejection_reason`, además del carácter transitorio de `file_password`.
+**Cambiado**
+- La sala NDA del Trust Center ahora tiene 14 documentos: los registros FINTRAC y PSP de Canadá pasaron a ser totalmente públicos (descarga directa en el sitio) y 7 reportes de auditoría de proveedores (Sophos C5, SOC 2, PCI AOC, riesgo healthcare; Cloudflare C5, SOC 2, PCI AOC) entraron a la sala. Guía: [Trust Center y sala NDA](https://docs.cbpayapp.com/es/guides/trust-center-nda).
+## v2.169 · 3 versiones - 19 de octubre de 2026
 ### v2.169
 **Cambiado**
 - Todos los números de dinero ahora se muestran en formato americano (miles con coma, decimales con punto: `1,234,567.89`) en el portal, comprobantes, trackers y cartola, para fiat y crypto en todos los países. Los valores de API, CSV y XLSX no cambian (formato máquina, sin separadores de miles).
