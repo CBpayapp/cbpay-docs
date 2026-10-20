@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.170"
+  version: "2.171"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -8879,7 +8879,7 @@ paths:
       - KYC / KYB
       operationId: uploadKycDocument
       summary: 上传 KYC 文档字节（原生 multipart）
-      description: 当 presign 的 `shape` 为 `multipart`（原生 API 路径）时文档流程的第 2 步。以 multipart（`file` + `category`）接收文件，并使用 org 凭证转发到核心；浏览器绝不直连核心。请原样使用 presign 返回的 `upload_url`。最大 24 MiB（核心按文件强制 15 MiB）。
+      description: 当 presign 的 `shape` 为 `multipart`（原生 API 路径）时文档流程的第 2 步。以 multipart（`file` + `category`）接收文件，并使用 org 凭证转发到核心；浏览器绝不直连核心。请原样使用 presign 返回的 `upload_url`。每个文件最大 15 MiB（+64 KiB 信封开销；核心按文件强制 15 MiB）。
       parameters:
       - name: submissionID
         in: path
@@ -9067,7 +9067,7 @@ paths:
       - KYC / KYB
       operationId: uploadKybDocument
       summary: 上传 KYB 文档字节（原生 multipart）
-      description: 当 presign 的 `shape` 为 `multipart`（原生 API 路径）时文档流程的第 2 步。以 multipart（`file` + `category`）接收文件，并使用 org 凭证转发到核心；浏览器绝不直连核心。请原样使用 presign 返回的 `upload_url`。最大 24 MiB（核心按文件强制 15 MiB）。
+      description: 当 presign 的 `shape` 为 `multipart`（原生 API 路径）时文档流程的第 2 步。以 multipart（`file` + `category`）接收文件，并使用 org 凭证转发到核心；浏览器绝不直连核心。请原样使用 presign 返回的 `upload_url`。每个文件最大 15 MiB（+64 KiB 信封开销；核心按文件强制 15 MiB）。
       parameters:
       - name: submissionID
         in: path
