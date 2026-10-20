@@ -280,6 +280,18 @@ curl https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id} \
 | `approved` / `approved_partial` | 已批准（最终态） |
 | `rejected` | 已拒绝（最终态） |
 
+### 已迁移验证墓碑
+
+迁移的 legacy 提交件是冻结的**墓碑**。读取墓碑会返回活跃提交件的数据，
+其 `status: "migrated"`，并在适用时包含 `migrated_from`（墓碑 ID）、
+`migrated_to`（活跃提交件 ID）以及用于审计的 `migrated_from_core`（legacy
+提供方 ID）。所有操作都应针对活跃提交件。
+
+墓碑上的任何写入都会返回 `409 superseded`，消息为
+`this case was migrated; decide on <id-vivo>`。这包括 approve、reject、
+request-changes、override、reinvite、文档预签名/上传/确认、创建活体链接以及
+`PATCH` banking intent。发送到墓碑的备注和分配会有意落到活跃提交件。
+
 ### 通过 API 上传证件
 
 创建时证件为可选项（如缺失，合规团队会通过 `more_info_required` 要求补充）。三步流程：

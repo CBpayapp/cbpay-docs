@@ -5,10 +5,27 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.170 · 1 version - October 20, 2026
+## v2.172 · 3 versions - October 20, 2026
+### v2.172
+**Fixed**
+- Verification reads on migrated legacy tombstones now return the live case data
+  with `status: migrated`, migration trace fields and `migrated_to`; writes
+  against the frozen ID return `409 superseded` with the live ID to operate.
+
+### v2.171
+**Changed**
+- Verification document uploads (`POST /v1/kyc|kyb/submissions/{id}/documents/upload`) now cap the file at 15 MiB (+64 KiB envelope overhead), matching the core limit; the `file_too_large` message reads "file exceeds 15 MiB". Uploads stream through the proxy without buffering the file in memory.
+
+**Added**
+- UK KYB company numbers are now shape-validated and normalized in the business form (8-character Companies House format, e.g. `12345678`, `SC123456`).
+
+**Fixed**
+- Typed signatures reject `typed_name` over 120 characters with `422 invalid_signer` (same cap as `signer_name`).
+- Re-signing a declaration with a different signature mode (drawn vs typed) now creates a new version instead of returning the previous one; the mode is part of the signed document hash.
 ### v2.170
 **Changed**
 - Trust Center NDA room now holds 14 documents: Canada's FINTRAC and PSP registrations went fully public (direct download on the site), and 7 vendor audit reports (Sophos C5, SOC 2, PCI AOC, healthcare risk; Cloudflare C5, SOC 2, PCI AOC) joined the gated room. Guide: [Trust Center & NDA room](https://docs.cbpayapp.com/en/guides/trust-center-nda).
+
 ## v2.169 · 3 versions - October 19, 2026
 ### v2.169
 **Changed**

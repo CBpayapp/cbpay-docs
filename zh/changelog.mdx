@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月20日" description="v2.171 · 2 个版本">
+<Update label="2026年10月20日" description="v2.172 · 3 个版本">
+### v2.172
+**修复**
+- 迁移验证的读取现在返回活跃案件数据、`status: migrated`、迁移追踪字段
+  和 `migrated_to`；对冻结 ID 的写入返回 `409 superseded` 及活跃 ID。
+
 ### v2.171
 **变更**
 - 验证文档上传（`POST /v1/kyc|kyb/submissions/{id}/documents/upload`）现将单个文件限制为 15 MiB（+64 KiB 信封开销），与核心限制一致；`file_too_large` 消息为 "file exceeds 15 MiB"。上传经代理流式转发，不再将文件载入内存。

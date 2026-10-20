@@ -5,10 +5,28 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.170 · 1 versión - 20 de octubre de 2026
+## v2.172 · 3 versiones - 20 de octubre de 2026
+### v2.172
+**Corregido**
+- Las lecturas de verificaciones migradas ahora devuelven los datos del caso vivo
+  con `status: migrated`, trazas de migración y `migrated_to`; las escrituras
+  sobre el ID congelado responden `409 superseded` con el ID vivo.
+
+### v2.171
+**Cambiado**
+- Las subidas de documentos de verificación (`POST /v1/kyc|kyb/submissions/{id}/documents/upload`) ahora limitan el archivo a 15 MiB (+64 KiB de overhead del envelope), igualando el tope del core; el mensaje de `file_too_large` dice "file exceeds 15 MiB". Las subidas se stremean por el proxy sin cargar el archivo en memoria.
+
+**Agregado**
+- El número de compañía del KYB británico ahora se valida por forma y se normaliza en el formulario de empresa (formato Companies House de 8 caracteres, ej. `12345678`, `SC123456`).
+
+**Corregido**
+- Las firmas tipeadas rechazan `typed_name` sobre 120 caracteres con `422 invalid_signer` (mismo tope que `signer_name`).
+- Re-firmar una declaración con distinto modo de firma (drawn vs typed) ahora crea una versión nueva en vez de devolver la anterior; el modo es parte del hash del documento firmado.
+
 ### v2.170
 **Cambiado**
 - La sala NDA del Trust Center ahora tiene 14 documentos: los registros FINTRAC y PSP de Canadá pasaron a ser totalmente públicos (descarga directa en el sitio) y 7 reportes de auditoría de proveedores (Sophos C5, SOC 2, PCI AOC, riesgo healthcare; Cloudflare C5, SOC 2, PCI AOC) entraron a la sala. Guía: [Trust Center y sala NDA](https://docs.cbpayapp.com/es/guides/trust-center-nda).
+
 ## v2.169 · 3 versiones - 19 de octubre de 2026
 ### v2.169
 **Cambiado**

@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="20 de octubre de 2026" description="v2.171 · 2 versiones">
+<Update label="20 de octubre de 2026" description="v2.172 · 3 versiones">
+### v2.172
+**Corregido**
+- Las lecturas de verificaciones migradas ahora devuelven los datos del caso vivo
+  con `status: migrated`, trazas de migración y `migrated_to`; las escrituras
+  sobre el ID congelado responden `409 superseded` con el ID vivo.
+
 ### v2.171
 **Cambiado**
 - Las subidas de documentos de verificación (`POST /v1/kyc|kyb/submissions/{id}/documents/upload`) ahora limitan el archivo a 15 MiB (+64 KiB de overhead del envelope), igualando el tope del core; el mensaje de `file_too_large` dice "file exceeds 15 MiB". Las subidas se stremean por el proxy sin cargar el archivo en memoria.

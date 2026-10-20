@@ -178,6 +178,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 422 | `verification_invalid` | Referenciaste una verificación de onboarding propio donde se exige la de un tercero |
 | 403 | `company_account_required` | La verificación de terceros (links/submissions KYC-KYB) es solo para cuentas empresa |
 | 409 | `already_verified` | Pediste link de onboarding con la cuenta ya verificada |
+| 409 | `superseded` | El ID de verificación es una tumba migrada congelada; sus lecturas vienen del caso vivo | No decidas, subas evidencia, crees links de liveness ni hagas presign/confirm o PATCH de banking intent sobre la tumba. Lee `migrated_to` y opera el caso vivo |
 | 409 | `identity_locked` | Con la verificación aprobada, `display_name`, `tax_id` y `country` vienen de la identidad verificada y no se cambian por `PATCH /v1/me`; contacta al soporte |
 | 409 | `no_screening` | Rescreen/monitoreo AML sin un screening previo |
 | 409 | `no_banking_customer` | Operación Banking clásica sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
