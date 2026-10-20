@@ -10,6 +10,9 @@ source_url: https://docs.cbpayapp.com/es/changelog
 **Cambiado**
 - Todos los números de dinero ahora se muestran en formato americano (miles con coma, decimales con punto: `1,234,567.89`) en el portal, comprobantes, trackers y cartola, para fiat y crypto en todos los países. Los valores de API, CSV y XLSX no cambian (formato máquina, sin separadores de miles).
 
+**Agregado**
+- Se agregó el Trust Center y la sala NDA agnósticos de proveedores: metadatos públicos, solicitudes idempotentes, firma tokenizada por correo, descargas restringidas por cinco años, consulta de estado y códigos accionables. Ver [Trust Center y sala NDA](https://docs.cbpayapp.com/es/guides/trust-center-nda).
+
 ### v2.168
 **Agregado**
 - Se agregó el endpoint de solo lectura

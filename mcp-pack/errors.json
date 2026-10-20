@@ -1,5 +1,5 @@
 {
-  "count": 340,
+  "count": 354,
   "errors": [
     {
       "category": {
@@ -304,9 +304,9 @@
       "code": "phone_binding_cooldown",
       "http": 403,
       "meaning": {
-        "en": "Phone linked less than 24 h ago without verification and no alternative factor (authenticator app or verified email)",
-        "es": "Teléfono enlazado hace menos de 24 h sin verificación y sin factor alternativo (app autenticadora o email verificado)",
-        "zh": "手机号绑定未满 24 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱）"
+        "en": "Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email). Lift early with `POST /v1/me/phone/unlock-cooldown` (email/totp token) or ask your operator (`POST /v1/accounts/{id}/phone/clear-cooldown`)",
+        "es": "Teléfono enlazado hace menos de 4 h sin verificación y sin factor alternativo (app autenticadora o email verificado). Libéralo antes con `POST /v1/me/phone/unlock-cooldown` (token email/totp) o pide a tu operador (`POST /v1/accounts/{id}/phone/clear-cooldown`)",
+        "zh": "手机号绑定未满 4 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱）。可用 `POST /v1/me/phone/unlock-cooldown`（邮箱/totp 令牌）提前解除，或请运营方执行（`POST /v1/accounts/{id}/phone/clear-cooldown`）"
       }
     },
     {
@@ -419,6 +419,20 @@
         "en": "The challenge expired or was already used; create a new one",
         "es": "El desafío expiró o ya se usó; crea uno nuevo",
         "zh": "质询已过期或已被使用；请创建一个新的"
+      }
+    },
+    {
+      "category": {
+        "en": "OTP / 2FA",
+        "es": "OTP / 2FA",
+        "zh": "OTP / 双因素认证"
+      },
+      "code": "independent_factor_required",
+      "http": 403,
+      "meaning": {
+        "en": "The phone cooldown can only be unlocked with the authenticator app or the verified email, never with a code sent to the new number",
+        "es": "El cooldown del teléfono solo se desbloquea con la app autenticadora o el email verificado, jamás con un código enviado al número nuevo",
+        "zh": "手机号冷却只能通过身份验证器应用或已验证邮箱解锁，绝不能使用发送到新号码的验证码"
       }
     },
     {
@@ -4495,6 +4509,34 @@
         "es": "Errores de límites money-out",
         "zh": "出金限额错误"
       },
+      "code": "invalid_signature_mode",
+      "http": 422,
+      "meaning": {
+        "en": "`signature_mode` must be `drawn` (pad) or `typed` (full name rendered to PNG).",
+        "es": "`signature_mode` debe ser `drawn` (pad) o `typed` (nombre completo renderizado a PNG).",
+        "zh": "`signature_mode` 必须为 `drawn`（手写板）或 `typed`（全名渲染为 PNG）。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "typed_name_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "With `signature_mode: typed`, `typed_name` must match `signer_name`.",
+        "es": "Con `signature_mode: typed`, `typed_name` debe coincidir con `signer_name`.",
+        "zh": "使用 `signature_mode: typed` 时，`typed_name` 必须与 `signer_name` 一致。"
+      }
+    },
+    {
+      "category": {
+        "en": "Money-out limit errors",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
       "code": "storage_failed",
       "http": 502,
       "meaning": {
@@ -4749,6 +4791,160 @@
       "http": 400,
       "meaning": {
         "en": "The resource identifier is empty or has an invalid format; send the identifier returned by the API."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "invalid_company_name",
+      "http": 422,
+      "meaning": {
+        "en": "`company_name` must be 2–200 characters; send a valid company name.",
+        "es": "`company_name` debe tener 2–200 caracteres; envía un nombre de empresa válido.",
+        "zh": "`company_name` 必须为 2–200 个字符；请发送有效的公司名称。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "invalid_contact_name",
+      "http": 422,
+      "meaning": {
+        "en": "`contact_name` must be 2–120 characters; send a valid contact name.",
+        "es": "`contact_name` debe tener 2–120 caracteres; envía un nombre de contacto válido.",
+        "zh": "`contact_name` 必须为 2–120 个字符；请发送有效的联系人姓名。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "invalid_signer_name",
+      "http": 422,
+      "meaning": {
+        "en": "`signer_name` must be 2–120 characters; send the authorized signer's name.",
+        "es": "`signer_name` debe tener 2–120 caracteres; envía el nombre del firmante autorizado.",
+        "zh": "`signer_name` 必须为 2–120 个字符；请发送授权签署人的姓名。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "counsel_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The NDA template is awaiting legal approval; wait until the Trust Center is enabled.",
+        "es": "La plantilla NDA espera aprobación legal; espera a que Trust Center se habilite.",
+        "zh": "NDA 模板正在等待法律批准；请等待 Trust Center 启用。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "invalid_contact_email",
+      "http": 422,
+      "meaning": {
+        "en": "The request email is invalid; send a valid mailbox address.",
+        "es": "El correo de solicitud no es válido; envía un buzón válido.",
+        "zh": "请求邮箱无效；请发送有效邮箱地址。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "entitlement_revoked",
+      "http": 410,
+      "meaning": {
+        "en": "Compliance revoked access; request access again if appropriate.",
+        "es": "Compliance revocó el acceso; solicita acceso nuevamente si corresponde.",
+        "zh": "合规团队已撤销访问；如有需要请重新申请。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "entitlement_expired",
+      "http": 410,
+      "meaning": {
+        "en": "The signing or five-year download entitlement expired; submit a new request.",
+        "es": "La autorización de firma o descarga de cinco años venció; crea una nueva solicitud.",
+        "zh": "签署或五年下载授权已过期；请提交新请求。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "unknown_document",
+      "http": 404,
+      "meaning": {
+        "en": "The document or signing link is unknown; use the metadata list or request a new link.",
+        "es": "El documento o enlace no existe; usa la lista de metadatos o pide un enlace nuevo.",
+        "zh": "文档或签署链接未知；使用元数据列表或申请新链接。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "unknown_link",
+      "http": 404,
+      "meaning": {
+        "en": "The document or signing link is unknown; use the metadata list or request a new link.",
+        "es": "El documento o enlace no existe; usa la lista de metadatos o pide un enlace nuevo.",
+        "zh": "文档或签署链接未知；使用元数据列表或申请新链接。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "accept_required",
+      "http": 422,
+      "meaning": {
+        "en": "The signer must explicitly accept the agreement.",
+        "es": "El firmante debe aceptar explícitamente el acuerdo.",
+        "zh": "签署人必须明确接受协议。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "email_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "Email delivery is not configured; retry later.",
+        "es": "El correo no está configurado; reintenta más tarde.",
+        "zh": "邮件投递未配置；请稍后重试。"
       }
     }
   ]

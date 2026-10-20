@@ -119,6 +119,8 @@ tags:
 - name: Real-time events
   description: >-
     Server-Sent Events stream with everything that happens in the account (or across the organization for admins), replay with `Last-Event-ID`, optional initial snapshot and a 90-day queryable history.
+- name: Trust Center
+  description: Public Trust Center metadata and tokenized NDA-gated compliance document access.
 - name: Contracts
   description: Pre-filled Grupo CB framework agreements for verified company accounts.
 paths:
@@ -227,6 +229,15 @@ paths:
                   format: byte
                   minLength: 1
                   description: "Base64-encoded PNG signature; the optional data:image/png;base64, prefix is accepted."
+                signature_mode:
+                  type: string
+                  enum: [drawn, typed]
+                  default: drawn
+                  description: "drawn = hand-drawn pad (default); typed = full name rendered to PNG by the client."
+                typed_name:
+                  type: string
+                  maxLength: 120
+                  description: "Required with signature_mode typed; must match signer_name."
             example:
               signer_name: Jordan Lee
               signer_title: Chief Executive Officer
@@ -2252,7 +2263,7 @@ paths:
                     expires_at: '2026-07-08T21:10:00Z'
                     note: verify the code with POST /v1/auth/login/otp to receive the session token
         '403':
-          description: The login policy resolves to SMS/WhatsApp but the phone was linked less than 24
+          description: The login policy resolves to SMS/WhatsApp but the phone was linked less than 4
             hours ago without verification and the account has no alternative factor (`phone_binding_cooldown`).
           content:
             application/json:
@@ -2261,7 +2272,7 @@ paths:
               example:
                 error: phone_binding_cooldown
                 message: the phone number was linked recently without verification; SMS/WhatsApp login
-                  codes unlock 24 hours after the change and no alternative factor (authenticator app or
+                  codes unlock 4 hours after the change and no alternative factor (authenticator app or
                   login email) is available
         '401':
           description: Email or password is incorrect (`invalid_credentials`).
@@ -18993,6 +19004,37 @@ paths:
                 email: taylor.new@example.com
         '409':
           description: No pending email change (`no_pending_email`).
+  /v1/me/phone/unlock-cooldown:
+    post:
+      tags:
+      - Account
+      operationId: unlockPhoneCooldown
+      summary: Lift the phone binding cooldown early with an independent factor
+      description: "Clears the self-service phone binding cooldown (4 hours) before it expires, once the holder proves an independent factor: a `phone_change` challenge verified with the authenticator app or the verified email, sent in the `X-OTP-Token` header. A code sent to the new number never unlocks it. Without a lock, returns `not_locked` without requiring a token."
+      parameters:
+      - name: X-OTP-Token
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Single-use OTP token from a `phone_change` challenge verified via email or totp. Required while the cooldown is active.
+      responses:
+        '200':
+          description: Cooldown unlocked (or not locked).
+          content:
+            application/json:
+              examples:
+                unlocked:
+                  value:
+                    status: unlocked
+                    channel: email
+                not_locked:
+                  value:
+                    status: not_locked
+        '401':
+          description: The OTP token is invalid, expired or already used (`invalid_otp`).
+        '403':
+          description: No token (`otp_required`) or the token came from a phone channel (`independent_factor_required`).
   /v1/me/alias:
     put:
       tags:
@@ -24129,6 +24171,196 @@ paths:
             application/json:
               example: {intents: []}
 
+  /v1/trust/nda-requests:
+    post:
+      security: []
+      tags: [Trust Center]
+      operationId: createTrustNDARequest
+      summary: Request access to gated Trust Center documents
+      description: Creates an external, tokenized NDA request. The same company and contact email while the request is pending return the existing request without creating a duplicate. The signing link is emailed and expires after 30 days. Requests remain unavailable until the NDA template has counsel approval.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_name, contact_name, contact_email]
+              properties:
+                company_name: {type: string, minLength: 2, maxLength: 200}
+                contact_name: {type: string, minLength: 2, maxLength: 120}
+                contact_email: {type: string, format: email}
+                country: {type: string, maxLength: 60}
+                purpose: {type: string, maxLength: 500}
+                locale: {type: string, enum: [es, en, zh], default: es}
+            example:
+              company_name: Acme Payments Ltd
+              contact_name: Jordan Lee
+              contact_email: compliance@acme.example
+              country: US
+              purpose: Evaluate compliance controls for a partnership
+              locale: en
+      responses:
+        '202':
+          description: Request created and signing email attempted.
+          content:
+            application/json:
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: pending_signature, expires_at: '2026-11-18T20:00:00Z', email_sent: true}
+        '200':
+          description: Existing pending request returned on an idempotent replay.
+          content:
+            application/json:
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: pending_signature, expires_at: '2026-11-18T20:00:00Z', idempotency_hit: true}
+        '422':
+          description: Invalid company, contact or email fields.
+          content:
+            application/json:
+              example: {error: invalid_contact_email, message: contact_email must be a valid email address}
+        '503':
+          description: counsel_pending or email_unavailable.
+          content:
+            application/json:
+              example: {error: counsel_pending, message: the NDA template is pending legal approval; requests are temporarily unavailable}
+  /v1/trust/nda-requests/{id}/reissue:
+    post:
+      security: []
+      tags: [Trust Center]
+      operationId: reissueTrustNDASigningLink
+      summary: Reissue a Trust Center signing link
+      description: Reissues a fresh signing link for a pending request. The previous link is invalidated. Unknown, expired or already-decided IDs return the same 202 response to prevent enumeration.
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '202':
+          description: Reissue accepted without revealing whether the request exists.
+          content:
+            application/json:
+              example: {reissued: true}
+        '429':
+          description: Too many attempts.
+          content:
+            application/json:
+              example: {error: too_many_attempts, message: too many requests; wait a moment and retry}
+  /v1/trust/nda-docs:
+    get:
+      security: []
+      tags: [Trust Center]
+      operationId: listTrustNDADocuments
+      summary: List gated Trust Center document metadata
+      description: Returns public metadata for the 11 currently available N2 compliance documents. It never returns document bytes; download requires a valid post-signature token.
+      responses:
+        '200':
+          description: Public metadata for gated documents.
+          content:
+            application/json:
+              example:
+                documents:
+                - {id: us-aml-program, title_en: 'US AML Program (Grupo CB LLC, Jan 2026)', title_es: 'Programa AML EE.UU. (Grupo CB LLC, ene 2026)', title_zh: '美国 AML 合规计划（Grupo CB LLC，2026年1月）', pages: 39, size_bytes: 184320, sha256: 7d1df3be9f4a8b4bf88dce93a3b939f8a737f123cb60b8074442ca035cd6e940}
+  /v1/trust/nda-requests/{id}/status:
+    get:
+      tags: [Trust Center]
+      operationId: getTrustNDARequestStatus
+      summary: Read NDA request status and entitlement
+      description: Reads a tokenized request using its signing or download Bearer token. Pending requests use the public status vocabulary pending_signature; signed requests list the document IDs and the five-year download expiry.
+      security: [{bearerAuth: []}]
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Request state and available documents.
+          content:
+            application/json:
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, signed_at: '2026-10-19T20:00:00Z', expires_at: '2031-10-18T20:00:00Z', documents: [us-aml-program, pe-splaft-manual]}
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example: {error: invalid_token, message: check the link from your email}
+  /v1/trust/nda/sign/{token}:
+    get:
+      security: []
+      tags: [Trust Center]
+      operationId: getTrustNDASigningPage
+      summary: Open the public NDA signing page
+      description: Renders the no-index signing page for the personal link emailed to the contact. The page is not an authenticated CBPay account surface.
+      parameters:
+      - {name: token, in: path, required: true, schema: {type: string, minLength: 32, maxLength: 32}}
+      - {name: lang, in: query, required: false, schema: {type: string, enum: [es, en]}}
+      responses:
+        '200': {description: HTML signing page, content: {text/html: {schema: {type: string}, example: '<!doctype html><html lang="en">'}}}
+        '404': {description: Unknown signing link.}
+        '410': {description: Signing link expired or access revoked.}
+    post:
+      security: []
+      tags: [Trust Center]
+      operationId: signTrustNDA
+      summary: Sign the Trust Center NDA
+      description: Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token.
+      parameters:
+      - {name: token, in: path, required: true, schema: {type: string, minLength: 32, maxLength: 32}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [signer_name, company_reg, company_address, accept]
+              properties:
+                signer_name: {type: string, minLength: 2, maxLength: 120}
+                signer_title: {type: string, maxLength: 120}
+                company_reg: {type: string, minLength: 2, maxLength: 120}
+                company_address: {type: string, minLength: 5, maxLength: 300}
+                accept: {type: boolean, const: true}
+            example: {signer_name: Jordan Lee, signer_title: Chief Compliance Officer, company_reg: US-123456, company_address: 1 Main Street, Boston MA, accept: true}
+      responses:
+        '200':
+          description: NDA signed and download entitlement issued.
+          content:
+            application/json:
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, download_token: '<32-hex-token>', download_url: 'https://www.cbpayapp.com/en/trust/nda?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01&token=<32-hex-token>', expires_at: '2031-10-18T20:00:00Z'}
+        '404':
+          description: Unknown or invalid signing link.
+          content:
+            application/json:
+              example: {error: unknown_link, message: this signing link is not valid}
+        '409':
+          description: Link already used or expired.
+          content:
+            application/json:
+              example: {error: already_decided, message: this link was already used or expired}
+        '422':
+          description: Acceptance or signer fields are invalid.
+          content:
+            application/json:
+              example: {error: accept_required, message: you must accept the agreement to sign}
+  /v1/trust/nda-docs/{id}/download:
+    get:
+      tags: [Trust Center]
+      operationId: downloadTrustNDADocument
+      summary: Download a gated Trust Center document
+      description: Returns one PDF only when the Bearer token is a valid, unexpired download entitlement. Every delivery is audit-recorded; revoked access immediately returns 410.
+      security: [{bearerAuth: []}]
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Gated PDF document.
+          headers: {X-Checksum-Sha256: {schema: {type: string}}, Cache-Control: {schema: {type: string, example: no-store}}}
+          content: {application/pdf: {schema: {type: string, format: binary}}}
+        '401':
+          description: Missing or invalid download token.
+          content:
+            application/json:
+              example: {error: invalid_token, message: check the link from your email}
+        '404':
+          description: Unknown document ID.
+          content:
+            application/json:
+              example: {error: unknown_document, message: no gated document with that id}
+        '410':
+          description: Entitlement revoked or expired.
+          content:
+            application/json:
+              example: {error: entitlement_revoked, message: access was revoked by compliance}
 components:
   securitySchemes:
     bearerAuth:

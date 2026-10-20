@@ -55,7 +55,7 @@ description: "错误格式与完整的错误码目录"
 | 403 | `otp_required` | 该操作需要 OTP：验证一个质询后携带 `X-OTP-Token` 重试 |
 | 403 | `otp_invalid` | OTP 令牌无效、已过期或已被使用 |
 | 403 | `session_required` | OTP 质询需要用户会话，不能使用 API 密钥 |
-| 403 | `phone_binding_cooldown` | 手机号绑定未满 24 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱） |
+| 403 | `phone_binding_cooldown` | 手机号绑定未满 4 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱）。可用 `POST /v1/me/phone/unlock-cooldown`（邮箱/totp 令牌）提前解除，或请运营方执行（`POST /v1/accounts/{id}/phone/clear-cooldown`） |
 | 409 | `phone_verification_required` | 通过 SMS/WhatsApp 启用登录 2FA 前需先验证手机号（OTP 挑战） |
 | 401 | `invalid_code` | 验证码不匹配 |
 | 401 | `invalid_pending_token` | 登录中间令牌已过期；请重新登录 |
@@ -63,6 +63,7 @@ description: "错误格式与完整的错误码目录"
 | 409 | `phone_required` | 账户未绑定手机号（`PATCH /v1/me`） |
 | 409 | `otp_phone_missing` | 登录需要 OTP 但账户没有手机号；请联系您的运营方 |
 | 409 | `challenge_not_pending` | 质询已过期或已被使用；请创建一个新的 |
+| 403 | `independent_factor_required` | 手机号冷却只能通过身份验证器应用或已验证邮箱解锁，绝不能使用发送到新号码的验证码 |
 | 429 | `too_many_attempts` | 达到发送/验证次数限制；请等待几分钟 |
 | 503 | `otp_unavailable` | 验证服务不可用（操作保持锁定；OTP 绝不会被跳过） |
 | 409 | `otp_disabled_for_org` | 您的组织未启用按操作的双因素认证；请联系您的运营方 |
@@ -551,6 +552,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `invalid_consent` | body 必须包含 JSON 布尔值 `"consent": true`。 |
 | 422 | `invalid_signer` | 姓名/职务为空或过长；使用 owner/operator 人工签署人。 |
 | 422 | `invalid_signature_image` | `signature_png` 不是有效或有墨迹的 PNG，超过编码/解码大小限制，或未达到最小尺寸；发送有效签名图片并使用新 OTP 重试。 |
+| 422 | `invalid_signature_mode` | `signature_mode` 必须为 `drawn`（手写板）或 `typed`（全名渲染为 PNG）。 |
+| 422 | `typed_name_mismatch` | 使用 `signature_mode: typed` 时，`typed_name` 必须与 `signer_name` 一致。 |
 | 502 | `storage_failed` | 私有 storage 失败；重试前先协调信封状态。 |
 | 502 | `email_failed` | 签署后邮件失败；已完成信封仍然有效。 |
 | 503 | `storage_unavailable` | 私有 storage 不可用；恢复后重试。 |
@@ -622,3 +625,20 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 400 | `purpose_required` | 每笔 US/USD 银行通道出金都必须填写 `options.purpose`；请选择目录值。 |
 | 400 | `invalid_options` | 选项未知，或非 `Other` 用途提供了 `purpose_detail`；修正 `options`。 |
 | 400 | `supporting_document_required` | 创建 USD 银行通道出金前上传并传递发票或收据。 |
+
+### Trust Center 与 NDA
+
+| HTTP | `error` | 含义和解决办法 |
+|---|---|---|
+| 422 | `invalid_company_name` | `company_name` 必须为 2–200 个字符；请发送有效的公司名称。 |
+| 422 | `invalid_contact_name` | `contact_name` 必须为 2–120 个字符；请发送有效的联系人姓名。 |
+| 422 | `invalid_signer_name` | `signer_name` 必须为 2–120 个字符；请发送授权签署人的姓名。 |
+| 503 | `counsel_pending` | NDA 模板正在等待法律批准；请等待 Trust Center 启用。 |
+| 422 | `invalid_contact_email` | 请求邮箱无效；请发送有效邮箱地址。 |
+| 401 | `invalid_token` | 签署或下载令牌无效；请使用最新邮件中的链接。 |
+| 410 | `entitlement_revoked` | 合规团队已撤销访问；如有需要请重新申请。 |
+| 410 | `entitlement_expired` | 签署或五年下载授权已过期；请提交新请求。 |
+| 404 | `unknown_document` / `unknown_link` | 文档或签署链接未知；使用元数据列表或申请新链接。 |
+| 409 | `already_decided` | 签署链接已使用或关闭；请勿重复提交。 |
+| 422 | `accept_required` | 签署人必须明确接受协议。 |
+| 503 | `email_unavailable` | 邮件投递未配置；请稍后重试。 |

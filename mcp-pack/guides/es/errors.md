@@ -54,7 +54,7 @@ Detalle y flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/secur
 | 403 | `otp_required` | La acción exige OTP: verifica un desafío y reintenta con `X-OTP-Token` |
 | 403 | `otp_invalid` | Token OTP inválido, expirado o ya usado |
 | 403 | `session_required` | Los desafíos OTP requieren sesión de usuario, no API key |
-| 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 24 h sin verificación y sin factor alternativo (app autenticadora o email verificado) |
+| 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 4 h sin verificación y sin factor alternativo (app autenticadora o email verificado). Libéralo antes con `POST /v1/me/phone/unlock-cooldown` (token email/totp) o pide a tu operador (`POST /v1/accounts/{id}/phone/clear-cooldown`) |
 | 409 | `phone_verification_required` | Verifica tu teléfono (desafío OTP) antes de activar el 2FA de login por SMS/WhatsApp |
 | 401 | `invalid_code` | El código no coincide |
 | 401 | `invalid_pending_token` | El token intermedio del login expiró; vuelve a iniciar sesión |
@@ -62,6 +62,7 @@ Detalle y flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/secur
 | 409 | `phone_required` | La cuenta no tiene teléfono (`PATCH /v1/me`) |
 | 409 | `otp_phone_missing` | El login exige OTP y la cuenta no tiene teléfono; contacta a tu operador |
 | 409 | `challenge_not_pending` | El desafío expiró o ya se usó; crea uno nuevo |
+| 403 | `independent_factor_required` | El cooldown del teléfono solo se desbloquea con la app autenticadora o el email verificado, jamás con un código enviado al número nuevo |
 | 429 | `too_many_attempts` | Límite de envíos o verificaciones; espera unos minutos |
 | 503 | `otp_unavailable` | Servicio de verificación no disponible (la acción queda bloqueada, nunca se salta el OTP) |
 | 409 | `otp_disabled_for_org` | Tu organización no tiene habilitado el 2FA por acción; contacta a tu operador |
@@ -568,6 +569,8 @@ código es el contrato estable para la integración.
 | 422 | `invalid_consent` | El body debe llevar el booleano JSON `"consent": true`. |
 | 422 | `invalid_signer` | Nombre/cargo vacíos o demasiado largos; usa owner/operator humano. |
 | 422 | `invalid_signature_image` | `signature_png` no es un PNG válido o no está entintado, supera el límite de tamaño codificado/decodificado o no alcanza las dimensiones mínimas; envía una imagen válida y reintenta con un OTP nuevo. |
+| 422 | `invalid_signature_mode` | `signature_mode` debe ser `drawn` (pad) o `typed` (nombre completo renderizado a PNG). |
+| 422 | `typed_name_mismatch` | Con `signature_mode: typed`, `typed_name` debe coincidir con `signer_name`. |
 | 502 | `storage_failed` | Falló el storage privado; reconcilia el sobre antes de reintentar. |
 | 502 | `email_failed` | Falló el email posterior a la firma; el sobre completado sigue siendo válido. |
 | 503 | `storage_unavailable` | Storage privado no disponible; reintenta cuando se recupere. |
@@ -640,3 +643,20 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 400 | `purpose_required` | `options.purpose` es obligatorio en todo payout bancario US/USD; elige un valor del catálogo. |
 | 400 | `invalid_options` | Hay una opción desconocida o enviaste `purpose_detail` con un propósito distinto de `Other`; corrige `options`. |
 | 400 | `supporting_document_required` | Sube y envía la factura o recibo antes de crear el payout bancario USD. |
+
+### Trust Center y NDA
+
+| HTTP | `error` | Significado y solución |
+|---|---|---|
+| 422 | `invalid_company_name` | `company_name` debe tener 2–200 caracteres; envía un nombre de empresa válido. |
+| 422 | `invalid_contact_name` | `contact_name` debe tener 2–120 caracteres; envía un nombre de contacto válido. |
+| 422 | `invalid_signer_name` | `signer_name` debe tener 2–120 caracteres; envía el nombre del firmante autorizado. |
+| 503 | `counsel_pending` | La plantilla NDA espera aprobación legal; espera a que Trust Center se habilite. |
+| 422 | `invalid_contact_email` | El correo de solicitud no es válido; envía un buzón válido. |
+| 401 | `invalid_token` | El token de firma o descarga no es válido; usa el último enlace del correo. |
+| 410 | `entitlement_revoked` | Compliance revocó el acceso; solicita acceso nuevamente si corresponde. |
+| 410 | `entitlement_expired` | La autorización de firma o descarga de cinco años venció; crea una nueva solicitud. |
+| 404 | `unknown_document` / `unknown_link` | El documento o enlace no existe; usa la lista de metadatos o pide un enlace nuevo. |
+| 409 | `already_decided` | El enlace ya fue usado o cerrado; no lo envíes otra vez. |
+| 422 | `accept_required` | El firmante debe aceptar explícitamente el acuerdo. |
+| 503 | `email_unavailable` | El correo no está configurado; reintenta más tarde. |

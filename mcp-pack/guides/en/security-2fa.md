@@ -204,12 +204,14 @@ two-factor flow on its own and does not request a second code.
   the **previous** number — nobody can redirect your codes without holding
   your current phone.
 - If the phone is linked for the first time (or changed without
-  verification), SMS/WhatsApp challenges stay locked for **24 hours**: the
+  verification), SMS/WhatsApp challenges stay locked for **4 hours**: the
   anti session-hijacking window. During the cooldown, if you have the
   authenticator app enrolled or a verified email, the challenge is issued
   automatically over that stronger factor (the channel comes back in the
   challenge response); you only get `403 phone_binding_cooldown` when no
   alternative factor exists. A phone set by your operator has no cooldown.
+  You can also lift the cooldown early with `POST /v1/me/phone/unlock-cooldown`
+  (email/totp token), or your operator can clear it from your profile.
   Pinning an explicit channel turns the fallback off: `channel: sms` in
   cooldown fails with `403 phone_binding_cooldown` even with the
   authenticator app enrolled.
@@ -229,7 +231,7 @@ two-factor flow on its own and does not request a second code.
 | 403 | `otp_invalid` | Token invalid, expired or already used | Verify a new challenge |
 | 403 | `session_required` | You requested a challenge with an API key | Challenges are for user sessions only |
 | 403 | `channel_locked_by_org` | Your explicit channel is weaker than the effective minimum for this action (your account's policy first, then the org default) | Leave `channel` out or pick a stronger factor |
-| 403 | `phone_binding_cooldown` | Phone linked less than 24 h ago without verification and no alternative factor (authenticator app or verified email) | Enroll the authenticator app or verify your email; otherwise wait out the cooldown or ask your operator to set the number |
+| 403 | `phone_binding_cooldown` | Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email) | Enroll the authenticator app or verify your email; lift early with `POST /v1/me/phone/unlock-cooldown`, or ask your operator to clear the cooldown |
 | 401 | `invalid_code` | The code does not match | Check the SMS/WhatsApp and retry (5 attempts) |
 | 401 | `invalid_pending_token` | The intermediate login token expired | Log in again |
 | 409 | `phone_required` | The account has no phone | `PATCH /v1/me` with an E.164 `phone` |

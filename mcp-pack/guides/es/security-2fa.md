@@ -205,13 +205,16 @@ ya es un flujo de dos factores y no pide un código adicional.
   número **anterior** — así nadie puede redirigir tus códigos sin tener tu
   teléfono actual.
 - Si el teléfono se enlaza por primera vez (o se cambia sin verificación),
-  los desafíos por SMS/WhatsApp quedan bloqueados por **24 horas**: es la
+  los desafíos por SMS/WhatsApp quedan bloqueados por **4 horas**: es la
   ventana anti-secuestro de sesión. Durante el cooldown, si tienes la app
   autenticadora enrolada o tu email verificado, el desafío se emite
   automáticamente por ese factor más fuerte (el canal llega en la respuesta
   del desafío); solo si no tienes ninguna alternativa recibes
   `403 phone_binding_cooldown`. El teléfono cargado por tu operador no tiene
-  cooldown. Fijar un canal explícito desactiva el fallback: `channel: sms`
+  cooldown. También puedes levantar el cooldown antes con
+  `POST /v1/me/phone/unlock-cooldown` (token email/totp), o tu operador
+  puede quitarlo desde tu perfil.
+  Fijar un canal explícito desactiva el fallback: `channel: sms`
   en cooldown falla con `403 phone_binding_cooldown` aunque tengas la app
   autenticadora enrolada.
 - El **login en dos pasos** respeta la misma regla: con 2FA de login por
@@ -230,7 +233,7 @@ ya es un flujo de dos factores y no pide un código adicional.
 | 403 | `otp_invalid` | Token inválido, expirado o ya usado | Verifica un desafío nuevo |
 | 403 | `session_required` | Pediste un desafío con una API key | Los desafíos son solo para sesiones de usuario |
 | 403 | `channel_locked_by_org` | Tu canal explícito es más débil que el mínimo efectivo para esta acción (la política de tu cuenta primero, luego el default de la org) | Omite `channel` o elige un factor más fuerte |
-| 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 24 h sin verificación y sin factor alternativo (app autenticadora o email verificado) | Enrola la app autenticadora o verifica tu email; si no, espera el cooldown o pide a tu operador fijar el número |
+| 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 4 h sin verificación y sin factor alternativo (app autenticadora o email verificado) | Enrola la app autenticadora o verifica tu email; libéralo antes con `POST /v1/me/phone/unlock-cooldown`, o pide a tu operador quitar el cooldown |
 | 401 | `invalid_code` | El código no coincide | Revisa el SMS/WhatsApp y reintenta (5 intentos) |
 | 401 | `invalid_pending_token` | El token intermedio del login expiró | Vuelve a iniciar sesión |
 | 409 | `phone_required` | La cuenta no tiene teléfono | `PATCH /v1/me` con `phone` E.164 |

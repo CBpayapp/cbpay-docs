@@ -54,7 +54,7 @@ Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/securit
 | 403 | `otp_required` | The action requires OTP: verify a challenge and retry with `X-OTP-Token` |
 | 403 | `otp_invalid` | OTP token invalid, expired or already used |
 | 403 | `session_required` | OTP challenges require a user session, not an API key |
-| 403 | `phone_binding_cooldown` | Phone linked less than 24 h ago without verification and no alternative factor (authenticator app or verified email) |
+| 403 | `phone_binding_cooldown` | Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email). Lift early with `POST /v1/me/phone/unlock-cooldown` (email/totp token) or ask your operator (`POST /v1/accounts/{id}/phone/clear-cooldown`) |
 | 409 | `phone_verification_required` | Verify your phone (OTP challenge) before enabling login 2FA over SMS/WhatsApp |
 | 401 | `invalid_code` | The code does not match |
 | 401 | `invalid_pending_token` | The intermediate login token expired; log in again |
@@ -62,6 +62,7 @@ Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/securit
 | 409 | `phone_required` | The account has no phone (`PATCH /v1/me`) |
 | 409 | `otp_phone_missing` | Login requires OTP and the account has no phone; contact your operator |
 | 409 | `challenge_not_pending` | The challenge expired or was already used; create a new one |
+| 403 | `independent_factor_required` | The phone cooldown can only be unlocked with the authenticator app or the verified email, never with a code sent to the new number |
 | 429 | `too_many_attempts` | Send/verification limits reached; wait a few minutes |
 | 409 | `otp_disabled_for_org` | Two-factor authentication is not enabled for your organization; contact support |
 | 409 | `totp_not_started` | Confirm requires starting enrollment first (`POST /v1/me/totp/enroll`) |
@@ -567,6 +568,8 @@ code is the stable integration contract.
 | 422 | `invalid_consent` | The signing body must contain the JSON boolean `"consent": true`. |
 | 422 | `invalid_signer` | Signer name/title are empty or exceed the permitted length; use a human owner/operator. |
 | 422 | `invalid_signature_image` | `signature_png` is not a valid, non-blank PNG, exceeds the encoded or decoded size limit, or is below the minimum dimensions; send a valid signature image and retry with a fresh OTP. |
+| 422 | `invalid_signature_mode` | `signature_mode` must be `drawn` (pad) or `typed` (full name rendered to PNG). |
+| 422 | `typed_name_mismatch` | With `signature_mode: typed`, `typed_name` must match `signer_name`. |
 | 502 | `storage_failed` | Private storage failed while creating the final artifact; reconcile the envelope before retrying. |
 | 502 | `email_failed` | Completion email delivery failed after signing; the completed envelope remains authoritative. |
 | 503 | `storage_unavailable` | Private storage is unavailable; retry after the service recovers. |
@@ -645,3 +648,20 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | HTTP | `error` | Meaning |
 |---|---|---|
 | 400 | `invalid_id` | The resource identifier is empty or has an invalid format; send the identifier returned by the API. |
+
+### Trust Center & NDA
+
+| HTTP | `error` | Meaning and solution |
+|---|---|---|
+| 422 | `invalid_company_name` | `company_name` must be 2–200 characters; send a valid company name. |
+| 422 | `invalid_contact_name` | `contact_name` must be 2–120 characters; send a valid contact name. |
+| 422 | `invalid_signer_name` | `signer_name` must be 2–120 characters; send the authorized signer's name. |
+| 503 | `counsel_pending` | The NDA template is awaiting legal approval; wait until the Trust Center is enabled. |
+| 422 | `invalid_contact_email` | The request email is invalid; send a valid mailbox address. |
+| 401 | `invalid_token` | The signing or download token is invalid; use the link from the latest email. |
+| 410 | `entitlement_revoked` | Compliance revoked access; request access again if appropriate. |
+| 410 | `entitlement_expired` | The signing or five-year download entitlement expired; submit a new request. |
+| 404 | `unknown_document` / `unknown_link` | The document or signing link is unknown; use the metadata list or request a new link. |
+| 409 | `already_decided` | The signing link was already used or closed; do not resubmit it. |
+| 422 | `accept_required` | The signer must explicitly accept the agreement. |
+| 503 | `email_unavailable` | Email delivery is not configured; retry later. |

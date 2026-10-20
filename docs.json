@@ -155,6 +155,7 @@
                     "pages": [
                       "en/guides/kyc",
                       "en/guides/aml",
+                  "en/guides/trust-center-nda",
                       "en/guides/screenings",
                       "en/guides/qscore",
                       "en/guides/qscore-batch",
@@ -295,6 +296,7 @@
                     "pages": [
                       "es/guides/kyc",
                       "es/guides/aml",
+                  "es/guides/trust-center-nda",
                       "es/guides/screenings",
                       "es/guides/qscore",
                       "es/guides/qscore-batch",
@@ -435,6 +437,7 @@
                     "pages": [
                       "zh/guides/kyc",
                       "zh/guides/aml",
+                  "zh/guides/trust-center-nda",
                       "zh/guides/screenings",
                       "zh/guides/qscore",
                       "zh/guides/qscore-batch",
