@@ -666,3 +666,5 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 409 | `already_decided` | The signing link was already used or closed; do not resubmit it. |
 | 422 | `accept_required` | The signer must explicitly accept the agreement. |
 | 503 | `email_unavailable` | Email delivery is not configured; retry later. |
+| 422 | `invalid_document_ids` | One or more requested document IDs are unknown, or the list is explicitly empty; use IDs from the metadata list, or omit the field for all documents. |
+| 410 | `not_signed` | The envelope is not signed yet; sign it before downloading the signed copy. |

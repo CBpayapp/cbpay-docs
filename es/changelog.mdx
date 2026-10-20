@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="20 de octubre de 2026" description="v2.172 · 3 versiones">
+<Update label="20 de octubre de 2026" description="v2.173 · 4 versiones">
+### v2.173
+**Agregado**
+- La sala NDA del Trust Center ahora sirve 24 documentos: entraron 10 reportes PCI DSS/SAQ-A y escaneos ASV (Aperia, septiembre 2026). La solicitud acepta `document_ids` opcional (omitido = todos; vacío explícito se rechaza); descargas, estado y email de completitud respetan la selección.
+- La firma captura rúbrica dibujada o escrita, impresa en el NDA firmado y adjunta al email de completitud. El PDF brandeado pre-firma se ve y descarga desde la página (`GET /v1/trust/nda/sign/{token}/review.pdf`, copia firmada en `.../signed.pdf`).
 ### v2.172
 **Corregido**
 - Las lecturas de verificaciones migradas ahora devuelven los datos del caso vivo

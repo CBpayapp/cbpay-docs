@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-20 12:11 UTC",
-    "_content_sha256": "41f163b6bd0f2cf3d7b8451bd58ec1d3fe5711ad284f5dc7c95259174b12c83a"
+    "_generated_at": "2026-10-20 15:32 UTC",
+    "_content_sha256": "26ad6cb61a308aed141cf18a2a528ec3ef9b3d7baaba4414f46b018efbe0d325"
   },
   "auth": {
     "type": "bearer",
@@ -27952,10 +27952,10 @@
                 "nda-requests"
               ]
             },
-            "description": "Creates an external, tokenized NDA request. The same company and contact email while the request is pending return the existing request without creating a duplicate. The signing link is emailed and expires after 30 days. Requests remain unavailable until the NDA template has counsel approval.",
+            "description": "Creates an external, tokenized NDA request. The same company and contact email while the request is pending return the existing request without creating a duplicate. The signing link is emailed and expires after 30 days. Requests remain unavailable until the NDA template has counsel approval. Optional document_ids restricts the grant to the chosen catalog IDs (omitted means all; an explicitly empty list is rejected); replays keep the original selection.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company_name\": \"Acme Payments Ltd\",\n  \"contact_name\": \"Jordan Lee\",\n  \"contact_email\": \"compliance@acme.example\",\n  \"country\": \"US\",\n  \"purpose\": \"Evaluate compliance controls for a partnership\",\n  \"locale\": \"en\"\n}",
+              "raw": "{\n  \"company_name\": \"Acme Payments Ltd\",\n  \"contact_name\": \"Jordan Lee\",\n  \"contact_email\": \"compliance@acme.example\",\n  \"country\": \"US\",\n  \"purpose\": \"Evaluate compliance controls for a partnership\",\n  \"locale\": \"en\",\n  \"document_ids\": [\n    \"us-aml-program\",\n    \"pci-saqa\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -28079,7 +28079,7 @@
                 "nda-docs"
               ]
             },
-            "description": "Returns public metadata for the 14 currently available N2 documents (7 first-party compliance programs + 7 vendor audit reports received by GRUPO CB LLC). It never returns document bytes; download requires a valid post-signature token.",
+            "description": "Returns public metadata for the 24 currently available N2 documents (7 first-party compliance programs + 7 vendor audit reports received by GRUPO CB LLC + 10 PCI DSS and ASV reports). It never returns document bytes; download requires a valid post-signature token.",
             "auth": {
               "type": "noauth"
             }
@@ -28245,10 +28245,10 @@
                 }
               ]
             },
-            "description": "Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token.",
+            "description": "Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Compliance Officer\",\n  \"company_reg\": \"US-123456\",\n  \"company_address\": \"1 Main Street\",\n  \"Boston MA\": null,\n  \"accept\": true\n}",
+              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Compliance Officer\",\n  \"company_reg\": \"US-123456\",\n  \"company_address\": \"1 Main Street\",\n  \"Boston MA\": null,\n  \"accept\": true,\n  \"signature_png\": \"data:image/png;base64,<signature-png>\",\n  \"signature_mode\": \"drawn\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -28296,6 +28296,68 @@
               "body": "{\n  \"request_id\": \"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01\",\n  \"status\": \"signed\",\n  \"download_token\": \"<32-hex-token>\",\n  \"download_url\": \"https://www.cbpayapp.com/en/trust/nda?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01&token=<32-hex-token>\",\n  \"expires_at\": \"2031-10-18T20:00:00Z\"\n}"
             }
           ]
+        },
+        {
+          "name": "View the pre-signature branded NDA PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda/sign/:token/review.pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda",
+                "sign",
+                ":token",
+                "review.pdf"
+              ],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Renders the same branded pre-signature NDA PDF attached to the request email. Pending envelopes only; decided envelopes return an error and never another state's text.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Download the signed NDA PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda/sign/:token/signed.pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda",
+                "sign",
+                ":token",
+                "signed.pdf"
+              ],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Re-renders the signed NDA (sealed text plus the stored drawn signature) as an attachment. Signed envelopes only; the path token remains the envelope capability.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
         },
         {
           "name": "Download a gated Trust Center document",
