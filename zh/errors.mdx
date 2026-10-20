@@ -176,6 +176,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `verification_invalid` | 在需要第三方验证的场景引用了自身入驻的验证 |
 | 403 | `company_account_required` | 第三方验证（KYC/KYB 链接/提交）仅限企业账户 |
 | 409 | `already_verified` | 使用已通过验证的账户请求了入驻链接 |
+| 409 | `superseded` | 验证 ID 是冻结的迁移墓碑；读取内容来自活跃案件 | 不要在墓碑上作出决定、上传证据、创建活体链接、预签名/确认文档或 PATCH banking intent。读取 `migrated_to` 并操作活跃案件 |
 | 409 | `identity_locked` | 验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持 |
 | 409 | `no_screening` | 在没有先行筛查的情况下发起 AML 重新筛查/监控 |
 | 409 | `no_banking_customer` | 传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程 |

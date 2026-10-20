@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.170"
+  version: "2.172"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -9257,7 +9257,7 @@ paths:
       - KYC / KYB
       operationId: uploadKycDocument
       summary: Sube los bytes de un documento KYC (multipart nativo)
-      description: Paso 2 del flujo de documentos cuando el `shape` del presign es `multipart` (ruta API nativa). Recibe el archivo como multipart (`file` + `category`) y lo reenvía al core con la credencial de la org; el browser jamás toca el core directo. Usa el `upload_url` del presign tal cual. Máx 24 MiB (el core enforcea 15 MiB por archivo).
+      description: Paso 2 del flujo de documentos cuando el `shape` del presign es `multipart` (ruta API nativa). Recibe el archivo como multipart (`file` + `category`) y lo reenvía al core con la credencial de la org; el browser jamás toca el core directo. Usa el `upload_url` del presign tal cual. Máx 15 MiB por archivo (+64 KiB de overhead del envelope; el core enforcea 15 MiB por archivo).
       parameters:
       - name: submissionID
         in: path
@@ -9446,7 +9446,7 @@ paths:
       - KYC / KYB
       operationId: uploadKybDocument
       summary: Sube los bytes de un documento KYB (multipart nativo)
-      description: Paso 2 del flujo de documentos cuando el `shape` del presign es `multipart` (ruta API nativa). Recibe el archivo como multipart (`file` + `category`) y lo reenvía al core con la credencial de la org; el browser jamás toca el core directo. Usa el `upload_url` del presign tal cual. Máx 24 MiB (el core enforcea 15 MiB por archivo).
+      description: Paso 2 del flujo de documentos cuando el `shape` del presign es `multipart` (ruta API nativa). Recibe el archivo como multipart (`file` + `category`) y lo reenvía al core con la credencial de la org; el browser jamás toca el core directo. Usa el `upload_url` del presign tal cual. Máx 15 MiB por archivo (+64 KiB de overhead del envelope; el core enforcea 15 MiB por archivo).
       parameters:
       - name: submissionID
         in: path

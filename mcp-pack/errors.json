@@ -1,5 +1,5 @@
 {
-  "count": 354,
+  "count": 355,
   "errors": [
     {
       "category": {
@@ -1553,6 +1553,20 @@
         "en": "Onboarding link requested with an already-verified account",
         "es": "Pediste link de onboarding con la cuenta ya verificada",
         "zh": "使用已通过验证的账户请求了入驻链接"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "superseded",
+      "http": 409,
+      "meaning": {
+        "en": "The verification ID is a frozen migrated tombstone; its data is served from the live case — Fix: Do not decide, upload evidence, create liveness links, presign/confirm documents, or patch banking intent on the tombstone. Read the response's `migrated_to` ID and operate that live case instead",
+        "es": "El ID de verificación es una tumba migrada congelada; sus lecturas vienen del caso vivo — Fix: No decidas, subas evidencia, crees links de liveness ni hagas presign/confirm o PATCH de banking intent sobre la tumba. Lee `migrated_to` y opera el caso vivo",
+        "zh": "验证 ID 是冻结的迁移墓碑；读取内容来自活跃案件 — Fix: 不要在墓碑上作出决定、上传证据、创建活体链接、预签名/确认文档或 PATCH banking intent。读取 `migrated_to` 并操作活跃案件"
       }
     },
     {

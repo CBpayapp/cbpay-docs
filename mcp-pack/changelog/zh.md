@@ -5,10 +5,27 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.170 · 1 个版本 - 2026年10月20日
+## v2.172 · 3 个版本 - 2026年10月20日
+### v2.172
+**修复**
+- 迁移验证的读取现在返回活跃案件数据、`status: migrated`、迁移追踪字段
+  和 `migrated_to`；对冻结 ID 的写入返回 `409 superseded` 及活跃 ID。
+
+### v2.171
+**变更**
+- 验证文档上传（`POST /v1/kyc|kyb/submissions/{id}/documents/upload`）现将单个文件限制为 15 MiB（+64 KiB 信封开销），与核心限制一致；`file_too_large` 消息为 "file exceeds 15 MiB"。上传经代理流式转发，不再将文件载入内存。
+
+**新增**
+- 英国 KYB 公司编号现于企业表单中按形状校验并标准化（Companies House 8 字符格式，如 `12345678`、`SC123456`）。
+
+**修复**
+- 手写签名（typed）超过 120 个字符的 `typed_name` 现以 `422 invalid_signer` 拒绝（与 `signer_name` 上限一致）。
+- 以不同签名模式（drawn vs typed）重新签署声明现会创建新版本，而非返回上一版本；签名模式已纳入已签署文档哈希。
+
 ### v2.170
 **变更**
 - Trust Center NDA 文件室现有 14 份文件：加拿大 FINTRAC 与 PSP 注册已完全公开（可直接从网站下载），另有 7 份供应商审计报告（Sophos C5、SOC 2、PCI AOC、医疗风险分析；Cloudflare C5、SOC 2、PCI AOC）加入文件室。指南：[Trust Center 与 NDA 文件室](https://docs.cbpayapp.com/zh/guides/trust-center-nda)。
+
 ## v2.169 · 3 个版本 - 2026年10月19日
 ### v2.169
 **变更**

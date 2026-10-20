@@ -297,7 +297,7 @@ The detail adds `pending_documents`, `rejection_reason`,
 | `escalated` | Escalated to senior review |
 | `approved` / `approved_partial` | Approved (final) |
 | `rejected` | Rejected (final) |
-
+A migrated legacy submission is a frozen **tombstone**: reads return live data with `status: "migrated"`, `migrated_from`, `migrated_to` and `migrated_from_core`; approve, reject, request-changes, override, reinvite, document presign/upload/confirm, liveness links and `PATCH` banking intent return `409 superseded` with `this case was migrated; decide on <id-vivo>`. Operate `migrated_to`; notes and assignments fall through to the live case.
 ### Documents through the API
 
 Documents are optional at creation (if missing, compliance will request

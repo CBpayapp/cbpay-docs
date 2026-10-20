@@ -298,7 +298,7 @@ El detalle agrega `pending_documents`, `rejection_reason`,
 | `escalated` | Caso escalado a revisión senior |
 | `approved` / `approved_partial` | Aprobada (final) |
 | `rejected` | Rechazada (final) |
-
+Una submission legacy migrada es una **tumba** congelada: leerla devuelve datos vivos con `status: "migrated"`, `migrated_from`, `migrated_to` y `migrated_from_core`; approve, reject, request-changes, override, reinvite, presign/upload/confirm, liveness link y `PATCH` de banking intent responden `409 superseded` con `this case was migrated; decide on <id-vivo>`. Opera `migrated_to`; notas y asignaciones caen en el caso vivo.
 ### Documentos por API
 
 Los documentos son opcionales al crear (si faltan, compliance los pedirá
