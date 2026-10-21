@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-20 18:58 UTC",
-    "_content_sha256": "c5f1a69b27e95d4ace71a3b456a4cdef234c9d11af10c0749552f7e7afbbdaf8"
+    "_generated_at": "2026-10-21 02:12 UTC",
+    "_content_sha256": "91d972097f0d37c812ce47412ec9a8d5d7a2f25d8aae60808fa51ad3f6db8e9c"
   },
   "auth": {
     "type": "bearer",
@@ -27932,6 +27932,54 @@
       "name": "Trust Center",
       "item": [
         {
+          "name": "List my Trust Center requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda-requests"
+              ]
+            },
+            "description": "Lists the calling account's NDA envelopes, newest first (cap 20)."
+          },
+          "response": [
+            {
+              "name": "200 Own envelopes.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/trust/nda-requests",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "trust",
+                    "nda-requests"
+                  ]
+                }
+              },
+              "status": "Own envelopes.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"requests\": [\n    {\n      \"request_id\": \"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01\",\n      \"status\": \"pending_signature\",\n      \"expires_at\": \"2026-11-18T20:00:00Z\",\n      \"documents\": []\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
           "name": "Request access to gated Trust Center documents",
           "request": {
             "method": "POST",
@@ -27952,7 +28000,7 @@
                 "nda-requests"
               ]
             },
-            "description": "Creates an external, tokenized NDA request. The same company and contact email while the request is pending return the existing request without creating a duplicate. The signing link is emailed and expires after 30 days. Requests remain unavailable until the NDA template has counsel approval. Optional document_ids restricts the grant to the chosen catalog IDs (omitted means all; an explicitly empty list is rejected); replays keep the original selection.",
+            "description": "Creates an NDA request bound to the calling verified account. The same account while a request is pending returns the existing request without creating a duplicate. Signing happens in the portal with a member session; the envelope expires after 30 days unsigned. Requests remain unavailable until the NDA template has counsel approval. Optional document_ids restricts the grant to the chosen catalog IDs (omitted means all; an explicitly empty list is rejected); replays keep the original selection.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"company_name\": \"Acme Payments Ltd\",\n  \"contact_name\": \"Jordan Lee\",\n  \"contact_email\": \"compliance@acme.example\",\n  \"country\": \"US\",\n  \"purpose\": \"Evaluate compliance controls for a partnership\",\n  \"locale\": \"en\",\n  \"document_ids\": [\n    \"us-aml-program\",\n    \"pci-saqa\"\n  ]\n}",
@@ -27961,9 +28009,6 @@
                   "language": "json"
                 }
               }
-            },
-            "auth": {
-              "type": "noauth"
             }
           },
           "response": [
@@ -27997,6 +28042,233 @@
           ]
         },
         {
+          "name": "Read one of my Trust Center requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda-requests/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda-requests",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Reads one own envelope (404 when foreign or unknown). Same shape as the legacy status read."
+          },
+          "response": [
+            {
+              "name": "200 Envelope status and granted documents.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/trust/nda-requests/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "trust",
+                    "nda-requests",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Envelope status and granted documents.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"request_id\": \"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01\",\n  \"status\": \"signed\",\n  \"signed_at\": \"2026-10-19T20:00:00Z\",\n  \"expires_at\": \"2031-10-18T20:00:00Z\",\n  \"documents\": [\n    \"us-aml-program\",\n    \"pci-saqa\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Sign the Trust Center NDA in the portal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda-requests/:id/sign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda-requests",
+                ":id",
+                "sign"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Signs an own pending envelope with a logged-in member session. Company registration comes from the verified account; a drawn or typed signature PNG is required and is printed on the signed NDA. Atomic claim, so a second submit cannot re-issue anything.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Compliance Officer\",\n  \"company_address\": \"1 Main Street\",\n  \"Boston MA\": null,\n  \"accept\": true,\n  \"signature_png\": \"data:image/png;base64,<signature-png>\",\n  \"signature_mode\": \"drawn\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 NDA signed; portal download link issued.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/trust/nda-requests/:id/sign",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "trust",
+                    "nda-requests",
+                    ":id",
+                    "sign"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "NDA signed; portal download link issued.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"request_id\": \"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01\",\n  \"status\": \"signed\",\n  \"download_token\": \"<32-hex-token>\",\n  \"download_url\": \"https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01\",\n  \"expires_at\": \"2031-10-18T20:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download a granted Trust Center document",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda-requests/:id/docs/:docID/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda-requests",
+                ":id",
+                "docs",
+                ":docID",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                },
+                {
+                  "key": "docID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Serves one granted PDF to the owning account. Every delivery is audit-recorded."
+          }
+        },
+        {
+          "name": "View my pre-signature branded NDA PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda-requests/:id/review.pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda-requests",
+                ":id",
+                "review.pdf"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Renders the branded pre-signature NDA PDF of an own pending envelope (inline)."
+          }
+        },
+        {
+          "name": "Download my signed NDA PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trust/nda-requests/:id/signed.pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "trust",
+                "nda-requests",
+                ":id",
+                "signed.pdf"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Re-renders the signed NDA of an own envelope (sealed text plus the stored signature) as an attachment."
+          }
+        },
+        {
           "name": "Reissue a Trust Center signing link",
           "request": {
             "method": "POST",
@@ -28020,7 +28292,7 @@
                 }
               ]
             },
-            "description": "Reissues a fresh signing link for a pending request. The previous link is invalidated. Unknown, expired or already-decided IDs return the same 202 response to prevent enumeration.",
+            "description": "[Legacy token flow] Reissues a fresh signing link for a pending request. The previous link is invalidated. Unknown, expired or already-decided IDs return the same 202 response to prevent enumeration.",
             "auth": {
               "type": "noauth"
             }
@@ -28245,7 +28517,7 @@
                 }
               ]
             },
-            "description": "Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA.",
+            "description": "[Legacy token flow] Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Compliance Officer\",\n  \"company_reg\": \"US-123456\",\n  \"company_address\": \"1 Main Street\",\n  \"Boston MA\": null,\n  \"accept\": true,\n  \"signature_png\": \"data:image/png;base64,<signature-png>\",\n  \"signature_mode\": \"drawn\"\n}",

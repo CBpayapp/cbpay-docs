@@ -4,7 +4,10 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月20日" description="v2.174 · 5 个版本">
+<Update label="2026年10月20日" description="v2.175 · 6 个版本">
+### v2.175
+**变更**
+- **Breaking：**Trust Center NDA 文件室现要求 CBPay 账户通过 KYC/KYB。`POST /v1/trust/nda-requests` 须使用已登录成员会话（API 密钥不能申请或签署）；身份字段须与已验证账户一致。新增成员端点：列出/读取我的申请、门户内签署、按申请下载、预签署/已签署 PDF。匿名令牌流程已对新信封关闭；既有已签署授权全部撤销。
 ### v2.174
 **新增**
 - Trust Center NDA 文件室现有 31 份文件：新增 7 份供应商证书（Sophos ISO 27001、TX-RAMP Cloud/MDR、NIST/CIS/PCI 对照卡；Cloudflare ISO 27001）。所有供应商 PDF 均可经 Trust Center 在 NDA 下申请。

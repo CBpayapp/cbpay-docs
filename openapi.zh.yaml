@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.174"
+  version: "2.175"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -23319,12 +23319,25 @@ paths:
               example: {intents: []}
 
   /v1/trust/nda-requests:
+    get:
+      security: [{bearerAuth: []}]
+      tags: [Trust Center]
+      operationId: listTrustNDARequests
+      summary: 列出我的 Trust Center 申请
+      description: Lists the calling account's NDA envelopes, newest first (cap 20).
+      responses:
+        '200':
+          description: Own envelopes.
+          content:
+            application/json:
+              example: {requests: [{request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: pending_signature, expires_at: '2026-11-18T20:00:00Z', documents: []}]}
+        '401': {description: Missing or invalid credentials.}
     post:
-      security: []
+      security: [{bearerAuth: []}]
       tags: [Trust Center]
       operationId: createTrustNDARequest
       summary: 申请访问 Trust Center 受限文档
-      description: Creates an external, tokenized NDA request. The same company and contact email while the request is pending return the existing request without creating a duplicate. The signing link is emailed and expires after 30 days. Requests remain unavailable until the NDA template has counsel approval. Optional document_ids restricts the grant to the chosen catalog IDs (omitted means all; an explicitly empty list is rejected); replays keep the original selection.
+      description: Creates an NDA request bound to the calling verified account. The same account while a request is pending returns the existing request without creating a duplicate. Signing happens in the portal with a member session; the envelope expires after 30 days unsigned. Requests remain unavailable until the NDA template has counsel approval. Optional document_ids restricts the grant to the chosen catalog IDs (omitted means all; an explicitly empty list is rejected); replays keep the original selection.
       requestBody:
         required: true
         content:
@@ -23333,9 +23346,9 @@ paths:
               type: object
               required: [company_name, contact_name, contact_email]
               properties:
-                company_name: {type: string, minLength: 2, maxLength: 200}
+                company_name: {type: string, description: 'Must match the verified account; echoed by the portal.'}
                 contact_name: {type: string, minLength: 2, maxLength: 120}
-                contact_email: {type: string, format: email}
+                contact_email: {type: string, format: email, description: 'Must match the logged-in member.'}
                 country: {type: string, maxLength: 60}
                 purpose: {type: string, maxLength: 500}
                 locale: {type: string, enum: [es, en, zh], default: es}
@@ -23369,13 +23382,118 @@ paths:
           content:
             application/json:
               example: {error: counsel_pending, message: the NDA template is pending legal approval; requests are temporarily unavailable}
+  /v1/trust/nda-requests/{id}:
+    get:
+      security: [{bearerAuth: []}]
+      tags: [Trust Center]
+      operationId: getTrustNDARequest
+      summary: 读取我的一份 Trust Center 申请
+      description: Reads one own envelope (404 when foreign or unknown). Same shape as the legacy status read.
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Envelope status and granted documents.
+          content:
+            application/json:
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, signed_at: '2026-10-19T20:00:00Z', expires_at: '2031-10-18T20:00:00Z', documents: [us-aml-program, pci-saqa]}
+        '401': {description: Missing or invalid credentials.}
+        '404': {description: Unknown or foreign request.}
+  /v1/trust/nda-requests/{id}/sign:
+    post:
+      security: [{bearerAuth: []}]
+      tags: [Trust Center]
+      operationId: signTrustNDAAccount
+      summary: 在门户中签署 Trust Center NDA
+      description: Signs an own pending envelope with a logged-in member session. Company registration comes from the verified account; a drawn or typed signature PNG is required and is printed on the signed NDA. Atomic claim, so a second submit cannot re-issue anything.
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [signer_name, company_address, accept, signature_png]
+              properties:
+                signer_name: {type: string, minLength: 2, maxLength: 120}
+                signer_title: {type: string, maxLength: 120}
+                company_address: {type: string, minLength: 5, maxLength: 300}
+                accept: {type: boolean, const: true}
+                signature_png: {type: string, description: 'Drawn signature PNG, base64 with or without the data-URL prefix.'}
+                signature_mode: {type: string, enum: [drawn, typed], default: drawn}
+                typed_name: {type: string, maxLength: 120, description: 'Typed mode only; must exactly match signer_name.'}
+            example: {signer_name: Jordan Lee, signer_title: Chief Compliance Officer, company_address: 1 Main Street, Boston MA, accept: true, signature_png: 'data:image/png;base64,<signature-png>', signature_mode: drawn}
+      responses:
+        '200':
+          description: NDA signed; portal download link issued.
+          content:
+            application/json:
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, download_token: '<32-hex-token>', download_url: 'https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01', expires_at: '2031-10-18T20:00:00Z'}
+        '401': {description: Missing or invalid credentials.}
+        '403': {description: member_required (human session) or kyc_not_approved.}
+        '404': {description: Unknown or foreign request.}
+        '409': {description: Envelope already decided.}
+        '422': {description: 'Acceptance, signer, address or signature fields are invalid.'}
+  /v1/trust/nda-requests/{id}/docs/{docID}/download:
+    get:
+      security: [{bearerAuth: []}]
+      tags: [Trust Center]
+      operationId: downloadTrustNDADocumentAccount
+      summary: 下载已授予的 Trust Center 文件
+      description: Serves one granted PDF to the owning account. Every delivery is audit-recorded.
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: docID, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Granted PDF document.
+          headers: {X-Checksum-Sha256: {schema: {type: string}}, Cache-Control: {schema: {type: string, example: no-store}}}
+          content: {application/pdf: {schema: {type: string, format: binary}}}
+        '401': {description: Missing or invalid credentials.}
+        '404': {description: 'Unknown or foreign request, or document outside the grant.'}
+        '410': {description: Access revoked or expired.}
+  /v1/trust/nda-requests/{id}/review.pdf:
+    get:
+      security: [{bearerAuth: []}]
+      tags: [Trust Center]
+      operationId: getTrustNDAReviewPDFAccount
+      summary: 查看我的签署前品牌 NDA PDF
+      description: Renders the branded pre-signature NDA PDF of an own pending envelope (inline).
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Branded pre-signature NDA PDF (inline).
+          headers: {X-Checksum-Sha256: {schema: {type: string}}, Cache-Control: {schema: {type: string, example: no-store}}}
+          content: {application/pdf: {schema: {type: string, format: binary}}}
+        '401': {description: Missing or invalid credentials.}
+        '404': {description: Unknown or foreign request.}
+        '410': {description: Envelope already decided.}
+  /v1/trust/nda-requests/{id}/signed.pdf:
+    get:
+      security: [{bearerAuth: []}]
+      tags: [Trust Center]
+      operationId: getTrustNDASignedPDFAccount
+      summary: 下载我已签署的 NDA PDF
+      description: Re-renders the signed NDA of an own envelope (sealed text plus the stored signature) as an attachment.
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Signed NDA PDF with the drawn signature.
+          headers: {X-Checksum-Sha256: {schema: {type: string}}, Cache-Control: {schema: {type: string, example: no-store}}}
+          content: {application/pdf: {schema: {type: string, format: binary}}}
+        '401': {description: Missing or invalid credentials.}
+        '404': {description: Unknown or foreign request.}
+        '410': {description: Envelope is not signed.}
   /v1/trust/nda-requests/{id}/reissue:
     post:
       security: []
       tags: [Trust Center]
       operationId: reissueTrustNDASigningLink
       summary: 重新发送 Trust Center 签署链接
-      description: Reissues a fresh signing link for a pending request. The previous link is invalidated. Unknown, expired or already-decided IDs return the same 202 response to prevent enumeration.
+      description: "[Legacy token flow] Reissues a fresh signing link for a pending request. The previous link is invalidated. Unknown, expired or already-decided IDs return the same 202 response to prevent enumeration."
       parameters:
       - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
       responses:
@@ -23443,7 +23561,7 @@ paths:
       tags: [Trust Center]
       operationId: signTrustNDA
       summary: 签署 Trust Center NDA
-      description: Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA.
+      description: "[Legacy token flow] Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA."
       parameters:
       - {name: token, in: path, required: true, schema: {type: string, minLength: 32, maxLength: 32}}
       requestBody:
