@@ -1,5 +1,5 @@
 {
-  "count": 357,
+  "count": 360,
   "errors": [
     {
       "category": {
@@ -4987,6 +4987,48 @@
         "en": "The envelope is not signed yet; sign it before downloading the signed copy.",
         "es": "El sobre aún no está firmado; fírmalo antes de descargar la copia firmada.",
         "zh": "信封尚未签署；请先签署再下载已签署副本。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "kyc_not_approved",
+      "http": 403,
+      "meaning": {
+        "en": "The account must complete identity verification (KYC/KYB) before requesting Trust Center access.",
+        "es": "La cuenta debe completar verificación de identidad (KYC/KYB) antes de pedir acceso al Trust Center.",
+        "zh": "账户须先完成身份验证（KYC/KYB）方可申请 Trust Center 准入。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "member_required",
+      "http": 403,
+      "meaning": {
+        "en": "Requesting or signing requires a logged-in member session; API keys cannot sign.",
+        "es": "Pedir o firmar exige sesión de miembro logueado; las API keys no firman.",
+        "zh": "申请或签署须使用已登录成员会话；API 密钥不能签署。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "account_identity_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "An echoed identity field differs from the verified account; send the verified values.",
+        "es": "Un campo de identidad difiere de la cuenta verificada; envía los valores verificados.",
+        "zh": "回显的身份字段与已验证账户不符；请发送已验证值。"
       }
     }
   ]

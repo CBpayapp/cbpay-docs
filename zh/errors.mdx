@@ -645,3 +645,6 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 503 | `email_unavailable` | 邮件投递未配置；请稍后重试。 |
 | 422 | `invalid_document_ids` | 请求的一个或多个文件 ID 未知，或列表显式为空；请使用元数据列表中的 ID，或省略该字段以获取全部。 |
 | 410 | `not_signed` | 信封尚未签署；请先签署再下载已签署副本。 |
+| 403 | `kyc_not_approved` | 账户须先完成身份验证（KYC/KYB）方可申请 Trust Center 准入。 |
+| 403 | `member_required` | 申请或签署须使用已登录成员会话；API 密钥不能签署。 |
+| 422 | `account_identity_mismatch` | 回显的身份字段与已验证账户不符；请发送已验证值。 |

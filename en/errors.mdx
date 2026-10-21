@@ -672,3 +672,6 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 503 | `email_unavailable` | Email delivery is not configured; retry later. |
 | 422 | `invalid_document_ids` | One or more requested document IDs are unknown, or the list is explicitly empty; use IDs from the metadata list, or omit the field for all documents. |
 | 410 | `not_signed` | The envelope is not signed yet; sign it before downloading the signed copy. |
+| 403 | `kyc_not_approved` | The account must complete identity verification (KYC/KYB) before requesting Trust Center access. |
+| 403 | `member_required` | Requesting or signing requires a logged-in member session; API keys cannot sign. |
+| 422 | `account_identity_mismatch` | An echoed identity field differs from the verified account; send the verified values. |

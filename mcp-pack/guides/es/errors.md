@@ -663,3 +663,6 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 503 | `email_unavailable` | El correo no está configurado; reintenta más tarde. |
 | 422 | `invalid_document_ids` | Uno o más IDs pedidos son desconocidos, o la lista viene explícitamente vacía; usa IDs de la lista de metadatos u omite el campo para todos. |
 | 410 | `not_signed` | El sobre aún no está firmado; fírmalo antes de descargar la copia firmada. |
+| 403 | `kyc_not_approved` | La cuenta debe completar verificación de identidad (KYC/KYB) antes de pedir acceso al Trust Center. |
+| 403 | `member_required` | Pedir o firmar exige sesión de miembro logueado; las API keys no firman. |
+| 422 | `account_identity_mismatch` | Un campo de identidad difiere de la cuenta verificada; envía los valores verificados. |

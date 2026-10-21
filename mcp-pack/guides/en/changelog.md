@@ -5,7 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.174 · 5 versions - October 20, 2026
+## v2.175 · 6 versions - October 20, 2026
+### v2.175
+**Changed**
+- **Breaking:** the Trust Center NDA room now requires a CBPay account with approved KYC/KYB. `POST /v1/trust/nda-requests` requires a logged-in member session (API keys cannot request or sign); identity fields must match the verified account. New member endpoints: list/get my requests, in-portal signing with drawn signature, per-request downloads, and review/signed PDFs. The anonymous token flow is closed for new envelopes; existing signed entitlements were revoked.
 ### v2.174
 **Added**
 - Trust Center NDA room now serves 31 documents: 7 vendor certificates joined (Sophos ISO 27001, TX-RAMP Cloud/MDR, NIST/CIS/PCI cards; Cloudflare ISO 27001). Every vendor PDF is now requestable under NDA from the Trust Center.
