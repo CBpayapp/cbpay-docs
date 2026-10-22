@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.178"
+  version: "2.179"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -4974,7 +4974,7 @@ paths:
       operationId: createPayin
       summary: 创建 payin(充值收款)
       description: '需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 创建一笔法币充值。使用 `method: "qr"`(默认)会通过处理方生成主动 QR 收款——在玻利维亚为本地互通 QR,在巴西为动态 PIX QR,其 `charge`
-        携带 QR PNG 图片（巴西不返回可复制粘贴的 EMV 载荷）。使用 `method: "bank_transfer"` 会预告存款,响应携带付款人必须附上的参考号,以便到账转账被自动匹配入账——一个
+        携带 QR PNG 图片和付款人看到的 BRL 转换（巴西不返回可复制粘贴的 EMV 载荷）。使用 `method: "bank_transfer"` 会预告存款,响应携带付款人必须附上的参考号,以便到账转账被自动匹配入账——一个
         12 位字母数字短码,适配任何银行附言字段(部分通道上限 20 个字符且不允许特殊字符)。使用 `method: "fintoc"`(智利)响应携带托管 `payment_url`:付款人打开后可从任意智利银行或钱包转账;存款会被自动检测、校验并入账。使用
         `method: "card"` 响应携带一个托管 3-D Secure 银行卡收银台的 `payment_url`,页面带有您组织的品牌 —— 支持玻利维亚(BOB)与以美元结算的国际银行卡(`country: "US"`;任意国家发行的 Visa、Mastercard、American Express、Discover 与 Diners);银行卡数据绝不经过您的集成。使用
         `method: "checkout"` 响应携带一个公开的 `checkout_url` —— 以您选择的虚拟余额计价的通用收款链接(`settlement_asset`:USD、USDT、USDC、
@@ -5027,7 +5027,11 @@ paths:
                   description: 传递给核心的可选渠道提示。
                 expires_in:
                   type: integer
-                  description: 收款过期时间(秒)。对 `checkout` 取值 600 到 604800(10 分钟到 7 天;默认 24 小时)。
+                  description: >-
+                    收款过期时间(秒)。对 `method: "qr"` 请发送整数秒数;服务器选择已配置的 QR 轨道。
+                    legacy QR 合同的有效上限为 86399 秒,7 天 QR 轨道的有效上限为 604800 秒。
+                    超过所选轨道上限的值会被截断,不会被拒绝。对 `checkout` 取值 600 到 604800
+                    (10 分钟到 7 天;默认 24 小时)。
                 method:
                   type: string
                   enum:
@@ -5144,7 +5148,7 @@ paths:
                   type: string
                   maxLength: 40
                   description: >-
-                    付款人身份。`BR`/`BRL` 的 `qr` 和 `pix`（巴西托管跳转）必填；在预告转账中为可选的付款人税号或身份证件号
+                    付款人身份。`BR`/`BOB` 的 `qr` 和 `pix`（巴西托管跳转）必填；在预告转账中为可选的付款人税号或身份证件号
                     （至少 5 个字符，其中至少一位为数字）。省略时使用账户持有人已验证的税号，
                     因此即使付款人忘记填写参考号，本人存款也能被识别。第三方付款时请填写。
                 payer_phone:
@@ -5155,7 +5159,7 @@ paths:
                   type: string
                   format: email
                   maxLength: 120
-                  description: 支持付款人身份的 QR payin 可选付款人邮箱，包括 BR/BRL。
+                  description: 支持付款人身份的 QR payin 可选付款人邮箱，包括 BR/BOB。
                 payer_account:
                   type: string
                   maxLength: 40
@@ -5174,12 +5178,12 @@ paths:
                   description: 应用充值
                   expires_in: 3600
               br_pix_qr:
-                summary: 巴西 — 动态 PIX QR(BRL)
+                summary: 巴西 — 动态 PIX QR（BOB charge，BRL 付款人转换）
                 value:
                   country: BR
-                  currency: BRL
+                  currency: BOB
                   method: qr
-                  amount: '120.00'
+                  amount: '1.00'
                   description: 订单 7719
                   payer_document: '52998224725'
                   payer_phone: '+5511999990000'
@@ -5300,6 +5304,22 @@ paths:
                       our_reference: '77849505'
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
+                br_qr:
+                  summary: '巴西 QR charge（方式: qr，BOB）'
+                  value:
+                    payin_id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+                    status: pending
+                    charge:
+                      charge_id: 8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401
+                      our_reference: '77849505'
+                      qr_image: data:image/png;base64,iVBORw0KGgo…
+                      qr_image_url: https://cdn.example.test/qr/77849505.png
+                      conversion:
+                        amount: '0.48'
+                        currency: BRL
+                        rate: '0.48'
+                      expires_at: '2026-10-22T12:57:14.937Z'
+                      status: pending
                 bank_transfer:
                   summary: 预告充值(方式:bank_transfer)
                   value:
@@ -25610,6 +25630,18 @@ components:
           type: string
         currency:
           type: string
+        holder_name:
+          type: string
+          description: 收款账户持有人姓名。
+          example: CBPay Operations SpA
+        holder_tax_id:
+          type: string
+          description: 持有人的税务标识，例如智利 RUT。
+          example: 76543210-8
+        holder_account_type:
+          type: string
+          description: 转账时使用的账户类型。
+          example: checking
         method:
           type: string
         purpose:

@@ -40,6 +40,16 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
+### QR expiration limits
+
+`expires_in` is an integer number of seconds for platform QR payins. The
+server selects the configured rail; the integrator cannot select it. The
+legacy QR contract has an effective maximum of `86399` seconds (23:59:59).
+The 7-day QR rail has an effective maximum of `604800` seconds, with
+`86400` seconds (24 hours) as its default when the value is missing or
+non-positive. Values above the selected rail maximum are capped, not
+rejected. For the 7-day rail, use at least `120` seconds as an operational minimum.
+
 Response `201`:
 
 ```json
@@ -59,11 +69,12 @@ Display the QR payload or the `qr_image_url` returned by the API. When the
 customer pays, the account is credited automatically. Read the current status
 with `GET /v1/payins/{payinID}`.
 
-## Brazil: PIX QR
+## Brazil: PIX QR in BOB
 
-For `country: "BR"`, `currency: "BRL"` and `method: "qr"`, the payer's CPF is
-required. `payer_phone` and `payer_email` are optional and are forwarded when
-provided. The API validates this locally before creating the charge:
+For `country: "BR"`, `currency: "BOB"` and `method: "qr"`, the charge is
+denominated in BOB. The payer pays in BRL through the rail's conversion.
+The payer's CPF is required; `payer_phone` and `payer_email` are optional and
+are forwarded when provided:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -71,21 +82,20 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Content-Type: application/json" \
   -d '{
     "country": "BR",
-    "currency": "BRL",
+    "currency": "BOB",
     "method": "qr",
-    "amount": "120.00",
+    "amount": "1.00",
     "description": "Order 7719",
     "payer_document": "52998224725",
     "payer_phone": "+5511999990000",
     "payer_email": "payer@example.test",
-    "idempotency_key": "qr-br-120-20261022-001"
+    "idempotency_key": "qr-br-bob-20261022-001"
   }'
 ```
 
-The response is `201` with `status: "pending"` and the QR image fields. For
-Brazil, the rail contract provides a PNG image, not an EMV copy-and-paste
-payload. The core sends the default `23:59:59` TTL when creating the charge,
-and the response includes the resulting expiration:
+The response is `201` with `status: "pending"`, the QR image fields, the
+conversion shown to the payer, and the rail expiration. Brazil's QR contract
+provides a PNG image, not an EMV copy-and-paste payload:
 
 ```json
 {
@@ -96,13 +106,19 @@ and the response includes the resulting expiration:
     "our_reference": "77849505",
     "qr_image": "<base64 PNG>",
     "qr_image_url": "https://cdn.example.test/qr/77849505.png",
-    "expires_at": "2026-10-22T23:59:59-03:00",
+    "conversion": {
+      "amount": "0.48",
+      "currency": "BRL",
+      "rate": "0.48"
+    },
+    "expires_at": "2026-10-22T12:57:14.937Z",
     "status": "pending"
   }
 }
 ```
 
-The checkout-link quote marks this corridor with `payer_required: true`.
+The checkout-link quote marks this `BR`/`BOB` corridor with
+`payer_required: true`.
 When a payer opens a hosted link, the server-driven page asks for the CPF
 before materializing the charge. Do not bypass that form by creating a second
 charge.
@@ -137,7 +153,7 @@ Never retry a possibly submitted payment with a new idempotency key.
 
 | HTTP | Code | What to do |
 | --- | --- | --- |
-| 400 | `invalid_request` | Include `payer_document` for a BR/BRL QR payin. |
+| 400 | `invalid_request` | Include `payer_document` for a BR/BOB QR payin. |
 | 422 | `provider_rejected` | The payment rail rejected the charge, including a missing CPF at the adapter boundary; correct the payer data using the returned detail and do not blind-retry. |
 
 ## Idempotent retries
@@ -213,9 +229,19 @@ Yes. The description is display text and is not part of the replay identity.
 Retry with the same idempotency key, then read the returned `payin_id` with
 `GET /v1/payins/{payinID}`. Do not create a new key for the same operation.
 #### Is a CPF required for every QR payin?
-Only for Brazil (`BR`/`BRL`/`qr`). Other QR corridors keep their own payer
+Only for Brazil (`BR`/`BOB`/`qr`). Other QR corridors keep their own payer
 requirements.
+#### How does the Brazil QR amount work?
+The charge amount is in BOB. The response's `conversion` block shows the BRL
+amount and rate the payer sees; for example, `1.00` BOB can convert to
+`0.48` BRL at rate `0.48`.
 #### When can I treat a Brazil QR payin as paid?
 Only after the API status is `credited` or the corresponding verified webhook
 is received. A QR being generated, scanned or locally expired is not proof of
 settlement.
+#### What is the maximum expires_in for a BO/BOB QR payin in production?
+For the platform API, the maximum effective value is `604800` seconds (7
+days) when the server selects the 7-day QR rail. The legacy QR rail
+has an effective maximum of `86399` seconds (23:59:59). Values above the
+selected maximum are capped, not rejected; the integrator does not choose the
+rail. Use at least `120` seconds for the 7-day rail.

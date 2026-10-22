@@ -40,6 +40,14 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
+### QR 过期时间限制
+
+平台 QR payin 的 `expires_in` 是以秒为单位的整数。服务器选择已配置的
+QR 轨道，集成方不能选择轨道。legacy QR 合同的有效上限为 `86399` 秒
+（23:59:59）。7 天 QR 轨道的有效上限为 `604800` 秒（7 天）；当值缺失
+或不为正数时，默认值为 `86400` 秒（24 小时）。超过所选轨道上限的值会
+被截断，不会被拒绝。对于 7 天轨道，建议至少使用 `120` 秒。
+
 响应 `201`：
 
 ```json
@@ -58,21 +66,21 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 向客户展示 QR 内容或 API 返回的 `qr_image_url`。客户付款后，账户会自动
 入账。使用 `GET /v1/payins/{payinID}` 查询当前状态。
 
-## 巴西：PIX QR
+## 巴西：BOB PIX QR
 
-对于 `country: "BR"`、`currency: "BRL"` 和 `method: "qr"`，付款人的 CPF
-是必填项。`payer_phone` 与 `payer_email` 为可选字段，提供时会被转发。
-平台会在创建 charge 前本地校验 CPF：
+对于 `country: "BR"`、`currency: "BOB"` 和 `method: "qr"`，charge 以 BOB
+计价，付款人通过通道转换以 BRL 支付。付款人的 CPF 是必填项；
+`payer_phone` 与 `payer_email` 为可选字段：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","idempotency_key":"qr-br-120-20261022-001"}'
+  -d '{"country":"BR","currency":"BOB","method":"qr","amount":"1.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","idempotency_key":"qr-br-bob-20261022-001"}'
 ```
 
-响应为 `201`，状态为 `pending`，并包含 QR 图像字段。巴西通道合同只
-提供 PNG 图像，不提供可复制粘贴的 EMV payload。core 创建 charge 时发送
-默认 TTL `23:59:59`，响应包含最终过期时间：
+响应为 `201`，状态为 `pending`，并包含 QR 图像字段、付款人看到的转换
+和通道过期时间。巴西通道合同只提供 PNG 图像，不提供可复制粘贴的 EMV
+payload：
 
 ```json
 {
@@ -83,13 +91,18 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "our_reference": "77849505",
     "qr_image": "<base64 PNG>",
     "qr_image_url": "https://cdn.example.test/qr/77849505.png",
-    "expires_at": "2026-10-22T23:59:59-03:00",
+    "conversion": {
+      "amount": "0.48",
+      "currency": "BRL",
+      "rate": "0.48"
+    },
+    "expires_at": "2026-10-22T12:57:14.937Z",
     "status": "pending"
   }
 }
 ```
 
-该 corridor 的 checkout link quote 会返回 `payer_required: true`。托管页面
+该 `BR`/`BOB` corridor 的 checkout link quote 会返回 `payer_required: true`。托管页面
 会在 materialize charge 前要求付款人填写 CPF。
 
 ### 确认与对账
@@ -107,7 +120,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 
 | HTTP | Code | 处理方式 |
 | --- | --- | --- |
-| 400 | `invalid_request` | 为 BR/BRL QR payin 提供 `payer_document`。 |
+| 400 | `invalid_request` | 为 BR/BOB QR payin 提供 `payer_document`。 |
 | 422 | `provider_rejected` | 付款轨道拒绝了 charge，包括 adapter 边界缺少 CPF；根据 `detail` 修正数据，不要盲目重试。 |
 
 ## 幂等重试
@@ -184,11 +197,23 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 </Accordion>
 
 <Accordion title="所有 QR payin 都需要 CPF 吗？">
-只有巴西（`BR`/`BRL`/`qr`）需要。其他 QR corridor 保持各自的付款人要求。
+只有巴西（`BR`/`BOB`/`qr`）需要。其他 QR corridor 保持各自的付款人要求。
+</Accordion>
+
+<Accordion title="巴西 QR 的金额如何工作？">
+charge 以 BOB 计价。`conversion` 块显示付款人看到的 BRL 金额和汇率；
+例如 `1.00` BOB 可以按 `0.48` 的汇率转换为 `0.48` BRL。
 </Accordion>
 
 <Accordion title="什么时候可以把巴西 QR payin 当作已支付？">
 只有在 API 返回已验证的 `credited` 状态或收到对应 webhook 后才可以。
 生成或扫描 QR 本身不是结算证明。
+</Accordion>
+
+<Accordion title="生产环境 BO/BOB QR payin 的 expires_in 最大值是多少？">
+在平台 API 中，当服务器选择 7 天 QR 轨道时，有效最大值为
+`604800` 秒（7 天）。legacy QR 轨道的有效最大值为 `86399` 秒
+（23:59:59）。超过所选上限的值会被截断，不会被拒绝；集成方不能选择
+轨道。对于 7 天轨道，建议至少使用 `120` 秒。
 </Accordion>
 </AccordionGroup>

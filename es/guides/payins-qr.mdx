@@ -41,6 +41,17 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
+### Límites de expiración QR
+
+`expires_in` es un número entero de segundos para los payins QR de la
+plataforma. El servidor selecciona el riel configurado; el integrador no
+puede elegirlo. El contrato QR legacy tiene un máximo efectivo de `86399`
+segundos (23:59:59). El riel QR de 7 días tiene un máximo efectivo de
+`604800` segundos, con `86400` segundos (24 horas) como default cuando el
+valor falta o no es positivo. Los valores sobre el máximo del riel
+seleccionado se recortan, no se rechazan. Para el riel de 7 días, usa al menos `120` segundos
+como mínimo operativo.
+
 Respuesta `201`:
 
 ```json
@@ -60,23 +71,21 @@ Muestra el contenido QR o el `qr_image_url` que devuelve la API. Cuando el
 cliente paga, la cuenta se acredita automáticamente. Consulta el estado actual
 con `GET /v1/payins/{payinID}`.
 
-## Brasil: QR PIX
+## Brasil: QR PIX en BOB
 
-Para `country: "BR"`, `currency: "BRL"` y `method: "qr"`, el CPF del pagador
-es obligatorio. `payer_phone` y `payer_email` son opcionales y se reenvían
-cuando se informan. La plataforma valida el CPF localmente antes de crear el
-cobro:
+Para `country: "BR"`, `currency: "BOB"` y `method: "qr"`, el cobro está
+denominado en BOB. El pagador paga en BRL mediante la conversión del riel.
+El CPF es obligatorio; `payer_phone` y `payer_email` son opcionales:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","idempotency_key":"qr-br-120-20261022-001"}'
+  -d '{"country":"BR","currency":"BOB","method":"qr","amount":"1.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","idempotency_key":"qr-br-bob-20261022-001"}'
 ```
 
-La respuesta `201` queda en `pending` y contiene los campos de imagen QR. En
-Brasil, el contrato del riel entrega una imagen PNG, no un payload EMV para
-copiar/pegar. El core envía TTL `23:59:59` al crear el cobro y la respuesta
-incluye la expiración resultante:
+La respuesta `201` queda en `pending` y contiene los campos de imagen QR, la
+conversión que verá el pagador y la expiración del riel. El contrato brasileño
+entrega una imagen PNG, no un payload EMV para copiar/pegar:
 
 ```json
 {
@@ -87,13 +96,19 @@ incluye la expiración resultante:
     "our_reference": "77849505",
     "qr_image": "<PNG en base64>",
     "qr_image_url": "https://cdn.example.test/qr/77849505.png",
-    "expires_at": "2026-10-22T23:59:59-03:00",
+    "conversion": {
+      "amount": "0.48",
+      "currency": "BRL",
+      "rate": "0.48"
+    },
+    "expires_at": "2026-10-22T12:57:14.937Z",
     "status": "pending"
   }
 }
 ```
 
-El quote de un checkout link marca este corredor con `payer_required: true`.
+El quote de un checkout link marca este corredor `BR`/`BOB` con
+`payer_required: true`.
 La página server-driven solicita el CPF antes de materializar el cobro.
 
 ### Confirmación y conciliación
@@ -112,7 +127,7 @@ clave nueva una solicitud cuyo resultado pueda ser ambiguo.
 
 | HTTP | Código | Qué hacer |
 | --- | --- | --- |
-| 400 | `invalid_request` | Incluye `payer_document` en el payin QR BR/BRL. |
+| 400 | `invalid_request` | Incluye `payer_document` en el payin QR BR/BOB. |
 | 422 | `provider_rejected` | El riel rechazó el cobro, incluido un CPF faltante en el adapter; corrige los datos según el `detail` y no reintentes a ciegas. |
 
 ## Reintentos idempotentes
@@ -193,12 +208,26 @@ Reintenta con la misma clave y consulta el `payin_id` devuelto con
 </Accordion>
 
 <Accordion title="¿El CPF es obligatorio para todos los payins QR?">
-Solo para Brasil (`BR`/`BRL`/`qr`). Los demás corredores QR mantienen sus
+Solo para Brasil (`BR`/`BOB`/`qr`). Los demás corredores QR mantienen sus
 propios requisitos.
+</Accordion>
+
+<Accordion title="¿Cómo funciona el monto del QR brasileño?">
+El cobro está denominado en BOB. El bloque `conversion` muestra el monto y la
+tasa en BRL que verá el pagador; por ejemplo, `1.00` BOB puede convertirse en
+`0.48` BRL con tasa `0.48`.
 </Accordion>
 
 <Accordion title="¿Cuándo puedo tratar el QR brasileño como pagado?">
 Solo después de un estado `credited` verificado o de su webhook correspondiente.
 Generar o escanear el QR no prueba la liquidación.
+</Accordion>
+
+<Accordion title="¿Cuál es el máximo de expires_in para un payin QR BO/BOB en producción?">
+En la API de plataforma, el máximo efectivo es `604800` segundos (7 días)
+cuando el servidor selecciona el riel QR de 7 días. El riel QR
+legacy tiene un máximo efectivo de `86399` segundos (23:59:59). Los valores
+sobre el máximo seleccionado se recortan, no se rechazan; el integrador no
+elige el riel. Para el riel de 7 días, usa al menos `120` segundos.
 </Accordion>
 </AccordionGroup>

@@ -5,8 +5,43 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.176 · 1 version - October 22, 2026
+## v2.179 · 4 versions - October 22, 2026
+### v2.179
+**Changed**
+- Clarified the `expires_in` contract for QR payins: the server selects the
+  rail, the effective maximum is 86,399 seconds on the legacy rail or 604,800
+  seconds on the 7-day QR rail, and values above the selected maximum are capped
+  rather than rejected.
+
+### v2.178
+**Fixed**
+- Automatic US/USD wire payouts now complete bank beneficiary setup with the
+  required routing number and account type. If the bank rejects a payout,
+  `GET /v1/payouts/{payout_id}` and `payout_status_changed` now expose the
+  actionable `status_message`, so integrators can distinguish a compliance
+  review from missing required fields without retrying blindly.
+
+### v2.177
+**Added**
+- Mandatory 2FA enrollment now gates new registrations, invited members and new OAuth accounts: email confirmation returns `pending_2fa_enrollment` with a 30-minute token, and TOTP or passkey enrollment is required before the first session.
+- Login, refresh and environment handoff remain blocked for members whose first factor is not enrolled.
+**Changed**
+- Brazil QR payins are denominated in BOB. The response now documents the
+  payer-facing BRL conversion (`conversion.amount`, `conversion.currency`,
+  `conversion.rate`) and the rail-provided `expires_at`; the CPF and optional
+  payer contact fields remain unchanged.
+- Added the Chile `CL`/`CLP` `fintoc` Business Accounts guide for reusable
+  virtual deposit accounts, holder details, inbound matching and integer-peso
+  payouts. The existing hosted `fintoc` checkout and `bank_transfer` corridor
+  remain separate.
+
 ### v2.176
+**Fixed**
+- EC/USD `bank_transfer` payouts now validate the USD 1–10,000 corridor
+  range and required beneficiary fields before creation or debit. Requests
+  outside the range return `amount_below_minimum` or `amount_above_maximum`;
+  incomplete beneficiaries return `invalid_beneficiary` with the exact field.
+
 **Changed**
 - Added provider-agnostic timing guidance for US ACH, Fedwire/wire and SWIFT
   banking withdrawals and payouts: approximately 24–48 business hours for

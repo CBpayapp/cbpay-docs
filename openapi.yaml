@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.178"
+  version: "2.179"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5255,7 +5255,8 @@ paths:
       summary: Create a payin (top-up charge)
       description: 'Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: "qr"` (default) an active QR charge is generated
         through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose
-        `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: "bank_transfer"` the
+        `charge` is denominated in BOB, carries the PNG QR image and exposes
+        the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: "bank_transfer"` the
         deposit is announced and the response carries the reference the sender must include so the arriving
         transfer is matched and credited automatically — a short 12-character alphanumeric code that fits
         any bank concept field (some rails cap it at 20 characters with no special characters). With `method:
@@ -5278,8 +5279,9 @@ paths:
         the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset
         unless paid in the same asset. The first method that completes the payment wins. Charging is
         free; the payin fee applies when the deposit is credited. The live catalog
-        may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is
-        integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix
+        may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted
+        PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two
+        decimals. BR/BRL/pix
         is a hosted redirect and requires payer name and document; its minimum is
         1 BRL. `wallet` may be
         hosted or collect-only depending on the corridor.'
@@ -5328,8 +5330,12 @@ paths:
                   description: Optional channel hint passed to the core.
                 expires_in:
                   type: integer
-                  description: Charge expiration in seconds. For `checkout` it accepts 600 to 604800
-                    (10 minutes to 7 days; default 24 hours).
+                  description: >-
+                    Charge expiration in seconds. For `method: "qr"`, send integer seconds; the server
+                    selects the configured QR rail. The legacy QR contract is effective up to 86399
+                    seconds, while the 7-day QR rail is effective up to 604800 seconds. Values above
+                    the selected rail maximum are capped, not rejected. For `checkout`, it accepts 600
+                    to 604800 (10 minutes to 7 days; default 24 hours).
                 method:
                   type: string
                   enum:
@@ -5464,7 +5470,7 @@ paths:
                   type: string
                   maxLength: 40
                   description: >-
-                    Payer identity. Required for `qr` in `BR`/`BRL` and for `pix` (Brazil hosted redirect); for announced
+                    Payer identity. Required for `qr` in `BR`/`BOB` and for `pix` (Brazil hosted redirect); for announced
                     bank transfers it is the optional tax or national ID of the sender (at least 5
                     characters, one of them a digit): when you omit it the account
                     holder's verified tax id is used, so a self-deposit is recognised even if the
@@ -5477,7 +5483,7 @@ paths:
                   type: string
                   format: email
                   maxLength: 120
-                  description: Optional payer email for QR payins that support payer identity, including BR/BRL.
+                  description: Optional payer email for QR payins that support payer identity, including BR/BOB.
                 payer_account:
                   type: string
                   maxLength: 40
@@ -5497,12 +5503,12 @@ paths:
                   expires_in: 3600
                   idempotency_key: qr-bo-001
               br_pix_qr:
-                summary: Brazil — dynamic PIX QR (BRL)
+                summary: Brazil — dynamic PIX QR (BOB charge, BRL payer conversion)
                 value:
                   country: BR
-                  currency: BRL
+                  currency: BOB
                   method: qr
-                  amount: '120.00'
+                  amount: '1.00'
                   description: Order 7719
                   payer_document: '52998224725'
                   payer_phone: '+5511999990000'
@@ -5623,6 +5629,22 @@ paths:
                       our_reference: '77849505'
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
+                br_qr:
+                  summary: 'Brazil QR charge (method: qr, BOB)'
+                  value:
+                    payin_id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+                    status: pending
+                    charge:
+                      charge_id: 8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401
+                      our_reference: '77849505'
+                      qr_image: data:image/png;base64,iVBORw0KGgo…
+                      qr_image_url: https://cdn.example.test/qr/77849505.png
+                      conversion:
+                        amount: '0.48'
+                        currency: BRL
+                        rate: '0.48'
+                      expires_at: '2026-10-22T12:57:14.937Z'
+                      status: pending
                 bank_transfer:
                   summary: 'Announced deposit (method: bank_transfer)'
                   value:
@@ -26533,6 +26555,18 @@ components:
           type: string
         currency:
           type: string
+        holder_name:
+          type: string
+          description: Account holder name to show the payer when the receiving rail requires it.
+          example: CBPay Operations SpA
+        holder_tax_id:
+          type: string
+          description: Account holder tax identifier, such as a Chilean RUT.
+          example: 76543210-8
+        holder_account_type:
+          type: string
+          description: Account type to use for the transfer, such as checking or sight.
+          example: checking
         method:
           type: string
         purpose:
