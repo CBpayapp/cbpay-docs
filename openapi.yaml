@@ -5253,7 +5253,7 @@ paths:
       - Payins
       operationId: createPayin
       summary: Create a payin (top-up charge)
-      description: 'Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: "qr"` (default) an active QR charge is generated
+      description: 'Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: "bank_transfer"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: "qr"` (default) an active QR charge is generated
         through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose
         `charge` is denominated in BOB, carries the PNG QR image and exposes
         the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: "bank_transfer"` the
@@ -5349,7 +5349,10 @@ paths:
                   default: qr
                   description: Collection mode. `qr` creates an active QR charge through the processor;
                     `bank_transfer` announces an incoming deposit and returns the reference to include
-                    in the transfer description; `fintoc` (Chile only) returns a hosted `payment_url`
+                    in the transfer description. The amount must cover the account's fixed fee at its
+                    current rate; otherwise creation returns `422 amount_below_minimum` with the local
+                    minimum in the message. If no rate is available, this pre-check is skipped and the
+                    ledger guard remains authoritative. `fintoc` (Chile only) returns a hosted `payment_url`
                     where the payer transfers from any Chilean bank or wallet and the deposit is detected
                     automatically; `pix` (Brazil only) returns a hosted `payment_url` for a PIX redirect
                     checkout (`payer_name` and `payer_document` required, minimum 1 BRL); `card` returns a hosted `payment_url` for a 3-D Secure card checkout
@@ -5872,7 +5875,8 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: The core rejected the charge (`core_rejected`), or the announced-transfer
+          description: The core rejected the charge (`core_rejected`), the announced bank-transfer
+            amount is below the account-specific fee minimum (`amount_below_minimum`), or the announced-transfer
             corridor requires a registered destination account and your organization has not
             configured one yet (`deposit_instructions_unavailable` — today CL, PY and US).
           content:
@@ -5885,6 +5889,11 @@ paths:
                   value:
                     error: core_rejected
                     message: amount is below the minimum for this corridor
+                amount_below_minimum:
+                  summary: Announced bank-transfer amount below the fee minimum
+                  value:
+                    error: amount_below_minimum
+                    message: amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller deposits)
                 deposit_instructions_unavailable:
                   summary: No deposit instructions configured on the corridor
                   value:

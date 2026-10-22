@@ -5555,7 +5555,7 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: 核心拒绝了该收款(`core_rejected`),或预告转账通道要求登记收款账户而您的组织尚未配置(`deposit_instructions_unavailable` —— 目前为 CL、PY、US)。
+          description: 核心拒绝了该收款(`core_rejected`),预告转账金额低于账户手续费最低值(`amount_below_minimum`),或预告转账通道要求登记收款账户而您的组织尚未配置(`deposit_instructions_unavailable` —— 目前为 CL、PY、US)。
           content:
             application/json:
               schema:
@@ -5566,6 +5566,11 @@ paths:
                   value:
                     error: core_rejected
                     message: amount is below the minimum for this corridor
+                amount_below_minimum:
+                  summary: 预告银行转账金额低于手续费最低值
+                  value:
+                    error: amount_below_minimum
+                    message: amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller deposits)
                 deposit_instructions_unavailable:
                   summary: 通道未配置入金说明
                   value:
