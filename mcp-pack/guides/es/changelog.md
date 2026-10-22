@@ -8,6 +8,11 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ## v2.179 · 4 versiones - 22 de octubre de 2026
 ### v2.179
 **Cambiado**
+- Los payins anunciados `bank_transfer` ahora fallan rápidamente con el código
+  reutilizado `amount_below_minimum` cuando el monto no cubre la comisión fija
+  de la cuenta a su tasa vigente. Los abonos matcheados bajo ese mínimo terminan
+  en `failed` con un objeto `failure` visible; los no matcheados quedan
+  `unassigned` para ruteo manual. No hay reintento fútil ni webhook nuevo.
 - Se aclaró el contrato de `expires_in` para payins QR: el servidor selecciona
   el riel, el máximo efectivo es 86.399 segundos en el riel legacy o 604.800
   segundos en el riel QR de 7 días, y los valores sobre el máximo seleccionado se

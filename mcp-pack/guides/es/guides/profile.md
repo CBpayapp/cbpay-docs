@@ -244,3 +244,6 @@ otro factor (passkey o contraseña + otro canal) y regenera todo.
 #### ¿Cambiar el email me desconecta de Google/Apple?
 No. Los inicios de sesión sociales se identifican por el proveedor, no por el
 email, así que siguen funcionando.
+### El primer factor se enrola durante el registro
+
+Los registros nuevos usan el wizard con `pending_token` descrito en [Autenticación](https://docs.cbpayapp.com/es/authentication). TOTP (`begin` → `confirm`) devuelve 10 `recovery_codes`; passkey (`begin` → `finish`) completa WebAuthn. Los endpoints `/v1/me/totp/*` y `/v1/me/passkeys/register/*` siguen disponibles para administrar factores después.

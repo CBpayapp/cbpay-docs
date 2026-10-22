@@ -268,3 +268,20 @@ ya es un flujo de dos factores y no pide un código adicional.
     No. El token consumido solo te obliga a verificar un desafío nuevo; la
     `idempotency_key` de la operación sigue garantizando que no haya
     duplicados.
+## Enrolamiento y reanudación del login
+
+El 2FA obligatorio del registro es distinto del OTP por acción. Conserva el `pending_token` hasta 30 minutos y elige TOTP o passkey. Password login, OAuth y el primer login de miembros invitados devuelven `pending_2fa_enrollment` mientras `must_enroll_2fa` esté activo; una cuenta OAuth nueva devuelve `201` y `created: true`. Refresh y handoff rechazan miembros sin enrolar.
+
+```mermaid
+sequenceDiagram
+  participant A as App
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin
+  API-->>A: 200 otpauth_uri + QR
+  A->>API: POST /v1/auth/register/2fa/totp/confirm
+  API-->>A: 201 sesión + recovery_codes
+```
+
+El login con passkey también respeta el gate de enrolamiento: si `must_enroll_2fa` es `true`, `POST /v1/auth/passkey/login/finish` devuelve `pending_2fa_enrollment` y el member completa el wizard antes de recibir sesión. Un member que siga en `RegisterPending` (email aún no verificado) recibe `invalid_credential` hasta confirmar el buzón; es un flujo separado del enrolamiento 2FA.

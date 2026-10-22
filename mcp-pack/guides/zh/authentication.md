@@ -28,7 +28,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register \
 {"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
 ```
 
-确认验证码以获取首个会话：
+确认验证码以验证邮箱。该端点返回 `201 pending_2fa_enrollment`，包含有效 30 分钟的 `pending_token`、`factors`、`passkeys_available`、`next` 和 `account`，不会创建会话。只有完成[注册后的强制 2FA 注册](#注册后的强制-2fa-注册)中的 TOTP 或通行密钥注册后才会签发会话：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
@@ -36,7 +36,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -d '{"org":"cbpay","email":"ana@example.com","code":"123456"}'
 ```
 
-格式错误的验证码返回 `400 invalid_code`；无效或过期的验证码统一返回 `401 invalid_code`。如果无法查询验证服务，API 返回 `502 otp_check_failed`。确认成功后返回与登录相同的会话结构（`access_token`、`expires_at`、`refresh_token`、`refresh_expires_at` 和 `account`）。
+格式错误的验证码返回 `400 invalid_code`；无效或过期的验证码统一返回 `401 invalid_code`。如果无法查询验证服务，API 返回 `502 otp_check_failed`。确认成功后返回上面的待注册结构；请将 token 交给注册向导。
 
 ## 身份验证滥用限制
 
@@ -275,3 +275,13 @@ curl "https://api.qbank.cl/platform/v1/members?page_size=50" \
 
 流量迁移完成后，请联系 CBPay 团队吊销旧密钥。
 - JWT 会话面向前端；自动化流程应始终使用 API 密钥。
+
+## 注册后的强制 2FA 注册
+
+邮箱确认只证明邮箱所有权，不再创建会话。`POST /v1/auth/register/confirm` 返回 `201`、`status: "pending_2fa_enrollment"`、有效 30 分钟的 `pending_token`、`expires_at`、`factors`、`passkeys_available`、`next`、`note` 和 `account`。只可将 token 用于 `/v1/auth/register/2fa/*`。
+
+TOTP 先调用 `totp/begin`，再用 `pending_token` 和六位 `code` 调用 `totp/confirm`；成功响应包含会话和 10 个一次性 `recovery_codes`。通行密钥先调用 `passkey/begin`，把 `options.publicKey` 交给 `navigator.credentials.create()`，再用 `pending_token`、`challenge_id`、可选 `name` 和 `credential` 调用 `passkey/finish`。受邀成员和 org-admin 创建账户的成员首次登录也使用同一向导。
+
+通行密钥登录也遵循注册门控：`must_enroll_2fa` 为 `true` 时，`POST /v1/auth/passkey/login/finish` 返回 `pending_2fa_enrollment`，成员完成注册向导后才获得会话。仍处于 `RegisterPending`（邮箱未验证）的成员在确认邮箱前会收到 `invalid_credential`；这与 2FA 注册门控是两个独立流程。
+
+`totp/begin` 和 `passkey/begin` 在之前的尝试已保存因子、但清理标志被中断时，也可能返回带正常会话的 `201`；该崩溃恢复会完成注册。正常 begin 响应包含 `totp_secret`、`otpauth_uri`、可选的 `qr_png_base64`、`steps` 和 `note`（不包含 `expires_at`）。

@@ -31,7 +31,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register \
 {"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
 ```
 
-Confirma el código para recibir la primera sesión:
+Confirma el código para verificar el buzón. El endpoint devuelve `201 pending_2fa_enrollment` con `pending_token` válido por 30 minutos, `factors`, `passkeys_available`, `next` y `account`; no crea una sesión. La sesión se entrega solo después del enrolamiento TOTP o passkey en [Enrolamiento 2FA obligatorio después del registro](#enrolamiento-2fa-obligatorio-después-del-registro):
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
@@ -41,9 +41,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
 
 Un código con forma inválida responde `400 invalid_code`; un código incorrecto o
 vencido responde uniformemente `401 invalid_code`. Si no se puede consultar el
-servicio de verificación, responde `502 otp_check_failed`. Una confirmación exitosa
-devuelve la misma forma de sesión que login (`access_token`, `expires_at`,
-`refresh_token`, `refresh_expires_at` y `account`).
+servicio de verificación, responde `502 otp_check_failed`. La confirmación exitosa devuelve la forma pendiente descrita arriba; usa su token con el wizard de enrolamiento.
 
 ## Límites antiabuso de autenticación
 
@@ -302,3 +300,15 @@ Pide al equipo de CBPay revocar la key anterior una vez que el tráfico
 migró.
 - Las sesiones JWT son para front-ends; para procesos automatizados usa
   siempre API keys.
+
+## Enrolamiento 2FA obligatorio después del registro
+
+La confirmación del email prueba el buzón, pero ya no crea una sesión. `POST /v1/auth/register/confirm` devuelve `201` con `status: "pending_2fa_enrollment"`, `pending_token` válido por 30 minutos, `expires_at`, `factors`, `passkeys_available`, `next`, `note` y `account`. Usa el token solo en `/v1/auth/register/2fa/*`.
+
+TOTP: llama `totp/begin` con `{ "pending_token": "..." }` y luego `totp/confirm` con `{ "pending_token": "...", "code": "482913" }`; la respuesta entrega la sesión y 10 `recovery_codes` de un solo uso. Passkey: llama `passkey/begin`, pasa `options.publicKey` a `navigator.credentials.create()` y completa `passkey/finish` con `pending_token`, `challenge_id`, `name` opcional y `credential`.
+
+Miembros invitados y miembros de cuentas creadas por un org-admin siguen el mismo wizard en su primer login.
+
+El login con passkey también respeta el gate de enrolamiento: si `must_enroll_2fa` es `true`, `POST /v1/auth/passkey/login/finish` devuelve `pending_2fa_enrollment` y el member completa el wizard antes de recibir sesión. Un member que siga en `RegisterPending` (email aún no verificado) recibe `invalid_credential` hasta confirmar el buzón; es un flujo separado del enrolamiento 2FA.
+
+Tanto `totp/begin` como `passkey/begin` también pueden devolver `201` con la sesión normal cuando un intento anterior ya guardó el factor y solo se interrumpió la limpieza del flag; este recovery seguro completa el enrolamiento. La respuesta normal de begin contiene `totp_secret`, `otpauth_uri`, `qr_png_base64` opcional, `steps` y `note` (sin `expires_at`).

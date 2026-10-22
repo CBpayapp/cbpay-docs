@@ -818,7 +818,7 @@ open submission and liveness links do not charge again.
 | 403 | `service_disabled` | The `kyc` service is disabled for your account | Contact your operator |
 | 404 | `not_found` | The link/submission does not exist or is not yours | Check the id |
 | 404 | `verification_not_found` | You requested your self report without a registered verification | Complete your onboarding first |
-| 409 | `already_verified` | Onboarding link requested with an already-approved account | Nothing to do |
+| 409 | `already_verified` / `self_verification_in_progress` | Onboarding link requested with an already-approved account, or while a verification is already in progress | Nothing to do, or complete that verification |
 | 503 | `verifications_unavailable` | Identity verification temporarily unavailable | Retry later |
 
 ## FAQ

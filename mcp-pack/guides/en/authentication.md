@@ -31,7 +31,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register \
 {"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
 ```
 
-Confirm the code to receive the first session:
+Confirm the code to verify the mailbox. The endpoint returns `201 pending_2fa_enrollment` with a 30-minute `pending_token`, `factors`, `passkeys_available`, `next` and `account`; it does not create a session. The session is issued only after TOTP or passkey enrollment in [Mandatory 2FA enrollment after registration](#mandatory-2fa-enrollment-after-registration):
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
@@ -41,9 +41,28 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
 
 A code with the wrong shape returns `400 invalid_code`; an invalid or expired code
 returns `401 invalid_code` uniformly. If the verification service cannot be checked,
-the API returns `502 otp_check_failed`. A successful confirmation returns the same
-session shape as login (`access_token`, `expires_at`, `refresh_token`,
-`refresh_expires_at`, and `account`).
+the API returns `502 otp_check_failed`. A successful confirmation returns the pending-enrollment shape described above; use its token with the enrollment wizard.
+
+## Mandatory 2FA enrollment after registration
+
+Email confirmation now proves mailbox ownership but does not create a session. `POST /v1/auth/register/confirm` returns `201` with a 30-minute `pending_token` and the exact next steps:
+
+```json
+{
+  "status": "pending_2fa_enrollment",
+  "pending_token": "eyJ...",
+  "expires_at": "2026-10-22T19:00:00Z",
+  "factors": ["totp", "passkey"],
+  "passkeys_available": true,
+  "next": ["1. Choose how to protect your account: authenticator app (recommended) or passkey (Face ID / fingerprint).", "2a. App: scan the QR with Google Authenticator, Authy or 2FAS, then enter the 6-digit code.", "2b. Passkey: approve the system dialog on this device (Face ID, fingerprint or Windows Hello).", "3. Save the 10 recovery codes (shown once): they are your last resort if you lose your phone."],
+  "note": "enroll with POST /v1/auth/register/2fa/totp/begin or POST /v1/auth/register/2fa/passkey/begin",
+  "account": {"id": "9b1deb4d-...", "type": "person", "email": "ana@example.com"}
+}
+```
+
+Use the pending token only with the enrollment endpoints. TOTP uses `totp/begin` with `{ "pending_token": "..." }`, then `totp/confirm` with `{ "pending_token": "...", "code": "482913" }`; confirmation returns the normal session plus `recovery_codes` (10 codes, shown once). Passkey uses `passkey/begin` with the pending token, sends `options.publicKey` to `navigator.credentials.create()`, then calls `passkey/finish` with `pending_token`, `challenge_id`, optional `name`, and the WebAuthn `credential`. A successful finish returns the normal session.
+
+Company members invited through `POST /v1/members` and members of accounts created by an organization administrator follow the same wizard on their first login. Existing members are not retroactively locked. Password reset clears a pending email-registration flag when the email code is proven, but the member still must enroll a factor before receiving a session.
 
 ## Authentication abuse limits
 
@@ -299,3 +318,7 @@ Update your service to use the new key.
 Ask the CBPay team to revoke the previous key once traffic migrated.
 - JWT sessions are for front-ends; automated processes should always use
   API keys.
+
+Passkey login also respects the enrollment gate: when `must_enroll_2fa` is true, `POST /v1/auth/passkey/login/finish` returns `pending_2fa_enrollment` and the member completes the registration wizard before receiving a session. A member still marked `RegisterPending` (email not yet verified) receives `invalid_credential` until the mailbox is confirmed; that is separate from the 2FA enrollment gate.
+
+Both `totp/begin` and `passkey/begin` can also return `201` with the normal session when a factor was already persisted by an earlier attempt and only the final flag cleanup was interrupted; this crash-safe recovery completes enrollment. A normal begin response contains `totp_secret`, `otpauth_uri`, optional `qr_png_base64`, `steps` and `note` (no `expires_at`).

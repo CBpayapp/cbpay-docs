@@ -188,3 +188,6 @@ SMS/WhatsApp OTP 挑战：`POST /v1/otp/challenges` + verify）。号码未验�
 在任何验证或登录中使用你的一个**备用码**（确认 TOTP 时获得的那些）。如果没有备用码，请使用另一个因子（通行密钥或密码 + 其他渠道）恢复访问，然后重新生成所有内容。
 #### 更换邮箱会断开我与 Google/Apple 的连接吗？
 不会。社交登录以提供方标识，而非邮箱，因此它们会继续正常工作。
+### 首个因子在注册时完成
+
+新注册必须使用[身份验证](https://docs.cbpayapp.com/zh/authentication)中的 `pending_token` 向导。TOTP（`begin` → `confirm`）返回 10 个恢复码；通行密钥（`begin` → `finish`）完成 WebAuthn。现有 `/v1/me/totp/*` 和 `/v1/me/passkeys/register/*` 仍用于后续管理。
