@@ -7,6 +7,12 @@ description: "History of API and documentation changes"
 <Update label="October 22, 2026" description="v2.179 · 4 versions">
 ### v2.179
 **Changed**
+- Announced `bank_transfer` payins now fail fast with the reused
+  `amount_below_minimum` code when the amount cannot cover the account's fixed
+  fee at its current rate. Matched inbound deposits below that fee minimum
+  terminalize as `failed` with a visible `failure` object; unmatched deposits
+  remain `unassigned` for manual routing. No futile retry or new webhook event
+  is emitted.
 - Clarified the `expires_in` contract for QR payins: the server selects the
   rail, the effective maximum is 86,399 seconds on the legacy rail or 604,800
   seconds on the 7-day QR rail, and values above the selected maximum are capped

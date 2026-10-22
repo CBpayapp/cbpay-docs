@@ -7,6 +7,11 @@ description: "API and documentation change history"
 <Update label="2026年10月22日" description="v2.179 · 4 个版本">
 ### v2.179
 **变更**
+- 预告的 `bank_transfer` payin 现在会在金额无法按账户当前汇率覆盖固定
+  手续费时快速失败，并使用复用的 `amount_below_minimum` 代码。低于该最低值
+  的已匹配入账会以 `failed` 终止并带有可见的 `failure` 对象；未匹配的入账
+  保持 `unassigned` 并交由人工路由。不会进行无意义重试，也不会发出新的
+  webhook 事件。
 - 明确了 QR payin 的 `expires_in` 合同：服务器选择轨道，legacy 轨道的
   有效上限为 86,399 秒，7 天 QR 轨道的有效上限为 604,800 秒；超过所选
   上限的值会被截断，而不会被拒绝。

@@ -47,7 +47,6 @@ flowchart LR
 ```
 
 ## 1. Discover the available corridors
-
 The available countries, currencies and collection modes are defined by
 CBPay. Always check the catalog:
 
@@ -80,7 +79,7 @@ Collection corridors and modes:
 | Mexico | MXN | Dedicated CLABE account, announced bank transfer |
 | Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`) |
 | Paraguay | PYG | Announced bank transfer |
-| Brazil | BRL | Dynamic PIX QR (`qr`), hosted PIX redirect (`pix`) |
+| Brazil | BOB (`qr`), BRL (`pix`) | Dynamic PIX QR with BRL payer conversion; hosted PIX redirect |
 | Argentina | ARS | Dedicated CVU account |
 | Venezuela | VES | Active collection (`c2p`) |
 | United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT) |
@@ -107,7 +106,6 @@ GOLD), configure `default_payin_asset` — see
 [the money model](/en/concepts/money-model#choose-which-balance-receives-your-payins).
 
 ## 2. Pick the mode and create the charge
-
 Each country has its own collection mode. The real request and response of
 each one:
 
@@ -538,12 +536,10 @@ putting it in the concept ensures the automatic match. Send
 `payer_document` as a backup — see
 [matching an announced transfer](#matching-an-announced-transfer).
 </Note>
-
 </Tab>
 <Tab title="Brazil">
-
-**Dynamic PIX QR**: the `qr` method generates a PIX QR with the amount
-embedded.
+**Dynamic PIX QR**: the `qr` method generates a PIX QR denominated in BOB.
+The payer completes the payment in BRL through the rail conversion.
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -551,9 +547,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Content-Type: application/json" \
   -d '{
     "country": "BR",
-    "currency": "BRL",
+    "currency": "BOB",
     "method": "qr",
-    "amount": "120.00",
+    "amount": "1.00",
     "description": "Order 7719",
     "payer_document": "52998224725",
     "payer_phone": "+5511999990000",
@@ -561,11 +557,16 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "expires_in": 1800
   }'
 ```
-The response contains `charge.qr_image` (base64 PNG) and
-`charge.qr_image_url`. For this Brazil corridor there is no EMV
-copy-and-paste payload. The core sends the default `23:59:59` TTL when
-creating the charge; the payment reaches `credited` after authenticated
-confirmation and reconciliation.
+The response contains `charge.qr_image` (base64 PNG),
+`charge.qr_image_url`, and the conversion shown to the payer. There is no
+EMV copy-and-paste payload:
+
+```json
+{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"0.48","currency":"BRL","rate":"0.48"},"expires_at":"2026-10-22T12:57:14.937Z","status":"pending"}}
+```
+
+The payment reaches `credited` after authenticated confirmation and
+reconciliation.
 <Note>
 The `qr` method is one payment per dynamic QR with the exact amount embedded.
 </Note>
@@ -817,7 +818,6 @@ without announcing with
 
 </Tab>
 </Tabs>
-
 ## Manual Ecuador USD operations
 
 The `EC/USD/bank_transfer` corridor supports announced payins and
@@ -983,9 +983,9 @@ A document shorter than 5 characters or with no digits is dropped as a
 signal (it cannot be told apart from an amount or a bank code). The
 announcement is still created and `payer_source` reports the real coverage.
 </Note>
+### Minimum viable amount for announced bank transfers — CBPay calculates an account-specific local minimum from its fixed fee and current payin rate. Below it, `POST /v1/payins` returns `422 amount_below_minimum` with the minimum in the message (for example, `amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller deposits)`). This reused code also applies to payouts and transfers. If no rate is available, the pre-check is skipped and the ledger guard remains authoritative. A matched inbound deposit below the viable minimum becomes `failed` with visible `failure.code: "amount_below_minimum"` and an operations alert; an unmatched deposit remains `unassigned` for manual routing. Both outcomes are idempotent, with no futile retry or new v1 webhook event.
 
 ### Retries and idempotency
-
 The announcement accepts `idempotency_key` (body) or the `Idempotency-Key`
 header. A retry with the same key returns the **original** announcement —
 same `reference` — with `idempotency_hit: true` and HTTP `200` instead of
@@ -1305,7 +1305,7 @@ Create a new charge — nothing was debited or credited.
 The reference still matches the announcement, but the amount that arrived is
 what gets credited. A transfer that resolves to no announcement stays
 `unassigned` for reconciliation; your CBPay team can assign it to the right
-payin manually.
+payin manually. An announced transfer below the account minimum returns `422 amount_below_minimum`; a matched inbound one ends `failed` with the same code in `failure`, while an unmatched deposit remains `unassigned` for manual routing. No futile retry or new webhook event is generated.
 </Accordion>
 <Accordion title="Two clients announced the same amount and neither sent the reference — who gets the money?">
 Nobody by chance. If the payer document does not tell them apart, both

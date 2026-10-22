@@ -71,7 +71,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 | 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账 |
 | 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`） |
 | 巴拉圭 | PYG | 预告银行转账 |
-| 巴西 | BRL | 动态 PIX 二维码 (`qr`)、Hosted PIX redirect (`pix`) |
+| 巴西 | BOB (`qr`)、BRL (`pix`) | 带 BRL 付款人转换的动态 PIX 二维码；Hosted PIX redirect |
 | 阿根廷 | ARS | 专属 CVU 账户 |
 | 委内瑞拉 | VES | 主动收款（`c2p`） |
 | 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT） |
@@ -481,7 +481,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 </Tab>
 <Tab title="巴西">
 
-**动态 PIX 二维码**：`qr` 方法生成内嵌金额的 PIX 二维码。
+**动态 PIX 二维码**：`qr` 方法生成以 BOB 计价的 PIX 二维码。
+付款人通过通道转换以 BRL 完成付款。
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -489,9 +490,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Content-Type: application/json" \
   -d '{
     "country": "BR",
-    "currency": "BRL",
+    "currency": "BOB",
     "method": "qr",
-    "amount": "120.00",
+    "amount": "1.00",
     "description": "Order 7719",
     "payer_document": "52998224725",
     "payer_phone": "+5511999990000",
@@ -500,9 +501,14 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-响应包含 `charge.qr_image`（base64 PNG）和 `charge.qr_image_url`。该巴西
-通道不提供可复制粘贴的 EMV payload。core 创建 charge 时发送默认 TTL
-`23:59:59`；付款在认证确认和对账后进入 `credited`。
+响应包含 `charge.qr_image`（base64 PNG）、`charge.qr_image_url` 和付款人
+看到的转换。该巴西通道不提供可复制粘贴的 EMV payload：
+
+```json
+{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"0.48","currency":"BRL","rate":"0.48"},"expires_at":"2026-10-22T12:57:14.937Z","status":"pending"}}
+```
+
+付款在认证确认和对账后进入 `credited`。
 
 <Note>
 `qr` 方法生成一个金额精确内嵌、一次支付使用的动态二维码。
@@ -884,6 +890,20 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 预告仍会创建，且 `payer_source` 会如实反映覆盖情况。
 </Note>
 
+### 预告银行转账的可行最低金额
+
+对于 `method: "bank_transfer"`，CBPay 会根据账户配置的固定手续费和当前
+payin 汇率，为每个账户计算本地最低金额。低于该金额的预告会在创建前快速失败，
+返回 HTTP `422` 和复用的 `amount_below_minimum` 错误码（例如：
+`amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller
+deposits)`）。这不是新错误码；payout 和 transfer 也使用同一个代码。如果当前
+没有可用汇率，则跳过此预检查，仍由 ledger guard 负责最终保护。
+
+如果收到的转账已匹配到账户或预告且低于可行最低金额，payin 会以 `failed` 终止，
+并带有可见的 `failure.code: "amount_below_minimum"`，运营团队会收到告警。
+未匹配的入账则保持 `unassigned`，交由人工路由。两种结果都具备幂等性，不会
+进行无意义的重试，v1 也不会为此发出新的 webhook 事件。
+
 ### 重试与幂等
 
 预告接受 `idempotency_key`（请求体）或 `Idempotency-Key` 请求头。使用相同
@@ -1124,6 +1144,9 @@ curl https://api.qbank.cl/platform/v1/payins/9c2a… \
 | `expired` | 收款过期且未支付 |
 | `failed` | 收款失败 |
 
+若因手续费最低值失败，`GET /v1/payins/{id}` 还会返回 `failure` 对象，其中
+包含 `code: "amount_below_minimum"` 以及可展示给付款人的原因。
+
 <Info>
 无法唯一对应到某一笔预告的存款会保持 `unassigned` 状态，直到 CBPay 团队将其
 路由到某个账户（参见[预告转账的匹配规则](#预告转账的匹配规则)）。分配后，
@@ -1191,6 +1214,13 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 参考号仍会匹配到该笔预告，但入账金额以实际到账金额为准。若一笔转账无法对应
 到任何预告，则保持 `unassigned` 状态等待对账；你的 CBPay 团队可以手动将其
 分配到正确的 payin。
+</Accordion>
+<Accordion title="如果银行转账金额太小，无法覆盖手续费怎么办？">
+低于账户当前手续费最低值的预告会在创建前返回
+`422 amount_below_minimum`，消息中包含本地最低金额。如果没有预告而直接收到
+低于该最低值且已匹配的转账，payin 会以 `failed` 结束，并在 `failure` 中返回
+相同代码；未匹配的入账保持 `unassigned` 并交由人工路由。不会进行无意义重试，
+也不会发出新的 webhook 事件。
 </Accordion>
 <Accordion title="两个客户预告了相同金额且都没填参考号，钱归谁？">
 不会靠猜。如果付款人证件号也无法区分二者，两笔预告都保持 `pending`，存款以

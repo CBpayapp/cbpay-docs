@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds ten independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN and ARS (local fiat with two decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the ten balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-22 13:36 UTC",
-    "_content_sha256": "1194eca76d7cabe38fbcf20c1168a5320e6cd7ed706901383e6a9a1591d05a9d"
+    "_generated_at": "2026-10-22 21:42 UTC",
+    "_content_sha256": "6baf1d47c4d7d9da803de7a13c7df49ae9f5f670153c956220d964e3b0c60900"
   },
   "auth": {
     "type": "bearer",
@@ -8798,7 +8798,7 @@
                 "confirm"
               ]
             },
-            "description": "Validates the registration email code, clears the pending member, provisions the account and issues the first session. Invalid or expired identity/code combinations are uniform.",
+            "description": "Validates the registration email code and returns pending_2fa_enrollment with a 30-minute pending token; no session is issued until TOTP or passkey enrollment completes. Invalid or expired identity/code combinations are uniform.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"org\": \"cbpay\",\n  \"email\": \"ana@example.com\",\n  \"code\": \"123456\"\n}",
@@ -8814,7 +8814,7 @@
           },
           "response": [
             {
-              "name": "201 First member session issued.",
+              "name": "201 Pending 2FA enrollment returned; no session is issued yet.",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -8830,7 +8830,7 @@
                   ]
                 }
               },
-              "status": "First member session issued.",
+              "status": "Pending 2FA enrollment returned; no session is issued yet.",
               "code": 201,
               "_postman_previewlanguage": "json",
               "header": [
@@ -8839,7 +8839,291 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"access_token\": \"eyJ...\",\n  \"expires_at\": \"2026-10-13T12:00:00Z\",\n  \"refresh_token\": \"rt_...\",\n  \"refresh_expires_at\": \"2026-11-12T12:00:00Z\",\n  \"account\": {\n    \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\"\n  }\n}"
+              "body": "{\n  \"status\": \"pending_2fa_enrollment\",\n  \"pending_token\": \"eyJ...\",\n  \"expires_at\": \"2026-10-22T19:00:00Z\",\n  \"factors\": [\n    \"totp\",\n    \"passkey\"\n  ],\n  \"passkeys_available\": true,\n  \"next\": [\n    \"Choose an authenticator app or passkey\"\n  ],\n  \"note\": \"enroll with POST /v1/auth/register/2fa/totp/begin\",\n  \"account\": {\n    \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"type\": \"person\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Start mandatory TOTP enrollment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/register/2fa/totp/begin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "register",
+                "2fa",
+                "totp",
+                "begin"
+              ]
+            },
+            "description": "Uses the 30-minute pending registration token to create the authenticator secret and QR data. It does not accept a session token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pending_token\": \"eyJ...\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 TOTP setup data.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/auth/register/2fa/totp/begin",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "auth",
+                    "register",
+                    "2fa",
+                    "totp",
+                    "begin"
+                  ]
+                }
+              },
+              "status": "TOTP setup data.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"totp_secret\": \"JBSWY3DPEHPK3PXP\",\n  \"otpauth_uri\": \"otpauth://totp/CBPay:ana@example.com?secret=JBSWY3DPEHPK3PXP\",\n  \"qr_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"steps\": [\n    \"1. Open your authenticator app\",\n    \"2. Scan the QR code\",\n    \"3. Enter the 6-digit code\"\n  ],\n  \"note\": \"scan the QR in your authenticator app, then confirm with POST /v1/auth/register/2fa/totp/confirm\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm mandatory TOTP enrollment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/register/2fa/totp/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "register",
+                "2fa",
+                "totp",
+                "confirm"
+              ]
+            },
+            "description": "Confirms the first six-digit code, returns ten one-time recovery codes and the first session.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pending_token\": \"eyJ...\",\n  \"code\": \"482913\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Enrollment completed and first session issued.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/auth/register/2fa/totp/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "auth",
+                    "register",
+                    "2fa",
+                    "totp",
+                    "confirm"
+                  ]
+                }
+              },
+              "status": "Enrollment completed and first session issued.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"access_token\": \"eyJ...\",\n  \"expires_at\": \"2026-10-22T19:00:00Z\",\n  \"refresh_token\": \"rt_...\",\n  \"refresh_expires_at\": \"2026-11-20T19:00:00Z\",\n  \"account\": {\n    \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"type\": \"person\"\n  },\n  \"recovery_codes\": [\n    \"ABCD-EFGH\",\n    \"JKLM-NPQR\",\n    \"STUV-WXYZ\",\n    \"2345-6789\",\n    \"CDEF-GHJK\",\n    \"MNPQ-RSTU\",\n    \"VWXY-Z234\",\n    \"5678-9ABC\",\n    \"DEFG-HJKM\",\n    \"NPQR-STUV\"\n  ],\n  \"steps\": [\n    \"Store these 10 recovery codes now: they are shown only once and each works a single time.\"\n  ],\n  \"note\": \"store these recovery codes now: they are shown only once and each works a single time\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Start mandatory passkey enrollment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/register/2fa/passkey/begin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "register",
+                "2fa",
+                "passkey",
+                "begin"
+              ]
+            },
+            "description": "Starts a WebAuthn registration using the pending registration token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pending_token\": \"eyJ...\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 WebAuthn creation options.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/auth/register/2fa/passkey/begin",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "auth",
+                    "register",
+                    "2fa",
+                    "passkey",
+                    "begin"
+                  ]
+                }
+              },
+              "status": "WebAuthn creation options.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"challenge_id\": \"6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69\",\n  \"options\": {\n    \"publicKey\": {\n      \"challenge\": \"Y2hhbG...\",\n      \"rp\": {\n        \"name\": \"CBPay\",\n        \"id\": \"cbpayapp.com\"\n      },\n      \"user\": {\n        \"name\": \"ana@example.com\"\n      }\n    }\n  },\n  \"expires_at\": \"2026-10-22T19:02:00Z\",\n  \"steps\": [\n    \"1. Approve the system dialog on this device\",\n    \"2. Name this device on the next screen\"\n  ],\n  \"note\": \"pass options.publicKey to navigator.credentials.create() and send the result to POST /v1/auth/register/2fa/passkey/finish\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Finish mandatory passkey enrollment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/register/2fa/passkey/finish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "register",
+                "2fa",
+                "passkey",
+                "finish"
+              ]
+            },
+            "description": "Validates the WebAuthn attestation, stores the credential and returns the first session.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pending_token\": \"eyJ...\",\n  \"challenge_id\": \"6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69\",\n  \"name\": \"Taylor's MacBook\",\n  \"credential\": {\n    \"id\": \"Y3JlZGVudGlhbA...\",\n    \"type\": \"public-key\",\n    \"response\": {\n      \"clientDataJSON\": \"eyJ...\",\n      \"attestationObject\": \"o2N...\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Enrollment completed and first session issued.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/auth/register/2fa/passkey/finish",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "auth",
+                    "register",
+                    "2fa",
+                    "passkey",
+                    "finish"
+                  ]
+                }
+              },
+              "status": "Enrollment completed and first session issued.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"access_token\": \"eyJ...\",\n  \"expires_at\": \"2026-10-22T19:00:00Z\",\n  \"refresh_token\": \"rt_...\",\n  \"refresh_expires_at\": \"2026-11-20T19:00:00Z\",\n  \"account\": {\n    \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"type\": \"person\"\n  }\n}"
             }
           ]
         },
@@ -8977,7 +9261,7 @@
                 "login"
               ]
             },
-            "description": "Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials.",
+            "description": "Members with must_enroll_2fa receive pending_2fa_enrollment instead of a session. Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"org\": \"cbpay\",\n  \"email\": \"ana@example.com\",\n  \"password\": \"a-secure-password\"\n}",
@@ -12601,7 +12885,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"qr\",\n  \"amount\": \"700.00\",\n  \"description\": \"App top-up\",\n  \"expires_in\": 3600,\n  \"idempotency_key\": \"qr-bo-001\"\n}",
@@ -12642,7 +12926,7 @@
           ]
         },
         {
-          "name": "Create a payin (top-up charge) — Brazil — dynamic PIX QR (BRL)",
+          "name": "Create a payin (top-up charge) — Brazil — dynamic PIX QR (BOB charge, BRL payer conversion)",
           "request": {
             "method": "POST",
             "header": [
@@ -12666,10 +12950,10 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"country\": \"BR\",\n  \"currency\": \"BRL\",\n  \"method\": \"qr\",\n  \"amount\": \"120.00\",\n  \"description\": \"Order 7719\",\n  \"payer_document\": \"52998224725\",\n  \"payer_phone\": \"+5511999990000\",\n  \"payer_email\": \"payer@example.test\",\n  \"expires_in\": 1800\n}",
+              "raw": "{\n  \"country\": \"BR\",\n  \"currency\": \"BOB\",\n  \"method\": \"qr\",\n  \"amount\": \"1.00\",\n  \"description\": \"Order 7719\",\n  \"payer_document\": \"52998224725\",\n  \"payer_phone\": \"+5511999990000\",\n  \"payer_email\": \"payer@example.test\",\n  \"expires_in\": 1800\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -12731,7 +13015,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"500000\",\n  \"payer_document\": \"17438319-7\",\n  \"idempotency_key\": \"topup-9912\"\n}",
@@ -12796,7 +13080,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"PY\",\n  \"currency\": \"PYG\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"596000\"\n}",
@@ -12861,7 +13145,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"bank_transfer\",\n  \"amount\": \"1250.00\",\n  \"payer_name\": \"Acme Holdings LLC\",\n  \"idempotency_key\": \"invoice-1042\"\n}",
@@ -12926,7 +13210,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"fintoc\",\n  \"amount\": \"150000\",\n  \"description\": \"Top-up order 8841\",\n  \"idempotency_key\": \"topup-8841\"\n}",
@@ -12991,7 +13275,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"BO\",\n  \"currency\": \"BOB\",\n  \"method\": \"card\",\n  \"amount\": \"700.00\",\n  \"description\": \"App top-up\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\"\n  },\n  \"payer_reference\": \"customer-7719\",\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"idempotency_key\": \"topup-7719\"\n}",
@@ -13056,7 +13340,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"card\",\n  \"amount\": \"49.90\",\n  \"description\": \"Pro plan\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\"\n  },\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"save_card\": true,\n  \"payer_reference\": \"customer-7719\",\n  \"idempotency_key\": \"pro-plan-7719\"\n}",
@@ -13121,7 +13405,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"method\": \"checkout\",\n  \"amount\": \"50\",\n  \"settlement_asset\": \"USDT\",\n  \"description\": \"Order 8841\",\n  \"country\": \"CL\",\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"expires_in\": 86400,\n  \"idempotency_key\": \"order-8841\"\n}",
@@ -13186,7 +13470,7 @@
                 "payins"
               ]
             },
-            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"method\": \"checkout\",\n  \"amount\": \"0.001\",\n  \"settlement_asset\": \"BTC\",\n  \"description\": \"Invoice 2210\",\n  \"idempotency_key\": \"invoice-2210\"\n}",

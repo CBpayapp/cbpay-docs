@@ -5837,7 +5837,8 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: El core rechazó el cobro (`core_rejected`), o el corredor de
+          description: El core rechazó el cobro (`core_rejected`), el monto del anuncio
+            está bajo el mínimo de comisión de la cuenta (`amount_below_minimum`), o el corredor de
             transferencia anunciada exige una cuenta de destino registrada y tu organización
             aún no la configura (`deposit_instructions_unavailable` — hoy CL, PY y US).
           content:
@@ -5850,6 +5851,11 @@ paths:
                   value:
                     error: core_rejected
                     message: amount is below the minimum for this corridor
+                amount_below_minimum:
+                  summary: Monto de transferencia anunciada bajo el mínimo de comisión
+                  value:
+                    error: amount_below_minimum
+                    message: amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller deposits)
                 deposit_instructions_unavailable:
                   summary: Sin instrucciones de depósito configuradas en el corredor
                   value:
