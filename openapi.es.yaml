@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.175"
+  version: "2.176"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -5072,7 +5072,7 @@ paths:
       summary: Crear un payin (cobro de recarga)
       description: 'Requiere identidad de cuenta aprobada; las cuentas persona necesitan KYC aprobado y las cuentas empresa KYB aprobado antes de que esta operación autenticada cree o cobre un payin. Crea una recarga fiat. Con `method: "qr"` (por defecto) se genera un cobro QR activo
         a través del procesador — en Bolivia el QR interoperable local, en Brasil un QR PIX dinámico cuyo
-        `charge` trae la imagen del QR y el payload "copia e cola".         Con `method: "bank_transfer"`
+        `charge` trae la imagen PNG del QR (Brasil no devuelve un payload EMV para copiar y pegar). Con `method: "bank_transfer"`
         el depósito queda anunciado y la respuesta trae la referencia que el remitente debe incluir para
         que la transferencia entrante se concilie y acredite automáticamente — un código corto de 12 caracteres
         alfanuméricos que cabe en cualquier concepto bancario (algunos rieles lo limitan a 20 caracteres
@@ -5281,7 +5281,7 @@ paths:
                   type: string
                   maxLength: 40
                   description: >-
-                    Identidad del pagador. Obligatorio para `pix` (redirect hosted Brasil);
+                    Identidad del pagador. Obligatorio para `qr` en `BR`/`BRL` y para `pix` (redirect hosted Brasil);
                     en transferencia anunciada es el documento tributario o de identidad
                     opcional del pagador (al menos 5 caracteres, uno de ellos un dígito):
                     si lo omites se usa el documento verificado del titular, así un depósito
@@ -5291,6 +5291,11 @@ paths:
                   type: string
                   maxLength: 40
                   description: Teléfono del pagador hosted o collect; algunos métodos wallet lo exigen.
+                payer_email:
+                  type: string
+                  format: email
+                  maxLength: 120
+                  description: Email opcional del pagador para payins QR que admiten identidad, incluido BR/BRL.
                 payer_account:
                   type: string
                   maxLength: 40
@@ -5317,6 +5322,9 @@ paths:
                   method: qr
                   amount: '120.00'
                   description: Order 7719
+                  payer_document: '52998224725'
+                  payer_phone: '+5511999990000'
+                  payer_email: payer@example.test
                   expires_in: 1800
               cl_announced_transfer:
                 summary: Chile — transferencia bancaria anunciada (CLP)
@@ -5430,7 +5438,7 @@ paths:
                     status: pending
                     charge:
                       charge_id: c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4
-                      our_reference: QR-778812
+                      our_reference: '77849505'
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
                 bank_transfer:
@@ -5571,7 +5579,7 @@ paths:
                     status: pending
                     charge:
                       charge_id: c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4
-                      our_reference: QR-778812
+                      our_reference: '77849505'
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
                     idempotency_hit: true
                 push_to_dedicated:
