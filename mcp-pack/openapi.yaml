@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.176"
+  version: "2.179"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2024,7 +2024,7 @@ paths:
       security: []
       operationId: confirmRegistration
       summary: Confirm registration by email code
-      description: Validates the registration email code, clears the pending member, provisions the account and issues the first session. Invalid or expired identity/code combinations are uniform.
+      description: Validates the registration email code and returns pending_2fa_enrollment with a 30-minute pending token; no session is issued until TOTP or passkey enrollment completes. Invalid or expired identity/code combinations are uniform.
       requestBody:
         required: true
         content:
@@ -2039,15 +2039,151 @@ paths:
             example: {org: cbpay, email: ana@example.com, code: '123456'}
       responses:
         '201':
-          description: First member session issued.
+          description: Pending 2FA enrollment returned; no session is issued yet.
           content:
             application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-13T12:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-12T12:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, passkey], passkeys_available: true, next: [Choose an authenticator app or passkey], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400':
           description: invalid_code when code shape is invalid.
         '401':
           description: invalid_code for an invalid, expired or unmatched code.
         '502': {description: otp_check_failed.}
+  /v1/auth/register/2fa/totp/begin:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FATOTPBegin
+      summary: Start mandatory TOTP enrollment
+      description: Uses the 30-minute pending registration token to create the authenticator secret and QR data. It does not accept a session token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: TOTP setup data.
+          content:
+            application/json:
+              example:
+                totp_secret: JBSWY3DPEHPK3PXP
+                otpauth_uri: otpauth://totp/CBPay:ana@example.com?secret=JBSWY3DPEHPK3PXP
+                qr_png_base64: iVBORw0KGgoAAAANSUhEUg...
+                steps: ["1. Open your authenticator app", "2. Scan the QR code", "3. Enter the 6-digit code"]
+                note: "scan the QR in your authenticator app, then confirm with POST /v1/auth/register/2fa/totp/confirm"
+        '401': {description: invalid_pending_token.}
+        '201':
+          description: An existing factor was found during crash recovery; enrollment is completed and a session is issued.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+  /v1/auth/register/2fa/totp/confirm:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FATOTPConfirm
+      summary: Confirm mandatory TOTP enrollment
+      description: Confirms the first six-digit code, returns ten one-time recovery codes and the first session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, code]
+              properties:
+                pending_token: {type: string}
+                code: {type: string, minLength: 1}
+            example: {pending_token: eyJ..., code: '482913'}
+      responses:
+        '201':
+          description: Enrollment completed and first session issued.
+          content:
+            application/json:
+              example:
+                access_token: eyJ...
+                expires_at: '2026-10-22T19:00:00Z'
+                refresh_token: rt_...
+                refresh_expires_at: '2026-11-20T19:00:00Z'
+                account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}
+                recovery_codes: [ABCD-EFGH, JKLM-NPQR, STUV-WXYZ, 2345-6789, CDEF-GHJK, MNPQ-RSTU, VWXY-Z234, 5678-9ABC, DEFG-HJKM, NPQR-STUV]
+                steps: ["Store these 10 recovery codes now: they are shown only once and each works a single time."]
+                note: "store these recovery codes now: they are shown only once and each works a single time"
+        '401': {description: invalid_pending_token.}
+        '403': {description: otp_invalid; the 6-digit code is invalid or expired.}
+        '409': {description: totp_not_started or enrollment_complete.}
+  /v1/auth/register/2fa/passkey/begin:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FAPasskeyBegin
+      summary: Start mandatory passkey enrollment
+      description: Starts a WebAuthn registration using the pending registration token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: WebAuthn creation options.
+          content:
+            application/json:
+              example:
+                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
+                options: {publicKey: {challenge: Y2hhbG..., rp: {name: CBPay, id: cbpayapp.com}, user: {name: ana@example.com}}}
+                expires_at: '2026-10-22T19:02:00Z'
+                steps: ["1. Approve the system dialog on this device", "2. Name this device on the next screen"]
+                note: "pass options.publicKey to navigator.credentials.create() and send the result to POST /v1/auth/register/2fa/passkey/finish"
+        '201':
+          description: An existing factor was found during crash recovery; enrollment is completed and a session is issued.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '401': {description: invalid_pending_token.}
+        '503': {description: passkeys_unavailable.}
+  /v1/auth/register/2fa/passkey/finish:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FAPasskeyFinish
+      summary: Finish mandatory passkey enrollment
+      description: Validates the WebAuthn attestation, stores the credential and returns the first session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, challenge_id, credential]
+              properties:
+                pending_token: {type: string}
+                challenge_id: {type: string, format: uuid}
+                name: {type: string, maxLength: 60}
+                credential: {type: object}
+            example: {pending_token: eyJ..., challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69, name: Taylor's MacBook, credential: {id: Y3JlZGVudGlhbA..., type: public-key, response: {clientDataJSON: eyJ..., attestationObject: o2N...}}}
+      responses:
+        '201':
+          description: Enrollment completed and first session issued.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
+        '400': {description: invalid_credential.}
+        '401': {description: invalid_pending_token.}
+        '403': {description: passkey_rejected.}
+        '409': {description: "challenge_not_pending, passkey_exists or enrollment_complete."}
+        '503': {description: passkeys_unavailable.}
+
   /v1/auth/environment-handoff:
     post:
       tags:
@@ -2165,7 +2301,7 @@ paths:
       security: []
       operationId: login
       summary: Log in
-      description: "Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials."
+      description: "Members with must_enroll_2fa receive pending_2fa_enrollment instead of a session. Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials."
       requestBody:
         required: true
         content:
@@ -5119,7 +5255,8 @@ paths:
       summary: Create a payin (top-up charge)
       description: 'Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. With `method: "qr"` (default) an active QR charge is generated
         through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose
-        `charge` carries the PNG QR image (Brazil does not return a copy-and-paste EMV payload). With `method: "bank_transfer"` the
+        `charge` is denominated in BOB, carries the PNG QR image and exposes
+        the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: "bank_transfer"` the
         deposit is announced and the response carries the reference the sender must include so the arriving
         transfer is matched and credited automatically — a short 12-character alphanumeric code that fits
         any bank concept field (some rails cap it at 20 characters with no special characters). With `method:
@@ -5142,8 +5279,9 @@ paths:
         the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset
         unless paid in the same asset. The first method that completes the payment wins. Charging is
         free; the payin fee applies when the deposit is credited. The live catalog
-        may also expose PY/PYG, CO/COP, EC/USD and BR/BRL regional corridors. COP is
-        integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix
+        may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted
+        PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two
+        decimals. BR/BRL/pix
         is a hosted redirect and requires payer name and document; its minimum is
         1 BRL. `wallet` may be
         hosted or collect-only depending on the corridor.'
@@ -5192,8 +5330,12 @@ paths:
                   description: Optional channel hint passed to the core.
                 expires_in:
                   type: integer
-                  description: Charge expiration in seconds. For `checkout` it accepts 600 to 604800
-                    (10 minutes to 7 days; default 24 hours).
+                  description: >-
+                    Charge expiration in seconds. For `method: "qr"`, send integer seconds; the server
+                    selects the configured QR rail. The legacy QR contract is effective up to 86399
+                    seconds, while the 7-day QR rail is effective up to 604800 seconds. Values above
+                    the selected rail maximum are capped, not rejected. For `checkout`, it accepts 600
+                    to 604800 (10 minutes to 7 days; default 24 hours).
                 method:
                   type: string
                   enum:
@@ -5328,7 +5470,7 @@ paths:
                   type: string
                   maxLength: 40
                   description: >-
-                    Payer identity. Required for `qr` in `BR`/`BRL` and for `pix` (Brazil hosted redirect); for announced
+                    Payer identity. Required for `qr` in `BR`/`BOB` and for `pix` (Brazil hosted redirect); for announced
                     bank transfers it is the optional tax or national ID of the sender (at least 5
                     characters, one of them a digit): when you omit it the account
                     holder's verified tax id is used, so a self-deposit is recognised even if the
@@ -5341,7 +5483,7 @@ paths:
                   type: string
                   format: email
                   maxLength: 120
-                  description: Optional payer email for QR payins that support payer identity, including BR/BRL.
+                  description: Optional payer email for QR payins that support payer identity, including BR/BOB.
                 payer_account:
                   type: string
                   maxLength: 40
@@ -5361,12 +5503,12 @@ paths:
                   expires_in: 3600
                   idempotency_key: qr-bo-001
               br_pix_qr:
-                summary: Brazil — dynamic PIX QR (BRL)
+                summary: Brazil — dynamic PIX QR (BOB charge, BRL payer conversion)
                 value:
                   country: BR
-                  currency: BRL
+                  currency: BOB
                   method: qr
-                  amount: '120.00'
+                  amount: '1.00'
                   description: Order 7719
                   payer_document: '52998224725'
                   payer_phone: '+5511999990000'
@@ -5487,6 +5629,22 @@ paths:
                       our_reference: '77849505'
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
+                br_qr:
+                  summary: 'Brazil QR charge (method: qr, BOB)'
+                  value:
+                    payin_id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+                    status: pending
+                    charge:
+                      charge_id: 8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401
+                      our_reference: '77849505'
+                      qr_image: data:image/png;base64,iVBORw0KGgo…
+                      qr_image_url: https://cdn.example.test/qr/77849505.png
+                      conversion:
+                        amount: '0.48'
+                        currency: BRL
+                        rate: '0.48'
+                      expires_at: '2026-10-22T12:57:14.937Z'
+                      status: pending
                 bank_transfer:
                   summary: 'Announced deposit (method: bank_transfer)'
                   value:
@@ -26397,6 +26555,18 @@ components:
           type: string
         currency:
           type: string
+        holder_name:
+          type: string
+          description: Account holder name to show the payer when the receiving rail requires it.
+          example: CBPay Operations SpA
+        holder_tax_id:
+          type: string
+          description: Account holder tax identifier, such as a Chilean RUT.
+          example: 76543210-8
+        holder_account_type:
+          type: string
+          description: Account type to use for the transfer, such as checking or sight.
+          example: checking
         method:
           type: string
         purpose:

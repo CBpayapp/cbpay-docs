@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.176"
+  version: "2.179"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2000,7 +2000,7 @@ paths:
       security: []
       operationId: confirmRegistration
       summary: Confirmar el registro con el c...digo del email
-      description: Valida el c...digo del email, elimina el estado pendiente, provisiona la cuenta y emite la primera sesi...n. Las combinaciones de identidad/c...digo inv...lidas son uniformes.
+      description: Valida el código del email y devuelve pending_2fa_enrollment con un pending_token válido por 30 minutos; no emite sesión hasta completar el enrolamiento TOTP o passkey. Las combinaciones de identidad/código inválidas son uniformes.
       requestBody:
         required: true
         content:
@@ -2015,15 +2015,151 @@ paths:
             example: {org: cbpay, email: ana@ejemplo.com, code: '123456'}
       responses:
         '201':
-          description: Primera sesi...n emitida.
+          description: Enrolamiento 2FA pendiente; todavía no se emite sesión.
           content:
             application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-13T12:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-12T12:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, passkey], passkeys_available: true, next: [Choose an authenticator app or passkey], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400':
           description: invalid_code cuando la forma del codigo es invalida.
         '401':
           description: invalid_code para codigo invalido, vencido o sin coincidencia.
         '502': {description: otp_check_failed.}
+  /v1/auth/register/2fa/totp/begin:
+    post:
+      tags: [Autenticación]
+      security: []
+      operationId: register2FATOTPBegin
+      summary: Iniciar enrolamiento TOTP obligatorio
+      description: Usa el token pendiente de registro, válido por 30 minutos, para crear el secreto del autenticador y los datos del QR. No acepta un token de sesión.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: Datos de configuración TOTP.
+          content:
+            application/json:
+              example:
+                totp_secret: JBSWY3DPEHPK3PXP
+                otpauth_uri: otpauth://totp/CBPay:ana@example.com?secret=JBSWY3DPEHPK3PXP
+                qr_png_base64: iVBORw0KGgoAAAANSUhEUg...
+                steps: ["1. Abre tu aplicación autenticadora", "2. Escanea el código QR", "3. Ingresa el código de 6 dígitos"]
+                note: "escanea el QR en tu aplicación autenticadora y confirma con POST /v1/auth/register/2fa/totp/confirm"
+        '401': {description: token pendiente inválido.}
+        '201':
+          description: Se encontró un factor existente durante la recuperación tras un fallo; el enrolamiento terminó y se entrega una sesión.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+  /v1/auth/register/2fa/totp/confirm:
+    post:
+      tags: [Autenticación]
+      security: []
+      operationId: register2FATOTPConfirm
+      summary: Confirmar enrolamiento TOTP obligatorio
+      description: Confirma el primer código de seis dígitos, devuelve diez códigos de recuperación de un solo uso y la primera sesión.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, code]
+              properties:
+                pending_token: {type: string}
+                code: {type: string, minLength: 1}
+            example: {pending_token: eyJ..., code: '482913'}
+      responses:
+        '201':
+          description: Enrolamiento completado y primera sesión emitida.
+          content:
+            application/json:
+              example:
+                access_token: eyJ...
+                expires_at: '2026-10-22T19:00:00Z'
+                refresh_token: rt_...
+                refresh_expires_at: '2026-11-20T19:00:00Z'
+                account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}
+                recovery_codes: [ABCD-EFGH, JKLM-NPQR, STUV-WXYZ, 2345-6789, CDEF-GHJK, MNPQ-RSTU, VWXY-Z234, 5678-9ABC, DEFG-HJKM, NPQR-STUV]
+                steps: ["Guarda ahora estos 10 códigos de recuperación: se muestran una sola vez y cada uno funciona una sola vez."]
+                note: "guarda ahora estos códigos de recuperación: se muestran una sola vez y cada uno funciona una sola vez"
+        '401': {description: token pendiente inválido.}
+        '403': {description: otp_invalid; el código de 6 dígitos es inválido o venció.}
+        '409': {description: TOTP no iniciado o enrollment_complete.}
+  /v1/auth/register/2fa/passkey/begin:
+    post:
+      tags: [Autenticación]
+      security: []
+      operationId: register2FAPasskeyBegin
+      summary: Iniciar enrolamiento obligatorio de passkey
+      description: Inicia un registro WebAuthn usando el token pendiente de registro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: Opciones para crear WebAuthn.
+          content:
+            application/json:
+              example:
+                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
+                options: {publicKey: {challenge: Y2hhbG..., rp: {name: CBPay, id: cbpayapp.com}, user: {name: ana@example.com}}}
+                expires_at: '2026-10-22T19:02:00Z'
+                steps: ["1. Aprueba el diálogo del sistema en este dispositivo", "2. Nombra este dispositivo en la siguiente pantalla"]
+                note: "pasa options.publicKey a navigator.credentials.create() y envía el resultado a POST /v1/auth/register/2fa/passkey/finish"
+        '201':
+          description: Se encontró un factor existente durante la recuperación tras un fallo; el enrolamiento terminó y se entrega una sesión.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '401': {description: token pendiente inválido.}
+        '503': {description: passkeys no disponibles.}
+  /v1/auth/register/2fa/passkey/finish:
+    post:
+      tags: [Autenticación]
+      security: []
+      operationId: register2FAPasskeyFinish
+      summary: Finalizar enrolamiento obligatorio de passkey
+      description: Valida la attestation WebAuthn, guarda la credencial y devuelve la primera sesión.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, challenge_id, credential]
+              properties:
+                pending_token: {type: string}
+                challenge_id: {type: string, format: uuid}
+                name: {type: string, maxLength: 60}
+                credential: {type: object}
+            example: {pending_token: eyJ..., challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69, name: Taylor's MacBook, credential: {id: Y3JlZGVudGlhbA..., type: public-key, response: {clientDataJSON: eyJ..., attestationObject: o2N...}}}
+      responses:
+        '201':
+          description: Enrolamiento completado y primera sesión emitida.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
+        '400': {description: credencial inválida.}
+        '401': {description: token pendiente inválido.}
+        '403': {description: passkey rechazada.}
+        '409': {description: "challenge_not_pending, passkey_exists o enrollment_complete."}
+        '503': {description: passkeys no disponibles.}
+
   /v1/auth/environment-handoff:
     post:
       tags:
@@ -5071,8 +5207,8 @@ paths:
       operationId: createPayin
       summary: Crear un payin (cobro de recarga)
       description: 'Requiere identidad de cuenta aprobada; las cuentas persona necesitan KYC aprobado y las cuentas empresa KYB aprobado antes de que esta operación autenticada cree o cobre un payin. Crea una recarga fiat. Con `method: "qr"` (por defecto) se genera un cobro QR activo
-        a través del procesador — en Bolivia el QR interoperable local, en Brasil un QR PIX dinámico cuyo
-        `charge` trae la imagen PNG del QR (Brasil no devuelve un payload EMV para copiar y pegar). Con `method: "bank_transfer"`
+        a través del procesador — en Bolivia el QR interoperable local, en Brasil un QR PIX dinámico denominado en BOB cuyo
+        `charge` trae la imagen PNG y la conversión BRL para el pagador (Brasil no devuelve un payload EMV para copiar y pegar). Con `method: "bank_transfer"`
         el depósito queda anunciado y la respuesta trae la referencia que el remitente debe incluir para
         que la transferencia entrante se concilie y acredite automáticamente — un código corto de 12 caracteres
         alfanuméricos que cabe en cualquier concepto bancario (algunos rieles lo limitan a 20 caracteres
@@ -5144,8 +5280,13 @@ paths:
                   description: Indicación opcional de canal que se pasa al core.
                 expires_in:
                   type: integer
-                  description: Expiración del cobro en segundos. Para `checkout` acepta de 600 a 604800
-                    (10 minutos a 7 días; default 24 horas).
+                  description: >-
+                    Expiración del cobro en segundos. Para `method: "qr"`, envía segundos enteros; el
+                    servidor selecciona el riel QR configurado. El contrato QR legacy tiene un máximo
+                    efectivo de 86399 segundos, mientras el riel QR de 7 días tiene un máximo efectivo
+                    de 604800 segundos. Los valores sobre el máximo del riel se recortan, no se
+                    rechazan. Para `checkout`, acepta de 600 a 604800 (10 minutos a 7 días; default
+                    24 horas).
                 method:
                   type: string
                   enum:
@@ -5281,7 +5422,7 @@ paths:
                   type: string
                   maxLength: 40
                   description: >-
-                    Identidad del pagador. Obligatorio para `qr` en `BR`/`BRL` y para `pix` (redirect hosted Brasil);
+                    Identidad del pagador. Obligatorio para `qr` en `BR`/`BOB` y para `pix` (redirect hosted Brasil);
                     en transferencia anunciada es el documento tributario o de identidad
                     opcional del pagador (al menos 5 caracteres, uno de ellos un dígito):
                     si lo omites se usa el documento verificado del titular, así un depósito
@@ -5295,7 +5436,7 @@ paths:
                   type: string
                   format: email
                   maxLength: 120
-                  description: Email opcional del pagador para payins QR que admiten identidad, incluido BR/BRL.
+                  description: Email opcional del pagador para payins QR que admiten identidad, incluido BR/BOB.
                 payer_account:
                   type: string
                   maxLength: 40
@@ -5315,12 +5456,12 @@ paths:
                   expires_in: 3600
                   idempotency_key: qr-bo-001
               br_pix_qr:
-                summary: Brasil — QR PIX dinámico (BRL)
+                summary: Brasil — QR PIX dinámico (cobro BOB, conversión BRL)
                 value:
                   country: BR
-                  currency: BRL
+                  currency: BOB
                   method: qr
-                  amount: '120.00'
+                  amount: '1.00'
                   description: Order 7719
                   payer_document: '52998224725'
                   payer_phone: '+5511999990000'
@@ -5441,6 +5582,22 @@ paths:
                       our_reference: '77849505'
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
+                br_qr:
+                  summary: 'Cobro QR de Brasil (method: qr, BOB)'
+                  value:
+                    payin_id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+                    status: pending
+                    charge:
+                      charge_id: 8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401
+                      our_reference: '77849505'
+                      qr_image: data:image/png;base64,iVBORw0KGgo…
+                      qr_image_url: https://cdn.example.test/qr/77849505.png
+                      conversion:
+                        amount: '0.48'
+                        currency: BRL
+                        rate: '0.48'
+                      expires_at: '2026-10-22T12:57:14.937Z'
+                      status: pending
                 bank_transfer:
                   summary: 'Depósito anunciado (method: bank_transfer)'
                   value:
@@ -26183,6 +26340,18 @@ components:
           type: string
         currency:
           type: string
+        holder_name:
+          type: string
+          description: Nombre del titular que debe mostrarse al pagador.
+          example: CBPay Operations SpA
+        holder_tax_id:
+          type: string
+          description: Identificador tributario del titular, como un RUT chileno.
+          example: 76543210-8
+        holder_account_type:
+          type: string
+          description: Tipo de cuenta que debe usarse para transferir.
+          example: checking
         method:
           type: string
         purpose:

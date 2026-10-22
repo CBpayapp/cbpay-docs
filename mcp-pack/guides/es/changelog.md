@@ -5,8 +5,44 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.176 · 1 versión - 22 de octubre de 2026
+## v2.179 · 4 versiones - 22 de octubre de 2026
+### v2.179
+**Cambiado**
+- Se aclaró el contrato de `expires_in` para payins QR: el servidor selecciona
+  el riel, el máximo efectivo es 86.399 segundos en el riel legacy o 604.800
+  segundos en el riel QR de 7 días, y los valores sobre el máximo seleccionado se
+  recortan en vez de rechazarse.
+
+### v2.178
+**Corregido**
+- Los payouts automáticos US/USD por wire ahora completan el alta del
+  beneficiario bancario con el routing number y el account type requeridos.
+  Si el banco rechaza un payout, `GET /v1/payouts/{payout_id}` y
+  `payout_status_changed` ahora exponen el `status_message` accionable, para
+  que los integradores distingan una revisión de compliance de campos
+  faltantes sin reintentar a ciegas.
+
+### v2.177
+**Agregado**
+- El enrolamiento 2FA obligatorio ahora aplica a registros, miembros invitados y cuentas OAuth nuevas: la confirmación del email devuelve `pending_2fa_enrollment` con token de 30 minutos y exige TOTP o passkey antes de la primera sesión.
+- Login, refresh y handoff siguen bloqueados hasta completar el factor.
+**Cambiado**
+- Los payins QR de Brasil están denominados en BOB. La respuesta documenta la
+  conversión BRL que ve el pagador (`conversion.amount`,
+  `conversion.currency`, `conversion.rate`) y el `expires_at` entregado por
+  el riel; el CPF y los contactos opcionales no cambian.
+- Se agregó la guía de Business Accounts `CL`/`CLP`/`fintoc` para cuentas
+  virtuales reutilizables, datos del titular, abonos y payouts en pesos
+  enteros. El checkout `fintoc` y `bank_transfer` siguen separados.
+
 ### v2.176
+**Corregido**
+- Los payouts `EC/USD` con `bank_transfer` ahora validan el rango de USD
+  1–10.000 y los campos requeridos del beneficiario antes de crear o debitar.
+  Fuera del rango responden `amount_below_minimum` o
+  `amount_above_maximum`; un beneficiario incompleto responde
+  `invalid_beneficiary` con el campo exacto.
+
 **Cambiado**
 - Se agregó orientación de tiempos, agnóstica a proveedores, para retiros y payouts
   Banking de EE. UU. por ACH, Fedwire/wire y SWIFT: aproximadamente 24 a 48
