@@ -555,20 +555,20 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "method": "qr",
     "amount": "120.00",
     "description": "Order 7719",
+    "payer_document": "52998224725",
+    "payer_phone": "+5511999990000",
+    "payer_email": "payer@example.test",
     "expires_in": 1800
   }'
 ```
-
-The response contains `charge.qr_payload`, the PIX **"copia e cola"** code,
-which the payer can paste into their banking app instead of scanning the
-image (`charge.qr_image` base64 or `charge.qr_image_url`, the public CDN
-URL). The QR expires according to `expires_in` (default 1 hour); the payment
-is credited automatically after confirmation and reconciliation.
-
+The response contains `charge.qr_image` (base64 PNG) and
+`charge.qr_image_url`. For this Brazil corridor there is no EMV
+copy-and-paste payload. The core sends the default `23:59:59` TTL when
+creating the charge; the payment reaches `credited` after authenticated
+confirmation and reconciliation.
 <Note>
 The `qr` method is one payment per dynamic QR with the exact amount embedded.
 </Note>
-
 **Hosted PIX redirect**: create a `pix` payin and redirect the payer to the
 returned `payment_url`. The payer name and document are required, and the
 minimum amount is 1 BRL.
