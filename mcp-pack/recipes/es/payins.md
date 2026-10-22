@@ -529,15 +529,17 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "method": "qr",
     "amount": "120.00",
     "description": "Pedido 7719",
+    "payer_document": "52998224725",
+    "payer_phone": "+5511999990000",
+    "payer_email": "payer@example.test",
     "expires_in": 1800
   }'
 ```
 
-La respuesta trae `charge.qr_payload`, el código PIX **"copia e cola"**,
-que el pagador puede pegar en su app bancaria en vez de escanear la imagen
-(`charge.qr_image` base64 o `charge.qr_image_url`, URL pública del CDN).
-El QR expira según `expires_in` (default 1 hora) y el pago se acredita tras
-la confirmación y conciliación.
+La respuesta trae `charge.qr_image` (PNG en base64) y `charge.qr_image_url`.
+Este corredor brasileño no entrega payload EMV para copiar y pegar. El core
+envía TTL default `23:59:59` al crear el cobro; el pago llega a `credited`
+tras la confirmación autenticada y la conciliación.
 
 > **Nota**
 El método `qr` genera un QR dinámico de un pago con el monto exacto embebido.

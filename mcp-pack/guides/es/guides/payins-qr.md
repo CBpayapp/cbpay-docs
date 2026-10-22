@@ -48,7 +48,7 @@ Respuesta `201`:
   "status": "pending",
   "charge": {
     "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
-    "our_reference": "QR-778812",
+    "our_reference": "77849505",
     "qr_payload": "<contenido del QR>",
     "status": "pending"
   }
@@ -58,6 +58,61 @@ Respuesta `201`:
 Muestra el contenido QR o el `qr_image_url` que devuelve la API. Cuando el
 cliente paga, la cuenta se acredita automáticamente. Consulta el estado actual
 con `GET /v1/payins/{payinID}`.
+
+## Brasil: QR PIX
+
+Para `country: "BR"`, `currency: "BRL"` y `method: "qr"`, el CPF del pagador
+es obligatorio. `payer_phone` y `payer_email` son opcionales y se reenvían
+cuando se informan. La plataforma valida el CPF localmente antes de crear el
+cobro:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","idempotency_key":"qr-br-120-20261022-001"}'
+```
+
+La respuesta `201` queda en `pending` y contiene los campos de imagen QR. En
+Brasil, el contrato del riel entrega una imagen PNG, no un payload EMV para
+copiar/pegar. El core envía TTL `23:59:59` al crear el cobro y la respuesta
+incluye la expiración resultante:
+
+```json
+{
+  "payin_id": "2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101",
+  "status": "pending",
+  "charge": {
+    "charge_id": "8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401",
+    "our_reference": "77849505",
+    "qr_image": "<PNG en base64>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "expires_at": "2026-10-22T23:59:59-03:00",
+    "status": "pending"
+  }
+}
+```
+
+El quote de un checkout link marca este corredor con `payer_required: true`.
+La página server-driven solicita el CPF antes de materializar el cobro.
+
+### Confirmación y conciliación
+
+El ciclo es webhook-first. Un evento entrante autenticado (el webhook del riel
+usa el header `x-api-key` configurado) puede cerrar el
+cobro `pending`; una lectura tardía de conciliación solo se permite después
+de la edad mínima configurada (15 minutos por defecto). Hasta verificar el
+estado de plataforma `credited`, el cobro sigue `pending` y no se acredita.
+
+Suscríbete a `payin_credited` y `payin_charge_status_changed`, y usa
+`GET /v1/payins/{payinID}` como fuente de verdad. Nunca reintentes con una
+clave nueva una solicitud cuyo resultado pueda ser ambiguo.
+
+## Errores de Brasil
+
+| HTTP | Código | Qué hacer |
+| --- | --- | --- |
+| 400 | `invalid_request` | Incluye `payer_document` en el payin QR BR/BRL. |
+| 422 | `provider_rejected` | El riel rechazó el cobro, incluido un CPF faltante en el adapter; corrige los datos según el `detail` y no reintentes a ciegas. |
 
 ## Reintentos idempotentes
 
@@ -131,3 +186,9 @@ del replay.
 #### ¿Qué hago si el cliente pagó mientras mi solicitud expiró?
 Reintenta con la misma clave y consulta el `payin_id` devuelto con
 `GET /v1/payins/{payinID}`. No crees una clave nueva para la misma operación.
+#### ¿El CPF es obligatorio para todos los payins QR?
+Solo para Brasil (`BR`/`BRL`/`qr`). Los demás corredores QR mantienen sus
+propios requisitos.
+#### ¿Cuándo puedo tratar el QR brasileño como pagado?
+Solo después de un estado `credited` verificado o de su webhook correspondiente.
+Generar o escanear el QR no prueba la liquidación.

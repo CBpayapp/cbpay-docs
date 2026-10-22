@@ -5,6 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.176 · 1 version - October 22, 2026
+### v2.176
+**Added**
+- Brazil QR payins now accept `method: "qr"` with `BR`/`BRL` and require the
+  payer CPF in `payer_document`. Optional payer phone and email fields are
+  documented, together with webhook-first confirmation, safe delayed
+  reconciliation, expiration and idempotent replay behavior.
 ## v2.175 · 6 versions - October 20, 2026
 ### v2.175
 **Changed**

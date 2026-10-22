@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.175"
+  version: "2.176"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -4838,7 +4838,7 @@ paths:
       operationId: createPayin
       summary: 创建 payin(充值收款)
       description: '需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。 创建一笔法币充值。使用 `method: "qr"`(默认)会通过处理方生成主动 QR 收款——在玻利维亚为本地互通 QR,在巴西为动态 PIX QR,其 `charge`
-        携带 QR 图片和 "copia e cola" 载荷。使用 `method: "bank_transfer"` 会预告存款,响应携带付款人必须附上的参考号,以便到账转账被自动匹配入账——一个
+        携带 QR PNG 图片（巴西不返回可复制粘贴的 EMV 载荷）。使用 `method: "bank_transfer"` 会预告存款,响应携带付款人必须附上的参考号,以便到账转账被自动匹配入账——一个
         12 位字母数字短码,适配任何银行附言字段(部分通道上限 20 个字符且不允许特殊字符)。使用 `method: "fintoc"`(智利)响应携带托管 `payment_url`:付款人打开后可从任意智利银行或钱包转账;存款会被自动检测、校验并入账。使用
         `method: "card"` 响应携带一个托管 3-D Secure 银行卡收银台的 `payment_url`,页面带有您组织的品牌 —— 支持玻利维亚(BOB)与以美元结算的国际银行卡(`country: "US"`;任意国家发行的 Visa、Mastercard、American Express、Discover 与 Diners);银行卡数据绝不经过您的集成。使用
         `method: "checkout"` 响应携带一个公开的 `checkout_url` —— 以您选择的虚拟余额计价的通用收款链接(`settlement_asset`:USD、USDT、USDC、
@@ -5008,13 +5008,18 @@ paths:
                   type: string
                   maxLength: 40
                   description: >-
-                    付款人身份。`pix`（巴西托管跳转）必填；在预告转账中为可选的付款人税号或身份证件号
+                    付款人身份。`BR`/`BRL` 的 `qr` 和 `pix`（巴西托管跳转）必填；在预告转账中为可选的付款人税号或身份证件号
                     （至少 5 个字符，其中至少一位为数字）。省略时使用账户持有人已验证的税号，
                     因此即使付款人忘记填写参考号，本人存款也能被识别。第三方付款时请填写。
                 payer_phone:
                   type: string
                   maxLength: 40
                   description: Hosted 或 collect 付款人电话；部分 wallet 方法要求此字段。
+                payer_email:
+                  type: string
+                  format: email
+                  maxLength: 120
+                  description: 支持付款人身份的 QR payin 可选付款人邮箱，包括 BR/BRL。
                 payer_account:
                   type: string
                   maxLength: 40
@@ -5040,6 +5045,9 @@ paths:
                   method: qr
                   amount: '120.00'
                   description: 订单 7719
+                  payer_document: '52998224725'
+                  payer_phone: '+5511999990000'
+                  payer_email: payer@example.test
                   expires_in: 1800
               cl_announced_transfer:
                 summary: 智利 — 预告银行转账(CLP)
@@ -5153,7 +5161,7 @@ paths:
                     status: pending
                     charge:
                       charge_id: c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4
-                      our_reference: QR-778812
+                      our_reference: '77849505'
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
                 bank_transfer:
@@ -5293,7 +5301,7 @@ paths:
                     status: pending
                     charge:
                       charge_id: c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4
-                      our_reference: QR-778812
+                      our_reference: '77849505'
                       qr_image_url: https://cdn.cbpayapp.com/public/payin-qr/c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4.png
                     idempotency_hit: true
                 push_to_dedicated:

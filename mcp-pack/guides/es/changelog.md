@@ -5,6 +5,13 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.176 · 1 versión - 22 de octubre de 2026
+### v2.176
+**Agregado**
+- Los payins QR de Brasil ahora documentan `method: "qr"` con `BR`/`BRL` y
+  exigen el CPF del pagador en `payer_document`. Se incluyen teléfono y email
+  opcionales, confirmación webhook-first, conciliación tardía segura,
+  expiración y replay idempotente.
 ## v2.175 · 6 versiones - 20 de octubre de 2026
 ### v2.175
 **Cambiado**
