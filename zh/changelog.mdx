@@ -4,7 +4,14 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月22日" description="v2.177 · 2 个版本">
+<Update label="2026年10月22日" description="v2.178 · 3 个版本">
+### v2.178
+**修复**
+- US/USD wire 自动 payout 现在会使用银行要求的 routing number 和
+  account type 完成收款人设置。如果银行拒绝 payout，`GET
+  /v1/payouts/{payout_id}` 和 `payout_status_changed` 现在会提供可操作的
+  `status_message`，集成方可以区分合规审查和缺少必填字段，避免盲目重试。
+
 ### v2.177
 **新增**
 - 新注册、受邀成员和新 OAuth 账户现在必须注册 2FA：邮箱确认返回有效 30 分钟的 `pending_2fa_enrollment`，首次会话前完成 TOTP 或通行密钥。
@@ -20,8 +27,6 @@ description: "API and documentation change history"
 - 巴西 QR payin 现在支持 `BR`/`BRL` 的 `method: "qr"`，并要求在
   `payer_document` 中提供付款人的 CPF。文档还说明可选电话和邮箱、
   webhook-first 确认、延迟对账、过期和幂等 replay。
-- 新注册、受邀成员和新 OAuth 账户现在必须注册 2FA：邮箱确认返回有效 30 分钟的 `pending_2fa_enrollment`，首次会话前完成 TOTP 或通行密钥。
-- 未完成首个因子的成员不能 login、refresh 或 handoff。
 </Update>
 
 <Update label="2026年10月20日" description="v2.175 · 6 个版本">
