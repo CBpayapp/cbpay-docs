@@ -46,6 +46,25 @@ All errors share the same shape:
 | 403 | `passkey_rejected` | The passkey could not be verified; retry or sign in with another method |
 | 403 | `owner_required` | Only the account owner can change the 2FA preferences |
 
+
+### Registration 2FA enrollment
+
+| HTTP | `error` | Meaning and solution |
+|---|---|---|
+| 401 | `invalid_pending_token` | The enrollment token is invalid or expired; start login or registration again. |
+| 400 | `invalid_credential` | WebAuthn payload is malformed; send the credential returned by the browser ceremony. |
+| 403 | `otp_invalid` | The six-digit authenticator code is invalid or expired; wait for the next code and try again. |
+| 403 | `passkey_rejected` | WebAuthn verification failed; retry on the same device or choose TOTP. |
+| 409 | `totp_not_started` | Call `totp/begin` before `totp/confirm`. |
+| 409 | `enrollment_complete` | Another request already completed enrollment; sign in with the new factor. |
+| 409 | `challenge_not_pending` | The passkey ceremony expired or was consumed; begin it again. |
+| 409 | `passkey_exists` | This device credential is already registered; use the existing passkey. |
+| 503 | `passkeys_unavailable` | The organization has no WebAuthn configuration; use TOTP. |
+| 403 | `enrollment_required` | An environment handoff cannot issue a session before enrollment; complete the wizard first. |
+
+`pending_2fa_enrollment` is a response status, not an error.
+
+
 ### OTP / 2FA
 
 Full flow and details in [security and 2FA](/en/security-2fa).

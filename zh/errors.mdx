@@ -648,3 +648,18 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 403 | `kyc_not_approved` | 账户须先完成身份验证（KYC/KYB）方可申请 Trust Center 准入。 |
 | 403 | `member_required` | 申请或签署须使用已登录成员会话；API 密钥不能签署。 |
 | 422 | `account_identity_mismatch` | 回显的身份字段与已验证账户不符；请发送已验证值。 |
+
+### 注册 2FA 错误
+
+| HTTP | `error` | 解决办法 |
+|---|---|---|
+| 401 | `invalid_pending_token` | token 无效或过期；重新开始。 |
+| 400 | `invalid_credential` | 发送浏览器返回的 WebAuthn credential。 |
+| 403 | `otp_invalid` | 等待下一次六位代码。 |
+| 403 | `passkey_rejected` | 重试或选择 TOTP。 |
+| 409 | `totp_not_started` | 先调用 `totp/begin`。 |
+| 409 | `enrollment_complete` | 已由其他请求完成；登录。 |
+| 409 | `challenge_not_pending` | 重新开始仪式。 |
+| 409 | `passkey_exists` | 使用现有通行密钥。 |
+| 503 | `passkeys_unavailable` | 组织未配置 WebAuthn，使用 TOTP。 |
+| 403 | `enrollment_required` | handoff 前先完成注册。 |

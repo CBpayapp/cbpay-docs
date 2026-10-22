@@ -185,10 +185,12 @@ flowchart TD
     B -->|sí| C[Inicia sesión en esa cuenta]
     B -->|no| D{¿Existe cuenta con ese email<br/>y el proveedor lo verificó?}
     D -->|sí| E[Vincula el proveedor y entra]
-    D -->|no| F[Crea cuenta nueva + sesión]
+    D -->|no| F[Crea cuenta nueva + enrolamiento 2FA pendiente]
 ```
 
 ## 4. Login social y 2FA
+
+Una cuenta OAuth nueva devuelve `201` con `created: true` y `pending_2fa_enrollment`; un member existente sin factor devuelve `200` con el mismo estado. Completa el wizard con el `pending_token` antes de recibir sesión. El login con passkey y `must_enroll_2fa` también devuelve `pending_2fa_enrollment`; `RegisterPending` sigue respondiendo `invalid_credential` hasta verificar el email.
 
 Si la cuenta tiene **OTP activo en el login**
 ([seguridad y 2FA](/es/security-2fa)), el login social respeta ese segundo

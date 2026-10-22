@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.176"
+  version: "2.177"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -1883,7 +1883,7 @@ paths:
       security: []
       operationId: confirmRegistration
       summary: .................................
-      description: ....................................................................................................................................
+      description: 验证注册邮箱代码并返回 pending_2fa_enrollment 和有效 30 分钟的 pending_token；完成 TOTP 或通行密钥注册前不会签发会话。无效或过期的身份/代码组合统一处理。
       requestBody:
         required: true
         content:
@@ -1898,13 +1898,149 @@ paths:
             example: {org: cbpay, email: ana@example.com, code: '123456'}
       responses:
         '201':
-          description: .................................
+          description: 返回待注册 2FA；暂不签发会话。
           content:
             application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-13T12:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-12T12:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, passkey], passkeys_available: true, next: [Choose an authenticator app or passkey], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400': {description: ........................... invalid_code...}
         '401': {description: ................................................ invalid_code...}
         '502': {description: otp_check_failed...}
+  /v1/auth/register/2fa/totp/begin:
+    post:
+      tags: [身份认证]
+      security: []
+      operationId: register2FATOTPBegin
+      summary: 开始强制 TOTP 注册
+      description: 使用有效期 30 分钟的注册待处理令牌创建身份验证器密钥和 QR 数据。不接受会话令牌。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: TOTP 设置数据。
+          content:
+            application/json:
+              example:
+                totp_secret: JBSWY3DPEHPK3PXP
+                otpauth_uri: otpauth://totp/CBPay:ana@example.com?secret=JBSWY3DPEHPK3PXP
+                qr_png_base64: iVBORw0KGgoAAAANSUhEUg...
+                steps: ["1. 打开身份验证器应用", "2. 扫描 QR 码", "3. 输入六位代码"]
+                note: "在身份验证器应用中扫描 QR，然后调用 POST /v1/auth/register/2fa/totp/confirm 确认"
+        '401': {description: 待处理令牌无效。}
+        '201':
+          description: 崩溃恢复发现已有因子；注册已完成并签发会话。
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+  /v1/auth/register/2fa/totp/confirm:
+    post:
+      tags: [身份认证]
+      security: []
+      operationId: register2FATOTPConfirm
+      summary: 确认强制 TOTP 注册
+      description: 确认首个六位代码，返回 10 个一次性恢复码和首个会话。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, code]
+              properties:
+                pending_token: {type: string}
+                code: {type: string, minLength: 1}
+            example: {pending_token: eyJ..., code: '482913'}
+      responses:
+        '201':
+          description: 注册完成并签发首个会话。
+          content:
+            application/json:
+              example:
+                access_token: eyJ...
+                expires_at: '2026-10-22T19:00:00Z'
+                refresh_token: rt_...
+                refresh_expires_at: '2026-11-20T19:00:00Z'
+                account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}
+                recovery_codes: [ABCD-EFGH, JKLM-NPQR, STUV-WXYZ, 2345-6789, CDEF-GHJK, MNPQ-RSTU, VWXY-Z234, 5678-9ABC, DEFG-HJKM, NPQR-STUV]
+                steps: ["立即保存这 10 个恢复码：它们只显示一次且每个只能使用一次。"]
+                note: "立即保存这些恢复码：它们只显示一次且每个只能使用一次"
+        '401': {description: 待处理令牌无效。}
+        '403': {description: otp_invalid；六位代码无效或已过期。}
+        '409': {description: TOTP 尚未开始或 enrollment_complete。}
+  /v1/auth/register/2fa/passkey/begin:
+    post:
+      tags: [身份认证]
+      security: []
+      operationId: register2FAPasskeyBegin
+      summary: 开始强制通行密钥注册
+      description: 使用注册待处理令牌开始 WebAuthn 注册。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: WebAuthn 创建选项。
+          content:
+            application/json:
+              example:
+                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
+                options: {publicKey: {challenge: Y2hhbG..., rp: {name: CBPay, id: cbpayapp.com}, user: {name: ana@example.com}}}
+                expires_at: '2026-10-22T19:02:00Z'
+                steps: ["1. 批准此设备上的系统对话框", "2. 在下一步为此设备命名"]
+                note: "将 options.publicKey 传给 navigator.credentials.create()，并将结果发送到 POST /v1/auth/register/2fa/passkey/finish"
+        '201':
+          description: 崩溃恢复发现已有因子；注册已完成并签发会话。
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '401': {description: 待处理令牌无效。}
+        '503': {description: 通行密钥不可用。}
+  /v1/auth/register/2fa/passkey/finish:
+    post:
+      tags: [身份认证]
+      security: []
+      operationId: register2FAPasskeyFinish
+      summary: 完成强制通行密钥注册
+      description: 验证 WebAuthn attestation，保存凭据并返回首个会话。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, challenge_id, credential]
+              properties:
+                pending_token: {type: string}
+                challenge_id: {type: string, format: uuid}
+                name: {type: string, maxLength: 60}
+                credential: {type: object}
+            example: {pending_token: eyJ..., challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69, name: Taylor's MacBook, credential: {id: Y3JlZGVudGlhbA..., type: public-key, response: {clientDataJSON: eyJ..., attestationObject: o2N...}}}
+      responses:
+        '201':
+          description: 注册完成并签发首个会话。
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
+        '400': {description: 凭据无效。}
+        '401': {description: 待处理令牌无效。}
+        '403': {description: 通行密钥验证失败。}
+        '409': {description: "challenge_not_pending、passkey_exists 或 enrollment_complete。"}
+        '503': {description: 通行密钥不可用。}
+
   /v1/auth/environment-handoff:
     post:
       tags:

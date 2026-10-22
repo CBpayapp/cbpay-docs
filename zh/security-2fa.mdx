@@ -178,7 +178,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 - **E.164** 格式（`+56912345678`），可在注册时、通过 `PATCH /v1/me` 或由您的运营方设置。
 - `phone_verified` 会在您首次成功验证质询时变为 `true`：这证明持有人手中确实握有该手机。
 - **更换手机号**（操作 `phone_change`）时，验证码将发送到**原有**号码进行校验——任何人在未持有您当前手机的情况下都无法劫持您的验证码。
-- 如果手机号是首次绑定（或未经验证即被更改），SMS/WhatsApp 质询将锁定 **24 小时**：这是防会话劫持的窗口期。冷却期内，若您已注册身份验证器应用或已验证邮箱，质询会自动改用该更强的因素发出（质询响应中会返回实际使用的渠道）；仅当没有任何替代因素时才会收到 `403 phone_binding_cooldown`。由运营方设置的手机号没有冷却期。指定显式渠道会关闭自动回退：冷却期内的 `channel: sms` 即使已注册身份验证器应用，也会返回 `403 phone_binding_cooldown`。
+- 如果手机号是首次绑定（或未经验证即被更改），SMS/WhatsApp 质询将锁定 **4 小时**：这是防会话劫持的窗口期。冷却期内，若您已注册身份验证器应用或已验证邮箱，质询会自动改用该更强的因素发出（质询响应中会返回实际使用的渠道）；仅当没有任何替代因素时才会收到 `403 phone_binding_cooldown`。由运营方设置的手机号没有冷却期。您也可以使用 `POST /v1/me/phone/unlock-cooldown`（邮箱/totp 令牌）提前解除，或请运营方从您的资料清除冷却。指定显式渠道会关闭自动回退：冷却期内的 `channel: sms` 即使已注册身份验证器应用，也会返回 `403 phone_binding_cooldown`。
 - **两步登录**遵循同样的规则：登录 2FA 为 SMS/WhatsApp 且手机号处于冷却期时，登录验证码会改由身份验证器应用或您的登录邮箱发出（登录响应中返回实际的 `channel`）——绝不会发送到最近绑定且未验证的号码。没有替代因素时，登录返回 `403 phone_binding_cooldown`，直到冷却期结束。
 
 ## 错误
@@ -190,7 +190,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 | 403 | `otp_invalid` | 令牌无效、已过期或已被使用 | 验证一个新的质询 |
 | 403 | `session_required` | 使用 API 密钥请求了质询 | 质询仅适用于用户会话 |
 | 403 | `channel_locked_by_org` | 显式渠道弱于该操作的有效最低强度（先看账户策略，再看组织默认值） | 省略 `channel` 或选择更强的因素 |
-| 403 | `phone_binding_cooldown` | 手机号绑定未满 24 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱） | 注册身份验证器应用或验证邮箱；否则等待冷却期结束，或请您的运营方设置号码 |
+| 403 | `phone_binding_cooldown` | 手机号绑定未满 4 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱） | 注册身份验证器应用或验证邮箱；使用 `POST /v1/me/phone/unlock-cooldown` 提前解除，或请您的运营方清除冷却 |
 | 401 | `invalid_code` | 验证码不匹配 | 核对 SMS/WhatsApp 中的验证码并重试（5 次机会） |
 | 401 | `invalid_pending_token` | 登录中间令牌已过期 | 重新登录 |
 | 409 | `phone_required` | 账户未绑定手机号 | 通过 `PATCH /v1/me` 设置 E.164 格式的 `phone` |
@@ -218,3 +218,21 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
     不会。令牌被消耗只意味着您需要重新验证一个新的质询；操作的 `idempotency_key` 仍然保证不会产生重复。
   </Accordion>
 </AccordionGroup>
+
+## 注册与登录恢复
+
+注册强制 2FA 独立于操作 OTP。保留 `pending_token` 最多 30 分钟并选择 TOTP 或通行密钥。密码登录、OAuth 登录和受邀成员首次登录在 `must_enroll_2fa` 时返回 `pending_2fa_enrollment`；新 OAuth 账户为 `201` 且带 `created: true`。未完成注册的成员不能 refresh 或 handoff。
+
+```mermaid
+sequenceDiagram
+  participant A as 应用
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin
+  API-->>A: 200 otpauth_uri + QR
+  A->>API: POST /v1/auth/register/2fa/totp/confirm
+  API-->>A: 201 会话 + recovery_codes
+```
+
+通行密钥登录也遵循注册门控：`must_enroll_2fa` 为 `true` 时，`POST /v1/auth/passkey/login/finish` 返回 `pending_2fa_enrollment`，成员完成注册向导后才获得会话。仍处于 `RegisterPending`（邮箱未验证）的成员在确认邮箱前会收到 `invalid_credential`；这与 2FA 注册门控是两个独立流程。

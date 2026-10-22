@@ -25,6 +25,28 @@ authenticator app (TOTP), recovery codes and passkeys — lives in
 [Profile & security](/en/guides/profile).
 </Note>
 
+
+## Registration enrollment and login resume
+
+Mandatory registration 2FA is a separate enrollment ceremony from per-action OTP. After email confirmation, keep the `pending_token` for up to 30 minutes and resume with either TOTP or passkey:
+
+```mermaid
+sequenceDiagram
+  participant A as App
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin
+  API-->>A: 200 otpauth_uri + QR
+  A->>API: POST /v1/auth/register/2fa/totp/confirm
+  API-->>A: 201 session + recovery_codes
+```
+
+Password login, OAuth login (including auto-link), and invited-member first login return `pending_2fa_enrollment` instead of a session when the member has `must_enroll_2fa`. OAuth-created accounts return `201` and include `created: true`; existing-account login returns `200`. The login OTP endpoint remains the second step for members who already have an enrolled factor and a login challenge. Refresh and environment handoff reject an unenrolled member; complete enrollment and sign in again.
+
+Registration enrollment errors include `401 invalid_pending_token`, `409 totp_not_started`, `403 otp_invalid` (the code must be exactly six digits), `409 enrollment_complete`, `409 challenge_not_pending`, `503 passkeys_unavailable`, `409 passkey_exists`, `403 passkey_rejected`, and `400 invalid_credential` for malformed WebAuthn data.
+
+
 ## How it works
 
 ```mermaid
@@ -210,12 +232,14 @@ two-factor flow on its own and does not request a second code.
   the **previous** number — nobody can redirect your codes without holding
   your current phone.
 - If the phone is linked for the first time (or changed without
-  verification), SMS/WhatsApp challenges stay locked for **24 hours**: the
+  verification), SMS/WhatsApp challenges stay locked for **4 hours**: the
   anti session-hijacking window. During the cooldown, if you have the
   authenticator app enrolled or a verified email, the challenge is issued
   automatically over that stronger factor (the channel comes back in the
   challenge response); you only get `403 phone_binding_cooldown` when no
   alternative factor exists. A phone set by your operator has no cooldown.
+  You can also lift the cooldown early with `POST /v1/me/phone/unlock-cooldown`
+  (email/totp token), or your operator can clear it from your profile.
   Pinning an explicit channel turns the fallback off: `channel: sms` in
   cooldown fails with `403 phone_binding_cooldown` even with the
   authenticator app enrolled.
@@ -235,7 +259,7 @@ two-factor flow on its own and does not request a second code.
 | 403 | `otp_invalid` | Token invalid, expired or already used | Verify a new challenge |
 | 403 | `session_required` | You requested a challenge with an API key | Challenges are for user sessions only |
 | 403 | `channel_locked_by_org` | Your explicit channel is weaker than the effective minimum for this action (your account's policy first, then the org default) | Leave `channel` out or pick a stronger factor |
-| 403 | `phone_binding_cooldown` | Phone linked less than 24 h ago without verification and no alternative factor (authenticator app or verified email) | Enroll the authenticator app or verify your email; otherwise wait out the cooldown or ask your operator to set the number |
+| 403 | `phone_binding_cooldown` | Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email) | Enroll the authenticator app or verify your email; lift early with `POST /v1/me/phone/unlock-cooldown`, or ask your operator to clear the cooldown |
 | 401 | `invalid_code` | The code does not match | Check the SMS/WhatsApp and retry (5 attempts) |
 | 401 | `invalid_pending_token` | The intermediate login token expired | Log in again |
 | 409 | `phone_required` | The account has no phone | `PATCH /v1/me` with an E.164 `phone` |
@@ -276,3 +300,5 @@ two-factor flow on its own and does not request a second code.
     operation's `idempotency_key` still guarantees there are no duplicates.
   </Accordion>
 </AccordionGroup>
+
+Passkey login also respects the enrollment gate: when `must_enroll_2fa` is true, `POST /v1/auth/passkey/login/finish` returns `pending_2fa_enrollment` and the member completes the registration wizard before receiving a session. A member still marked `RegisterPending` (email not yet verified) receives `invalid_credential` until the mailbox is confirmed; that is separate from the 2FA enrollment gate.
