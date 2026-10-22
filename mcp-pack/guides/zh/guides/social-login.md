@@ -176,10 +176,12 @@ flowchart TD
     B -->|是| C[登录到该账户]
     B -->|否| D{是否存在使用该邮箱的账户<br/>且提供方已验证该邮箱？}
     D -->|是| E[关联该提供方并登录]
-    D -->|否| F[创建新账户 + 会话]
+    D -->|否| F[创建新账户 + 待注册 2FA]
 ```
 
 ## 4. 社交登录与 2FA
+
+新 OAuth 账户返回 `201`、`created: true` 和 `pending_2fa_enrollment`；没有因子的既有成员返回 `200` 和相同状态。使用 `pending_token` 完成注册向导后才获得会话。`must_enroll_2fa` 时通行密钥登录也返回 `pending_2fa_enrollment`；`RegisterPending` 成员在验证邮箱前仍返回 `invalid_credential`。
 
 如果账户**在登录时启用了 OTP**
 （[安全与 2FA](https://docs.cbpayapp.com/zh/security-2fa)），社交登录同样遵循该第二

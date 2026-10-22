@@ -176,16 +176,14 @@ flowchart TD
     B -->|yes| C[Sign in to that account]
     B -->|no| D{Account with that email exists<br/>and provider verified it?}
     D -->|yes| E[Link the provider and sign in]
-    D -->|no| F[Create new account + session]
+    D -->|no| F[Create new account + pending 2FA enrollment]
 ```
 
 ## 4. Social login and 2FA
 
-If the account has **OTP enabled on login**
-([security and 2FA](https://docs.cbpayapp.com/en/security-2fa)), social login respects that second
-step: instead of the session, `POST /v1/auth/oauth` returns
-`otp_required: true` + `pending_token`, and you complete it with
-`POST /v1/auth/login/otp` just like password login.
+OAuth login follows the same factor gate as password login. A new OAuth account returns `201` with `created: true`, `account`, and `status: "pending_2fa_enrollment"` instead of a session. An existing member without an enrolled factor receives `200` with the same pending enrollment shape. Follow `next` and use the returned `pending_token` with the public registration enrollment endpoints; do not send it as a bearer session.
+
+After TOTP or passkey enrollment, the API returns the normal session. OAuth auto-linking does not bypass mandatory enrollment. If the account already has OTP enabled on login, the normal login second step also remains available: `POST /v1/auth/oauth` returns `otp_required: true` and a `pending_token`, completed with `POST /v1/auth/login/otp`. Passkey login with `must_enroll_2fa` likewise returns `pending_2fa_enrollment`; `RegisterPending` remains `invalid_credential` until the email is verified.
 
 ## 5. Link and unlink providers
 
@@ -239,3 +237,4 @@ password and that provider is the only one linked, the API responds
 #### Is the provider credential usable as a CBPay token?
     No. The provider credential is used once to verify you; every following
     call uses the CBPay `access_token`.
+Passkey login also respects the enrollment gate: when `must_enroll_2fa` is true, `POST /v1/auth/passkey/login/finish` returns `pending_2fa_enrollment` and the member completes the registration wizard before receiving a session. A member still marked `RegisterPending` (email not yet verified) receives `invalid_credential` until the mailbox is confirmed; that is separate from the 2FA enrollment gate.

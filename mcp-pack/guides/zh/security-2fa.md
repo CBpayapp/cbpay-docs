@@ -205,3 +205,20 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
     不可以：令牌与创建质询时指定的确切操作绑定（`payout` 令牌不能用于 `transfer`），且在首次使用时即被消耗。
 #### 令牌被消耗后操作失败了——我会被扣两次款吗？
     不会。令牌被消耗只意味着您需要重新验证一个新的质询；操作的 `idempotency_key` 仍然保证不会产生重复。
+## 注册与登录恢复
+
+注册强制 2FA 独立于操作 OTP。保留 `pending_token` 最多 30 分钟并选择 TOTP 或通行密钥。密码登录、OAuth 登录和受邀成员首次登录在 `must_enroll_2fa` 时返回 `pending_2fa_enrollment`；新 OAuth 账户为 `201` 且带 `created: true`。未完成注册的成员不能 refresh 或 handoff。
+
+```mermaid
+sequenceDiagram
+  participant A as 应用
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin
+  API-->>A: 200 otpauth_uri + QR
+  A->>API: POST /v1/auth/register/2fa/totp/confirm
+  API-->>A: 201 会话 + recovery_codes
+```
+
+通行密钥登录也遵循注册门控：`must_enroll_2fa` 为 `true` 时，`POST /v1/auth/passkey/login/finish` 返回 `pending_2fa_enrollment`，成员完成注册向导后才获得会话。仍处于 `RegisterPending`（邮箱未验证）的成员在确认邮箱前会收到 `invalid_credential`；这与 2FA 注册门控是两个独立流程。

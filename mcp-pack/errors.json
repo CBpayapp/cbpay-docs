@@ -1,5 +1,5 @@
 {
-  "count": 360,
+  "count": 363,
   "errors": [
     {
       "category": {
@@ -255,6 +255,132 @@
     },
     {
       "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "OTP / 2FA",
+        "zh": "OTP / 双因素认证"
+      },
+      "code": "invalid_pending_token",
+      "http": 401,
+      "meaning": {
+        "en": "The enrollment token is invalid or expired; start login or registration again.",
+        "es": "El token intermedio del login expiró; vuelve a iniciar sesión",
+        "zh": "登录中间令牌已过期；请重新登录"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "Login social (OAuth)",
+        "zh": "社交登录（OAuth）"
+      },
+      "code": "invalid_credential",
+      "http": 400,
+      "meaning": {
+        "en": "WebAuthn payload is malformed; send the credential returned by the browser ceremony.",
+        "es": "La credencial del proveedor es inválida, expiró o es de otra app",
+        "zh": "提供方凭证无效、已过期或来自其他应用"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "OTP / 2FA",
+        "zh": "OTP / 双因素认证"
+      },
+      "code": "otp_invalid",
+      "http": 403,
+      "meaning": {
+        "en": "The six-digit authenticator code is invalid or expired; wait for the next code and try again.",
+        "es": "Token OTP inválido, expirado o ya usado",
+        "zh": "OTP 令牌无效、已过期或已被使用"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "OTP / 2FA",
+        "zh": "OTP / 双因素认证"
+      },
+      "code": "totp_not_started",
+      "http": 409,
+      "meaning": {
+        "en": "Call `totp/begin` before `totp/confirm`.",
+        "es": "No hay enrolamiento TOTP en curso; parte con `POST /v1/me/totp/enroll`",
+        "zh": "尚未开始 TOTP 注册；请先调用 `POST /v1/me/totp/enroll`"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "enrollment_complete",
+      "http": 409,
+      "meaning": {
+        "en": "Another request already completed enrollment; sign in with the new factor.",
+        "es": "Ya terminó otro request; inicia sesión.",
+        "zh": "已由其他请求完成；登录。"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "OTP / 2FA",
+        "zh": "OTP / 双因素认证"
+      },
+      "code": "challenge_not_pending",
+      "http": 409,
+      "meaning": {
+        "en": "The passkey ceremony expired or was consumed; begin it again.",
+        "es": "El desafío expiró o ya se usó; crea uno nuevo",
+        "zh": "质询已过期或已被使用；请创建一个新的"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "Errores de límites money-out",
+        "zh": "出金限额错误"
+      },
+      "code": "passkey_exists",
+      "http": 409,
+      "meaning": {
+        "en": "This device credential is already registered; use the existing passkey.",
+        "es": "El credential ID ya está registrado en esta cuenta. Inicia sesión con la passkey existente.",
+        "zh": "该 credential ID 已注册在此账户。请用现有 passkey 登录。"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "passkeys_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The organization has no WebAuthn configuration; use TOTP.",
+        "es": "Usa TOTP; la organización no configuró WebAuthn.",
+        "zh": "组织未配置 WebAuthn，使用 TOTP。"
+      }
+    },
+    {
+      "category": {
+        "en": "Registration 2FA enrollment",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "enrollment_required",
+      "http": 403,
+      "meaning": {
+        "en": "An environment handoff cannot issue a session before enrollment; complete the wizard first.",
+        "es": "Completa el enrolamiento antes del handoff.",
+        "zh": "handoff 前先完成注册。"
+      }
+    },
+    {
+      "category": {
         "en": "OTP / 2FA",
         "es": "OTP / 2FA",
         "zh": "OTP / 双因素认证"
@@ -265,20 +391,6 @@
         "en": "The action requires OTP: verify a challenge and retry with `X-OTP-Token`",
         "es": "La acción exige OTP: verifica un desafío y reintenta con `X-OTP-Token`",
         "zh": "该操作需要 OTP：验证一个质询后携带 `X-OTP-Token` 重试"
-      }
-    },
-    {
-      "category": {
-        "en": "OTP / 2FA",
-        "es": "OTP / 2FA",
-        "zh": "OTP / 双因素认证"
-      },
-      "code": "otp_invalid",
-      "http": 403,
-      "meaning": {
-        "en": "OTP token invalid, expired or already used",
-        "es": "Token OTP inválido, expirado o ya usado",
-        "zh": "OTP 令牌无效、已过期或已被使用"
       }
     },
     {
@@ -343,20 +455,6 @@
         "es": "OTP / 2FA",
         "zh": "OTP / 双因素认证"
       },
-      "code": "invalid_pending_token",
-      "http": 401,
-      "meaning": {
-        "en": "The intermediate login token expired; log in again",
-        "es": "El token intermedio del login expiró; vuelve a iniciar sesión",
-        "zh": "登录中间令牌已过期；请重新登录"
-      }
-    },
-    {
-      "category": {
-        "en": "OTP / 2FA",
-        "es": "OTP / 2FA",
-        "zh": "OTP / 双因素认证"
-      },
       "code": "invalid_action",
       "http": 400,
       "meaning": {
@@ -413,20 +511,6 @@
         "es": "OTP / 2FA",
         "zh": "OTP / 双因素认证"
       },
-      "code": "challenge_not_pending",
-      "http": 409,
-      "meaning": {
-        "en": "The challenge expired or was already used; create a new one",
-        "es": "El desafío expiró o ya se usó; crea uno nuevo",
-        "zh": "质询已过期或已被使用；请创建一个新的"
-      }
-    },
-    {
-      "category": {
-        "en": "OTP / 2FA",
-        "es": "OTP / 2FA",
-        "zh": "OTP / 双因素认证"
-      },
       "code": "independent_factor_required",
       "http": 403,
       "meaning": {
@@ -469,20 +553,6 @@
         "es": "OTP / 2FA",
         "zh": "OTP / 双因素认证"
       },
-      "code": "totp_not_started",
-      "http": 409,
-      "meaning": {
-        "en": "Confirm requires starting enrollment first (`POST /v1/me/totp/enroll`)",
-        "es": "No hay enrolamiento TOTP en curso; parte con `POST /v1/me/totp/enroll`",
-        "zh": "尚未开始 TOTP 注册；请先调用 `POST /v1/me/totp/enroll`"
-      }
-    },
-    {
-      "category": {
-        "en": "OTP / 2FA",
-        "es": "OTP / 2FA",
-        "zh": "OTP / 双因素认证"
-      },
       "code": "otp_unavailable",
       "http": 503,
       "meaning": {
@@ -517,20 +587,6 @@
         "en": "Your organization has not enabled that provider",
         "es": "Tu organización no tiene ese proveedor habilitado",
         "zh": "您的组织尚未启用该提供方"
-      }
-    },
-    {
-      "category": {
-        "en": "Social login (OAuth)",
-        "es": "Login social (OAuth)",
-        "zh": "社交登录（OAuth）"
-      },
-      "code": "invalid_credential",
-      "http": 401,
-      "meaning": {
-        "en": "The provider credential is invalid, expired or from another app",
-        "es": "La credencial del proveedor es inválida, expiró o es de otra app",
-        "zh": "提供方凭证无效、已过期或来自其他应用"
       }
     },
     {
@@ -4613,20 +4669,6 @@
         "en": "The organization policy enables TOTP only and blocks passkey registration for this account; it also rejects challenges whose explicit `channel` is weaker than the org floor. Contact an org admin to change the policy.",
         "es": "La política de la org solo permite TOTP y bloquea el registro de passkeys en esta cuenta; también rechaza desafíos cuyo `channel` explícito es más débil que el piso de la org. Pide a un org admin que cambie la política.",
         "zh": "组织策略仅允许 TOTP，禁止该账户注册 passkey；也会拒绝显式 `channel` 弱于组织底线的质询。请联系 org 管理员修改策略。"
-      }
-    },
-    {
-      "category": {
-        "en": "Money-out limit errors",
-        "es": "Errores de límites money-out",
-        "zh": "出金限额错误"
-      },
-      "code": "passkey_exists",
-      "http": 409,
-      "meaning": {
-        "en": "The credential ID is already registered on this account. Sign in with the existing passkey.",
-        "es": "El credential ID ya está registrado en esta cuenta. Inicia sesión con la passkey existente.",
-        "zh": "该 credential ID 已注册在此账户。请用现有 passkey 登录。"
       }
     },
     {

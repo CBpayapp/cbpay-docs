@@ -42,7 +42,6 @@ flowchart LR
 ```
 
 ## 1. Descubre los corredores disponibles
-
 Los países, monedas y modalidades disponibles los define CBPay.
 Consúltalos siempre por catálogo:
 
@@ -75,7 +74,7 @@ Corredores y modalidades de cobro:
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
 | Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`) |
 | Paraguay | PYG | Transferencia anunciada |
-| Brasil | BRL | QR PIX dinámico (`qr`), redirect PIX hosted (`pix`) |
+| Brasil | BOB (`qr`), BRL (`pix`) | QR PIX dinámico con conversión BRL para el pagador; redirect PIX hosted |
 | Argentina | ARS | Cuenta CVU dedicada |
 | Venezuela | VES | Cobro activo (`c2p`) |
 | Ecuador | USD | Transferencia anunciada con despacho manual |
@@ -99,7 +98,6 @@ Si prefieres quedarte con tus cobros en otro saldo
 [el modelo de dinero](https://docs.cbpayapp.com/es/concepts/money-model#elige-en-que-saldo-se-acreditan-tus-payins).
 
 ## 2. Elige la modalidad y crea el cobro
-
 Cada país tiene su propia modalidad de cobro. El request y la respuesta
 real de cada una:
 
@@ -515,9 +513,8 @@ el concepto asegura el match automático. Manda `payer_document` como
 respaldo — ver
 [conciliación de una transferencia anunciada](#conciliaci%C3%B3n-de-una-transferencia-anunciada).
 #### Brasil
-
-**QR PIX dinámico**: el método `qr` genera un QR PIX con el monto
-embebido.
+**QR PIX dinámico**: el método `qr` genera un QR PIX denominado en BOB.
+El pagador completa el pago en BRL mediante la conversión del riel.
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -525,9 +522,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Content-Type: application/json" \
   -d '{
     "country": "BR",
-    "currency": "BRL",
+    "currency": "BOB",
     "method": "qr",
-    "amount": "120.00",
+    "amount": "1.00",
     "description": "Pedido 7719",
     "payer_document": "52998224725",
     "payer_phone": "+5511999990000",
@@ -536,10 +533,15 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-La respuesta trae `charge.qr_image` (PNG en base64) y `charge.qr_image_url`.
-Este corredor brasileño no entrega payload EMV para copiar y pegar. El core
-envía TTL default `23:59:59` al crear el cobro; el pago llega a `credited`
-tras la confirmación autenticada y la conciliación.
+La respuesta trae `charge.qr_image` (PNG en base64), `charge.qr_image_url` y
+la conversión que verá el pagador. Este corredor brasileño no entrega payload
+EMV para copiar y pegar:
+
+```json
+{"charge":{"our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"0.48","currency":"BRL","rate":"0.48"},"expires_at":"2026-10-22T12:57:14.937Z","status":"pending"}}
+```
+
+El pago llega a `credited` tras la confirmación autenticada y la conciliación.
 
 > **Nota**
 El método `qr` genera un QR dinámico de un pago con el monto exacto embebido.
@@ -923,8 +925,9 @@ pedirle al pagador:
 Un documento de menos de 5 caracteres o sin dígitos se descarta como señal
 (no se puede distinguir de un monto o un código de banco). El anuncio se crea
 igual y `payer_source` reporta la cobertura real.
-### Reintentos e idempotencia
+### Monto mínimo viable para transferencias anunciadas — CBPay calcula por cuenta un mínimo local según la comisión fija y la tasa vigente. Bajo ese mínimo, `POST /v1/payins` responde `422 amount_below_minimum` e incluye el mínimo en el mensaje (por ejemplo, `amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller deposits)`). Es el código reutilizado para payouts y transfers. Sin tasa, se omite la prevalidación y manda el guard del ledger. Un abono matcheado bajo el mínimo termina en `failed` con `failure.code: "amount_below_minimum"` visible y alerta a operaciones; un abono sin match queda `unassigned` para ruteo manual. Ambos resultados son idempotentes, sin reintento fútil ni webhook nuevo en v1.
 
+### Reintentos e idempotencia
 El anuncio acepta `idempotency_key` (en el body) o el header
 `Idempotency-Key`. Un reintento con la MISMA clave devuelve el anuncio
 **original** — misma `reference` — con `idempotency_hit: true` y HTTP `200`,
@@ -1232,7 +1235,7 @@ cobro nuevo — nada se debitó ni acreditó.
 La referencia sigue calzando con el anuncio, pero se acredita el monto que
 llegó. Una transferencia que no resuelve a ningún anuncio queda `unassigned`
 para conciliación; tu equipo CBPay puede asignarla manualmente al payin
-correcto.
+correcto. Un anuncio bajo el mínimo responde `422 amount_below_minimum`; un abono matcheado termina `failed` con el mismo código en `failure`, mientras uno sin match queda `unassigned` para ruteo manual. No hay reintento fútil ni webhook nuevo.
 #### Dos clientes anunciaron el mismo monto y ninguno puso la referencia, ¿a quién se le abona?
 A nadie por azar. Si el documento del pagador no los distingue, ambos anuncios
 quedan `pending` y el depósito queda `unassigned` para que el operador lo

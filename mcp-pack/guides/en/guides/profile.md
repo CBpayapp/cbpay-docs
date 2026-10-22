@@ -150,6 +150,12 @@ front end — use it directly in an ``); in that case
 }
 ```
 
+### Registration is where the first factor is enrolled
+
+The profile page still manages factors after sign-in, but new registrations no longer enroll from a session. After `POST /v1/auth/register/confirm`, use the pending-token wizard described in [Authentication](https://docs.cbpayapp.com/en/authentication): TOTP (`begin` → `confirm`) returns 10 one-time `recovery_codes`, while passkey (`begin` → `finish`) completes WebAuthn registration. Store recovery codes immediately; they are shown only once.
+
+Existing profile endpoints remain available for factor management: `POST /v1/me/totp/enroll`, `POST /v1/me/totp/confirm`, `POST /v1/me/passkeys/register/begin`, and `POST /v1/me/passkeys/register/finish`. They do not replace the mandatory first-enrollment ceremony.
+
 ## Two-factor authentication (2FA)
 
 CBPay protects sensitive actions with a one-time code. You choose, per action,

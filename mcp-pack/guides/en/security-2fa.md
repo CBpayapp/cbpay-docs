@@ -22,6 +22,26 @@ This page covers the **per-action OTP flow** your integration must handle
 their own factors — enabling 2FA, channels (SMS/WhatsApp/email), the
 authenticator app (TOTP), recovery codes and passkeys — lives in
 [Profile & security](https://docs.cbpayapp.com/en/guides/profile).
+## Registration enrollment and login resume
+
+Mandatory registration 2FA is a separate enrollment ceremony from per-action OTP. After email confirmation, keep the `pending_token` for up to 30 minutes and resume with either TOTP or passkey:
+
+```mermaid
+sequenceDiagram
+  participant A as App
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin
+  API-->>A: 200 otpauth_uri + QR
+  A->>API: POST /v1/auth/register/2fa/totp/confirm
+  API-->>A: 201 session + recovery_codes
+```
+
+Password login, OAuth login (including auto-link), and invited-member first login return `pending_2fa_enrollment` instead of a session when the member has `must_enroll_2fa`. OAuth-created accounts return `201` and include `created: true`; existing-account login returns `200`. The login OTP endpoint remains the second step for members who already have an enrolled factor and a login challenge. Refresh and environment handoff reject an unenrolled member; complete enrollment and sign in again.
+
+Registration enrollment errors include `401 invalid_pending_token`, `409 totp_not_started`, `403 otp_invalid` (the code must be exactly six digits), `409 enrollment_complete`, `409 challenge_not_pending`, `503 passkeys_unavailable`, `409 passkey_exists`, `403 passkey_rejected`, and `400 invalid_credential` for malformed WebAuthn data.
+
 ## How it works
 
 ```mermaid
@@ -265,3 +285,4 @@ two-factor flow on its own and does not request a second code.
 #### The action failed after consuming the token — do I pay twice?
     No. A consumed token only means you must verify a new challenge; the
     operation's `idempotency_key` still guarantees there are no duplicates.
+Passkey login also respects the enrollment gate: when `must_enroll_2fa` is true, `POST /v1/auth/passkey/login/finish` returns `pending_2fa_enrollment` and the member completes the registration wizard before receiving a session. A member still marked `RegisterPending` (email not yet verified) receives `invalid_credential` until the mailbox is confirmed; that is separate from the 2FA enrollment gate.

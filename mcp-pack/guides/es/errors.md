@@ -666,3 +666,18 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 403 | `kyc_not_approved` | La cuenta debe completar verificación de identidad (KYC/KYB) antes de pedir acceso al Trust Center. |
 | 403 | `member_required` | Pedir o firmar exige sesión de miembro logueado; las API keys no firman. |
 | 422 | `account_identity_mismatch` | Un campo de identidad difiere de la cuenta verificada; envía los valores verificados. |
+
+### Enrolamiento 2FA del registro
+
+| HTTP | `error` | Solución |
+|---|---|---|
+| 401 | `invalid_pending_token` | Token inválido o vencido; inicia nuevamente. |
+| 400 | `invalid_credential` | Envía el credential devuelto por WebAuthn. |
+| 403 | `otp_invalid` | Espera el siguiente código de seis dígitos. |
+| 403 | `passkey_rejected` | Reintenta WebAuthn o elige TOTP. |
+| 409 | `totp_not_started` | Llama `totp/begin` antes de confirmar. |
+| 409 | `enrollment_complete` | Ya terminó otro request; inicia sesión. |
+| 409 | `challenge_not_pending` | Comienza de nuevo la ceremonia. |
+| 409 | `passkey_exists` | Usa la passkey ya registrada. |
+| 503 | `passkeys_unavailable` | Usa TOTP; la organización no configuró WebAuthn. |
+| 403 | `enrollment_required` | Completa el enrolamiento antes del handoff. |
