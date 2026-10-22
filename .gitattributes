@@ -11,6 +11,9 @@
 *.sh text eol=lf
 .githooks/** text eol=lf
 
+# Append-only changelogs: concurrent entries merge automatically (union).
+*/changelog.mdx merge=union
+
 *.png binary
 *.jpg binary
 *.jpeg binary
