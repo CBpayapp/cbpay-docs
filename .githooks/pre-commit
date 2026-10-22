@@ -16,4 +16,13 @@ if [ -d "$root/.git" ]; then
 	exit 1
 fi
 
+# qx-claim espejo: el script canonico vive en Qxchange (cero drift); los
+# claims de ESTE repo viven en SU .git (paths relativos por repo).
+claim_script="${QX_CLAIM_PS1:-C:/Users/satur/QBANK/Qxchange/scripts/qx-claim.ps1}"
+if [ ! -f "$claim_script" ]; then
+	echo "error: qx-claim.ps1 is missing ($claim_script); commit is fail-closed" >&2
+	exit 1
+fi
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$claim_script" -Mode precommit -Clone "$root"
+
 exit 0

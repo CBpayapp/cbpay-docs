@@ -5,7 +5,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$Slug,
     [string]$Branch = "",
-    [string]$Clone = ""
+    [string]$Clone = "",
+    [string[]]$ClaimPaths = @(),
+    [string]$QxClaim = "C:\Users\satur\QBANK\Qxchange\scripts\qx-claim.ps1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,5 +47,17 @@ git -C $wt config extensions.worktreeConfig true
 if (-not $?) { exit 1 }
 git -C $wt config --worktree core.hooksPath .githooks
 if (-not $?) { exit 1 }
+
+# qx-claim espejo (canonico en Qxchange; claims en el .git del clon docs).
+if ($ClaimPaths.Count -gt 0) {
+    & $QxClaim -Mode claim -Clone $Clone -Owner "$Site-$Slug" -Worktree $wt -Branch $Branch -Paths $ClaimPaths
+    if ($LASTEXITCODE -ne 0) {
+        try { git -C $Clone worktree remove --force -- "$wt" 2>&1 | Out-Null } catch { }
+        try { git -C $Clone branch -D -- "$Branch" 2>&1 | Out-Null } catch { }
+        Write-Error "qx-claim BLOCKED: otro ciclo toca esos paths (worktree revertido)"
+        exit 1
+    }
+    Write-Host "qx-claim: CLAIMED $($ClaimPaths.Count) paths"
+}
 
 Write-Host "File → Open Folder → $wt"
