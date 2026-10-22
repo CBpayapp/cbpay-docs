@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="22 de octubre de 2026" description="v2.176 · 1 versión">
+<Update label="22 de octubre de 2026" description="v2.177 · 2 versiones">
+### v2.177
+**Agregado**
+- El enrolamiento 2FA obligatorio ahora aplica a registros, miembros invitados y cuentas OAuth nuevas: la confirmación del email devuelve `pending_2fa_enrollment` con token de 30 minutos y exige TOTP o passkey antes de la primera sesión.
+- Login, refresh y handoff siguen bloqueados hasta completar el factor.
+
 ### v2.176
 **Cambiado**
 - Se agregó orientación de tiempos, agnóstica a proveedores, para retiros y payouts
@@ -18,6 +23,8 @@ description: "Historial de cambios de la API y de esta documentación"
   exigen el CPF del pagador en `payer_document`. Se incluyen teléfono y email
   opcionales, confirmación webhook-first, conciliación tardía segura,
   expiración y replay idempotente.
+- El enrolamiento 2FA obligatorio ahora aplica a registros, miembros invitados y cuentas OAuth nuevas: la confirmación del email devuelve `pending_2fa_enrollment` con token de 30 minutos y exige TOTP o passkey antes de la primera sesión.
+- Login, refresh y handoff siguen bloqueados hasta completar el factor.
 </Update>
 
 <Update label="20 de octubre de 2026" description="v2.175 · 6 versiones">

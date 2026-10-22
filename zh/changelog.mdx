@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月22日" description="v2.176 · 1 个版本">
+<Update label="2026年10月22日" description="v2.177 · 2 个版本">
+### v2.177
+**新增**
+- 新注册、受邀成员和新 OAuth 账户现在必须注册 2FA：邮箱确认返回有效 30 分钟的 `pending_2fa_enrollment`，首次会话前完成 TOTP 或通行密钥。
+- 未完成首个因子的成员不能 login、refresh 或 handoff。
+
 ### v2.176
 **变更**
 - 新增与供应商无关的美国 Banking 提现和 payout 时间说明：ACH 约需
@@ -15,6 +20,8 @@ description: "API and documentation change history"
 - 巴西 QR payin 现在支持 `BR`/`BRL` 的 `method: "qr"`，并要求在
   `payer_document` 中提供付款人的 CPF。文档还说明可选电话和邮箱、
   webhook-first 确认、延迟对账、过期和幂等 replay。
+- 新注册、受邀成员和新 OAuth 账户现在必须注册 2FA：邮箱确认返回有效 30 分钟的 `pending_2fa_enrollment`，首次会话前完成 TOTP 或通行密钥。
+- 未完成首个因子的成员不能 login、refresh 或 handoff。
 </Update>
 
 <Update label="2026年10月20日" description="v2.175 · 6 个版本">

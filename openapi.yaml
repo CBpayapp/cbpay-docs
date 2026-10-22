@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.176"
+  version: "2.177"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2024,7 +2024,7 @@ paths:
       security: []
       operationId: confirmRegistration
       summary: Confirm registration by email code
-      description: Validates the registration email code, clears the pending member, provisions the account and issues the first session. Invalid or expired identity/code combinations are uniform.
+      description: Validates the registration email code and returns pending_2fa_enrollment with a 30-minute pending token; no session is issued until TOTP or passkey enrollment completes. Invalid or expired identity/code combinations are uniform.
       requestBody:
         required: true
         content:
@@ -2039,15 +2039,151 @@ paths:
             example: {org: cbpay, email: ana@example.com, code: '123456'}
       responses:
         '201':
-          description: First member session issued.
+          description: Pending 2FA enrollment returned; no session is issued yet.
           content:
             application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-13T12:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-12T12:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, passkey], passkeys_available: true, next: [Choose an authenticator app or passkey], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400':
           description: invalid_code when code shape is invalid.
         '401':
           description: invalid_code for an invalid, expired or unmatched code.
         '502': {description: otp_check_failed.}
+  /v1/auth/register/2fa/totp/begin:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FATOTPBegin
+      summary: Start mandatory TOTP enrollment
+      description: Uses the 30-minute pending registration token to create the authenticator secret and QR data. It does not accept a session token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: TOTP setup data.
+          content:
+            application/json:
+              example:
+                totp_secret: JBSWY3DPEHPK3PXP
+                otpauth_uri: otpauth://totp/CBPay:ana@example.com?secret=JBSWY3DPEHPK3PXP
+                qr_png_base64: iVBORw0KGgoAAAANSUhEUg...
+                steps: ["1. Open your authenticator app", "2. Scan the QR code", "3. Enter the 6-digit code"]
+                note: "scan the QR in your authenticator app, then confirm with POST /v1/auth/register/2fa/totp/confirm"
+        '401': {description: invalid_pending_token.}
+        '201':
+          description: An existing factor was found during crash recovery; enrollment is completed and a session is issued.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+  /v1/auth/register/2fa/totp/confirm:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FATOTPConfirm
+      summary: Confirm mandatory TOTP enrollment
+      description: Confirms the first six-digit code, returns ten one-time recovery codes and the first session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, code]
+              properties:
+                pending_token: {type: string}
+                code: {type: string, minLength: 1}
+            example: {pending_token: eyJ..., code: '482913'}
+      responses:
+        '201':
+          description: Enrollment completed and first session issued.
+          content:
+            application/json:
+              example:
+                access_token: eyJ...
+                expires_at: '2026-10-22T19:00:00Z'
+                refresh_token: rt_...
+                refresh_expires_at: '2026-11-20T19:00:00Z'
+                account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}
+                recovery_codes: [ABCD-EFGH, JKLM-NPQR, STUV-WXYZ, 2345-6789, CDEF-GHJK, MNPQ-RSTU, VWXY-Z234, 5678-9ABC, DEFG-HJKM, NPQR-STUV]
+                steps: ["Store these 10 recovery codes now: they are shown only once and each works a single time."]
+                note: "store these recovery codes now: they are shown only once and each works a single time"
+        '401': {description: invalid_pending_token.}
+        '403': {description: otp_invalid; the 6-digit code is invalid or expired.}
+        '409': {description: totp_not_started or enrollment_complete.}
+  /v1/auth/register/2fa/passkey/begin:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FAPasskeyBegin
+      summary: Start mandatory passkey enrollment
+      description: Starts a WebAuthn registration using the pending registration token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+            example: {pending_token: eyJ...}
+      responses:
+        '200':
+          description: WebAuthn creation options.
+          content:
+            application/json:
+              example:
+                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
+                options: {publicKey: {challenge: Y2hhbG..., rp: {name: CBPay, id: cbpayapp.com}, user: {name: ana@example.com}}}
+                expires_at: '2026-10-22T19:02:00Z'
+                steps: ["1. Approve the system dialog on this device", "2. Name this device on the next screen"]
+                note: "pass options.publicKey to navigator.credentials.create() and send the result to POST /v1/auth/register/2fa/passkey/finish"
+        '201':
+          description: An existing factor was found during crash recovery; enrollment is completed and a session is issued.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '401': {description: invalid_pending_token.}
+        '503': {description: passkeys_unavailable.}
+  /v1/auth/register/2fa/passkey/finish:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FAPasskeyFinish
+      summary: Finish mandatory passkey enrollment
+      description: Validates the WebAuthn attestation, stores the credential and returns the first session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, challenge_id, credential]
+              properties:
+                pending_token: {type: string}
+                challenge_id: {type: string, format: uuid}
+                name: {type: string, maxLength: 60}
+                credential: {type: object}
+            example: {pending_token: eyJ..., challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69, name: Taylor's MacBook, credential: {id: Y3JlZGVudGlhbA..., type: public-key, response: {clientDataJSON: eyJ..., attestationObject: o2N...}}}
+      responses:
+        '201':
+          description: Enrollment completed and first session issued.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
+        '400': {description: invalid_credential.}
+        '401': {description: invalid_pending_token.}
+        '403': {description: passkey_rejected.}
+        '409': {description: "challenge_not_pending, passkey_exists or enrollment_complete."}
+        '503': {description: passkeys_unavailable.}
+
   /v1/auth/environment-handoff:
     post:
       tags:
@@ -2165,7 +2301,7 @@ paths:
       security: []
       operationId: login
       summary: Log in
-      description: "Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials."
+      description: "Members with must_enroll_2fa receive pending_2fa_enrollment instead of a session. Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials."
       requestBody:
         required: true
         content:

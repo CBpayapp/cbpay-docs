@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 22, 2026" description="v2.176 · 1 version">
+<Update label="October 22, 2026" description="v2.177 · 2 versions">
+### v2.177
+**Added**
+- Mandatory 2FA enrollment now gates new registrations, invited members and new OAuth accounts: email confirmation returns `pending_2fa_enrollment` with a 30-minute token, and TOTP or passkey enrollment is required before the first session.
+- Login, refresh and environment handoff remain blocked for members whose first factor is not enrolled.
+
 ### v2.176
 **Changed**
 - Added provider-agnostic timing guidance for US ACH, Fedwire/wire and SWIFT
@@ -18,6 +23,8 @@ description: "History of API and documentation changes"
   payer CPF in `payer_document`. Optional payer phone and email fields are
   documented, together with webhook-first confirmation, safe delayed
   reconciliation, expiration and idempotent replay behavior.
+- Mandatory 2FA enrollment now gates new registrations, invited members and new OAuth accounts: email confirmation returns `pending_2fa_enrollment` with a 30-minute token, and TOTP or passkey enrollment is required before the first session.
+- Login, refresh and environment handoff remain blocked for members whose first factor is not enrolled.
 </Update>
 
 <Update label="October 20, 2026" description="v2.175 · 6 versions">
