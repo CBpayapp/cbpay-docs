@@ -5,6 +5,12 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.176 · 1 个版本 - 2026年10月22日
+### v2.176
+**新增**
+- 巴西 QR payin 现在支持 `BR`/`BRL` 的 `method: "qr"`，并要求在
+  `payer_document` 中提供付款人的 CPF。文档还说明可选电话和邮箱、
+  webhook-first 确认、延迟对账、过期和幂等 replay。
 ## v2.175 · 6 个版本 - 2026年10月20日
 ### v2.175
 **变更**

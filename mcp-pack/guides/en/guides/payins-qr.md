@@ -48,7 +48,7 @@ Response `201`:
   "status": "pending",
   "charge": {
     "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
-    "our_reference": "QR-778812",
+    "our_reference": "77849505",
     "qr_payload": "<QR content>",
     "status": "pending"
   }
@@ -58,6 +58,87 @@ Response `201`:
 Display the QR payload or the `qr_image_url` returned by the API. When the
 customer pays, the account is credited automatically. Read the current status
 with `GET /v1/payins/{payinID}`.
+
+## Brazil: PIX QR
+
+For `country: "BR"`, `currency: "BRL"` and `method: "qr"`, the payer's CPF is
+required. `payer_phone` and `payer_email` are optional and are forwarded when
+provided. The API validates this locally before creating the charge:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "qr",
+    "amount": "120.00",
+    "description": "Order 7719",
+    "payer_document": "52998224725",
+    "payer_phone": "+5511999990000",
+    "payer_email": "payer@example.test",
+    "idempotency_key": "qr-br-120-20261022-001"
+  }'
+```
+
+The response is `201` with `status: "pending"` and the QR image fields. For
+Brazil, the rail contract provides a PNG image, not an EMV copy-and-paste
+payload. The core sends the default `23:59:59` TTL when creating the charge,
+and the response includes the resulting expiration:
+
+```json
+{
+  "payin_id": "2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101",
+  "status": "pending",
+  "charge": {
+    "charge_id": "8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401",
+    "our_reference": "77849505",
+    "qr_image": "<base64 PNG>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "expires_at": "2026-10-22T23:59:59-03:00",
+    "status": "pending"
+  }
+}
+```
+
+The checkout-link quote marks this corridor with `payer_required: true`.
+When a payer opens a hosted link, the server-driven page asks for the CPF
+before materializing the charge. Do not bypass that form by creating a second
+charge.
+
+### Confirmation and reconciliation
+
+The lifecycle is webhook-first. An authenticated inbound event (the rail
+webhook uses its configured `x-api-key` header) can close the pending charge; a
+late reconciliation read is allowed only after the configured
+minimum age (15 minutes by default). Until the platform status is verified as
+`credited`, the charge remains `pending` and must not be credited:
+
+```mermaid
+sequenceDiagram
+    participant I as Integrator
+    participant C as CBPay
+    participant R as Payment rail
+    I->>C: POST /platform/v1/payins (CPF)
+    C->>R: Create QR charge
+    R-->>C: pending + QR
+    C-->>I: 201 pending
+    R-->>C: authenticated payment event
+    C-->>I: payin_credited webhook
+    C->>R: Late status read after 15 minutes if needed
+```
+
+Subscribe to `payin_credited` and `payin_charge_status_changed`; use
+`GET /v1/payins/{payinID}` as the source of truth before fulfilling an order.
+Never retry a possibly submitted payment with a new idempotency key.
+
+## Brazil-specific errors
+
+| HTTP | Code | What to do |
+| --- | --- | --- |
+| 400 | `invalid_request` | Include `payer_document` for a BR/BRL QR payin. |
+| 422 | `provider_rejected` | The payment rail rejected the charge, including a missing CPF at the adapter boundary; correct the payer data using the returned detail and do not blind-retry. |
 
 ## Idempotent retries
 
@@ -131,3 +212,10 @@ Yes. The description is display text and is not part of the replay identity.
 #### What if the customer paid while my request timed out?
 Retry with the same idempotency key, then read the returned `payin_id` with
 `GET /v1/payins/{payinID}`. Do not create a new key for the same operation.
+#### Is a CPF required for every QR payin?
+Only for Brazil (`BR`/`BRL`/`qr`). Other QR corridors keep their own payer
+requirements.
+#### When can I treat a Brazil QR payin as paid?
+Only after the API status is `credited` or the corresponding verified webhook
+is received. A QR being generated, scanned or locally expired is not proof of
+settlement.

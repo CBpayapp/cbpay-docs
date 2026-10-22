@@ -47,7 +47,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   "status": "pending",
   "charge": {
     "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
-    "our_reference": "QR-778812",
+    "our_reference": "77849505",
     "qr_payload": "<QR content>",
     "status": "pending"
   }
@@ -56,6 +56,58 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 
 向客户展示 QR 内容或 API 返回的 `qr_image_url`。客户付款后，账户会自动
 入账。使用 `GET /v1/payins/{payinID}` 查询当前状态。
+
+## 巴西：PIX QR
+
+对于 `country: "BR"`、`currency: "BRL"` 和 `method: "qr"`，付款人的 CPF
+是必填项。`payer_phone` 与 `payer_email` 为可选字段，提供时会被转发。
+平台会在创建 charge 前本地校验 CPF：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","idempotency_key":"qr-br-120-20261022-001"}'
+```
+
+响应为 `201`，状态为 `pending`，并包含 QR 图像字段。巴西通道合同只
+提供 PNG 图像，不提供可复制粘贴的 EMV payload。core 创建 charge 时发送
+默认 TTL `23:59:59`，响应包含最终过期时间：
+
+```json
+{
+  "payin_id": "2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101",
+  "status": "pending",
+  "charge": {
+    "charge_id": "8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401",
+    "our_reference": "77849505",
+    "qr_image": "<base64 PNG>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "expires_at": "2026-10-22T23:59:59-03:00",
+    "status": "pending"
+  }
+}
+```
+
+该 corridor 的 checkout link quote 会返回 `payer_required: true`。托管页面
+会在 materialize charge 前要求付款人填写 CPF。
+
+### 确认与对账
+
+流程优先使用 webhook。经过认证的入站事件（通道 webhook 使用配置的
+`x-api-key` header）可以关闭 `pending` charge；延迟
+对账读取只有在达到最小年龄后才允许（默认 15 分钟）。平台状态验证为
+`credited` 前，charge 保持 `pending`，不得入账。
+
+订阅 `payin_credited` 和 `payin_charge_status_changed`，并使用
+`GET /v1/payins/{payinID}` 作为事实来源。结果不明确时不要使用新的幂等键
+重新创建付款。
+
+## 巴西错误
+
+| HTTP | Code | 处理方式 |
+| --- | --- | --- |
+| 400 | `invalid_request` | 为 BR/BRL QR payin 提供 `payer_document`。 |
+| 422 | `provider_rejected` | 付款轨道拒绝了 charge，包括 adapter 边界缺少 CPF；根据 `detail` 修正数据，不要盲目重试。 |
 
 ## 幂等重试
 
@@ -125,3 +177,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 #### 如果请求超时时客户已经付款怎么办？
 使用相同 key 重试，然后使用返回的 `payin_id` 调用
 `GET /v1/payins/{payinID}`。同一笔操作不要生成新 key。
+#### 所有 QR payin 都需要 CPF 吗？
+只有巴西（`BR`/`BRL`/`qr`）需要。其他 QR corridor 保持各自的付款人要求。
+#### 什么时候可以把巴西 QR payin 当作已支付？
+只有在 API 返回已验证的 `credited` 状态或收到对应 webhook 后才可以。
+生成或扫描 QR 本身不是结算证明。

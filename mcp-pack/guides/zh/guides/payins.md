@@ -471,14 +471,16 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "method": "qr",
     "amount": "120.00",
     "description": "Order 7719",
+    "payer_document": "52998224725",
+    "payer_phone": "+5511999990000",
+    "payer_email": "payer@example.test",
     "expires_in": 1800
   }'
 ```
 
-响应包含 `charge.qr_payload`，即 PIX **“copia e cola”** 代码；付款人
-可以将其粘贴到银行 App，而无需扫描图片（`charge.qr_image` base64 或
-公共 CDN 的 `charge.qr_image_url`）。二维码按 `expires_in` 过期（默认
-1 小时），付款在确认和对账后自动入账。
+响应包含 `charge.qr_image`（base64 PNG）和 `charge.qr_image_url`。该巴西
+通道不提供可复制粘贴的 EMV payload。core 创建 charge 时发送默认 TTL
+`23:59:59`；付款在认证确认和对账后进入 `credited`。
 
 > **注**
 `qr` 方法生成一个金额精确内嵌、一次支付使用的动态二维码。
