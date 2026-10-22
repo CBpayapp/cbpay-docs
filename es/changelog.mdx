@@ -55,6 +55,15 @@ description: "Historial de cambios de la API y de esta documentación"
   receptor. No cambió el contrato de la API.
 
 **Agregado**
+- **Subsanación KYC/KYB:** se documenta el 409
+  `self_verification_in_progress`, el reuso del link vigente y la
+  resubmisión en el mismo expediente. El detalle nativo expone
+  `pending_documents`, `documents_received` y
+  `changes_requested_comments`; al completar lo pedido vuelve a
+  `pending_review`.
+- El onboarding de empresas incorpora el cuestionario Wolfsberg CBDDQ v1.4,
+  borrador local, preguntas condicionales, PDF brandeado y adjunto con
+  categoría `wolfsberg`.
 - Los payins QR de Brasil ahora documentan `method: "qr"` con `BR`/`BRL` y
   exigen el CPF del pagador en `payer_document`. Se incluyen teléfono y email
   opcionales, confirmación webhook-first, conciliación tardía segura,

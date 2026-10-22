@@ -55,6 +55,15 @@ description: "History of API and documentation changes"
   bank. No API contract changed.
 
 **Added**
+- **KYC/KYB remediation:** self onboarding now documents the
+  `self_verification_in_progress` 409 and re-serving the current open link.
+  The current case remains authoritative after later duplicate rejection;
+  native details expose remediable `pending_documents`,
+  `documents_received`, and `changes_requested_comments`, and completing
+  the requested documents reopens the same submission as `pending_review`.
+- Company onboarding now includes the Wolfsberg CBDDQ v1.4 questionnaire
+  with draft persistence, conditional questions, branded PDF generation and
+  `wolfsberg` document attachment.
 - Brazil QR payins now accept `method: "qr"` with `BR`/`BRL` and require the
   payer CPF in `payer_document`. Optional payer phone and email fields are
   documented, together with webhook-first confirmation, safe delayed
