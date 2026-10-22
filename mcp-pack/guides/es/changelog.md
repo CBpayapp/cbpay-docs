@@ -7,6 +7,13 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ---
 ## v2.176 · 1 versión - 22 de octubre de 2026
 ### v2.176
+**Cambiado**
+- Se agregó orientación de tiempos, agnóstica a proveedores, para retiros y payouts
+  Banking de EE. UU. por ACH, Fedwire/wire y SWIFT: aproximadamente 24 a 48
+  horas hábiles para ACH, mismo día hábil (hasta 24 horas) para Fedwire/wire y
+  24 a 48 horas hábiles para SWIFT, que puede extenderse según el banco
+  receptor. No cambió el contrato de la API.
+
 **Agregado**
 - Los payins QR de Brasil ahora documentan `method: "qr"` con `BR`/`BRL` y
   exigen el CPF del pagador en `payer_document`. Se incluyen teléfono y email

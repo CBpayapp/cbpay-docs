@@ -6,6 +6,13 @@ description: "History of API and documentation changes"
 
 <Update label="October 22, 2026" description="v2.176 · 1 version">
 ### v2.176
+**Changed**
+- Added provider-agnostic timing guidance for US ACH, Fedwire/wire and SWIFT
+  banking withdrawals and payouts: approximately 24–48 business hours for
+  ACH, the same business day (up to 24 hours) for Fedwire/wire, and 24–48
+  business hours for SWIFT, which may take longer depending on the receiving
+  bank. No API contract changed.
+
 **Added**
 - Brazil QR payins now accept `method: "qr"` with `BR`/`BRL` and require the
   payer CPF in `payer_document`. Optional payer phone and email fields are
