@@ -48,6 +48,13 @@ description: "API and documentation change history"
   约需 24–48 个工作小时且可能因收款银行而延长。API 合同未发生变化。
 
 **新增**
+- KYC/KYB 补件流程现已记录 `self_verification_in_progress` 409、复用当前
+  链接以及原提交件内重新提交。原生详情在可补件状态提供
+  `pending_documents`、`documents_received` 和
+  `changes_requested_comments`；完成补件后同一提交件自动回到
+  `pending_review`。
+- 企业入驻新增 Wolfsberg CBDDQ v1.4 问卷，支持本地草稿、条件问题、品牌
+  PDF 以及 `wolfsberg` 文档附件。
 - 巴西 QR payin 现在支持 `BR`/`BRL` 的 `method: "qr"`，并要求在
   `payer_document` 中提供付款人的 CPF。文档还说明可选电话和邮箱、
   webhook-first 确认、延迟对账、过期和幂等 replay。

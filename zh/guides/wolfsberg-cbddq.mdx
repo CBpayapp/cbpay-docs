@@ -1,0 +1,39 @@
+---
+title: "Wolfsberg CBDDQ v1.4"
+icon: "clipboard-check"
+description: "Complete and attach the Wolfsberg CBDDQ questionnaire during company onboarding"
+i18n_pending: true
+i18n_due: "2026-10-29"
+---
+
+import { EnvUrls } from "/snippets/env-urls.jsx";
+
+<EnvUrls lang="zh" />
+
+> This page is temporarily provided in English while the Chinese translation
+> is scheduled. Field names and behavior are identical in every locale.
+
+## Complete the questionnaire
+
+Company onboarding includes the 15-section Wolfsberg CBDDQ v1.4 questionnaire
+with conditional follow-up questions and a final declaration. Matching
+company-profile values are prefilled and saved as a local draft while you
+move between sections. **Generate PDF** creates the branded
+`wolfsberg-cbddq-v1.4-*.pdf`, attached to the native KYB submission with
+category `wolfsberg`. If upload fails, retry from the saved draft.
+
+```mermaid
+flowchart LR
+  A["Prefill"] --> B["Answer visible questions"]
+  B --> C["Save draft"]
+  C --> D["Generate PDF"]
+  D --> E["Attach as wolfsberg"]
+```
+
+<AccordionGroup>
+  <Accordion title="Can I submit an incomplete questionnaire?">
+    No. Complete all visible required questions and the final declaration.
+  </Accordion>
+</AccordionGroup>
+
+See the [error catalog](/zh/errors) if the PDF upload fails.
