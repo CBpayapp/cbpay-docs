@@ -43,6 +43,11 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 用于付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）；发送到您 CBPay 余额的 USD 落入
 您的主资产（USD 为主资产）。
 
+对于美国通道，账户操作和 `WITHDRAW` 付款可按以下时间估算：**ACH 约需
+24–48 个工作小时；Fedwire（wire）通常为同一工作日（最长 24 小时）；
+SWIFT 约需 24–48 个工作小时，且可能因收款银行而延长。**这些只是估算，
+不是保证；银行截止时间、节假日和收款银行处理时间都可能延长最终结算。
+
 ### 🇪🇺 EUR — 欧元
 
 所有欧元业务都通过虚拟 IBAN：申请 `funding_usdt` 地址将入账欧元转换为您的
@@ -632,6 +637,10 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/operations/prepare \
 
 带幂等键执行（在此计收通道费用——若该通道无配置则计收旧的 `banking_operation` 费用）：
 
+对于 USD `WITHDRAW` 操作，ACH 的估算时间为 **24–48 个工作小时**，
+Fedwire 为**同一工作日（最长 24 小时）**，SWIFT 为**24–48 个工作小时**。
+SWIFT 可能因收款银行而延长。
+
 ```bash WITHDRAW (to a beneficiary)
 curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
   -H "Authorization: Bearer <token>" \
@@ -791,6 +800,10 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 订阅 `banking_operation_status_changed`：它在 `completed` / `failed` 时触发，
 最终状态时附带 `receipt_url`。你也可以轮询
 `GET /v1/banking/operations/{id}`。
+#### 美国 ACH、Fedwire 或 SWIFT 提现需要多长时间？
+ACH 的估算时间为 24–48 个工作小时，Fedwire 为同一工作日（最长 24 小时），
+SWIFT 为 24–48 个工作小时。SWIFT 可能因收款银行而延长；银行截止时间和
+节假日也可能延长结算。
 ## Banking creation claims and recovery
 
 Creation claims are durable records, not permission to send a second provider

@@ -973,6 +973,7 @@ Payouts in **USD** to US bank accounts, with three methods:
   **next-day** settlement.
 - **`wire`** — domestic wire transfer. Minimum **USD 25.00**.
 - **`swift`** — international USD wire via SWIFT. Minimum **USD 25.00**.
+Planning estimates: **ACH, 24–48 business hours; wire/Fedwire, same business day (up to 24 hours); SWIFT, 24–48 business hours, potentially longer depending on the receiving bank.** Payouts remain `processing` until bank confirmation.
 
 The US banking rail requires the beneficiary's **complete identity and
 postal address on every transfer** — an incomplete beneficiary is rejected
@@ -1332,8 +1333,7 @@ independent payout.
 #### Why is my US ACH/wire/SWIFT payout still processing?
 US bank-rail payouts are paid by the operator by hand. Create already
 returns the CBF in `bank_reference` and stays `processing` until the bank
-confirms. Listen to `payout_status_changed` for the final state; a failure
-refunds the debit automatically.
+confirms. Estimates: ACH 24–48 business hours, wire/Fedwire same business day (up to 24 hours), SWIFT 24–48 business hours (potentially longer depending on the receiving bank). Listen to `payout_status_changed`; failures refund the debit.
 For payout errors and the `422 destination_recently_rejected` retry sequence, see
 [Errors](../errors) and [Destination rejection protection](payout-destination-retries).
 

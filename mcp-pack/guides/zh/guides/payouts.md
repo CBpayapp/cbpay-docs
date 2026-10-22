@@ -993,6 +993,11 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - **`wire`** —— 美国境内电汇，最低 **USD 25.00**。
 - **`swift`** —— 通过 SWIFT 的国际美元电汇，最低 **USD 25.00**。
 
+美国各通道的预计时间为：**ACH 约 24–48 个工作小时；wire/Fedwire 为同一
+工作日（最长 24 小时）；SWIFT 约 24–48 个工作小时，且可能因收款银行而
+延长。**这些估算不改变 `processing` 状态，也不替代银行确认；银行截止时间
+和节假日可能延长结算。
+
 美国银行通道要求**每笔转账都附带收款人完整的身份与邮政地址** ——
 收款人信息不完整会在创建时被拒绝（`422`，见下文）。收款人的
 `country_code` 是其**居住国，可以是任何国家**（例如：向居住在德国的
@@ -1315,7 +1320,9 @@ payout；结果为 `process` 时继续，`hold` 时进入防火墙，`rejected` 
 payout。
 #### 为什么我的美国 ACH/wire/SWIFT payout 一直处于 processing？
 创建时就已经返回 `bank_reference`（CBF）。payout 保持 `processing`，直到银行确认人工付款。
-监听 `payout_status_changed` 以获得 `completed` 或 `failed`（已退款）。该通道没有额外的收款人 AML hold。
+预计 ACH 为 24–48 个工作小时，wire/Fedwire 为同一工作日（最长 24 小时），
+SWIFT 为 24–48 个工作小时且可能因收款银行而延长。监听
+`payout_status_changed` 以获得 `completed` 或 `failed`（已退款）。该通道没有额外的收款人 AML hold。
 出金限额错误见公开错误参考。
 
 ## 目的地拒绝保护

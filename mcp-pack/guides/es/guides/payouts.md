@@ -971,6 +971,7 @@ Payouts en **USD** a cuentas bancarias de EE. UU., con tres métodos:
   con liquidación **al día siguiente**.
 - **`wire`** — transferencia wire doméstica. Mínimo **USD 25.00**.
 - **`swift`** — wire internacional en USD vía SWIFT. Mínimo **USD 25.00**.
+Estimaciones: **ACH, 24 a 48 horas hábiles; wire/Fedwire, mismo día hábil (hasta 24 horas); SWIFT, 24 a 48 horas hábiles, posiblemente más según el banco receptor.** El payout queda `processing` hasta la confirmación bancaria.
 
 El riel bancario de EE. UU. exige la **identidad y dirección postal
 completas del beneficiario en cada transferencia** — un beneficiario
@@ -1329,11 +1330,10 @@ beneficiario o contacta a tu equipo CBPay.
 Reintenta con la **misma** `idempotency_key`: recibes el payout original
 (`idempotency_hit: true`) — jamás un duplicado. Una clave nueva es un
 payout nuevo e independiente.
-#### Por que mi payout US ACH/wire/SWIFT sigue processing?
+#### Por qué mi payout US ACH/wire/SWIFT sigue processing?
 Los payouts del riel bancario US los paga el operador a mano. El create
 ya trae el CBF en `bank_reference` y queda `processing` hasta que el banco
-confirma. Escucha `payout_status_changed` para el estado final; un fallo
-reembolsa el debito solo.
+confirma. Estimaciones: ACH 24 a 48 horas hábiles, wire/Fedwire mismo día hábil (hasta 24 horas), SWIFT 24 a 48 horas hábiles (posiblemente más según el banco receptor). Escucha `payout_status_changed`; un fallo reembolsa el débito.
 Para errores de payouts y la secuencia de reintento `422 destination_recently_rejected`,
 consulta [Errores](../errors) y [Protección ante rechazo del destino](payout-destination-retries).
 

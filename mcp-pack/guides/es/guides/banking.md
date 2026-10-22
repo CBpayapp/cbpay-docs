@@ -47,6 +47,14 @@ Banking se mantienen para payouts ([payouts](https://docs.cbpayapp.com/es/guides
 enviados a tus saldos CBPay aterrizan en tu asset principal (USD es el saldo
 principal).
 
+Para los rieles de EE. UU., usa estas estimaciones para planificar las
+operaciones de cuenta y los pagos `WITHDRAW`: **ACH: demora aproximada de 24 a
+48 horas hábiles; Fedwire (wire): demora aproximada del mismo día hábil (hasta
+24 horas); SWIFT: demora aproximada de 24 a 48 horas hábiles, con posibles
+extensiones según el banco receptor.** Son estimaciones, no una garantía;
+los horarios de corte, feriados y el procesamiento del banco receptor pueden
+extender la liquidación final.
+
 ### 🇪🇺 EUR — euro
 
 Todo lo euro pasa por un IBAN virtual: solicita una dirección `funding_usdt`
@@ -760,6 +768,10 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/operations/prepare \
 Ejecuta con clave de idempotencia (aquí se cobra la comisión del riel — o la
 `banking_operation` predeterminada cuando el riel no tiene configuración):
 
+Para operaciones `WITHDRAW` en USD, planifica **24 a 48 horas hábiles en ACH**,
+**mismo día hábil (hasta 24 horas) en Fedwire** o **24 a 48 horas hábiles en
+SWIFT**. SWIFT puede extenderse según el banco receptor.
+
 ```bash WITHDRAW (a un beneficiario)
 curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
   -H "Authorization: Bearer <token>" \
@@ -944,6 +956,11 @@ registro además exige el `verification_id` de una verificación KYC/KYB
 Suscríbete a `banking_operation_status_changed`: se dispara en `completed`
 / `failed` e incluye el `receipt_url` una vez final. También puedes
 consultar `GET /v1/banking/operations/{id}`.
+#### ¿Cuánto tarda un retiro US por ACH, Fedwire o SWIFT?
+La estimación es de 24 a 48 horas hábiles para ACH, mismo día hábil (hasta
+24 horas) para Fedwire y 24 a 48 horas hábiles para SWIFT. SWIFT puede
+extenderse según el banco receptor; los horarios de corte y feriados también
+pueden alargar la liquidación.
 ## Banking creation claims and recovery
 
 Creation claims are durable records, not permission to send a second provider

@@ -45,6 +45,13 @@ the profile → accounts → operations flow in this guide
 is held for payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)); USD sent to your CBPay
 balances lands in your principal asset (USD is the principal balance).
 
+For the US rails, use these planning estimates for account operations and
+`WITHDRAW` payments: **ACH: approximately 24–48 business hours; Fedwire
+(wire): approximately the same business day (up to 24 hours); SWIFT:
+approximately 24–48 business hours, and it may take longer depending on the
+receiving bank.** These are estimates, not a guarantee; bank cutoffs,
+holidays and receiving-bank processing can extend the final settlement time.
+
 ### 🇪🇺 EUR — euro
 
 Everything euro goes through a virtual IBAN: request a `funding_usdt`
@@ -549,6 +556,11 @@ Execute with an idempotency key (the rail fee — or the default
 `banking_operation` fee when the rail has no configuration — is charged
 here):
 
+For USD `WITHDRAW` operations, plan for approximately **24–48 business hours
+on ACH**, **the same business day (up to 24 hours) on Fedwire**, or
+**24–48 business hours on SWIFT**. SWIFT can take longer depending on the
+receiving bank.
+
 ```bash WITHDRAW (to a beneficiary)
 curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
   -H "Authorization: Bearer <token>" \
@@ -1008,6 +1020,11 @@ verification of the third party.
 Subscribe to `banking_operation_status_changed`: it fires on `completed` /
 `failed` and includes the `receipt_url` once final. You can also poll
 `GET /v1/banking/operations/{id}`.
+#### How long does a US ACH, Fedwire or SWIFT withdrawal take?
+The planning estimate is 24–48 business hours for ACH, the same business day
+(up to 24 hours) for Fedwire, and 24–48 business hours for SWIFT. SWIFT may
+take longer depending on the receiving bank; cutoffs and holidays can also
+extend settlement.
 ## Banking creation claims and recovery
 
 Creation claims are durable records, not permission to send a second provider
