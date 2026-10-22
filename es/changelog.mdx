@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="22 de octubre de 2026" description="v2.177 · 2 versiones">
+<Update label="22 de octubre de 2026" description="v2.178 · 3 versiones">
+### v2.178
+**Corregido**
+- Los payouts automáticos US/USD por wire ahora completan el alta del
+  beneficiario bancario con el routing number y el account type requeridos.
+  Si el banco rechaza un payout, `GET /v1/payouts/{payout_id}` y
+  `payout_status_changed` ahora exponen el `status_message` accionable, para
+  que los integradores distingan una revisión de compliance de campos
+  faltantes sin reintentar a ciegas.
+
 ### v2.177
 **Agregado**
 - El enrolamiento 2FA obligatorio ahora aplica a registros, miembros invitados y cuentas OAuth nuevas: la confirmación del email devuelve `pending_2fa_enrollment` con token de 30 minutos y exige TOTP o passkey antes de la primera sesión.
@@ -23,8 +32,6 @@ description: "Historial de cambios de la API y de esta documentación"
   exigen el CPF del pagador en `payer_document`. Se incluyen teléfono y email
   opcionales, confirmación webhook-first, conciliación tardía segura,
   expiración y replay idempotente.
-- El enrolamiento 2FA obligatorio ahora aplica a registros, miembros invitados y cuentas OAuth nuevas: la confirmación del email devuelve `pending_2fa_enrollment` con token de 30 minutos y exige TOTP o passkey antes de la primera sesión.
-- Login, refresh y handoff siguen bloqueados hasta completar el factor.
 </Update>
 
 <Update label="20 de octubre de 2026" description="v2.175 · 6 versiones">

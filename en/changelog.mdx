@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 22, 2026" description="v2.177 · 2 versions">
+<Update label="October 22, 2026" description="v2.178 · 3 versions">
+### v2.178
+**Fixed**
+- Automatic US/USD wire payouts now complete bank beneficiary setup with the
+  required routing number and account type. If the bank rejects a payout,
+  `GET /v1/payouts/{payout_id}` and `payout_status_changed` now expose the
+  actionable `status_message`, so integrators can distinguish a compliance
+  review from missing required fields without retrying blindly.
+
 ### v2.177
 **Added**
 - Mandatory 2FA enrollment now gates new registrations, invited members and new OAuth accounts: email confirmation returns `pending_2fa_enrollment` with a 30-minute token, and TOTP or passkey enrollment is required before the first session.
@@ -23,8 +31,6 @@ description: "History of API and documentation changes"
   payer CPF in `payer_document`. Optional payer phone and email fields are
   documented, together with webhook-first confirmation, safe delayed
   reconciliation, expiration and idempotent replay behavior.
-- Mandatory 2FA enrollment now gates new registrations, invited members and new OAuth accounts: email confirmation returns `pending_2fa_enrollment` with a 30-minute token, and TOTP or passkey enrollment is required before the first session.
-- Login, refresh and environment handoff remain blocked for members whose first factor is not enrolled.
 </Update>
 
 <Update label="October 20, 2026" description="v2.175 · 6 versions">
