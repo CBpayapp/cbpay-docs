@@ -694,3 +694,9 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 403 | `kyc_not_approved` | The account must complete identity verification (KYC/KYB) before requesting Trust Center access. |
 | 403 | `member_required` | Requesting or signing requires a logged-in member session; API keys cannot sign. |
 | 422 | `account_identity_mismatch` | An echoed identity field differs from the verified account; send the verified values. |
+
+## Client Journey discard
+
+| HTTP | `error` | Cause and action |
+|---:|---|---|
+| 409 | `discard_pending` | A discard maker request is still awaiting approval; cancel it before restoring the account. |
