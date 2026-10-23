@@ -685,3 +685,9 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 409 | `passkey_exists` | Usa la passkey ya registrada. |
 | 503 | `passkeys_unavailable` | Usa TOTP; la organización no configuró WebAuthn. |
 | 403 | `enrollment_required` | Completa el enrolamiento antes del handoff. |
+
+## Descarte de Client Journey
+
+| HTTP | `error` | Causa y acción |
+|---:|---|---|
+| 409 | `discard_pending` | Hay una solicitud maker de descarte esperando aprobación; cancélala antes de restaurar la cuenta. |

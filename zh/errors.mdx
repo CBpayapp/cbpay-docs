@@ -663,3 +663,9 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `passkey_exists` | 使用现有通行密钥。 |
 | 503 | `passkeys_unavailable` | 组织未配置 WebAuthn，使用 TOTP。 |
 | 403 | `enrollment_required` | handoff 前先完成注册。 |
+
+## Client Journey 丢弃
+
+| HTTP | `error` | 原因与处理 |
+|---:|---|---|
+| 409 | `discard_pending` | 丢弃 maker 请求仍在等待审批；恢复账户前请先取消请求。 |
