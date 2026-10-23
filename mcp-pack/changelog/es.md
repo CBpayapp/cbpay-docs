@@ -5,7 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.183 · 2 versiones - 23 de octubre de 2026
+## v2.184 · 3 versiones - 23 de octubre de 2026
+### v2.184
+**Agregado**
+- El `403 otp_required` de las acciones protegidas ahora puede traer
+  `challenge_id`, `phone` (destino enmascarado) y `expires_at`: el gate
+  reusa un desafío vivo o crea uno por ti. Verifica el código directo y
+  reintenta con `X-OTP-Token`, saltándote el `POST /v1/otp/challenges`
+  explícito (sigue disponible como respaldo).
+
 ### v2.183
 **Cambiado**
 - `GET /v1/payouts/banks` acepta el parámetro de consulta solo para display

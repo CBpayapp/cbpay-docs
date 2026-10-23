@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.183"
+  version: "2.184"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -5470,12 +5470,12 @@ paths:
                   expires_in: 3600
                   idempotency_key: qr-bo-001
               br_pix_qr:
-                summary: Brasil — QR PIX dinámico (cobro BOB, conversión BRL)
+                summary: Brasil — QR PIX dinámico (entrada BRL, cobro BOB)
                 value:
                   country: BR
-                  currency: BOB
+                  currency: BRL
                   method: qr
-                  amount: '1.00'
+                  amount: '120.00'
                   description: Order 7719
                   payer_document: '52998224725'
                   payer_phone: '+5511999990000'
@@ -5585,6 +5585,25 @@ paths:
                   charge:
                     type: object
                     description: Detalles del cobro (datos del QR, referencias) desde el core.
+                    properties:
+                      conversion:
+                        type: object
+                        properties:
+                          amount: {type: string}
+                          currency: {type: string, example: BRL}
+                          rate: {type: string}
+                      expires_at: {type: string, format: date-time}
+                      bob_charged: {type: string}
+                      platform_quote:
+                        type: object
+                        properties:
+                          quoted_currency: {type: string, example: BRL}
+                          quoted_amount: {type: string}
+                          charged_currency: {type: string, example: BOB}
+                          charged_amount: {type: string}
+                          rate_brl_per_usd: {type: string}
+                          rate_bob_per_usd: {type: string}
+                          rates_updated_at: {type: string, format: date-time}
               examples:
                 qr:
                   summary: 'Cobro QR (method: qr)'
@@ -5607,10 +5626,19 @@ paths:
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.example.test/qr/77849505.png
                       conversion:
-                        amount: '0.48'
+                        amount: '120.00'
                         currency: BRL
-                        rate: '0.48'
+                        rate: '0.50'
                       expires_at: '2026-10-22T12:57:14.937Z'
+                      bob_charged: '240.00'
+                      platform_quote:
+                        quoted_currency: BRL
+                        quoted_amount: '120.00'
+                        charged_currency: BOB
+                        charged_amount: '240.00'
+                        rate_brl_per_usd: '5.0000000000'
+                        rate_bob_per_usd: '10.0000000000'
+                        rates_updated_at: '2026-10-22T20:00:00Z'
                       status: pending
                 bank_transfer:
                   summary: 'Depósito anunciado (method: bank_transfer)'
@@ -5865,6 +5893,10 @@ paths:
                   value:
                     error: core_rejected
                     message: amount is below the minimum for this corridor
+                amount_too_small:
+                  value:
+                    error: amount_too_small
+                    message: amount is too small after BRL to BOB conversion
                 amount_below_minimum:
                   summary: Monto de transferencia anunciada bajo el mínimo de comisión
                   value:
@@ -5885,6 +5917,11 @@ paths:
               example:
                 error: core_unavailable
                 message: could not create the charge
+              examples:
+                rates_unavailable:
+                  value:
+                    error: rates_unavailable
+                    message: exchange rates are temporarily unavailable
         '401':
           $ref: '#/components/responses/Unauthorized'
     get:
@@ -13362,7 +13399,7 @@ paths:
                 error: invalid_purpose
                 message: purpose must be one of wallet_ownership, treasury_attestation; to link an external wallet use POST /v1/wallet-links/challenges
         '403':
-          description: 'La cuenta o sesión no pasó el gate: `human_session_required` (las API keys no pueden firmar), `verification_required` (KYC no aprobado), `account_blocked`, `service_disabled`, o falta/OTP inválido (`otp_required`, `otp_invalid`).'
+          description: 'La cuenta o sesión no pasó el gate: `human_session_required` (las API keys no pueden firmar), `verification_required` (KYC no aprobado), `account_blocked`, `service_disabled`, o falta/OTP inválido (`otp_required`, `otp_invalid`). Cuando el gate pudo adjuntar un desafío, el 403 también trae `challenge_id`, `phone` (destino enmascarado) y `expires_at`: verifica el código directo y reintenta con `X-OTP-Token`, saltándote el `POST /v1/otp/challenges` explícito.'
         '404':
           description: La wallet no existe o no pertenece a la cuenta.
         '409':

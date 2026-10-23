@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.183"
+  version: "2.184"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -13430,7 +13430,7 @@ paths:
                 error: invalid_purpose
                 message: purpose must be one of wallet_ownership, treasury_attestation; to link an external wallet use POST /v1/wallet-links/challenges
         '403':
-          description: 'Account or session gate failed: `human_session_required` (API keys cannot sign), `verification_required` (KYC not approved), `account_blocked`, `service_disabled`, or OTP challenge missing/invalid (`otp_required`, `otp_invalid`).'
+          description: 'Account or session gate failed: `human_session_required` (API keys cannot sign), `verification_required` (KYC not approved), `account_blocked`, `service_disabled`, or OTP challenge missing/invalid (`otp_required`, `otp_invalid`). When the gate could attach a challenge, the 403 also carries `challenge_id`, `phone` (masked destination) and `expires_at`: verify the code directly and retry with `X-OTP-Token`, skipping the explicit `POST /v1/otp/challenges`.'
           content:
             application/json:
               schema:

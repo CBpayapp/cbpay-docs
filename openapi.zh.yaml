@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.183"
+  version: "2.184"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -5189,12 +5189,12 @@ paths:
                   description: 应用充值
                   expires_in: 3600
               br_pix_qr:
-                summary: 巴西 — 动态 PIX QR（BOB charge，BRL 付款人转换）
+                summary: 巴西 — 动态 PIX QR（BRL 输入，BOB charge）
                 value:
                   country: BR
-                  currency: BOB
+                  currency: BRL
                   method: qr
-                  amount: '1.00'
+                  amount: '120.00'
                   description: 订单 7719
                   payer_document: '52998224725'
                   payer_phone: '+5511999990000'
@@ -5304,6 +5304,25 @@ paths:
                   charge:
                     type: object
                     description: 来自核心的收款详情(QR 数据、参考号)。
+                    properties:
+                      conversion:
+                        type: object
+                        properties:
+                          amount: {type: string}
+                          currency: {type: string, example: BRL}
+                          rate: {type: string}
+                      expires_at: {type: string, format: date-time}
+                      bob_charged: {type: string}
+                      platform_quote:
+                        type: object
+                        properties:
+                          quoted_currency: {type: string, example: BRL}
+                          quoted_amount: {type: string}
+                          charged_currency: {type: string, example: BOB}
+                          charged_amount: {type: string}
+                          rate_brl_per_usd: {type: string}
+                          rate_bob_per_usd: {type: string}
+                          rates_updated_at: {type: string, format: date-time}
               examples:
                 qr:
                   summary: QR 收款(方式:qr)
@@ -5326,10 +5345,19 @@ paths:
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.example.test/qr/77849505.png
                       conversion:
-                        amount: '0.48'
+                        amount: '120.00'
                         currency: BRL
-                        rate: '0.48'
+                        rate: '0.50'
                       expires_at: '2026-10-22T12:57:14.937Z'
+                      bob_charged: '240.00'
+                      platform_quote:
+                        quoted_currency: BRL
+                        quoted_amount: '120.00'
+                        charged_currency: BOB
+                        charged_amount: '240.00'
+                        rate_brl_per_usd: '5.0000000000'
+                        rate_bob_per_usd: '10.0000000000'
+                        rates_updated_at: '2026-10-22T20:00:00Z'
                       status: pending
                 bank_transfer:
                   summary: 预告充值(方式:bank_transfer)
@@ -5577,6 +5605,10 @@ paths:
                   value:
                     error: core_rejected
                     message: amount is below the minimum for this corridor
+                amount_too_small:
+                  value:
+                    error: amount_too_small
+                    message: amount is too small after BRL to BOB conversion
                 amount_below_minimum:
                   summary: 预告银行转账金额低于手续费最低值
                   value:
@@ -5597,6 +5629,11 @@ paths:
               example:
                 error: core_unavailable
                 message: could not create the charge
+              examples:
+                rates_unavailable:
+                  value:
+                    error: rates_unavailable
+                    message: exchange rates are temporarily unavailable
         '401':
           $ref: '#/components/responses/Unauthorized'
     get:
@@ -12918,7 +12955,7 @@ paths:
         '400':
           description: 无效负载(`invalid_purpose`、`invalid_statement`)。
         '403':
-          description: 账户未完成验证(`verification_required`)、未启用该服务(`service_disabled`)、缺少有效签名(`invalid_signature`)或需要 OTP 挑战(`otp_required`)。
+          description: 账户未完成验证(`verification_required`)、未启用该服务(`service_disabled`)、缺少有效签名(`invalid_signature`)或需要 OTP 挑战(`otp_required`)。当网关附带了质询时,403 还会携带 `challenge_id`、`phone`(掩码后的目标)和 `expires_at`:直接验证验证码后携带 `X-OTP-Token` 重试,可跳过显式的 `POST /v1/otp/challenges`。
         '404':
           description: 钱包不存在或不属于该账户。
         '409':

@@ -36,6 +36,10 @@ sequenceDiagram
 
 `otp_token` 为**一次性使用**，绑定到您的用户及其签发时对应的操作，并随质询（challenge）一同过期（验证码发送后 10 分钟）。
 
+<Note>
+快捷方式：`403` 可能已携带 `challenge_id`、`phone`（掩码后的目标）和 `expires_at`——网关会复用有效的质询或为您创建一个。若存在，请直接验证验证码后携带 `X-OTP-Token` 重试，可跳过下文显式的 `POST /v1/otp/challenges`（仍可作为备选）。
+</Note>
+
 ## 1. 查询您的策略
 
 `GET /v1/otp/settings` 会告诉您 OTP 是否已启用，以及哪些操作需要验证码：

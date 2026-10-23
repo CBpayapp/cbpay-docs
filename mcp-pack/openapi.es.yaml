@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.183"
+  version: "2.184"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -13399,7 +13399,7 @@ paths:
                 error: invalid_purpose
                 message: purpose must be one of wallet_ownership, treasury_attestation; to link an external wallet use POST /v1/wallet-links/challenges
         '403':
-          description: 'La cuenta o sesión no pasó el gate: `human_session_required` (las API keys no pueden firmar), `verification_required` (KYC no aprobado), `account_blocked`, `service_disabled`, o falta/OTP inválido (`otp_required`, `otp_invalid`).'
+          description: 'La cuenta o sesión no pasó el gate: `human_session_required` (las API keys no pueden firmar), `verification_required` (KYC no aprobado), `account_blocked`, `service_disabled`, o falta/OTP inválido (`otp_required`, `otp_invalid`). Cuando el gate pudo adjuntar un desafío, el 403 también trae `challenge_id`, `phone` (destino enmascarado) y `expires_at`: verifica el código directo y reintenta con `X-OTP-Token`, saltándote el `POST /v1/otp/challenges` explícito.'
         '404':
           description: La wallet no existe o no pertenece a la cuenta.
         '409':

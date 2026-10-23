@@ -5,7 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.183 · 2 个版本 - 2026年10月23日
+## v2.184 · 3 个版本 - 2026年10月23日
+### v2.184
+**新增**
+- 受保护操作的 `403 otp_required` 响应现在可能携带 `challenge_id`、`phone`（掩码后的目标）和 `expires_at`：网关会复用有效的质询或为您创建一个。直接验证验证码后携带 `X-OTP-Token` 重试，可跳过显式的 `POST /v1/otp/challenges`（仍可作为备选）。
+
 ### v2.183
 **变更**
 - `GET /v1/payouts/banks` 接受仅用于显示的查询参数
