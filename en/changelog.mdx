@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 23, 2026" description="v2.183 · 2 versions">
+<Update label="October 23, 2026" description="v2.184 · 3 versions">
+### v2.184
+**Added**
+- The `403 otp_required` response of protected actions may now carry
+  `challenge_id`, `phone` (masked destination) and `expires_at`: the gate
+  reuses a live challenge or creates one for you. Verify the code directly
+  and retry with `X-OTP-Token`, skipping the explicit
+  `POST /v1/otp/challenges` (still available as a fallback).
+
 ### v2.183
 **Changed**
 - `GET /v1/payouts/banks` accepts the display-only `include_variants` query
@@ -22,7 +30,20 @@ description: "History of API and documentation changes"
 
 </Update>
 
-<Update label="October 22, 2026" description="v2.179 · 4 versions">
+<Update label="October 22, 2026" description="v2.181 · 6 versions">
+### v2.181
+**Fixed**
+- Brazil QR payins left unpaid now close automatically: when the rail
+  cancels the QR, the pending payin transitions to `expired` with a visible
+  `failure` object and emits `payin_expired`, instead of staying `pending`.
+
+### v2.180
+**Added**
+- Brazil QR payins now accept BRL as the recommended input in addition to
+  direct BOB. BRL inputs are converted at the mid rate without quote spread,
+  rounded half-up to cents, and returned with `bob_charged` and an auditable
+  `platform_quote`; the original quote is preserved on replay.
+
 ### v2.179
 **Changed**
 - Announced `bank_transfer` payins now fail fast with the reused

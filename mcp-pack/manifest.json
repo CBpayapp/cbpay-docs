@@ -1,7 +1,7 @@
 {
-  "content_sha256": "5c568e12b1b820b0c54aaee7d0c20184620b3da3ee27e0a25dc7aa50e44b7331",
+  "content_sha256": "649c97bf24369a7036cfed1c117550c0fae4726b24475e32977b6b62e276778e",
   "counts": {
-    "chunks": 4636,
+    "chunks": 4639,
     "errors": 364,
     "languages": [
       "en",
@@ -11,32 +11,32 @@
     "pages": 210,
     "webhook_events": 47
   },
-  "docs_version": "v2.183",
+  "docs_version": "v2.184",
   "docs_version_date": "October 23, 2026",
   "files": {
     "changelog/en.md": {
-      "bytes": 207181,
-      "sha256": "59d6b127437de6d4f7a0710b607804351c5d0d71068ccba56af33cec7ca3e363"
+      "bytes": 207536,
+      "sha256": "ad5ec7970428095ffe9d1d1e4e2f36948124e26ea26141fd2b73be18b728020a"
     },
     "changelog/es.md": {
-      "bytes": 219170,
-      "sha256": "25d29740357c6c081e6d955b8eb73d4af0f8beaf213c5404f3ef58e83626764a"
+      "bytes": 219529,
+      "sha256": "0cf784b5852732259547dc807ca9f7c2b94adc3f57c4dbd399a93a92d4b6fb60"
     },
     "changelog/zh.md": {
-      "bytes": 195507,
-      "sha256": "346df7b2632548234980d504546a97ba4709ddc7426b9fdce1da7e7d660bfc49"
+      "bytes": 195842,
+      "sha256": "07f3ee843311d559d00eafd0cf32e45c9982e9817ec5c2ec41ba4df0c9d3db8b"
     },
     "chunks/en.jsonl": {
-      "bytes": 1584948,
-      "sha256": "3b55eb6ae1cd23439b087dd59abcce1ff04a705ac290aaab186b6a8dc36f06c6"
+      "bytes": 1585902,
+      "sha256": "7b5dd621f1d2194a4192709a4c8180d9ea987781daa4b3747361c511be048a79"
     },
     "chunks/es.jsonl": {
-      "bytes": 1610654,
-      "sha256": "b1a97fa813c904d77bf6f364a9bf6615b5a68b7e1ce279f0d8f69ddd41d4e9e9"
+      "bytes": 1611615,
+      "sha256": "986751e5ea55eabbddc3df6e19fa5dc55e631181d58eb5fb1078c030bc95a542"
     },
     "chunks/zh.jsonl": {
-      "bytes": 1504955,
-      "sha256": "b67861844fccc4c9d1823681794b6ec10285756f4702d03558fb9f84a3a185fd"
+      "bytes": 1505871,
+      "sha256": "2cb47e7b446fdf3ad9679b0baeab1a6be05729477f05202b3e165cbd5900f857"
     },
     "errors.json": {
       "bytes": 210906,
@@ -44,15 +44,15 @@
     },
     "evals/golden.json": {
       "bytes": 4242,
-      "sha256": "29b6e4e611ef0cc2b9acf5cd3e58a18688d19b53ffd09f1fc130c8b88f78209d"
+      "sha256": "ac993d7f695a271805fc4ec002d69eda44272c69fd16d1da06a11a79e6a2502e"
     },
     "guides/en/authentication.md": {
       "bytes": 13892,
       "sha256": "3e17495ede0fe6a59df171fe79d7f980b205ea617404fc882f201a1eff1be132"
     },
     "guides/en/changelog.md": {
-      "bytes": 207181,
-      "sha256": "59d6b127437de6d4f7a0710b607804351c5d0d71068ccba56af33cec7ca3e363"
+      "bytes": 207536,
+      "sha256": "ad5ec7970428095ffe9d1d1e4e2f36948124e26ea26141fd2b73be18b728020a"
     },
     "guides/en/concepts/fees.md": {
       "bytes": 14069,
@@ -315,8 +315,8 @@
       "sha256": "1ae44cf6c5c9fea5ad65bb876c415d070ab2def4ba97c4cc33d9233fe2f50acb"
     },
     "guides/en/security-2fa.md": {
-      "bytes": 13465,
-      "sha256": "733e1b6314829694bc7b2c56924960750fafd84b8599727354da5950000d4689"
+      "bytes": 13795,
+      "sha256": "4e91904fa40618e49694017afb831ec5b5f252a571ce3fbfe716d776405f6e50"
     },
     "guides/en/service-status.md": {
       "bytes": 9243,
@@ -331,8 +331,8 @@
       "sha256": "3a478b58a4d25fc206e9f4b366219b8f65cb05318b1ddf141d93aff805d7ba83"
     },
     "guides/es/changelog.md": {
-      "bytes": 219170,
-      "sha256": "25d29740357c6c081e6d955b8eb73d4af0f8beaf213c5404f3ef58e83626764a"
+      "bytes": 219529,
+      "sha256": "0cf784b5852732259547dc807ca9f7c2b94adc3f57c4dbd399a93a92d4b6fb60"
     },
     "guides/es/concepts/fees.md": {
       "bytes": 14505,
@@ -595,8 +595,8 @@
       "sha256": "515c03d199ea73f5e7e30e241bf80b9ea7d22dd88c883152a538fa77be1f6d17"
     },
     "guides/es/security-2fa.md": {
-      "bytes": 13082,
-      "sha256": "318d93a6fb49696e3b5279cc4de6fa095a5a50d436e500c0062b894aa4c606fc"
+      "bytes": 13409,
+      "sha256": "77d091e1eccc642fd0287614a91917a06e81be23710fc8ace13076005f00be62"
     },
     "guides/es/service-status.md": {
       "bytes": 9811,
@@ -611,8 +611,8 @@
       "sha256": "63a5a72e6e094dfb70f860fcc28e18a31d50b9fbdd30b0bbdddc85c2d85f874a"
     },
     "guides/zh/changelog.md": {
-      "bytes": 195507,
-      "sha256": "346df7b2632548234980d504546a97ba4709ddc7426b9fdce1da7e7d660bfc49"
+      "bytes": 195842,
+      "sha256": "07f3ee843311d559d00eafd0cf32e45c9982e9817ec5c2ec41ba4df0c9d3db8b"
     },
     "guides/zh/concepts/fees.md": {
       "bytes": 13586,
@@ -875,8 +875,8 @@
       "sha256": "4a30743be7c8fc91dd1d92298778ed63f5bbf3cfa34df22562d6454d7c3df7fc"
     },
     "guides/zh/security-2fa.md": {
-      "bytes": 12483,
-      "sha256": "ea39b4dc45b69edbe92f274e015c395bff7ce9feec279d40ec0285b35532ea28"
+      "bytes": 12801,
+      "sha256": "be1628fed4765e11bd27b948de11c75637efc9101d2c076a7271a716b6c0e696"
     },
     "guides/zh/service-status.md": {
       "bytes": 8575,
@@ -887,16 +887,16 @@
       "sha256": "754de9d188507543589862d22a5ab33fce3a6defda0a14e3de81fab4cb737c64"
     },
     "openapi.es.yaml": {
-      "bytes": 1092289,
-      "sha256": "094d634c6f3ea4d3f8ef9ae75c45bbb6a9031f02d47c5de3f182d42b39a8c221"
+      "bytes": 1092526,
+      "sha256": "62186f817711300c7920fc9d78ba3a39ad82b42ceaf4deb12d085898185731bf"
     },
     "openapi.yaml": {
-      "bytes": 1088623,
-      "sha256": "e26f60928178215284527c9a2e6515896cbd9d65883ed99c7920cf5c5d8d2e68"
+      "bytes": 1088851,
+      "sha256": "e2d7272cc17eaaed2e101602ec43f20d9ab141cea0100127de7730b7dca9060a"
     },
     "openapi.zh.yaml": {
-      "bytes": 1045605,
-      "sha256": "90be99b2a27337c8419a5260d111cfe23431143c92fcea947ff4c4bcb61a7ca5"
+      "bytes": 1045810,
+      "sha256": "24594d3e5659f0b37a4c71cc09724f7cd2a26ec812089a585c3e46c26b1601fb"
     },
     "recipes/en/checkout.md": {
       "bytes": 18229,
@@ -991,7 +991,7 @@
       "sha256": "a17e390542734803cac91334745f2c04d57a707e6df2b1387b2eac53402183a5"
     }
   },
-  "generated_at": "2026-10-23T16:40:24Z",
+  "generated_at": "2026-10-23T19:03:29Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"

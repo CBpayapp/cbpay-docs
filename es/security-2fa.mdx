@@ -46,6 +46,14 @@ El `otp_token` es de **un solo uso**, está ligado a tu usuario y a la acción
 para la que se emitió, y expira junto con el desafío (10 minutos desde el
 envío del código).
 
+<Note>
+Atajo: el `403` puede traer ya `challenge_id`, `phone` (destino enmascarado)
+y `expires_at` — el gate reusa un desafío vivo o crea uno por ti. Si vienen,
+verifica el código directo y reintenta con `X-OTP-Token`, saltándote el
+`POST /v1/otp/challenges` explícito de abajo (que sigue funcionando como
+respaldo).
+</Note>
+
 ## 1. Consulta tu política
 
 `GET /v1/otp/settings` te dice si el OTP está activo y qué acciones lo

@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="23 de octubre de 2026" description="v2.183 · 2 versiones">
+<Update label="23 de octubre de 2026" description="v2.184 · 3 versiones">
+### v2.184
+**Agregado**
+- El `403 otp_required` de las acciones protegidas ahora puede traer
+  `challenge_id`, `phone` (destino enmascarado) y `expires_at`: el gate
+  reusa un desafío vivo o crea uno por ti. Verifica el código directo y
+  reintenta con `X-OTP-Token`, saltándote el `POST /v1/otp/challenges`
+  explícito (sigue disponible como respaldo).
+
 ### v2.183
 **Cambiado**
 - `GET /v1/payouts/banks` acepta el parámetro de consulta solo para display
@@ -23,7 +31,20 @@ description: "Historial de cambios de la API y de esta documentación"
 
 </Update>
 
-<Update label="22 de octubre de 2026" description="v2.179 · 4 versiones">
+<Update label="22 de octubre de 2026" description="v2.181 · 6 versiones">
+### v2.181
+**Corregido**
+- Los payins QR de Brasil impagos ahora se cierran solos: cuando el riel
+  cancela el QR, el payin pendiente pasa a `expired` con un objeto `failure`
+  visible y emite `payin_expired`, en vez de quedar en `pending`.
+
+### v2.180
+**Agregado**
+- Los payins QR de Brasil aceptan ahora BRL como entrada recomendada además de
+  BOB directo. BRL se convierte con tasa mid sin spread, se redondea half-up a
+  centavos y devuelve `bob_charged` junto con `platform_quote`; el replay
+  conserva la cotización original.
+
 ### v2.179
 **Cambiado**
 - Los payins anunciados `bank_transfer` ahora fallan rápidamente con el código

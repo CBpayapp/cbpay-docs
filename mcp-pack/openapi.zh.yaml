@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.183"
+  version: "2.184"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -12955,7 +12955,7 @@ paths:
         '400':
           description: 无效负载(`invalid_purpose`、`invalid_statement`)。
         '403':
-          description: 账户未完成验证(`verification_required`)、未启用该服务(`service_disabled`)、缺少有效签名(`invalid_signature`)或需要 OTP 挑战(`otp_required`)。
+          description: 账户未完成验证(`verification_required`)、未启用该服务(`service_disabled`)、缺少有效签名(`invalid_signature`)或需要 OTP 挑战(`otp_required`)。当网关附带了质询时,403 还会携带 `challenge_id`、`phone`(掩码后的目标)和 `expires_at`:直接验证验证码后携带 `X-OTP-Token` 重试,可跳过显式的 `POST /v1/otp/challenges`。
         '404':
           description: 钱包不存在或不属于该账户。
         '409':

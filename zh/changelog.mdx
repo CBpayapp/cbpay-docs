@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月23日" description="v2.183 · 2 个版本">
+<Update label="2026年10月23日" description="v2.184 · 3 个版本">
+### v2.184
+**新增**
+- 受保护操作的 `403 otp_required` 响应现在可能携带 `challenge_id`、`phone`（掩码后的目标）和 `expires_at`：网关会复用有效的质询或为您创建一个。直接验证验证码后携带 `X-OTP-Token` 重试，可跳过显式的 `POST /v1/otp/challenges`（仍可作为备选）。
+
 ### v2.183
 **变更**
 - `GET /v1/payouts/banks` 接受仅用于显示的查询参数
@@ -21,7 +25,19 @@ description: "API and documentation change history"
 
 </Update>
 
-<Update label="2026年10月22日" description="v2.179 · 4 个版本">
+<Update label="2026年10月22日" description="v2.181 · 6 个版本">
+### v2.181
+**修复**
+- 无人支付的巴西 QR payin 现在会自动关闭：当轨道取消 QR 后，pending 的
+  payin 会转为 `expired`（带有可见的 `failure` 对象）并发出 `payin_expired`，
+  而不再永久停留在 `pending`。
+
+### v2.180
+**新增**
+- 巴西 QR payin 现在推荐使用 BRL 输入，同时保留直接 BOB 输入。BRL 按
+  mid 汇率、无报价 spread 转换并按 half-up 保留两位小数；响应返回
+  `bob_charged` 和可审计的 `platform_quote`，replay 保留原始报价。
+
 ### v2.179
 **变更**
 - 预告的 `bank_transfer` payin 现在会在金额无法按账户当前汇率覆盖固定
