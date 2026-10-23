@@ -130,11 +130,13 @@ entrega una imagen PNG, no un payload EMV para copiar/pegar:
 }
 ```
 
-El quote de un checkout link marca este corredor `BR`/`BOB` con
+El quote de un checkout link marca los corredores `BR`/`BOB` y `BR`/`BRL` con
 `payer_required: true`.
 La página server-driven solicita el CPF antes de materializar el cobro.
-Los checkout links siguen denominados en BOB; la paridad BRL para checkout
-queda para una fase futura.
+Los checkout links cotizan ambos: `BRL` para pagadores (convertido a BOB al
+materializar con la misma tasa mid y snapshot `platform_quote` del payin
+directo) y `BOB` directo; con dos monedas el materialize envía
+`?currency=BRL` (o `BOB`).
 
 ### Confirmación y conciliación
 

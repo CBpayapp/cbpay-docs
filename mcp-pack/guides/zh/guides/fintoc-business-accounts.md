@@ -67,6 +67,7 @@ curl -X POST "https://api.qbank.cl/platform/v1/payins/deposit-accounts" \
 请原样展示账号、银行、持有人姓名、RUT 和账户类型。平台按虚拟账号
 匹配入账；webhook 是首选，polling 是幂等后备。使用 `payin_credited`
 后，再用带有 `from`/`to` 和分页的 payins 列表读取权威记录。
+持有人是拥有创建该专用账户所用 CPF 的公司，而不是付款人或最终用户。
 
 ## 发送 CLP payout
 
@@ -114,5 +115,8 @@ delivery ID 去重。
     使用的账号，并按账号匹配入账。
 #### 超时后可以重试吗？
     不要使用新的幂等键重新发送。请使用相同 key 查询原操作并等待对账。
+#### 为什么专用账户的持有人不是我？
+    专用 CLP 账户号码签发给拥有创建账户所用 CPF 的公司。付款人或最终
+    用户不是账户持有人；请原样显示 CBPay 返回的持有人字段。
 参阅 [webhooks](https://docs.cbpayapp.com/zh/webhooks)、[errors](https://docs.cbpayapp.com/zh/errors) 和
 [幂等性](https://docs.cbpayapp.com/zh/concepts/idempotency)。

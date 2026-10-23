@@ -66,7 +66,29 @@ QR 轨道，集成方不能选择轨道。legacy QR 合同的有效上限为 `86
 向客户展示 QR 内容或 API 返回的 `qr_image_url`。客户付款后，账户会自动
 入账。使用 `GET /v1/payins/{payinID}` 查询当前状态。
 
-## 巴西：BOB PIX QR
+## 巴西：BRL 或 BOB PIX QR
+
+巴西 `method: "qr"` 接受 `currency: "BRL"`（推荐）或 `currency: "BOB"`
+（高级直接模式）。使用 BRL 时，平台按当前 mid 汇率报价 BOB，不在报价中
+加入 spread，再将转换后的 BOB 金额发送给 core。入账和费用基于实际收到的
+BOB。报价会被快照保存，幂等 replay 保留原始报价。
+
+### 推荐：以 BRL 输入付款人金额
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","expires_in":1800,"idempotency_key":"qr-brl-20261022-001"}'
+```
+
+响应包含 QR 图像、付款人看到的 BRL 金额、收取的 BOB 金额和可审计的报价：
+
+```json
+{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
+```
+
+`conversion.amount` 可能与请求的 BRL 相差几分钱：BOB 金额按 half-up
+规则保留两位小数，通道返回对应的 BRL 等值金额。
+
+### 高级：直接输入 BOB 收取金额
 
 对于 `country: "BR"`、`currency: "BOB"` 和 `method: "qr"`，charge 以 BOB
 计价，付款人通过通道转换以 BRL 支付。付款人的 CPF 是必填项；
@@ -102,8 +124,10 @@ payload：
 }
 ```
 
-该 `BR`/`BOB` corridor 的 checkout link quote 会返回 `payer_required: true`。托管页面
+`BR`/`BOB` 和 `BR`/`BRL` corridor 的 checkout link quote 都会返回 `payer_required: true`。托管页面
 会在 materialize charge 前要求付款人填写 CPF。
+checkout link 同时报价两者：面向付款人的 `BRL`（materialize 时按与 direct payin 相同的 mid 汇率转换为 BOB，
+并附带 `platform_quote` 快照）以及直接 `BOB`；同一 method 有两种货币时，materialize 调用需带 `?currency=BRL`（或 `BOB`）。
 
 ### 确认与对账
 
@@ -120,8 +144,10 @@ payload：
 
 | HTTP | Code | 处理方式 |
 | --- | --- | --- |
-| 400 | `invalid_request` | 为 BR/BOB QR payin 提供 `payer_document`。 |
+| 400 | `invalid_request` | 为巴西 QR payin 提供 `payer_document`，并使用 `BRL` 或 `BOB`。 |
+| 422 | `amount_too_small` | 增加 BRL 金额；转换并 half-up 舍入后必须至少为 `0.01 BOB`。 |
 | 422 | `provider_rejected` | 付款轨道拒绝了 charge，包括 adapter 边界缺少 CPF；根据 `detail` 修正数据，不要盲目重试。 |
+| 503 | `rates_unavailable` | 汇率恢复后使用相同幂等 key 重试；此时不会创建 charge。 |
 
 ## 幂等重试
 
@@ -197,12 +223,23 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 </Accordion>
 
 <Accordion title="所有 QR payin 都需要 CPF 吗？">
-只有巴西（`BR`/`BOB`/`qr`）需要。其他 QR corridor 保持各自的付款人要求。
+只有巴西（`BR`/`BRL` 或 `BOB`/`qr`）需要。通道会验证 CPF 是否存在；
+虚构或未知 CPF 可能返回 `CPF no encontrado`。其他 QR corridor 保持各自要求。
 </Accordion>
 
 <Accordion title="巴西 QR 的金额如何工作？">
-charge 以 BOB 计价。`conversion` 块显示付款人看到的 BRL 金额和汇率；
-例如 `1.00` BOB 可以按 `0.48` 的汇率转换为 `0.48` BRL。
+推荐输入付款人应支付的 BRL；平台按 mid 汇率转换为 BOB 并保存报价。
+需要直接指定 core charge 时才使用 BOB。
+</Accordion>
+
+<Accordion title="为什么付款金额可能相差几分钱？">
+平台将 BRL 转换为 BOB，并按 half-up 规则将 BOB 收费金额舍入到两位小数，
+所以 `conversion.amount` 可能与请求的 BRL 略有不同。
+</Accordion>
+
+<Accordion title="汇率不可用时怎么办？">
+API 在创建 charge 前返回 `503 rates_unavailable`。稍后使用相同幂等 key
+重试。
 </Accordion>
 
 <Accordion title="什么时候可以把巴西 QR payin 当作已支付？">

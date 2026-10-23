@@ -118,7 +118,8 @@ y redirige a tu `success_url` si la configuraste.
   payin y después se convierte al `settlement_asset`. Un pago anunciado
   MENOR a la cotización congelada se acredita igual (la plata es real)
   pero **no** marca el link como pagado. Si un país ofrece el mismo
-  método en **varias monedas** (ej. Bolivia con QR en BOB y en USD), la
+  método en **varias monedas** (ej. Bolivia con QR en BOB y en USD,
+  Brasil con QR en BRL y en BOB), la
   página lista cada moneda como opción independiente. En transferencias
   bancarias en México el link genera una **CLABE dedicada y exclusiva de
   ese cobro**: el pagador transfiere el monto exacto **sin poner
@@ -185,7 +186,7 @@ motor de conversiones de tu cuenta (mismos spreads y límites que
   de ese país.
 - `POST {checkout_url}/methods/{method}` — materializa la opción elegida.
   Métodos fiat exigen `?country=XX`; si el país ofrece el método en más
-  de una moneda (tarjetas, QR BOB/USD en Bolivia) exige además
+  de una moneda (tarjetas, QR BOB/USD en Bolivia, QR BRL/BOB en Brasil) exige además
   `&currency=YYY`; crypto usa `crypto:<chain>:<asset>` (ej.
   `crypto:tron:usdt`) sin país. Re-POST de la misma combinación devuelve
   la MISMA materialización.

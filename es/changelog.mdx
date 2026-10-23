@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="23 de octubre de 2026" description="v2.184 · 3 versiones">
+<Update label="23 de octubre de 2026" description="v2.185 · 4 versiones">
+### v2.185
+**Agregado**
+- Los checkout links ahora cotizan el QR de Brasil en BRL (para pagadores)
+  y en BOB (directo). Las selecciones BRL se convierten a BOB al
+  materializar con la misma tasa mid y snapshot `platform_quote` auditable
+  del payin directo; la vista congelada sigue en BRL. Con dos monedas, el
+  materialize envía `?currency=BRL` (o `BOB`); ambas opciones exigen el CPF
+  del pagador (`payer_required`).
+
 ### v2.184
 **Agregado**
 - El `403 otp_required` de las acciones protegidas ahora puede traer

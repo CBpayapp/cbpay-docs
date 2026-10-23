@@ -74,6 +74,8 @@ Respuesta `201`:
 
 Muestra al pagador exactamente el número, banco, nombre, RUT y tipo
 devueltos. No infieras un banco por su nombre ni reemplaces el RUT.
+El titular es la empresa dueña del CPF usado para la cuenta dedicada, no el
+pagador ni el usuario final.
 
 ### 3. Concilia el abono
 
@@ -138,5 +140,9 @@ recurso. Los eventos relevantes son `payin_credited` y
     como `"100.00"`.
 #### ¿Debo reintentar un timeout?
     No. Reutiliza la misma idempotency key y consulta la operación original.
+#### ¿Por qué yo no soy el titular de la cuenta dedicada?
+    Los números de cuenta CLP dedicados se emiten para la empresa dueña del CPF.
+    El pagador o usuario final no es el titular. Muestra los campos de titular
+    devueltos por CBPay sin reemplazarlos.
 Consulta [webhooks](https://docs.cbpayapp.com/es/webhooks), [errores](https://docs.cbpayapp.com/es/errors) e
 [idempotencia](https://docs.cbpayapp.com/es/concepts/idempotency).

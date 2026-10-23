@@ -54,6 +54,13 @@ source_url: https://docs.cbpayapp.com/zh/guides/funding
 完整 deposit account 契约见 [payins](https://docs.cbpayapp.com/zh/guides/payins)；要付款出去见
 [payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
 
+### 🇨🇱 CLP — 智利比索
+
+通过专用的 `CL/CLP/fintoc` 账户号码收款。该专用账户属于拥有创建账户
+所用 CPF 的公司；付款人或最终用户不是账户持有人。显示付款说明时，
+必须原样使用 API 返回的 `holder_name`、`holder_tax_id` 和
+`holder_account_type`。
+
 ### 🇪🇺 EUR — 欧元
 
 通过 `funding_usdt` 虚拟 IBAN 收款：入账欧元自动转换为USD——你的主
@@ -272,3 +279,6 @@ curl "https://api.qbank.cl/platform/v1/payins?country=BO&status=credited&from=20
 当每笔充值都应记入USD（你的主余额）时，选择默认的资金账户。当你需要为
 payout 保留 BOB、MXN 或 ARS 本地余额时，选择带 `purpose: "banking"` 的
 [Banking](https://docs.cbpayapp.com/zh/guides/banking)。
+#### 为什么专用 CLP 账户的持有人不是我？
+CLP 账户专用于拥有创建账户所用 CPF 的公司。账户号码合约识别的是该公司，
+而不是付款人或最终用户。支付说明应使用 CBPay 返回的持有人字段。

@@ -5,7 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.184 · 3 versions - October 23, 2026
+## v2.185 · 4 versions - October 23, 2026
+### v2.185
+**Added**
+- Checkout links now quote Brazil QR in both BRL (for payers) and BOB
+  (direct). BRL selections convert to BOB at materialization with the same
+  mid rate and auditable `platform_quote` snapshot as direct payins; the
+  frozen view stays in BRL. With two currencies, materialize sends
+  `?currency=BRL` (or `BOB`); both options require the payer CPF
+  (`payer_required`).
+
 ### v2.184
 **Added**
 - The `403 otp_required` response of protected actions may now carry
@@ -21,6 +30,8 @@ source_url: https://docs.cbpayapp.com/en/changelog
   catalogs. The default catalog stays first and wins duplicate codes; omit
   the flag for the historical response. Creation selectors must continue
   using the default catalog.
+- Clarified that the holder of a dedicated `CL/CLP/fintoc` account is the
+  company that owns the CPF used for the account, not the payer or end user.
 
 ### v2.182
 **Added**

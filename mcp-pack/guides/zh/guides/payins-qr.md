@@ -123,9 +123,10 @@ payload：
 }
 ```
 
-该 `BR`/`BOB` corridor 的 checkout link quote 会返回 `payer_required: true`。托管页面
+`BR`/`BOB` 和 `BR`/`BRL` corridor 的 checkout link quote 都会返回 `payer_required: true`。托管页面
 会在 materialize charge 前要求付款人填写 CPF。
-checkout link 仍以 BOB 计价；checkout 的 BRL 对等支持属于未来阶段。
+checkout link 同时报价两者：面向付款人的 `BRL`（materialize 时按与 direct payin 相同的 mid 汇率转换为 BOB，
+并附带 `platform_quote` 快照）以及直接 `BOB`；同一 method 有两种货币时，materialize 调用需带 `?currency=BRL`（或 `BOB`）。
 
 ### 确认与对账
 

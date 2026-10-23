@@ -111,7 +111,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   **冻结**。入账按正常 payin 汇率与手续费结算，随后转换为
   `settlement_asset`。付款金额**小于**冻结报价时照常入账（钱是真实的），
   但**不会**将链接标记为已支付。当一个国家以**多种币种**提供同一方式
-  （例如玻利维亚同时提供 BOB 和 USD 的二维码）时，页面把每种币种列为
+  （例如玻利维亚同时提供 BOB 和 USD 的二维码、巴西同时提供 BRL 和 BOB 的二维码）时，页面把每种币种列为
   独立选项。墨西哥的银行转账会为该链接生成一个**专属 CLABE（仅限本次
   收款）**：付款人只需转账准确金额，**无需填写任何参考号** —— 账户本身
   即可识别链接，存款自动检测并结算。若当时无法签发专属账户，页面会降级
@@ -165,7 +165,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   `?country=XX` 时额外返回该国每个选项当地金额的 `country_quote`。
 - `POST {checkout_url}/methods/{method}`——物化所选支付选项。法币方式
   要求 `?country=XX`；当国家以多种币种提供该方式时（银行卡、玻利维亚
-  的 QR BOB/USD）还须传 `&currency=YYY`；加密货币使用
+  的 QR BOB/USD、巴西的 QR BRL/BOB）还须传 `&currency=YYY`；加密货币使用
   `crypto:<chain>:<asset>`（如 `crypto:tron:usdt`），不带国家。对同一
   组合重复 POST 返回**同一个**物化结果。
 - `POST {checkout_url}/collect/otp` / `POST {checkout_url}/collect`——

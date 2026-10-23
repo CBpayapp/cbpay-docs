@@ -5,7 +5,16 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.184 · 3 versiones - 23 de octubre de 2026
+## v2.185 · 4 versiones - 23 de octubre de 2026
+### v2.185
+**Agregado**
+- Los checkout links ahora cotizan el QR de Brasil en BRL (para pagadores)
+  y en BOB (directo). Las selecciones BRL se convierten a BOB al
+  materializar con la misma tasa mid y snapshot `platform_quote` auditable
+  del payin directo; la vista congelada sigue en BRL. Con dos monedas, el
+  materialize envía `?currency=BRL` (o `BOB`); ambas opciones exigen el CPF
+  del pagador (`payer_required`).
+
 ### v2.184
 **Agregado**
 - El `403 otp_required` de las acciones protegidas ahora puede traer
@@ -21,6 +30,9 @@ source_url: https://docs.cbpayapp.com/es/changelog
   internas del riel. El catálogo predeterminado queda primero y gana códigos
   duplicados; omite el flag para conservar la respuesta histórica. Los
   selectores de creación deben seguir usando el catálogo predeterminado.
+- Se aclara que el titular de una cuenta dedicada `CL/CLP/fintoc` es la
+  empresa dueña del CPF usado para la cuenta, no el pagador ni el usuario
+  final.
 
 ### v2.182
 **Agregado**

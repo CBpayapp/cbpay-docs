@@ -63,6 +63,13 @@ Para el contrato completo de deposit accounts ver
 [payins](https://docs.cbpayapp.com/es/guides/payins); para enviar pesos, ver
 [payouts](https://docs.cbpayapp.com/es/guides/payouts).
 
+### 🇨🇱 CLP — peso chileno
+
+Recibe pesos mediante un número de cuenta dedicado `CL/CLP/fintoc`. La cuenta
+dedicada pertenece a la empresa dueña del CPF usado para crearla; el pagador o
+usuario final nunca es el titular. Muestra `holder_name`, `holder_tax_id` y
+`holder_account_type` exactamente como los devuelve la API.
+
 ### 🇪🇺 EUR — euro
 
 Recibe euros a través de un IBAN virtual `funding_usdt`: los euros
@@ -307,6 +314,10 @@ anomalía, contacta a operaciones en vez de crear un sustituto a ciegas.
 Este corredor es push-first con sondeo de respaldo. El tiempo final depende
 de cuándo el banco reporta el movimiento; el webhook se envía solo tras la
 conciliación.
+#### ¿Por qué no aparezco como titular de la cuenta CLP dedicada?
+La cuenta CLP está dedicada a la empresa dueña del CPF usado para crearla. El
+contrato del número de cuenta identifica a esa empresa, no al pagador o usuario
+final. Usa los campos de titular devueltos en las instrucciones de pago.
 #### ¿Fondeo o Banking — cuál necesito?
 Elige fondeo (default) cuando cada depósito debe aterrizar en USD, tu
 saldo principal. Elige [Banking](https://docs.cbpayapp.com/es/guides/banking) con

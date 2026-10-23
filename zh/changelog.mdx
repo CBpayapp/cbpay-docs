@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月23日" description="v2.184 · 3 个版本">
+<Update label="2026年10月23日" description="v2.185 · 4 个版本">
+### v2.185
+**新增**
+- checkout link 的巴西 QR 现在同时报价 BRL（面向付款人）和 BOB（直接）。
+  选择 BRL 时，materialize 按与 direct payin 相同的 mid 汇率转换为 BOB，
+  并附带可审计的 `platform_quote` 快照；冻结视图保持 BRL。有两种货币时，
+  materialize 需带 `?currency=BRL`（或 `BOB`）；两种选项都要求付款人 CPF
+ （`payer_required`）。
+
 ### v2.184
 **新增**
 - 受保护操作的 `403 otp_required` 响应现在可能携带 `challenge_id`、`phone`（掩码后的目标）和 `expires_at`：网关会复用有效的质询或为您创建一个。直接验证验证码后携带 `X-OTP-Token` 重试，可跳过显式的 `POST /v1/otp/challenges`（仍可作为备选）。
