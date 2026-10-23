@@ -74,7 +74,7 @@ Collection corridors and modes:
 | Mexico | MXN | Dedicated CLABE account, announced bank transfer |
 | Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`) |
 | Paraguay | PYG | Announced bank transfer |
-| Brazil | BOB (`qr`), BRL (`pix`) | Dynamic PIX QR with BRL payer conversion; hosted PIX redirect |
+| Brazil | BRL or BOB (`qr`), BRL (`pix`) | Dynamic PIX QR (BRL input converts to BOB); hosted PIX redirect |
 | Argentina | ARS | Dedicated CVU account |
 | Venezuela | VES | Active collection (`c2p`) |
 | United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT) |
@@ -521,8 +521,10 @@ putting it in the concept ensures the automatic match. Send
 `payer_document` as a backup — see
 [matching an announced transfer](#matching-an-announced-transfer).
 #### Brazil
-**Dynamic PIX QR**: the `qr` method generates a PIX QR denominated in BOB.
-The payer completes the payment in BRL through the rail conversion.
+**Dynamic PIX QR**: for Brazil, `qr` accepts `BRL` (recommended) or `BOB`.
+With BRL, the platform converts the payer amount to a BOB charge at the
+current mid rate, without spread in the quote, and snapshots the quote for
+replays. BOB is the direct advanced input.
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -530,9 +532,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Content-Type: application/json" \
   -d '{
     "country": "BR",
-    "currency": "BOB",
+    "currency": "BRL",
     "method": "qr",
-    "amount": "1.00",
+    "amount": "120.00",
     "description": "Order 7719",
     "payer_document": "52998224725",
     "payer_phone": "+5511999990000",
@@ -541,15 +543,15 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 The response contains `charge.qr_image` (base64 PNG),
-`charge.qr_image_url`, and the conversion shown to the payer. There is no
-EMV copy-and-paste payload:
+`charge.qr_image_url`, the payer-facing BRL conversion, `bob_charged`, and the
+auditable `platform_quote`. There is no EMV copy-and-paste payload:
 
 ```json
-{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"0.48","currency":"BRL","rate":"0.48"},"expires_at":"2026-10-22T12:57:14.937Z","status":"pending"}}
+{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
 ```
-
-The payment reaches `credited` after authenticated confirmation and
-reconciliation.
+The payment reaches `credited` from the BOB amount received after authenticated
+confirmation and reconciliation. A BRL amount that converts below `0.01 BOB`
+returns `422 amount_too_small`; missing FX returns `503 rates_unavailable`.
 > **Note**
 The `qr` method is one payment per dynamic QR with the exact amount embedded.
 **Hosted PIX redirect**: create a `pix` payin and redirect the payer to the
@@ -828,7 +830,7 @@ The request uses the existing collect contract. `payer_document`,
 `payer_phone`, `payer_bank` and `otp` are the payer data needed by the C2P
 rail; `otp` carries the bank-generated dynamic key. The response keeps the
 existing payin shape and, on synchronous success, includes `paid: true`,
-`provider_reference` and the credited payin identifiers.
+`provider_reference` and the credited payin identifiers. When you later read the payin or list, the top-level `payer_bank` field is returned for this collect flow (and for checkout charges completed through a pull method) when the persisted collect snapshot contains a bank code. It is omitted otherwise; resolve the code to the display name with `GET /v1/payouts/banks`.
 
 ### OTP-based pull methods
 

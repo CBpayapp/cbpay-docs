@@ -5,7 +5,28 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.179 · 4 versions - October 22, 2026
+## v2.182 · 1 version - October 23, 2026
+### v2.182
+**Added**
+- Payin list and detail responses now expose the optional top-level `payer_bank`
+  catalog code for VE/VES collect and checkout charges completed through a pull
+  method. The code comes from the persisted collect request; resolve its display
+  name with `GET /v1/payouts/banks`. It is omitted when no valid snapshot exists.
+
+## v2.181 · 6 versions - October 22, 2026
+### v2.181
+**Fixed**
+- Brazil QR payins left unpaid now close automatically: when the rail
+  cancels the QR, the pending payin transitions to `expired` with a visible
+  `failure` object and emits `payin_expired`, instead of staying `pending`.
+
+### v2.180
+**Added**
+- Brazil QR payins now accept BRL as the recommended input in addition to
+  direct BOB. BRL inputs are converted at the mid rate without quote spread,
+  rounded half-up to cents, and returned with `bob_charged` and an auditable
+  `platform_quote`; the original quote is preserved on replay.
+
 ### v2.179
 **Changed**
 - Announced `bank_transfer` payins now fail fast with the reused
@@ -56,6 +77,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
   bank. No API contract changed.
 
 **Added**
+- **KYC/KYB remediation:** self onboarding now documents the
+  `self_verification_in_progress` 409 and re-serving the current open link.
+  The current case remains authoritative after later duplicate rejection;
+  native details expose remediable `pending_documents`,
+  `documents_received`, and `changes_requested_comments`, and completing
+  the requested documents reopens the same submission as `pending_review`.
+- Company onboarding now includes the Wolfsberg CBDDQ v1.4 questionnaire
+  with draft persistence, conditional questions, branded PDF generation and
+  `wolfsberg` document attachment.
 - Brazil QR payins now accept `method: "qr"` with `BR`/`BRL` and require the
   payer CPF in `payer_document`. Optional payer phone and email fields are
   documented, together with webhook-first confirmation, safe delayed

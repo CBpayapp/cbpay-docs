@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.179"
+  version: "2.182"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -26085,6 +26085,13 @@ components:
             used as the default, `none` no identity was available (only the reference can match),
             `bank_event` is reported by the bank, including for a paid QR charge bound through
             `charge_link`; if the rail does not report a value, the corresponding field is omitted.
+        payer_bank:
+          type: string
+          description: >-
+            Bank catalog code declared by the payer, returned for VE/VES collect and checkout
+            charges completed through a pull method. The code is read from the persisted
+            `collect_request` snapshot and is omitted when no valid snapshot or bank code exists.
+            Resolve it to a display name with `GET /v1/payouts/banks`.
         payer:
           type: object
           description: Payer identity attached to the payin, when known.

@@ -782,7 +782,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/collect \
 该 request 使用现有 collect 合同。`payer_document`、`payer_phone`、
 `payer_bank` 和 `otp` 是 C2P 所需的付款人数据；`otp` 携带银行生成的
 动态密钥。响应 shape 不变；同步成功时包含 `paid: true`、
-`provider_reference` 和已入账 payin 的标识。
+`provider_reference` 和已入账 payin 的标识。之后读取或列出该 payin 时，如果持久化的 collect snapshot 中包含银行代码，此 collect 流程（以及通过 pull 完成的 checkout charge）会在顶层返回 `payer_bank`。否则省略；请使用 `GET /v1/payouts/banks` 将代码解析为显示名称。
 
 ### 基于 OTP 的 pull 方式
 

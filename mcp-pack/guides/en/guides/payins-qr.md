@@ -69,7 +69,69 @@ Display the QR payload or the `qr_image_url` returned by the API. When the
 customer pays, the account is credited automatically. Read the current status
 with `GET /v1/payins/{payinID}`.
 
-## Brazil: PIX QR in BOB
+## Brazil: PIX QR in BRL or BOB
+
+For Brazil, `method: "qr"` accepts either `currency: "BRL"` (recommended)
+or `currency: "BOB"` (direct advanced mode). With BRL, the platform quotes
+the BOB charge using the current mid rates, without spread in the quote, and
+passes the converted BOB amount to the core. The credit and fees are based on
+the BOB amount actually received. The quote is snapshotted and preserved on
+idempotent replay.
+
+### Recommended: enter the payer amount in BRL
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "qr",
+    "amount": "120.00",
+    "description": "Order 7719",
+    "payer_document": "52998224725",
+    "payer_phone": "+5511999990000",
+    "payer_email": "payer@example.test",
+    "expires_in": 1800,
+    "idempotency_key": "qr-brl-20261022-001"
+  }'
+```
+
+The response includes the QR image, the amount the payer sees in BRL, the BOB
+amount charged, and the auditable platform quote:
+
+```json
+{
+  "payin_id": "2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101",
+  "status": "pending",
+  "charge": {
+    "charge_id": "8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401",
+    "our_reference": "77849505",
+    "qr_image": "<base64 PNG>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "conversion": {"amount": "120.00", "currency": "BRL", "rate": "0.50"},
+    "expires_at": "2026-10-22T12:57:14.937Z",
+    "bob_charged": "240.00",
+    "platform_quote": {
+      "quoted_currency": "BRL",
+      "quoted_amount": "120.00",
+      "charged_currency": "BOB",
+      "charged_amount": "240.00",
+      "rate_brl_per_usd": "5.0000000000",
+      "rate_bob_per_usd": "10.0000000000",
+      "rates_updated_at": "2026-10-22T20:00:00Z"
+    },
+    "status": "pending"
+  }
+}
+```
+
+`conversion.amount` is the BRL amount returned by the rail. It can differ by
+centavos from the BRL request when the BRL→BOB conversion is rounded
+half-up to cents.
+
+### Advanced: enter the charge directly in BOB
 
 For `country: "BR"`, `currency: "BOB"` and `method: "qr"`, the charge is
 denominated in BOB. The payer pays in BRL through the rail's conversion.
@@ -121,7 +183,8 @@ The checkout-link quote marks this `BR`/`BOB` corridor with
 `payer_required: true`.
 When a payer opens a hosted link, the server-driven page asks for the CPF
 before materializing the charge. Do not bypass that form by creating a second
-charge.
+charge. Checkout links remain BOB-denominated; BRL parity for checkout is a
+future phase.
 
 ### Confirmation and reconciliation
 
@@ -153,8 +216,10 @@ Never retry a possibly submitted payment with a new idempotency key.
 
 | HTTP | Code | What to do |
 | --- | --- | --- |
-| 400 | `invalid_request` | Include `payer_document` for a BR/BOB QR payin. |
+| 400 | `invalid_request` | Include `payer_document` for a BR QR payin and use `BRL` or `BOB` as the currency. |
+| 422 | `amount_too_small` | Increase the BRL amount: after conversion and half-up rounding, it must produce at least `0.01 BOB`. |
 | 422 | `provider_rejected` | The payment rail rejected the charge, including a missing CPF at the adapter boundary; correct the payer data using the returned detail and do not blind-retry. |
+| 503 | `rates_unavailable` | Retry the same request with the same idempotency key after rate service recovery. No charge is created while rates are unavailable. |
 
 ## Idempotent retries
 
@@ -229,12 +294,21 @@ Yes. The description is display text and is not part of the replay identity.
 Retry with the same idempotency key, then read the returned `payin_id` with
 `GET /v1/payins/{payinID}`. Do not create a new key for the same operation.
 #### Is a CPF required for every QR payin?
-Only for Brazil (`BR`/`BOB`/`qr`). Other QR corridors keep their own payer
-requirements.
+Only for Brazil (`BR`/`BRL` or `BOB`/`qr`). The rail validates that the CPF
+exists; a synthetic or unknown CPF can be rejected with `CPF no encontrado`.
+Other QR corridors keep their own payer requirements.
 #### How does the Brazil QR amount work?
-The charge amount is in BOB. The response's `conversion` block shows the BRL
-amount and rate the payer sees; for example, `1.00` BOB can convert to
-`0.48` BRL at rate `0.48`.
+Use BRL when the amount your payer should pay is the product price. The
+platform converts it to BOB at the mid rate and snapshots the quote. Use BOB
+only when you need to specify the core charge directly.
+#### Why can the payer amount differ by a few centavos?
+The platform converts BRL to BOB and rounds the BOB charge half-up to two
+decimals. The rail then returns the BRL amount corresponding to that rounded
+charge, so `conversion.amount` can differ slightly from the requested BRL
+amount.
+#### What if FX rates are unavailable?
+The API returns `503 rates_unavailable` before creating a charge. Retry later
+with the same idempotency key; do not create a new payment attempt.
 #### When can I treat a Brazil QR payin as paid?
 Only after the API status is `credited` or the corresponding verified webhook
 is received. A QR being generated, scanned or locally expired is not proof of

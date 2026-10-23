@@ -74,7 +74,7 @@ Corredores y modalidades de cobro:
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
 | Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`) |
 | Paraguay | PYG | Transferencia anunciada |
-| Brasil | BOB (`qr`), BRL (`pix`) | QR PIX dinámico con conversión BRL para el pagador; redirect PIX hosted |
+| Brasil | BRL o BOB (`qr`), BRL (`pix`) | QR PIX dinámico (BRL convierte a BOB); redirect PIX hosted |
 | Argentina | ARS | Cuenta CVU dedicada |
 | Venezuela | VES | Cobro activo (`c2p`) |
 | Ecuador | USD | Transferencia anunciada con despacho manual |
@@ -513,8 +513,10 @@ el concepto asegura el match automático. Manda `payer_document` como
 respaldo — ver
 [conciliación de una transferencia anunciada](#conciliaci%C3%B3n-de-una-transferencia-anunciada).
 #### Brasil
-**QR PIX dinámico**: el método `qr` genera un QR PIX denominado en BOB.
-El pagador completa el pago en BRL mediante la conversión del riel.
+**QR PIX dinámico**: en Brasil, `qr` acepta `BRL` (recomendado) o `BOB`.
+Con BRL, la plataforma convierte el monto del pagador a BOB con la tasa mid
+vigente, sin spread en la cotización, y guarda la cotización para los replay.
+BOB es la entrada directa avanzada.
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -522,9 +524,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Content-Type: application/json" \
   -d '{
     "country": "BR",
-    "currency": "BOB",
+    "currency": "BRL",
     "method": "qr",
-    "amount": "1.00",
+    "amount": "120.00",
     "description": "Pedido 7719",
     "payer_document": "52998224725",
     "payer_phone": "+5511999990000",
@@ -533,15 +535,17 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-La respuesta trae `charge.qr_image` (PNG en base64), `charge.qr_image_url` y
-la conversión que verá el pagador. Este corredor brasileño no entrega payload
-EMV para copiar y pegar:
+La respuesta trae `charge.qr_image` (PNG en base64), `charge.qr_image_url`, la
+conversión BRL del pagador, `bob_charged` y `platform_quote`. No entrega
+payload EMV para copiar y pegar:
 
 ```json
-{"charge":{"our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"0.48","currency":"BRL","rate":"0.48"},"expires_at":"2026-10-22T12:57:14.937Z","status":"pending"}}
+{"charge":{"our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
 ```
 
-El pago llega a `credited` tras la confirmación autenticada y la conciliación.
+El pago llega a `credited` según el BOB recibido tras la confirmación autenticada
+y la conciliación. Un monto BRL bajo `0.01 BOB` devuelve `422 amount_too_small`;
+sin tasas devuelve `503 rates_unavailable`.
 
 > **Nota**
 El método `qr` genera un QR dinámico de un pago con el monto exacto embebido.
@@ -818,7 +822,7 @@ El request usa el contrato collect existente. `payer_document`, `payer_phone`,
 `payer_bank` y `otp` son los datos que necesita el riel C2P; `otp` lleva la
 clave dinámica generada por el banco. La respuesta conserva el shape actual y,
 si se aprueba en forma síncrona, incluye `paid: true`, `provider_reference` y
-los identificadores del payin acreditado.
+los identificadores del payin acreditado. Al leer o listar después el payin, el campo top-level `payer_bank` aparece en este flujo collect (y en cargos checkout completados mediante pull) cuando el snapshot persistido del collect contiene un código bancario. En caso contrario se omite; resuelve el código al nombre visible con `GET /v1/payouts/banks`.
 
 ### Métodos pull basados en OTP
 

@@ -257,6 +257,10 @@ in every status (pending, expired and credited); `currency`/`local_amount`
 stay empty until a local payment method is used. A charge settled in
 crypto or via the CBPay app exposes its `usdt_credited` without an
 `fx_rate` (no FX quote applies).
+If the payer completes checkout through a pull method, the list and detail may
+also include the top-level `payer_bank` catalog code when the collect snapshot
+contains it; resolve the code with `GET /v1/payouts/banks`. Otherwise the field
+is omitted.
 
 Link-specific errors (seen by whoever opens the page):
 

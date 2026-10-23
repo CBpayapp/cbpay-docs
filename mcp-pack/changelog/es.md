@@ -5,7 +5,29 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.179 · 4 versiones - 22 de octubre de 2026
+## v2.182 · 1 versión - 23 de octubre de 2026
+### v2.182
+**Agregado**
+- Las respuestas de lista y detalle de payins ahora exponen el código de
+  catálogo opcional top-level `payer_bank` para cobros collect VE/VES y cargos
+  checkout completados mediante pull. El código proviene del collect persistido;
+  resuelve su nombre visible con `GET /v1/payouts/banks`. Se omite sin snapshot
+  válido.
+
+## v2.181 · 6 versiones - 22 de octubre de 2026
+### v2.181
+**Corregido**
+- Los payins QR de Brasil impagos ahora se cierran solos: cuando el riel
+  cancela el QR, el payin pendiente pasa a `expired` con un objeto `failure`
+  visible y emite `payin_expired`, en vez de quedar en `pending`.
+
+### v2.180
+**Agregado**
+- Los payins QR de Brasil aceptan ahora BRL como entrada recomendada además de
+  BOB directo. BRL se convierte con tasa mid sin spread, se redondea half-up a
+  centavos y devuelve `bob_charged` junto con `platform_quote`; el replay
+  conserva la cotización original.
+
 ### v2.179
 **Cambiado**
 - Los payins anunciados `bank_transfer` ahora fallan rápidamente con el código
@@ -56,6 +78,15 @@ source_url: https://docs.cbpayapp.com/es/changelog
   receptor. No cambió el contrato de la API.
 
 **Agregado**
+- **Subsanación KYC/KYB:** se documenta el 409
+  `self_verification_in_progress`, el reuso del link vigente y la
+  resubmisión en el mismo expediente. El detalle nativo expone
+  `pending_documents`, `documents_received` y
+  `changes_requested_comments`; al completar lo pedido vuelve a
+  `pending_review`.
+- El onboarding de empresas incorpora el cuestionario Wolfsberg CBDDQ v1.4,
+  borrador local, preguntas condicionales, PDF brandeado y adjunto con
+  categoría `wolfsberg`.
 - Los payins QR de Brasil ahora documentan `method: "qr"` con `BR`/`BRL` y
   exigen el CPF del pagador en `payer_document`. Se incluyen teléfono y email
   opcionales, confirmación webhook-first, conciliación tardía segura,

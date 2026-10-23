@@ -857,7 +857,7 @@ El request usa el contrato collect existente. `payer_document`, `payer_phone`,
 `payer_bank` y `otp` son los datos que necesita el riel C2P; `otp` lleva la
 clave dinámica generada por el banco. La respuesta conserva el shape actual y,
 si se aprueba en forma síncrona, incluye `paid: true`, `provider_reference` y
-los identificadores del payin acreditado.
+los identificadores del payin acreditado. Al leer o listar después el payin, el campo top-level `payer_bank` aparece en este flujo collect (y en cargos checkout completados mediante pull) cuando el snapshot persistido del collect contiene un código bancario. En caso contrario se omite; resuelve el código al nombre visible con `GET /v1/payouts/banks`.
 
 ### Métodos pull basados en OTP
 

@@ -4,6 +4,16 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年10月23日" description="v2.182 · 1 个版本">
+### v2.182
+**新增**
+- payin 列表和详情响应现在会为 VE/VES collect 以及通过 pull 完成的 checkout
+  charge 返回可选的顶层目录代码 `payer_bank`。代码来自持久化的 collect
+  request；请使用 `GET /v1/payouts/banks` 解析显示名称。没有有效 snapshot
+  时省略。
+
+</Update>
+
 <Update label="2026年10月22日" description="v2.179 · 4 个版本">
 ### v2.179
 **变更**
