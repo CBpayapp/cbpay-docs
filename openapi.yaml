@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.182"
+  version: "2.183"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5113,7 +5113,11 @@ paths:
       summary: List destination banks
       description: Bank catalog for a country's payouts. Without `method` it returns the union of every
         payout method's banks for the country (deduplicated by code); pass `method` to get a single channel's
-        catalog. Some methods have no bank catalog (e.g. QR) and contribute no entries.
+        catalog. Some methods have no bank catalog (e.g. QR) and contribute no entries. Pass
+        `include_variants=true` (also `1` or `yes`) to add the internal variants' bank catalogs for
+        display-only resolution of codes saved from a non-default rail. The default catalog remains first,
+        so duplicate codes keep the default's name; without the flag, behavior is unchanged. This flag is
+        not for payout creation selectors, which must continue validating against the default rail.
       parameters:
       - name: country
         in: query
@@ -5126,6 +5130,15 @@ paths:
           type: string
           example: bank_transfer
         description: Optional payout method to scope the catalog (see GET /v1/payouts/methods).
+      - name: include_variants
+        in: query
+        schema:
+          type: string
+          enum: ['true', 'false', '1', '0', 'yes', 'no']
+          default: 'false'
+        description: Display-only expansion. When true, 1, or yes, also includes internal rail variants;
+          the default catalog wins duplicate bank codes. Omit this parameter to preserve the historical
+          catalog. Do not use it to populate creation selectors.
       responses:
         '200':
           description: Banks catalog for the country.

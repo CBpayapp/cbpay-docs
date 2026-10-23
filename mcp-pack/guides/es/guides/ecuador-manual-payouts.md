@@ -215,6 +215,12 @@ Devuelve `{ "items": [{ "code": "...", "name": "..." }], "meta": {
 "retrieved": 1 } }`, donde `retrieved` es el número de elementos devueltos.
 Usa un `code` devuelto por el catálogo como `beneficiary.bank_code`.
 
+Si necesitas mostrar el nombre de un código guardado desde un riel interno no
+predeterminado, agrega `&include_variants=true` (también `1` o `yes`). Es solo
+para display: el catálogo predeterminado queda primero y gana los códigos
+duplicados, y los selectores de creación deben seguir usando el catálogo
+predeterminado. Omitir el flag conserva el catálogo histórico.
+
 ## Reglas operativas
 
 - El operador paga en el portal bancario y registra la referencia bancaria.

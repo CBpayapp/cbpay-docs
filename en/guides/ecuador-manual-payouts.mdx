@@ -214,6 +214,12 @@ It returns `{ "items": [{ "code": "...", "name": "..." }], "meta": {
 "retrieved": 1 } }`, where `retrieved` is the number of items returned. Use a
 returned `code` as `beneficiary.bank_code`.
 
+If you need to display the name for a code saved from an internal non-default
+rail, add `&include_variants=true` (also `1` or `yes`). This is display-only:
+the default catalog remains first and wins duplicate codes, and payout
+creation selectors must continue using the default catalog. Omitting the flag
+preserves the historical catalog.
+
 ## Operational rules
 
 - The operator pays in the bank portal and records the bank reference.

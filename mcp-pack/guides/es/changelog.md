@@ -5,7 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.182 · 1 versión - 23 de octubre de 2026
+## v2.183 · 2 versiones - 23 de octubre de 2026
+### v2.183
+**Cambiado**
+- `GET /v1/payouts/banks` acepta el parámetro de consulta solo para display
+  `include_variants` (`true`, `1` o `yes`) para incluir catálogos de variantes
+  internas del riel. El catálogo predeterminado queda primero y gana códigos
+  duplicados; omite el flag para conservar la respuesta histórica. Los
+  selectores de creación deben seguir usando el catálogo predeterminado.
+
 ### v2.182
 **Agregado**
 - Las respuestas de lista y detalle de payins ahora exponen el código de

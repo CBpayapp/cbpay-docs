@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 23, 2026" description="v2.182 · 1 version">
+<Update label="October 23, 2026" description="v2.183 · 2 versions">
+### v2.183
+**Changed**
+- `GET /v1/payouts/banks` accepts the display-only `include_variants` query
+  parameter (`true`, `1` or `yes`) to include internal rail-variant bank
+  catalogs. The default catalog stays first and wins duplicate codes; omit
+  the flag for the historical response. Creation selectors must continue
+  using the default catalog.
+
 ### v2.182
 **Added**
 - Payin list and detail responses now expose the optional top-level `payer_bank`

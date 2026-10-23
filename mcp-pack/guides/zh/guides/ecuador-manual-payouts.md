@@ -201,6 +201,10 @@ Authorization: Bearer <API_KEY>
 "retrieved": 1 } }`，其中 `retrieved` 是返回的条目数量。将返回的 `code`
 用作 `beneficiary.bank_code`。
 
+如果需要显示从内部非默认轨道保存的代码名称，可加入
+`&include_variants=true`（也接受 `1` 或 `yes`）。这仅用于显示：默认目录仍排在
+前面并覆盖重复代码，创建选择器仍必须使用默认目录。不传该参数可保持历史目录。
+
 ## 运营规则
 
 - 运营人员在银行门户付款，并记录银行参考号。

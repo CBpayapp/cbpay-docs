@@ -5,7 +5,14 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.182 · 1 个版本 - 2026年10月23日
+## v2.183 · 2 个版本 - 2026年10月23日
+### v2.183
+**变更**
+- `GET /v1/payouts/banks` 接受仅用于显示的查询参数
+  `include_variants`（`true`、`1` 或 `yes`），以加入内部轨道变体的银行目录。
+  默认目录仍排在前面并覆盖重复代码；不传该参数即可保持历史响应。创建选择器
+  仍必须使用默认目录。
+
 ### v2.182
 **新增**
 - payin 列表和详情响应现在会为 VE/VES collect 以及通过 pull 完成的 checkout
