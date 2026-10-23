@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.179"
+  version: "2.182"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -25180,6 +25180,12 @@ components:
             默认使用账户持有人已验证的税号，`none` 没有可用身份（只能通过参考号匹配），
             `bank_event` 由银行报告，也适用于通过 `charge_link` 绑定的已支付 QR；
             如果通道没有报告某个值，则省略对应字段。
+        payer_bank:
+          type: string
+          description: >-
+            付款人声明的目录银行代码，适用于 VE/VES collect 以及通过 pull 完成的 checkout
+            charge。该代码读取自持久化的 `collect_request` snapshot；没有有效 snapshot
+            或银行代码时省略。请使用 `GET /v1/payouts/banks` 将其解析为显示名称。
         payer:
           type: object
           description: 已知时附加到该 payin 的付款人身份。

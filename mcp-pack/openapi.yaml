@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.179"
+  version: "2.182"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5506,12 +5506,12 @@ paths:
                   expires_in: 3600
                   idempotency_key: qr-bo-001
               br_pix_qr:
-                summary: Brazil — dynamic PIX QR (BOB charge, BRL payer conversion)
+                summary: Brazil — dynamic PIX QR (BRL input, BOB charge)
                 value:
                   country: BR
-                  currency: BOB
+                  currency: BRL
                   method: qr
-                  amount: '1.00'
+                  amount: '120.00'
                   description: Order 7719
                   payer_document: '52998224725'
                   payer_phone: '+5511999990000'
@@ -5621,6 +5621,25 @@ paths:
                   charge:
                     type: object
                     description: Charge details (QR data, references) from the core.
+                    properties:
+                      conversion:
+                        type: object
+                        properties:
+                          amount: {type: string}
+                          currency: {type: string, example: BRL}
+                          rate: {type: string}
+                      expires_at: {type: string, format: date-time}
+                      bob_charged: {type: string}
+                      platform_quote:
+                        type: object
+                        properties:
+                          quoted_currency: {type: string, example: BRL}
+                          quoted_amount: {type: string}
+                          charged_currency: {type: string, example: BOB}
+                          charged_amount: {type: string}
+                          rate_brl_per_usd: {type: string}
+                          rate_bob_per_usd: {type: string}
+                          rates_updated_at: {type: string, format: date-time}
               examples:
                 qr:
                   summary: 'QR charge (method: qr)'
@@ -5643,10 +5662,19 @@ paths:
                       qr_image: data:image/png;base64,iVBORw0KGgo…
                       qr_image_url: https://cdn.example.test/qr/77849505.png
                       conversion:
-                        amount: '0.48'
+                        amount: '120.00'
                         currency: BRL
-                        rate: '0.48'
+                        rate: '0.50'
                       expires_at: '2026-10-22T12:57:14.937Z'
+                      bob_charged: '240.00'
+                      platform_quote:
+                        quoted_currency: BRL
+                        quoted_amount: '120.00'
+                        charged_currency: BOB
+                        charged_amount: '240.00'
+                        rate_brl_per_usd: '5.0000000000'
+                        rate_bob_per_usd: '10.0000000000'
+                        rates_updated_at: '2026-10-22T20:00:00Z'
                       status: pending
                 bank_transfer:
                   summary: 'Announced deposit (method: bank_transfer)'
@@ -5889,6 +5917,10 @@ paths:
                   value:
                     error: core_rejected
                     message: amount is below the minimum for this corridor
+                amount_too_small:
+                  value:
+                    error: amount_too_small
+                    message: amount is too small after BRL to BOB conversion
                 amount_below_minimum:
                   summary: Announced bank-transfer amount below the fee minimum
                   value:
@@ -5909,6 +5941,11 @@ paths:
               example:
                 error: core_unavailable
                 message: could not create the charge
+              examples:
+                rates_unavailable:
+                  value:
+                    error: rates_unavailable
+                    message: exchange rates are temporarily unavailable
         '401':
           $ref: '#/components/responses/Unauthorized'
     get:
@@ -26085,6 +26122,13 @@ components:
             used as the default, `none` no identity was available (only the reference can match),
             `bank_event` is reported by the bank, including for a paid QR charge bound through
             `charge_link`; if the rail does not report a value, the corresponding field is omitted.
+        payer_bank:
+          type: string
+          description: >-
+            Bank catalog code declared by the payer, returned for VE/VES collect and checkout
+            charges completed through a pull method. The code is read from the persisted
+            `collect_request` snapshot and is omitted when no valid snapshot or bank code exists.
+            Resolve it to a display name with `GET /v1/payouts/banks`.
         payer:
           type: object
           description: Payer identity attached to the payin, when known.

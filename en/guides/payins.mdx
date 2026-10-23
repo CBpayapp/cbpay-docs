@@ -862,7 +862,7 @@ The request uses the existing collect contract. `payer_document`,
 `payer_phone`, `payer_bank` and `otp` are the payer data needed by the C2P
 rail; `otp` carries the bank-generated dynamic key. The response keeps the
 existing payin shape and, on synchronous success, includes `paid: true`,
-`provider_reference` and the credited payin identifiers.
+`provider_reference` and the credited payin identifiers. When you later read the payin or list, the top-level `payer_bank` field is returned for this collect flow (and for checkout charges completed through a pull method) when the persisted collect snapshot contains a bank code. It is omitted otherwise; resolve the code to the display name with `GET /v1/payouts/banks`.
 
 ### OTP-based pull methods
 

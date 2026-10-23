@@ -4,6 +4,17 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="23 de octubre de 2026" description="v2.182 · 1 versión">
+### v2.182
+**Agregado**
+- Las respuestas de lista y detalle de payins ahora exponen el código de
+  catálogo opcional top-level `payer_bank` para cobros collect VE/VES y cargos
+  checkout completados mediante pull. El código proviene del collect persistido;
+  resuelve su nombre visible con `GET /v1/payouts/banks`. Se omite sin snapshot
+  válido.
+
+</Update>
+
 <Update label="22 de octubre de 2026" description="v2.179 · 4 versiones">
 ### v2.179
 **Cambiado**

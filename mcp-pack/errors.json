@@ -1,5 +1,5 @@
 {
-  "count": 363,
+  "count": 364,
   "errors": [
     {
       "category": {
@@ -5071,6 +5071,20 @@
         "en": "An echoed identity field differs from the verified account; send the verified values.",
         "es": "Un campo de identidad difiere de la cuenta verificada; envía los valores verificados.",
         "zh": "回显的身份字段与已验证账户不符；请发送已验证值。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "discard_pending",
+      "http": 409,
+      "meaning": {
+        "en": "A discard maker request is still awaiting approval; cancel it before restoring the account.",
+        "es": "Hay una solicitud maker de descarte esperando aprobación; cancélala antes de restaurar la cuenta.",
+        "zh": "丢弃 maker 请求仍在等待审批；恢复账户前请先取消请求。"
       }
     }
   ]

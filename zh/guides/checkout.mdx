@@ -224,6 +224,9 @@ fintoc）支付的收款仍立即入账，与以往相同。详见
 `settlement_asset` + `asset_amount`；在使用本地支付方式之前
 `currency`/`local_amount` 保持为空。以加密货币或 CBPay 应用结算的收款
 会返回 `usdt_credited` 而没有 `fx_rate`（不适用外汇报价）。
+如果付款人通过 pull 方式完成 checkout，且 collect snapshot 中包含银行代码，
+列表和详情还可能返回顶层目录代码 `payer_bank`；请使用
+`GET /v1/payouts/banks` 解析该代码。否则省略此字段。
 
 链接专属错误（由打开页面的人看到）：
 

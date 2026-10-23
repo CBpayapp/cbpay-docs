@@ -262,6 +262,10 @@ todo estado (pendiente, vencido y abonado); `currency`/`local_amount`
 quedan vacíos hasta que se usa un método de pago local. Un cobro
 liquidado en crypto o vía la app CBPay expone su `usdt_credited` sin
 `fx_rate` (no aplica cotización FX).
+Si el pagador completa el checkout mediante un método pull, la lista y el
+detalle también pueden incluir el código de catálogo top-level `payer_bank`
+cuando el snapshot collect lo contiene; resuelve el código con
+`GET /v1/payouts/banks`. En caso contrario el campo se omite.
 
 Errores propios del link (los ve quien abre la página):
 

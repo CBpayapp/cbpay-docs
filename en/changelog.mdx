@@ -4,6 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="October 23, 2026" description="v2.182 · 1 version">
+### v2.182
+**Added**
+- Payin list and detail responses now expose the optional top-level `payer_bank`
+  catalog code for VE/VES collect and checkout charges completed through a pull
+  method. The code comes from the persisted collect request; resolve its display
+  name with `GET /v1/payouts/banks`. It is omitted when no valid snapshot exists.
+
+</Update>
+
 <Update label="October 22, 2026" description="v2.179 · 4 versions">
 ### v2.179
 **Changed**

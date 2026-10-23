@@ -5,7 +5,27 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.179 · 4 个版本 - 2026年10月22日
+## v2.182 · 1 个版本 - 2026年10月23日
+### v2.182
+**新增**
+- payin 列表和详情响应现在会为 VE/VES collect 以及通过 pull 完成的 checkout
+  charge 返回可选的顶层目录代码 `payer_bank`。代码来自持久化的 collect
+  request；请使用 `GET /v1/payouts/banks` 解析显示名称。没有有效 snapshot
+  时省略。
+
+## v2.181 · 6 个版本 - 2026年10月22日
+### v2.181
+**修复**
+- 无人支付的巴西 QR payin 现在会自动关闭：当轨道取消 QR 后，pending 的
+  payin 会转为 `expired`（带有可见的 `failure` 对象）并发出 `payin_expired`，
+  而不再永久停留在 `pending`。
+
+### v2.180
+**新增**
+- 巴西 QR payin 现在推荐使用 BRL 输入，同时保留直接 BOB 输入。BRL 按
+  mid 汇率、无报价 spread 转换并按 half-up 保留两位小数；响应返回
+  `bob_charged` 和可审计的 `platform_quote`，replay 保留原始报价。
+
 ### v2.179
 **变更**
 - 预告的 `bank_transfer` payin 现在会在金额无法按账户当前汇率覆盖固定
@@ -49,6 +69,13 @@ source_url: https://docs.cbpayapp.com/zh/changelog
   约需 24–48 个工作小时且可能因收款银行而延长。API 合同未发生变化。
 
 **新增**
+- KYC/KYB 补件流程现已记录 `self_verification_in_progress` 409、复用当前
+  链接以及原提交件内重新提交。原生详情在可补件状态提供
+  `pending_documents`、`documents_received` 和
+  `changes_requested_comments`；完成补件后同一提交件自动回到
+  `pending_review`。
+- 企业入驻新增 Wolfsberg CBDDQ v1.4 问卷，支持本地草稿、条件问题、品牌
+  PDF 以及 `wolfsberg` 文档附件。
 - 巴西 QR payin 现在支持 `BR`/`BRL` 的 `method: "qr"`，并要求在
   `payer_document` 中提供付款人的 CPF。文档还说明可选电话和邮箱、
   webhook-first 确认、延迟对账、过期和幂等 replay。

@@ -65,7 +65,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 | 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账 |
 | 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`） |
 | 巴拉圭 | PYG | 预告银行转账 |
-| 巴西 | BOB (`qr`)、BRL (`pix`) | 带 BRL 付款人转换的动态 PIX 二维码；Hosted PIX redirect |
+| 巴西 | BRL 或 BOB (`qr`)、BRL (`pix`) | 动态 PIX 二维码（BRL 转换为 BOB）；Hosted PIX redirect |
 | 阿根廷 | ARS | 专属 CVU 账户 |
 | 委内瑞拉 | VES | 主动收款（`c2p`） |
 | 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT） |
@@ -459,8 +459,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 参见[预告转账的匹配规则](#预告转账的匹配规则)。
 #### 巴西
 
-**动态 PIX 二维码**：`qr` 方法生成以 BOB 计价的 PIX 二维码。
-付款人通过通道转换以 BRL 完成付款。
+**动态 PIX 二维码**：在巴西，`qr` 接受 `BRL`（推荐）或 `BOB`。
+使用 BRL 时，平台按当前 mid 汇率将付款人金额转换为 BOB，不在报价中加入
+spread，并为 replay 保存原始报价。BOB 是高级直接输入模式。
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payins \
@@ -468,9 +469,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -H "Content-Type: application/json" \
   -d '{
     "country": "BR",
-    "currency": "BOB",
+    "currency": "BRL",
     "method": "qr",
-    "amount": "1.00",
+    "amount": "120.00",
     "description": "Order 7719",
     "payer_document": "52998224725",
     "payer_phone": "+5511999990000",
@@ -479,14 +480,16 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-响应包含 `charge.qr_image`（base64 PNG）、`charge.qr_image_url` 和付款人
-看到的转换。该巴西通道不提供可复制粘贴的 EMV payload：
+响应包含 `charge.qr_image`（base64 PNG）、`charge.qr_image_url`、付款人
+看到的 BRL 转换、`bob_charged` 和可审计的 `platform_quote`。不提供可复制
+粘贴的 EMV payload：
 
 ```json
-{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"0.48","currency":"BRL","rate":"0.48"},"expires_at":"2026-10-22T12:57:14.937Z","status":"pending"}}
+{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
 ```
 
-付款在认证确认和对账后进入 `credited`。
+付款按实际收到的 BOB 在认证确认和对账后进入 `credited`。转换后低于
+`0.01 BOB` 返回 `422 amount_too_small`；无汇率返回 `503 rates_unavailable`。
 
 > **注**
 `qr` 方法生成一个金额精确内嵌、一次支付使用的动态二维码。
@@ -741,7 +744,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/collect \
 该 request 使用现有 collect 合同。`payer_document`、`payer_phone`、
 `payer_bank` 和 `otp` 是 C2P 所需的付款人数据；`otp` 携带银行生成的
 动态密钥。响应 shape 不变；同步成功时包含 `paid: true`、
-`provider_reference` 和已入账 payin 的标识。
+`provider_reference` 和已入账 payin 的标识。之后读取或列出该 payin 时，如果持久化的 collect snapshot 中包含银行代码，此 collect 流程（以及通过 pull 完成的 checkout charge）会在顶层返回 `payer_bank`。否则省略；请使用 `GET /v1/payouts/banks` 将代码解析为显示名称。
 
 ### 基于 OTP 的 pull 方式
 
