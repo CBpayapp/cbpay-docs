@@ -71,7 +71,31 @@ Muestra el contenido QR o el `qr_image_url` que devuelve la API. Cuando el
 cliente paga, la cuenta se acredita automáticamente. Consulta el estado actual
 con `GET /v1/payins/{payinID}`.
 
-## Brasil: QR PIX en BOB
+## Brasil: QR PIX en BRL o BOB
+
+Para `method: "qr"`, Brasil acepta `currency: "BRL"` (recomendado) o
+`currency: "BOB"` (modo directo avanzado). Con BRL, la plataforma cotiza el
+cobro en BOB usando la tasa mid vigente, sin spread en la cotización, y envía
+el monto convertido al core. El crédito y las comisiones usan el BOB recibido.
+La cotización queda guardada y se conserva en un replay idempotente.
+
+### Recomendado: ingresar el monto del pagador en BRL
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","expires_in":1800,"idempotency_key":"qr-brl-20261022-001"}'
+```
+
+La respuesta expone la imagen QR, el monto en BRL que ve el pagador, el BOB
+cobrado y la cotización auditable:
+
+```json
+{"charge":{"our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
+```
+
+El `conversion.amount` puede diferir por centavos del BRL solicitado: el BOB
+se redondea half-up a dos decimales y el riel devuelve el BRL equivalente.
+
+### Avanzado: ingresar directamente el cobro en BOB
 
 Para `country: "BR"`, `currency: "BOB"` y `method: "qr"`, el cobro está
 denominado en BOB. El pagador paga en BRL mediante la conversión del riel.
@@ -107,9 +131,13 @@ entrega una imagen PNG, no un payload EMV para copiar/pegar:
 }
 ```
 
-El quote de un checkout link marca este corredor `BR`/`BOB` con
+El quote de un checkout link marca los corredores `BR`/`BOB` y `BR`/`BRL` con
 `payer_required: true`.
 La página server-driven solicita el CPF antes de materializar el cobro.
+Los checkout links cotizan ambos: `BRL` para pagadores (convertido a BOB al
+materializar con la misma tasa mid y snapshot `platform_quote` del payin
+directo) y `BOB` directo; con dos monedas el materialize envía
+`?currency=BRL` (o `BOB`).
 
 ### Confirmación y conciliación
 
@@ -127,8 +155,10 @@ clave nueva una solicitud cuyo resultado pueda ser ambiguo.
 
 | HTTP | Código | Qué hacer |
 | --- | --- | --- |
-| 400 | `invalid_request` | Incluye `payer_document` en el payin QR BR/BOB. |
+| 400 | `invalid_request` | Incluye `payer_document` y usa `BRL` o `BOB` en el payin QR BR. |
+| 422 | `amount_too_small` | Aumenta el monto BRL: tras conversión y redondeo debe producir al menos `0.01 BOB`. |
 | 422 | `provider_rejected` | El riel rechazó el cobro, incluido un CPF faltante en el adapter; corrige los datos según el `detail` y no reintentes a ciegas. |
+| 503 | `rates_unavailable` | Reintenta la misma solicitud con la misma clave de idempotencia cuando vuelvan las tasas. |
 
 ## Reintentos idempotentes
 
@@ -208,8 +238,19 @@ Reintenta con la misma clave y consulta el `payin_id` devuelto con
 </Accordion>
 
 <Accordion title="¿El CPF es obligatorio para todos los payins QR?">
-Solo para Brasil (`BR`/`BOB`/`qr`). Los demás corredores QR mantienen sus
-propios requisitos.
+Solo para Brasil (`BR`/`BRL` o `BOB`/`qr`). El riel valida que el CPF exista;
+un CPF sintético o desconocido puede responder `CPF no encontrado`. Los demás
+corredores QR mantienen sus propios requisitos.
+</Accordion>
+
+<Accordion title="¿Por qué el monto pagado puede diferir por centavos?">
+La plataforma convierte BRL a BOB y redondea el cobro BOB half-up a dos
+decimales. Por eso `conversion.amount` puede diferir levemente del BRL pedido.
+</Accordion>
+
+<Accordion title="¿Qué ocurre si no hay tasas FX?">
+La API responde `503 rates_unavailable` antes de crear el cobro. Reintenta más
+tarde con la misma clave de idempotencia.
 </Accordion>
 
 <Accordion title="¿Cómo funciona el monto del QR brasileño?">

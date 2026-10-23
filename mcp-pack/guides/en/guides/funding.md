@@ -59,6 +59,14 @@ to USD, your principal balance.
 For the full deposit-account contract see [payins](https://docs.cbpayapp.com/en/guides/payins); to
 send pesos out, see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
 
+### 🇨🇱 CLP — Chilean peso
+
+Receive pesos through a dedicated `CL/CLP/fintoc` account number. The
+dedicated account is owned by the company account that owns the CPF used for
+the account; the final payer or end user is not the account holder. Show the
+returned `holder_name`, `holder_tax_id` and `holder_account_type` exactly as
+provided.
+
 ### 🇪🇺 EUR — euro
 
 Receive euros through a `funding_usdt` virtual IBAN: inbound euros convert
@@ -301,3 +309,8 @@ Choose funding (default) when every deposit should land in USD, your
 principal balance. Choose [Banking](https://docs.cbpayapp.com/en/guides/banking) with
 `purpose: "banking"` when you need to keep BOB, MXN or ARS balances
 locally for payouts.
+#### Why am I not shown as the holder of a dedicated CLP account?
+The CLP account is dedicated to the company that owns the CPF used to create
+it. The account-number contract identifies that company; it does not assign
+the account to the payer or end user. Use the returned holder fields when
+displaying the payment instructions.

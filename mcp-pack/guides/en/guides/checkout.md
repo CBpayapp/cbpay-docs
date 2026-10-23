@@ -119,7 +119,7 @@ and redirects to your `success_url` if you set one.
   payment SMALLER than the frozen quote still credits (the money is real)
   but does **not** mark the link as paid. When a country offers the same
   method in **several currencies** (e.g. Bolivia with QR in BOB and in
-  USD), the page lists each currency as an independent option. On bank
+  USD, Brazil with QR in BRL and in BOB), the page lists each currency as an independent option. On bank
   transfers in Mexico the link issues a **dedicated CLABE exclusive to
   that charge**: the payer transfers the exact amount **with no reference
   needed** — the deposit is detected and settled automatically because
@@ -186,7 +186,8 @@ as `POST /v1/swaps`). The aggregate state travels in `conversion_status`:
   with that country's local amount per option.
 - `POST {checkout_url}/methods/{method}` — materializes the chosen
   option. Fiat methods require `?country=XX`; when the country offers
-  the method in more than one currency (cards, QR BOB/USD in Bolivia)
+  the method in more than one currency (cards, QR BOB/USD in Bolivia,
+  QR BRL/BOB in Brazil)
   it also requires `&currency=YYY`; crypto uses
   `crypto:<chain>:<asset>` (e.g. `crypto:tron:usdt`) without a country.
   Re-POSTing the same combination returns the SAME materialization.

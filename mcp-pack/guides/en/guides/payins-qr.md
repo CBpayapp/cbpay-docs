@@ -179,12 +179,14 @@ provides a PNG image, not an EMV copy-and-paste payload:
 }
 ```
 
-The checkout-link quote marks this `BR`/`BOB` corridor with
+The checkout-link quote marks the `BR`/`BOB` and `BR`/`BRL` corridors with
 `payer_required: true`.
 When a payer opens a hosted link, the server-driven page asks for the CPF
 before materializing the charge. Do not bypass that form by creating a second
-charge. Checkout links remain BOB-denominated; BRL parity for checkout is a
-future phase.
+charge. Checkout links quote both: `BRL` for payers (converted to BOB at
+materialization with the same mid rate and `platform_quote` snapshot as the
+direct payin) and direct `BOB`; with two currencies the materialize call
+sends `?currency=BRL` (or `BOB`).
 
 ### Confirmation and reconciliation
 

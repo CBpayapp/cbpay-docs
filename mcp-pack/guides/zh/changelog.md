@@ -5,7 +5,15 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.184 · 3 个版本 - 2026年10月23日
+## v2.185 · 4 个版本 - 2026年10月23日
+### v2.185
+**新增**
+- checkout link 的巴西 QR 现在同时报价 BRL（面向付款人）和 BOB（直接）。
+  选择 BRL 时，materialize 按与 direct payin 相同的 mid 汇率转换为 BOB，
+  并附带可审计的 `platform_quote` 快照；冻结视图保持 BRL。有两种货币时，
+  materialize 需带 `?currency=BRL`（或 `BOB`）；两种选项都要求付款人 CPF
+ （`payer_required`）。
+
 ### v2.184
 **新增**
 - 受保护操作的 `403 otp_required` 响应现在可能携带 `challenge_id`、`phone`（掩码后的目标）和 `expires_at`：网关会复用有效的质询或为您创建一个。直接验证验证码后携带 `X-OTP-Token` 重试，可跳过显式的 `POST /v1/otp/challenges`（仍可作为备选）。
@@ -16,6 +24,8 @@ source_url: https://docs.cbpayapp.com/zh/changelog
   `include_variants`（`true`、`1` 或 `yes`），以加入内部轨道变体的银行目录。
   默认目录仍排在前面并覆盖重复代码；不传该参数即可保持历史响应。创建选择器
   仍必须使用默认目录。
+- 明确专用 `CL/CLP/fintoc` 账户的持有人是拥有创建账户所用 CPF 的公司，
+  而不是付款人或最终用户。
 
 ### v2.182
 **新增**

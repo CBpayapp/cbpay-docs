@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 23, 2026" description="v2.184 · 3 versions">
+<Update label="October 23, 2026" description="v2.185 · 4 versions">
+### v2.185
+**Added**
+- Checkout links now quote Brazil QR in both BRL (for payers) and BOB
+  (direct). BRL selections convert to BOB at materialization with the same
+  mid rate and auditable `platform_quote` snapshot as direct payins; the
+  frozen view stays in BRL. With two currencies, materialize sends
+  `?currency=BRL` (or `BOB`); both options require the payer CPF
+  (`payer_required`).
+
 ### v2.184
 **Added**
 - The `403 otp_required` response of protected actions may now carry

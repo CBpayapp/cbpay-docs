@@ -80,6 +80,8 @@ Response `201`:
 
 Show the payer the account number, bank, holder name, RUT and account type
 exactly as returned. Do not infer a bank from its name or replace the RUT.
+The holder is the company that owns the CPF used for the dedicated account,
+not the payer or end user.
 
 ### 3. Reconcile the credit
 
@@ -172,5 +174,9 @@ state.
 #### Should I retry a timeout?
     No. Reuse the same idempotency key and query the original operation. An
     ambiguous payout must never be sent again automatically.
+#### Why am I not the holder of the dedicated account?
+    Dedicated CLP account numbers are issued to the company that owns the CPF.
+    The payer or end user is not the account holder. Display the holder fields
+    returned by CBPay without replacing them.
 See [webhooks](https://docs.cbpayapp.com/en/webhooks), [errors](https://docs.cbpayapp.com/en/errors), and
 [idempotency](https://docs.cbpayapp.com/en/concepts/idempotency) for shared contracts.
