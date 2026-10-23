@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.182"
+  version: "2.183"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -4841,7 +4841,10 @@ paths:
       operationId: getPayoutBanks
       summary: 列出目标银行
       description: 某国 payout 的银行目录。不带 `method` 时返回该国所有 payout 方式的银行并集(按代码去重);传入 `method` 可获取单一渠道的目录。部分方式没有银行目录(例如
-        QR),不贡献任何条目。
+        QR),不贡献任何条目。传入 `include_variants=true`(也接受 `1` 或 `yes`)可额外加入内部
+        变体的银行目录，仅用于显示从非默认轨道保存的代码。默认目录仍排在前面,因此代码重复时
+        保留默认目录的名称;不传该参数时行为保持历史不变。该参数不用于 payout 创建选择器,
+        创建选择器仍必须按默认轨道校验。
       parameters:
       - name: country
         in: query
@@ -4854,6 +4857,14 @@ paths:
           type: string
           example: bank_transfer
         description: 可选的 payout 方式以缩小目录范围(见 GET /v1/payouts/methods)。
+      - name: include_variants
+        in: query
+        schema:
+          type: string
+          enum: ['true', 'false', '1', '0', 'yes', 'no']
+          default: 'false'
+        description: 仅用于显示的扩展。设为 true、1 或 yes 时也包含内部轨道变体;重复银行代码以
+          默认目录为准。不传该参数可保持历史目录。不要用它填充创建选择器。
       responses:
         '200':
           description: 该国的银行目录。

@@ -5,7 +5,15 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.182 · 1 version - October 23, 2026
+## v2.183 · 2 versions - October 23, 2026
+### v2.183
+**Changed**
+- `GET /v1/payouts/banks` accepts the display-only `include_variants` query
+  parameter (`true`, `1` or `yes`) to include internal rail-variant bank
+  catalogs. The default catalog stays first and wins duplicate codes; omit
+  the flag for the historical response. Creation selectors must continue
+  using the default catalog.
+
 ### v2.182
 **Added**
 - Payin list and detail responses now expose the optional top-level `payer_bank`
