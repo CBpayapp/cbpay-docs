@@ -74,13 +74,13 @@ Corredores y modalidades de cobro:
 | Chile | CLP | Página de pago hosted (`fintoc`), transferencia anunciada |
 | Perú | PEN | Transferencia anunciada |
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
-| Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`) |
+| Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`), cash anunciado presencial |
 | Paraguay | PYG | Transferencia anunciada |
 | Brasil | BRL o BOB (`qr`), BRL (`pix`) | QR PIX dinámico (BRL convierte a BOB); redirect PIX hosted |
-| Argentina | ARS | Cuenta CVU dedicada |
-| Venezuela | VES | Cobro activo (`c2p`) |
+| Argentina | ARS | Cuenta CVU dedicada, cash anunciado presencial |
+| Venezuela | VES | Cobro activo (`c2p`), cash anunciado presencial |
 | Ecuador | USD | Transferencia anunciada con despacho manual |
-| Estados Unidos | USD | Página de pago con tarjeta internacional (`card`), transferencia anunciada (dos rieles: wire doméstico + SWIFT internacional) |
+| Estados Unidos | USD | Página de pago con tarjeta internacional (`card`), transferencia anunciada, cash anunciado presencial (dos rieles: wire doméstico + SWIFT internacional) |
 
 <Note>
 **Venezuela (VES)**: el cobro activo está disponible mediante `c2p`. El
@@ -100,6 +100,10 @@ autoritativa y el faltante se registra como fallback spot con alerta operativa.
 Si prefieres quedarte con tus cobros en otro saldo
 (USDC, BTC o GOLD), configura `default_payin_asset` — ver
 [el modelo de dinero](/es/concepts/money-model#elige-en-que-saldo-se-acreditan-tus-payins).
+
+<Card title="Payins cash" icon="hand-holding-dollar" href="/es/guides/cash-payins">
+Entrega física anunciada con confirmación maker-checker.
+</Card>
 
 ## 2. Elige la modalidad y crea el cobro
 Cada país tiene su propia modalidad de cobro. El request y la respuesta
@@ -598,7 +602,7 @@ El monto de `pix` usa BRL con hasta dos decimales y el mínimo es 1 BRL.
 </Tab>
 <Tab title="Argentina">
 
-**Cuenta CVU dedicada**: crea una CVU fija ligada a tu cuenta.
+**Cuenta CVU dedicada, cash anunciado presencial**: crea una CVU fija ligada a tu cuenta.
 Para `AR/ARS/bank_transfer`, la plataforma exige el `bank_alias` direccionable
 que quieres usar en el sistema bancario argentino:
 
@@ -1001,7 +1005,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "payer_document": "17438319-7"
   }'
 ```
-
 ```json Response 200
 {
   "payin_id": "4f81…",
@@ -1014,19 +1017,16 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 }
 ```
 </CodeGroup>
-
 <Warning>
 Dos anuncios vivos idénticos (misma cuenta, moneda, monto y pagador) son
 justo el caso que la conciliación se niega a resolver: el depósito real
 calza con ambos y queda `unassigned`. Por eso un POST **sin** clave reutiliza
 un anuncio vivo idéntico en lugar de duplicarlo (también `200` con
 `idempotency_hit: true`).
-
 Para cobrar **dos pagos reales** del mismo monto al mismo pagador, manda una
 `idempotency_key` distinta en cada uno — cada clave crea su anuncio con su
 propia `reference`.
 </Warning>
-
 <Note>
 Las claves son **únicas por cuenta y por operación lógica**: si reutilizas una
 `idempotency_key` que ya usaste con OTRO método de payin (QR, checkout,
@@ -1396,4 +1396,4 @@ Un payin acreditado directamente a una cuenta USD-principal expone
 sigue siendo el equivalente USD para reportes. El hold de una controversia
 sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
-normalizados.
+normalizados. Revisa la [guía completa de payins cash](/es/guides/cash-payins) para los 13 corredores, respuesta del anuncio, confirmación maker-checker, webhooks y errores.

@@ -72,16 +72,16 @@ Collection corridors and modes:
 
 | Country | Currency | Modes |
 |---|---|---|
-| Chile | CLP | Hosted payment page (`fintoc`), announced bank transfer |
-| Peru | PEN | Announced bank transfer |
-| Mexico | MXN | Dedicated CLABE account, announced bank transfer |
-| Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`) |
-| Paraguay | PYG | Announced bank transfer |
-| Brazil | BRL or BOB (`qr`), BRL (`pix`) | Dynamic PIX QR (BRL input converts to BOB); hosted PIX redirect |
-| Argentina | ARS | Dedicated CVU account |
-| Venezuela | VES | Active collection (`c2p`) |
-| United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT) |
-| Ecuador | USD | Announced bank transfer |
+| Chile | CLP | Hosted payment page (`fintoc`), announced bank transfer, announced-only cash |
+| Peru | PEN | Announced bank transfer, announced-only cash |
+| Mexico | MXN | Dedicated CLABE account, announced bank transfer, announced-only cash |
+| Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`), announced-only cash |
+| Paraguay | PYG | Announced bank transfer, announced-only cash |
+| Brazil | BRL or BOB (`qr`), BRL (`pix`) | Dynamic PIX QR (BRL input converts to BOB); hosted PIX redirect; announced-only cash |
+| Argentina | ARS | Dedicated CVU account, announced-only cash |
+| Venezuela | VES | Active collection (`c2p`), announced-only cash |
+| United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT), announced-only cash |
+| Ecuador | USD | Announced bank transfer, announced-only cash |
 
 <Note>
 **Venezuela (VES)**: active collection is available through `c2p`. The payer
@@ -102,6 +102,10 @@ uncovered portion is recorded as spot fallback with an operator alert.
 If you'd rather keep your collections in another balance (USDC, BTC or
 GOLD), configure `default_payin_asset` — see
 [the money model](/en/concepts/money-model#choose-which-balance-receives-your-payins).
+
+<Card title="Cash payins" icon="hand-holding-dollar" href="/en/guides/cash-payins">
+Announced-only physical cash delivery with maker-checker confirmation.
+</Card>
 
 ## 2. Pick the mode and create the charge
 Each country has its own collection mode. The real request and response of
@@ -603,7 +607,7 @@ is 1 BRL.
 </Tab>
 <Tab title="Argentina">
 
-**Dedicated CVU account**: create a fixed CVU bound to your account.
+**Dedicated CVU account, announced-only cash**: create a fixed CVU bound to your account.
 For `AR/ARS/bank_transfer`, the platform requires the bank-addressable
 `bank_alias` you want the Argentine banking system to use:
 
@@ -1005,7 +1009,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
     "payer_document": "17438319-7"
   }'
 ```
-
 ```json Response 200
 {
   "payin_id": "4f81…",
@@ -1018,19 +1021,16 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 }
 ```
 </CodeGroup>
-
 <Warning>
 Two live announcements that look identical (same account, currency, amount
 and payer) are exactly the case matching refuses to resolve: the real
 deposit matches both and lands `unassigned`. That is why a POST **without**
 a key reuses a live identical announcement instead of duplicating it (also
 `200` with `idempotency_hit: true`).
-
 To collect **two real payments** of the same amount from the same payer,
 send a different `idempotency_key` for each one — each key creates its own
 announcement with its own `reference`.
 </Warning>
-
 <Note>
 Keys are **unique per account and per logical operation**: if you reuse an
 `idempotency_key` that was already used with ANOTHER payin method (QR,
@@ -1264,7 +1264,7 @@ case-insensitive partial match on the payin ID, reference or idempotency key.
 
 | HTTP | `error` | What to do |
 |---|---|---|
-| 400 | `invalid_request` | Check `method` (qr, bank_transfer, fintoc, pix, card; collect has its own endpoint) |
+| 400 | `invalid_request` | Check `method` (qr, bank_transfer, fintoc, pix, card, cash; collect has its own endpoint) |
 | 400 | `idempotency_key_required` | Collect requires an idempotency key (real debit against the payer) |
 | 403 | `service_disabled` | Payins is not enabled for your account — see [services](/en/concepts/services) |
 | 429 | `too_many_open_card_sessions` | The account has 10,000 open card sessions and no unused, zero-attempt pending session can be evicted — complete or let an existing session expire before creating another |
@@ -1396,4 +1396,4 @@ A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
 remains the USD-equivalent reporting field. A controversy hold follows the
 credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
-`disputed_usdt` and `held_usdt` are normalized equivalents.
+`disputed_usdt` and `held_usdt` are normalized equivalents. See the complete [cash payin guide](/en/guides/cash-payins) for the 13 corridors, announcement response, maker-checker confirmation, webhooks and error handling.

@@ -1,20 +1,20 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.185"
+  version: "2.187"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
 
-    on-chain, y screening KYC. Cada cuenta mantiene diez saldos virtuales
+    on-chain, y screening KYC. Cada cuenta mantiene once saldos virtuales
 
     independientes — USD (la moneda principal de las cuentas nuevas; las cuentas
 
     existentes mantienen USDT salvo que cambien su configuración), USDT, USDC, BTC y GOLD (gramos de
 
-    oro fino), SILVER, PLATINUM (gramos) y BOB, MXN, ARS (libro mayor fiat de 2 decimales) —
+    oro fino), SILVER, PLATINUM (gramos) y BOB, MXN, ARS y CLP (libro mayor fiat; BOB/MXN/ARS usan 2 decimales y CLP 0) —
 
-    convertibles a demanda con swaps entre los siete assets convertibles. Los balances fiat (BOB/MXN/ARS) solo acumulan payins retenidos con el flag `fiat_hold_local` y débitos directos en misma moneda; no son intercambiables por swap.
+    convertibles a demanda con swaps entre los siete assets convertibles. Los balances fiat (BOB/MXN/ARS/CLP) solo acumulan payins retenidos con el flag `fiat_hold_local` y débitos directos en misma moneda; no son intercambiables por swap.
 
     Los payouts y las comisiones de servicios pueden pagarse desde cualquiera
 
@@ -25,9 +25,9 @@ info:
     elijas (`default_payin_asset`).
 
 
-    Todos los montos son strings decimales en la precisión de cada moneda (6
+    Todos los montos son strings decimales en la precisión de cada moneda (2
 
-    decimales para USD/BOB/MXN/ARS, 6 decimales para USDT/USDC/GOLD/SILVER/PLATINUM, 8 para BTC). Los errores siempre devuelven
+    decimales para USD/BOB/MXN/ARS, 0 para CLP, 6 decimales para USDT/USDC/GOLD/SILVER/PLATINUM y 8 para BTC). Los errores siempre devuelven
 
     `{"error": "<code>", "message": "<detail>"}`.
 
@@ -3010,7 +3010,7 @@ paths:
       - Saldos
       operationId: getBalances
       summary: Obtener saldos
-      description: Los diez saldos virtuales independientes de la cuenta que llama (USD — la moneda
+      description: Los once saldos virtuales independientes de la cuenta que llama (USD — la moneda
         principal —, USDT, USDC, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos
         y los saldos fiat BOB, MXN y ARS de 2 decimales). Todos los activos soportados vienen siempre,
         con ceros si la cuenta no ha usado esa moneda. Si la cuenta usa Banking, sus saldos espejo BANK_USD/BANK_EUR
@@ -3063,7 +3063,7 @@ paths:
       summary: Obtener historial de saldos
       description: 'Evolución diaria de los saldos de la cuenta para gráficos de dashboard: una serie
         por asset (el saldo disponible de cierre de cada día, arrastrado en días sin movimientos) más
-        una serie agregada en USD que valoriza cada saldo al precio de referencia histórico de cada día (USDT/USDC a la par; BTC/GOLD/SILVER/PLATINUM y USD/BOB/MXN/ARS al precio del día).
+        una serie agregada en USD que valoriza cada saldo al precio de referencia histórico de cada día (USDT/USDC a la par; BTC/GOLD/SILVER/PLATINUM y USD/BOB/MXN/ARS/CLP al precio del día).
         Incluye las entradas/salidas totales del período y el snapshot actual (available + held), para
         que el front arme una tarjeta de saldo estilo dashboard con su variación porcentual. La serie
         refleja el saldo **disponible** (los holds no tienen historia); `current` trae el `held` de hoy
@@ -3073,7 +3073,7 @@ paths:
 
         El mapa `assets` incluye también los espejos de las cuentas banking (`BANK_USD`, `BANK_EUR`) como
         serie propia en su propia moneda (2 decimales). **No** forman parte del agregado `total_usd`,
-        que cubre los diez saldos del libro mayor (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS).
+        que cubre los once saldos del libro mayor (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP).
 
         '
       parameters:
@@ -3113,8 +3113,8 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 'Una serie de saldo de cierre diario por asset. Incluye los diez saldos
-                      del ledger (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) y los
+                    description: 'Una serie de saldo de cierre diario por asset. Incluye los once saldos
+                      del ledger (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) y los
                       espejos de las cuentas banking (BANK_USD, BANK_EUR)
                       en su propia moneda; las series banking quedan fuera de `total_usd`.
 
@@ -4126,6 +4126,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
+                  - CLP
                   description: 'Saldo virtual a debitar para esta operación. La ejecución en fiat devuelve hoy 503 pricing_unavailable. Omítelo para usar el asset
                     de settlement predeterminado de tu cuenta (USD es el saldo principal).'
                 source_virtual_iban_id:
@@ -5241,7 +5242,7 @@ paths:
         puede desalojar una sesión `pending` sin intentos, responde
         `429 too_many_open_card_sessions`. Con `method: "checkout"` la respuesta trae
         una `checkout_url` pública — un link de cobro universal denominado en el saldo virtual que
-        elijas (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM; el fiat BOB/MXN/ARS se rechaza). El pagador elige cualquier país con
+        elijas (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM; el fiat BOB/MXN/ARS/CLP se rechaza). El pagador elige cualquier país con
         corredor de payin vivo (monto local cotizado), cualquiera de las 4 opciones crypto (dirección
         de depósito exclusiva con QR escaneable) o paga al instante desde la app CBPay vía el
         QR/alias del comercio; cada pago se convierte automático al asset de settlement salvo que se
@@ -5310,6 +5311,7 @@ paths:
                   - card
                   - checkout
                   - wallet
+                  - cash
                   - pix
                   default: qr
                   description: Modo de cobro. `qr` crea un cobro QR activo a través del procesador; `bank_transfer`
@@ -5469,6 +5471,15 @@ paths:
                   description: App top-up
                   expires_in: 3600
                   idempotency_key: qr-bo-001
+              cl_cash:
+                summary: Chile — announced cash payin (CLP)
+                value:
+                  country: CL
+                  currency: CLP
+                  method: cash
+                  amount: '50000'
+                  payer_name: Ana Perez
+                  idempotency_key: cash-cl-001
               br_pix_qr:
                 summary: Brasil — QR PIX dinámico (entrada BRL, cobro BOB)
                 value:
@@ -6080,7 +6091,7 @@ paths:
       - Payins
       operationId: confirmAnnouncedPayinReceived
       summary: "Solicitar la confirmación de un depósito bancario anunciado (maker)"
-      description: "Paso maker de la confirmación en dos personas para un payin manual push bank_transfer EC/USD anunciado. It only accepts EC/USD/bank_transfer announced payins. Quien llama es el maker: un admin de la org con `ops:write` en sesión humana (las API keys se rechazan). El payin queda `pending` y no se acredita nada; un god nombrado aprueba o cancela con los endpoints hermanos."
+      description: "Paso maker de la confirmación en dos personas para un payin manual push bank_transfer EC/USD anunciado. Acepta payins anunciados EC/USD/bank_transfer o payins push cash de un corredor cash activo. En cash, `bank_reference` es el folio o recibo físico. Quien llama es el maker: un admin de la org con `ops:write` en sesión humana (las API keys se rechazan). El payin queda `pending` y no se acredita nada; un god nombrado aprueba o cancela con los endpoints hermanos."
       parameters:
       - name: payinID
         in: path
@@ -6145,7 +6156,7 @@ paths:
         '409':
           description: "invalid_state (solo los payins pending se confirman aquí; sin cuenta declarada hay que asignar primero) o confirm_request_conflict (ya hay una solicitud con otra evidencia) o deposit_settled_treasury_trade (el movimiento ya liquidó una compra de tesorería)"
         '422':
-          description: "invalid_payload — only announced EC/USD push bank_transfer payins can be confirmed here"
+          description: "invalid_payload — solo se pueden confirmar payins anunciados EC/USD push bank_transfer o payins push cash de un corredor cash activo"
         '503':
           description: "treasury_check_unavailable, core_bank_ref_unavailable, o bank_ref_recovery_pending (reintentar cuando la dependencia se recupere; no se acreditó nada)"
   /v1/payins/{payinID}/confirm-approve:
@@ -6697,7 +6708,7 @@ paths:
       summary: Crear una transferencia interna
       description: 'Mueve saldo entre dos cuentas CBPay, de forma atómica y siempre gratuita — funciona
         cualquier combinación: persona a persona, persona a empresa, empresa a persona o empresa a empresa.
-        Funciona con los diez saldos virtuales (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) y siempre entre
+        Funciona con los once saldos virtuales (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) y siempre entre
         saldos de la **misma moneda** (sin conversión). El destino se resuelve por `to_account_id`, `to_email`,
         `to_phone` (solo teléfonos verificados por OTP) o `to_contact_id`. Cada transferencia guarda al
         destinatario como contacto automáticamente (desactívalo con `save_contact: false`). Los suscriptores
@@ -6755,10 +6766,11 @@ paths:
                   - BOB
                   - MXN
                   - ARS
+                  - CLP
                   description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD es el saldo principal).
                 amount:
                   type: string
-                  description: String decimal positivo, hasta los decimales de la moneda (2 para USD/BOB/MXN/ARS, 6 para USDT/USDC/GOLD/SILVER/PLATINUM,
+                  description: String decimal positivo, hasta los decimales de la moneda (2 para USD/BOB/MXN/ARS, 0 para CLP, 6 para USDT/USDC/GOLD/SILVER/PLATINUM,
                     8 para BTC).
                   example: '10.500000'
                 description:
@@ -14019,6 +14031,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
+                  - CLP
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset
                     de settlement predeterminado de tu cuenta.
                 idempotency_key:
@@ -15364,8 +15377,10 @@ paths:
       description: Requiere identidad de cuenta aprobada; las cuentas persona necesitan KYC aprobado y las cuentas empresa KYB aprobado antes de que esta operación autenticada cree o cobre un payin. Aprovisiona un destino de depósito fijo ligado a tu cuenta en los corredores que lo
         soportan (ej. una CLABE mexicana o una CVU argentina). Cada transferencia que llega a él se acredita
         automáticamente, neta de la comisión de payin. `purpose` es `fondeo`
-        por defecto; `banking` conserva fiat local solo en BO/BOB, MX/MXN y
-        AR/ARS con `bank_transfer`. La creación es gratuita.
+        por defecto; `banking` conserva fiat local en BO/BOB, MX/MXN y AR/ARS
+        con `bank_transfer`, y en CL/CLP/fintoc. En CL/CLP/fintoc Banking
+        recibe, retiene y exhibe saldo derivado; los payouts CL se originan
+        en la cuenta root. La creación es gratuita.
       requestBody:
         required: true
         content:
@@ -15458,7 +15473,7 @@ paths:
                 invalid_request:
                   value:
                     error: invalid_request
-                    message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer
+                    message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer and CL/CLP/fintoc
                 missing_alias:
                   value:
                     error: missing_alias
@@ -16950,7 +16965,7 @@ paths:
       description: 'Consolida todos los movimientos del período — payouts, payins, depósitos y retiros
         crypto, transferencias internas y cargos por servicio — en una cartola auditable con cuadratura
         exacta: opening_balance + total_in − total_out = closing_balance, verificada contra el ledger
-        (`balanced`). El resumen cubre el saldo USDT; cada otro saldo virtual (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS) con actividad se reconcilia de forma independiente dentro de `assets`. La respuesta del cliente omite el ledger crudo; usa las secciones de producto para cuadrar y `GET /v1/movements` para una auditoría profunda. Pide `format=pdf` o
+        (`balanced`). El resumen cubre el saldo USDT; cada otro saldo virtual (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) con actividad se reconcilia de forma independiente dentro de `assets`. La respuesta del cliente omite el ledger crudo; usa las secciones de producto para cuadrar y `GET /v1/movements` para una auditoría profunda. Pide `format=pdf` o
         `format=xlsx` para descargar el archivo con branding CBPay (Content-Disposition: attachment).'
       parameters:
       - name: from
@@ -25474,7 +25489,7 @@ components:
             properties:
               asset:
                 type: string
-                description: Los activos fiat BOB, MXN y ARS del ledger usan dos decimales.
+                description: Los activos fiat BOB, MXN y ARS del ledger usan dos decimales; CLP usa cero decimales.
                 example: USDT
               available:
                 type: string
@@ -25603,6 +25618,7 @@ components:
           - BOB
           - MXN
           - ARS
+          - CLP
           description: Saldo desde el que se debitan las operaciones cuando no se envía un override por
             request.
         default_payin_asset:
@@ -25879,7 +25895,7 @@ components:
             checkout/POS liquidados en crypto o vía transferencia CBPay (no aplica cotización FX).
         credit_asset:
           type: string
-          enum: [USD, USDT, BOB, MXN, ARS]
+          enum: [USD, USDT, BOB, MXN, ARS, CLP]
           description: Activo realmente acreditado (USDT o fiat local retenido).
         fiat_credited:
           type: string

@@ -14,6 +14,19 @@ source_url: https://docs.cbpayapp.com/zh/guides/fintoc-business-accounts
 > **重要**
 CLP 没有小数单位。请发送正整数比索，例如 `"150000"`；`"150000.50"`
 会返回 `400 invalid_amount`。
+## Fondeo 与 Banking 槽位
+
+同一个 `CL/CLP/fintoc` 走廊支持两种用途，响应结构不变
+（`purpose`、`label`、派生 `balance` 和流水）：
+
+- `purpose: "fondeo"`（默认）将 CLP 入账转换到主余额。
+- `purpose: "banking"` 接收、保留并展示该工具的派生 CLP 余额。不发起
+  payout：CL payout 始终从 root 账户发送，也不设置物理 sweep-exempt 标记。
+
+企业可为每个额外 fondeo 或 Banking 账户使用不同幂等键；每个企业/走廊的
+Banking 上限为 50 个工具。个人账户可在此走廊创建第二个 Banking 虚拟槽位。
+重复使用同一幂等键会返回原账户。
+
 ## 在虚拟账户接收 CLP
 
 ```mermaid

@@ -105,6 +105,7 @@
                     "group": "Money in",
                     "pages": [
                       "en/guides/payins",
+                      "en/guides/cash-payins",
                       "en/guides/fintoc-business-accounts",
                       "en/guides/regional-payouts-payins",
                       "en/guides/ecuador-manual-payouts",
@@ -249,6 +250,7 @@
                     "group": "Cobrar (money in)",
                     "pages": [
                       "es/guides/payins",
+                      "es/guides/cash-payins",
                       "es/guides/fintoc-business-accounts",
                       "es/guides/regional-payouts-payins",
                       "es/guides/ecuador-manual-payouts",
@@ -393,6 +395,7 @@
                     "group": "收款（Money in）",
                     "pages": [
                       "zh/guides/payins",
+                      "zh/guides/cash-payins",
                       "zh/guides/fintoc-business-accounts",
                       "zh/guides/regional-payouts-payins",
                       "zh/guides/ecuador-manual-payouts",

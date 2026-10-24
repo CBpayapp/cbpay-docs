@@ -15,6 +15,22 @@ corridor.
 > **Important**
 CLP has no minor unit. Send whole positive pesos such as `"150000"`; values
 such as `"150000.50"` are rejected with `400 invalid_amount`.
+## Funding and Banking slots
+
+The same CL/CLP/fintoc corridor supports both purposes without changing the
+response shape (`purpose`, `label`, derived `balance` and movements):
+
+- `purpose: "fondeo"` (default) converts the inbound CLP credit to the
+  account's principal balance.
+- `purpose: "banking"` receives, retains and exposes a derived CLP balance for
+  that instrument. It does not originate payouts; CL payouts always send from
+  the root account, and no physical sweep-exempt flag applies.
+
+Companies can create additional funding or Banking accounts with a distinct
+idempotency key per account; Banking is capped at 50 instruments per
+company/corridor. Person accounts can create the second virtual Banking slot
+in this corridor. Reusing a key replays the original account.
+
 ## Receive CLP into a virtual account
 
 ```mermaid

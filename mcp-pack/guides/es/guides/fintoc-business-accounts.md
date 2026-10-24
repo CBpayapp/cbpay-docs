@@ -15,6 +15,21 @@ usa el contrato normal de payouts. No cambia el corredor existente
 > **Importante**
 CLP no tiene unidad menor. Envía pesos enteros positivos, por ejemplo
 `"150000"`; `"150000.50"` responde `400 invalid_amount`.
+## Slots de fondeo y Banking
+
+El mismo corredor `CL/CLP/fintoc` admite ambos propósitos sin cambiar la
+forma de respuesta (`purpose`, `label`, `balance` derivado y movimientos):
+
+- `purpose: "fondeo"` (por defecto) convierte el abono CLP al saldo principal.
+- `purpose: "banking"` recibe, retiene y exhibe el saldo CLP derivado del
+  instrumento. No origina payouts: los payouts CL siempre salen desde la cuenta root
+  y no aplica un flag físico de sweep-exempt.
+
+Las empresas pueden crear cuentas adicionales de fondeo o Banking con una
+idempotency key distinta por cuenta; Banking tiene tope de 50 instrumentos por
+empresa/corredor. Las personas pueden crear la segunda virtual Banking en este
+corredor. Repetir una key reproduce la cuenta original.
+
 ## Recibir CLP en una cuenta virtual
 
 ```mermaid
