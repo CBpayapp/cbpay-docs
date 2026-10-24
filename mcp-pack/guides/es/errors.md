@@ -687,3 +687,14 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | HTTP | `error` | Causa y acción |
 |---:|---|---|
 | 409 | `discard_pending` | Hay una solicitud maker de descarte esperando aprobación; cancélala antes de restaurar la cuenta. |
+
+## Tickets de soporte
+
+| HTTP | `error` | Solución |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Envía la clave en el body o `Idempotency-Key`. |
+| 400 | Errores `invalid_*` de ticket | Usa el vocabulario cerrado y sus límites. |
+| 404 | `not_found` | Confirma el ownership del ticket o transacción. |
+| 409 | `ticket_already_open` | Continúa el ticket existente de la respuesta. |
+| 409 | `ticket_closed` / `already_rated` | Abre otro ticket o conserva la calificación. |
+| 503 | `storage_unavailable` | Espera y sube una vez; no dupliques. |

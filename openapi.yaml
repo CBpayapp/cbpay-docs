@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.187"
+  version: "2.188"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -33,6 +33,8 @@ servers:
 security:
 - bearerAuth: []
 tags:
+- name: Support
+  description: Support tickets and organization queue
 - name: Receipts
   description: Branded PDF receipt per operation, with a public signed-QR authenticity check, receipt_url
     on final-state responses/webhooks and automatic email delivery on final states. A pending payout before
@@ -24851,6 +24853,250 @@ paths:
           content:
             application/json:
               example: {error: entitlement_revoked, message: access was revoked by compliance}
+
+  /v1/support/tickets:
+    get:
+        tags: [Support]
+        operationId: listSupportTickets
+        summary: List support tickets
+        parameters:
+          - {name: from, in: query, required: true, schema: {type: string, format: date}}
+          - {name: to, in: query, required: true, schema: {type: string, format: date}}
+          - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+          - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {page: 1, page_size: 50, tickets: [{ticket_id: ticket-01, number: SUP-2026-000123, kind: payout, subject: Payout delayed, category: delay, priority: high, status: open, unread: true, sla_breached: false}]}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+    post:
+        tags: [Support]
+        operationId: createSupportTicket
+        summary: Open a support ticket
+        description: The idempotency key is deduplicated by organization, account and key.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idempotency_key:
+                    type: string
+                    maxLength: 128
+                    description: Maximum 128 characters.
+              example: {kind: payout, resource_id: payout-123, subject: Payout delayed, category: delay, priority: high, message: Please check this payout., idempotency_key: support-001}
+        responses:
+          '201':
+            description: Successful response
+            content:
+              application/json:
+                example: {ticket_id: ticket-01, number: SUP-2026-000123, status: open, idempotency_hit: false}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+  /v1/support/tickets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+        tags: [Support]
+        operationId: getSupportTicket
+        summary: Get a support ticket
+        parameters:
+          - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {ticket_id: ticket-01, number: SUP-2026-000123, status: open, messages: [], attachments: [], snapshot: {}}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+  /v1/support/tickets/{id}/messages:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: postSupportMessage
+        summary: Post a ticket message
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {body: Additional context for this request.}
+        responses:
+          '201':
+            description: Successful response
+            content:
+              application/json:
+                example: {message_id: message-01, author_kind: account, author_name: Acme, body: Additional context for this request., created_at: '2026-10-24T12:00:00Z'}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+  /v1/support/tickets/{id}/attachments:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: uploadSupportAttachment
+        summary: Upload a ticket attachment
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {file: receipt.png}
+        responses:
+          '201':
+            description: Successful response
+            content:
+              application/json:
+                example: {attachment_id: attachment-01, filename: receipt.png, content_type: image/png, bytes: 1204, sha256: sha256:abc123, download_url: /v1/support/tickets/ticket-01/attachments/attachment-01}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+  /v1/support/tickets/{id}/attachments/{attachmentID}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: attachmentID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+        tags: [Support]
+        operationId: downloadSupportAttachment
+        summary: Download a ticket attachment
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {error: binary, message: authenticated binary response}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+  /v1/support/tickets/{id}/close:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: closeSupportTicket
+        summary: Close a support ticket
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {ticket_id: ticket-01, status: closed}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+  /v1/support/tickets/{id}/rate:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: rateSupportTicket
+        summary: Rate a resolved ticket
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {rating: 5, comment: Clear and helpful.}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {ticket_id: ticket-01, status: resolved, csat_rating: 5}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: support ticket not found}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -28242,3 +28488,37 @@ webhooks:
       responses:
         '200':
           description: Return any 2xx to acknowledge the delivery.
+
+  support_ticket_created:
+    post:
+      summary: Support ticket created
+      description: Identifier-only ticket creation event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {ticket_id: ticket-01, number: SUP-2026-000123, status: open, account_id: account-01, category: delay, priority: high, kind: payout, resource_id: payout-123, subject: Payout delayed}
+      responses:
+        '200': {description: Return any 2xx to acknowledge delivery.}
+  support_ticket_message:
+    post:
+      summary: Support ticket message
+      description: Identifier-only message event; bodies are never included.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {ticket_id: ticket-01, number: SUP-2026-000123, status: pending_customer, account_id: account-01, from: admin}
+      responses:
+        '200': {description: Return any 2xx to acknowledge delivery.}
+  support_ticket_updated:
+    post:
+      summary: Support ticket updated
+      description: Identifier-only status, priority, assignment or attachment event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {ticket_id: ticket-01, number: SUP-2026-000123, status: resolved, account_id: account-01, change: status, priority: high, assigned_admin_id: admin-01}
+      responses:
+        '200': {description: Return any 2xx to acknowledge delivery.}

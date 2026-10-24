@@ -5,7 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.187 · 1 versión - 24 de octubre de 2026
+## v2.188 · 2 versiones - 24 de octubre de 2026
+### v2.188
+**Agregado**
+- Se agregó el flujo de tickets de soporte ligados a transacciones, cola de organización, SLA, notas internas, respuestas rápidas, CSAT y eventos firmados solo con identificadores.
+
 ### v2.187
 **Agregado**
 - Se agregaron payins `push` cash anunciados para 13 corredores activos país/moneda. La respuesta conserva `payer_name` y usa el note exacto de cash; la confirmación es maker-checker, el anuncio vence a las 24 horas con `payin_expired` y la solicitud maker no tiene TTL de sistema.

@@ -862,3 +862,27 @@ event stream 接收；请使用 `X-Webhook-Event-ID` 对投递去重。
 ## 收款资产字段
 
 `payin_credited` 始终包含 `credit_asset`，本地法币增加 `fiat_credited`；`payin_refunded` 增加 `debited_asset`/`debited_amount`。不新增事件。
+
+## 支持工单事件
+
+The following events are delivered to both account and organization audiences. Payloads contain identifiers and state only; message bodies, internal notes and attachment bytes never travel in an event. Verify the signature and deduplicate by event ID.
+
+| Event | Payload additions |
+|---|---|
+| `support_ticket_created` | `ticket_id`, `number`, `status`, `account_id`, `category`, `priority`, `kind`, `resource_id`, `subject` |
+| `support_ticket_message` | The ticket identifiers plus `from: account` or `from: admin` |
+| `support_ticket_updated` | The ticket identifiers plus `change: status`, `priority`, `assigned` or `attachment`, plus `assigned_admin_id` |
+
+```json
+{
+  "ticket_id": "11111111-1111-4111-8111-111111111111",
+  "number": "SUP-2026-000123",
+  "status": "open",
+  "account_id": "22222222-2222-4222-8222-222222222222",
+  "category": "delay",
+  "priority": "high",
+  "kind": "payout",
+  "resource_id": "33333333-3333-4333-8333-333333333333",
+  "subject": "Payout is delayed"
+}
+```

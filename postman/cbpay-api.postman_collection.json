@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-24 13:20 UTC",
-    "_content_sha256": "b268531dd116daa524c173421fef2f4344e6341072354f73b580ed198b4a49e2"
+    "_generated_at": "2026-10-24 13:59 UTC",
+    "_content_sha256": "9a3d5856447d5566bf5fb12fd8a17099b1a8f8835820e62d5bf9c3e9daf278ea"
   },
   "auth": {
     "type": "bearer",
@@ -29018,6 +29018,539 @@
             },
             "description": "Returns one PDF only when the Bearer token is a valid, unexpired download entitlement. Every delivery is audit-recorded; revoked access immediately returns 410."
           }
+        }
+      ]
+    },
+    {
+      "name": "Support",
+      "item": [
+        {
+          "name": "List support tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Successful response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"tickets\": [\n    {\n      \"ticket_id\": \"ticket-01\",\n      \"number\": \"SUP-2026-000123\",\n      \"kind\": \"payout\",\n      \"subject\": \"Payout delayed\",\n      \"category\": \"delay\",\n      \"priority\": \"high\",\n      \"status\": \"open\",\n      \"unread\": true,\n      \"sla_breached\": false\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Open a support ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets"
+              ]
+            },
+            "description": "The idempotency key is deduplicated by organization, account and key.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"payout\",\n  \"resource_id\": \"payout-123\",\n  \"subject\": \"Payout delayed\",\n  \"category\": \"delay\",\n  \"priority\": \"high\",\n  \"message\": \"Please check this payout.\",\n  \"idempotency_key\": \"support-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Successful response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets"
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticket_id\": \"ticket-01\",\n  \"number\": \"SUP-2026-000123\",\n  \"status\": \"open\",\n  \"idempotency_hit\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get a support ticket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Successful response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticket_id\": \"ticket-01\",\n  \"number\": \"SUP-2026-000123\",\n  \"status\": \"open\",\n  \"messages\": [],\n  \"attachments\": [],\n  \"snapshot\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Post a ticket message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets/:id/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets",
+                ":id",
+                "messages"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Additional context for this request.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Successful response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets/:id/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets",
+                    ":id",
+                    "messages"
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message_id\": \"message-01\",\n  \"author_kind\": \"account\",\n  \"author_name\": \"Acme\",\n  \"body\": \"Additional context for this request.\",\n  \"created_at\": \"2026-10-24T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload a ticket attachment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets/:id/attachments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets",
+                ":id",
+                "attachments"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"file\": \"receipt.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Successful response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets/:id/attachments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets",
+                    ":id",
+                    "attachments"
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"attachment_id\": \"attachment-01\",\n  \"filename\": \"receipt.png\",\n  \"content_type\": \"image/png\",\n  \"bytes\": 1204,\n  \"sha256\": \"sha256:abc123\",\n  \"download_url\": \"/v1/support/tickets/ticket-01/attachments/attachment-01\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download a ticket attachment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets/:id/attachments/:attachmentID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets",
+                ":id",
+                "attachments",
+                ":attachmentID"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Successful response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets/:id/attachments/:attachmentID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets",
+                    ":id",
+                    "attachments",
+                    ":attachmentID"
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"binary\",\n  \"message\": \"authenticated binary response\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Close a support ticket",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets/:id/close",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets",
+                ":id",
+                "close"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Successful response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets/:id/close",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets",
+                    ":id",
+                    "close"
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticket_id\": \"ticket-01\",\n  \"status\": \"closed\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Rate a resolved ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets/:id/rate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets",
+                ":id",
+                "rate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Clear and helpful.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Successful response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets/:id/rate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets",
+                    ":id",
+                    "rate"
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticket_id\": \"ticket-01\",\n  \"status\": \"resolved\",\n  \"csat_rating\": 5\n}"
+            }
+          ]
         }
       ]
     }

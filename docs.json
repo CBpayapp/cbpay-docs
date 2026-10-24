@@ -114,7 +114,8 @@
                       "en/guides/checkout",
                       "en/guides/stored-cards-subscriptions",
                       "en/guides/qr-pos",
-                      "en/guides/refunds"
+                      "en/guides/refunds",
+                      "en/guides/support-tickets"
                     ]
                   },
                   {
@@ -159,7 +160,7 @@
                       "en/guides/kyc-remediation",
                       "en/guides/wolfsberg-cbddq",
                       "en/guides/aml",
-                  "en/guides/trust-center-nda",
+                      "en/guides/trust-center-nda",
                       "en/guides/screenings",
                       "en/guides/qscore",
                       "en/guides/qscore-batch",
@@ -259,7 +260,8 @@
                       "es/guides/checkout",
                       "es/guides/stored-cards-subscriptions",
                       "es/guides/qr-pos",
-                      "es/guides/refunds"
+                      "es/guides/refunds",
+                      "es/guides/support-tickets"
                     ]
                   },
                   {
@@ -304,7 +306,7 @@
                       "es/guides/kyc-remediation",
                       "es/guides/wolfsberg-cbddq",
                       "es/guides/aml",
-                  "es/guides/trust-center-nda",
+                      "es/guides/trust-center-nda",
                       "es/guides/screenings",
                       "es/guides/qscore",
                       "es/guides/qscore-batch",
@@ -404,7 +406,8 @@
                       "zh/guides/checkout",
                       "zh/guides/stored-cards-subscriptions",
                       "zh/guides/qr-pos",
-                      "zh/guides/refunds"
+                      "zh/guides/refunds",
+                      "zh/guides/support-tickets"
                     ]
                   },
                   {
@@ -449,7 +452,7 @@
                       "zh/guides/kyc-remediation",
                       "zh/guides/wolfsberg-cbddq",
                       "zh/guides/aml",
-                  "zh/guides/trust-center-nda",
+                      "zh/guides/trust-center-nda",
                       "zh/guides/screenings",
                       "zh/guides/qscore",
                       "zh/guides/qscore-batch",
