@@ -1,0 +1,104 @@
+---
+title: "现金 payin"
+description: "申报的现场现金收款"
+icon: "hand-holding-dollar"
+---
+import { EnvUrls } from "/snippets/env-urls.jsx";
+<EnvUrls lang="zh" />
+
+## 现金 payin（申报与现场交付）
+
+`method: "cash"` 创建已申报的 `push` payin。CBPay 不返回存款账户或 `deposit_instructions`：付款人把准确的本地金额交给操作员，并报出 12 位 `reference`。完成 maker-checker 前状态保持 `pending`。
+
+```mermaid
+flowchart LR
+ A[POST /v1/payins<br/>method cash] --> B[201 pending<br/>12 位 reference]
+ B --> C[付款人向操作员<br/>现场交现金] --> D[Maker 提交<br/>收据和金额]
+ D --> E[不同 god Checker<br/>批准] --> F[实时汇率 - fee<br/>入账] --> G[payin_credited webhook]
+```
+
+| 国家 | 货币 | 方法 | 交付 |
+|---|---|---|---|
+| CL | CLP | `cash` | announced-only (in-person) |
+| PE | PEN | `cash` | announced-only (in-person) |
+| MX | MXN | `cash` | announced-only (in-person) |
+| VE | VES | `cash` | announced-only (in-person) |
+| BO | BOB, USD | `cash` | announced-only (in-person) |
+| US | USD | `cash` | announced-only (in-person) |
+| PY | PYG | `cash` | announced-only (in-person) |
+| CO | COP | `cash` | announced-only (in-person) |
+| EC | USD | `cash` | announced-only (in-person) |
+| BR | BRL, BOB | `cash` | announced-only (in-person) |
+| AR | ARS | `cash` | announced-only (in-person) |
+
+### 申报现金
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"country":"CL","currency":"CLP","method":"cash","amount":"50000","payer_name":"Ana Perez","idempotency_key":"cash-cl-001"}'
+```
+
+```json
+{"payin_id":"11111111-2222-4333-8444-555555555555","status":"pending","reference":"A1B2C3D4E5F6","note":"hand the cash to the operator quoting the reference; the deposit is credited once the operator confirms receipt","payer_name":"Ana Perez","payer_source":"declared"}
+```
+
+使用同一 key 重放返回 HTTP `200` 和 `idempotency_hit: true`；超时后不要创建第二个申报。
+
+### 确认与 webhook
+
+org-admin maker 调用 `POST /v1/payins/{payinID}/confirm-received`，提交 `bank_reference`（收据/流水号）和 `received_amount`，只记录证据。不同的具名 god checker 调用无 body 的 `POST .../confirm-approve`。`GET /v1/payins/{payinID}` 与 `GET /v1/admin/approvals` 返回 `confirm_request` 和 `kind: "payin_manual_confirm"`。maker 或 god 可调用 `POST .../confirm-cancel`；取消不会入账。批准时使用实时汇率扣除 fee，并发送 `payin_credited`。
+
+### 错误
+
+请查看完整的[错误参考](/zh/errors)。
+
+| HTTP/代码 | 含义 | 处理 |
+|---|---|---|
+| 400 `invalid_request` | 缺少国家或货币 | 补齐字段。 |
+| 422 `invalid_request` | `method cash is not available for country X / currency Y` | 查询 `GET /v1/payins/methods` 并使用启用的现金走廊。 |
+| 422 `amount_below_minimum` | 固定 fee 导致金额无法入账 | 提高本地金额。 |
+| 409 `idempotency_conflict` | key 用于其他方法或内容 | 读取原 payin，不要创建第二个申报。 |
+| 409 `corridor_disabled` | 走廊开关关闭 | 等待运营启用。 |
+| 409 `bank_ref_conflict` | 收据/流水号已被其他操作占用 | 停止并使用原操作，不能复用流水号。 |
+| 409 `confirm_request_conflict` | 已有不同证据的待处理请求 | 读取并处理或取消原请求。 |
+| 409 `invalid_state` | 批准或取消时 payin 已不是 `pending` | 重新读取资源和请求后按当前状态操作。 |
+| 403 `named_admin_required` | checker 不是具名 god | 使用具名 god 人工会话。 |
+| 409 `confirm_account_mismatch` | maker 请求后账户发生变化 | 重新读取，仍符合条件时重新提交证据。 |
+
+### 到期与确认请求生命周期
+
+现金申报是普通 `push` payin：保持 `pending` 24 小时后，过期扫描会改为 `expired` 并发送 `payin_expired`。现场收据晚到不会入账到该申报，运营应为其开立新的申报（现金不会自动产生 `unassigned` 行——没有可暂存的 provider 事件）。maker 请求**没有系统 TTL**，超时是运营规则；它随 payin 一起失效。申报到期后 checker 收到 `409 invalid_state`，待审批列表隐藏已到期 payin，因为只列 pending。
+
+### 查询与历史
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/{payinID} -H "Authorization: Bearer <token>"
+curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-24&status=pending&country=CL&method=cash" -H "Authorization: Bearer <token>"
+```
+
+详情用于读取 `confirm_request`（仅 org-admin 与平台角色——账户级调用看不到该块）；列表支持 `from`、`to`、`status`、`country` 和 `method`。
+
+### 状态
+
+| 状态 | 含义 | 处理 |
+|---|---|---|
+| `pending` | 申报或确认等待操作 | 交付现金或完成 maker-checker。 |
+| `credited` | 批准后按实时汇率、fee 和 ledger 入账 | 对账余额和 webhook。 |
+| `unassigned` | 现金不会出现（没有可暂存的 provider 事件） | 若已收现金，请开立新申报。 |
+| `expired` | push 申报 24 小时后过期 | 不要批准，单独对账收据。 |
+| `failed` | 操作无法完成 | 阅读 failure，避免重复。 |
+
+### `payin_credited` webhook
+
+```json
+{"payin_id":"11111111-2222-4333-8444-555555555555","account_id":"66666666-7777-4888-8999-000000000000","country":"CL","currency":"CLP","local_amount":"47500","fx_rate":"950.00","rate_source":"lot","usdt_credited":"49.500000","fee":"0.500000"}
+```
+
+
+<AccordionGroup>
+<Accordion title="现金会返回存款指令吗？">不会。现场交付，没有 `deposit_instructions`。
+</Accordion>
+<Accordion title="confirm-received 会入账吗？">不会，只有 checker 单独批准才入账。
+</Accordion>
+<Accordion title="现金申报何时到期？">pending 24 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。
+</Accordion>
+</AccordionGroup>

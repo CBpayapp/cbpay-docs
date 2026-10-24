@@ -13,6 +13,11 @@ temporales listas para graficar, el detalle de cada servicio con todas sus
 dimensiones (país, moneda, método, estado, chain, comercio), lo que
 gastaste en servicios y tus saldos valorizados.
 
+Los saldos y volúmenes CLP del ledger se incluyen en pesos enteros. La
+valorización USD usa el feed de la organización; sin un precio CLP válido,
+el activo queda visible en `unpriced_assets` y se excluye de los totales USD.
+Nunca se inventa una tasa FX.
+
 ```mermaid
 flowchart LR
     front["Tu dashboard"] --> ep["GET /v1/analytics/summary"]
@@ -324,7 +329,7 @@ curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-
 - `assets` incluye también los espejos de las cuentas banking (`BANK_USD`,
   `BANK_EUR`) como serie propia en su moneda (2 decimales) — útiles para un
   chip "Bank USD"/"Bank EUR" en el gráfico. **No** entran al agregado
-  `total_usd`, que cubre solo los diez saldos del ledger.
+  `total_usd`, que cubre solo los once saldos del ledger.
 - `total_usd` valoriza BTC/GOLD/SILVER/PLATINUM al **precio histórico de cada día**. Si un
   día aún no tiene precio histórico se usa el spot de hoy y ese día se
   declara en `spot_priced_dates` (jamás inventamos valores).

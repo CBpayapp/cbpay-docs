@@ -4,8 +4,33 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 23, 2026" description="v2.185 · 4 versions">
+<Update label="October 24, 2026" description="v2.187 · 1 version">
+### v2.187
+**Added**
+- Added announced `push` cash payins for 13 live country/currency corridors. The response preserves `payer_name` and uses the exact cash note; confirmation is maker-checker, the announcement expires after 24 hours with `payin_expired`, and the maker request has no system TTL.
+
+<Update label="October 23, 2026" description="v2.186 · 5 versions">
+### v2.186
+**Changed**
+- Documented CLP as a zero-decimal fiat-ledger asset: same-asset transfers,
+  Banking hold and derived instrument balances, same-currency identity payout
+  settlement with zero spreads, feed-based valuation with `unpriced` fallback,
+  and fail-closed swaps, conversion, cards, checkout/POS and
+  `default_payin_asset` gates.
+
+**Changed**
+- Added `CL/CLP/fintoc` to the company additional-account and person
+  second-virtual Banking documentation. Banking receives, retains and exposes
+  a derived CLP balance for the instrument; CL payouts always originate
+  from the root account, with no physical sweep-exempt behavior. Company
+  Banking accounts remain capped at 50 per corridor and use idempotency keys.
+
 ### v2.185
+**Changed**
+- Treasury for the Chilean CLP deposit source now renders settled movement
+  rows with credit/debit direction, minor-unit settled amount, counterparty
+  name and account number, comment, and reversal flag when available. The balance remains
+  `unsupported` because no current-balance endpoint exists.
 **Added**
 - Checkout links now quote Brazil QR in both BRL (for payers) and BOB
   (direct). BRL selections convert to BOB at materialization with the same
@@ -29,6 +54,8 @@ description: "History of API and documentation changes"
   catalogs. The default catalog stays first and wins duplicate codes; omit
   the flag for the historical response. Creation selectors must continue
   using the default catalog.
+- Clarified that the holder of a dedicated `CL/CLP/fintoc` account is the
+  company that owns the CPF used for the account, not the payer or end user.
 
 ### v2.182
 **Added**

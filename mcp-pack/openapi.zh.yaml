@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.185"
-  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
-    GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS(2 位小数法币账本)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
+  version: "2.187"
+  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
+    GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从七个结算余额中的任意一个支付(用 `PUT /v1/settlement`
 
@@ -12,7 +12,7 @@ info:
     可自动兑换为你选择的资产(`default_payin_asset`)。
 
 
-    所有金额均为十进制字符串,遵循各货币的精度(USD/BOB/MXN/ARS 为 2 位小数,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。错误始终返回
+    所有金额均为十进制字符串,遵循各货币的精度(USD/BOB/MXN/ARS 为 2 位小数,CLP 为 0 位,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。错误始终返回
 
     `{"error": "<code>", "message": "<detail>"}`。
 
@@ -2863,7 +2863,7 @@ paths:
       - 余额
       operationId: getBalances
       summary: 获取余额
-      description: 调用账户的十个独立虚拟余额(USD(主资产)、USDT、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
+      description: 调用账户的十一个独立虚拟余额(USD(主资产)、USDT、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
         Banking,其 BANK_USD/BANK_EUR 镜像余额也会列出,`custody` 标记为 `banking`(权威余额在银行;这些余额在平台内不可消费)。
       responses:
         '200':
@@ -2910,12 +2910,12 @@ paths:
       - 余额
       operationId: getBalancesHistory
       summary: 获取余额历史
-      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对每个余额估值的 USD 汇总序列(USDT/USDC 按 1:1 平价;BTC/GOLD/SILVER/PLATINUM 与 USD/BOB/MXN/ARS 按当日价格)。包含期间总流入/流出及当前快照(可用
+      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对每个余额估值的 USD 汇总序列(USDT/USDC 按 1:1 平价;BTC/GOLD/SILVER/PLATINUM 与 USD/BOB/MXN/ARS/CLP 按当日价格)。包含期间总流入/流出及当前快照(可用
         + 冻结),前端可据此渲染 Mercury 风格的余额卡片及其百分比变化。序列跟踪**可用**余额(冻结没有历史);`current` 携带今日各资产的 `held`。在历史价格存在之前用今日现价估值的日期会在
         `spot_priced_dates` 中披露——绝不虚构数值。
 
 
-        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总覆盖十个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)。
+        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总覆盖十一个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)。
 
         '
       parameters:
@@ -2955,7 +2955,7 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 每个资产一条每日收盘余额序列。包含十个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
+                    description: 每个资产一条每日收盘余额序列。包含十一个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
                       `total_usd`。
                     additionalProperties:
                       type: object
@@ -3912,6 +3912,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
+                  - CLP
                   description: 此操作要扣款的虚拟余额。可接受的值:USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 与 ARS。法币执行目前返回 503 pricing_unavailable。省略则使用账户的默认结算资产(`default_settlement_asset`——USD 为主资产)。
                 source_virtual_iban_id:
                   type: string
@@ -4989,7 +4990,7 @@ paths:
         12 位字母数字短码,适配任何银行附言字段(部分通道上限 20 个字符且不允许特殊字符)。使用 `method: "fintoc"`(智利)响应携带托管 `payment_url`:付款人打开后可从任意智利银行或钱包转账;存款会被自动检测、校验并入账。使用
         `method: "card"` 响应携带一个托管 3-D Secure 银行卡收银台的 `payment_url`,页面带有您组织的品牌 —— 支持玻利维亚(BOB)与以美元结算的国际银行卡(`country: "US"`;任意国家发行的 Visa、Mastercard、American Express、Discover 与 Diners);银行卡数据绝不经过您的集成。使用
         `method: "checkout"` 响应携带一个公开的 `checkout_url` —— 以您选择的虚拟余额计价的通用收款链接(`settlement_asset`:USD、USDT、USDC、
-        BTC、GOLD、SILVER 或 PLATINUM;法币 BOB/MXN/ARS 会被拒绝)。付款人可选择任何有可用 payin 走廊的国家(本地金额实时报价)、四个加密货币选项之一(带可扫描二维码的专属充值地址),或通过商户的
+        BTC、GOLD、SILVER 或 PLATINUM;法币 BOB/MXN/ARS/CLP 会被拒绝)。付款人可选择任何有可用 payin 走廊的国家(本地金额实时报价)、四个加密货币选项之一(带可扫描二维码的专属充值地址),或通过商户的
         CBPay 二维码/别名从 CBPay 应用即时付款;每笔付款自动兑换为结算资产(以相同资产付款则不兑换)。最先完成支付的方式生效。创建收款免费;存款入账时收取
         payin 费用。未发送 `stored_card_id` 时，开放的 `pending`/`challenge`
         银行卡会话可按同一账户、国家、币种、金额和 `payer_reference` 复用
@@ -5052,6 +5053,7 @@ paths:
                   - card
                   - checkout
                   - wallet
+                  - cash
                   - pix
                   default: qr
                   description: 收款模式。`qr` 通过处理方创建主动 QR 收款;`bank_transfer` 预告一笔入账存款并返回需附在转账附言中的参考号;`fintoc`(仅智利)返回托管
@@ -5188,6 +5190,15 @@ paths:
                   idempotency_key: qr-bo-001
                   description: 应用充值
                   expires_in: 3600
+              cl_cash:
+                summary: Chile — announced cash payin (CLP)
+                value:
+                  country: CL
+                  currency: CLP
+                  method: cash
+                  amount: '50000'
+                  payer_name: Ana Perez
+                  idempotency_key: cash-cl-001
               br_pix_qr:
                 summary: 巴西 — 动态 PIX QR（BRL 输入，BOB charge）
                 value:
@@ -5791,7 +5802,7 @@ paths:
       - Payins
       operationId: confirmAnnouncedPayinReceived
       summary: "发起已公告银行存款的确认请求（maker）"
-      description: "两步确认的第一步：已公告的 EC/USD push bank_transfer 手动 payin。 It only accepts EC/USD/bank_transfer announced payins. 调用者是 maker：拥有 `ops:write` 的 org admin，且必须使用人工会话（API 密钥会被拒绝）。payin 保持 `pending`，不入账；由具名 god 通过兄弟接口批准或取消该请求。"
+      description: "两步确认的第一步：已公告的 EC/USD push bank_transfer 手动 payin。 接受已公告的 EC/USD/bank_transfer payin，或来自活跃现金走廊的 push cash payin。 cash 的 `bank_reference` 是现场收据或流水号。调用者是 maker：拥有 `ops:write` 的 org admin，且必须使用人工会话（API 密钥会被拒绝）。payin 保持 `pending`，不入账；由具名 god 通过兄弟接口批准或取消该请求。"
       parameters:
       - name: payinID
         in: path
@@ -5856,7 +5867,7 @@ paths:
         '409':
           description: "invalid_state（只有 pending payin 才能确认；未声明账户需先分配）、confirm_request_conflict（已存在其他证据的待处理请求）或 deposit_settled_treasury_trade（该笔银行流水已结算一笔国库采购）"
         '422':
-          description: "invalid_payload — only announced EC/USD push bank_transfer payins can be confirmed here"
+          description: "invalid_payload — 这里只能确认已公告的 EC/USD push bank_transfer 或活跃现金走廊的 push cash payin"
         '503':
           description: "treasury_check_unavailable、core_bank_ref_unavailable 或 bank_ref_recovery_pending（依赖恢复后重试；未入账）"
   /v1/payins/{payinID}/confirm-approve:
@@ -6399,7 +6410,7 @@ paths:
       - 转账
       operationId: createTransfer
       summary: 创建内部转账
-      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持十个虚拟余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
+      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持十一个虚拟余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
         `to_account_id`、`to_email`、`to_phone`(仅 OTP 已验证的手机号)或 `to_contact_id` 解析。每笔转账都会自动把收款人保存为联系人(用
         `save_contact: false` 退出)。收款方的 webhook 订阅者会收到 `transfer_received`。'
       parameters:
@@ -6447,10 +6458,11 @@ paths:
                   - BOB
                   - MXN
                   - ARS
+                  - CLP
                   description: 要划转的余额币种;接收方以同一币种入账。省略时使用付款方的结算资产(USD 为主资产)。
                 amount:
                   type: string
-                  description: 正数十进制字符串,不超过该货币的小数位数(USD/BOB/MXN/ARS 为 2 位,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
+                  description: 正数十进制字符串,不超过该货币的小数位数(USD/BOB/MXN/ARS 为 2 位,CLP 为 0 位,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
                   example: '10.500000'
                 description:
                   type: string
@@ -13581,6 +13593,7 @@ paths:
                   - BOB
                   - MXN
                   - ARS
+                  - CLP
                   description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产。
                 idempotency_key:
                   type: string
@@ -14916,7 +14929,7 @@ paths:
       - 收款(Payins)
       operationId: createDepositAccount
       summary: 创建专属充值账户
-      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。在支持的通道开通固定充值目的地。`purpose` 默认为 `fondeo`；`banking` 仅在 BO/BOB、MX/MXN 和 AR/ARS 的 `bank_transfer` 中保留本地法币。创建免费。
+      description: 需要已批准的账户身份；个人账户必须通过 KYC，企业账户必须通过 KYB，之后才能通过此认证操作创建或扣款 payin。在支持的通道开通固定充值目的地。`purpose` 默认为 `fondeo`；`banking` 在 BO/BOB、MX/MXN 和 AR/ARS 的 `bank_transfer` 以及 CL/CLP/fintoc 中保留本地法币。在 CL/CLP/fintoc 中 Banking 接收、保留并展示派生余额，CL payout 从 root 账户发起。创建免费。
       requestBody:
         required: true
         content:
@@ -14937,7 +14950,7 @@ paths:
                   type: string
                   enum: [fondeo, banking]
                   default: fondeo
-                  description: 存款目的地用途。banking 仅限 BO/BOB、MX/MXN 和 AR/ARS bank_transfer。
+                  description: 存款目的地用途。banking 支持 BO/BOB、MX/MXN 和 AR/ARS bank_transfer 以及 CL/CLP/fintoc。
                 bank_alias:
                   type: string
                   minLength: 6
@@ -15009,7 +15022,7 @@ paths:
                 invalid_request:
                   value:
                     error: invalid_request
-                    message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer
+                    message: banking purpose is only supported in BO/BOB, MX/MXN and AR/ARS bank_transfer and CL/CLP/fintoc
                 missing_alias:
                   value:
                     error: missing_alias
@@ -24937,6 +24950,7 @@ components:
           - BOB
           - MXN
           - ARS
+          - CLP
           description: 未提供单次覆盖时,余额操作默认扣款的资产。
         default_payin_asset:
           type: string
@@ -25189,7 +25203,7 @@ components:
             也会返回该字段（不适用外汇报价）。
         credit_asset:
           type: string
-          enum: [USD, USDT, BOB, MXN, ARS]
+          enum: [USD, USDT, BOB, MXN, ARS, CLP]
           description: 实际入账资产（USDT 或保留的本地法币）。
         fiat_credited:
           type: string

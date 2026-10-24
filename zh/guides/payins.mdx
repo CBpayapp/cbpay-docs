@@ -66,16 +66,16 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 
 | 国家 | 货币 | 模式 |
 |---|---|---|
-| 智利 | CLP | 托管支付页面（`fintoc`）、预告银行转账 |
-| 秘鲁 | PEN | 预告银行转账 |
-| 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账 |
-| 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`） |
-| 巴拉圭 | PYG | 预告银行转账 |
-| 巴西 | BRL 或 BOB (`qr`)、BRL (`pix`) | 动态 PIX 二维码（BRL 转换为 BOB）；Hosted PIX redirect |
-| 阿根廷 | ARS | 专属 CVU 账户 |
-| 委内瑞拉 | VES | 主动收款（`c2p`） |
-| 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT） |
-| 厄瓜多尔 | USD | 预告银行转账，由授权运营人员手动确认 |
+| 智利 | CLP | 托管支付页面（`fintoc`）、预告银行转账、现场现金申报 |
+| 秘鲁 | PEN | 预告银行转账、现场现金申报 |
+| 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账、现场现金申报、现场现金申报 |
+| 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`）、现场现金申报 |
+| 巴拉圭 | PYG | 预告银行转账、现场现金申报 |
+| 巴西 | BRL 或 BOB (`qr`)、BRL (`pix`) | 动态 PIX 二维码（BRL 转换为 BOB）；Hosted PIX redirect；现场现金申报 |
+| 阿根廷 | ARS | 专属 CVU 账户、现场现金申报 |
+| 委内瑞拉 | VES | 主动收款（`c2p`）、现场现金申报 |
+| 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT）、现场现金申报 |
+| 厄瓜多尔 | USD | 预告银行转账、现场现金申报，由授权运营人员手动确认 |
 
 <Note>
 **委内瑞拉（VES）**：现在可通过 `c2p` 进行主动收款。付款人先在其银行
@@ -93,6 +93,10 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 如果您希望将收款保留在其他余额（USDC、BTC
 或 GOLD），请配置 `default_payin_asset` — 参见
 [资金模型](/zh/concepts/money-model)。
+
+<Card title="现金 payin" icon="hand-holding-dollar" href="/zh/guides/cash-payins">
+现场现金申报与 maker-checker 确认。
+</Card>
 
 ## 2. 选择模式并创建收款
 
@@ -546,7 +550,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 </Tab>
 <Tab title="阿根廷">
 
-**专属 CVU 账户**：创建绑定到你账户的固定 CVU。
+**专属 CVU 账户、现场现金申报**：创建绑定到你账户的固定 CVU。
 对于 `AR/ARS/bank_transfer`，平台要求你提供希望在阿根廷银行系统中使用的
 可寻址 `bank_alias`：
 
@@ -1295,3 +1299,5 @@ USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
 跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。
+
+请查看[现金 payin 完整指南](/zh/guides/cash-payins)，了解 13 个走廊、申报响应、maker-checker 确认、webhook 和错误处理。

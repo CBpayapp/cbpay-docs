@@ -5,8 +5,30 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.185 · 4 个版本 - 2026年10月23日
+## v2.187 · 1 个版本 - 2026年10月24日
+### v2.187
+**新增**
+- 新增 13 个活跃国家/货币走廊的 `push` 现金申报 payin。响应保留 `payer_name` 并使用准确的现金 note；确认采用 maker-checker，申报 24 小时后以 `payin_expired` 到期，maker 请求没有系统 TTL。
+
+## v2.186 · 5 个版本 - 2026年10月23日
+### v2.186
+**变更**
+- 将 CLP 记录为零位小数的法币账本资产：支持相同资产转账、Banking
+  本地 hold 和按工具派生余额，同币种 payout 使用身份汇率和零 spread，
+  feed 估值缺失时为 `unpriced`，并对 swap、转换、卡片、checkout/POS
+  和 `default_payin_asset` 保持 fail-closed。
+
+**变更**
+- 在企业额外账户和个人第二个 Banking 虚拟槽位的文档中加入
+  `CL/CLP/fintoc`。Banking 接收、保留并展示派生 CLP 余额；CL payout
+  始终从 root 账户发起，没有物理 sweep 或 sweep-exempt。企业 Banking
+  每个走廊仍上限 50 个，并使用幂等键。
+
 ### v2.185
+**变更**
+- 智利 CLP 收款来源的资金管理现在显示已结算流水行，包括 credit/debit
+  方向、最小货币单位的已结算金额、对手方姓名和账号、备注以及可用时的
+  reversal 标记。余额仍为 `unsupported`，因为没有当前余额接口。
 **新增**
 - checkout link 的巴西 QR 现在同时报价 BRL（面向付款人）和 BOB（直接）。
   选择 BRL 时，materialize 按与 direct payin 相同的 mid 汇率转换为 BOB，

@@ -5,8 +5,34 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.185 · 4 versiones - 23 de octubre de 2026
+## v2.187 · 1 versión - 24 de octubre de 2026
+### v2.187
+**Agregado**
+- Se agregaron payins `push` cash anunciados para 13 corredores activos país/moneda. La respuesta conserva `payer_name` y usa el note exacto de cash; la confirmación es maker-checker, el anuncio vence a las 24 horas con `payin_expired` y la solicitud maker no tiene TTL de sistema.
+
+## v2.186 · 5 versiones - 23 de octubre de 2026
+### v2.186
+**Cambiado**
+- Se documentó CLP como activo fiat del ledger con cero decimales:
+  transferencias same-asset, hold Banking y saldo derivado por instrumento,
+  settlement CLP same-currency con identidad y spreads cero, valorización por
+  feed con fallback `unpriced` y gates fail-closed para swaps, conversiones,
+  tarjetas, checkout/POS y `default_payin_asset`.
+
+**Cambiado**
+- Se agregó `CL/CLP/fintoc` a la documentación de cuentas adicionales de
+  empresas y la segunda virtual Banking de personas. Banking recibe, retiene y
+  exhibe saldo CLP derivado; los payouts CL siempre se originan en la cuenta
+  root, sin barrido físico ni sweep-exempt. Banking empresa mantiene el tope de
+  50 por corredor y usa idempotency keys.
+
 ### v2.185
+**Cambiado**
+- Tesorería para la fuente de depósitos CLP de Chile ahora muestra filas de
+  movimientos liquidados con dirección crédito/débito, monto liquidado en
+  unidad menor, nombre y número de cuenta de contraparte, comentario y flag de reversa
+  cuando existen. El saldo mantiene `unsupported` porque no existe un endpoint
+  de saldo actual.
 **Agregado**
 - Los checkout links ahora cotizan el QR de Brasil en BRL (para pagadores)
   y en BOB (directo). Las selecciones BRL se convierten a BOB al

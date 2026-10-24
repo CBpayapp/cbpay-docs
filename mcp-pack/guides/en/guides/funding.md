@@ -19,18 +19,21 @@ that is [Banking](https://docs.cbpayapp.com/en/guides/banking): create a second 
 
 ## Funding vs Banking
 
-For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`), every payin
+For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`, `CL/CLP/fintoc`), every payin
 destination carries a `purpose` that decides where inbound money lands:
 
 | Purpose | Meaning |
 |---|---|
 | `fondeo` (default) | **Funding account.** Everything received converts automatically to USD, your principal balance. |
-| `banking` | **Banking account.** Inbound fiat is retained in its local currency for payouts, with individual balances per currency. |
+| `banking` | **Banking account.** Inbound fiat is retained in its local currency and exposed through a derived balance and movement history. |
 
 Destinations created without a purpose keep the historical `fondeo`
-behavior. Banking purpose is only supported in `BO/BOB/bank_transfer`,
-`MX/MXN/bank_transfer` and `AR/ARS/bank_transfer`; everything else is
-always funding.
+behavior. Banking purpose is supported in
+`BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` and
+`CL/CLP/fintoc`. The CL/CLP/fintoc Banking destination receives, retains and
+exposes a derived CLP balance, but it does **not** originate payouts:
+CL payouts always dispatch from the root account. It is not sweep-exempt
+because no physical sweep is performed.
 
 ## Funding by currency
 
@@ -66,6 +69,11 @@ dedicated account is owned by the company account that owns the CPF used for
 the account; the final payer or end user is not the account holder. Show the
 returned `holder_name`, `holder_tax_id` and `holder_account_type` exactly as
 provided.
+
+For a `purpose: "banking"` destination, inbound CLP is retained and exposed
+through the derived balance and movements for that instrument. It is a
+receiving and holding destination only: CLP payouts always originate from the
+root account, and no physical sweep-exempt flag applies.
 
 ### 🇪🇺 EUR — euro
 
@@ -176,9 +184,13 @@ the transfer card; missing optional fields are never inferred.
 Person accounts keep at most one active funding account per
 country/currency/method. Company accounts can create additional immutable
 destinations only in enabled corridors; the currently supported additional
-corridors are `MX/MXN/bank_transfer`, `BO/BOB/bank_transfer`, and `AR/ARS/bank_transfer`. Every
-destination stays bound to the same CBPay account, and credits match by
-destination instrument.
+corridors are `MX/MXN/bank_transfer`, `BO/BOB/bank_transfer`,
+`AR/ARS/bank_transfer`, and `CL/CLP/fintoc`. For a company, each additional
+funding or banking destination is keyed by its own idempotency key; banking
+destinations are capped at 50 per corridor. Person accounts can create their
+second virtual Banking slot for `CL/CLP/fintoc`, with the same
+purpose/label/balance response contract. Every destination stays bound to the
+same CBPay account, and credits match by destination instrument.
 
 Verification provisions the first corridor instrument automatically for a
 verified account. The call above also repairs a missing instrument after
@@ -307,8 +319,9 @@ reconciliation.
 #### Funding or Banking — which one do I need?
 Choose funding (default) when every deposit should land in USD, your
 principal balance. Choose [Banking](https://docs.cbpayapp.com/en/guides/banking) with
-`purpose: "banking"` when you need to keep BOB, MXN or ARS balances
-locally for payouts.
+`purpose: "banking"` when you need to retain a local balance. For
+`CL/CLP/fintoc`, Banking receives, retains and displays derived CLP balance
+for the instrument, while payouts still originate from the root account.
 #### Why am I not shown as the holder of a dedicated CLP account?
 The CLP account is dedicated to the company that owns the CPF used to create
 it. The account-number contract identifies that company; it does not assign

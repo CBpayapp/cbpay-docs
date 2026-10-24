@@ -18,17 +18,19 @@ source_url: https://docs.cbpayapp.com/zh/guides/funding
 
 ## 资金账户 vs Banking
 
-对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`），每个 payin 目的地都
+对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`、`CL/CLP/fintoc`），每个 payin 目的地都
 带一个 `purpose`，决定入账资金的去向：
 
 | Purpose | 含义 |
 |---|---|
 | `fondeo`（默认） | **资金账户。**所有到账自动转换为USD——你的主余额。 |
-| `banking` | **Banking 账户。**入账法币按本地币种保留，用于 payout，每个币种有独立余额。 |
+| `banking` | **Banking 账户。**入账法币按本地币种保留，并通过派生余额和流水展示。 |
 
-不带 purpose 创建的目的地保留历史 `fondeo` 行为。banking purpose 仅支持
-`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和 `AR/ARS/bank_transfer`；
-其余一律是资金账户。
+不带 purpose 创建的目的地保留历史 `fondeo` 行为。banking purpose 支持
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和
+`CL/CLP/fintoc`。在 CL/CLP/fintoc 中，Banking 接收、保留并展示派生的
+CLP 余额，但不发起 payout：CL payout 始终从 root 账户发送；由于没有物理
+sweep，不适用 sweep-exempt。
 
 ## 按币种的资金账户
 
@@ -60,6 +62,10 @@ source_url: https://docs.cbpayapp.com/zh/guides/funding
 所用 CPF 的公司；付款人或最终用户不是账户持有人。显示付款说明时，
 必须原样使用 API 返回的 `holder_name`、`holder_tax_id` 和
 `holder_account_type`。
+
+使用 `purpose: "banking"` 时，入账 CLP 会在该工具的派生余额和流水中
+保留并展示。它只负责接收和保留；CLP payout 始终从 root 账户发起，也不
+设置物理 sweep-exempt 标记。
 
 ### 🇪🇺 EUR — 欧元
 
@@ -163,8 +169,12 @@ curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
 缺失的可选字段不会被推断。
 
 个人账户在每个国家/币种/方法上最多只有一个活动充值账户。企业账户只有
-在已启用的走廊中才能创建不可变的额外目的地；目前支持的额外走廊是 `MX/MXN/bank_transfer`、`BO/BOB/bank_transfer` 和 `AR/ARS/bank_transfer`。每个目的地仍绑定到
-同一个 CBPay 账户，到账按目的地 instrument 进行匹配。
+在已启用的走廊中才能创建不可变的额外目的地；目前支持的额外走廊是
+`MX/MXN/bank_transfer`、`BO/BOB/bank_transfer`、`AR/ARS/bank_transfer` 和
+`CL/CLP/fintoc`。每个额外的 fondeo 或 banking 创建都使用自己的幂等键；
+每个走廊的 banking 上限为 50 个。个人账户可在 `CL/CLP/fintoc` 创建第二
+个 Banking 虚拟槽位，响应仍使用相同的 purpose/label/balance 契约。每个
+目的地仍绑定到同一个 CBPay 账户，到账按目的地 instrument 进行匹配。
 
 验证通过后，账户的第一个走廊工具会自动提供。前面的请求也可
 用于修复验证通过后缺失的工具。收款账户展示字段是可选的，不会被推断。该 BOB 流程不会创建用户选择的银行别名；AR/ARS 银行别名是 payins 指南中的独立契约。企业创建额外 BOB 目的地时，每个

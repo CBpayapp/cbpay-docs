@@ -7,7 +7,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/transfers
 ---
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
-内部转账在两个 **CBPay 账户**之间转移余额，在账本中原子完成且**始终免费** — 资金从不离开生态系统。它支持全部十种 ledger 资产（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`），并且始终**在同币种余额之间**进行：你发送的 `asset` 就是目标账户收到的 `asset`，没有任何兑换。
+内部转账在两个 **CBPay 账户**之间转移余额，在账本中原子完成且**始终免费** — 资金从不离开生态系统。它支持全部十一种 ledger 资产（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`、`CLP`），并且始终**在同币种余额之间**进行：你发送的 `asset` 就是目标账户收到的 `asset`，没有任何兑换。
 
 ```mermaid
 sequenceDiagram
@@ -105,7 +105,7 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
   }'
 ```
 
-对于任何组合（个人或企业、任一方向），请求结构完全相同 — 只有调用凭据不同。`asset` 为可选，默认使用**发送方的 settlement 资产**（`USD` 为主资产）；它接受十种 ledger 资产中的任意一种（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`），目标账户会**以同一币种**收到。
+对于任何组合（个人或企业、任一方向），请求结构完全相同 — 只有调用凭据不同。`asset` 为可选，默认使用**发送方的 settlement 资产**（`USD` 为主资产）；它接受十一种 ledger 资产中的任意一种（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`、`CLP`），目标账户会**以同一币种**收到。
 
 响应 `201` — 转账是**同步且即时**的：
 
@@ -161,7 +161,7 @@ curl https://api.qbank.cl/platform/v1/transfers/77b1… \
 - 双方始终为**同一币种**：余额之间没有兑换（`USDT`→`USDT`、`GOLD`→`GOLD`……）。
 - 不能给自己转账（`400 self_transfer`）。
 - 需要 `idempotency_key`（请求体或 `Idempotency-Key` 请求头）；重放返回 `200` 及 `idempotency_hit: true`。
-- `amount` 最多接受该币种的小数位数：`USD`/`BOB`/`MXN`/`ARS` 为 2 位，`USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM` 为 6 位，`BTC` 为 8 位。
+- `amount` 最多接受该币种的小数位数：`USD`/`BOB`/`MXN`/`ARS` 为 2 位，`CLP` 为 0 位，`USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM` 为 6 位，`BTC` 为 8 位。
 
 ## 错误
 
