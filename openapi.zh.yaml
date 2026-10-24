@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.187"
+  version: "2.188"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -25,6 +25,8 @@ servers:
 security:
 - bearerAuth: []
 tags:
+- name: Support
+  description: 支持工单和组织队列
 - name: 凭证
   description: 每笔操作的品牌化 PDF 凭证,附带公开的签名 QR 真伪校验、最终状态响应/webhook 中的 receipt_url,
     以及最终状态时的自动邮件发送。扣款前处于 pending 的 payout 不会暴露 receipt_url。
@@ -23893,6 +23895,249 @@ paths:
           content:
             application/json:
               example: {error: entitlement_revoked, message: access was revoked by compliance}
+
+  /v1/support/tickets:
+    get:
+        tags: [Support]
+        operationId: listSupportTickets
+        summary: 列出支持工单s
+        parameters:
+          - {name: from, in: query, required: true, schema: {type: string, format: date}}
+          - {name: to, in: query, required: true, schema: {type: string, format: date}}
+          - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+          - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {page: 1, page_size: 50, 工单s: [{工单_id: 工单-01, number: SUP-2026-000123, kind: payout, subject: Payout delayed, category: delay, priority: high, status: open, unread: true, sla_breached: false}]}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+    post:
+        tags: [Support]
+        operationId: createSupportTicket
+        summary: 创建支持工单
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idempotency_key:
+                    type: string
+                    maxLength: 128
+                    description: Maximum 128 characters.
+              example: {kind: payout, resource_id: payout-123, subject: Payout delayed, category: delay, priority: high, message: Please check this payout., idempotency_key: support-001}
+        responses:
+          '201':
+            description: Successful response
+            content:
+              application/json:
+                example: {工单_id: 工单-01, number: SUP-2026-000123, status: open, idempotency_hit: false}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+  /v1/support/tickets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+        tags: [Support]
+        operationId: getSupportTicket
+        summary: 获取支持工单
+        parameters:
+          - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {工单_id: 工单-01, number: SUP-2026-000123, status: open, messages: [], attachments: [], snapshot: {}}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+  /v1/support/tickets/{id}/messages:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: postSupportMessage
+        summary: 提交工单 message
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {body: Additional context for this request.}
+        responses:
+          '201':
+            description: Successful response
+            content:
+              application/json:
+                example: {message_id: message-01, author_kind: account, author_name: Acme, body: Additional context for this request., created_at: '2026-10-24T12:00:00Z'}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+  /v1/support/tickets/{id}/attachments:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: uploadSupportAttachment
+        summary: 上传工单 attachment
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {file: receipt.png}
+        responses:
+          '201':
+            description: Successful response
+            content:
+              application/json:
+                example: {attachment_id: attachment-01, filename: receipt.png, content_type: image/png, bytes: 1204, sha256: sha256:abc123, download_url: /v1/support/工单s/工单-01/attachments/attachment-01}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+  /v1/support/tickets/{id}/attachments/{attachmentID}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: attachmentID
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+        tags: [Support]
+        operationId: downloadSupportAttachment
+        summary: 下载工单 attachment
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {error: binary, message: authenticated binary response}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+  /v1/support/tickets/{id}/close:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: closeSupportTicket
+        summary: 关闭支持工单
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {工单_id: 工单-01, status: closed}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+  /v1/support/tickets/{id}/rate:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+        tags: [Support]
+        operationId: rateSupportTicket
+        summary: 评价resolved 工单
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {rating: 5, comment: Clear and helpful.}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {工单_id: 工单-01, status: resolved, csat_rating: 5}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+          '404':
+            description: Resource not found
+            content:
+              application/json:
+                example: {error: not_found, message: 支持工单 not found}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -27160,3 +27405,37 @@ webhooks:
       responses:
         '200':
           description: 返回任意 2xx 确认投递。
+
+  support_ticket_created:
+    post:
+      summary: Support ticket created
+      description: Identifier-only ticket creation event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {ticket_id: ticket-01, number: SUP-2026-000123, status: open, account_id: account-01, category: delay, priority: high, kind: payout, resource_id: payout-123, subject: Payout delayed}
+      responses:
+        '200': {description: Return any 2xx to acknowledge delivery.}
+  support_ticket_message:
+    post:
+      summary: Support ticket message
+      description: Identifier-only message event; bodies are never included.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {ticket_id: ticket-01, number: SUP-2026-000123, status: pending_customer, account_id: account-01, from: admin}
+      responses:
+        '200': {description: Return any 2xx to acknowledge delivery.}
+  support_ticket_updated:
+    post:
+      summary: Support ticket updated
+      description: Identifier-only status, priority, assignment or attachment event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {ticket_id: ticket-01, number: SUP-2026-000123, status: resolved, account_id: account-01, change: status, priority: high, assigned_admin_id: admin-01}
+      responses:
+        '200': {description: Return any 2xx to acknowledge delivery.}

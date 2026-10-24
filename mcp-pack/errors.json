@@ -1,5 +1,5 @@
 {
-  "count": 364,
+  "count": 374,
   "errors": [
     {
       "category": {
@@ -5085,6 +5085,118 @@
         "en": "A discard maker request is still awaiting approval; cancel it before restoring the account.",
         "es": "Hay una solicitud maker de descarte esperando aprobación; cancélala antes de restaurar la cuenta.",
         "zh": "丢弃 maker 请求仍在等待审批；恢复账户前请先取消请求。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_kind",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_category",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_priority",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_subject",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_message",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_rating",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_comment",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "ticket_already_open",
+      "http": 409,
+      "meaning": {
+        "en": "Continue the existing ticket returned in the response.",
+        "es": "Continúa el ticket existente de la respuesta.",
+        "zh": "继续响应中返回的现有工单。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "ticket_closed",
+      "http": 409,
+      "meaning": {
+        "en": "Open a new ticket or keep the existing rating.",
+        "es": "Abre otro ticket o conserva la calificación.",
+        "zh": "创建新工单或保留原评价。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "already_rated",
+      "http": 409,
+      "meaning": {
+        "en": "Open a new ticket or keep the existing rating.",
+        "es": "Abre otro ticket o conserva la calificación.",
+        "zh": "创建新工单或保留原评价。"
       }
     }
   ]

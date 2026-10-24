@@ -5,7 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.187 · 1 个版本 - 2026年10月24日
+## v2.188 · 2 个版本 - 2026年10月24日
+### v2.188
+**新增**
+- 新增关联交易的支持工单、组织队列、SLA、内部备注、快捷回复、CSAT 以及仅含标识符的签名事件。
+
 ### v2.187
 **新增**
 - 新增 13 个活跃国家/货币走廊的 `push` 现金申报 payin。响应保留 `payer_name` 并使用准确的现金 note；确认采用 maker-checker，申报 24 小时后以 `payin_expired` 到期，maker 请求没有系统 TTL。

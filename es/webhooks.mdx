@@ -3,10 +3,8 @@ title: "Webhooks"
 icon: "bell"
 description: "Recibe eventos firmados en tiempo real"
 ---
-
 Los webhooks te notifican los eventos de tu cuenta en un callback HTTPS
 propio, firmados criptográficamente.
-
 ```mermaid
 sequenceDiagram
     autonumber
@@ -22,9 +20,7 @@ sequenceDiagram
         Note over App: El mismo evento puede llegar 2 veces —<br/>deduplica por X-Webhook-Event-ID
     end
 ```
-
 ## Crear una suscripción
-
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \
   -H "Authorization: Bearer <token>" \
@@ -35,22 +31,18 @@ curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \
     "secret": "un-secreto-de-al-menos-16-chars"
   }'
 ```
-
 - `event_type`: uno de los eventos de la tabla siguiente, o `*` para todos.
 - `callback_url`: **HTTPS obligatorio**; se rechazan localhost e IPs
   privadas — para desarrollo local usa un
   [túnel HTTPS](/es/environment-testing#probar-webhooks-en-desarrollo-local).
 - `secret`: mínimo 16 caracteres; se usa para firmar cada entrega. Se
   almacena cifrado y no puede recuperarse.
-
 La suscripción recibe los eventos de **tu cuenta**. Puedes listar las
 suscripciones activas en cualquier momento:
-
 ```bash
 curl https://api.qbank.cl/platform/v1/webhooks/subscriptions \
   -H "Authorization: Bearer <token>"
 ```
-
 ```json
 {
   "page": 1,
@@ -66,20 +58,16 @@ curl https://api.qbank.cl/platform/v1/webhooks/subscriptions \
   ]
 }
 ```
-
 ## Desactivar y reactivar una suscripción
-
 Cuando un callback deja de usarse, desactívalo en vez de borrarlo (las
 suscripciones **nunca se borran**: quedan `disabled` y puedes reactivarlas
 cuando quieras):
-
 ```bash
 curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "status": "disabled" }'
 ```
-
 ```json
 {
   "id": "5f3a…",
@@ -89,23 +77,18 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
   "created_at": "2026-07-01T12:00:00Z"
 }
 ```
-
 Para reactivarla, el mismo llamado con `{ "status": "active" }`.
-
 - El toggle rige lo **futuro**: una suscripción `disabled` deja de recibir
   eventos nuevos, pero las entregas **ya encoladas** siguen saliendo.
 - Es **idempotente**: repetir el estado vigente responde `200` sin cambiar
   nada.
 - Solo puedes tocar las suscripciones de **tu cuenta**: una suscripción de
   otra cuenta responde `404` (es indistinguible de una inexistente).
-
 | HTTP | `error` | Solución |
 |---|---|---|
 | 400 | `invalid_status` | El estado debe ser `active` o `disabled` |
 | 404 | `not_found` | La suscripción no existe o pertenece a otra cuenta |
-
 ## Eventos
-
 | Evento | Cuándo se emite |
 |---|---|
 | `payin_credited` | Un cobro fiat fue recibido y abonado |
@@ -149,11 +132,8 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `account_status_changed` | El estado administrativo de la cuenta cambió (`active` / `blocked` / `closed`) |
 | `member_security_event` | Hecho de seguridad de un usuario de la cuenta (inicio de sesión, cambio de credenciales, factor nuevo, sesión revocada) |
 | `admin_announcement` | Un administrador nombrado de la organización aprobó un anuncio localizado de texto plano para esta cuenta |
-
 ### Payload de cada evento
-
 <CodeGroup>
-
 ```json payin_credited
 {
   "payin_id": "9c2a…",
@@ -167,7 +147,6 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
   "idempotency_key": "order-10042"
 }
 ```
-
 ```json payin_expired
 {
   "payin_id": "567d…",
@@ -180,7 +159,6 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
   "idempotency_key": "order-10042"
 }
 ```
-
 ```json payin_refunded
 {
   "refund_id": "3a7d…",
@@ -195,7 +173,6 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
   "receipt_url": "https://api.qbank.cl/platform/v1/payin-refunds/3a7d…/receipt"
 }
 ```
-
 ```json payin_settlement_scheduled
 {
   "payin_id": "8b3e…",
@@ -213,7 +190,6 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
   "receipt_url": "https://api.qbank.cl/platform/v1/payins/8b3e…/receipt"
 }
 ```
-
 <Note>
 Con una demora de settlement configurada, ambos webhooks se emiten **al
 confirmarse el pago**: primero `payin_settlement_scheduled` (el saldo
@@ -223,12 +199,10 @@ es la disponibilidad del saldo — la respuesta del payin lleva
 `settlement_pending: true` mientras está pendiente y `settled_at` cuando
 cae en el ledger.
 </Note>
-
 `usdt_net` es el monto que se acreditará al vencimiento (bruto − comisión).
 Los montos pueden venir vacíos (`""`) en filas históricas sin bruto/comisión.
 Al llegar el `settle_at`, el worker de settlement acredita el saldo y emite
 `payin_credited` (el flujo de siempre, sin cambios).
-
 ```json payout_status_changed
 {
   "payout_id": "0d4f…",
@@ -249,28 +223,23 @@ Al llegar el `settle_at`, el worker de settlement acredita el saldo y emite
   "idempotency_key": "payroll-2026-07-001"
 }
 ```
-
 Mientras espera el screening técnico del beneficiario, un payload de
 `payout_status_changed` puede llevar `status: "pending"`,
 `status_code: "compliance_pending"`, `compliance_pending: true` y
 `funds_debited: false`. No incluye `receipt_url` porque todavía no existe
 débito ni comprobante.
-
 Después de que el screening devuelve `process`, el mismo payout puede emitir
 eventos de transición durables mientras sigue en `pending`:
-
 - `status_code: "compliance_dispatch_pending"` significa que existe el
   débito/hold y `funds_debited: true`, pero el despacho al core no terminó.
 - `status_code: "compliance_dispatching"` significa que el claim de despacho
   está activo.
 - `status_code: "core_unreachable"` significa que el despacho o la liquidación
   local es ambigua y espera conciliación; no crees un segundo payout.
-
 Usa `X-Webhook-Event-ID` para deduplicar cada delivery, pero no asumas un solo
 evento por payout: la plataforma persiste estas revisiones de estado y después
 emite el evento terminal `completed` o `failed`. Los eventos terminales llevan
 los campos normales del comprobante; un payout fallido devuelve el débito exacto.
-
 ```json txn_review_status_changed
 {
   "account_id": "ae8c…",
@@ -283,7 +252,6 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "asset": "USD"
 }
 ```
-
 ```json transfer_received
 {
   "transfer_id": "77b1…",
@@ -295,7 +263,6 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "created_at": "2026-07-06T20:10:00Z"
 }
 ```
-
 ```json crypto_deposit_credited
 {
   "account_id": "ae8c…",
@@ -306,7 +273,6 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "fee": "1.000000"
 }
 ```
-
 ```json crypto_deposit_held
 {
   "account_id": "ae8c…",
@@ -318,7 +284,6 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "status": "held"
 }
 ```
-
 ```json crypto_deposit_alert
 {
   "account_id": "ae8c…",
@@ -329,7 +294,6 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "status": "credited"
 }
 ```
-
 ```json crypto_withdrawal_status_changed
 {
   "withdrawal_id": "5e8c…",
@@ -342,7 +306,6 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "idempotency_key": "wd-2026-09-0042"
 }
 ```
-
 ```json banking_customer_status_changed
 {
   "account_id": "ae8c…",
@@ -352,11 +315,9 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "kyc_status": "approved"
 }
 ```
-
 En `banking_customer_status_changed`, `customer_kind` distingue tu perfil
 propio (`self`) de un tercero que registraste (`third_party`, con su
 `third_party_id` — el mismo id de `GET /v1/banking/third-parties/{id}`).
-
 ```json banking_operation_status_changed
 {
   "account_id": "ae8c…",
@@ -370,7 +331,6 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
   "reference": "CJ-DEP-001"
 }
 ```
-
 ```json card_transaction
 {
   "account_id": "ae8c…",
@@ -381,7 +341,6 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
   "merchant": "AMZN Mktp"
 }
 ```
-
 ```json card_status_changed
 {
   "account_id": "ae8c…",
@@ -390,7 +349,6 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
   "reason": "monthly_fee_unpaid"
 }
 ```
-
 ```json card_stored
 {
   "stored_card_id": "a9b8…",
@@ -403,7 +361,6 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
   "seed_payin_id": "9c2a…"
 }
 ```
-
 ```json stored_card_revoked
 {
   "stored_card_id": "a9b8…",
@@ -413,7 +370,6 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
   "last4": "1234"
 }
 ```
-
 ```json subscription_status_changed
 {
   "subscription_id": "4f1e…",
@@ -427,7 +383,6 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
   "failed_attempts": 3
 }
 ```
-
 ```json kyc_verification_status_changed
 {
   "account_id": "ae8c…",
@@ -441,14 +396,12 @@ propio (`self`) de un tercero que registraste (`third_party`, con su
   "decision_source": "auto"
 }
 ```
-
 Cuando el evento lleva una decisión final (`approved`, `rejected` o
 `changes_requested`), el payload incluye `decision_source`: `"auto"` si la
 resolvió el motor de decisión automática (los expedientes limpios se aprueban
 en segundos sin intervención humana), `"admin"` si la decidió un oficial de
 cumplimiento desde la consola de revisión. El campo se omite en submissions
 antiguas sin datos del motor.
-
 ```json kyb_link_completed
 {
   "account_id": "ae8c…",
@@ -460,7 +413,6 @@ antiguas sin datos del motor.
   "status": "completed"
 }
 ```
-
 ```json kyc_document_validated
 {
   "account_id": "ae8c…",
@@ -473,7 +425,6 @@ antiguas sin datos del motor.
   "summary": "Document matches the submitted identity"
 }
 ```
-
 ```json kyc_liveness_completed
 {
   "account_id": "ae8c…",
@@ -484,7 +435,6 @@ antiguas sin datos del motor.
   "passed": true
 }
 ```
-
 ```json aml_screening_updated
 {
   "account_id": "ae8c…",
@@ -493,7 +443,6 @@ antiguas sin datos del motor.
   "data": { "risk_level": "high" }
 }
 ```
-
 ```json wallet_deposit_received
 {
   "wallet_id": "b7e3…",
@@ -505,7 +454,6 @@ antiguas sin datos del motor.
   "from_address": "TDonor…"
 }
 ```
-
 ```json wallet_send_status_changed
 {
   "send_id": "9c8b…",
@@ -519,7 +467,6 @@ antiguas sin datos del motor.
   "idempotency_key": "send-0042"
 }
 ```
-
 ```json wallet_key_exported
 {
   "wallet_id": "b7e3…",
@@ -529,7 +476,6 @@ antiguas sin datos del motor.
   "address": "TRmSZRaMAqLEevAdGwo3R43bRBXamWR5bd"
 }
 ```
-
 ```json wallet_external_movement
 {
   "wallet_id": "b7e3…",
@@ -542,7 +488,6 @@ antiguas sin datos del motor.
   "custody": "client"
 }
 ```
-
 ```json wallet_key_compromise_suspected
 {
   "wallet_id": "b7e3…",
@@ -555,7 +500,6 @@ antiguas sin datos del motor.
   "custody": "cbpay"
 }
 ```
-
 ```json wallet_signature_created
 {
   "proof_id": "c41d…",
@@ -568,7 +512,6 @@ antiguas sin datos del motor.
   "verify_url": "https://api.qbank.cl/platform/v1/public/signature-proofs/G9f2c…"
 }
 ```
-
 ```json wallet_linked
 {
   "link_id": "d52e…",
@@ -578,7 +521,6 @@ antiguas sin datos del motor.
   "proof_id": "c41d…"
 }
 ```
-
 ```json risk_report_ready
 {
   "report_id": "9f1c…",
@@ -591,7 +533,6 @@ antiguas sin datos del motor.
   "verify_code": "Q9f1c2e7a5b6d4c8e9a0f1d2b3c4d5e6f0123456789ab"
 }
 ```
-
 ```json risk_score_changed
 {
   "subject_id": "6aa2…",
@@ -602,7 +543,6 @@ antiguas sin datos del motor.
   "new_band": "B"
 }
 ```
-
 ```json risk_monitoring_alert
 {
   "monitoring_id": "7c9e2f14-5b6a-4c8d-9e1f-3a7b5c2d8e91",
@@ -628,7 +568,6 @@ antiguas sin datos del motor.
   ]
 }
 ```
-
 ```json risk_batch_completed
 {
   "batch_id": "b7f2c1a4-3e5d-4f8a-9c2b-1d0e6a8f4c5d",
@@ -640,7 +579,6 @@ antiguas sin datos del motor.
   "purpose": "credit_evaluation"
 }
 ```
-
 ```json risk_consent_granted
 {
   "consent_id": "c3a1e9b2-7f4d-4c8a-9e1b-2a5c6d7e8f9a",
@@ -656,7 +594,6 @@ antiguas sin datos del motor.
   "granted_at": "2026-08-09T15:42:10Z"
 }
 ```
-
 ```json risk_consent_revoked
 {
   "consent_id": "c3a1e9b2-7f4d-4c8a-9e1b-2a5c6d7e8f9a",
@@ -670,7 +607,6 @@ antiguas sin datos del motor.
   "revoked_at": "2026-08-11T09:05:33Z"
 }
 ```
-
 ```json corridor_status_changed
 {
   "flow": "payout",
@@ -683,7 +619,6 @@ antiguas sin datos del motor.
   "reason": "consecutive infrastructure failures"
 }
 ```
-
 ```json balance_adjusted
 {
   "account_id": "ae8c…",
@@ -695,7 +630,6 @@ antiguas sin datos del motor.
   "held": "0.000000"
 }
 ```
-
 ```json account_status_changed
 {
   "account_id": "ae8c…",
@@ -703,7 +637,6 @@ antiguas sin datos del motor.
   "previous_status": "active"
 }
 ```
-
 ```json member_security_event
 {
   "account_id": "ae8c…",
@@ -711,28 +644,22 @@ antiguas sin datos del motor.
   "event_type": "password_changed"
 }
 ```
-
 En suscripciones con alcance de cuenta, `ip` y `user_agent` se redactan
 intencionalmente. Las vistas de seguridad de alcance organizacional conservan
 el `user_agent` forense y los campos de IP del actor (`actor_ip`,
 `actor_ip_source`) para auditoría administrativa; esos campos son exclusivos
 del contrato admin y no forman parte del webhook público.
-
 </CodeGroup>
-
 En `payout_status_changed`, una actualización de screening técnico puede ser
 `pending` antes de cualquier débito. Las actualizaciones finales son
 `completed` o `failed` (con `failed` el débito ya fue reembolsado cuando
 recibes el evento). `crypto_withdrawal_status_changed` usa `completed` o
 `failed`.
-
 En `payout_status_changed`, `status_code` y `status_message` son el resultado
 normalizado que reporta el core. `status_message` puede venir vacío cuando el
 riel no entrega detalle adicional; se depura antes de la entrega y nunca
 contiene la identidad de un proveedor upstream.
-
 ### Fallos terminales antes del débito
-
 Si el screening falla antes del camino de débito, el evento puede ser terminal
 con `status: "failed"`, `predebit_failure: true` y
 `funds_debited: false`; se omite `receipt_url`. Un fallo posterior al débito
@@ -742,9 +669,7 @@ por lo que un payout puede producir más de una entrega
 `payout_status_changed`; deduplica por `X-Webhook-Event-ID` y no crees otro
 payout.
 ## Formato de entrega
-
 Cada entrega es un `POST` JSON con estos headers:
-
 | Header | Contenido |
 |---|---|
 | `X-Webhook-Event` | Tipo de evento |
@@ -753,37 +678,29 @@ Cada entrega es un `POST` JSON con estos headers:
 | `X-Webhook-Timestamp` | Unix timestamp (segundos, UTC) |
 | `X-Webhook-Signature` | Firma HMAC V1 heredada (ver abajo) |
 | `X-Webhook-Signature-V2` | Firma HMAC V2 (ver abajo) |
-
 ## Verificar las firmas
-
 CBPay envía ambos headers de firma en cada entrega de webhook de plataforma.
 V1 sigue siendo válida y se continúa enviando, por lo que adoptar V2 no rompe
 la compatibilidad. Las integraciones nuevas deben verificar V2 primero y
 mantener el fallback a V1 mientras migran los receptores existentes.
-
 | Header | Entrada firmada |
 |---|---|
 | `X-Webhook-Signature` (V1) | `timestamp + "." + raw_body` |
 | `X-Webhook-Signature-V2` | `timestamp + "." + event_type + "." + event_id + "." + raw_body` |
-
 Ambas entradas usan los valores de `X-Webhook-Timestamp`, `X-Webhook-Event`
 y `X-Webhook-Event-ID` de la misma solicitud cuando corresponde. El resultado
 es un HMAC-SHA256 hexadecimal en minúsculas usando el secreto de la
 suscripción. V2 vincula el tipo y el ID del evento a la firma: no tomes esos
 valores desde un payload JSON re-serializado. `X-Webhook-Delivery-ID` sirve
 para trazabilidad de la entrega; deduplica por `X-Webhook-Event-ID`.
-
 <CodeGroup>
-
 ```javascript Node.js
 const crypto = require("crypto");
-
 function timingSafeHexEqual(provided, expected) {
   const a = Buffer.from(provided, "hex");
   const b = Buffer.from(expected, "hex");
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
-
 function verifyWebhook(req, secret) {
   const ts = req.headers["x-webhook-timestamp"];
   const signatureV2 = req.headers["x-webhook-signature-v2"];
@@ -791,7 +708,6 @@ function verifyWebhook(req, secret) {
   const useV2 = Boolean(signatureV2);
   const provided = useV2 ? signatureV2 : signatureV1;
   if (!ts || !provided || !req.rawBody) return false;
-
   const prefix = useV2
     ? `${ts}.${req.headers["x-webhook-event"]}.${req.headers["x-webhook-event-id"]}.`
     : `${ts}.`;
@@ -802,10 +718,8 @@ function verifyWebhook(req, secret) {
   return timingSafeHexEqual(provided, expected);
 }
 ```
-
 ```python Python
 import hashlib, hmac
-
 def verify_webhook(headers, raw_body: bytes, secret: str) -> bool:
     ts = headers["X-Webhook-Timestamp"]
     sig_v2 = headers.get("X-Webhook-Signature-V2", "").strip()
@@ -819,43 +733,33 @@ def verify_webhook(headers, raw_body: bytes, secret: str) -> bool:
     else:
         signed = ts.encode() + b"." + raw_body
         signature = headers.get("X-Webhook-Signature", "").strip()
-
     expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
     return bool(signature) and hmac.compare_digest(signature.lower(), expected)
 ```
-
 </CodeGroup>
-
 <Warning>
 Calcula el HMAC sobre el **body crudo** (bytes tal como llegan), no sobre el
 JSON re-serializado. Rechaza timestamps muy antiguos (> 5 minutos) para
 prevenir replay.
 </Warning>
-
 ## Reintentos e idempotencia
-
 - Tu endpoint debe responder **2xx** dentro del timeout; cualquier otra
   respuesta se reintenta.
 - Hasta **5 intentos** con backoff incremental:
-
 | Intento | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|
 | Espera aprox. | inmediato | ~5s | ~20s | ~45s | ~80s |
-
 - Usa `X-Webhook-Event-ID` para deduplicar: el mismo evento puede llegar más
   de una vez (entregas at-least-once).
 - Si los 5 intentos fallan, el evento no se reenvía — recupera el estado
   con el `GET` del recurso (por eso ningún flujo debe depender SOLO del
   webhook).
-
 ### Tu idempotency key vuelve en el payload
-
 Cuando el evento viene de una operación que creaste con una
 `idempotency_key` (un payout, un payin con tarjeta, un retiro crypto, un
 envío desde wallet segregada, un refund…), el payload la trae de vuelta
 como `idempotency_key` — concilia la notificación contra tu propia
 referencia sin un GET extra.
-
 - Es **opcional**: presente solo cuando el request original traía una key
   no vacía, y omitida en caso contrario. Las operaciones creadas por la
   propia plataforma jamás exponen una key interna.
@@ -864,27 +768,20 @@ referencia sin un GET extra.
   `crypto_withdrawal_status_changed` y `wallet_send_status_changed`.
   `transfer_received` no la lleva.
 - El recurso payin también la devuelve en `GET /v1/payins/{id}`.
-
 ## Buenas prácticas
-
 - Responde `200` de inmediato y procesa en background.
 - Registra el `X-Webhook-Delivery-ID` para trazabilidad.
 - No dependas solo de webhooks para estados críticos: puedes consultar el
   objeto por API en cualquier momento (`GET /v1/payouts/{id}`, etc.).
-
 ## `banking_virtual_iban_inbound`
-
 This event reports an inbound EUR transfer received by an owned virtual IBAN.
 The event is normalized before delivery; consumers should deduplicate by the
 event ID and fetch the banking operation or virtual account when they need the
 latest state. The event does not expose an upstream provider identity.
-
 ## `admin_announcement`
-
 Este evento account-scoped se emite cuando el broadcast aprobado por un
 administrador de la organización llega al canal de notificaciones de la
 cuenta. Es texto plano localizado, nunca HTML:
-
 ```json
 {
   "broadcast_id": "4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
@@ -892,8 +789,27 @@ cuenta. Es texto plano localizado, nunca HTML:
   "body": "Algunos servicios serán de solo lectura el 2026-09-20 desde las 02:00 UTC."
 }
 ```
-
 El evento solo se entrega a la cuenta seleccionada por la campaña. Puede
 recibirse mediante una suscripción webhook de cuenta o el event stream;
 deduplica las entregas por `X-Webhook-Event-ID`.
 `dispute_status_changed`: consulta la [guía de disputas](/es/guides/disputes) para payload y transiciones firmadas. {/* banking-fase2-fiat-hold:2026-09-24 */} Payins fiat locales: `payin_credited` lleva `credit_asset`/`fiat_credited`; `payin_refunded` lleva `debited_asset`/`debited_amount`.
+## Eventos de tickets de soporte
+The following events are delivered to both account and organization audiences. Payloads contain identifiers and state only; message bodies, internal notes and attachment bytes never travel in an event. Verify the signature and deduplicate by event ID.
+| Event | Payload additions |
+|---|---|
+| `support_ticket_created` | `ticket_id`, `number`, `status`, `account_id`, `category`, `priority`, `kind`, `resource_id`, `subject` |
+| `support_ticket_message` | The ticket identifiers plus `from: account` or `from: admin` |
+| `support_ticket_updated` | The ticket identifiers plus `change: status`, `priority`, `assigned` or `attachment`, plus `assigned_admin_id` |
+```json
+{
+  "ticket_id": "11111111-1111-4111-8111-111111111111",
+  "number": "SUP-2026-000123",
+  "status": "open",
+  "account_id": "22222222-2222-4222-8222-222222222222",
+  "category": "delay",
+  "priority": "high",
+  "kind": "payout",
+  "resource_id": "33333333-3333-4333-8333-333333333333",
+  "subject": "Payout is delayed"
+}
+```

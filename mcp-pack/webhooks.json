@@ -1,5 +1,5 @@
 {
-  "count": 47,
+  "count": 50,
   "events": [
     {
       "description": {
@@ -909,6 +909,72 @@
         "en": "A subscription changed status (active, paused, past_due after dunning, or canceled).",
         "es": "Una suscripción cambió de estado (active, paused, past_due tras el dunning, o canceled).",
         "zh": "订阅状态发生变化（active、paused、经催收后 past_due，或 canceled）。"
+      }
+    },
+    {
+      "description": {
+        "en": "Identifier-only ticket creation event.",
+        "es": "Identifier-only ticket creation event.",
+        "zh": "Identifier-only ticket creation event."
+      },
+      "event": "support_ticket_created",
+      "payload_example": {
+        "account_id": "account-01",
+        "category": "delay",
+        "kind": "payout",
+        "number": "SUP-2026-000123",
+        "priority": "high",
+        "resource_id": "payout-123",
+        "status": "open",
+        "subject": "Payout delayed",
+        "ticket_id": "ticket-01"
+      },
+      "summary": {
+        "en": "Support ticket created",
+        "es": "Support ticket created",
+        "zh": "Support ticket created"
+      }
+    },
+    {
+      "description": {
+        "en": "Identifier-only message event; bodies are never included.",
+        "es": "Identifier-only message event; bodies are never included.",
+        "zh": "Identifier-only message event; bodies are never included."
+      },
+      "event": "support_ticket_message",
+      "payload_example": {
+        "account_id": "account-01",
+        "from": "admin",
+        "number": "SUP-2026-000123",
+        "status": "pending_customer",
+        "ticket_id": "ticket-01"
+      },
+      "summary": {
+        "en": "Support ticket message",
+        "es": "Support ticket message",
+        "zh": "Support ticket message"
+      }
+    },
+    {
+      "description": {
+        "en": "Identifier-only status, priority, assignment or attachment event.",
+        "es": "Identifier-only status, priority, assignment or attachment event.",
+        "zh": "Identifier-only status, priority, assignment or attachment event."
+      },
+      "event": "support_ticket_updated",
+      "payload_example": {
+        "account_id": "account-01",
+        "assigned_admin_id": "admin-01",
+        "change": "status",
+        "number": "SUP-2026-000123",
+        "priority": "high",
+        "status": "resolved",
+        "ticket_id": "ticket-01"
+      },
+      "summary": {
+        "en": "Support ticket updated",
+        "es": "Support ticket updated",
+        "zh": "Support ticket updated"
       }
     },
     {
