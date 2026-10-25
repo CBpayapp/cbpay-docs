@@ -9,6 +9,10 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ### v2.190
 **Cambiado**
 - Firmar en el Trust Center ahora deja los sobres en revisión de compliance en vez de abrir descargas: las respuestas de firma y estado traen `review_status` (`pending`/`approved`/`rejected`), `documents` lista los otorgados solo tras la liberación, y las descargas de sobres no liberados responden `409 review_pending`. Los clientes reciben email al liberarse (con la lista otorgada), al rechazarse (con el motivo) y al revocarse.
+## v2.189 · 1 versión - 25 de octubre de 2026
+### v2.190
+**Agregado**
+- Se agregaron listados enriquecidos de tarjetas, resúmenes agregados y un feed de transacciones de tarjetas de toda la organización. Las lecturas soportan búsqueda libre, tarjeta física, tipo de titular, asset de gasto, cuenta, estado, fechas y paginación; el detalle expone el uso diario y mensual vigente.
 
 ### v2.189
 **Corregido**
