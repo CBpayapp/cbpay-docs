@@ -17422,6 +17422,18 @@ paths:
           type: string
           format: date
         description: Hasta esta fecha (YYYY-MM-DD, zona horaria de la organización, inclusive).
+      - name: q
+        in: query
+        schema: {type: string}
+      - name: physical
+        in: query
+        schema: {type: boolean}
+      - name: cardholder_kind
+        in: query
+        schema: {type: string}
+      - name: spending_asset
+        in: query
+        schema: {type: string}
       responses:
         '200':
           description: Tarjetas paginadas.
@@ -17453,6 +17465,62 @@ paths:
                   updated_at: '2026-07-08T12:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/cards/summary:
+    get:
+      tags: [Cards]
+      operationId: getCardsSummary
+      summary: Get card summary
+      parameters:
+      - name: account_id
+        in: query
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Aggregate card summary.
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+              example: {total: 12, by_status: {active: 10, frozen: 2}, new_30d: 3, spend_24h_usdt: '1250.000000', spend_30d_usdt: '18400.000000', declined_24h: 4}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/cards/transactions:
+    get:
+      tags: [Cards]
+      operationId: listCardsTransactions
+      summary: List organization card transactions
+      parameters:
+      - name: card_id
+        in: query
+        schema: {type: string, format: uuid}
+      - name: account_id
+        in: query
+        schema: {type: string, format: uuid}
+      - name: status
+        in: query
+        schema: {type: string}
+      - name: merchant
+        in: query
+        schema: {type: string}
+      - name: mcc
+        in: query
+        schema: {type: string}
+      - name: from
+        in: query
+        schema: {type: string, format: date}
+      - name: to
+        in: query
+        schema: {type: string, format: date}
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      responses:
+        '200':
+          description: Paged organization card transactions.
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+              example: {page: 1, page_size: 50, total: 1, transactions: [{transaction_id: 7a1b0000-0000-4000-8000-000000000001, card_id: 6c1f0000-0000-4000-8000-000000000001, account_id: 9b1d0000-0000-4000-8000-000000000001, status: settled, merchant: MARKET, mcc: '5411'}]}
         '403':
           $ref: '#/components/responses/Forbidden'
   /v1/cards/{cardID}:
@@ -25288,6 +25356,19 @@ components:
         updated_at:
           type: string
           format: date-time
+        account_display_name:
+          type: string
+        account_email:
+          type: string
+        last_txn_at:
+          type: string
+          format: date-time
+        billed_through:
+          type: string
+        spent_daily:
+          type: string
+        spent_monthly:
+          type: string
     VerificationLinkRequest:
       type: object
       required:
