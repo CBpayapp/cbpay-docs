@@ -13,15 +13,17 @@ La sala tiene 31 documentos: 7 programas propios (programa AML US, manual SPLAFT
 
 Pide solo lo que necesites: envía `document_ids` con los IDs elegidos del catálogo (ver `GET /v1/trust/nda-docs`). Omitido significa todos; una lista explícitamente vacía se rechaza. Descargas, panel de estado y email de completitud respetan la selección — lo fuera de ella responde 404 como si no existiera.
 
-La firma captura tu rúbrica dibujada (o escrita) en el portal: se imprime en el bloque del NDA firmado y se adjunta al email de completitud. El PDF brandeado pre-firma se puede ver y descargar antes de firmar.
+La firma captura tu rúbrica dibujada (o escrita) en el portal: se imprime en el bloque del NDA firmado y se adjunta al email de revisión. El PDF brandeado pre-firma se puede ver y descargar antes de firmar. Firmar no abre las descargas: el sobre firmado entra en revisión de compliance, y los documentos gated se liberan solo cuando el compliance de tu organización lo aprueba (recibes aviso por email en ambos casos).
 
 ```mermaid
 sequenceDiagram
   participant M as Miembro (portal)
   participant T as Trust Center
+  participant C as Compliance (org)
   M->>T: POST /v1/trust/nda-requests (sesión)
   M->>T: GET /v1/trust/nda-requests/{id}/review.pdf
   M->>T: POST /v1/trust/nda-requests/{id}/sign (sesión + pad)
+  C->>T: Aprueba (todo o subset) o rechaza + motivo
   M->>T: GET /v1/trust/nda-requests/{id}/docs/{doc}/download
 ```
 
@@ -72,11 +74,12 @@ curl -X POST https://api.qbank.cl/platform/v1/trust/nda-requests/<REQUEST_ID>/si
 Respuesta (`200`):
 
 ```json
-{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","download_token":"<32-hex-token>","download_url":"https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","expires_at":"2031-10-18T20:00:00Z"}
+{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","review_status":"pending","download_token":"<32-hex-token>","download_url":"https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","expires_at":"2031-10-18T20:00:00Z"}
 ```
-### Consulta y descarga
+### Espera la revisión, consulta y descarga
 
-Autentícate con tu sesión de miembro. Cada PDF incluye `X-Checksum-Sha256` y `Cache-Control: no-store`; toda entrega queda auditada.
+Tu sobre quedó en `review_status: pending`: las descargas responden `409 review_pending` hasta que compliance las libere. Consulta el estado (o espera el email de liberación) y luego descarga.
+    Autentícate con tu sesión de miembro. Cada PDF incluye `X-Checksum-Sha256` y `Cache-Control: no-store`; toda entrega queda auditada.
 
 ```bash
 curl https://api.qbank.cl/platform/v1/trust/nda-requests/<REQUEST_ID> -H 'Authorization: Bearer <MEMBER_JWT>'
@@ -86,19 +89,23 @@ curl -L -o documento-trust.pdf https://api.qbank.cl/platform/v1/trust/nda-reques
 Respuesta de estado (`200`):
 
 ```json
-{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","signed_at":"2026-10-19T20:00:00Z","expires_at":"2031-10-18T20:00:00Z","documents":["us-aml-program"]}
+{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","review_status":"approved","signed_at":"2026-10-19T20:00:00Z","expires_at":"2031-10-18T20:00:00Z","documents":["us-aml-program"]}
 ```
+
+`documents` lista los otorgados solo tras la liberación; mientras `review_status` sea `pending` viene vacío.
 ## Estados y errores
 
-| Estado | Significado | Acción |
-|---|---|---|
-| `pending_signature` | El sobre vence en 30 días. | Revisa y firma, o solicita de nuevo tras vencer. |
-| `signed` | Descargas habilitadas por cinco años. | Descarga desde el portal con tu sesión. |
-| `expired` | Venció la firma o la descarga. | Envía una nueva solicitud. |
-| `revoked` | Compliance quitó el acceso de inmediato. | Contacta compliance o solicita de nuevo. |
+| `status` | `review_status` | Significado | Acción |
+|---|---|---|---|
+| `pending_signature` | `none` | El sobre vence en 30 días. | Revisa y firma, o solicita de nuevo tras vencer. |
+| `signed` | `pending` | Firmado, esperando la decisión de compliance. Descargas bloqueadas (`409`). | Espera el email de liberación, o consulta el estado. |
+| `signed` | `approved` | Liberado. Descargas abiertas por cinco años. | Descarga desde el portal con tu sesión. |
+| `signed` | `rejected` | No otorgado, con motivo. Descargas bloqueadas (`410`). | Envía una nueva solicitud si tu situación cambia. |
+| `expired` | `none` | Venció la firma o la descarga. | Envía una nueva solicitud. |
+| `revoked` | `none` | Compliance quitó el acceso de inmediato. | Contacta compliance o solicita de nuevo. |
 
 Revisa el [catálogo de errores](https://docs.cbpayapp.com/es/errors).
 
 ## Preguntas frecuentes
 
-#### ¿Necesito una cuenta CBPay?Sí. La cuenta debe tener KYC/KYB aprobado; solicitudes, firmas y descargas quedan ligadas a la identidad verificada.#### ¿Sirven las API keys?No para pedir ni firmar (exigen sesión de miembro logueado); sí para lecturas y descargas de la propia cuenta.#### ¿Puedo repetir la solicitud?Sí. Mientras esté pendiente devuelve la solicitud existente y no crea otro sobre.#### ¿Qué significa email_sent?`true` indica que el servicio de correo aceptó el envío; `false` indica que la solicitud existe pero la entrega falló. Nunca registres ni expongas tokens crudos.#### ¿Cuánto duran las descargas?Cinco años desde la firma, salvo revocación anticipada de compliance.
+#### ¿Necesito una cuenta CBPay?Sí. La cuenta debe tener KYC/KYB aprobado; solicitudes, firmas y descargas quedan ligadas a la identidad verificada.#### ¿Sirven las API keys?No para pedir ni firmar (exigen sesión de miembro logueado); sí para lecturas y descargas de la propia cuenta.#### ¿Puedo repetir la solicitud?Sí. Mientras esté pendiente devuelve la solicitud existente y no crea otro sobre.#### ¿Qué significa email_sent?`true` indica que el servicio de correo aceptó el envío; `false` indica que la solicitud existe pero la entrega falló. Nunca registres ni expongas tokens crudos.#### ¿Cuánto duran las descargas?Cinco años desde la firma, salvo revocación anticipada de compliance. La revisión controla el inicio, no el fin: aprobar no extiende la ventana.#### Firmé pero las descargas devuelven 409. ¿Por qué?Tu sobre espera la decisión de compliance (`review_status: pending`). Recibirás un email cuando se libere (o se rechace con motivo).#### Rechazaron mi solicitud. ¿Ahora qué?Los rechazos son terminales. Envía una nueva solicitud si tu situación cambia; el motivo del email explica la decisión.

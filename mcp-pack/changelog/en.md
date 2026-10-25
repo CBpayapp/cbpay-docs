@@ -5,6 +5,15 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.190 · 2 versions - October 25, 2026
+### v2.190
+**Changed**
+- Trust Center signing now moves envelopes to compliance review instead of opening downloads: sign responses and status reads carry `review_status` (`pending`/`approved`/`rejected`), `documents` lists granted ids only once released, and downloads on unreleased envelopes answer `409 review_pending`. Clients are emailed on release (with the granted list), rejection (with the reason), and revocation.
+
+### v2.189
+**Fixed**
+- Fixed login 2FA code email spam: back-to-back logins now reuse the pending code instead of sending a new email every time, and sends stop after 5 uncompleted codes in 24 hours (completing a code or resetting the password re-enables them). The `otp_required` response is unchanged.
+
 ## v2.188 · 2 versions - October 24, 2026
 ### v2.188
 **Added**

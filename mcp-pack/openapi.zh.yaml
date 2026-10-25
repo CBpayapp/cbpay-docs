@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.188"
+  version: "2.190"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -23620,7 +23620,7 @@ paths:
       tags: [Trust Center]
       operationId: getTrustNDARequest
       summary: 读取我的一份 Trust Center 申请
-      description: Reads one own envelope (404 when foreign or unknown). Same shape as the legacy status read.
+      description: "Reads one own envelope (404 when foreign or unknown). Same shape as the legacy status read. `documents` lists granted ids only once compliance releases the envelope (`review_status: approved`); while the signed envelope awaits review it is empty."
       parameters:
       - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
       responses:
@@ -23628,7 +23628,7 @@ paths:
           description: Envelope status and granted documents.
           content:
             application/json:
-              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, signed_at: '2026-10-19T20:00:00Z', expires_at: '2031-10-18T20:00:00Z', documents: [us-aml-program, pci-saqa]}
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, review_status: approved, signed_at: '2026-10-19T20:00:00Z', expires_at: '2031-10-18T20:00:00Z', documents: [us-aml-program, pci-saqa]}
         '401': {description: Missing or invalid credentials.}
         '404': {description: Unknown or foreign request.}
   /v1/trust/nda-requests/{id}/sign:
@@ -23637,7 +23637,7 @@ paths:
       tags: [Trust Center]
       operationId: signTrustNDAAccount
       summary: 在门户中签署 Trust Center NDA
-      description: Signs an own pending envelope with a logged-in member session. Company registration comes from the verified account; a drawn or typed signature PNG is required and is printed on the signed NDA. Atomic claim, so a second submit cannot re-issue anything.
+      description: "Signs an own pending envelope with a logged-in member session. Company registration comes from the verified account; a drawn or typed signature PNG is required and is printed on the signed NDA. Atomic claim, so a second submit cannot re-issue anything. Signing moves the envelope to compliance review (`review_status: pending`); downloads open after approval."
       parameters:
       - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
       requestBody:
@@ -23661,7 +23661,7 @@ paths:
           description: NDA signed; portal download link issued.
           content:
             application/json:
-              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, download_token: '<32-hex-token>', download_url: 'https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01', expires_at: '2031-10-18T20:00:00Z'}
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, review_status: pending, download_token: '<32-hex-token>', download_url: 'https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01', expires_at: '2031-10-18T20:00:00Z'}
         '401': {description: Missing or invalid credentials.}
         '403': {description: member_required (human session) or kyc_not_approved.}
         '404': {description: Unknown or foreign request.}
@@ -23673,7 +23673,7 @@ paths:
       tags: [Trust Center]
       operationId: downloadTrustNDADocumentAccount
       summary: 下载已授予的 Trust Center 文件
-      description: Serves one granted PDF to the owning account. Every delivery is audit-recorded.
+      description: "Serves one granted PDF to the owning account. Requires a released envelope (`review_status: approved`); signed envelopes awaiting review answer 409. Every delivery is audit-recorded."
       parameters:
       - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
       - {name: docID, in: path, required: true, schema: {type: string}}
@@ -23684,7 +23684,12 @@ paths:
           content: {application/pdf: {schema: {type: string, format: binary}}}
         '401': {description: Missing or invalid credentials.}
         '404': {description: 'Unknown or foreign request, or document outside the grant.'}
-        '410': {description: Access revoked or expired.}
+        '409':
+          description: Signed envelope awaiting compliance review.
+          content:
+            application/json:
+              example: {error: review_pending, message: your NDA is signed and awaiting compliance review; you will be notified when your documents are released}
+        '410': {description: 'Access denied by compliance, revoked or expired.'}
   /v1/trust/nda-requests/{id}/review.pdf:
     get:
       security: [{bearerAuth: []}]
@@ -23759,7 +23764,7 @@ paths:
       tags: [Trust Center]
       operationId: getTrustNDARequestStatus
       summary: 读取 NDA 请求状态和访问授权
-      description: Reads a tokenized request using its signing or download Bearer token. Pending requests use the public status vocabulary pending_signature; signed requests list the document IDs and the five-year download expiry.
+      description: Reads a tokenized request using its signing or download Bearer token. Pending requests use the public status vocabulary pending_signature; signed requests report the compliance review state, and list document IDs with the five-year download expiry only once released.
       security: [{bearerAuth: []}]
       parameters:
       - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
@@ -23768,7 +23773,7 @@ paths:
           description: Request state and available documents.
           content:
             application/json:
-              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, signed_at: '2026-10-19T20:00:00Z', expires_at: '2031-10-18T20:00:00Z', documents: [us-aml-program, pe-splaft-manual]}
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, review_status: approved, signed_at: '2026-10-19T20:00:00Z', expires_at: '2031-10-18T20:00:00Z', documents: [us-aml-program, pe-splaft-manual]}
         '401':
           description: Missing or invalid token.
           content:
@@ -23793,7 +23798,7 @@ paths:
       tags: [Trust Center]
       operationId: signTrustNDA
       summary: 签署 Trust Center NDA
-      description: "[Legacy token flow] Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA."
+      description: "[Legacy token flow] Atomically accepts the agreement and issues the raw download token once in the TLS response. The download entitlement lasts five years once compliance releases the signed envelope. A second submit cannot issue another token. A drawn or typed signature PNG is required and is printed on the signed NDA."
       parameters:
       - {name: token, in: path, required: true, schema: {type: string, minLength: 32, maxLength: 32}}
       requestBody:
@@ -23818,7 +23823,7 @@ paths:
           description: NDA signed and download entitlement issued.
           content:
             application/json:
-              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, download_token: '<32-hex-token>', download_url: 'https://www.cbpayapp.com/en/trust/nda?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01&token=<32-hex-token>', expires_at: '2031-10-18T20:00:00Z'}
+              example: {request_id: 4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01, status: signed, review_status: pending, download_token: '<32-hex-token>', download_url: 'https://www.cbpayapp.com/en/trust/nda?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01&token=<32-hex-token>', expires_at: '2031-10-18T20:00:00Z'}
         '404':
           description: Unknown or invalid signing link.
           content:
@@ -23871,7 +23876,7 @@ paths:
       tags: [Trust Center]
       operationId: downloadTrustNDADocument
       summary: 下载 Trust Center 受限文档
-      description: Returns one PDF only when the Bearer token is a valid, unexpired download entitlement. Every delivery is audit-recorded; revoked access immediately returns 410.
+      description: Returns one PDF only when the Bearer token is a valid, unexpired download entitlement on a released envelope. Signed envelopes awaiting review answer 409. Every delivery is audit-recorded; revoked access immediately returns 410.
       security: [{bearerAuth: []}]
       parameters:
       - {name: id, in: path, required: true, schema: {type: string}}
@@ -23890,8 +23895,13 @@ paths:
           content:
             application/json:
               example: {error: unknown_document, message: no gated document with that id}
+        '409':
+          description: Signed envelope awaiting compliance review.
+          content:
+            application/json:
+              example: {error: review_pending, message: your NDA is signed and awaiting compliance review; you will be notified when your documents are released}
         '410':
-          description: Entitlement revoked or expired.
+          description: Entitlement denied by compliance, revoked or expired.
           content:
             application/json:
               example: {error: entitlement_revoked, message: access was revoked by compliance}
