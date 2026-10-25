@@ -9,7 +9,6 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ### v2.190
 **Changed**
 - Trust Center signing now moves envelopes to compliance review instead of opening downloads: sign responses and status reads carry `review_status` (`pending`/`approved`/`rejected`), `documents` lists granted ids only once released, and downloads on unreleased envelopes answer `409 review_pending`. Clients are emailed on release (with the granted list), rejection (with the reason), and revocation.
-## v2.189 · 1 version - October 25, 2026
 ### v2.190
 **Added**
 - Added enriched card listings, aggregate card summaries, and an organization-wide card transaction feed. Card reads now support free-text, physical-card, cardholder-kind, spending-asset, account, status, date, and pagination filters; card details expose current daily and monthly usage.
