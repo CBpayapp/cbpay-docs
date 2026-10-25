@@ -8,7 +8,6 @@ description: "API and documentation change history"
 ### v2.190
 **变更**
 - 信任中心签署现将信封送入合规审核而非直接开放下载：签署响应与状态查询携带 `review_status`（`pending`/`approved`/`rejected`），`documents` 仅在释放后列出授予清单，未释放信封的下载返回 `409 review_pending`。释放（含授予清单）、拒绝（含理由）与撤销均会邮件通知客户。
-<Update label="2026年10月25日" description="v2.189 · 1 个版本">
 ### v2.190
 **新增**
 - 新增增强型卡片列表、卡片聚合汇总和组织级卡片交易流。卡片读取现在支持自由文本、实体卡、持卡人类型、消费资产、账户、状态、日期和分页筛选；卡片详情显示当前每日和每月使用量。
