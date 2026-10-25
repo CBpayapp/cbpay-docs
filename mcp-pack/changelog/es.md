@@ -5,6 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.190 · 2 versiones - 25 de octubre de 2026
+### v2.190
+**Cambiado**
+- Firmar en el Trust Center ahora deja los sobres en revisión de compliance en vez de abrir descargas: las respuestas de firma y estado traen `review_status` (`pending`/`approved`/`rejected`), `documents` lista los otorgados solo tras la liberación, y las descargas de sobres no liberados responden `409 review_pending`. Los clientes reciben email al liberarse (con la lista otorgada), al rechazarse (con el motivo) y al revocarse.
+
+### v2.189
+**Corregido**
+- Se corrigió el spam de emails con códigos 2FA de login: los logins seguidos reusan el código pendiente en vez de mandar un email cada vez, y los envíos se detienen tras 5 códigos sin completar en 24 horas (completar un código o restablecer la clave los reactiva). La respuesta `otp_required` no cambia.
+
 ## v2.188 · 2 versiones - 24 de octubre de 2026
 ### v2.188
 **Agregado**

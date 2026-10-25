@@ -13,15 +13,17 @@ source_url: https://docs.cbpayapp.com/zh/guides/trust-center-nda
 
 按需申请：用 `document_ids` 传入所选目录 ID（见 `GET /v1/trust/nda-docs`）。省略表示全部；显式空列表会被拒绝。下载、状态面板与完成邮件均遵循该选择——范围外的文件返回 404，视为不存在。
 
-签署时在门户中采集手绘（或手写）签名：印在已签署 NDA 的签署栏，并附于完成邮件。签署前可查看与下载品牌预签署 PDF。
+签署时在门户中采集手绘（或手写）签名：印在已签署 NDA 的签署栏，并附于审核邮件。签署前可查看与下载品牌预签署 PDF。签署本身不会打开下载：已签署信封进入合规审核，只有本机构合规团队批准后门控文档才会释放（两种结果都会收到邮件通知）。
 
 ```mermaid
 sequenceDiagram
   participant M as 成员（门户）
   participant T as Trust Center
+  participant C as 合规（机构）
   M->>T: POST /v1/trust/nda-requests（会话）
   M->>T: GET /v1/trust/nda-requests/{id}/review.pdf
   M->>T: POST /v1/trust/nda-requests/{id}/sign（会话 + 手写板）
+  C->>T: 批准（全部或子集）或拒绝 + 理由
   M->>T: GET /v1/trust/nda-requests/{id}/docs/{doc}/download
 ```
 
@@ -61,11 +63,12 @@ curl -X POST https://api.qbank.cl/platform/v1/trust/nda-requests/<REQUEST_ID>/si
 ```
 
 ```json
-{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","download_token":"<32-hex-token>","download_url":"https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","expires_at":"2031-10-18T20:00:00Z"}
+{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","review_status":"pending","download_token":"<32-hex-token>","download_url":"https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","expires_at":"2031-10-18T20:00:00Z"}
 ```
-### 查询状态并下载
+### 等待审核，再查询状态并下载
 
-使用成员会话认证。每个 PDF 返回 `X-Checksum-Sha256` 和 `Cache-Control: no-store`，每次交付都会记录审计。
+你的信封现为 `review_status: pending`：合规释放前下载返回 `409 review_pending`。轮询状态（或等待释放邮件），然后下载。
+    使用成员会话认证。每个 PDF 返回 `X-Checksum-Sha256` 和 `Cache-Control: no-store`，每次交付都会记录审计。
 
 ```bash
 curl https://api.qbank.cl/platform/v1/trust/nda-requests/<REQUEST_ID> -H 'Authorization: Bearer <MEMBER_JWT>'
@@ -73,19 +76,23 @@ curl -L -o trust-document.pdf https://api.qbank.cl/platform/v1/trust/nda-request
 ```
 
 ```json
-{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","signed_at":"2026-10-19T20:00:00Z","expires_at":"2031-10-18T20:00:00Z","documents":["us-aml-program"]}
+{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","review_status":"approved","signed_at":"2026-10-19T20:00:00Z","expires_at":"2031-10-18T20:00:00Z","documents":["us-aml-program"]}
 ```
+
+只有释放后 `documents` 才列出授予清单；`review_status` 为 `pending` 时为空。
 ## 状态和错误
 
-| 状态 | 含义 | 操作 |
-|---|---|---|
-| `pending_signature` | 信封 30 天有效。 | 审核并签署，或过期后重新申请。 |
-| `signed` | 下载权限有效五年。 | 使用成员会话在门户下载。 |
-| `expired` | 签署或下载权限已过期。 | 提交新请求。 |
-| `revoked` | 合规团队立即撤销了访问。 | 联系合规团队或重新申请。 |
+| `status` | `review_status` | 含义 | 操作 |
+|---|---|---|---|
+| `pending_signature` | `none` | 信封 30 天有效。 | 审核并签署，或过期后重新申请。 |
+| `signed` | `pending` | 已签署，待合规裁决。下载被拦（`409`）。 | 等待释放邮件，或轮询状态。 |
+| `signed` | `approved` | 已释放。下载开放五年。 | 使用成员会话在门户下载。 |
+| `signed` | `rejected` | 未授予，附理由。下载被拦（`410`）。 | 情况变化时可重新申请。 |
+| `expired` | `none` | 签署或下载权限已过期。 | 提交新请求。 |
+| `revoked` | `none` | 合规团队立即撤销了访问。 | 联系合规团队或重新申请。 |
 
 请查看[错误目录](https://docs.cbpayapp.com/zh/errors)。
 
 ## 常见问题
 
-#### 需要 CBPay 账户吗？需要。账户须通过 KYC/KYB；申请、签署与下载均绑定已验证身份。#### API 密钥可以申请或签署吗？不可以（须使用已登录成员会话）；API 密钥仅可读取与下载本账户内容。#### 可以安全地重复申请吗？可以。pending 状态下会返回原请求，不会创建重复信封。#### email_sent 是什么意思？`true` 表示邮件服务已接受投递；`false` 表示请求存在但投递失败。不要记录或暴露原始令牌。#### 下载有效多久？签署后五年，除非合规团队提前撤销。
+#### 需要 CBPay 账户吗？需要。账户须通过 KYC/KYB；申请、签署与下载均绑定已验证身份。#### API 密钥可以申请或签署吗？不可以（须使用已登录成员会话）；API 密钥仅可读取与下载本账户内容。#### 可以安全地重复申请吗？可以。pending 状态下会返回原请求，不会创建重复信封。#### email_sent 是什么意思？`true` 表示邮件服务已接受投递；`false` 表示请求存在但投递失败。不要记录或暴露原始令牌。#### 下载有效多久？签署后五年，除非合规团队提前撤销。审核只控制起点，不控制终点：批准不会延长窗口。#### 已签署但下载返回 409，为什么？你的信封正在等待合规裁决（`review_status: pending`）。释放（或附理由拒绝）时会收到邮件通知。#### 申请被拒绝了，怎么办？拒绝是终局。如情况变化请重新申请；邮件中的理由说明了裁决依据。

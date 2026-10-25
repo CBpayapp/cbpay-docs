@@ -1,5 +1,5 @@
 {
-  "count": 374,
+  "count": 375,
   "errors": [
     {
       "category": {
@@ -4973,6 +4973,20 @@
         "en": "The document or signing link is unknown; use the metadata list or request a new link.",
         "es": "El documento o enlace no existe; usa la lista de metadatos o pide un enlace nuevo.",
         "zh": "文档或签署链接未知；使用元数据列表或申请新链接。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Trust Center y NDA",
+        "zh": "Trust Center 与 NDA"
+      },
+      "code": "review_pending",
+      "http": 409,
+      "meaning": {
+        "en": "The envelope is signed and awaiting the org compliance decision; downloads open after approval. Poll the status read or wait for the release email.",
+        "es": "El sobre está firmado y espera la decisión de compliance; las descargas abren tras la aprobación. Consulta el estado o espera el email de liberación.",
+        "zh": "信封已签署，正在等待合规裁决；批准后下载开放。请轮询状态或等待释放邮件。"
       }
     },
     {

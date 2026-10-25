@@ -637,6 +637,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 410 | `entitlement_expired` | 签署或五年下载授权已过期；请提交新请求。 |
 | 404 | `unknown_document` / `unknown_link` | 文档或签署链接未知；使用元数据列表或申请新链接。 |
 | 409 | `already_decided` | 签署链接已使用或关闭；请勿重复提交。 |
+| 409 | `review_pending` | 信封已签署，正在等待合规裁决；批准后下载开放。请轮询状态或等待释放邮件。 |
 | 422 | `accept_required` | 签署人必须明确接受协议。 |
 | 503 | `email_unavailable` | 邮件投递未配置；请稍后重试。 |
 | 422 | `invalid_document_ids` | 请求的一个或多个文件 ID 未知，或列表显式为空；请使用元数据列表中的 ID，或省略该字段以获取全部。 |
