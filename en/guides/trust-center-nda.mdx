@@ -14,15 +14,17 @@ The room holds 31 documents: 7 first-party programs (US AML program, Peru SPLAFT
 
 Request only what you need: pass `document_ids` with the chosen catalog IDs (see `GET /v1/trust/nda-docs`). Omitted means all documents; an explicitly empty list is rejected. Downloads, the status panel, and the completion email all honor the selection — documents outside it return 404 as if unknown.
 
-Signing captures a drawn (or typed) signature in the portal: it is printed on the signed NDA block and attached to the completion email. The pre-signature branded PDF can be viewed and downloaded before signing.
+Signing captures a drawn (or typed) signature in the portal: it is printed on the signed NDA block and attached to the under-review email. The pre-signature branded PDF can be viewed and downloaded before signing. Signing alone does not open downloads: the signed envelope enters compliance review, and the gated documents are released only when your organization's compliance team approves it (you are notified by email either way).
 
 ```mermaid
 sequenceDiagram
   participant M as Member (portal)
   participant T as Trust Center
+  participant C as Compliance (org)
   M->>T: POST /v1/trust/nda-requests (session)
   M->>T: GET /v1/trust/nda-requests/{id}/review.pdf
   M->>T: POST /v1/trust/nda-requests/{id}/sign (session + pad)
+  C->>T: Approve (full or subset) or reject + reason
   M->>T: GET /v1/trust/nda-requests/{id}/docs/{doc}/download
 ```
 
@@ -73,10 +75,11 @@ curl -X POST https://api.qbank.cl/platform/v1/trust/nda-requests/<REQUEST_ID>/si
 Response (`200`):
 
 ```json
-{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","download_token":"<32-hex-token>","download_url":"https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","expires_at":"2031-10-18T20:00:00Z"}
+{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","review_status":"pending","download_token":"<32-hex-token>","download_url":"https://business.cbpayapp.com/trust?request=4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","expires_at":"2031-10-18T20:00:00Z"}
 ```
   </Step>
-  <Step title="Check status and download">
+  <Step title="Await review, then check status and download">
+    Your envelope is now `review_status: pending`: downloads answer `409 review_pending` until compliance releases them. Poll the status read (or wait for the release email), then download.
     Authenticate with the member session. Each PDF response includes `X-Checksum-Sha256` and `Cache-Control: no-store`; every delivery is audit-recorded.
 
 ```bash
@@ -89,21 +92,25 @@ curl -L -o trust-document.pdf https://api.qbank.cl/platform/v1/trust/nda-request
 Status response (`200`):
 
 ```json
-{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","signed_at":"2026-10-19T20:00:00Z","expires_at":"2031-10-18T20:00:00Z","documents":["us-aml-program"]}
+{"request_id":"4e7b1f3e-8b20-4ef8-9cc5-1bcb6d9b2a01","status":"signed","review_status":"approved","signed_at":"2026-10-19T20:00:00Z","expires_at":"2031-10-18T20:00:00Z","documents":["us-aml-program"]}
 ```
+
+`documents` lists granted ids only once released; while `review_status` is `pending` it is empty.
   </Step>
 </Steps>
 
 ## States and errors
 
-| State | Meaning | Action |
-|---|---|---|
-| `pending_signature` | Envelope is valid for 30 days. | Review and sign, or request again after expiry. |
-| `signed` | Downloads are enabled for five years. | Download from the portal with your session. |
-| `expired` | Signing or download entitlement expired. | Submit a new request. |
-| `revoked` | Compliance removed access immediately. | Contact compliance or submit a new request. |
+| `status` | `review_status` | Meaning | Action |
+|---|---|---|---|
+| `pending_signature` | `none` | Envelope is valid for 30 days. | Review and sign, or request again after expiry. |
+| `signed` | `pending` | Signed, awaiting the org compliance decision. Downloads blocked (`409`). | Wait for the release email, or poll status. |
+| `signed` | `approved` | Released. Downloads open for five years. | Download from the portal with your session. |
+| `signed` | `rejected` | Not granted, with reason. Downloads blocked (`410`). | Submit a new request if your situation changes. |
+| `expired` | `none` | Signing or download entitlement expired. | Submit a new request. |
+| `revoked` | `none` | Compliance removed access immediately. | Contact compliance or submit a new request. |
 
-See the [error catalog](/en/errors) for `counsel_pending`, `invalid_token`, `unknown_document`, `already_decided`, `accept_required`, `email_unavailable`, `entitlement_revoked`, `entitlement_expired`, `kyc_not_approved`, `member_required` and `account_identity_mismatch`.
+See the [error catalog](/en/errors) for `counsel_pending`, `invalid_token`, `unknown_document`, `already_decided`, `accept_required`, `email_unavailable`, `review_pending`, `entitlement_revoked`, `entitlement_expired`, `kyc_not_approved`, `member_required` and `account_identity_mismatch`.
 
 ## FAQ
 
@@ -112,5 +119,7 @@ See the [error catalog](/en/errors) for `counsel_pending`, `invalid_token`, `unk
   <Accordion title="Can API keys request or sign?">No. Requesting and signing require a logged-in member session; API keys can only consume reads and downloads of the owning account.</Accordion>
   <Accordion title="Can I retry the request safely?">Yes. Replaying while pending returns the existing request and does not send a duplicate envelope.</Accordion>
   <Accordion title="What does email_sent mean?">`true` means delivery was handed to the configured email service; `false` means the request exists but delivery failed. Do not log or expose raw tokens.</Accordion>
-  <Accordion title="How long are downloads available?">Five years after signing, unless compliance revokes the entitlement sooner.</Accordion>
+  <Accordion title="How long are downloads available?">Five years after signing, unless compliance revokes the entitlement sooner. The review gates the start, not the end: approval does not extend the window.</Accordion>
+  <Accordion title="I signed but downloads return 409. Why?">Your envelope is awaiting the compliance decision (`review_status: pending`). You will be notified by email when it is released (or rejected with a reason).</Accordion>
+  <Accordion title="My request was rejected. What now?">Rejections are terminal. Submit a new request if your situation changes; the reason emailed to you explains the decision.</Accordion>
 </AccordionGroup>

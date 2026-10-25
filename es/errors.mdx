@@ -663,6 +663,7 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 410 | `entitlement_expired` | La autorización de firma o descarga de cinco años venció; crea una nueva solicitud. |
 | 404 | `unknown_document` / `unknown_link` | El documento o enlace no existe; usa la lista de metadatos o pide un enlace nuevo. |
 | 409 | `already_decided` | El enlace ya fue usado o cerrado; no lo envíes otra vez. |
+| 409 | `review_pending` | El sobre está firmado y espera la decisión de compliance; las descargas abren tras la aprobación. Consulta el estado o espera el email de liberación. |
 | 422 | `accept_required` | El firmante debe aceptar explícitamente el acuerdo. |
 | 503 | `email_unavailable` | El correo no está configurado; reintenta más tarde. |
 | 422 | `invalid_document_ids` | Uno o más IDs pedidos son desconocidos, o la lista viene explícitamente vacía; usa IDs de la lista de metadatos u omite el campo para todos. |
