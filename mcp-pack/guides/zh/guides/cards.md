@@ -566,6 +566,117 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
 卡片会被自动冻结（`card_status_changed` 事件，`reason: monthly_fee_unpaid`）。不会产生欠款；余额补足后，用 `PATCH { "frozen": false }` 解冻即可。
 #### 我可以为公司以外的人发卡吗？
 企业账户可以为任何指定人员发卡。该人员必须拥有[已批准的 KYC 验证](https://docs.cbpayapp.com/zh/guides/kyc)——您在 `cardholder` 中传入其 `verification_id`，其数据和证件会自动填充。卡片始终从发卡企业账户的余额消费。
+## 卡片列表、汇总与组织交易流
+
+`GET /v1/cards` 同时支持账户凭证（仅查看自己的卡片）和组织管理员
+（需要 `ops:read`）。组织管理员可以添加 `account_id` 缩小范围。
+bank-partner 凭证不能使用 `/v1/cards`；该角色不会显示卡片管理区。
+
+列表支持 `page`（默认 `1`）、`page_size`（默认 `50`，最大 `200`）以及：
+
+| 筛选项 | 行为 |
+|---|---|
+| `q` | 搜索账户邮箱/显示名称、持卡人姓名、卡片 ID 和账户 ID |
+| `physical` | 只能是 `true` 或 `false`；其他值返回 `400 invalid_filter` |
+| `cardholder_kind` | `account`、`person` 或卡片实际使用的值 |
+| `spending_asset` | 规范账本资产，例如 `USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER` 或 `PLATINUM`；不支持的值返回 `400 invalid_filter` |
+| `from`、`to` | 可选 `YYYY-MM-DD` 日期范围；格式错误返回 `400 invalid_range` |
+
+响应包含 `total`，增强读取还可能包含 `account_display_name`、
+`account_email`、`last_txn_at` 和 `billed_through`：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards?q=finance&physical=false&spending_asset=USDT&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "cards": [{
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "physical": false,
+    "cardholder_kind": "account",
+    "status": "active",
+    "spending_asset": "USDT",
+    "last_txn_at": "2026-10-24T15:04:05Z",
+    "billed_through": "2026-10"
+  }]
+}
+```
+
+组织管理员可以调用 `GET /v1/cards/summary?account_id=...`。它只返回
+不含 PII 的汇总：`total`、`by_status`、`new_30d`、`spend_24h_usdt`、
+`spend_30d_usdt` 和 `declined_24h`。
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary?account_id=9b1d0000-0000-4000-8000-000000000001" \
+  -H "Authorization: Bearer <admin-token>"
+```
+
+```json
+{
+  "total": 12,
+  "by_status": {"active": 10, "frozen": 2},
+  "new_30d": 3,
+  "spend_24h_usdt": "1250.000000",
+  "spend_30d_usdt": "18400.000000",
+  "declined_24h": 4
+}
+```
+
+`GET /v1/cards/transactions` 是组织级交易流（账户凭证只看到自己的
+账户）。它支持 `card_id`（UUID）、`account_id`、`status`、`merchant`、
+`mcc`、`from`、`to`、`page` 和 `page_size`。格式错误的 `card_id` 返回
+`400 invalid_filter`。每个项目还可能包含 `cardholder_name`、
+`card_status`、`account_display_name` 和 `account_email`。
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/transactions?status=settled&merchant=market&mcc=5411&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "transactions": [{
+    "transaction_id": "7a1b0000-0000-4000-8000-000000000001",
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "cardholder_name": "Operations",
+    "card_status": "active",
+    "merchant": "MARKET",
+    "mcc": "5411",
+    "status": "settled",
+    "amount_usd": "25.00",
+    "amount_usdt": "25.000000",
+    "created_at": "2026-10-24T15:04:05Z"
+  }]
+}
+```
+
+`GET /v1/cards/{card_id}` 增加 `spent_daily` 和 `spent_monthly`。它们按
+JIT 执行使用的相同 UTC 时间窗口计算实际已授权和已清算金额（UTC
+午夜及当前 UTC 月第一天）；拒绝和冲正交易不计入。
+
+#### 账户可以查看其他账户的卡片吗？
+不可以。账户凭证只能访问自己的账户。组织管理员需要 `ops:read`，
+并可用 `account_id` 缩小组织范围。
+#### 汇总会暴露客户信息吗？
+不会。汇总只包含计数和金额。卡片和交易流中的账户上下文取决于调用者范围。
+#### 筛选项或日期无效时会怎样？
+无效的 `physical`、`spending_asset` 或 `card_id` 返回
+`400 invalid_filter`；无效的 `from`/`to` 日期返回 `400 invalid_range`。
+API 不会静默忽略筛选项。
 ## USD 作为主账本资产
 
 账户的 `settlement_asset` 与 `payin_settlement_asset` 默认值为 `USD`，可随时用

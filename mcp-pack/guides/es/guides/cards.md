@@ -706,6 +706,124 @@ Las devoluciones siempre reintegran el fee prorrateado sobre lo
 efectivamente cobrado, nunca re-cotizan.
 El catálogo general de errores vive en [Errores](https://docs.cbpayapp.com/es/errors).
 
+## Listados, resúmenes y feed de la organización
+
+`GET /v1/cards` está disponible para credenciales de cuenta (solo sus
+tarjetas) y administradores de organización (`ops:read`). Un administrador
+puede agregar `account_id` para acotar la vista. Una credencial de
+bank-partner no puede usar `/v1/cards`; la sección de tarjetas se oculta para
+ese rol.
+
+El listado acepta `page` (por defecto `1`), `page_size` (por defecto `50`,
+máximo `200`) y estos filtros:
+
+| Filtro | Comportamiento |
+|---|---|
+| `q` | Busca por email/nombre visible de cuenta, nombre del titular, card ID y account ID |
+| `physical` | `true` o `false`; otro valor responde `400 invalid_filter` |
+| `cardholder_kind` | `account`, `person` o el valor de la tarjeta |
+| `spending_asset` | Asset canónico, por ejemplo `USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER` o `PLATINUM`; uno no soportado responde `400 invalid_filter` |
+| `from`, `to` | Fechas opcionales `YYYY-MM-DD`; un rango malformado responde `400 invalid_range` |
+
+La respuesta incluye `total` y, en lecturas enriquecidas, los campos
+opcionales `account_display_name`, `account_email`, `last_txn_at` y
+`billed_through`:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards?q=finance&physical=false&spending_asset=USDT&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "cards": [{
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "physical": false,
+    "cardholder_kind": "account",
+    "status": "active",
+    "spending_asset": "USDT",
+    "last_txn_at": "2026-10-24T15:04:05Z",
+    "billed_through": "2026-10"
+  }]
+}
+```
+
+Para administradores, `GET /v1/cards/summary?account_id=...` devuelve solo
+agregados sin PII: `total`, `by_status`, `new_30d`, `spend_24h_usdt`,
+`spend_30d_usdt` y `declined_24h`.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary?account_id=9b1d0000-0000-4000-8000-000000000001" \
+  -H "Authorization: Bearer <admin-token>"
+```
+
+```json
+{
+  "total": 12,
+  "by_status": {"active": 10, "frozen": 2},
+  "new_30d": 3,
+  "spend_24h_usdt": "1250.000000",
+  "spend_30d_usdt": "18400.000000",
+  "declined_24h": 4
+}
+```
+
+`GET /v1/cards/transactions` es el feed de transacciones de toda la
+organización (o de la cuenta para una credencial de cuenta). Soporta
+`card_id` (UUID), `account_id`, `status`, `merchant`, `mcc`, `from`, `to`,
+`page` y `page_size`. Un `card_id` malformado responde `400 invalid_filter`.
+Cada item agrega `account_id` y opcionalmente `cardholder_name`,
+`card_status`, `account_display_name` y `account_email`.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/transactions?status=settled&merchant=market&mcc=5411&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "transactions": [{
+    "transaction_id": "7a1b0000-0000-4000-8000-000000000001",
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "cardholder_name": "Operations",
+    "card_status": "active",
+    "merchant": "MARKET",
+    "mcc": "5411",
+    "status": "settled",
+    "amount_usd": "25.00",
+    "amount_usdt": "25.000000",
+    "created_at": "2026-10-24T15:04:05Z"
+  }]
+}
+```
+
+`GET /v1/cards/{card_id}` agrega `spent_daily` y `spent_monthly`: gasto
+autorizado y liquidado en las mismas ventanas UTC que usa el enforcement JIT
+(medianoche UTC y el primer día del mes UTC vigente). Rechazos y reversas no
+se cuentan.
+
+#### ¿Una cuenta puede ver tarjetas de otra cuenta?
+No. La credencial de cuenta queda limitada a su cuenta. El administrador de
+organización necesita `ops:read` y puede acotar con `account_id`.
+#### ¿El resumen expone información de clientes?
+No. Solo contiene conteos y montos agregados. El contexto de cuenta aparece
+en tarjetas y feed según el alcance de la credencial.
+#### ¿Qué pasa con un filtro o fecha inválida?
+La API responde `400 invalid_filter` para `physical`, `spending_asset` o
+`card_id` inválidos, y `400 invalid_range` para fechas `from`/`to` inválidas.
+Los filtros nunca se ignoran silenciosamente.
 ## USD como activo principal del ledger
 
 Las cuentas usan `USD` como valor predeterminado de `settlement_asset` y

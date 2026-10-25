@@ -777,6 +777,109 @@ account.
 </AccordionGroup>
 The general error catalog lives in [Errors](/en/errors).
 
+## Card listings, summaries, and organization feeds
+`GET /v1/cards` is available to both an account credential (its own cards)
+and an organization administrator (`ops:read`). Organization admins may
+add `account_id` to narrow the result. A bank-partner credential cannot use
+the `/v1/cards` surface; the cards section is hidden for that role.
+
+The list accepts `page` (default `1`) and `page_size` (default `50`, maximum
+`200`), plus these filters:
+
+| Filter | Behavior |
+|---|---|
+| `q` | Free-text search over account email/display name, cardholder name, card ID, and account ID |
+| `physical` | `true` or `false`; any other value returns `400 invalid_filter` |
+| `cardholder_kind` | `account`, `person`, or the value used by the card |
+| `spending_asset` | Canonical ledger asset, for example `USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`, or `PLATINUM`; an unsupported value returns `400 invalid_filter` |
+| `from`, `to` | Optional inclusive date bounds in `YYYY-MM-DD`; malformed ranges return `400 invalid_range` |
+
+The response includes `total` and, on enriched reads, optional
+`account_display_name`, `account_email`, `last_txn_at`, and `billed_through`:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards?q=finance&physical=false&spending_asset=USDT&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "cards": [{
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "physical": false,
+    "cardholder_kind": "account",
+    "status": "active",
+    "spending_asset": "USDT",
+    "last_txn_at": "2026-10-24T15:04:05Z",
+    "billed_through": "2026-10"
+  }]
+}
+```
+
+For organization administrators, `GET /v1/cards/summary?account_id=...` returns
+Aggregate fields: `total`, `by_status`, `new_30d`, `spend_24h_usdt`,
+`spend_30d_usdt`, and `declined_24h`.
+
+```json
+{
+  "total": 12,
+  "by_status": {"active": 10, "frozen": 2},
+  "new_30d": 3,
+  "spend_24h_usdt": "1250.000000", "spend_30d_usdt": "18400.000000",
+  "declined_24h": 4
+}
+```
+
+`GET /v1/cards/transactions` is the organization-wide transaction feed. It
+supports `card_id` (UUID), `account_id`, `status`, `merchant`, `mcc`, `from`,
+`to`, `page`, and `page_size`; malformed `card_id` returns
+`400 invalid_filter`. Items add account and optional cardholder context.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/transactions?status=settled&merchant=market&mcc=5411&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "transactions": [{
+    "transaction_id": "7a1b0000-0000-4000-8000-000000000001",
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "cardholder_name": "Operations",
+    "card_status": "active",
+    "merchant": "MARKET",
+    "mcc": "5411",
+    "status": "settled",
+    "amount_usd": "25.00",
+    "amount_usdt": "25.000000",
+    "created_at": "2026-10-24T15:04:05Z"
+  }]
+}
+```
+
+`GET /v1/cards/{card_id}` enriches the card with `spent_daily` and
+`spent_monthly`, using the same UTC windows and authorized/settled states as
+JIT enforcement; declined and reversed transactions are excluded.
+
+<AccordionGroup>
+<Accordion title="Does the summary expose customer information?">
+No. The summary contains aggregate counts and amounts only. Customer context
+is available on enriched card and feed items according to the caller scope.
+</Accordion>
+</AccordionGroup>
+
 ## USD as the principal ledger asset
 
 Accounts use `USD` as the default for `settlement_asset` and
