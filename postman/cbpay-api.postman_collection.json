@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-25 17:47 UTC",
-    "_content_sha256": "eb9563341e6e15ca69c5645ed379f83eccba7957bd02ed6384f9b47a59422288"
+    "_generated_at": "2026-10-25 23:27 UTC",
+    "_content_sha256": "59f076f5198c3bd95d796314e5d5fdd9b251288de5867fdfe66947d307e2529d"
   },
   "auth": {
     "type": "bearer",
@@ -27,6 +27,1825 @@
     }
   ],
   "item": [
+    {
+      "name": "Account",
+      "item": [
+        {
+          "name": "Search your account activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Search text, exact operation ID, amount, email/name, partial reference, transaction hash or idempotency key."
+                }
+              ]
+            },
+            "description": "Search operations, ledger entries and your saved contacts within the authenticated account. Account records and data belonging to other accounts are never returned. Queries are trimmed, must contain 2–128 characters, and are limited to 60 requests per minute per account."
+          },
+          "response": [
+            {
+              "name": "200 Matching records in the authenticated account.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/search",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Search text, exact operation ID, amount, email/name, partial reference, transaction hash or idempotency key."
+                    }
+                  ]
+                }
+              },
+              "status": "Matching records in the authenticated account.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"query\": \"ana\",\n  \"matches\": [\n    {\n      \"type\": \"transfer\",\n      \"matched_by\": \"id\",\n      \"id\": \"8f1e2d3c-4b5a-4f6e-8d9c-0a1b2c3d4e5f\",\n      \"account_id\": \"acct_01\",\n      \"status\": \"completed\",\n      \"created_at\": \"2026-10-25T18:10:00Z\",\n      \"detail\": {\n        \"to_account_id\": \"acct_02\",\n        \"asset\": \"USDT\"\n      }\n    },\n    {\n      \"type\": \"payout\",\n      \"matched_by\": \"amount\",\n      \"id\": \"payout_01\",\n      \"account_id\": \"acct_01\",\n      \"status\": \"pending\",\n      \"created_at\": \"2026-10-25T18:11:00Z\",\n      \"detail\": {\n        \"amount\": \"1234.56\",\n        \"currency\": \"USD\"\n      },\n      \"matched_value\": \"1234.56\"\n    },\n    {\n      \"type\": \"contact\",\n      \"matched_by\": \"email\",\n      \"id\": \"contact_01\",\n      \"account_id\": \"acct_01\",\n      \"created_at\": \"2026-10-25T18:12:00Z\",\n      \"detail\": {\n        \"display_name\": \"Ana Pérez\",\n        \"phone_or_email\": \"ana@example.com\"\n      },\n      \"matched_value\": \"ana@example.com\"\n    },\n    {\n      \"type\": \"payin\",\n      \"matched_by\": \"reference_partial\",\n      \"id\": \"payin_01\",\n      \"account_id\": \"acct_01\",\n      \"status\": \"completed\",\n      \"created_at\": \"2026-10-25T18:13:00Z\",\n      \"detail\": {\n        \"country\": \"CL\",\n        \"method\": \"bank_transfer\"\n      },\n      \"matched_value\": \"CB7K2M\"\n    },\n    {\n      \"type\": \"crypto_withdrawal\",\n      \"matched_by\": \"tx_hash\",\n      \"id\": \"withdrawal_01\",\n      \"account_id\": \"acct_01\",\n      \"status\": \"completed\",\n      \"created_at\": \"2026-10-25T18:14:00Z\",\n      \"detail\": {\n        \"chain\": \"ethereum\",\n        \"asset\": \"USDT\"\n      },\n      \"matched_value\": \"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get the platform branding",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/branding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "branding"
+              ]
+            },
+            "description": "Effective branding of the platform you operate on (name, colors, logos in base64) so a white-label front end can theme itself from the API instead of hardcoding assets. `logo_url`/`symbol_url` are public CDN URLs for the same logos — prefer them over the base64 payloads. Read-only, no PII. `timezone` is the IANA timezone of the organization (default `America/New_York`) — every `from`/`to` date filter and every daily bucket of the platform is interpreted in that zone."
+          },
+          "response": [
+            {
+              "name": "200 Effective branding.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/branding",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "branding"
+                  ]
+                }
+              },
+              "status": "Effective branding.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"brand_name\": \"CBPay\",\n  \"website\": \"www.cbpayapp.com\",\n  \"footer_address\": \"Miami: 25 SW 9th STREET, Suite 406, Miami, FL 33130\",\n  \"support_email\": \"\",\n  \"colors\": {\n    \"primary\": \"#FBC140\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"symbol_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/default/logo.png\",\n  \"symbol_url\": \"https://cdn.cbpayapp.com/public/branding/default/symbol.png\",\n  \"timezone\": \"America/New_York\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get my account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 The calling account.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me"
+                  ]
+                }
+              },
+              "status": "The calling account.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{}"
+            }
+          ]
+        },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me"
+              ]
+            },
+            "description": "Once your identity verification is approved, `display_name`, `tax_id` and `country` are filled from the verified identity and locked (`409 identity_locked`); `phone` stays editable with its own verification flow.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+56987654321\",\n  \"locale\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Updated account.",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me"
+                  ]
+                }
+              },
+              "status": "Updated account.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"org_id\": \"1c9e7a2b-5f6d-4e3a-8c1b-2a9d8e7f6a5b\",\n  \"type\": \"person\",\n  \"status\": \"active\",\n  \"kyc_status\": \"approved\",\n  \"email\": \"ana@example.com\",\n  \"display_name\": \"Ana Perez\",\n  \"tax_id\": \"12345678-9\",\n  \"phone\": \"+56987654321\",\n  \"country\": \"CL\",\n  \"locale\": \"en\",\n  \"profile\": {},\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-07-07T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members"
+              ]
+            },
+            "description": "Login members of the calling account (company accounts)."
+          },
+          "response": [
+            {
+              "name": "200 Members.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members"
+                  ]
+                }
+              },
+              "status": "Members.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"members\": [\n    {\n      \"id\": \"5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d\",\n      \"email\": \"ops@example.com\",\n      \"role\": \"operator\",\n      \"status\": \"active\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add a member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members"
+              ]
+            },
+            "description": "Adds a login member. Only available for company accounts.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ops@example.com\",\n  \"password\": \"another-secure-pass\",\n  \"role\": \"operator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Member created.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members"
+                  ]
+                }
+              },
+              "status": "Member created.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create an API key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/api-keys",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "api-keys"
+              ]
+            },
+            "description": "Issues a server-to-server API key bound to the calling account. The\nplaintext token (`pk_...`) is returned exactly once and cannot be\nretrieved again.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"production-backend\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Key issued.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/api-keys",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "api-keys"
+                  ]
+                }
+              },
+              "status": "Key issued.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"api_key_id\": \"7f6e5d4c-3b2a-1908-a7b6-c5d4e3f2a1b0\",\n  \"key_id\": \"a1b2c3d4e5f60718\",\n  \"token\": \"pk_a1b2c3d4e5f60718.k9J2mX4pQ7wR5tY8uZ0aB3cD6eF1gH2i\",\n  \"label\": \"production-backend\",\n  \"note\": \"store this token now; it cannot be retrieved again\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Enabled services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/services",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "services"
+              ]
+            },
+            "description": "Effective map of which products this account can use right now (payouts, payins, transfers, crypto, banking, kyc, cards). When a service is disabled, its action endpoints answer 403 service_disabled; reads and money already in flight are never affected. Use it to decide what to show in your UI."
+          },
+          "response": [
+            {
+              "name": "200 Effective services map.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/services",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "services"
+                  ]
+                }
+              },
+              "status": "Effective services map.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"services\": {\n    \"payouts\": true,\n    \"payins\": true,\n    \"transfers\": true,\n    \"crypto\": true,\n    \"banking\": true,\n    \"kyc\": true,\n    \"cards\": false\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get my settlement settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/settlement",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "settlement"
+              ]
+            },
+            "description": "Returns which virtual balance your operations (payouts and service fees) debit from by default, the balance your payins settle into by default (`default_payin_asset`), which assets your organization allows, and the per-operation limit (USDT equivalent) applied to volatile assets (BTC/GOLD/SILVER/PLATINUM)."
+          },
+          "response": [
+            {
+              "name": "200 Current settlement settings.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/settlement",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "settlement"
+                  ]
+                }
+              },
+              "status": "Current settlement settings.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"default_settlement_asset\": \"USD\",\n  \"default_payin_asset\": \"USD\",\n  \"enabled_assets\": [\n    \"USD\",\n    \"USDT\",\n    \"USDC\",\n    \"BTC\",\n    \"GOLD\",\n    \"SILVER\",\n    \"PLATINUM\"\n  ],\n  \"volatile_op_limit_usdt\": \"10000.000000\",\n  \"volatile_daily_limit_usdt\": \"50000.000000\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Set my default balances (payouts and payins)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/settlement",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "settlement"
+              ]
+            },
+            "description": "Changes your default balances. `default_settlement_asset` is the balance your payouts and service fees debit from when a request does not send an explicit `settlement_asset`. `default_payin_asset` is the balance your payins settle into — with `USD` (the default for new accounts) the net is credited directly in USD cents; with any other target the net amount is auto-converted through the swap engine at the real price, with no extra swap spread (the payin already paid its fee and rate; checkout and POS payins keep their per-link asset). Any of USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM (if enabled for your organization). Send one or both fields. The change applies to new operations only; nothing in flight is re-quoted.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"default_settlement_asset\": \"BTC\",\n  \"default_payin_asset\": \"USDC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Updated settlement settings.",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/settlement",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "settlement"
+                  ]
+                }
+              },
+              "status": "Updated settlement settings.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"default_settlement_asset\": \"BTC\",\n  \"default_payin_asset\": \"USDC\",\n  \"enabled_assets\": [\n    \"USD\",\n    \"USDT\",\n    \"USDC\",\n    \"BTC\",\n    \"GOLD\",\n    \"SILVER\",\n    \"PLATINUM\"\n  ],\n  \"volatile_op_limit_usdt\": \"10000.000000\",\n  \"volatile_daily_limit_usdt\": \"50000.000000\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change my password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-OTP-Token",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "password"
+              ]
+            },
+            "description": "Changes the calling member's password. Requires the current password (members created via social login without a password set their first one here, leaving `current_password` empty) and, when the OTP policy requires it, an `X-OTP-Token` for the `password_change` action. All other sessions are revoked and a fresh session is returned.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"old-pass\",\n  \"new_password\": \"my-new-strong-pass\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Password changed; previous sessions revoked; new session ret",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/password",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "password"
+                  ]
+                }
+              },
+              "status": "Password changed; previous sessions revoked; new session ret",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"password_changed\",\n  \"access_token\": \"eyJ…\",\n  \"expires_at\": \"2026-07-12T00:00:00Z\",\n  \"refresh_token\": \"rt_6a1e6c22-….XXXX…\",\n  \"refresh_expires_at\": \"2026-08-10T00:00:00Z\",\n  \"note\": \"all previous sessions were revoked\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change my login email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-OTP-Token",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/email/change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "email",
+                "change"
+              ]
+            },
+            "description": "Starts a login-email change. A verification code is sent to the NEW email; confirm with `POST /v1/me/email/confirm`. When the OTP policy requires it, an `X-OTP-Token` for the `email_change` action is also required. Verifying the new email is mandatory — it prevents an attacker from pointing the login at a mailbox they do not control.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_email\": \"taylor.new@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Code sent to the new email.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/email/change",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "email",
+                    "change"
+                  ]
+                }
+              },
+              "status": "Code sent to the new email.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"code_sent\",\n  \"email\": \"t***@***.com\",\n  \"expires_at\": \"2026-07-11T00:30:00Z\",\n  \"note\": \"confirm the change with POST /v1/me/email/confirm using the code sent to the new email\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify my current email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/email/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "email",
+                "verify"
+              ]
+            },
+            "description": "Sends a code to the member's CURRENT email to mark it verified (required to use the email OTP channel for money actions). Confirm with `POST /v1/me/email/confirm`."
+          },
+          "response": [
+            {
+              "name": "200 Code sent (or already verified).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/email/verify",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "email",
+                    "verify"
+                  ]
+                }
+              },
+              "status": "Code sent (or already verified).",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"code_sent\",\n  \"email\": \"t***@***.com\",\n  \"note\": \"confirm with POST /v1/me/email/confirm using the code sent to your email\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm an email change or verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/email/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "email",
+                "confirm"
+              ]
+            },
+            "description": "Confirms a pending email change (or verification) with the code received. On a change, the login email — and, for owners, the account contact email — are updated and the old email is notified.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Email confirmed.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/email/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "email",
+                    "confirm"
+                  ]
+                }
+              },
+              "status": "Email confirmed.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"email_confirmed\",\n  \"email\": \"taylor.new@example.com\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Lift the phone binding cooldown early with an independent factor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-OTP-Token",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/phone/unlock-cooldown",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "phone",
+                "unlock-cooldown"
+              ]
+            },
+            "description": "Clears the self-service phone binding cooldown (4 hours) before it expires, once the holder proves an independent factor: a `phone_change` challenge verified with the authenticator app or the verified email, sent in the `X-OTP-Token` header. A code sent to the new number never unlocks it. Without a lock, returns `not_locked` without requiring a token."
+          },
+          "response": [
+            {
+              "name": "200 Cooldown unlocked (or not locked).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/phone/unlock-cooldown",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "phone",
+                    "unlock-cooldown"
+                  ]
+                }
+              },
+              "status": "Cooldown unlocked (or not locked).",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"unlocked\",\n  \"channel\": \"email\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Set the profile alias derived from the verified name — derived_confirmation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/alias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "alias"
+              ]
+            },
+            "description": "Sets the account's permanent public alias once. The alias is derived from the account's verified KYC/KYB display name; it is not freely chosen. The request body is optional. If `alias` is supplied, it must equal one of the candidates derived from that verified name. Once set, the alias cannot be changed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alias\": \"taylor.code\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Alias set permanently.",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/alias",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "alias"
+                  ]
+                }
+              },
+              "status": "Alias set permanently.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"alias\": \"taylor.code\",\n  \"note\": \"the alias is permanent and is derived from the verified name\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Set the profile alias derived from the verified name — empty_body",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/alias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "alias"
+              ]
+            },
+            "description": "Sets the account's permanent public alias once. The alias is derived from the account's verified KYC/KYB display name; it is not freely chosen. The request body is optional. If `alias` is supplied, it must equal one of the candidates derived from that verified name. Once set, the alias cannot be changed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Alias set permanently.",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/alias",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "alias"
+                  ]
+                }
+              },
+              "status": "Alias set permanently.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"alias\": \"taylor.code\",\n  \"note\": \"the alias is permanent and is derived from the verified name\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "My profile QR code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/qr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "qr"
+              ]
+            },
+            "description": "Returns the account's immutable QR token, its payload URI (`cbpay:pay?to=<token>`) and a ready-to-render PNG. The QR only lets others SEND money to you; it never changes."
+          },
+          "response": [
+            {
+              "name": "200 QR token, payload and PNG.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/qr",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "qr"
+                  ]
+                }
+              },
+              "status": "QR token, payload and PNG.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"qr_token\": \"9f8c7b6a5d4e3f2a1b0c9d8e7f6a5b4c\",\n  \"payload\": \"cbpay:pay?to=9f8c7b6a5d4e3f2a1b0c9d8e7f6a5b4c\",\n  \"png_base64\": \"iVBORw0KGgo…\",\n  \"alias\": \"taylor.code\",\n  \"note\": \"the QR identifies your account to RECEIVE transfers; it never changes\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload my profile photo",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "avatar"
+              ]
+            },
+            "description": "Uploads (or replaces) the account avatar. Body is the raw image bytes (JPEG, PNG or WebP), max 512 KB. The content type is detected from the file's magic bytes, never the header. When the image is published to the public CDN, `avatar_url` is an absolute URL that loads without authentication; otherwise it is the authenticated API path."
+          },
+          "response": [
+            {
+              "name": "200 Avatar updated.",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/avatar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "avatar"
+                  ]
+                }
+              },
+              "status": "Avatar updated.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"avatar_updated\",\n  \"content_type\": \"image/png\",\n  \"size_bytes\": 20481,\n  \"avatar_url\": \"https://cdn.cbpayapp.com/public/avatars/1fa63bd1-0000-4000-8000-000000000001/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete my profile photo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "avatar"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Avatar deleted.",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/avatar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "avatar"
+                  ]
+                }
+              },
+              "status": "Avatar deleted.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"avatar_deleted\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get an account's avatar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/avatars/:accountID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "avatars",
+                ":accountID"
+              ],
+              "variable": [
+                {
+                  "key": "accountID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Serves the avatar image of an account in the same organization (used for the recipient preview in transfers and contacts). Avatars published to the public CDN answer with a `302` redirect to the CDN URL; previously uploaded avatars are served directly."
+          }
+        },
+        {
+          "name": "Resolve a recipient by alias or QR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "resolve"
+              ],
+              "query": [
+                {
+                  "key": "alias",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "qr",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Returns a minimal preview (alias, display name, type, avatar) of an account in the same organization, to confirm before sending. Provide `alias` or `qr` (the raw token or the full `cbpay:pay?to=…` payload). Returns a uniform 404 and is rate-limited to prevent enumeration."
+          },
+          "response": [
+            {
+              "name": "200 Recipient preview.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/resolve",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "resolve"
+                  ],
+                  "query": [
+                    {
+                      "key": "alias",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "qr",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Recipient preview.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"display_name\": \"Taylor Code\",\n  \"type\": \"person\",\n  \"alias\": \"taylor.code\",\n  \"avatar_url\": \"https://cdn.cbpayapp.com/public/avatars/1fa63bd1-0000-4000-8000-000000000001/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List my active sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "sessions"
+              ]
+            },
+            "description": "Lists the member's sessions (devices) with IP, user agent, login method and whether each is the current one."
+          },
+          "response": [
+            {
+              "name": "200 The member's sessions.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/sessions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "sessions"
+                  ]
+                }
+              },
+              "status": "The member's sessions.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"sessions\": [\n    {\n      \"session_id\": \"8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"created_at\": \"2026-07-11T00:00:00Z\",\n      \"expires_at\": \"2026-07-12T00:00:00Z\",\n      \"login_method\": \"password\",\n      \"current\": true,\n      \"active\": true,\n      \"ip\": \"200.1.2.3\",\n      \"user_agent\": \"Mozilla/5.0\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Revoke one of my sessions",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/sessions/:sessionID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "sessions",
+                ":sessionID"
+              ],
+              "variable": [
+                {
+                  "key": "sessionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Signs out a specific device."
+          },
+          "response": [
+            {
+              "name": "200 Session revoked.",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/sessions/:sessionID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "sessions",
+                    ":sessionID"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sessionID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Session revoked.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"session_id\": \"8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"status\": \"revoked\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Revoke all my other sessions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/sessions/revoke-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "sessions",
+                "revoke-all"
+              ]
+            },
+            "description": "Signs out every session except the current one."
+          },
+          "response": [
+            {
+              "name": "200 Other sessions revoked.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/sessions/revoke-all",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "sessions",
+                    "revoke-all"
+                  ]
+                }
+              },
+              "status": "Other sessions revoked.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"revoked\",\n  \"sessions_revoked\": 3\n}"
+            }
+          ]
+        },
+        {
+          "name": "My security activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/security/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "security",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Append-only history of security events for the account (logins, credential changes, factors added/removed). Requires `from`/`to` date filters."
+          },
+          "response": [
+            {
+              "name": "200 Security events.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/security/events",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "security",
+                    "events"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Security events.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"events\": [\n    {\n      \"event_id\": \"a1b2c3d4-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"member_id\": \"1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"event\": \"password_changed\",\n      \"created_at\": \"2026-07-11T00:00:00Z\",\n      \"ip\": \"200.1.2.3\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List my transaction reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/txn-reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "txn-reviews"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "`in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`)."
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Money operations of the account held by the transactional firewall (payouts, crypto withdrawals, payins, banking transfers) with their review status. Filter by `status` and date range (`from`/`to`, organization timezone, both inclusive). When a review moves to `info_requested`, upload the requested documents with `POST /v1/me/txn-reviews/{reviewID}/files` — the operation stays held until the compliance team decides."
+          },
+          "response": [
+            {
+              "name": "200 List my transaction reviews.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/txn-reviews",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "txn-reviews"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": "`in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`)."
+                    },
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "List my transaction reviews.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"reviews\": [\n    {\n      \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n      \"kind\": \"payout\",\n      \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n      \"status\": \"info_requested\",\n      \"amount_label\": \"1500.00\",\n      \"asset\": \"USD\",\n      \"country\": \"MX\",\n      \"method\": \"spei\",\n      \"counterparty\": \"Juan Pérez\",\n      \"info_request\": {\n        \"message\": \"Please upload the invoice that justifies this payment\",\n        \"requested_at\": \"2026-08-06T15:20:00Z\"\n      },\n      \"created_at\": \"2026-08-06T14:32:00Z\",\n      \"updated_at\": \"2026-08-06T15:20:00Z\"\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get a review",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "txn-reviews",
+                ":reviewID"
+              ],
+              "variable": [
+                {
+                  "key": "reviewID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Detail of one review of the account, with the information request message (`info_request`) and the files already uploaded. The internal hold reason and compliance notes are never exposed (anti tipping-off). A rejected review also includes `decision_note` (the same text as the rejection email) and `decided_at`."
+          },
+          "response": [
+            {
+              "name": "200 The review with its uploaded files.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "txn-reviews",
+                    ":reviewID"
+                  ],
+                  "variable": [
+                    {
+                      "key": "reviewID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "The review with its uploaded files.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"review\": {\n    \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"kind\": \"payout\",\n    \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n    \"status\": \"info_requested\",\n    \"amount_label\": \"1500.00\",\n    \"asset\": \"USD\",\n    \"country\": \"MX\",\n    \"method\": \"spei\",\n    \"counterparty\": \"Juan Pérez\",\n    \"info_request\": {\n      \"message\": \"Please upload the invoice that justifies this payment\",\n      \"requested_at\": \"2026-08-06T15:20:00Z\"\n    },\n    \"files\": [\n      {\n        \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n        \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n        \"file_name\": \"invoice-221.pdf\",\n        \"content_type\": \"application/pdf\",\n        \"size_bytes\": 482110,\n        \"uploaded_by\": \"account\",\n        \"category\": \"proofOfAddress\",\n        \"created_at\": \"2026-08-06T15:40:00Z\"\n      }\n    ],\n    \"created_at\": \"2026-08-06T14:32:00Z\",\n    \"updated_at\": \"2026-08-06T15:40:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload a file for an information request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "txn-reviews",
+                ":reviewID",
+                "files"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Original filename (max 200 chars, no path separators)."
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional closed banking-document category. Omit for a visible file that is not eligible for provider synchronization."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "reviewID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads a supporting document for a review in `info_requested`. Send the raw binary body with its `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) or XLS(X), up to 50 MB) and the filename in the `name` query param. Uploading a file moves the review back to `in_review` so the compliance team re-evaluates it.\nThe optional `category` query parameter uses a closed banking-document vocabulary. Omitting it keeps the file visible in the review but it is not eligible for banking-provider synchronization. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`."
+          },
+          "response": [
+            {
+              "name": "201 File uploaded; the review moved back to `in_review`.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/files",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "txn-reviews",
+                    ":reviewID",
+                    "files"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Original filename (max 200 chars, no path separators)."
+                    },
+                    {
+                      "key": "category",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Optional closed banking-document category. Omit for a visible file that is not eligible for provider synchronization."
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "reviewID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "File uploaded; the review moved back to `in_review`.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"file\": {\n    \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n    \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"file_name\": \"invoice-221.pdf\",\n    \"content_type\": \"application/pdf\",\n    \"size_bytes\": 482110,\n    \"uploaded_by\": \"account\",\n    \"category\": \"proofOfAddress\",\n    \"created_at\": \"2026-08-06T15:40:00Z\"\n  },\n  \"status\": \"in_review\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download a file you uploaded",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/files/:fileID/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "txn-reviews",
+                ":reviewID",
+                "files",
+                ":fileID",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "reviewID",
+                  "value": ""
+                },
+                {
+                  "key": "fileID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Downloads a file previously uploaded by the account for this review. Returns the raw binary with the original `Content-Type`. Files from other accounts or other reviews answer `404 not_found` (never `403`, so existence is not leaked)."
+          }
+        },
+        {
+          "name": "Get account integration eligibility",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/integration-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "integration-status"
+              ]
+            },
+            "description": "Returns the current eligibility for account-level API keys and webhooks. Companies require an active account with approved KYB. Persons require an active account, approved KYC and an effective administrator grant. The response never exposes the administrator's internal grant reason."
+          },
+          "response": [
+            {
+              "name": "200 Eligibility decision.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/integration-status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "integration-status"
+                  ]
+                }
+              },
+              "status": "Eligibility decision.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"eligible\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "Contracts",
       "item": [
@@ -6948,1761 +8767,6 @@
                 }
               ],
               "body": "{\n  \"paid\": true,\n  \"status\": \"paid\",\n  \"status_message\": \"approved\"\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Account",
-      "item": [
-        {
-          "name": "Get the platform branding",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/branding",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "branding"
-              ]
-            },
-            "description": "Effective branding of the platform you operate on (name, colors, logos in base64) so a white-label front end can theme itself from the API instead of hardcoding assets. `logo_url`/`symbol_url` are public CDN URLs for the same logos — prefer them over the base64 payloads. Read-only, no PII. `timezone` is the IANA timezone of the organization (default `America/New_York`) — every `from`/`to` date filter and every daily bucket of the platform is interpreted in that zone."
-          },
-          "response": [
-            {
-              "name": "200 Effective branding.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/branding",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "branding"
-                  ]
-                }
-              },
-              "status": "Effective branding.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"brand_name\": \"CBPay\",\n  \"website\": \"www.cbpayapp.com\",\n  \"footer_address\": \"Miami: 25 SW 9th STREET, Suite 406, Miami, FL 33130\",\n  \"support_email\": \"\",\n  \"colors\": {\n    \"primary\": \"#FBC140\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"symbol_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/default/logo.png\",\n  \"symbol_url\": \"https://cdn.cbpayapp.com/public/branding/default/symbol.png\",\n  \"timezone\": \"America/New_York\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get my account",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me"
-              ]
-            },
-            "description": ""
-          },
-          "response": [
-            {
-              "name": "200 The calling account.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me"
-                  ]
-                }
-              },
-              "status": "The calling account.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{}"
-            }
-          ]
-        },
-        {
-          "name": "Update my profile",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me"
-              ]
-            },
-            "description": "Once your identity verification is approved, `display_name`, `tax_id` and `country` are filled from the verified identity and locked (`409 identity_locked`); `phone` stays editable with its own verification flow.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"+56987654321\",\n  \"locale\": \"en\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Updated account.",
-              "originalRequest": {
-                "method": "PATCH",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me"
-                  ]
-                }
-              },
-              "status": "Updated account.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"org_id\": \"1c9e7a2b-5f6d-4e3a-8c1b-2a9d8e7f6a5b\",\n  \"type\": \"person\",\n  \"status\": \"active\",\n  \"kyc_status\": \"approved\",\n  \"email\": \"ana@example.com\",\n  \"display_name\": \"Ana Perez\",\n  \"tax_id\": \"12345678-9\",\n  \"phone\": \"+56987654321\",\n  \"country\": \"CL\",\n  \"locale\": \"en\",\n  \"profile\": {},\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-07-07T12:00:00Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "List members",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/members",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "members"
-              ]
-            },
-            "description": "Login members of the calling account (company accounts)."
-          },
-          "response": [
-            {
-              "name": "200 Members.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/members",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "members"
-                  ]
-                }
-              },
-              "status": "Members.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"members\": [\n    {\n      \"id\": \"5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d\",\n      \"email\": \"ops@example.com\",\n      \"role\": \"operator\",\n      \"status\": \"active\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Add a member",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/members",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "members"
-              ]
-            },
-            "description": "Adds a login member. Only available for company accounts.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"ops@example.com\",\n  \"password\": \"another-secure-pass\",\n  \"role\": \"operator\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "201 Member created.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/members",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "members"
-                  ]
-                }
-              },
-              "status": "Member created.",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"id\": \"5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Create an API key",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/api-keys",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "api-keys"
-              ]
-            },
-            "description": "Issues a server-to-server API key bound to the calling account. The\nplaintext token (`pk_...`) is returned exactly once and cannot be\nretrieved again.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"label\": \"production-backend\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "201 Key issued.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/api-keys",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "api-keys"
-                  ]
-                }
-              },
-              "status": "Key issued.",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"api_key_id\": \"7f6e5d4c-3b2a-1908-a7b6-c5d4e3f2a1b0\",\n  \"key_id\": \"a1b2c3d4e5f60718\",\n  \"token\": \"pk_a1b2c3d4e5f60718.k9J2mX4pQ7wR5tY8uZ0aB3cD6eF1gH2i\",\n  \"label\": \"production-backend\",\n  \"note\": \"store this token now; it cannot be retrieved again\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Enabled services",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/services",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "services"
-              ]
-            },
-            "description": "Effective map of which products this account can use right now (payouts, payins, transfers, crypto, banking, kyc, cards). When a service is disabled, its action endpoints answer 403 service_disabled; reads and money already in flight are never affected. Use it to decide what to show in your UI."
-          },
-          "response": [
-            {
-              "name": "200 Effective services map.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/services",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "services"
-                  ]
-                }
-              },
-              "status": "Effective services map.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"services\": {\n    \"payouts\": true,\n    \"payins\": true,\n    \"transfers\": true,\n    \"crypto\": true,\n    \"banking\": true,\n    \"kyc\": true,\n    \"cards\": false\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get my settlement settings",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/settlement",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "settlement"
-              ]
-            },
-            "description": "Returns which virtual balance your operations (payouts and service fees) debit from by default, the balance your payins settle into by default (`default_payin_asset`), which assets your organization allows, and the per-operation limit (USDT equivalent) applied to volatile assets (BTC/GOLD/SILVER/PLATINUM)."
-          },
-          "response": [
-            {
-              "name": "200 Current settlement settings.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/settlement",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "settlement"
-                  ]
-                }
-              },
-              "status": "Current settlement settings.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"default_settlement_asset\": \"USD\",\n  \"default_payin_asset\": \"USD\",\n  \"enabled_assets\": [\n    \"USD\",\n    \"USDT\",\n    \"USDC\",\n    \"BTC\",\n    \"GOLD\",\n    \"SILVER\",\n    \"PLATINUM\"\n  ],\n  \"volatile_op_limit_usdt\": \"10000.000000\",\n  \"volatile_daily_limit_usdt\": \"50000.000000\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Set my default balances (payouts and payins)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/settlement",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "settlement"
-              ]
-            },
-            "description": "Changes your default balances. `default_settlement_asset` is the balance your payouts and service fees debit from when a request does not send an explicit `settlement_asset`. `default_payin_asset` is the balance your payins settle into — with `USD` (the default for new accounts) the net is credited directly in USD cents; with any other target the net amount is auto-converted through the swap engine at the real price, with no extra swap spread (the payin already paid its fee and rate; checkout and POS payins keep their per-link asset). Any of USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM (if enabled for your organization). Send one or both fields. The change applies to new operations only; nothing in flight is re-quoted.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"default_settlement_asset\": \"BTC\",\n  \"default_payin_asset\": \"USDC\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Updated settlement settings.",
-              "originalRequest": {
-                "method": "PUT",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/settlement",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "settlement"
-                  ]
-                }
-              },
-              "status": "Updated settlement settings.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"default_settlement_asset\": \"BTC\",\n  \"default_payin_asset\": \"USDC\",\n  \"enabled_assets\": [\n    \"USD\",\n    \"USDT\",\n    \"USDC\",\n    \"BTC\",\n    \"GOLD\",\n    \"SILVER\",\n    \"PLATINUM\"\n  ],\n  \"volatile_op_limit_usdt\": \"10000.000000\",\n  \"volatile_daily_limit_usdt\": \"50000.000000\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Change my password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-OTP-Token",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "password"
-              ]
-            },
-            "description": "Changes the calling member's password. Requires the current password (members created via social login without a password set their first one here, leaving `current_password` empty) and, when the OTP policy requires it, an `X-OTP-Token` for the `password_change` action. All other sessions are revoked and a fresh session is returned.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"current_password\": \"old-pass\",\n  \"new_password\": \"my-new-strong-pass\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Password changed; previous sessions revoked; new session ret",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/password",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "password"
-                  ]
-                }
-              },
-              "status": "Password changed; previous sessions revoked; new session ret",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"password_changed\",\n  \"access_token\": \"eyJ…\",\n  \"expires_at\": \"2026-07-12T00:00:00Z\",\n  \"refresh_token\": \"rt_6a1e6c22-….XXXX…\",\n  \"refresh_expires_at\": \"2026-08-10T00:00:00Z\",\n  \"note\": \"all previous sessions were revoked\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Change my login email",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-OTP-Token",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/email/change",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "email",
-                "change"
-              ]
-            },
-            "description": "Starts a login-email change. A verification code is sent to the NEW email; confirm with `POST /v1/me/email/confirm`. When the OTP policy requires it, an `X-OTP-Token` for the `email_change` action is also required. Verifying the new email is mandatory — it prevents an attacker from pointing the login at a mailbox they do not control.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"new_email\": \"taylor.new@example.com\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Code sent to the new email.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/email/change",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "email",
-                    "change"
-                  ]
-                }
-              },
-              "status": "Code sent to the new email.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"code_sent\",\n  \"email\": \"t***@***.com\",\n  \"expires_at\": \"2026-07-11T00:30:00Z\",\n  \"note\": \"confirm the change with POST /v1/me/email/confirm using the code sent to the new email\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Verify my current email",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/email/verify",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "email",
-                "verify"
-              ]
-            },
-            "description": "Sends a code to the member's CURRENT email to mark it verified (required to use the email OTP channel for money actions). Confirm with `POST /v1/me/email/confirm`."
-          },
-          "response": [
-            {
-              "name": "200 Code sent (or already verified).",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/email/verify",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "email",
-                    "verify"
-                  ]
-                }
-              },
-              "status": "Code sent (or already verified).",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"code_sent\",\n  \"email\": \"t***@***.com\",\n  \"note\": \"confirm with POST /v1/me/email/confirm using the code sent to your email\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Confirm an email change or verification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/email/confirm",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "email",
-                "confirm"
-              ]
-            },
-            "description": "Confirms a pending email change (or verification) with the code received. On a change, the login email — and, for owners, the account contact email — are updated and the old email is notified.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"123456\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Email confirmed.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/email/confirm",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "email",
-                    "confirm"
-                  ]
-                }
-              },
-              "status": "Email confirmed.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"email_confirmed\",\n  \"email\": \"taylor.new@example.com\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Lift the phone binding cooldown early with an independent factor",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "X-OTP-Token",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/phone/unlock-cooldown",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "phone",
-                "unlock-cooldown"
-              ]
-            },
-            "description": "Clears the self-service phone binding cooldown (4 hours) before it expires, once the holder proves an independent factor: a `phone_change` challenge verified with the authenticator app or the verified email, sent in the `X-OTP-Token` header. A code sent to the new number never unlocks it. Without a lock, returns `not_locked` without requiring a token."
-          },
-          "response": [
-            {
-              "name": "200 Cooldown unlocked (or not locked).",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/phone/unlock-cooldown",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "phone",
-                    "unlock-cooldown"
-                  ]
-                }
-              },
-              "status": "Cooldown unlocked (or not locked).",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"unlocked\",\n  \"channel\": \"email\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Set the profile alias derived from the verified name — derived_confirmation",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/alias",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "alias"
-              ]
-            },
-            "description": "Sets the account's permanent public alias once. The alias is derived from the account's verified KYC/KYB display name; it is not freely chosen. The request body is optional. If `alias` is supplied, it must equal one of the candidates derived from that verified name. Once set, the alias cannot be changed.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"alias\": \"taylor.code\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Alias set permanently.",
-              "originalRequest": {
-                "method": "PUT",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/alias",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "alias"
-                  ]
-                }
-              },
-              "status": "Alias set permanently.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"alias\": \"taylor.code\",\n  \"note\": \"the alias is permanent and is derived from the verified name\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Set the profile alias derived from the verified name — empty_body",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/alias",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "alias"
-              ]
-            },
-            "description": "Sets the account's permanent public alias once. The alias is derived from the account's verified KYC/KYB display name; it is not freely chosen. The request body is optional. If `alias` is supplied, it must equal one of the candidates derived from that verified name. Once set, the alias cannot be changed.",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Alias set permanently.",
-              "originalRequest": {
-                "method": "PUT",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/alias",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "alias"
-                  ]
-                }
-              },
-              "status": "Alias set permanently.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"alias\": \"taylor.code\",\n  \"note\": \"the alias is permanent and is derived from the verified name\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "My profile QR code",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/qr",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "qr"
-              ]
-            },
-            "description": "Returns the account's immutable QR token, its payload URI (`cbpay:pay?to=<token>`) and a ready-to-render PNG. The QR only lets others SEND money to you; it never changes."
-          },
-          "response": [
-            {
-              "name": "200 QR token, payload and PNG.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/qr",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "qr"
-                  ]
-                }
-              },
-              "status": "QR token, payload and PNG.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"qr_token\": \"9f8c7b6a5d4e3f2a1b0c9d8e7f6a5b4c\",\n  \"payload\": \"cbpay:pay?to=9f8c7b6a5d4e3f2a1b0c9d8e7f6a5b4c\",\n  \"png_base64\": \"iVBORw0KGgo…\",\n  \"alias\": \"taylor.code\",\n  \"note\": \"the QR identifies your account to RECEIVE transfers; it never changes\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Upload my profile photo",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/avatar",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "avatar"
-              ]
-            },
-            "description": "Uploads (or replaces) the account avatar. Body is the raw image bytes (JPEG, PNG or WebP), max 512 KB. The content type is detected from the file's magic bytes, never the header. When the image is published to the public CDN, `avatar_url` is an absolute URL that loads without authentication; otherwise it is the authenticated API path."
-          },
-          "response": [
-            {
-              "name": "200 Avatar updated.",
-              "originalRequest": {
-                "method": "PUT",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/avatar",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "avatar"
-                  ]
-                }
-              },
-              "status": "Avatar updated.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"avatar_updated\",\n  \"content_type\": \"image/png\",\n  \"size_bytes\": 20481,\n  \"avatar_url\": \"https://cdn.cbpayapp.com/public/avatars/1fa63bd1-0000-4000-8000-000000000001/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Delete my profile photo",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/avatar",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "avatar"
-              ]
-            },
-            "description": ""
-          },
-          "response": [
-            {
-              "name": "200 Avatar deleted.",
-              "originalRequest": {
-                "method": "DELETE",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/avatar",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "avatar"
-                  ]
-                }
-              },
-              "status": "Avatar deleted.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"avatar_deleted\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get an account's avatar",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/avatars/:accountID",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "avatars",
-                ":accountID"
-              ],
-              "variable": [
-                {
-                  "key": "accountID",
-                  "value": ""
-                }
-              ]
-            },
-            "description": "Serves the avatar image of an account in the same organization (used for the recipient preview in transfers and contacts). Avatars published to the public CDN answer with a `302` redirect to the CDN URL; previously uploaded avatars are served directly."
-          }
-        },
-        {
-          "name": "Resolve a recipient by alias or QR",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/resolve",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "resolve"
-              ],
-              "query": [
-                {
-                  "key": "alias",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                },
-                {
-                  "key": "qr",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                }
-              ]
-            },
-            "description": "Returns a minimal preview (alias, display name, type, avatar) of an account in the same organization, to confirm before sending. Provide `alias` or `qr` (the raw token or the full `cbpay:pay?to=…` payload). Returns a uniform 404 and is rate-limited to prevent enumeration."
-          },
-          "response": [
-            {
-              "name": "200 Recipient preview.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/resolve",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "resolve"
-                  ],
-                  "query": [
-                    {
-                      "key": "alias",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    },
-                    {
-                      "key": "qr",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    }
-                  ]
-                }
-              },
-              "status": "Recipient preview.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"display_name\": \"Taylor Code\",\n  \"type\": \"person\",\n  \"alias\": \"taylor.code\",\n  \"avatar_url\": \"https://cdn.cbpayapp.com/public/avatars/1fa63bd1-0000-4000-8000-000000000001/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "List my active sessions",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/sessions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "sessions"
-              ]
-            },
-            "description": "Lists the member's sessions (devices) with IP, user agent, login method and whether each is the current one."
-          },
-          "response": [
-            {
-              "name": "200 The member's sessions.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/sessions",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "sessions"
-                  ]
-                }
-              },
-              "status": "The member's sessions.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"sessions\": [\n    {\n      \"session_id\": \"8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"created_at\": \"2026-07-11T00:00:00Z\",\n      \"expires_at\": \"2026-07-12T00:00:00Z\",\n      \"login_method\": \"password\",\n      \"current\": true,\n      \"active\": true,\n      \"ip\": \"200.1.2.3\",\n      \"user_agent\": \"Mozilla/5.0\"\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Revoke one of my sessions",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/sessions/:sessionID",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "sessions",
-                ":sessionID"
-              ],
-              "variable": [
-                {
-                  "key": "sessionID",
-                  "value": ""
-                }
-              ]
-            },
-            "description": "Signs out a specific device."
-          },
-          "response": [
-            {
-              "name": "200 Session revoked.",
-              "originalRequest": {
-                "method": "DELETE",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/sessions/:sessionID",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "sessions",
-                    ":sessionID"
-                  ],
-                  "variable": [
-                    {
-                      "key": "sessionID",
-                      "value": ""
-                    }
-                  ]
-                }
-              },
-              "status": "Session revoked.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"session_id\": \"8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"status\": \"revoked\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Revoke all my other sessions",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/sessions/revoke-all",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "sessions",
-                "revoke-all"
-              ]
-            },
-            "description": "Signs out every session except the current one."
-          },
-          "response": [
-            {
-              "name": "200 Other sessions revoked.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/sessions/revoke-all",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "sessions",
-                    "revoke-all"
-                  ]
-                }
-              },
-              "status": "Other sessions revoked.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"status\": \"revoked\",\n  \"sessions_revoked\": 3\n}"
-            }
-          ]
-        },
-        {
-          "name": "My security activity",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/security/events",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "security",
-                "events"
-              ],
-              "query": [
-                {
-                  "key": "from",
-                  "value": "",
-                  "disabled": false,
-                  "description": ""
-                },
-                {
-                  "key": "to",
-                  "value": "",
-                  "disabled": false,
-                  "description": ""
-                },
-                {
-                  "key": "page",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                },
-                {
-                  "key": "page_size",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                }
-              ]
-            },
-            "description": "Append-only history of security events for the account (logins, credential changes, factors added/removed). Requires `from`/`to` date filters."
-          },
-          "response": [
-            {
-              "name": "200 Security events.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/security/events",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "security",
-                    "events"
-                  ],
-                  "query": [
-                    {
-                      "key": "from",
-                      "value": "",
-                      "disabled": false,
-                      "description": ""
-                    },
-                    {
-                      "key": "to",
-                      "value": "",
-                      "disabled": false,
-                      "description": ""
-                    },
-                    {
-                      "key": "page",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    },
-                    {
-                      "key": "page_size",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    }
-                  ]
-                }
-              },
-              "status": "Security events.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"events\": [\n    {\n      \"event_id\": \"a1b2c3d4-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"member_id\": \"1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"event\": \"password_changed\",\n      \"created_at\": \"2026-07-11T00:00:00Z\",\n      \"ip\": \"200.1.2.3\"\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "List my transaction reviews",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/txn-reviews",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "txn-reviews"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "",
-                  "disabled": true,
-                  "description": "`in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`)."
-                },
-                {
-                  "key": "from",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                },
-                {
-                  "key": "to",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                },
-                {
-                  "key": "page",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                },
-                {
-                  "key": "page_size",
-                  "value": "",
-                  "disabled": true,
-                  "description": ""
-                }
-              ]
-            },
-            "description": "Money operations of the account held by the transactional firewall (payouts, crypto withdrawals, payins, banking transfers) with their review status. Filter by `status` and date range (`from`/`to`, organization timezone, both inclusive). When a review moves to `info_requested`, upload the requested documents with `POST /v1/me/txn-reviews/{reviewID}/files` — the operation stays held until the compliance team decides."
-          },
-          "response": [
-            {
-              "name": "200 List my transaction reviews.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/txn-reviews",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "txn-reviews"
-                  ],
-                  "query": [
-                    {
-                      "key": "status",
-                      "value": "",
-                      "disabled": true,
-                      "description": "`in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`)."
-                    },
-                    {
-                      "key": "from",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    },
-                    {
-                      "key": "to",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    },
-                    {
-                      "key": "page",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    },
-                    {
-                      "key": "page_size",
-                      "value": "",
-                      "disabled": true,
-                      "description": ""
-                    }
-                  ]
-                }
-              },
-              "status": "List my transaction reviews.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"reviews\": [\n    {\n      \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n      \"kind\": \"payout\",\n      \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n      \"status\": \"info_requested\",\n      \"amount_label\": \"1500.00\",\n      \"asset\": \"USD\",\n      \"country\": \"MX\",\n      \"method\": \"spei\",\n      \"counterparty\": \"Juan Pérez\",\n      \"info_request\": {\n        \"message\": \"Please upload the invoice that justifies this payment\",\n        \"requested_at\": \"2026-08-06T15:20:00Z\"\n      },\n      \"created_at\": \"2026-08-06T14:32:00Z\",\n      \"updated_at\": \"2026-08-06T15:20:00Z\"\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 1\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get a review",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "txn-reviews",
-                ":reviewID"
-              ],
-              "variable": [
-                {
-                  "key": "reviewID",
-                  "value": ""
-                }
-              ]
-            },
-            "description": "Detail of one review of the account, with the information request message (`info_request`) and the files already uploaded. The internal hold reason and compliance notes are never exposed (anti tipping-off). A rejected review also includes `decision_note` (the same text as the rejection email) and `decided_at`."
-          },
-          "response": [
-            {
-              "name": "200 The review with its uploaded files.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "txn-reviews",
-                    ":reviewID"
-                  ],
-                  "variable": [
-                    {
-                      "key": "reviewID",
-                      "value": ""
-                    }
-                  ]
-                }
-              },
-              "status": "The review with its uploaded files.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"review\": {\n    \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"kind\": \"payout\",\n    \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n    \"status\": \"info_requested\",\n    \"amount_label\": \"1500.00\",\n    \"asset\": \"USD\",\n    \"country\": \"MX\",\n    \"method\": \"spei\",\n    \"counterparty\": \"Juan Pérez\",\n    \"info_request\": {\n      \"message\": \"Please upload the invoice that justifies this payment\",\n      \"requested_at\": \"2026-08-06T15:20:00Z\"\n    },\n    \"files\": [\n      {\n        \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n        \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n        \"file_name\": \"invoice-221.pdf\",\n        \"content_type\": \"application/pdf\",\n        \"size_bytes\": 482110,\n        \"uploaded_by\": \"account\",\n        \"category\": \"proofOfAddress\",\n        \"created_at\": \"2026-08-06T15:40:00Z\"\n      }\n    ],\n    \"created_at\": \"2026-08-06T14:32:00Z\",\n    \"updated_at\": \"2026-08-06T15:40:00Z\"\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Upload a file for an information request",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/files",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "txn-reviews",
-                ":reviewID",
-                "files"
-              ],
-              "query": [
-                {
-                  "key": "name",
-                  "value": "",
-                  "disabled": false,
-                  "description": "Original filename (max 200 chars, no path separators)."
-                },
-                {
-                  "key": "category",
-                  "value": "",
-                  "disabled": true,
-                  "description": "Optional closed banking-document category. Omit for a visible file that is not eligible for provider synchronization."
-                }
-              ],
-              "variable": [
-                {
-                  "key": "reviewID",
-                  "value": ""
-                }
-              ]
-            },
-            "description": "Uploads a supporting document for a review in `info_requested`. Send the raw binary body with its `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) or XLS(X), up to 50 MB) and the filename in the `name` query param. Uploading a file moves the review back to `in_review` so the compliance team re-evaluates it.\nThe optional `category` query parameter uses a closed banking-document vocabulary. Omitting it keeps the file visible in the review but it is not eligible for banking-provider synchronization. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`."
-          },
-          "response": [
-            {
-              "name": "201 File uploaded; the review moved back to `in_review`.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/files",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "me",
-                    "txn-reviews",
-                    ":reviewID",
-                    "files"
-                  ],
-                  "query": [
-                    {
-                      "key": "name",
-                      "value": "",
-                      "disabled": false,
-                      "description": "Original filename (max 200 chars, no path separators)."
-                    },
-                    {
-                      "key": "category",
-                      "value": "",
-                      "disabled": true,
-                      "description": "Optional closed banking-document category. Omit for a visible file that is not eligible for provider synchronization."
-                    }
-                  ],
-                  "variable": [
-                    {
-                      "key": "reviewID",
-                      "value": ""
-                    }
-                  ]
-                }
-              },
-              "status": "File uploaded; the review moved back to `in_review`.",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"file\": {\n    \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n    \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"file_name\": \"invoice-221.pdf\",\n    \"content_type\": \"application/pdf\",\n    \"size_bytes\": 482110,\n    \"uploaded_by\": \"account\",\n    \"category\": \"proofOfAddress\",\n    \"created_at\": \"2026-08-06T15:40:00Z\"\n  },\n  \"status\": \"in_review\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Download a file you uploaded",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/files/:fileID/download",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "me",
-                "txn-reviews",
-                ":reviewID",
-                "files",
-                ":fileID",
-                "download"
-              ],
-              "variable": [
-                {
-                  "key": "reviewID",
-                  "value": ""
-                },
-                {
-                  "key": "fileID",
-                  "value": ""
-                }
-              ]
-            },
-            "description": "Downloads a file previously uploaded by the account for this review. Returns the raw binary with the original `Content-Type`. Files from other accounts or other reviews answer `404 not_found` (never `403`, so existence is not leaked)."
-          }
-        },
-        {
-          "name": "Get account integration eligibility",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/integration-status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "integration-status"
-              ]
-            },
-            "description": "Returns the current eligibility for account-level API keys and webhooks. Companies require an active account with approved KYB. Persons require an active account, approved KYC and an effective administrator grant. The response never exposes the administrator's internal grant reason."
-          },
-          "response": [
-            {
-              "name": "200 Eligibility decision.",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/integration-status",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "integration-status"
-                  ]
-                }
-              },
-              "status": "Eligibility decision.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"eligible\": true\n}"
             }
           ]
         }

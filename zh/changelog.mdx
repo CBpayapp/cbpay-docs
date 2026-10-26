@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年10月25日" description="v2.190 · 2 个版本">
+<Update label="2026年10月25日" description="v2.191 · 3 个版本">
+### v2.191
+**新增**
+- 新增 `GET /v1/me/search`，可在账户范围内搜索操作、账本分录和已保存联系人。支持 ID、精确数值金额、姓名/电子邮件、部分参考号、交易哈希和幂等键；结果包含 `matched_by`、`matched_value` 以及按类型提供的详细信息。绝不会返回账户记录或其他账户的数据。
+
 ### v2.190
 **变更**
 - 信任中心签署现将信封送入合规审核而非直接开放下载：签署响应与状态查询携带 `review_status`（`pending`/`approved`/`rejected`），`documents` 仅在释放后列出授予清单，未释放信封的下载返回 `409 review_pending`。释放（含授予清单）、拒绝（含理由）与撤销均会邮件通知客户。
