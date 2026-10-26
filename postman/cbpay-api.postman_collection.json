@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-25 23:27 UTC",
-    "_content_sha256": "59f076f5198c3bd95d796314e5d5fdd9b251288de5867fdfe66947d307e2529d"
+    "_generated_at": "2026-10-26 01:41 UTC",
+    "_content_sha256": "6a98f3c0679d8369894485f2e8d4bf298f17a23a4e744b17b16fddda3f3cfe90"
   },
   "auth": {
     "type": "bearer",
@@ -50,7 +50,7 @@
                   "key": "q",
                   "value": "",
                   "disabled": false,
-                  "description": "Search text, exact operation ID, amount, email/name, partial reference, transaction hash or idempotency key."
+                  "description": "Search text, exact operation ID, amount, email/name, partial reference, transaction hash or idempotency key. Amount queries match the exact numeric value stored: fiat `local_amount` is stored as a decimal, while USDT/USDC/BTC `NUMERIC(38,0)` columns use minor/base units."
                 }
               ]
             },
@@ -76,7 +76,7 @@
                       "key": "q",
                       "value": "",
                       "disabled": false,
-                      "description": "Search text, exact operation ID, amount, email/name, partial reference, transaction hash or idempotency key."
+                      "description": "Search text, exact operation ID, amount, email/name, partial reference, transaction hash or idempotency key. Amount queries match the exact numeric value stored: fiat `local_amount` is stored as a decimal, while USDT/USDC/BTC `NUMERIC(38,0)` columns use minor/base units."
                     }
                   ]
                 }
