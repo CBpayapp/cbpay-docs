@@ -23,7 +23,7 @@ choose** (`settlement_asset`: `USD`, `USDT`, `USDC`, `BTC`, `GOLD`,
 `USD` is the principal balance) and every payment is converted **automatically** to
 that balance
 when it credits — unless the payer pays in the same asset, in which case
-  there is no conversion. Local fiat (`BOB`, `MXN`, `ARS`, `CLP`) is rejected here.
+there is no conversion. Local fiat (`BOB`, `MXN`, `ARS`) is rejected here.
 
 The page organizes the payment into **four tabs**:
 
@@ -326,7 +326,7 @@ In-flight operations are never re-quoted.
 USD ledger amounts use cents (two decimal places). Direct credits and debits,
 fees, and supported payout, checkout, POS, and card paths use USD only where
 their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
-do not use an FX oracle. BOB, MXN, ARS, CLP remain separate fiat-ledger
+do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
 assets; v1 money-out pricing for those assets remains unavailable.
 
 A payin credited directly to a USD-principal account exposes

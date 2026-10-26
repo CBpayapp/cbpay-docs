@@ -12,12 +12,12 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 对于本地法币走廊，请创建带有 `purpose: "banking"` 的充值目的地。
 该目的会保留本地法币，用于法币付款。默认的 `fondeo` 目的会把入账
 法币转换为您账户的主资产(USD 为主资产)。Banking 目前仅支持
-`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和
-`CL/CLP/fintoc`。
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和
+`AR/ARS/bank_transfer`。
 
 ## 两类本地法币目的地
 
-对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`、`CL/CLP/fintoc`），每个 payin 目的地都带有
+对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`），每个 payin 目的地都带有
 `purpose`，决定入账资金的去向：
 
 | Purpose | 含义 |
@@ -27,10 +27,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 
 请创建第二个 `purpose: "banking"` 的目的地来持有本地法币用于付款；未指定
 目的地的目的地保留历史 `fondeo` 行为。Banking 目的仅支持
-`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和
-`CL/CLP/fintoc`。在 CL/CLP/fintoc 中，Banking 接收、保留并展示派生的
-CLP 余额和流水，但不发起 payout：CL payout 始终从 root 账户发送，不存在
-需要豁免的物理 sweep。
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和 `AR/ARS/bank_transfer`。
 
 | 概念 | 存放位置 | 查询方式 |
 |---|---|---|
@@ -79,16 +76,11 @@ SWIFT 约需 24–48 个工作小时，且可能因收款银行而延长。**这
 ## 企业多银行：运营账户
 
 企业账户可以在启用的本地通道中创建多个 `purpose: "banking"` 充值
-账户：`BO/BOB`、`MX/MXN`、`AR/ARS`（`method` 为 `bank_transfer`）以及
-`CL/CLP/fintoc`。每个目的地使用不同的 `Idempotency-Key`；重复使用会
+账户：`BO/BOB`、`MX/MXN` 和 `AR/ARS`，且 `method` 必须为
+`bank_transfer`。每个目的地使用不同的 `Idempotency-Key`；重复使用会
 返回原账户，不会再次开户。每个企业账户和通道最多保留 **50 个 banking
 工具**（超过时返回 `422 deposit_account_limit_reached`）。个人账户仍
-然每个通道只有一个 banking 工具，并可在 `CL/CLP/fintoc` 创建第二个
-Banking 虚拟槽位。
-
-在 `CL/CLP/fintoc` 中，Banking 目的地接收、保留并展示派生的 CLP 余额
-和流水，但不发起 payout：CL payout 始终从 root 账户发送，不存在需要豁免
-的物理 sweep。
+然每个通道只有一个 banking 工具。
 
 ```mermaid
 sequenceDiagram

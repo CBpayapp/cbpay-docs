@@ -13,11 +13,11 @@ depending on the currency), hold fiat balances and send payments to third
 parties. It is a separate product from your CBPay balances: **banking money
 lives in your bank accounts**, not in your USDT or USD balance.
 
-For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD is the principal balance). Banking supports `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer`, and `CL/CLP/fintoc`.
+For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD is the principal balance). Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
 
 ## Two kinds of local-fiat destinations
 
-For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`, `CL/CLP/fintoc`), every payin
+For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`), every payin
 destination carries a `purpose` that decides where inbound money lands:
 
 | Purpose | Meaning |
@@ -27,11 +27,8 @@ destination carries a `purpose` that decides where inbound money lands:
 
 Create a second destination with `purpose: "banking"` to hold local fiat for
 payouts; destinations created without a purpose keep the historical `fondeo`
-behavior. Banking purpose is supported in `BO/BOB/bank_transfer`,
-`MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` and `CL/CLP/fintoc`. For
-CL/CLP/fintoc, Banking receives, retains and exposes derived CLP balance and
-movements; it does not originate payouts. CL payouts always send from the root
-account, and no physical sweep-exempt flag applies.
+behavior. Banking purpose is only supported in `BO/BOB/bank_transfer`,
+`MX/MXN/bank_transfer` and `AR/ARS/bank_transfer`.
 
 | Concept | Where it lives | Queried with |
 |---|---|---|
@@ -85,12 +82,15 @@ Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/pay
 asset (USD is the principal balance); `banking` retains ARS for local
 payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
 
-### 🇨🇱 CLP — Chilean peso
-
-Receive CLP through the dedicated `CL/CLP/fintoc` deposit account. With `purpose: "banking"`, it retains inbound CLP and exposes derived balance/movements; it only receives and holds, while CL payouts originate from root.
 ## Company multi-banking: operating accounts
 
-Company accounts can create multiple `purpose: "banking"` destinations in `BO/BOB`, `MX/MXN`, `AR/ARS` (`bank_transfer`) and `CL/CLP/fintoc`; use a distinct `Idempotency-Key` per destination. Replay returns the same instrument. The soft limit is **50 per company and corridor** (`422 deposit_account_limit_reached`); persons retain one per corridor and can create the second virtual Banking slot in `CL/CLP/fintoc`.
+Company accounts can create multiple `purpose: "banking"` deposit accounts
+in each enabled local corridor: `BO/BOB`, `MX/MXN`, and `AR/ARS`, always with
+`method: "bank_transfer"`. Send a distinct `Idempotency-Key` for each
+destination; reusing it returns the same instrument and never provisions a
+second bank account. The soft operational limit is **50 banking instruments
+per company account and corridor** (`422 deposit_account_limit_reached`).
+Person accounts retain one banking instrument per corridor.
 
 ```mermaid
 sequenceDiagram

@@ -12,10 +12,6 @@ source_url: https://docs.cbpayapp.com/zh/guides/analytics
 （国家、货币、方式、状态、链、商户）的明细、您在服务上的支出以及
 按美元估值的余额。
 
-CLP 账本余额和交易量以整数比索显示。USD 估值使用组织 feed；没有有效
-CLP 价格时，资产仍出现在 `unpriced_assets`，但不会计入 USD 总额。
-平台不会猜测 FX 汇率。
-
 ```mermaid
 flowchart LR
     front["您的仪表板"] --> ep["GET /v1/analytics/summary"]
@@ -320,7 +316,7 @@ curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-
 - `assets` 还包含银行账户镜像（`BANK_USD`、`BANK_EUR`），以其自身
   货币（2 位小数）作为独立序列提供——适合在图表上做"Bank USD"/
   "Bank EUR"筛选项。它们**不**计入 `total_usd` 聚合，该聚合仅覆盖
-  十一种账本余额。
+  十种账本余额。
 - `total_usd` 按**每一天的历史价格**为 BTC/GOLD/SILVER/PLATINUM 估值。若某天尚无
   历史价格，则使用今日现货价格，并在 `spot_priced_dates` 中披露
   该日期（绝不虚构数值）。

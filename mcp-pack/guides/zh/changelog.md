@@ -5,7 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.191 · 3 个版本 - 2026年10月25日
+## v2.192 · 4 个版本 - 2026年10月25日
+### v2.192
+**变更**
+- 托管 KYB 链接现在覆盖专用 `uk`、`es` 和 `vg` profile。未知国家使用带该 ISO 国家值的通用 profile；`country: generic` 必须提供 `generic_country`。现已记录原生 KYC/KYB submission 所需的完整身份和企业字段。
+
 ### v2.191
 **新增**
 - 新增 `GET /v1/me/search`，可在账户范围内搜索操作、账本分录和已保存联系人。支持 ID、精确数值金额、姓名/电子邮件、部分参考号、交易哈希和幂等键；结果包含 `matched_by`、`matched_value` 以及按类型提供的详细信息。绝不会返回账户记录或其他账户的数据。

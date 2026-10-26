@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.191"
+  version: "2.192"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -8493,7 +8493,7 @@ paths:
       operationId: createKybLink
       summary: 为客户创建 KYB 链接
       description: 仅限企业账户:为你的终端客户(企业)生成托管 KYB 链接。若配置了固定 `kyb_verification` 费用则计费(创建失败退款);必须提供 `idempotency_key`。`country`
-        决定向导通道:us、cl、ve、br、mx、co、pe、bo、py、ar 或 generic(需传 ISO alpha-2 的 `generic_country`,可选 `currency`)。
+        决定向导通道:us、cl、ve、br、mx、co、pe、bo、py、ar、uk、es、vg 或 generic(需传 ISO alpha-2 的 `generic_country`,可选 `currency`)。
       requestBody:
         required: true
         content:
@@ -8843,7 +8843,7 @@ paths:
       - KYC / KYB
       operationId: createKybSubmission
       summary: 通过 API 数据创建 KYB submission
-      description: 仅限企业账户:直接提交数据以验证你的终端客户(企业)。请求体:external_customer_id、country?、business(公司字段)、ubos?、directors?、signers?、bank_info?、metadata?。按固定
+      description: 仅限企业账户:直接提交数据以验证你的终端客户(企业)。请求体:external_customer_id、country?、business(公司字段)、ubos?、directors?、signers?、bank_info?、metadata?。KYB 必须提供完整的法定名称和注册号；KYC 必须提供姓名、出生日期、ISO alpha-3 国籍、证件和 ISO alpha-3 国家。未知 KYB 国家使用带该 ISO 国家值的通用 profile；`country=generic` 必须提供 `generic_country`。按固定
         `kyb_verification` 费用计费;必须提供 `idempotency_key`。在开放期间重新提交会更新同一份 submission 而不再次扣费。
       requestBody:
         required: true
@@ -8863,7 +8863,7 @@ paths:
                   type: string
                 business:
                   type: object
-                  description: 公司字段(法定名称、税号、地址、经营活动……)。
+                  description: 完整企业字段；KYB 必须提供 legal_name 和 registration_number。
                 ubos:
                   type: array
                   items:
@@ -24787,7 +24787,7 @@ components:
           type: string
         country:
           type: string
-          description: 仅 KYB。向导通道(us、cl、ve、br、mx、co、pe、bo、py、ar、generic)。
+          description: 仅 KYB。向导通道(us、cl、ve、br、mx、co、pe、bo、py、ar、uk、es、vg、generic)。
         generic_country:
           type: string
           description: country=generic 时的 ISO alpha-2。

@@ -8,17 +8,12 @@ source_url: https://docs.cbpayapp.com/en/guides/fiat-settlement
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Note**
-This page covers same-currency settlement for BOB, MXN, ARS and CLP. It does not
+This page covers same-currency settlement for BOB, MXN and ARS. It does not
 convert one fiat balance into another.
 Payouts can debit a local-fiat balance when the payout currency and
 `settlement_asset` are the same. The settlement rate is `"1"` and settlement
 spreads are zero. Fees configured in USDT are converted using the locked quote
 and rounded up to the smallest unit of the payout currency.
-
-CLP uses zero decimals: send whole pesos only. A CLP payout with
-`settlement_asset: "CLP"` debits the matching CLP identity balance; the CL
-payout still originates from the root account. Cross-currency CLP
-settlement fails closed with `503 pricing_unavailable`.
 
 ```mermaid
 sequenceDiagram
@@ -100,9 +95,8 @@ BOB balance:
 ```
 
 For BOB, MXN and ARS, amounts with more than two decimal places are rejected:
-`"100.001"` returns `400 invalid_amount`. CLP rejects any non-zero fractional
-digit, such as `"100.50"`, with the same code. CBPay does not silently round
-the requested local amount.
+`"100.001"` returns `400 invalid_amount`. Use the payout currency's minor
+unit; CBPay does not silently round the requested local amount.
 
 See [Errors](https://docs.cbpayapp.com/en/errors) for the public error contract.
 

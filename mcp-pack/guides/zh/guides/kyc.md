@@ -146,7 +146,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
 
 - `external_customer_id`（必填）：您对被验证客户的自有引用——会在每个 webhook 和查询中原样返回。等于 `self` 或以 `:self` 结尾的值保留给账户入驻使用，会被拒绝并返回 `400 invalid_payload`。
 - `idempotency_key`（必填）：使用相同 key 的重试会返回原始链接，**绝不会重复扣费**。
-- `country`（仅 KYB）：`us`、`cl`、`ve`、`br`、`mx`、`co`、`pe`、`bo`、`py`、`ar` 或 `generic`（配合 ISO alpha-2 的 `generic_country`，例如 `"ES"`）。个人 KYC 不需要国家。
+- `country`（仅 KYB）：`us`、`cl`、`ve`、`br`、`mx`、`co`、`pe`、`bo`、`py`、`ar`、`uk`、`es`、`vg` 或 `generic`（配合 ISO alpha-2 的 `generic_country`，例如 `"ES"`）。个人 KYC 不需要国家。
 - `expires_in_days`（可选，1–30）：省略时链接永不过期。
 
 `201` 响应：
@@ -224,7 +224,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions \
 数据模式注意事项：
 
 - 国家使用 **ISO alpha-3**（`CHL`、`USA`、`VEN`…）；日期格式 `YYYY-MM-DD`；`id_type`：`passport | id_card | drivers_license`。
-- KYB：在 `POST /v1/kyb/submissions` 上使用请求体 `{ external_customer_id, country?, business: {…}, ubos?, directors?, signers?, bank_info?, metadata? }`。
+- KYB：在 `POST /v1/kyb/submissions` 上使用请求体 `{ external_customer_id, country?, business: {…}, ubos?, directors?, signers?, bank_info?, metadata? }`。 数据模式 KYB 必须完整提供法定名称和注册号；KYC 必须提供姓名、出生日期、ISO alpha-3 国籍、证件和 ISO alpha-3 国家。未知 KYB 国家使用带该 ISO 国家值的通用 profile；`country: generic` 必须提供 `generic_country`。
 - **创建时不要求活体检测**：KYC 提交件带有 `liveness_pending: true`；通过[活体检测链接](#liveness-check-liveness-link)来完成它。
 - 在提交件处于开放状态（`pending_review`、`changes_requested`、`more_info_required`）时使用相同的 `external_customer_id` 重新发送，会**更新**同一个提交件，不会再次扣费。
 
@@ -723,7 +723,7 @@ curl "https://api.qbank.cl/platform/verify/reports/Bc3d4e5f6a7b84c9d0e1f2a3b4c5d
 | 403 | `service_disabled` | 您的账户已禁用 `kyc` 服务 | 联系您的运营方 |
 | 404 | `not_found` | 链接/提交件不存在或不属于您 | 检查 id |
 | 404 | `verification_not_found` | 在没有已登记验证的情况下请求自己的报告 | 请先完成您的入驻验证 |
-| 409 | `already_verified` / `self_verification_in_progress` | 已批准的账户又申请入驻链接，或已有验证进行中 | 无需处理，或完成该验证 |
+| 409 | `already_verified` | 已批准的账户又申请入驻链接 | 无需处理 |
 | 503 | `verifications_unavailable` | 身份验证暂时不可用 | 稍后重试 |
 
 ## 常见问题

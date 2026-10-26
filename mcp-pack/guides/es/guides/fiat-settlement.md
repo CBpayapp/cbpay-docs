@@ -8,18 +8,13 @@ source_url: https://docs.cbpayapp.com/es/guides/fiat-settlement
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Nota**
-Esta página cubre settlement en la misma moneda para BOB, MXN, ARS y CLP. No
+Esta página cubre settlement en la misma moneda para BOB, MXN y ARS. No
 convierte un saldo fiat en otra moneda fiat.
 Un payout puede debitar un saldo fiat local cuando la moneda del payout y
 `settlement_asset` son iguales. La tasa de settlement es `"1"` y los spreads
 de settlement son cero. Las comisiones configuradas en USDT se convierten con
 la cotización bloqueada y se redondean hacia arriba a la unidad mínima de la
 moneda del payout.
-
-CLP usa cero decimales: envía pesos enteros. `settlement_asset: "CLP"` debita
-el saldo CLP de identidad cuando el payout también es CLP; el payout CL se
-origina en la cuenta root. El settlement CLP cross-currency falla cerrado con
-`503 pricing_unavailable`.
 
 ```mermaid
 sequenceDiagram
@@ -101,9 +96,8 @@ debitar un saldo BOB:
 ```
 
 Para BOB, MXN y ARS, los montos con más de dos decimales responden
-`400 invalid_amount`; CLP rechaza cualquier fracción no nula, como `"100.50"`,
-con el mismo código. Usa la unidad mínima de la moneda del payout: CBPay no
-redondea silenciosamente el monto local.
+`400 invalid_amount`; por ejemplo, `"100.001"`. Usa la unidad mínima de la
+moneda del payout: CBPay no redondea silenciosamente el monto local.
 
 Consulta [Errores](https://docs.cbpayapp.com/es/errors) para el contrato público de errores.
 

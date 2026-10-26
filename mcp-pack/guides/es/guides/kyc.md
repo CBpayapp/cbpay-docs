@@ -168,7 +168,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
 - `idempotency_key` (obligatoria): un retry con la misma clave devuelve el
   link original y **nunca cobra dos veces**.
 - `country` (solo KYB): `us`, `cl`, `ve`, `br`, `mx`, `co`, `pe`, `bo`,
-  `py`, `ar` o `generic` (con `generic_country` ISO alpha-2, ej. `"ES"`).
+  `py`, `ar`, `uk`, `es`, `vg` o `generic` (con `generic_country` ISO alpha-2, ej. `"ES"`).
   El KYC individual no lleva país.
 - `expires_in_days` (opcional, 1–30): sin enviarlo, el link no vence.
 
@@ -251,7 +251,7 @@ Notas del modo datos:
   `id_type`: `passport | id_card | drivers_license`.
 - KYB: body `{ external_customer_id, country?, business: {…}, ubos?,
   directors?, signers?, bank_info?, metadata? }` en
-  `POST /v1/kyb/submissions`.
+  `POST /v1/kyb/submissions`. Además, el modo datos KYB exige nombre legal y número de registro completos; KYC exige nombres, fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Países KYB desconocidos usan el perfil genérico con ese ISO; `country: generic` exige `generic_country`.
 - **No se exige prueba de vida al crear**: la submission KYC queda con
   `liveness_pending: true` y la cierras con un [liveness
   link](#prueba-de-vida-liveness-link).
@@ -819,7 +819,7 @@ submission abierta y liveness links no cobran de nuevo.
 | 403 | `service_disabled` | El servicio `kyc` está deshabilitado para tu cuenta | Contacta a tu operador |
 | 404 | `not_found` | El link/submission no existe o no es tuyo | Verifica el id |
 | 404 | `verification_not_found` | Pediste tu informe self sin una verificación registrada | Completa tu onboarding primero |
-| 409 | `already_verified` / `self_verification_in_progress` | Pediste link de onboarding con la cuenta ya aprobada, o con una verificación ya en curso | Nada que hacer, o completa esa verificación |
+| 409 | `already_verified` | Pediste link de onboarding con la cuenta ya aprobada | Nada que hacer |
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible | Reintenta más tarde |
 
 ## Preguntas frecuentes

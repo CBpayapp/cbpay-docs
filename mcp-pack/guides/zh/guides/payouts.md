@@ -764,13 +764,12 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 #### 厄瓜多尔
 
-以 **USD** 汇出汇款（每笔 1 至 10,000，最多 2 位小数）；对于
-`EC/USD/bank_transfer`，低于 USD 1 返回 `amount_below_minimum`，高于
-USD 10,000 返回 `amount_above_maximum`，更大金额应拆分为多笔 payout；支持四种方式：
+以 **USD** 汇出汇款（每笔 1 至 10,000，最多 2 位小数），支持四种方式：
 银行转账、**DE UNA** 钱包（按手机号）、**柜台取现**（`cash_pickup`）和
 **非银行代理点取现**（`cnb`）。这是一个汇款通道：除收款人外，通道还
 要求提供**汇款人**（付款发起方）的信息，以 `sender_*` 前缀平铺在同一个
 `beneficiary` 对象中。
+
 ```bash bank_transfer（到账户）
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
   -H "Authorization: Bearer <token>" \
@@ -866,11 +865,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - 厄瓜多尔为美元化经济体：当地货币就是美元（`fx_rate: "1"`）。
 - `document_value` 为收款人的身份证号（cédula）；`document_type` 接受
   `IDCD`（身份证，默认）、`CCPT`（护照）或 `TXID`（RUC）。
-- 在 `bank_transfer` 中，省略 `bank_code` 表示账户属于通道的发卡银行；转到
-  **其他银行**时需发送目录中的 `bank_code`（`GET /v1/payouts/banks?country=EC`）
-  以及 `account_type`（`checking` 或 `savings`）。
-- 收款人资料不完整时，在创建或扣款前返回 `invalid_beneficiary`，并由
-  `message` 指出具体字段。
+- 在 `bank_transfer` 中，省略 `bank_code` 表示账户属于通道的发卡银行；
+  转到**其他银行**时需发送目录中的 `bank_code`
+  （`GET /v1/payouts/banks?country=EC`）以及 `account_type`
+  （`checking` 或 `savings`）。
 - 可选的结构化姓名字段（`given_name`、`middle_name`、`first_surname`、
   `second_surname` 及其 `sender_*` 对应字段）：如有请发送 —— 它们优先
   于对 `name` 的自动拆分。

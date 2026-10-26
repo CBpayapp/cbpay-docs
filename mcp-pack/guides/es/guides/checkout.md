@@ -23,7 +23,7 @@ elijas** (`settlement_asset`: `USD`, `USDT`, `USDC`, `BTC`, `GOLD`,
 `USD` es el saldo principal) y todo pago se convierte **automáticamente** a
 ese saldo al
 acreditarse — salvo que te paguen en el mismo asset, ahí no hay
-conversión. El fiat local (`BOB`, `MXN`, `ARS`, `CLP`) se rechaza aquí.
+conversión. El fiat local (`BOB`, `MXN`, `ARS`) se rechaza aquí.
 
 La página organiza el pago en **cuatro pestañas**:
 
@@ -324,7 +324,7 @@ Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
 d débitos directos, las comisiones y los flujos de payout, checkout, POS y
 tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
 swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
-MXN, ARS y CLP siguen siendo activos fiat separados del ledger; en v1 el pricing
+MXN y ARS siguen siendo activos fiat separados del ledger; en v1 el pricing
 de money-out para esos activos sigue no disponible.
 
 Un payin acreditado directamente a una cuenta USD-principal expone
