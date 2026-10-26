@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.190 · 2 versions - October 25, 2026
+## v2.191 · 3 versions - October 25, 2026
+### v2.191
+**Added**
+- Added `GET /v1/me/search` for account-scoped search across operations, ledger entries and saved contacts. Queries accept IDs, exact numeric amounts, names/emails, partial references, transaction hashes and idempotency keys; results include `matched_by`, `matched_value` and type-specific detail. Account records and other accounts are never returned.
+
 ### v2.190
 **Changed**
 - Trust Center signing now moves envelopes to compliance review instead of opening downloads: sign responses and status reads carry `review_status` (`pending`/`approved`/`rejected`), `documents` lists granted ids only once released, and downloads on unreleased envelopes answer `409 review_pending`. Clients are emailed on release (with the granted list), rejection (with the reason), and revocation.
