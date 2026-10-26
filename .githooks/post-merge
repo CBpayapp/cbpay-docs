@@ -1,0 +1,35 @@
+#!/bin/sh
+# post-merge guard: `git merge` RUNS pre-commit but IGNORES its exit code
+# (verified 2026-10-26, git 2.55 windows: a failing qx-claim/approval check
+# does NOT stop the merge). This hook cannot block either (merge already
+# done), but fails LOUD with instructions. The hard gate stays pre-push
+# (approved_commit must equal HEAD).
+set -e
+root=$(git rev-parse --show-toplevel)
+head=$(git rev-parse HEAD)
+# Only true merges carry local commits to approve (fast-forwards don't).
+if ! git rev-parse --verify --quiet HEAD^2 >/dev/null; then
+    exit 0
+fi
+marker=$(git rev-parse --git-path qx-approval)
+case "$marker" in
+    /*|?:*) ;;
+    *) marker="$root/$marker" ;;
+esac
+approved=""
+if [ -f "$marker" ]; then
+    approved=$(grep '^approved_commit=' "$marker" | cut -d= -f2 || true)
+fi
+if [ "$approved" = "$head" ]; then
+    exit 0
+fi
+echo "==================================================================" >&2
+echo "GATE: merge commit $head has NO approval marker." >&2
+echo "git merge ignores pre-commit failures: qx-claim + approval checks" >&2
+echo "RAN but could NOT block this merge. Before pushing you MUST:" >&2
+echo "  1. micro-review the merge delta (union resolutions + byte-verify)" >&2
+echo "  2. run the test suite on the merged tree" >&2
+echo "  3. register a fresh marker with approved_commit=$head" >&2
+echo "(pre-push will block any push until then.)" >&2
+echo "==================================================================" >&2
+exit 1
