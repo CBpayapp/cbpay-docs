@@ -5,7 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.190 · 2 versiones - 25 de octubre de 2026
+## v2.191 · 3 versiones - 25 de octubre de 2026
+### v2.191
+**Agregado**
+- Se agregó `GET /v1/me/search` para buscar dentro de la cuenta en operaciones, asientos de ledger y contactos guardados. Acepta IDs, montos numéricos exactos, nombres/emails, referencias parciales, hashes de transacción y claves de idempotencia; los resultados incluyen `matched_by`, `matched_value` y detalles por tipo. Nunca devuelve registros de cuenta ni datos de otras cuentas.
+
 ### v2.190
 **Cambiado**
 - Firmar en el Trust Center ahora deja los sobres en revisión de compliance en vez de abrir descargas: las respuestas de firma y estado traen `review_status` (`pending`/`approved`/`rejected`), `documents` lista los otorgados solo tras la liberación, y las descargas de sobres no liberados responden `409 review_pending`. Los clientes reciben email al liberarse (con la lista otorgada), al rechazarse (con el motivo) y al revocarse.
