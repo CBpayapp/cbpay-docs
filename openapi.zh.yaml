@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.190"
+  version: "2.191"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -96,6 +96,73 @@ tags:
 - name: 合同
   description: 面向已验证企业账户的预填充 Grupo CB 主协议。
 paths:
+  /v1/me/search:
+    get:
+      tags: [Account]
+      operationId: searchMyAccount
+      summary: 搜索账户活动
+      description: 在已认证账户内搜索操作、账本分录和已保存联系人。绝不会返回账户记录或其他账户的数据。查询会去除首尾空格，长度必须为 2–128 个字符，每个账户每分钟最多 60 次请求。
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: 搜索文本、精确操作 ID、金额、姓名/电子邮件、部分参考号、交易哈希或幂等键。
+          schema: {type: string, minLength: 2, maxLength: 128}
+          examples:
+            operation_id: {value: "8f1e2d3c-4b5a-4f6e-8d9c-0a1b2c3d4e5f"}
+            amount: {value: "1.234,56"}
+            contact: {value: "ana@example.com"}
+            reference: {value: "CB7K2M"}
+            transaction_hash: {value: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+      responses:
+        '200':
+          description: 已认证账户内的匹配记录。
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [query, matches]
+                properties:
+                  query: {type: string}
+                  matches:
+                    type: array
+                    items:
+                      type: object
+                      required: [type, matched_by, id, created_at]
+                      properties:
+                        type: {type: string, enum: [payout, payin, transfer, crypto_withdrawal, swap, payin_refund, ledger_entry, contact, banking_operation, risk_report, risk_fraud_report]}
+                        matched_by: {type: string, enum: [id, reference, tx_hash, idempotency_key, doc_id, provider_ref, reference_partial, amount, name, email, phone, tax_id, alias, payer, beneficiary, counterparty, address, description]}
+                        id: {type: string}
+                        account_id: {type: string}
+                        status: {type: string}
+                        created_at: {type: string, format: date-time}
+                        detail: {type: object, additionalProperties: true}
+                        matched_value: {type: string}
+              example:
+                query: "ana"
+                matches:
+                  - {type: transfer, matched_by: id, id: "8f1e2d3c-4b5a-4f6e-8d9c-0a1b2c3d4e5f", account_id: "acct_01", status: completed, created_at: "2026-10-25T18:10:00Z", detail: {to_account_id: "acct_02", asset: USDT}}
+                  - {type: payout, matched_by: amount, id: "payout_01", account_id: "acct_01", status: pending, created_at: "2026-10-25T18:11:00Z", detail: {amount: "1234.56", currency: USD}, matched_value: "1234.56"}
+                  - {type: contact, matched_by: email, id: "contact_01", account_id: "acct_01", created_at: "2026-10-25T18:12:00Z", detail: {display_name: "Ana Pérez", phone_or_email: "ana@example.com"}, matched_value: "ana@example.com"}
+                  - {type: payin, matched_by: reference_partial, id: "payin_01", account_id: "acct_01", status: completed, created_at: "2026-10-25T18:13:00Z", detail: {country: CL, method: bank_transfer}, matched_value: "CB7K2M"}
+                  - {type: crypto_withdrawal, matched_by: tx_hash, id: "withdrawal_01", account_id: "acct_01", status: completed, created_at: "2026-10-25T18:14:00Z", detail: {chain: ethereum, asset: USDT}, matched_value: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+        '400':
+          description: 查询长度无效。
+          content:
+            application/json:
+              examples:
+                too_short: {value: {error: query_too_short, message: "q must be at least 2 characters"}}
+                too_long: {value: {error: query_too_long, message: "q must be at most 128 characters"}}
+        '403':
+          description: 需要账户凭证。
+          content:
+            application/json:
+              example: {error: account_required, message: "this endpoint requires an account credential"}
+        '429':
+          description: 超出搜索速率限制。
+          content:
+            application/json:
+              example: {error: too_many_attempts, message: "too many requests; wait a moment and retry"}
   /v1/me/contracts/envelopes:
     get:
       tags:

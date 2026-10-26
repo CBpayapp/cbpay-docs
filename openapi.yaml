@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.190"
+  version: "2.191"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -125,6 +125,73 @@ tags:
 - name: Contracts
   description: Pre-filled Grupo CB framework agreements for verified company accounts.
 paths:
+  /v1/me/search:
+    get:
+      tags: [Account]
+      operationId: searchMyAccount
+      summary: Search your account activity
+      description: Search operations, ledger entries and your saved contacts within the authenticated account. Account records and data belonging to other accounts are never returned. Queries are trimmed, must contain 2–128 characters, and are limited to 60 requests per minute per account.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search text, exact operation ID, amount, email/name, partial reference, transaction hash or idempotency key.
+          schema: {type: string, minLength: 2, maxLength: 128}
+          examples:
+            operation_id: {value: "8f1e2d3c-4b5a-4f6e-8d9c-0a1b2c3d4e5f"}
+            amount: {value: "1.234,56"}
+            contact: {value: "ana@example.com"}
+            reference: {value: "CB7K2M"}
+            transaction_hash: {value: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+      responses:
+        '200':
+          description: Matching records in the authenticated account.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [query, matches]
+                properties:
+                  query: {type: string}
+                  matches:
+                    type: array
+                    items:
+                      type: object
+                      required: [type, matched_by, id, created_at]
+                      properties:
+                        type: {type: string, enum: [payout, payin, transfer, crypto_withdrawal, swap, payin_refund, ledger_entry, contact, banking_operation, risk_report, risk_fraud_report]}
+                        matched_by: {type: string, enum: [id, reference, tx_hash, idempotency_key, doc_id, provider_ref, reference_partial, amount, name, email, phone, tax_id, alias, payer, beneficiary, counterparty, address, description]}
+                        id: {type: string}
+                        account_id: {type: string}
+                        status: {type: string}
+                        created_at: {type: string, format: date-time}
+                        detail: {type: object, additionalProperties: true}
+                        matched_value: {type: string}
+              example:
+                query: "ana"
+                matches:
+                  - {type: transfer, matched_by: id, id: "8f1e2d3c-4b5a-4f6e-8d9c-0a1b2c3d4e5f", account_id: "acct_01", status: completed, created_at: "2026-10-25T18:10:00Z", detail: {to_account_id: "acct_02", asset: USDT}}
+                  - {type: payout, matched_by: amount, id: "payout_01", account_id: "acct_01", status: pending, created_at: "2026-10-25T18:11:00Z", detail: {amount: "1234.56", currency: USD}, matched_value: "1234.56"}
+                  - {type: contact, matched_by: email, id: "contact_01", account_id: "acct_01", created_at: "2026-10-25T18:12:00Z", detail: {display_name: "Ana Pérez", phone_or_email: "ana@example.com"}, matched_value: "ana@example.com"}
+                  - {type: payin, matched_by: reference_partial, id: "payin_01", account_id: "acct_01", status: completed, created_at: "2026-10-25T18:13:00Z", detail: {country: CL, method: bank_transfer}, matched_value: "CB7K2M"}
+                  - {type: crypto_withdrawal, matched_by: tx_hash, id: "withdrawal_01", account_id: "acct_01", status: completed, created_at: "2026-10-25T18:14:00Z", detail: {chain: ethereum, asset: USDT}, matched_value: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+        '400':
+          description: Invalid query length.
+          content:
+            application/json:
+              examples:
+                too_short: {value: {error: query_too_short, message: "q must be at least 2 characters"}}
+                too_long: {value: {error: query_too_long, message: "q must be at most 128 characters"}}
+        '403':
+          description: An account credential is required.
+          content:
+            application/json:
+              example: {error: account_required, message: "this endpoint requires an account credential"}
+        '429':
+          description: Search rate limit exceeded.
+          content:
+            application/json:
+              example: {error: too_many_attempts, message: "too many requests; wait a moment and retry"}
   /v1/me/contracts/envelopes:
     get:
       tags:
