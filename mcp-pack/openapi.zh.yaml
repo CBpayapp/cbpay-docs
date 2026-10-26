@@ -106,7 +106,10 @@ paths:
         - name: q
           in: query
           required: true
-          description: 搜索文本、精确操作 ID、金额、姓名/电子邮件、部分参考号、交易哈希或幂等键。
+          description: >-
+            搜索文本、精确操作 ID、金额、姓名/电子邮件、部分参考号、交易哈希或幂等键。
+            金额搜索匹配存储的精确数值：法币 `local_amount` 以小数存储，而 USDT/USDC/BTC 的
+            `NUMERIC(38,0)` 列使用最小单位/基础单位。
           schema: {type: string, minLength: 2, maxLength: 128}
           examples:
             operation_id: {value: "8f1e2d3c-4b5a-4f6e-8d9c-0a1b2c3d4e5f"}
