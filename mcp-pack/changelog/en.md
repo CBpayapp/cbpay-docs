@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.191 · 3 versions - October 25, 2026
+## v2.192 · 4 versions - October 25, 2026
+### v2.192
+**Changed**
+- KYB hosted links now cover the dedicated `uk`, `es` and `vg` profiles. Unknown link countries use the generic profile with that ISO country; explicit `country: generic` requires `generic_country`. Native KYC/KYB submissions now document complete required identity and business fields.
+
 ### v2.191
 **Added**
 - Added `GET /v1/me/search` for account-scoped search across operations, ledger entries and saved contacts. Queries accept IDs, exact numeric amounts, names/emails, partial references, transaction hashes and idempotency keys; results include `matched_by`, `matched_value` and type-specific detail. Account records and other accounts are never returned.

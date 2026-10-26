@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.191"
+  version: "2.192"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -8900,7 +8900,7 @@ paths:
       summary: Create a KYB link for a customer
       description: 'Company accounts only: generates a hosted KYB link for one of YOUR end customers (businesses).
         Bills the fixed `kyb_verification` fee when configured (refunded if creation fails); `idempotency_key`
-        is required. `country` picks the wizard corridor: us, cl, ve, br, mx, co, pe, bo, py, ar or generic
+        is required. `country` picks the wizard corridor: us, cl, ve, br, mx, co, pe, bo, py, ar, uk, es, vg or generic
         (send `generic_country` ISO alpha-2, optional `currency`).'
       requestBody:
         required: true
@@ -9258,8 +9258,11 @@ paths:
       summary: Create a KYB submission with API data
       description: 'Company accounts only: verifies one of YOUR end customers (a business) sending the
         data directly. Body: external_customer_id, country?, business (the company fields), ubos?, directors?,
-        signers?, bank_info?, metadata?. Bills the fixed `kyb_verification` fee; `idempotency_key` required.
-        Re-sending while open updates the same submission without charging again.'
+        signers?, bank_info?, metadata?. KYB requires a complete legal name and registration number; KYC
+        requires names, date of birth, ISO alpha-3 nationality, document and ISO alpha-3 country. An unknown
+        KYB country uses the generic wizard/profile with that ISO country; `country: generic` requires
+        `generic_country`. Bills the fixed `kyb_verification` fee; `idempotency_key` required. Re-sending
+        while open updates the same submission without charging again.'
       requestBody:
         required: true
         content:
@@ -9278,7 +9281,7 @@ paths:
                   type: string
                 business:
                   type: object
-                  description: Company fields (legal name, tax id, address, activity...).
+                  description: Complete company fields; legal_name and registration_number are required for KYB.
                 ubos:
                   type: array
                   items:
@@ -25665,7 +25668,7 @@ components:
           type: string
         country:
           type: string
-          description: KYB only. Wizard corridor (us, cl, ve, br, mx, co, pe, bo, py, ar, generic).
+          description: KYB only. Wizard corridor (us, cl, ve, br, mx, co, pe, bo, py, ar, uk, es, vg, generic).
         generic_country:
           type: string
           description: ISO alpha-2 when country=generic.

@@ -13,11 +13,11 @@ mantienes saldo en moneda fiat y envías pagos a terceros. Es un
 producto distinto de tus saldos CBPay: **el dinero de banking vive en tus cuentas
 bancarias**, no en tu saldo USDT ni en tu saldo USD.
 
-Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a tu asset principal (USD es el saldo principal). Banking admite `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` y `CL/CLP/fintoc`.
+Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a tu asset principal (USD es el saldo principal). Banking admite solo `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
 
 ## Dos clases de destinos fiat locales
 
-Para los corredores fiat locales (`BO/BOB`, `MX/MXN`, `AR/ARS`, `CL/CLP/fintoc`), cada
+Para los corredores fiat locales (`BO/BOB`, `MX/MXN`, `AR/ARS`), cada
 destino de payin lleva un `purpose` que decide dónde aterriza el dinero
 entrante:
 
@@ -29,10 +29,7 @@ entrante:
 Crea un segundo destino con `purpose: "banking"` para mantener fiat local
 para payouts; los destinos creados sin propósito conservan el comportamiento
 histórico `fondeo`. El propósito banking solo se admite en
-`BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` y
-`CL/CLP/fintoc`. En CL/CLP/fintoc, Banking recibe, retiene y exhibe el saldo
-CLP derivado y sus movimientos; no origina payouts. Los payouts CL siempre salen desde
-la cuenta root y no aplica sweep-exempt físico.
+`BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`.
 
 | Concepto | Dónde vive | Se consulta con |
 |---|---|---|
@@ -83,19 +80,13 @@ Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payi
 
 ## Multi-banking para empresas: cuentas operativas
 
-En `CL/CLP/fintoc`, una cuenta `purpose: "banking"` recibe, retiene y
-exhibe saldo CLP derivado y movimientos, pero no origina payouts: los payouts CL
-siempre salen desde la cuenta root y no existe sweep físico que eximir.
-
 Las cuentas empresa pueden crear múltiples cuentas de depósito con
 `purpose: "banking"` en cada corredor local habilitado:
-`BO/BOB`, `MX/MXN`, `AR/ARS` con `method: "bank_transfer"`, y
-`CL/CLP/fintoc`.
+`BO/BOB`, `MX/MXN` y `AR/ARS`, siempre con `method: "bank_transfer"`.
 Usa un `Idempotency-Key` distinto para cada destino; repetirlo devuelve el
 mismo instrumento. El tope operativo blando es de **50 instrumentos banking
 por cuenta empresa y corredor** (`422 deposit_account_limit_reached`).
-Las cuentas persona mantienen un instrumento banking por corredor y pueden
-crear la segunda virtual Banking en `CL/CLP/fintoc`.
+Las cuentas persona mantienen un instrumento banking por corredor.
 
 ```mermaid
 sequenceDiagram

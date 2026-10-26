@@ -19,21 +19,19 @@ eso es [Banking](https://docs.cbpayapp.com/es/guides/banking): crea un segundo d
 
 ## Fondeo vs Banking
 
-Para los corredores fiat locales (`BO/BOB`, `MX/MXN`, `AR/ARS`, `CL/CLP/fintoc`), cada
+Para los corredores fiat locales (`BO/BOB`, `MX/MXN`, `AR/ARS`), cada
 destino de payin lleva un `purpose` que decide dónde aterriza el dinero
 entrante:
 
 | Purpose | Significado |
 |---|---|
 | `fondeo` (default) | **Cuenta de fondeo.** Todo lo recibido convierte automáticamente a USD, tu saldo principal. |
-| `banking` | **Cuenta Banking.** El fiat entrante se retiene en su moneda local y se exhibe mediante saldo derivado y movimientos. |
+| `banking` | **Cuenta Banking.** El fiat entrante se retiene en su moneda local para payouts, con saldos individuales por moneda. |
 
 Los destinos creados sin purpose conservan el comportamiento histórico
-`fondeo`. El purpose banking se soporta en
-`BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` y
-`CL/CLP/fintoc`. En CL/CLP/fintoc, Banking recibe, retiene y exhibe un saldo
-CLP derivado, pero no origina payouts: los payouts CL siempre salen desde la cuenta
-root. No aplica una exención de sweep porque no existe barrido físico.
+`fondeo`. El purpose banking solo se soporta en
+`BO/BOB/bank_transfer`, `MX/MXN/bank_transfer` y `AR/ARS/bank_transfer`;
+todo lo demás es siempre fondeo.
 
 ## Fondeo por moneda
 
@@ -64,18 +62,6 @@ automáticamente a USD, tu saldo principal.
 Para el contrato completo de deposit accounts ver
 [payins](https://docs.cbpayapp.com/es/guides/payins); para enviar pesos, ver
 [payouts](https://docs.cbpayapp.com/es/guides/payouts).
-
-### 🇨🇱 CLP — peso chileno
-
-Recibe pesos mediante un número de cuenta dedicado `CL/CLP/fintoc`. La cuenta
-dedicada pertenece a la empresa dueña del CPF usado para crearla; el pagador o
-usuario final nunca es el titular. Muestra `holder_name`, `holder_tax_id` y
-`holder_account_type` exactamente como los devuelve la API.
-
-Con `purpose: "banking"`, el CLP entrante se retiene y se exhibe mediante el
-saldo derivado y los movimientos del instrumento. Es un destino de recepción y
-retención; los payouts CLP siempre se originan en la cuenta root y no existe
-flag de sweep-exempt.
 
 ### 🇪🇺 EUR — euro
 
@@ -190,12 +176,8 @@ faltantes nunca se infieren.
 Las cuentas persona conservan como máximo una cuenta de fondeo activa por
 país/moneda/método. Las cuentas empresa pueden crear destinos adicionales
 inmutables solo en corredores habilitados; los corredores adicionales
-soportados actualmente son `MX/MXN/bank_transfer`, `BO/BOB/bank_transfer`,
-`AR/ARS/bank_transfer` y `CL/CLP/fintoc`. Cada alta adicional de fondeo o
-banking usa su propia idempotency key; banking tiene tope de 50 por corredor.
-Las personas pueden crear su segunda virtual Banking en `CL/CLP/fintoc`, con
-el mismo contrato de purpose/label/balance. Cada destino sigue ligado a la
-misma cuenta CBPay y los abonos calzan por instrumento.
+soportados actualmente son `MX/MXN/bank_transfer`, `BO/BOB/bank_transfer` y `AR/ARS/bank_transfer`. Cada destino sigue ligado a la misma cuenta CBPay,
+y los abonos calzan por instrumento de destino.
 
 La verificación aprovisiona automáticamente el primer instrumento del
 corredor para una cuenta verificada. La llamada anterior también repara un
@@ -325,13 +307,8 @@ anomalía, contacta a operaciones en vez de crear un sustituto a ciegas.
 Este corredor es push-first con sondeo de respaldo. El tiempo final depende
 de cuándo el banco reporta el movimiento; el webhook se envía solo tras la
 conciliación.
-#### ¿Por qué no aparezco como titular de la cuenta CLP dedicada?
-La cuenta CLP está dedicada a la empresa dueña del CPF usado para crearla. El
-contrato del número de cuenta identifica a esa empresa, no al pagador o usuario
-final. Usa los campos de titular devueltos en las instrucciones de pago.
 #### ¿Fondeo o Banking — cuál necesito?
 Elige fondeo (default) cuando cada depósito debe aterrizar en USD, tu
 saldo principal. Elige [Banking](https://docs.cbpayapp.com/es/guides/banking) con
-`purpose: "banking"` cuando necesites mantener un saldo local. En
-`CL/CLP/fintoc`, Banking recibe, retiene y exhibe el saldo CLP derivado del
-instrumento, mientras los payouts siguen originándose en la cuenta root.
+`purpose: "banking"` cuando necesites mantener saldos BOB, MXN o ARS
+locales para payouts.

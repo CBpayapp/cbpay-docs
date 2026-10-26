@@ -168,7 +168,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
 - `idempotency_key` (required): a retry with the same key returns the
   original link and **never double-charges**.
 - `country` (KYB only): `us`, `cl`, `ve`, `br`, `mx`, `co`, `pe`, `bo`,
-  `py`, `ar` or `generic` (with `generic_country` ISO alpha-2, e.g.
+  `py`, `ar`, `uk`, `es`, `vg` or `generic` (with `generic_country` ISO alpha-2, e.g.
   `"ES"`). Individual KYC takes no country.
 - `expires_in_days` (optional, 1–30): omitted, the link never expires.
 
@@ -251,7 +251,7 @@ Data-mode notes:
   `id_type`: `passport | id_card | drivers_license`.
 - KYB: body `{ external_customer_id, country?, business: {…}, ubos?,
   directors?, signers?, bank_info?, metadata? }` on
-  `POST /v1/kyb/submissions`.
+  `POST /v1/kyb/submissions`. Also, KYB data mode requires a complete legal name and registration number; KYC requires names, date of birth, ISO alpha-3 nationality, document and ISO alpha-3 country. Unknown KYB countries use the generic profile with that ISO; `country: generic` requires `generic_country`.
 - **No liveness is required at creation**: the KYC submission carries
   `liveness_pending: true`; close it with a [liveness
   link](#liveness-check-liveness-link).
@@ -818,7 +818,7 @@ open submission and liveness links do not charge again.
 | 403 | `service_disabled` | The `kyc` service is disabled for your account | Contact your operator |
 | 404 | `not_found` | The link/submission does not exist or is not yours | Check the id |
 | 404 | `verification_not_found` | You requested your self report without a registered verification | Complete your onboarding first |
-| 409 | `already_verified` / `self_verification_in_progress` | Onboarding link requested with an already-approved account, or while a verification is already in progress | Nothing to do, or complete that verification |
+| 409 | `already_verified` | Onboarding link requested with an already-approved account | Nothing to do |
 | 503 | `verifications_unavailable` | Identity verification temporarily unavailable | Retry later |
 
 ## FAQ

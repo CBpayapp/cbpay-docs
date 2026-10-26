@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.191"
+  version: "2.192"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -9222,9 +9222,11 @@ paths:
       operationId: createKybSubmission
       summary: Crear una submission KYB con datos por API
       description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales (una empresa) enviando
-        los datos directo. Body: external_customer_id, country?, business (los campos de la empresa),
-        ubos?, directors?, signers?, bank_info?, metadata?. Cobra el fee fijo `kyb_verification`; `idempotency_key`
-        obligatoria. Re-enviar mientras siga abierta actualiza la misma submission sin cobrar de nuevo.'
+        los datos directo. Body: external_customer_id, country?, business (los campos de la empresa), ubos?, directors?,
+        signers?, bank_info?, metadata?. KYB exige nombre legal y número de registro completos; KYC exige nombres,
+        fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Un país KYB desconocido usa
+        el perfil genérico con ese ISO; `country: generic` exige `generic_country`. Cobra el fee fijo `kyb_verification`;
+        `idempotency_key` obligatoria. Re-enviar mientras siga abierta actualiza la misma submission sin cobrar de nuevo.'
       requestBody:
         required: true
         content:
@@ -9243,7 +9245,7 @@ paths:
                   type: string
                 business:
                   type: object
-                  description: Campos de la empresa (razón social, tax id, domicilio, giro...).
+                  description: Campos completos de la empresa; legal_name y registration_number son obligatorios para KYB.
                 ubos:
                   type: array
                   items:
@@ -25452,7 +25454,7 @@ components:
           type: string
         country:
           type: string
-          description: Solo KYB. Corredor del wizard (us, cl, ve, br, mx, co, pe, bo, py, ar, generic).
+          description: Solo KYB. Corredor del wizard (us, cl, ve, br, mx, co, pe, bo, py, ar, uk, es, vg, generic).
         generic_country:
           type: string
           description: ISO alpha-2 cuando country=generic.
