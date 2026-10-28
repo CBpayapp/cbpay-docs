@@ -12,12 +12,12 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 对于本地法币走廊，请创建带有 `purpose: "banking"` 的充值目的地。
 该目的会保留本地法币，用于法币付款。默认的 `fondeo` 目的会把入账
 法币转换为您账户的主资产(USD 为主资产)。Banking 目前仅支持
-`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和
-`AR/ARS/bank_transfer`。
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和
+`CL/CLP/fintoc`。
 
 ## 两类本地法币目的地
 
-对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`），每个 payin 目的地都带有
+对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`、`CL/CLP/fintoc`），每个 payin 目的地都带有
 `purpose`，决定入账资金的去向：
 
 | Purpose | 含义 |
@@ -27,7 +27,10 @@ source_url: https://docs.cbpayapp.com/zh/guides/banking
 
 请创建第二个 `purpose: "banking"` 的目的地来持有本地法币用于付款；未指定
 目的地的目的地保留历史 `fondeo` 行为。Banking 目的仅支持
-`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和 `AR/ARS/bank_transfer`。
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和
+`CL/CLP/fintoc`。在 CL/CLP/fintoc 中，Banking 接收、保留并展示派生的
+CLP 余额和流水，但不发起 payout：CL payout 始终从 root 账户发送，不存在
+需要豁免的物理 sweep。
 
 | 概念 | 存放位置 | 查询方式 |
 |---|---|---|
@@ -76,11 +79,16 @@ SWIFT 约需 24–48 个工作小时，且可能因收款银行而延长。**这
 ## 企业多银行：运营账户
 
 企业账户可以在启用的本地通道中创建多个 `purpose: "banking"` 充值
-账户：`BO/BOB`、`MX/MXN` 和 `AR/ARS`，且 `method` 必须为
-`bank_transfer`。每个目的地使用不同的 `Idempotency-Key`；重复使用会
+账户：`BO/BOB`、`MX/MXN`、`AR/ARS`（`method` 为 `bank_transfer`）以及
+`CL/CLP/fintoc`。每个目的地使用不同的 `Idempotency-Key`；重复使用会
 返回原账户，不会再次开户。每个企业账户和通道最多保留 **50 个 banking
 工具**（超过时返回 `422 deposit_account_limit_reached`）。个人账户仍
-然每个通道只有一个 banking 工具。
+然每个通道只有一个 banking 工具，并可在 `CL/CLP/fintoc` 创建第二个
+Banking 虚拟槽位。
+
+在 `CL/CLP/fintoc` 中，Banking 目的地接收、保留并展示派生的 CLP 余额
+和流水，但不发起 payout：CL payout 始终从 root 账户发送，不存在需要豁免
+的物理 sweep。
 
 ```mermaid
 sequenceDiagram
@@ -452,6 +460,20 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
 ```
 
 公司账户的等价字段为 `incorporation_country` / `incorporationCountry` 与 `incorporation_date` / `incorporationDate`。这些值只用于补全已验证 registrant，不会绕过 KYC/KYB。
+
+`POST /v1/banking/virtual-ibans` 和
+`POST /v1/banking/company-wallets` 也接受可选地址 override：
+`address_street`、`address_city`、`address_country` 以及已有的
+`address_zip`（接受 camelCase aliases）。显式值优先，已批准 profile
+作为第二来源；因此迁移后地址为空的已批准 KYC/KYB profile 可以在不重新
+验证的情况下补全。缺失或无效值会返回 `422 registrant_incomplete`，
+`message` 保留相同的 `individual.address.*` 或
+`corporate.address.*` vIBAN 路径；企业钱包预留使用
+`holder.corporate.address.*`。
+
+对于 corporate registrant，`business_activity` 的来源顺序为：显式
+override、已验证 profile、已验证行业标签，最后是账户的
+`account.industry_label`。
 
 申请会进入人工审批队列：
 

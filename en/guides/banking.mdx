@@ -14,11 +14,11 @@ depending on the currency), hold fiat balances and send payments to third
 parties. It is a separate product from your CBPay balances: **banking money
 lives in your bank accounts**, not in your USDT or USD balance.
 
-For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD is the principal balance). Banking supports only `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and `AR/ARS/bank_transfer`.
+For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD is the principal balance). Banking supports `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer`, and `CL/CLP/fintoc`.
 
 ## Two kinds of local-fiat destinations
 
-For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`), every payin
+For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`, `CL/CLP/fintoc`), every payin
 destination carries a `purpose` that decides where inbound money lands:
 
 | Purpose | Meaning |
@@ -28,8 +28,11 @@ destination carries a `purpose` that decides where inbound money lands:
 
 Create a second destination with `purpose: "banking"` to hold local fiat for
 payouts; destinations created without a purpose keep the historical `fondeo`
-behavior. Banking purpose is only supported in `BO/BOB/bank_transfer`,
-`MX/MXN/bank_transfer` and `AR/ARS/bank_transfer`.
+behavior. Banking purpose is supported in `BO/BOB/bank_transfer`,
+`MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` and `CL/CLP/fintoc`. For
+CL/CLP/fintoc, Banking receives, retains and exposes derived CLP balance and
+movements; it does not originate payouts. CL payouts always send from the root
+account, and no physical sweep-exempt flag applies.
 
 | Concept | Where it lives | Queried with |
 |---|---|---|
@@ -83,15 +86,12 @@ Receive pesos through [deposit accounts](/en/guides/payins) with a
 asset (USD is the principal balance); `banking` retains ARS for local
 payouts ([payouts](/en/guides/payouts)).
 
+### 🇨🇱 CLP — Chilean peso
+
+Receive CLP through the dedicated `CL/CLP/fintoc` deposit account. With `purpose: "banking"`, it retains inbound CLP and exposes derived balance/movements; it only receives and holds, while CL payouts originate from root.
 ## Company multi-banking: operating accounts
 
-Company accounts can create multiple `purpose: "banking"` deposit accounts
-in each enabled local corridor: `BO/BOB`, `MX/MXN`, and `AR/ARS`, always with
-`method: "bank_transfer"`. Send a distinct `Idempotency-Key` for each
-destination; reusing it returns the same instrument and never provisions a
-second bank account. The soft operational limit is **50 banking instruments
-per company account and corridor** (`422 deposit_account_limit_reached`).
-Person accounts retain one banking instrument per corridor.
+Company accounts can create multiple `purpose: "banking"` destinations in `BO/BOB`, `MX/MXN`, `AR/ARS` (`bank_transfer`) and `CL/CLP/fintoc`; use a distinct `Idempotency-Key` per destination. Replay returns the same instrument. The soft limit is **50 per company and corridor** (`422 deposit_account_limit_reached`); persons retain one per corridor and can create the second virtual Banking slot in `CL/CLP/fintoc`.
 
 ```mermaid
 sequenceDiagram
@@ -729,10 +729,8 @@ routing instrument, not a separate provider balance, and comes in two purposes:
 | `banking_eur` | No | EUR banking address (requires the Banking product). EUR Banking operations debit `BANK_EUR`; inbound lands in the Banking ledger. |
 
 ### Request a virtual IBAN
-
 The platform builds the provider registrant from the approved KYC/KYB
 profile. Request the default funding address with an idempotency key:
-
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
   -H "Authorization: Bearer <token>" \
@@ -740,7 +738,6 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
   -H "Content-Type: application/json" \
   -d '{"purpose":"funding_usdt"}'
 ```
-
 If a verified profile lacks a document issuing country or a document
 expiration date, an account request may send these optional top-level
 overrides (snake_case or camelCase aliases are accepted):
@@ -752,12 +749,15 @@ overrides (snake_case or camelCase aliases are accepted):
   "document_expiration_date": "2035-06-01"
 }
 ```
-
 For company accounts the equivalent optional fields are
 `incorporation_country` / `incorporationCountry` and
 `incorporation_date` / `incorporationDate`. These values are used only to
 complete the verified registrant; they do not bypass KYC/KYB.
-
+Both `POST /v1/banking/virtual-ibans` and `POST /v1/banking/company-wallets` accept optional `address_street`, `address_city`, `address_country` and `address_zip` overrides (camelCase accepted); explicit values win over the profile, rescuing migrated profiles with an empty address without re-verifying.
+Invalid/missing values use `corporate.address.*` (vIBAN companies),
+`individual.address.*` (persons) or `holder.corporate.address.*` (wallets) in
+`registrant_incomplete`. `business_activity` falls back to profile, verified
+industry label, then account `industry_label`.
 The request is accepted into the manual approval queue — every allocation is
 manually approved by organization operations before the core calls the
 banking rail:

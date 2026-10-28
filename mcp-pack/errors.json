@@ -3770,9 +3770,9 @@
       "code": "registrant_incomplete",
       "http": null,
       "meaning": {
-        "en": "422 — Fix: Virtual IBAN request / approval | The verified KYC/KYB profile is missing required registrant fields; provide the missing document or incorporation data named in the message and retry the same request.",
-        "es": "422 — Fix: Solicitud de vIBAN | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant; completa los datos de documento o incorporación indicados y reintenta la misma solicitud.",
-        "zh": "422 — Fix: 虚拟 IBAN 申请 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段；按消息补充证件或公司注册数据，并重试相同申请。"
+        "en": "422 — Fix: Virtual IBAN request / company-wallet reservation or approval | The verified KYC/KYB profile is missing required registrant fields. For migrated profiles with an empty address, provide `address_street`, `address_city`, `address_country` or `address_zip` (snake_case or camelCase); explicit values override the profile. Invalid or missing values preserve the same `individual.address.*` or `holder.corporate.address.*` path in `message`. Retry the same durable request.",
+        "es": "422 — Fix: Solicitud de vIBAN o reserva de company wallet | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant. En perfiles migrados con dirección vacía, envía `address_street`, `address_city`, `address_country` o `address_zip` (snake_case o camelCase); el valor explícito sobrescribe el perfil. Los valores faltantes o inválidos conservan en `message` el mismo path `individual.address.*` o `holder.corporate.address.*`. Reintenta la misma solicitud durable.",
+        "zh": "422 — Fix: 虚拟 IBAN 申请或企业钱包预留 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段。对于地址为空的迁移 profile，可发送 `address_street`、`address_city`、`address_country` 或 `address_zip`（snake_case 或 camelCase）；显式值覆盖 profile。缺失或无效值会在 `message` 中保留相同的 `individual.address.*` 或 `holder.corporate.address.*` 路径。请重试相同的持久化请求。"
       }
     },
     {

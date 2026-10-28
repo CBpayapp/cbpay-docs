@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.192"
+  version: "2.193"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -20262,7 +20262,7 @@ paths:
       - Account
       operationId: getMyTxnReview
       summary: Detalle de una revisión
-      description: 'Detalle de una revisión de la cuenta, con el mensaje de la solicitud de información (`info_request`) y los archivos ya subidos. El motivo interno de la retención y las notas de cumplimiento nunca se exponen (anti tipping-off). Una revisión rechazada incluye además `decision_note` (el mismo texto del email de rechazo) y `decided_at`.'
+      description: 'Detalle de una revisión de la cuenta, con el mensaje de la solicitud de información (`info_request`), los documentos exactos pedidos (`requested_documents`, vocabulario cerrado de evidencia) y los archivos ya subidos. El motivo interno de la retención y las notas de cumplimiento nunca se exponen (anti tipping-off). Una revisión rechazada incluye además `decision_note` (el mismo texto del email de rechazo) y `decided_at`.'
       parameters:
       - name: reviewID
         in: path
@@ -20288,6 +20288,9 @@ paths:
                   info_request:
                     message: Please upload the invoice that justifies this payment
                     requested_at: '2026-08-06T15:20:00Z'
+                  requested_documents:
+                  - bankStatement
+                  - sourceOfWealth
                   files:
                   - id: f1e2d3c4-0000-4000-8000-0000000000aa
                     review_id: 7a3f2b1c-0000-4000-8000-000000000001
@@ -23142,6 +23145,12 @@ paths:
                 taxNumber: {type: string, description: Alias camelCase}
                 address_zip: {type: string, description: Corrección del código postal cuando el KYC trae uno con formato inválido para su país (vacío = se usa el del perfil)}
                 addressZip: {type: string, description: Alias camelCase}
+                address_street: {type: string, description: Override de calle cuando el perfil KYC/KYB aprobado está vacío}
+                addressStreet: {type: string, description: Alias camelCase}
+                address_city: {type: string, description: Override de ciudad cuando el perfil KYC/KYB aprobado está vacío}
+                addressCity: {type: string, description: Alias camelCase}
+                address_country: {type: string, description: Override de país ISO alpha-2 cuando el perfil KYC/KYB aprobado está vacío}
+                addressCountry: {type: string, description: Alias camelCase}
                 ubo_0_document_issued_country: {type: string, description: País ISO alpha-2 de emisión del documento del UBO 0; repetir por índice de UBO'}
                 ubo0DocumentIssuedCountry: {type: string, description: Alias camelCase}
                 ubo_0_document_expiration_date: {type: string, format: date, description: Vencimiento del documento del UBO 0; debe superar un mes desde hoy; repetir por índice de UBO'}
@@ -23166,6 +23175,9 @@ paths:
                   purpose: funding_usdt
                   document_issued_country: IT
                   document_expiration_date: '2035-06-01'
+                  address_street: 1 Main Street
+                  address_city: Santiago
+                  address_country: CL
               company_overrides:
                 value:
                   purpose: banking_eur
@@ -23588,6 +23600,15 @@ paths:
                 address_zip:
                   type: string
                   description: Corrección del código postal cuando el KYC trae uno con formato inválido para su país (vacío = se usa el del perfil)
+                address_street:
+                  type: string
+                  description: Override de calle cuando el perfil KYC/KYB aprobado está vacío
+                address_city:
+                  type: string
+                  description: Override de ciudad cuando el perfil KYC/KYB aprobado está vacío
+                address_country:
+                  type: string
+                  description: Override de país ISO alpha-2 cuando el perfil KYC/KYB aprobado está vacío
                 ubo_0_document_issued_country:
                   type: string
                   description: País ISO alpha-2 de emisión del documento del UBO 0; repetir por índice de UBO
@@ -23619,6 +23640,9 @@ paths:
               incorporation_country: CL
               incorporation_date: '2020-04-15'
               expected_turnover: '250000.00'
+              address_street: 1 Main Street
+              address_city: Santiago
+              address_country: CL
               ubo_0_document_issued_country: CL
               ubo_0_document_expiration_date: '2035-04-15'
               ubo_0_pep: 'false'

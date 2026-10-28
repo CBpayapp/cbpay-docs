@@ -5,9 +5,9 @@ slug: zh/concepts/money-model
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 ---
-## 十个相互独立的虚拟余额
+## 十一个相互独立的虚拟余额
 
-每个账户持有**十个虚拟余额，每个资产一个**：
+每个账户持有**十一个虚拟余额，每个资产一个**：
 
 | 资产 | 说明 | 小数位 | 入金方式 |
 |---|---|---|---|
@@ -21,12 +21,13 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 | `BOB` | 玻利维亚诺 — 本地留存 | 2 | 带本地留存的法币收款、内部转账、调整 |
 | `MXN` | 墨西哥比索 — 本地留存 | 2 | 带本地留存的法币收款、内部转账、调整 |
 | `ARS` | 阿根廷比索 — 本地留存 | 2 | 带本地留存的法币收款、内部转账、调整 |
+| `CLP` | 智利比索 — 本地留存 | 0 | 带本地留存的法币收款、同资产内部转账、调整 |
 
 它们完全相互独立：永远不会混合，也永远不会自动换算。（`BANK_USD`
 和 `BANK_EUR` 是单独的银行镜像余额 — 参见
 [银行服务](https://docs.cbpayapp.com/zh/guides/banking)。）
 
-`GET /v1/balances` 始终返回全部十个余额（尚未使用的资产返回零），
+`GET /v1/balances` 始终返回全部十一个余额（尚未使用的资产返回零），
 金额均为**十进制字符串**：
 
 ```json
@@ -42,7 +43,8 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
     { "asset": "PLATINUM", "available": "0.000000", "held": "0.000000" },
     { "asset": "BOB", "available": "0.00", "held": "0.00" },
     { "asset": "MXN", "available": "0.00", "held": "0.00" },
-    { "asset": "ARS", "available": "0.00", "held": "0.00" }
+    { "asset": "ARS", "available": "0.00", "held": "0.00" },
+    { "asset": "CLP", "available": "0", "held": "0" }
   ]
 }
 ```
@@ -56,7 +58,7 @@ source_url: https://docs.cbpayapp.com/zh/concepts/money-model
 
 ## 选择用哪个余额付款
 
-**出款**与**服务费**（KYC、钱包创建、银行服务）可以从您十个余额中的
+**出款**与**服务费**（KYC、钱包创建、银行服务）可以从您十一个余额中的
 任意一个扣款。定价流程不变：操作始终以 USDT 报价，最后再按当时的
 **有效结算价格**将总额换算为所选资产。
 

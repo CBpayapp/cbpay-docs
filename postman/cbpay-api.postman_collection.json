@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-26 15:27 UTC",
-    "_content_sha256": "433faa04fbe746b404bfbb5bbeb3183f2d1aaade67382d478df8e4a360b9d855"
+    "_generated_at": "2026-10-28 15:52 UTC",
+    "_content_sha256": "916c9ea1db5cbba36803fc12994af65ede75d4ff3474ff3a972065768db480df"
   },
   "auth": {
     "type": "bearer",
@@ -1634,7 +1634,7 @@
                 }
               ]
             },
-            "description": "Detail of one review of the account, with the information request message (`info_request`) and the files already uploaded. The internal hold reason and compliance notes are never exposed (anti tipping-off). A rejected review also includes `decision_note` (the same text as the rejection email) and `decided_at`."
+            "description": "Detail of one review of the account, with the information request message (`info_request`), the exact documents asked (`requested_documents`, closed evidence vocabulary) and the files already uploaded. The internal hold reason and compliance notes are never exposed (anti tipping-off). A rejected review also includes `decision_note` (the same text as the rejection email) and `decided_at`."
           },
           "response": [
             {
@@ -1669,7 +1669,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"review\": {\n    \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"kind\": \"payout\",\n    \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n    \"status\": \"info_requested\",\n    \"amount_label\": \"1500.00\",\n    \"asset\": \"USD\",\n    \"country\": \"MX\",\n    \"method\": \"spei\",\n    \"counterparty\": \"Juan Pérez\",\n    \"info_request\": {\n      \"message\": \"Please upload the invoice that justifies this payment\",\n      \"requested_at\": \"2026-08-06T15:20:00Z\"\n    },\n    \"files\": [\n      {\n        \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n        \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n        \"file_name\": \"invoice-221.pdf\",\n        \"content_type\": \"application/pdf\",\n        \"size_bytes\": 482110,\n        \"uploaded_by\": \"account\",\n        \"category\": \"proofOfAddress\",\n        \"created_at\": \"2026-08-06T15:40:00Z\"\n      }\n    ],\n    \"created_at\": \"2026-08-06T14:32:00Z\",\n    \"updated_at\": \"2026-08-06T15:40:00Z\"\n  }\n}"
+              "body": "{\n  \"review\": {\n    \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"kind\": \"payout\",\n    \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n    \"status\": \"info_requested\",\n    \"amount_label\": \"1500.00\",\n    \"asset\": \"USD\",\n    \"country\": \"MX\",\n    \"method\": \"spei\",\n    \"counterparty\": \"Juan Pérez\",\n    \"info_request\": {\n      \"message\": \"Please upload the invoice that justifies this payment\",\n      \"requested_at\": \"2026-08-06T15:20:00Z\"\n    },\n    \"requested_documents\": [\n      \"bankStatement\",\n      \"sourceOfWealth\"\n    ],\n    \"files\": [\n      {\n        \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n        \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n        \"file_name\": \"invoice-221.pdf\",\n        \"content_type\": \"application/pdf\",\n        \"size_bytes\": 482110,\n        \"uploaded_by\": \"account\",\n        \"category\": \"proofOfAddress\",\n        \"created_at\": \"2026-08-06T15:40:00Z\"\n      }\n    ],\n    \"created_at\": \"2026-08-06T14:32:00Z\",\n    \"updated_at\": \"2026-08-06T15:40:00Z\"\n  }\n}"
             }
           ]
         },
@@ -23895,7 +23895,7 @@
             "description": "Requests one durable virtual IBAN allocation for the authenticated account. `funding_usdt` is the default purpose; `banking_eur` requires the Banking product. The platform autofills the provider V3 registrant from the approved KYC/KYB profile. The optional document and incorporation fields below accept snake_case and camelCase aliases. Company accounts also accept trading_website, business_activity, is_micro_enterprise, expected_turnover and one document pair per UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases accepted): the corporate rail requires a full document per UBO. UBO identity corrections (ubo_{i}_first_name, ubo_{i}_last_name, ubo_{i}_birth_date) override a KYB carrying wrong owner data without re-verification; birth dates (person and UBOs) must yield age 16-85. tax_number works on BOTH branches: a US person/company must provide a valid 9-digit SSN/EIN; other countries validate known formats (CL RUT, GB NINO/UTR) and omit invalid values instead of failing. Names fold to the rail latin charset (José→Jose) and addresses validate zip format per country, with address_zip as correction when the KYC zip is malformed. Values already present in the approved KYB profile (incorporation, website, industry, UBO documents) are autofilled — overrides are only needed for what the profile lacks, and explicit overrides always win. Missing required registrant paths return `422 registrant_incomplete` with the missing paths in `message`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"purpose\": \"funding_usdt\",\n  \"document_issued_country\": \"IT\",\n  \"document_expiration_date\": \"2035-06-01\"\n}",
+              "raw": "{\n  \"purpose\": \"funding_usdt\",\n  \"document_issued_country\": \"IT\",\n  \"document_expiration_date\": \"2035-06-01\",\n  \"address_street\": \"1 Main Street\",\n  \"address_city\": \"Santiago\",\n  \"address_country\": \"CL\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -24496,7 +24496,7 @@
             "description": "Requires the Banking product, a verified company account and an idempotency key. Optional registrant overrides complete the approved KYB profile, including one document pair per UBO (ubo_{i}_document_issued_country, ubo_{i}_document_expiration_date, zero-based UBO index, camelCase aliases accepted): the corporate rail requires a full document per UBO. UBO identity corrections (ubo_{i}_first_name, ubo_{i}_last_name, ubo_{i}_birth_date, age 16-85) override wrong KYB owner data. Values already present in the KYB profile are autofilled — overrides are only needed for what the profile lacks, and explicit overrides always win. Missing holder paths return 422 registrant_incomplete. The accepted reservation carries `upload_link`: a pre-signed upload URL where the verification document zip must be PUT (provider requirement).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idempotency_key\": \"company-wallet-eur-001\",\n  \"trading_website\": \"https://example.com\",\n  \"business_activity\": \"International software services\",\n  \"is_micro_enterprise\": false,\n  \"incorporation_country\": \"CL\",\n  \"incorporation_date\": \"2020-04-15\",\n  \"expected_turnover\": \"250000.00\",\n  \"ubo_0_document_issued_country\": \"CL\",\n  \"ubo_0_document_expiration_date\": \"2035-04-15\",\n  \"ubo_0_pep\": \"false\",\n  \"ubo_0_usa_tax_residency\": \"false\"\n}",
+              "raw": "{\n  \"idempotency_key\": \"company-wallet-eur-001\",\n  \"trading_website\": \"https://example.com\",\n  \"business_activity\": \"International software services\",\n  \"is_micro_enterprise\": false,\n  \"incorporation_country\": \"CL\",\n  \"incorporation_date\": \"2020-04-15\",\n  \"expected_turnover\": \"250000.00\",\n  \"address_street\": \"1 Main Street\",\n  \"address_city\": \"Santiago\",\n  \"address_country\": \"CL\",\n  \"ubo_0_document_issued_country\": \"CL\",\n  \"ubo_0_document_expiration_date\": \"2035-04-15\",\n  \"ubo_0_pep\": \"false\",\n  \"ubo_0_usa_tax_residency\": \"false\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

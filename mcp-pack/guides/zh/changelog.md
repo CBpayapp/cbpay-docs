@@ -5,7 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.192 · 4 个版本 - 2026年10月25日
+## v2.193 · 1 个版本 - 2026年10月28日
+### v2.193
+**变更**
+- EUR 虚拟 IBAN 和企业钱包申请现在接受可选的
+  `address_street`、`address_city`、`address_country` override，以及已有的
+  `address_zip`（snake_case 和 camelCase aliases）。显式值覆盖已批准的
+  KYC/KYB profile，包括地址为空的迁移 profile；无效或缺失值保留相同的
+  `registrant_incomplete` 路径。企业 `business_activity` 在没有已验证活动
+  标签时，最后回退到账户行业标签。
+## v2.192 · 4 个版本 - 2026年10月26日
 ### v2.192
 **变更**
 - 托管 KYB 链接现在覆盖专用 `uk`、`es` 和 `vg` profile。未知国家使用带该 ISO 国家值的通用 profile；`country: generic` 必须提供 `generic_country`。现已记录原生 KYC/KYB submission 所需的完整身份和企业字段。

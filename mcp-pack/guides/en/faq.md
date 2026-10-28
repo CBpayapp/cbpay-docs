@@ -53,14 +53,12 @@ See [Locale and language](https://docs.cbpayapp.com/en/guides/locale).
 ## Money and rates
 
 #### What currency is my balance in?
-Your account holds **ten independent balances**: USD (the principal currency, 2 decimals), USDT, USDC, BTC, GOLD, SILVER,
-PLATINUM, BOB, MXN and ARS. Fiat operations (payouts in
-CLP, collections in BOB…) convert to/from your principal asset at your
-account's rates at
-execution time (`rate` for payouts, `payin_rate` for payins); you can
-also settle payouts from another balance (`settlement_asset`) and keep
-your payins in the asset you choose (`default_payin_asset`). Pricing is
-still quoted in USDT behind the scenes. See the
+Your account holds **eleven independent balances**: USD (the principal currency, 2 decimals), USDT, USDC, BTC, GOLD, SILVER,
+PLATINUM, BOB, MXN, ARS, CLP (zero decimals). CLP is held locally and
+same-currency CLP payouts use identity settlement; it is not an FX conversion
+path.
+`default_payin_asset: CLP`, swaps, checkout/POS and cards remain blocked
+without FX pricing. See the
 [money model](https://docs.cbpayapp.com/en/concepts/money-model).
 #### How do I know what a payout will cost before creating it?
 Query `GET /v1/rates` (returns **your** rate per country) and compute:

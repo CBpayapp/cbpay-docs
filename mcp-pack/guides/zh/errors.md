@@ -401,7 +401,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | Code | Meaning and action |
 |---|---|
 | `banking_customer_incomplete` | The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key. |
-| `registrant_incomplete` | 422 | 虚拟 IBAN 申请 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段；按消息补充证件或公司注册数据，并重试相同申请。 |
+| `registrant_incomplete` | 422 | 虚拟 IBAN 申请或企业钱包预留 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段。对于地址为空的迁移 profile，可发送 `address_street`、`address_city`、`address_country` 或 `address_zip`（snake_case 或 camelCase）；显式值覆盖 profile。缺失或无效值会在 `message` 中保留相同的 `individual.address.*` 或 `holder.corporate.address.*` 路径。请重试相同的持久化请求。 |
 | `provider_rejected` | The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state. |
 | `customer_id_required` | A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource. |
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
@@ -432,7 +432,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `no_fee_charged` | 该虚拟 IBAN 未收费（首个注资免费），无需退款。 |
 | 409 | `wallet_not_ready` | 钱包仍为 `pending`/`provisioning`；读取详情直到变为 `active`。 |
 | 422 | `virtual_iban_limit_reached` | 预留时达到个人账户的 purpose 上限；不要创建第二个 key。 |
-| 422 | `registrant_incomplete` | 按 `message` 补充 KYC/KYB 或公司注册字段，并重试同一持久化请求。 |
+| 422 | `registrant_incomplete` | 按 `message` 补充 KYC/KYB、公司注册或地址字段（包括 `address_street`、`address_city`、`address_country` 或 `address_zip`），并重试同一持久化请求。 |
 | 502 | `wallet_reservation_failed` | 预留没有返回可用 reference；先协调再重试。 |
 | 502 | `wallet_reservation_status_failed` | 状态读取失败；保留 `order_reference` 或 `client_order`。 |
 | 502 | `wallet_read_failed` | live wallet 响应或 EUR 金额不可读；检查状态后重试读取。 |

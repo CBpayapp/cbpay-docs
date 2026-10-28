@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.192"
+  version: "2.193"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -9279,6 +9279,7 @@ paths:
                   type: string
                 country:
                   type: string
+                  description: ISO alpha-2; unknown values use the generic profile. Required with generic_country when country=generic.
                 business:
                   type: object
                   description: Complete company fields; legal_name and registration_number are required for KYB.
@@ -20456,7 +20457,7 @@ paths:
       - Account
       operationId: getMyTxnReview
       summary: Get a review
-      description: 'Detail of one review of the account, with the information request message (`info_request`) and the files already uploaded. The internal hold reason and compliance notes are never exposed (anti tipping-off). A rejected review also includes `decision_note` (the same text as the rejection email) and `decided_at`.'
+      description: 'Detail of one review of the account, with the information request message (`info_request`), the exact documents asked (`requested_documents`, closed evidence vocabulary) and the files already uploaded. The internal hold reason and compliance notes are never exposed (anti tipping-off). A rejected review also includes `decision_note` (the same text as the rejection email) and `decided_at`.'
       parameters:
       - name: reviewID
         in: path
@@ -20482,6 +20483,9 @@ paths:
                   info_request:
                     message: Please upload the invoice that justifies this payment
                     requested_at: '2026-08-06T15:20:00Z'
+                  requested_documents:
+                  - bankStatement
+                  - sourceOfWealth
                   files:
                   - id: f1e2d3c4-0000-4000-8000-0000000000aa
                     review_id: 7a3f2b1c-0000-4000-8000-000000000001
@@ -23319,6 +23323,12 @@ paths:
                 taxNumber: {type: string, description: CamelCase alias}
                 address_zip: {type: string, description: Address postal code correction when the KYC carries one with invalid country format (empty = profile value is used)}
                 addressZip: {type: string, description: CamelCase alias}
+                address_street: {type: string, description: Address street override when the approved KYC/KYB profile is empty}
+                addressStreet: {type: string, description: CamelCase alias}
+                address_city: {type: string, description: Address city override when the approved KYC/KYB profile is empty}
+                addressCity: {type: string, description: CamelCase alias}
+                address_country: {type: string, description: ISO alpha-2 address country override when the approved KYC/KYB profile is empty}
+                addressCountry: {type: string, description: CamelCase alias}
                 ubo_0_document_issued_country: {type: string, description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index}
                 ubo0DocumentIssuedCountry: {type: string, description: CamelCase alias}
                 ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 document expiry; must be more than one month in the future; repeat per UBO index}
@@ -23343,6 +23353,9 @@ paths:
                   purpose: funding_usdt
                   document_issued_country: IT
                   document_expiration_date: '2035-06-01'
+                  address_street: 1 Main Street
+                  address_city: Santiago
+                  address_country: CL
               company_overrides:
                 value:
                   purpose: banking_eur
@@ -23767,6 +23780,15 @@ paths:
                 address_zip:
                   type: string
                   description: Address postal code correction when the KYC carries one with invalid country format (empty = profile value is used)
+                address_street:
+                  type: string
+                  description: Address street override when the approved KYC/KYB profile is empty
+                address_city:
+                  type: string
+                  description: Address city override when the approved KYC/KYB profile is empty
+                address_country:
+                  type: string
+                  description: ISO alpha-2 address country override when the approved KYC/KYB profile is empty
                 ubo_0_document_issued_country:
                   type: string
                   description: ISO alpha-2 issuing country of UBO 0 document; repeat per UBO index
@@ -23798,6 +23820,9 @@ paths:
               incorporation_country: CL
               incorporation_date: '2020-04-15'
               expected_turnover: '250000.00'
+              address_street: 1 Main Street
+              address_city: Santiago
+              address_country: CL
               ubo_0_document_issued_country: CL
               ubo_0_document_expiration_date: '2035-04-15'
               ubo_0_pep: 'false'

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.192"
+  version: "2.193"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -8843,7 +8843,7 @@ paths:
       - KYC / KYB
       operationId: createKybSubmission
       summary: 通过 API 数据创建 KYB submission
-      description: 仅限企业账户:直接提交数据以验证你的终端客户(企业)。请求体:external_customer_id、country?、business(公司字段)、ubos?、directors?、signers?、bank_info?、metadata?。KYB 必须提供完整的法定名称和注册号；KYC 必须提供姓名、出生日期、ISO alpha-3 国籍、证件和 ISO alpha-3 国家。未知 KYB 国家使用带该 ISO 国家值的通用 profile；`country=generic` 必须提供 `generic_country`。按固定
+      description: 仅限企业账户:直接提交数据以验证你的终端客户(企业)。请求体:external_customer_id、country?、business(公司字段)、ubos?、directors?、signers?、bank_info?、metadata?。按固定
         `kyb_verification` 费用计费;必须提供 `idempotency_key`。在开放期间重新提交会更新同一份 submission 而不再次扣费。
       requestBody:
         required: true
@@ -8863,7 +8863,7 @@ paths:
                   type: string
                 business:
                   type: object
-                  description: 完整企业字段；KYB 必须提供 legal_name 和 registration_number。
+                  description: 公司字段(法定名称、税号、地址、经营活动……)。
                 ubos:
                   type: array
                   items:
@@ -19665,7 +19665,7 @@ paths:
       - Account
       operationId: getMyTxnReview
       summary: 审核详情
-      description: '账户某条审核的详情，包括信息请求消息（`info_request`）和已上传的文件。内部挂起原因和合规备注绝不对外暴露（防止通风报信）。被拒绝的审核还会包含 `decision_note`（与拒绝邮件相同的文本）和 `decided_at`。'
+      description: '账户某条审核的详情，包括信息请求消息（`info_request`）、明确要求的文件（`requested_documents`，封闭证据词汇） 和已上传的文件。内部挂起原因和合规备注绝不对外暴露（防止通风报信）。被拒绝的审核还会包含 `decision_note`（与拒绝邮件相同的文本）和 `decided_at`。'
       parameters:
       - name: reviewID
         in: path
@@ -19691,6 +19691,9 @@ paths:
                   info_request:
                     message: Please upload the invoice that justifies this payment
                     requested_at: '2026-08-06T15:20:00Z'
+                  requested_documents:
+                  - bankStatement
+                  - sourceOfWealth
                   files:
                   - id: f1e2d3c4-0000-4000-8000-0000000000aa
                     review_id: 7a3f2b1c-0000-4000-8000-000000000001
@@ -22399,6 +22402,12 @@ paths:
                 taxNumber: {type: string, description: camelCase alias}
                 address_zip: {type: string, description: KYC 邮编国家格式有误时的更正（空 = 使用 profile 值）}
                 addressZip: {type: string, description: camelCase alias}
+                address_street: {type: string, description: 已批准 KYC/KYB profile 地址为空时的街道 override}
+                addressStreet: {type: string, description: camelCase alias}
+                address_city: {type: string, description: 已批准 KYC/KYB profile 地址为空时的城市 override}
+                addressCity: {type: string, description: camelCase alias}
+                address_country: {type: string, description: 已批准 KYC/KYB profile 地址为空时的 ISO alpha-2 国家 override}
+                addressCountry: {type: string, description: camelCase alias}
                 ubo_0_document_issued_country: {type: string, description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复}
                 ubo0DocumentIssuedCountry: {type: string, description: camelCase alias}
                 ubo_0_document_expiration_date: {type: string, format: date, description: UBO 0 证件到期日，必须晚于一个月，按 UBO 索引重复}
@@ -22423,6 +22432,9 @@ paths:
                   purpose: funding_usdt
                   document_issued_country: IT
                   document_expiration_date: '2035-06-01'
+                  address_street: 1 Main Street
+                  address_city: Santiago
+                  address_country: CL
               company_overrides:
                 value:
                   purpose: banking_eur
@@ -22843,6 +22855,15 @@ paths:
                 address_zip:
                   type: string
                   description: KYC 邮编国家格式有误时的更正（空 = 使用 profile 值）
+                address_street:
+                  type: string
+                  description: 已批准 KYC/KYB profile 地址为空时的街道 override
+                address_city:
+                  type: string
+                  description: 已批准 KYC/KYB profile 地址为空时的城市 override
+                address_country:
+                  type: string
+                  description: 已批准 KYC/KYB profile 地址为空时的 ISO alpha-2 国家 override
                 ubo_0_document_issued_country:
                   type: string
                   description: UBO 0 证件签发国家 ISO alpha-2，按 UBO 索引重复
@@ -22874,6 +22895,9 @@ paths:
               incorporation_country: CL
               incorporation_date: '2020-04-15'
               expected_turnover: '250000.00'
+              address_street: 1 Main Street
+              address_city: Santiago
+              address_country: CL
               ubo_0_document_issued_country: CL
               ubo_0_document_expiration_date: '2035-04-15'
               ubo_0_pep: 'false'

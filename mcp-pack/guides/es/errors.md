@@ -420,7 +420,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | Code | Meaning and action |
 |---|---|
 | `banking_customer_incomplete` | The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key. |
-| `registrant_incomplete` | 422 | Solicitud de vIBAN | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant; completa los datos de documento o incorporación indicados y reintenta la misma solicitud. |
+| `registrant_incomplete` | 422 | Solicitud de vIBAN o reserva de company wallet | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant. En perfiles migrados con dirección vacía, envía `address_street`, `address_city`, `address_country` o `address_zip` (snake_case o camelCase); el valor explícito sobrescribe el perfil. Los valores faltantes o inválidos conservan en `message` el mismo path `individual.address.*` o `holder.corporate.address.*`. Reintenta la misma solicitud durable. |
 | `provider_rejected` | The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state. |
 | `customer_id_required` | A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource. |
 | `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
@@ -452,7 +452,7 @@ Se incluyen aquí para que los SDK compartidos mantengan un solo catálogo.
 | 409 | `no_fee_charged` | Este IBAN virtual no tuvo cobro (el primer fondeo es gratis). Nada que devolver. |
 | 409 | `wallet_not_ready` | La wallet sigue `pending`/`provisioning`. Consulta el detalle hasta que quede `active`. |
 | 422 | `virtual_iban_limit_reached` | Se alcanzó el límite persona-por-propósito al reservar. No crees una segunda clave. |
-| 422 | `registrant_incomplete` | Completa los datos KYC/KYB o de incorporación indicados en `message` y repite la misma solicitud durable. |
+| 422 | `registrant_incomplete` | Completa los datos KYC/KYB, de incorporación o de dirección indicados en `message` (incluidos `address_street`, `address_city`, `address_country` o `address_zip`) y repite la misma solicitud durable. |
 | 502 | `wallet_reservation_failed` | La reserva no devolvió una referencia utilizable. Concilia antes de reintentar. |
 | 502 | `wallet_reservation_status_failed` | Falló la lectura de estado. Conserva `order_reference` o `client_order`. |
 | 502 | `wallet_read_failed` | No se pudo leer la respuesta live o el monto EUR. Reintenta la lectura después de revisar el estado. |

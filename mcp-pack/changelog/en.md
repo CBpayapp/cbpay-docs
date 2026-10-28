@@ -5,7 +5,17 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.192 · 4 versions - October 25, 2026
+## v2.193 · 1 version - October 28, 2026
+### v2.193
+**Changed**
+- EUR virtual IBAN and company-wallet requests now accept optional
+  `address_street`, `address_city` and `address_country` overrides alongside
+  `address_zip` (snake_case and camelCase aliases). Explicit values override
+  the approved KYC/KYB profile, including migrated profiles with an empty
+  address; invalid or missing values retain the same `registrant_incomplete`
+  path. Corporate `business_activity` now falls back to the account industry
+  label when no verified activity label exists.
+## v2.192 · 4 versions - October 26, 2026
 ### v2.192
 **Changed**
 - KYB hosted links now cover the dedicated `uk`, `es` and `vg` profiles. Unknown link countries use the generic profile with that ISO country; explicit `country: generic` requires `generic_country`. Native KYC/KYB submissions now document complete required identity and business fields.
