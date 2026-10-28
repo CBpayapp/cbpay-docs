@@ -5,9 +5,9 @@ slug: es/concepts/money-model
 lang: es
 source_url: https://docs.cbpayapp.com/es/concepts/money-model
 ---
-## Diez saldos virtuales independientes
+## Once saldos virtuales independientes
 
-Cada cuenta mantiene **diez saldos virtuales, uno por asset**:
+Cada cuenta mantiene **once saldos virtuales, uno por asset**:
 
 | Asset | Qué es | Decimales | Cómo se fondea |
 |---|---|---|---|
@@ -21,12 +21,13 @@ Cada cuenta mantiene **diez saldos virtuales, uno por asset**:
 | `BOB` | Bolivianos — hold local | 2 | Payins fiat con hold local, transferencias, ajustes |
 | `MXN` | Pesos mexicanos — hold local | 2 | Payins fiat con hold local, transferencias, ajustes |
 | `ARS` | Pesos argentinos — hold local | 2 | Payins fiat con hold local, transferencias, ajustes |
+| `CLP` | Pesos chilenos — hold local | 0 | Payins fiat con hold local, transferencias same-asset, ajustes |
 
 Son totalmente independientes entre sí: nunca se mezclan ni se convierten
 automáticamente. (`BANK_USD` y `BANK_EUR` son saldos espejo de banking
 separados — ver [Banking](https://docs.cbpayapp.com/es/guides/banking).)
 
-`GET /v1/balances` devuelve siempre los diez (con ceros si no has operado
+`GET /v1/balances` devuelve siempre los once (con ceros si no has operado
 ese asset), como **strings decimales**:
 
 ```json
@@ -42,7 +43,8 @@ ese asset), como **strings decimales**:
     { "asset": "PLATINUM", "available": "0.000000", "held": "0.000000" },
     { "asset": "BOB", "available": "0.00", "held": "0.00" },
     { "asset": "MXN", "available": "0.00", "held": "0.00" },
-    { "asset": "ARS", "available": "0.00", "held": "0.00" }
+    { "asset": "ARS", "available": "0.00", "held": "0.00" },
+    { "asset": "CLP", "available": "0", "held": "0" }
   ]
 }
 ```
@@ -58,7 +60,7 @@ y comisiones usan USD salvo que la cuenta configure otra cosa. Un asset vacío s
 ## Elige desde qué saldo pagas
 
 Los **payouts** y las **comisiones de servicios** (KYC, creación de
-wallets, banking) pueden debitarse desde cualquiera de tus diez saldos.
+wallets, banking) pueden debitarse desde cualquiera de tus once saldos.
 El pipeline de pricing no cambia: la operación se cotiza en USDT como
 siempre, y al final el total se traduce al asset elegido con el **precio
 efectivo de settlement** del momento.

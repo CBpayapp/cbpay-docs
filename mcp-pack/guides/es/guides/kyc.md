@@ -819,7 +819,7 @@ submission abierta y liveness links no cobran de nuevo.
 | 403 | `service_disabled` | El servicio `kyc` está deshabilitado para tu cuenta | Contacta a tu operador |
 | 404 | `not_found` | El link/submission no existe o no es tuyo | Verifica el id |
 | 404 | `verification_not_found` | Pediste tu informe self sin una verificación registrada | Completa tu onboarding primero |
-| 409 | `already_verified` | Pediste link de onboarding con la cuenta ya aprobada | Nada que hacer |
+| 409 | `already_verified` / `self_verification_in_progress` | Pediste link de onboarding con la cuenta ya aprobada, o con una verificación ya en curso | Nada que hacer, o completa esa verificación |
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible | Reintenta más tarde |
 
 ## Preguntas frecuentes
