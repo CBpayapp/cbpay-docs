@@ -4,18 +4,13 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 29, 2026" description="v2.196 · 3 versions">
-### v2.196
-**Changed**
-- Your own self-onboarding submission can now be read and remediated before
-  the account is approved when it is in an actionable state
-  (`pending_review`, `in_review`, `changes_requested`, `more_info_required`
-  or `escalated`). Third-party submissions, product and money routes keep
-  their existing gates, and terminal `rejected` submissions still return
-  `403`.
-
+<Update label="October 29, 2026" description="v2.195 · 2 versions">
 ### v2.195
 **Added**
+- Your own self-onboarding submission can be read and remediated before
+  approval while it is `pending_review`, `in_review`, `changes_requested`,
+  `more_info_required` or `escalated`; third-party, product and money routes
+  keep their gates, and terminal `rejected` still returns `403`.
 - Pending QR payins now support a shareable public payment link. `GET
   /v1/track-link?kind=payin&id=...` returns `{track_url, code}`; the public
   tracker exposes the payer-facing `pay` block with QR data, conversion and
