@@ -4,6 +4,17 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年10月29日" description="v2.194 · 1 个版本">
+### v2.194
+**新增**
+- QR payin 响应现在提供公开数字 `reference`、详情读取中的完整已清理
+  `charge`，以及列表中的轻量 `charge`。巴西 QR 的 `conversion.amount`
+  是付款人必须支付的确切金额；当轨道返回更短有效期时还会提供
+  `requested_expires_in` 和 `ttl_notice`。Checkout 会自动重新生成带有
+  图像但已过期的 QR charge。
+
+</Update>
+
 <Update label="2026年10月28日" description="v2.193 · 1 个版本">
 ### v2.193
 **变更**
@@ -35,7 +46,6 @@ description: "API and documentation change history"
 **修复**
 - 修复登录 2FA 验证码邮件轰炸：连续登录现在复用待验证的验证码，而不是每次都发送新邮件；24 小时内 5 个验证码未使用后将停止发送（完成验证或重置密码可恢复）。`otp_required` 响应不变。
 
-</Update>
 <Update label="2026年10月24日" description="v2.188 · 2 个版本">
 ### v2.188
 **新增**

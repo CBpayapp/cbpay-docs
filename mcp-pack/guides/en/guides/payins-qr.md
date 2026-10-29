@@ -49,6 +49,10 @@ The 7-day QR rail has an effective maximum of `604800` seconds, with
 `86400` seconds (24 hours) as its default when the value is missing or
 non-positive. Values above the selected rail maximum are capped, not
 rejected. For the 7-day rail, use at least `120` seconds as an operational minimum.
+The response preserves the requested value as `charge.requested_expires_in`.
+If the selected rail returns a shorter lifetime, the response also includes
+`ttl_notice` with `requested_expires_in`, `actual_expires_in`, and a note. This
+is informational: use `charge.expires_at` as the deadline.
 
 Response `201`:
 
@@ -56,16 +60,23 @@ Response `201`:
 {
   "payin_id": "9c2a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
   "status": "pending",
+  "reference": "77849505",
   "charge": {
     "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
     "our_reference": "77849505",
-    "qr_payload": "<QR content>",
+    "qr_image": "<base64 PNG>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "qr_payload": "<QR content when this rail emits one>",
+    "expires_at": "2026-10-29T19:00:00Z",
+    "requested_expires_in": 3600,
     "status": "pending"
   }
 }
 ```
 
-Display the QR payload or the `qr_image_url` returned by the API. When the
+Display `qr_image` or `qr_image_url`; use `qr_payload` only when it is present.
+Brazil returns the PNG image only, without a copy-and-paste payload. The
+numeric `reference` is the citable reference for support and sharing. When the
 customer pays, the account is credited automatically. Read the current status
 with `GET /v1/payins/{payinID}`.
 
@@ -98,8 +109,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   }'
 ```
 
-The response includes the QR image, the amount the payer sees in BRL, the BOB
-amount charged, and the auditable platform quote:
+The response includes the QR image, the amount the payer must actually pay in
+BRL, the BOB amount charged, and the auditable platform quote:
 
 ```json
 {
@@ -112,6 +123,7 @@ amount charged, and the auditable platform quote:
     "qr_image_url": "https://cdn.example.test/qr/77849505.png",
     "conversion": {"amount": "120.00", "currency": "BRL", "rate": "0.50"},
     "expires_at": "2026-10-22T12:57:14.937Z",
+    "requested_expires_in": 1800,
     "bob_charged": "240.00",
     "platform_quote": {
       "quoted_currency": "BRL",
@@ -127,9 +139,33 @@ amount charged, and the auditable platform quote:
 }
 ```
 
-`conversion.amount` is the BRL amount returned by the rail. It can differ by
-centavos from the BRL request when the BRL→BOB conversion is rounded
-half-up to cents.
+`conversion.amount` is the source of truth for the amount shown to the payer.
+It is the exact amount the payer must transfer, and can differ materially from
+the typed amount because the rail applies its own rate. For example, an
+integrator may type `5.41` BRL while the generated QR requires `5.84` BRL.
+Never display the request amount instead of `conversion.amount`.
+
+When a rail returns a shorter lifetime than requested, the response is still
+successful and includes an additive notice:
+
+```json
+{
+  "reference": "77849505",
+  "ttl_notice": {
+    "requested_expires_in": 1800,
+    "actual_expires_in": 300,
+    "note": "the rail returned a shorter lifetime than requested; the payer must pay within the actual window"
+  },
+  "charge": {
+    "expires_at": "2026-10-29T18:05:00Z",
+    "requested_expires_in": 1800
+  }
+}
+```
+
+For Brazil, request `expires_in: 300` and show the fixed five-minute notice in
+your portal. The rail may return approximately five minutes even when a
+longer value was requested.
 
 ### Advanced: enter the charge directly in BOB
 
@@ -169,11 +205,12 @@ provides a PNG image, not an EMV copy-and-paste payload:
     "qr_image": "<base64 PNG>",
     "qr_image_url": "https://cdn.example.test/qr/77849505.png",
     "conversion": {
-      "amount": "0.48",
+      "amount": "5.84",
       "currency": "BRL",
       "rate": "0.48"
     },
     "expires_at": "2026-10-22T12:57:14.937Z",
+    "requested_expires_in": 300,
     "status": "pending"
   }
 }
@@ -188,6 +225,55 @@ materialization with the same mid rate and `platform_quote` snapshot as the
 direct payin) and direct `BOB`; with two currencies the materialize call
 sends `?currency=BRL` (or `BOB`).
 
+### Read a QR payin
+
+The detail endpoint returns the same sanitized charge needed to render the QR
+after a page reload. It includes the image, payer-facing conversion, expiry,
+status timestamps, and the optional `ttl_notice`; provider identity and
+internal fields are never exposed:
+
+```http
+GET /v1/payins/2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+```
+
+```json
+{
+  "payin_id": "2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101",
+  "kind": "qr",
+  "status": "pending",
+  "reference": "77849505",
+  "charge": {
+    "charge_id": "8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401",
+    "our_reference": "77849505",
+    "qr_image": "<base64 PNG>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "conversion": {"amount": "5.84", "currency": "BRL", "rate": "0.48"},
+    "status": "pending",
+    "expires_at": "2026-10-29T18:05:00Z",
+    "requested_expires_in": 300,
+    "created_at": "2026-10-29T18:00:00Z",
+    "updated_at": "2026-10-29T18:00:01Z"
+  },
+  "ttl_notice": {
+    "requested_expires_in": 1800,
+    "actual_expires_in": 300,
+    "note": "the rail returned a shorter lifetime than requested; the payer must pay within the actual window"
+  }
+}
+```
+
+The list endpoint returns only `charge.conversion` and `charge.expires_at` for
+QR rows, never the image. Request it with explicit date filters:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-31&kind=qr&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+> **Note**
+When an internal QR in a checkout link has expired but still has an image, the
+checkout automatically re-materializes a fresh QR before serving it. The
+expired image is never presented as payable.
 ### Confirmation and reconciliation
 
 The lifecycle is webhook-first. An authenticated inbound event (the rail
@@ -304,10 +390,20 @@ Use BRL when the amount your payer should pay is the product price. The
 platform converts it to BOB at the mid rate and snapshots the quote. Use BOB
 only when you need to specify the core charge directly.
 #### Why can the payer amount differ by a few centavos?
-The platform converts BRL to BOB and rounds the BOB charge half-up to two
-decimals. The rail then returns the BRL amount corresponding to that rounded
-charge, so `conversion.amount` can differ slightly from the requested BRL
-amount.
+`conversion.amount` is the exact payer-facing amount returned by the rail. The
+rail's rate and rounding can make it differ from the amount typed in the
+request — an incident showed `5.41` BRL entered versus `5.84` BRL in the QR.
+Always display `conversion.amount` and never recalculate it in the client.
+#### Why does a Brazil QR expire after five minutes?
+Some Brazil QR rails enforce an approximately five-minute lifetime and ignore
+longer requested durations. The API records your
+`charge.requested_expires_in`, returns the actual `charge.expires_at`, and adds
+`ttl_notice` when the difference is material. Request `expires_in: 300` and
+start a new QR after expiry; do not reuse a dead QR.
+#### What does the QR listing include?
+`GET /v1/payins` includes a lightweight QR `charge` with only
+`conversion` and `expires_at`. Use `GET /v1/payins/{id}` when you need the
+image or the complete sanitized charge.
 #### What if FX rates are unavailable?
 The API returns `503 rates_unavailable` before creating a charge. Retry later
 with the same idempotency key; do not create a new payment attempt.

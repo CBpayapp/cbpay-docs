@@ -5,6 +5,15 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.194 · 1 个版本 - 2026年10月29日
+### v2.194
+**新增**
+- QR payin 响应现在提供公开数字 `reference`、详情读取中的完整已清理
+  `charge`，以及列表中的轻量 `charge`。巴西 QR 的 `conversion.amount`
+  是付款人必须支付的确切金额；当轨道返回更短有效期时还会提供
+  `requested_expires_in` 和 `ttl_notice`。Checkout 会自动重新生成带有
+  图像但已过期的 QR charge。
+
 ## v2.193 · 1 个版本 - 2026年10月28日
 ### v2.193
 **变更**

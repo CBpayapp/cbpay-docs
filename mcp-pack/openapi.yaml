@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.193"
+  version: "2.194"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5713,10 +5713,41 @@ paths:
                   status:
                     type: string
                     example: pending
+                  reference:
+                    type: string
+                    description: Public numeric reference from the QR charge (`our_reference`).
+                  ttl_notice:
+                    type: object
+                    description: Present when the selected rail returns a materially shorter lifetime than requested.
+                    properties:
+                      requested_expires_in: {type: integer, format: int32}
+                      actual_expires_in: {type: integer, format: int32}
+                      note: {type: string}
                   charge:
                     type: object
                     description: Charge details (QR data, references) from the core.
                     properties:
+                      charge_id:
+                        type: string
+                      our_reference:
+                        type: string
+                        description: Public numeric reference suitable for payer support and sharing.
+                      provider_reference:
+                        type: string
+                        description: Opaque rail reference; provider identity is not exposed.
+                      qr_image:
+                        type: string
+                        description: Base64-encoded PNG QR image.
+                      qr_image_url:
+                        type: string
+                        format: uri
+                      qr_payload:
+                        type: string
+                        description: Copy-and-paste payload, present only when the rail emits one.
+                      status:
+                        type: string
+                      status_message:
+                        type: string
                       conversion:
                         type: object
                         properties:
@@ -5735,12 +5766,26 @@ paths:
                           rate_brl_per_usd: {type: string}
                           rate_bob_per_usd: {type: string}
                           rates_updated_at: {type: string, format: date-time}
+                      requested_expires_in:
+                        type: integer
+                        format: int32
+                        description: Seconds requested by the integrator.
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                      paid_at:
+                        type: string
+                        format: date-time
               examples:
                 qr:
                   summary: 'QR charge (method: qr)'
                   value:
                     payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
                     status: pending
+                    reference: '77849505'
                     charge:
                       charge_id: c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4
                       our_reference: '77849505'
@@ -5751,6 +5796,7 @@ paths:
                   value:
                     payin_id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
                     status: pending
+                    reference: '77849505'
                     charge:
                       charge_id: 8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401
                       our_reference: '77849505'
@@ -5761,6 +5807,7 @@ paths:
                         currency: BRL
                         rate: '0.50'
                       expires_at: '2026-10-22T12:57:14.937Z'
+                      requested_expires_in: 1800
                       bob_charged: '240.00'
                       platform_quote:
                         quoted_currency: BRL
@@ -5771,6 +5818,10 @@ paths:
                         rate_bob_per_usd: '10.0000000000'
                         rates_updated_at: '2026-10-22T20:00:00Z'
                       status: pending
+                    ttl_notice:
+                      requested_expires_in: 1800
+                      actual_expires_in: 300
+                      note: the rail returned a shorter lifetime than requested; the payer must pay within the actual window
                 bank_transfer:
                   summary: 'Announced deposit (method: bank_transfer)'
                   value:
@@ -6151,6 +6202,12 @@ paths:
                     document: '1234567'
                     account: '1000001'
                   reference: QR-778812
+                  charge:
+                    conversion:
+                      amount: '700.00'
+                      currency: BOB
+                      rate: '6.91'
+                    expires_at: '2026-10-29T19:00:00Z'
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-07T12:00:00Z'
                   fx_rate: '6.91'
@@ -6373,6 +6430,31 @@ paths:
               examples:
                 standard:
                   value: *id006
+                qr_detail:
+                  summary: QR payin detail with the complete sanitized charge
+                  value:
+                    payin_id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+                    kind: qr
+                    status: pending
+                    reference: '77849505'
+                    charge:
+                      charge_id: 8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401
+                      our_reference: '77849505'
+                      qr_image: data:image/png;base64,iVBORw0KGgo…
+                      qr_image_url: https://cdn.example.test/qr/77849505.png
+                      conversion:
+                        amount: '5.84'
+                        currency: BRL
+                        rate: '0.48'
+                      status: pending
+                      expires_at: '2026-10-29T18:05:00Z'
+                      requested_expires_in: 300
+                      created_at: '2026-10-29T18:00:00Z'
+                      updated_at: '2026-10-29T18:00:01Z'
+                    ttl_notice:
+                      requested_expires_in: 1800
+                      actual_expires_in: 300
+                      note: the rail returned a shorter lifetime than requested; the payer must pay within the actual window
                 virtual_account_with_payer:
                   summary: Dedicated account credit with instrument and payer
                   value:
@@ -26486,6 +26568,37 @@ components:
           - failed
         reference:
           type: string
+        charge:
+          type: object
+          description: QR charge details. Detail responses include the full sanitized block; lists include only conversion and expires_at.
+          properties:
+            charge_id: {type: string}
+            our_reference: {type: string}
+            provider_reference: {type: string}
+            qr_image: {type: string}
+            qr_image_url: {type: string, format: uri}
+            qr_payload: {type: string}
+            status: {type: string}
+            status_message: {type: string}
+            conversion:
+              type: object
+              properties:
+                amount: {type: string}
+                currency: {type: string}
+                rate: {type: string}
+            expires_at: {type: string, format: date-time}
+            bob_charged: {type: string}
+            platform_quote: {type: object, additionalProperties: true}
+            requested_expires_in: {type: integer, format: int32}
+            created_at: {type: string, format: date-time}
+            updated_at: {type: string, format: date-time}
+            paid_at: {type: string, format: date-time}
+        ttl_notice:
+          type: object
+          properties:
+            requested_expires_in: {type: integer, format: int32}
+            actual_expires_in: {type: integer, format: int32}
+            note: {type: string}
         idempotency_key:
           type: string
           description: >-

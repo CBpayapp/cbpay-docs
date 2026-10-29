@@ -46,6 +46,9 @@ QR 轨道，集成方不能选择轨道。legacy QR 合同的有效上限为 `86
 （23:59:59）。7 天 QR 轨道的有效上限为 `604800` 秒（7 天）；当值缺失
 或不为正数时，默认值为 `86400` 秒（24 小时）。超过所选轨道上限的值会
 被截断，不会被拒绝。对于 7 天轨道，建议至少使用 `120` 秒。
+响应会在 `charge.requested_expires_in` 中保留请求的秒数。如果轨道返回
+更短的有效期，还会返回包含 `requested_expires_in`、
+`actual_expires_in` 和说明的 `ttl_notice`；请以 `charge.expires_at` 为准。
 
 响应 `201`：
 
@@ -53,17 +56,23 @@ QR 轨道，集成方不能选择轨道。legacy QR 合同的有效上限为 `86
 {
   "payin_id": "9c2a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
   "status": "pending",
+  "reference": "77849505",
   "charge": {
     "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
     "our_reference": "77849505",
-    "qr_payload": "<QR content>",
+    "qr_image": "<base64 PNG>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "qr_payload": "<轨道提供时才有的 QR 内容>",
+    "expires_at": "2026-10-29T19:00:00Z",
+    "requested_expires_in": 3600,
     "status": "pending"
   }
 }
 ```
 
-向客户展示 QR 内容或 API 返回的 `qr_image_url`。客户付款后，账户会自动
-入账。使用 `GET /v1/payins/{payinID}` 查询当前状态。
+展示 `qr_image` 或 `qr_image_url`；仅在存在时使用 `qr_payload`。巴西只返回
+PNG 图像，不提供复制粘贴 payload。数字 `reference` 是可引用的支持编号。
+客户付款后账户会自动入账；使用 `GET /v1/payins/{payinID}` 查询状态。
 
 ## 巴西：BRL 或 BOB PIX QR
 
@@ -78,14 +87,23 @@ BOB。报价会被快照保存，幂等 replay 保留原始报价。
 curl -X POST https://api.qbank.cl/platform/v1/payins -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","expires_in":1800,"idempotency_key":"qr-brl-20261022-001"}'
 ```
 
-响应包含 QR 图像、付款人看到的 BRL 金额、收取的 BOB 金额和可审计的报价：
+响应包含 QR 图像、付款人必须实际支付的 BRL 金额、收取的 BOB 金额和可审计的报价：
 
 ```json
-{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
+{"reference":"77849505","charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","requested_expires_in":1800,"bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
 ```
 
-`conversion.amount` 可能与请求的 BRL 相差几分钱：BOB 金额按 half-up
-规则保留两位小数，通道返回对应的 BRL 等值金额。
+`conversion.amount` 是付款人必须支付的确切金额，也是展示的唯一事实来源。
+轨道自己的汇率可能让它明显不同于输入值：例如输入 `5.41` BRL 时，
+QR 可能要求 `5.84` BRL。不要在客户端用请求金额替代它。
+
+如果轨道返回更短的有效期，响应仍然成功：
+
+```json
+{"reference":"77849505","ttl_notice":{"requested_expires_in":1800,"actual_expires_in":300,"note":"the rail returned a shorter lifetime than requested; the payer must pay within the actual window"},"charge":{"expires_at":"2026-10-29T18:05:00Z","requested_expires_in":1800}}
+```
+
+巴西请请求 `expires_in: 300`，并在门户中显示固定的五分钟提示。
 
 ### 高级：直接输入 BOB 收取金额
 
@@ -118,6 +136,7 @@ payload：
       "rate": "0.48"
     },
     "expires_at": "2026-10-22T12:57:14.937Z",
+    "requested_expires_in": 300,
     "status": "pending"
   }
 }
@@ -128,6 +147,21 @@ payload：
 checkout link 同时报价两者：面向付款人的 `BRL`（materialize 时按与 direct payin 相同的 mid 汇率转换为 BOB，
 并附带 `platform_quote` 快照）以及直接 `BOB`；同一 method 有两种货币时，materialize 调用需带 `?currency=BRL`（或 `BOB`）。
 
+### 查询 QR payin
+
+详情接口返回完整的已清理 charge，以便页面刷新后重新渲染二维码：
+
+```json
+{"payin_id":"2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101","kind":"qr","status":"pending","reference":"77849505","charge":{"charge_id":"8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401","our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"5.84","currency":"BRL","rate":"0.48"},"status":"pending","expires_at":"2026-10-29T18:05:00Z","requested_expires_in":300,"created_at":"2026-10-29T18:00:00Z","updated_at":"2026-10-29T18:00:01Z"},"ttl_notice":{"requested_expires_in":1800,"actual_expires_in":300,"note":"the rail returned a shorter lifetime than requested; the payer must pay within the actual window"}}
+```
+
+列表（`GET /v1/payins`）中的 QR 只包含 `charge.conversion` 和
+`charge.expires_at`，不会返回图像。请使用明确的日期筛选：
+`?from=2026-10-01&to=2026-10-31&kind=qr&page=1&page_size=50`。
+
+> **注**
+Checkout link 中带有图像的内部 QR 过期后，checkout 会在提供给付款人之前
+自动重新生成新的 QR。绝不会把已过期图像作为可支付二维码展示。
 ### 确认与对账
 
 流程优先使用 webhook。经过认证的入站事件（通道 webhook 使用配置的
@@ -223,8 +257,16 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 推荐输入付款人应支付的 BRL；平台按 mid 汇率转换为 BOB 并保存报价。
 需要直接指定 core charge 时才使用 BOB。
 #### 为什么付款金额可能相差几分钱？
-平台将 BRL 转换为 BOB，并按 half-up 规则将 BOB 收费金额舍入到两位小数，
-所以 `conversion.amount` 可能与请求的 BRL 略有不同。
+`conversion.amount` 是轨道返回给付款人的确切金额。轨道汇率可能使它
+不同于请求值：一次真实事件中输入 `5.41` BRL，而 QR 显示 `5.84` BRL。
+始终展示 `conversion.amount`，不要在客户端重新计算。
+#### 为什么巴西 QR 五分钟后过期？
+部分巴西 QR 轨道强制约五分钟的有效期，并忽略更长的请求值。API 保留
+`charge.requested_expires_in`，返回实际的 `charge.expires_at`，并在差异
+明显时增加 `ttl_notice`。请请求 `expires_in: 300`，过期后创建新的 QR。
+#### QR 列表包含哪些内容？
+`GET /v1/payins` 只返回含 `conversion` 和 `expires_at` 的轻量 `charge`。
+需要图像或完整 charge 时，请调用 `GET /v1/payins/{id}`。
 #### 汇率不可用时怎么办？
 API 在创建 charge 前返回 `503 rates_unavailable`。稍后使用相同幂等 key
 重试。
