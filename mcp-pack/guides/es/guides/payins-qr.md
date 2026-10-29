@@ -178,6 +178,53 @@ El listado (`GET /v1/payins`) incluye para QR solo `charge.conversion` y
 Cuando un QR interno de un checkout link vence pero conserva su imagen,
 checkout vuelve a materializar automáticamente un QR nuevo antes de servirlo.
 Nunca se presenta la imagen vencida como pagable.
+## Compartir un link de pago
+
+Usa el tracker público como página de pago para el pagador de un payin QR
+pendiente. El flujo es:
+
+```mermaid
+sequenceDiagram
+    participant I as Integrador
+    participant C as CBPay
+    participant P as Pagador
+    I->>C: GET /v1/track-link?kind=payin&id={payin_id}
+    C-->>I: {track_url, code}
+    I-->>P: "Paga aquí: {track_url}"
+    P->>C: Abre el link público
+    C-->>P: Imagen QR, monto, conversión y expiración
+    P->>C: Escanea y paga
+    C-->>I: webhook payin_credited
+```
+
+1. Emite el link con el ID del payin:
+
+```bash
+curl -G "https://api.qbank.cl/platform/v1/track-link" \
+  -H "Authorization: Bearer <token>" \
+  --data-urlencode "kind=payin" \
+  --data-urlencode "id=2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101"
+```
+
+```json
+{
+  "track_url": "https://business.cbpayapp.com/t/P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
+  "code": "P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6"
+}
+```
+
+2. Comparte exactamente `Paga aquí: {track_url}`. Si tu portal necesita un
+   fallback, usa primero `pay.qr_image_url` y luego `pay.qr_payload` como
+   texto. `pay.qr_image` es la opción PNG base64 inline.
+3. El pagador ve la página pública con el QR, `conversion.amount` y
+   `conversion.currency` cuando existan, la tasa opcional y `expires_at`.
+   Después del pago, la página refleja el estado y la timeline públicos.
+
+> **Nota**
+El link es una capability firmada sin login y deliberadamente no es listable.
+No pongas los códigos de seguimiento en índices de búsqueda ni los expongas en
+un directorio. Solo un payin QR pendiente incluye `pay`; las demás operaciones
+y los payins terminales lo omiten. El link no crea otro cobro.
 ### Confirmación y conciliación
 
 El ciclo es webhook-first. Un evento entrante autenticado (el webhook del riel
@@ -303,3 +350,12 @@ cuando el servidor selecciona el riel QR de 7 días. El riel QR
 legacy tiene un máximo efectivo de `86399` segundos (23:59:59). Los valores
 sobre el máximo seleccionado se recortan, no se rechazan; el integrador no
 elige el riel. Para el riel de 7 días, usa al menos `120` segundos.
+#### ¿El link expira con el QR?
+El link público puede seguir accesible, pero el QR solo se puede pagar hasta
+`pay.expires_at`. Cuando vence, no reutilices ese QR: crea o sirve un nuevo
+intento de pago según el flujo de tu producto.
+#### ¿Qué ve el pagador?
+Ve la imagen QR o su payload de fallback, el `conversion.amount` y
+`conversion.currency` exactos cuando se devuelven, la tasa opcional, la
+expiración y la timeline pública de estado. No se exponen la identidad del
+proveedor ni PII del pagador.

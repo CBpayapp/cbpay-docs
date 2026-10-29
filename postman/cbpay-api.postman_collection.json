@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-29 18:23 UTC",
-    "_content_sha256": "cbfbdc20d08153101ce9d0e23f3eca741ea0c03124c5639beba820ed36ac01ba"
+    "_generated_at": "2026-10-29 20:08 UTC",
+    "_content_sha256": "9f30ebe6449a53abef2491c25d15a37c8ba9868405c5819ece1095b5d17c98e4"
   },
   "auth": {
     "type": "bearer",
@@ -2553,7 +2553,7 @@
                 }
               ]
             },
-            "description": "Returns the shareable public tracking link of any transaction in your read scope, without downloading the receipt PDF — the building block for a \"Share link\" button in your UI. The `code` is the same HMAC-signed, deterministic code printed as a QR on every receipt, so calling the endpoint twice for the same transaction always returns the same link, and anyone who receives the link can follow the operation on the public tracking page (`GET /v1/public/track/{code}`, Wise-style: timeline, receipt PDF download, three languages). Available to the account itself (API key or member session), to org admins and to platform admins — the same read scope as receipts. A transaction outside your scope (or an unknown `kind`) answers 404, never 403: existence is never leaked."
+            "description": "Returns the shareable public tracking link of any transaction in your read scope, without downloading the receipt PDF — the building block for a \"Share link\" button in your UI. The `code` is the same HMAC-signed, deterministic code printed as a QR on every receipt, so calling the endpoint twice for the same transaction always returns the same link, and anyone who receives the link can follow the operation on the public tracking page (`GET /v1/public/track/{code}`, Wise-style: timeline, receipt PDF download, three languages). Available to the account itself (API key or member session), to org admins and to platform admins — the same read scope as receipts. A transaction outside your scope (or an unknown `kind`) answers 404, never 403: existence is never leaked. For a pending QR payin, use `kind=payin` and the payin ID to issue the link that the payer can open and use to pay."
           },
           "response": [
             {
@@ -2636,7 +2636,7 @@
           },
           "response": [
             {
-              "name": "200 Current public state of the operation.",
+              "name": "200 Current public state of the operation. For a pending QR payi",
               "originalRequest": {
                 "method": "GET",
                 "url": {
@@ -2666,7 +2666,7 @@
                   ]
                 }
               },
-              "status": "Current public state of the operation.",
+              "status": "Current public state of the operation. For a pending QR payi",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
@@ -2675,7 +2675,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"kind\": \"payout\",\n  \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"status\": \"in_transit\",\n  \"status_class\": \"pending\",\n  \"subtitle\": \"Venezuela — Pago Móvil\",\n  \"fields\": [\n    {\n      \"label\": \"TRANSACTION ID\",\n      \"value\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"mono\": true\n    },\n    {\n      \"label\": \"DATE AND TIME\",\n      \"value\": \"August 8, 2026 at 15:29 UTC\"\n    },\n    {\n      \"label\": \"BENEFICIARY\",\n      \"value\": \"María Pérez\"\n    },\n    {\n      \"label\": \"BANK\",\n      \"value\": \"Banco de Venezuela\"\n    },\n    {\n      \"label\": \"PHONE\",\n      \"value\": \"0414-1234567\"\n    },\n    {\n      \"label\": \"MESSAGE\",\n      \"value\": \"Invoice 1042\"\n    }\n  ],\n  \"amounts\": [\n    {\n      \"label\": \"AMOUNT RECEIVED\",\n      \"value\": \"1250000.00 VES\"\n    },\n    {\n      \"label\": \"EXCHANGE RATE\",\n      \"value\": \"950.00\"\n    },\n    {\n      \"label\": \"TOTAL DEBIT\",\n      \"value\": \"1315.79 USDT\"\n    }\n  ],\n  \"created_at\": \"2026-08-08T15:29:04Z\",\n  \"timeline\": [\n    {\n      \"key\": \"initiated\",\n      \"state\": \"complete\",\n      \"at\": \"2026-08-08T15:29:04Z\"\n    },\n    {\n      \"key\": \"processing\",\n      \"state\": \"complete\",\n      \"at\": null\n    },\n    {\n      \"key\": \"in_transit\",\n      \"state\": \"in_progress\",\n      \"at\": null\n    },\n    {\n      \"key\": \"completed\",\n      \"state\": \"upcoming\",\n      \"at\": null\n    }\n  ],\n  \"branding\": {\n    \"name\": \"CBPay\",\n    \"logo_url\": \"https://cdn.example.com/logo.png\",\n    \"website\": \"https://www.cbpayapp.com\",\n    \"accent\": \"#FBC140\"\n  },\n  \"receipt_pdf_url\": \"https://api.qbank.cl/platform/v1/public/track/Cb4f8a…/receipt.pdf\",\n  \"whats_next\": \"payout.in_transit\",\n  \"support\": {\n    \"website\": \"https://www.cbpayapp.com\"\n  }\n}"
+              "body": "{\n  \"kind\": \"payin\",\n  \"id\": \"2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101\",\n  \"status\": \"pending\",\n  \"status_class\": \"pending\",\n  \"subtitle\": \"QR payment\",\n  \"fields\": [\n    {\n      \"label\": \"PAYIN ID\",\n      \"value\": \"2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101\",\n      \"mono\": true\n    },\n    {\n      \"label\": \"REFERENCE\",\n      \"value\": \"77849505\"\n    }\n  ],\n  \"amounts\": [\n    {\n      \"label\": \"AMOUNT TO PAY\",\n      \"value\": \"5.84 BRL\"\n    }\n  ],\n  \"created_at\": \"2026-10-29T18:00:00Z\",\n  \"timeline\": [\n    {\n      \"key\": \"initiated\",\n      \"state\": \"complete\",\n      \"at\": \"2026-10-29T18:00:00Z\"\n    },\n    {\n      \"key\": \"processing\",\n      \"state\": \"in_progress\",\n      \"at\": null\n    },\n    {\n      \"key\": \"completed\",\n      \"state\": \"upcoming\",\n      \"at\": null\n    }\n  ],\n  \"pay\": {\n    \"qr_image\": \"data:image/png;base64,iVBORw0KGgo…\",\n    \"qr_image_url\": \"https://cdn.example.test/qr/77849505.png\",\n    \"qr_payload\": \"00020126360014br.gov.bcb.pix0114+551199999000052040000530398654045.845802BR5913LOJA EXEMPLO6009SAO PAULO\",\n    \"conversion\": {\n      \"amount\": \"5.84\",\n      \"currency\": \"BRL\",\n      \"rate\": \"0.48\"\n    },\n    \"expires_at\": \"2026-10-29T18:05:00Z\"\n  },\n  \"branding\": {\n    \"name\": \"CBPay\",\n    \"logo_url\": \"https://cdn.example.test/logo.png\",\n    \"website\": \"https://www.cbpayapp.com\",\n    \"accent\": \"#FBC140\"\n  },\n  \"receipt_pdf_url\": \"https://api.qbank.cl/platform/v1/public/track/Cb4f8a…/receipt.pdf\",\n  \"whats_next\": \"payin.pending\",\n  \"support\": {\n    \"website\": \"https://www.cbpayapp.com\"\n  }\n}"
             }
           ]
         },

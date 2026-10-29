@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 29, 2026" description="v2.194 · 1 version">
+<Update label="October 29, 2026" description="v2.195 · 2 versions">
+### v2.195
+**Added**
+- Pending QR payins now support a shareable public payment link. `GET
+  /v1/track-link?kind=payin&id=...` returns `{track_url, code}`; the public
+  tracker exposes the payer-facing `pay` block with QR data, conversion and
+  expiry. The link is signed and not listable, and the `pay` block is omitted
+  outside pending QR payins.
+
 ### v2.194
 **Added**
 - QR payin responses now expose the public numeric `reference`, the complete
@@ -48,6 +56,7 @@ description: "History of API and documentation changes"
 **Fixed**
 - Fixed login 2FA code email spam: back-to-back logins now reuse the pending code instead of sending a new email every time, and sends stop after 5 uncompleted codes in 24 hours (completing a code or resetting the password re-enables them). The `otp_required` response is unchanged.
 
+</Update>
 <Update label="October 24, 2026" description="v2.188 · 2 versions">
 ### v2.188
 **Added**

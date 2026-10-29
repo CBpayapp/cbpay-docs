@@ -5,7 +5,14 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.194 · 1 个版本 - 2026年10月29日
+## v2.195 · 2 个版本 - 2026年10月29日
+### v2.195
+**新增**
+- 待处理的 QR payin 现在支持可分享的公开付款链接。
+  `GET /v1/track-link?kind=payin&id=...` 返回 `{track_url, code}`；公开
+  tracker 暴露付款人可见的 `pay` 区块，其中包含 QR 数据、转换和过期时间。
+  链接带签名且不可列出；在待处理 QR payin 之外会省略 `pay`。
+
 ### v2.194
 **新增**
 - QR payin 响应现在提供公开数字 `reference`、详情读取中的完整已清理

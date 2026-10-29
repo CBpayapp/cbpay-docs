@@ -274,6 +274,53 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-31&kind
 When an internal QR in a checkout link has expired but still has an image, the
 checkout automatically re-materializes a fresh QR before serving it. The
 expired image is never presented as payable.
+## Share a payment link
+
+Use the public tracker as a payer-facing payment page for a pending QR payin.
+The flow is:
+
+```mermaid
+sequenceDiagram
+    participant I as Integrator
+    participant C as CBPay
+    participant P as Payer
+    I->>C: GET /v1/track-link?kind=payin&id={payin_id}
+    C-->>I: {track_url, code}
+    I-->>P: "Pay here: {track_url}"
+    P->>C: Open the public link
+    C-->>P: QR image, amount, conversion and expiry
+    P->>C: Scan and pay
+    C-->>I: payin_credited webhook
+```
+
+1. Issue the link with the payin ID:
+
+```bash
+curl -G "https://api.qbank.cl/platform/v1/track-link" \
+  -H "Authorization: Bearer <token>" \
+  --data-urlencode "kind=payin" \
+  --data-urlencode "id=2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101"
+```
+
+```json
+{
+  "track_url": "https://business.cbpayapp.com/t/P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
+  "code": "P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6"
+}
+```
+
+2. Share the exact text `Pay here: {track_url}`. If your own portal renders
+   a fallback, use `pay.qr_image_url` first, then `pay.qr_payload` as text.
+   `pay.qr_image` is the inline base64 PNG option.
+3. The payer sees the public page with the QR, `conversion.amount` and
+   `conversion.currency` when present, the optional rate, and `expires_at`.
+   After payment, the page reflects the public status and timeline.
+
+> **Note**
+The link is a signed, no-login capability and is intentionally not listable.
+Do not put tracking codes in search indexes or expose them in a directory.
+Only a pending QR payin includes `pay`; other operations and terminal payins
+omit it. The link does not create another charge.
 ### Confirmation and reconciliation
 
 The lifecycle is webhook-first. An authenticated inbound event (the rail
@@ -417,3 +464,12 @@ days) when the server selects the 7-day QR rail. The legacy QR rail
 has an effective maximum of `86399` seconds (23:59:59). Values above the
 selected maximum are capped, not rejected; the integrator does not choose the
 rail. Use at least `120` seconds for the 7-day rail.
+#### Does the link expire with the QR?
+The public link can remain reachable, but the QR is payable only until
+`pay.expires_at`. When it expires, do not reuse that QR: create or serve a new
+payment attempt according to your product flow.
+#### What does the payer see?
+The payer sees the QR image or its fallback payload, the exact
+`conversion.amount` and `conversion.currency` when returned, the optional rate,
+the expiry and the public status timeline. Provider identity and payer PII are
+not exposed.
