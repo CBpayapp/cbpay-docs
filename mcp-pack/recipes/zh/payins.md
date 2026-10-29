@@ -17,8 +17,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/payins
 该关卡仅适用于认证账户创建。已经创建的公开支付链接仍可支付，已经收到的被动入账
 仍可处理，org-admin 的运营分配仍可用，系统创建的入金工具不受阻止。
 在收款中，客户以当地货币付款。账户直接以 USD 入账，精度为 2 位小数；若配置其他资产，则净额按
-`payin_rate`（`GET /v1/rates`）和固定手续费执行入账后的转换。
-
+`payin_rate`（`GET /v1/rates`）和固定手续费执行入账后的转换。详见 [QR payin — 分享付款链接](https://docs.cbpayapp.com/zh/guides/payins-qr#分享付款链接)。
 无论采用哪种模式，每条路径的终点都相同 —— 自动入账 + webhook：
 
 ```mermaid

@@ -24,8 +24,7 @@ A payin is a fiat collection: your customer pays in local currency and your acco
 the post-credit conversion flow at **your payin rate** (`payin_rate` in
 `GET /v1/rates`) minus the fixed payin fee. In USDT v1, `payin_rate_source` tells you whether
 that rate is backed by enabled payin FIFO inventory (`lot`) or spot (`spot`).
-The rate is fixed before the asynchronous payment is credited.
-
+The rate is fixed before the asynchronous payment is credited. See [QR payins — Share a payment link](https://docs.cbpayapp.com/en/guides/payins-qr#share-a-payment-link).
 Whatever the mode, every path ends the same way — automatic credit +
 webhook:
 

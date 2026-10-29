@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.194"
+  version: "2.195"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -980,7 +980,9 @@ paths:
         cuenta (API key o sesión de miembro), para admins de la organización y para
         admins de plataforma — el mismo alcance de lectura que los comprobantes.
         Una transacción fuera de tu alcance (o un `kind` desconocido) responde 404,
-        nunca 403: la existencia nunca se revela.'
+        nunca 403: la existencia nunca se revela. Para un payin QR pendiente, usa
+        `kind=payin` y el ID del payin para emitir el link que el pagador puede abrir
+        y usar para pagar.'
       parameters:
       - name: kind
         in: query
@@ -1050,35 +1052,36 @@ paths:
         description: Idioma de las etiquetas, el subtítulo y `whats_next`.
       responses:
         '200':
-          description: Estado público vigente de la operación.
+          description: Estado público vigente de la operación. En un payin QR pendiente,
+            `pay` está presente y contiene solo datos del QR visibles para el pagador;
+            se omite en las demás operaciones y en payins que no están pendientes.
           content:
             application/json:
               example:
-                kind: payout
-                id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                status: in_transit
+                kind: payin
+                id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+                status: pending
                 status_class: pending
-                subtitle: Venezuela — Pago Móvil
+                subtitle: Pago QR
                 fields:
-                - {label: 'ID DE TRANSACCIÓN', value: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, mono: true}
-                - {label: 'FECHA Y HORA', value: '8 de agosto de 2026 a las 15:29 UTC'}
-                - {label: 'BENEFICIARIO', value: 'María Pérez'}
-                - {label: 'BANCO', value: 'Banco de Venezuela'}
-                - {label: 'TELÉFONO', value: 0414-1234567}
-                - {label: 'MENSAJE', value: 'Factura 1042'}
+                - {label: 'ID DEL PAYIN', value: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101, mono: true}
+                - {label: 'REFERENCIA', value: '77849505'}
                 amounts:
-                - {label: 'MONTO RECIBIDO', value: '1250000.00 VES'}
-                - {label: 'TASA DE CAMBIO', value: '950.00'}
-                - {label: 'DÉBITO TOTAL', value: '1315.79 USDT'}
-                created_at: '2026-08-08T15:29:04Z'
+                - {label: 'MONTO A PAGAR', value: '5.84 BRL'}
+                created_at: '2026-10-29T18:00:00Z'
                 timeline:
-                - {key: initiated, state: complete, at: '2026-08-08T15:29:04Z'}
-                - {key: processing, state: complete, at: null}
-                - {key: in_transit, state: in_progress, at: null}
+                - {key: initiated, state: complete, at: '2026-10-29T18:00:00Z'}
+                - {key: processing, state: in_progress, at: null}
                 - {key: completed, state: upcoming, at: null}
-                branding: {name: CBPay, logo_url: 'https://cdn.example.com/logo.png', website: 'https://www.cbpayapp.com', accent: '#FBC140'}
+                pay:
+                  qr_image: 'data:image/png;base64,iVBORw0KGgo…'
+                  qr_image_url: 'https://cdn.example.test/qr/77849505.png'
+                  qr_payload: '00020126360014br.gov.bcb.pix0114+551199999000052040000530398654045.845802BR5913LOJA EXEMPLO6009SAO PAULO'
+                  conversion: {amount: '5.84', currency: BRL, rate: '0.48'}
+                  expires_at: '2026-10-29T18:05:00Z'
+                branding: {name: CBPay, logo_url: 'https://cdn.example.test/logo.png', website: 'https://www.cbpayapp.com', accent: '#FBC140'}
                 receipt_pdf_url: 'https://api.qbank.cl/platform/v1/public/track/Cb4f8a…/receipt.pdf'
-                whats_next: payout.in_transit
+                whats_next: payin.pending
                 support: {website: 'https://www.cbpayapp.com'}
         '404':
           description: Código de seguimiento inválido, adulterado o desconocido (respuesta uniforme — anti-enumeración).

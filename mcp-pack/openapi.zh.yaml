@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.194"
+  version: "2.195"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -906,7 +906,8 @@ paths:
         HMAC 签名确定性代码,因此对同一交易重复调用始终返回相同链接;任何收到链接的人都可以在公开跟踪页面(`GET
         /v1/public/track/{code}`,Wise 风格:时间线、凭证 PDF 下载、三种语言)上跟进该笔交易。账户本身(API
         密钥或成员会话)、组织管理员和平台管理员均可使用 —— 与凭证相同的读取范围。范围之外的交易(或未知的
-        `kind`)统一返回 404 而非 403:绝不泄露交易是否存在。'
+        `kind`)统一返回 404 而非 403:绝不泄露交易是否存在。对于待处理的 QR
+        payin,请使用 `kind=payin` 和 payin ID 签发付款人可以打开并完成支付的链接。'
       parameters:
       - name: kind
         in: query
@@ -970,35 +971,35 @@ paths:
         description: 标签、副标题及 `whats_next` 的语言。
       responses:
         '200':
-          description: 交易当前的公开状态。
+          description: 交易当前的公开状态。对于待处理的 QR payin,会返回 `pay`，
+            其中仅包含付款人可见的二维码数据；其他交易以及非待处理 payin 会省略该字段。
           content:
             application/json:
               example:
-                kind: payout
-                id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                status: in_transit
+                kind: payin
+                id: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101
+                status: pending
                 status_class: pending
-                subtitle: Venezuela — Pago Móvil
+                subtitle: QR 付款
                 fields:
-                - {label: '交易编号', value: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, mono: true}
-                - {label: '日期和时间', value: '2026年8月8日 15:29 UTC'}
-                - {label: '收款人', value: 'María Pérez'}
-                - {label: '银行', value: 'Banco de Venezuela'}
-                - {label: '电话', value: 0414-1234567}
-                - {label: '附言', value: 'Invoice 1042'}
+                - {label: 'PAYIN 编号', value: 2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101, mono: true}
+                - {label: '参考号', value: '77849505'}
                 amounts:
-                - {label: '到账金额', value: '1250000.00 VES'}
-                - {label: '汇率', value: '950.00'}
-                - {label: '扣款总额', value: '1315.79 USDT'}
-                created_at: '2026-08-08T15:29:04Z'
+                - {label: '待支付金额', value: '5.84 BRL'}
+                created_at: '2026-10-29T18:00:00Z'
                 timeline:
-                - {key: initiated, state: complete, at: '2026-08-08T15:29:04Z'}
-                - {key: processing, state: complete, at: null}
-                - {key: in_transit, state: in_progress, at: null}
+                - {key: initiated, state: complete, at: '2026-10-29T18:00:00Z'}
+                - {key: processing, state: in_progress, at: null}
                 - {key: completed, state: upcoming, at: null}
-                branding: {name: CBPay, logo_url: 'https://cdn.example.com/logo.png', website: 'https://www.cbpayapp.com', accent: '#FBC140'}
+                pay:
+                  qr_image: 'data:image/png;base64,iVBORw0KGgo…'
+                  qr_image_url: 'https://cdn.example.test/qr/77849505.png'
+                  qr_payload: '00020126360014br.gov.bcb.pix0114+551199999000052040000530398654045.845802BR5913LOJA EXEMPLO6009SAO PAULO'
+                  conversion: {amount: '5.84', currency: BRL, rate: '0.48'}
+                  expires_at: '2026-10-29T18:05:00Z'
+                branding: {name: CBPay, logo_url: 'https://cdn.example.test/logo.png', website: 'https://www.cbpayapp.com', accent: '#FBC140'}
                 receipt_pdf_url: 'https://api.qbank.cl/platform/v1/public/track/Cb4f8a…/receipt.pdf'
-                whats_next: payout.in_transit
+                whats_next: payin.pending
                 support: {website: 'https://www.cbpayapp.com'}
         '404':
           description: 跟踪代码无效、被篡改或未知(统一应答——防枚举)。

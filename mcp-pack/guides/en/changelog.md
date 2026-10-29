@@ -5,7 +5,15 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.194 · 1 version - October 29, 2026
+## v2.195 · 2 versions - October 29, 2026
+### v2.195
+**Added**
+- Pending QR payins now support a shareable public payment link. `GET
+  /v1/track-link?kind=payin&id=...` returns `{track_url, code}`; the public
+  tracker exposes the payer-facing `pay` block with QR data, conversion and
+  expiry. The link is signed and not listable, and the `pay` block is omitted
+  outside pending QR payins.
+
 ### v2.194
 **Added**
 - QR payin responses now expose the public numeric `reference`, the complete

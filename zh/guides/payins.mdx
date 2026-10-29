@@ -23,8 +23,7 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 
 在收款中，客户以当地货币付款。账户直接以 USD 入账，精度为 2 位小数；若配置其他资产，则净额按
-`payin_rate`（`GET /v1/rates`）和固定手续费执行入账后的转换。
-
+`payin_rate`（`GET /v1/rates`）和固定手续费执行入账后的转换。详见 [QR payin — 分享付款链接](/zh/guides/payins-qr#分享付款链接)。
 无论采用哪种模式，每条路径的终点都相同 —— 自动入账 + webhook：
 
 ```mermaid

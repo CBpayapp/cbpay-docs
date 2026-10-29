@@ -24,8 +24,7 @@ Un payin es un cobro fiat: tu cliente paga en moneda local y una cuenta
 nueva USD-principal se acredita directamente en USD con 2 decimales. Las cuentas
 existentes con USDT explícito conservan USDT. Si se configura otro asset, el neto sigue
 la conversión post-crédito con tu **tasa de payin** (`payin_rate` en `GET /v1/rates`)
-menos la comisión fija.
-
+menos la comisión fija. Consulta [Payins QR — Compartir un link de pago](https://docs.cbpayapp.com/es/guides/payins-qr#compartir-un-link-de-pago).
 Sea cual sea la modalidad, todos los caminos terminan igual — abono
 automático + webhook:
 

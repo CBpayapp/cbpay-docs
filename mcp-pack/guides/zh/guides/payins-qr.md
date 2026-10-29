@@ -162,6 +162,51 @@ checkout link 同时报价两者：面向付款人的 `BRL`（materialize 时按
 > **注**
 Checkout link 中带有图像的内部 QR 过期后，checkout 会在提供给付款人之前
 自动重新生成新的 QR。绝不会把已过期图像作为可支付二维码展示。
+## 分享付款链接
+
+对于待处理的 QR payin，可将公开 tracker 作为付款人的支付页面。流程如下：
+
+```mermaid
+sequenceDiagram
+    participant I as 集成方
+    participant C as CBPay
+    participant P as 付款人
+    I->>C: GET /v1/track-link?kind=payin&id={payin_id}
+    C-->>I: {track_url, code}
+    I-->>P: "请在此付款：{track_url}"
+    P->>C: 打开公开链接
+    C-->>P: QR 图像、金额、转换和过期时间
+    P->>C: 扫描并付款
+    C-->>I: payin_credited webhook
+```
+
+1. 使用 payin ID 签发链接：
+
+```bash
+curl -G "https://api.qbank.cl/platform/v1/track-link" \
+  -H "Authorization: Bearer <token>" \
+  --data-urlencode "kind=payin" \
+  --data-urlencode "id=2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101"
+```
+
+```json
+{
+  "track_url": "https://business.cbpayapp.com/t/P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
+  "code": "P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6"
+}
+```
+
+2. 直接分享文本 `请在此付款：{track_url}`。如果门户需要 fallback，
+   优先使用 `pay.qr_image_url`，然后将 `pay.qr_payload` 作为文本。
+   `pay.qr_image` 是 inline base64 PNG 选项。
+3. 付款人会看到包含 QR、（如有）`conversion.amount` 和
+   `conversion.currency`、可选汇率以及 `expires_at` 的公开页面。付款后，
+   页面会反映公开状态和时间线。
+
+> **注**
+该链接是无需登录的签名 capability，且刻意不可列出。不要将跟踪代码放入
+搜索索引或目录中。只有待处理的 QR payin 包含 `pay`；其他交易和已终止
+payin 会省略它。链接不会创建另一笔 charge。
 ### 确认与对账
 
 流程优先使用 webhook。经过认证的入站事件（通道 webhook 使用配置的
@@ -278,3 +323,10 @@ API 在创建 charge 前返回 `503 rates_unavailable`。稍后使用相同幂�
 `604800` 秒（7 天）。legacy QR 轨道的有效最大值为 `86399` 秒
 （23:59:59）。超过所选上限的值会被截断，不会被拒绝；集成方不能选择
 轨道。对于 7 天轨道，建议至少使用 `120` 秒。
+#### 链接会随 QR 一起过期吗？
+公开链接可能仍然可以访问，但 QR 只能在 `pay.expires_at` 之前支付。过期后
+不要重复使用该 QR；请按照你的产品流程创建或提供新的付款尝试。
+#### 付款人会看到什么？
+付款人会看到 QR 图像或其 fallback payload、（如返回）准确的
+`conversion.amount` 与 `conversion.currency`、可选汇率、过期时间以及公开
+状态时间线。不会公开服务商身份或付款人 PII。

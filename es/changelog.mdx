@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="29 de octubre de 2026" description="v2.194 · 1 versión">
+<Update label="29 de octubre de 2026" description="v2.195 · 2 versiones">
+### v2.195
+**Agregado**
+- Los payins QR pendientes ahora soportan un link público de pago compartible.
+  `GET /v1/track-link?kind=payin&id=...` devuelve `{track_url, code}`; el
+  tracker público expone el bloque `pay` visible para el pagador, con datos QR,
+  conversión y expiración. El link está firmado y no es listable, y `pay` se
+  omite fuera de los payins QR pendientes.
+
 ### v2.194
 **Agregado**
 - Las respuestas de payins QR ahora exponen la `reference` numérica pública,
@@ -49,6 +57,7 @@ description: "Historial de cambios de la API y de esta documentación"
 **Corregido**
 - Se corrigió el spam de emails con códigos 2FA de login: los logins seguidos reusan el código pendiente en vez de mandar un email cada vez, y los envíos se detienen tras 5 códigos sin completar en 24 horas (completar un código o restablecer la clave los reactiva). La respuesta `otp_required` no cambia.
 
+</Update>
 <Update label="24 de octubre de 2026" description="v2.188 · 2 versiones">
 ### v2.188
 **Agregado**
