@@ -310,19 +310,13 @@ The detail adds `pending_documents`, `rejection_reason`,
 | `approved` / `approved_partial` | Approved (final) |
 | `rejected` | Rejected (final) |
 A migrated legacy submission is a frozen **tombstone**: reads return live data with `status: "migrated"`, `migrated_from`, `migrated_to` and `migrated_from_core`; approve, reject, request-changes, override, reinvite, document presign/upload/confirm, liveness links and `PATCH` banking intent return `409 superseded` with `this case was migrated; decide on <id-vivo>`. Operate `migrated_to`; notes and assignments fall through to the live case.
-### Remediate your own submission before approval
-
-If your own self-onboarding submission needs changes, you can keep reading
-the case and supplying evidence before the account is approved. The account
-must own the submission and it must be in an actionable state:
-`pending_review`, `in_review`, `changes_requested`, `more_info_required` or
-`escalated`. The detail, document list, document presign/upload/confirm and
-liveness-link endpoints remain available for that case.
-
-This exception does not apply to third-party submissions or to product and
-money endpoints. A terminal `rejected` submission still returns `403`; use
-the account's normal support or re-onboarding process instead. Remediation
-continues the existing submission and does not create a duplicate case.
+<Note>
+Owners may remediate their own self-onboarding submission before approval when
+its status is `pending_review`, `in_review`, `changes_requested`,
+`more_info_required` or `escalated`; detail, documents and liveness routes
+remain available. Third-party, product and money routes are unchanged, and
+terminal `rejected` still returns `403`.
+</Note>
 
 ### Documents through the API
 
