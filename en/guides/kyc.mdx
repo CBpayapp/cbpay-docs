@@ -310,13 +310,7 @@ The detail adds `pending_documents`, `rejection_reason`,
 | `approved` / `approved_partial` | Approved (final) |
 | `rejected` | Rejected (final) |
 A migrated legacy submission is a frozen **tombstone**: reads return live data with `status: "migrated"`, `migrated_from`, `migrated_to` and `migrated_from_core`; approve, reject, request-changes, override, reinvite, document presign/upload/confirm, liveness links and `PATCH` banking intent return `409 superseded` with `this case was migrated; decide on <id-vivo>`. Operate `migrated_to`; notes and assignments fall through to the live case.
-<Note>
-Owners may remediate their own self-onboarding submission before approval when
-its status is `pending_review`, `in_review`, `changes_requested`,
-`more_info_required` or `escalated`; detail, documents and liveness routes
-remain available. Third-party, product and money routes are unchanged, and
-terminal `rejected` still returns `403`.
-</Note>
+Owners may remediate their own self-onboarding submission before approval in `pending_review`, `in_review`, `changes_requested`, `more_info_required` or `escalated`; detail, documents and liveness routes remain available. Third-party, product and money routes are unchanged, and terminal `rejected` returns `403`.
 
 ### Documents through the API
 
