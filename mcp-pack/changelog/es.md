@@ -5,6 +5,16 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.194 · 1 versión - 29 de octubre de 2026
+### v2.194
+**Agregado**
+- Las respuestas de payins QR ahora exponen la `reference` numérica pública,
+  el `charge` sanitizado completo en el detalle y un `charge` liviano en los
+  listados. En Brasil, `conversion.amount` es el monto exacto que debe pagar
+  el cliente; también se incluyen `requested_expires_in` y `ttl_notice` si el
+  riel devuelve una vida menor. Checkout vuelve a materializar automáticamente
+  un QR vencido que tenía imagen.
+
 ## v2.193 · 1 versión - 28 de octubre de 2026
 ### v2.193
 **Cambiado**

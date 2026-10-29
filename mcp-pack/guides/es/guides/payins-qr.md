@@ -50,6 +50,10 @@ segundos (23:59:59). El riel QR de 7 días tiene un máximo efectivo de
 valor falta o no es positivo. Los valores sobre el máximo del riel
 seleccionado se recortan, no se rechazan. Para el riel de 7 días, usa al menos `120` segundos
 como mínimo operativo.
+La respuesta conserva el valor solicitado en `charge.requested_expires_in`.
+Si el riel devuelve una vida más corta, incluye `ttl_notice` con
+`requested_expires_in`, `actual_expires_in` y una nota. Usa
+`charge.expires_at` como fecha límite.
 
 Respuesta `201`:
 
@@ -57,18 +61,25 @@ Respuesta `201`:
 {
   "payin_id": "9c2a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
   "status": "pending",
+  "reference": "77849505",
   "charge": {
     "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
     "our_reference": "77849505",
-    "qr_payload": "<contenido del QR>",
+    "qr_image": "<PNG en base64>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "qr_payload": "<contenido QR si este riel lo emite>",
+    "expires_at": "2026-10-29T19:00:00Z",
+    "requested_expires_in": 3600,
     "status": "pending"
   }
 }
 ```
 
-Muestra el contenido QR o el `qr_image_url` que devuelve la API. Cuando el
-cliente paga, la cuenta se acredita automáticamente. Consulta el estado actual
-con `GET /v1/payins/{payinID}`.
+Muestra `qr_image` o `qr_image_url`; usa `qr_payload` solo cuando esté presente.
+Brasil devuelve solo la imagen PNG, sin payload para copiar y pegar. La
+`reference` numérica es la referencia citable. Cuando el cliente paga, la
+cuenta se acredita automáticamente. Consulta el estado con
+`GET /v1/payins/{payinID}`.
 
 ## Brasil: QR PIX en BRL o BOB
 
@@ -84,15 +95,26 @@ La cotización queda guardada y se conserva en un replay idempotente.
 curl -X POST https://api.qbank.cl/platform/v1/payins -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","expires_in":1800,"idempotency_key":"qr-brl-20261022-001"}'
 ```
 
-La respuesta expone la imagen QR, el monto en BRL que ve el pagador, el BOB
+La respuesta expone la imagen QR, el monto exacto en BRL que debe pagar el pagador, el BOB
 cobrado y la cotización auditable:
 
 ```json
-{"charge":{"our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
+{"reference":"77849505","charge":{"our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","requested_expires_in":1800,"bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
 ```
 
-El `conversion.amount` puede diferir por centavos del BRL solicitado: el BOB
-se redondea half-up a dos decimales y el riel devuelve el BRL equivalente.
+`conversion.amount` es la fuente de verdad y el monto exacto que debe mostrar el
+pagador. Puede diferir bastante del monto digitado porque el riel aplica su
+propia tasa: se pueden ingresar `5.41` BRL y el QR exigir `5.84` BRL. Nunca
+muestres el monto del request en lugar de `conversion.amount`.
+
+Si el riel devuelve una vida menor, la respuesta sigue siendo exitosa:
+
+```json
+{"reference":"77849505","ttl_notice":{"requested_expires_in":1800,"actual_expires_in":300,"note":"the rail returned a shorter lifetime than requested; the payer must pay within the actual window"},"charge":{"expires_at":"2026-10-29T18:05:00Z","requested_expires_in":1800}}
+```
+
+Para Brasil, pide `expires_in: 300` y muestra el aviso fijo de cinco minutos
+en tu portal.
 
 ### Avanzado: ingresar directamente el cobro en BOB
 
@@ -125,6 +147,7 @@ entrega una imagen PNG, no un payload EMV para copiar/pegar:
       "rate": "0.48"
     },
     "expires_at": "2026-10-22T12:57:14.937Z",
+    "requested_expires_in": 300,
     "status": "pending"
   }
 }
@@ -138,6 +161,23 @@ materializar con la misma tasa mid y snapshot `platform_quote` del payin
 directo) y `BOB` directo; con dos monedas el materialize envía
 `?currency=BRL` (o `BOB`).
 
+### Consultar un payin QR
+
+El detalle devuelve el charge sanitizado completo para volver a renderizar el
+QR después de recargar la página:
+
+```json
+{"payin_id":"2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101","kind":"qr","status":"pending","reference":"77849505","charge":{"charge_id":"8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401","our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"5.84","currency":"BRL","rate":"0.48"},"status":"pending","expires_at":"2026-10-29T18:05:00Z","requested_expires_in":300,"created_at":"2026-10-29T18:00:00Z","updated_at":"2026-10-29T18:00:01Z"},"ttl_notice":{"requested_expires_in":1800,"actual_expires_in":300,"note":"the rail returned a shorter lifetime than requested; the payer must pay within the actual window"}}
+```
+
+El listado (`GET /v1/payins`) incluye para QR solo `charge.conversion` y
+`charge.expires_at`, nunca la imagen. Usa filtros de fecha explícitos:
+`?from=2026-10-01&to=2026-10-31&kind=qr&page=1&page_size=50`.
+
+> **Nota**
+Cuando un QR interno de un checkout link vence pero conserva su imagen,
+checkout vuelve a materializar automáticamente un QR nuevo antes de servirlo.
+Nunca se presenta la imagen vencida como pagable.
 ### Confirmación y conciliación
 
 El ciclo es webhook-first. Un evento entrante autenticado (el webhook del riel
@@ -236,8 +276,17 @@ Solo para Brasil (`BR`/`BRL` o `BOB`/`qr`). El riel valida que el CPF exista;
 un CPF sintético o desconocido puede responder `CPF no encontrado`. Los demás
 corredores QR mantienen sus propios requisitos.
 #### ¿Por qué el monto pagado puede diferir por centavos?
-La plataforma convierte BRL a BOB y redondea el cobro BOB half-up a dos
-decimales. Por eso `conversion.amount` puede diferir levemente del BRL pedido.
+`conversion.amount` es el monto exacto devuelto por el riel. La tasa puede
+cambiarlo respecto del request: un incidente mostró `5.41` BRL digitados frente
+a `5.84` BRL en el QR. Muestra siempre `conversion.amount`.
+#### ¿Por qué el QR brasileño vence en cinco minutos?
+Algunos rieles QR de Brasil imponen una vida aproximada de cinco minutos e
+ignoran duraciones mayores. La API conserva `charge.requested_expires_in`,
+devuelve `charge.expires_at` y agrega `ttl_notice` cuando corresponde. Pide
+`expires_in: 300` y crea un QR nuevo al vencer.
+#### ¿Qué contiene el listado de QR?
+`GET /v1/payins` incluye un `charge` liviano con solo `conversion` y
+`expires_at`. Usa `GET /v1/payins/{id}` para la imagen y el charge completo.
 #### ¿Qué ocurre si no hay tasas FX?
 La API responde `503 rates_unavailable` antes de crear el cobro. Reintenta más
 tarde con la misma clave de idempotencia.

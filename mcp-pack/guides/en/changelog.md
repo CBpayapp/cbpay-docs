@@ -5,6 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.194 · 1 version - October 29, 2026
+### v2.194
+**Added**
+- QR payin responses now expose the public numeric `reference`, the complete
+  sanitized `charge` on detail reads, and a lightweight `charge` in listings.
+  Brazil QR responses include the payer-facing `conversion.amount` as the
+  source of truth, `requested_expires_in`, and `ttl_notice` when the rail
+  returns a shorter lifetime. Expired QR charges with an image are
+  automatically re-materialized by checkout.
+
 ## v2.193 · 1 version - October 28, 2026
 ### v2.193
 **Changed**
