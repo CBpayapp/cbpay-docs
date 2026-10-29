@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 29, 2026" description="v2.195 · 2 versions">
+<Update label="October 29, 2026" description="v2.196 · 3 versions">
+### v2.196
+**Changed**
+- Your own self-onboarding submission can now be read and remediated before
+  the account is approved when it is in an actionable state
+  (`pending_review`, `in_review`, `changes_requested`, `more_info_required`
+  or `escalated`). Third-party submissions, product and money routes keep
+  their existing gates, and terminal `rejected` submissions still return
+  `403`.
+
 ### v2.195
 **Added**
 - Pending QR payins now support a shareable public payment link. `GET

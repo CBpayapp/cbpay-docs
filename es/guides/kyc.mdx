@@ -310,6 +310,21 @@ El detalle agrega `pending_documents`, `rejection_reason`,
 | `approved` / `approved_partial` | Aprobada (final) |
 | `rejected` | Rechazada (final) |
 Una submission legacy migrada es una **tumba** congelada: leerla devuelve datos vivos con `status: "migrated"`, `migrated_from`, `migrated_to` y `migrated_from_core`; approve, reject, request-changes, override, reinvite, presign/upload/confirm, liveness link y `PATCH` de banking intent responden `409 superseded` con `this case was migrated; decide on <id-vivo>`. Opera `migrated_to`; notas y asignaciones caen en el caso vivo.
+### Subsanar tu propia submission antes de la aprobación
+
+Si tu submission propia de self-onboarding requiere cambios, puedes seguir
+consultando el caso y enviando evidencia antes de que la cuenta sea aprobada.
+La submission debe pertenecer a tu cuenta y estar en un estado accionable:
+`pending_review`, `in_review`, `changes_requested`, `more_info_required` o
+`escalated`. El detalle, el listado de documentos, el presign/upload/confirm
+de documentos y los endpoints del link de liveness siguen disponibles para
+ese caso.
+
+Esta excepción no aplica a submissions de terceros ni a endpoints de
+productos o dinero. Una submission terminal `rejected` sigue respondiendo
+`403`; usa el soporte normal o el proceso de nuevo onboarding de la cuenta.
+La subsanación continúa la submission existente y no crea un caso duplicado.
+
 ### Documentos por API
 
 Los documentos son opcionales al crear (si faltan, compliance los pedirá

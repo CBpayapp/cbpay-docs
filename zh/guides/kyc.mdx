@@ -292,6 +292,18 @@ curl https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id} \
 request-changes、override、reinvite、文档预签名/上传/确认、创建活体链接以及
 `PATCH` banking intent。发送到墓碑的备注和分配会有意落到活跃提交件。
 
+### 在批准前补充自己的提交件
+
+如果你自己的 self-onboarding 提交件需要修改，即使账户尚未批准，也可以
+继续读取案件并提交证据。提交件必须属于该账户，并处于可操作状态：
+`pending_review`、`in_review`、`changes_requested`、`more_info_required` 或
+`escalated`。在这些情况下，详情、文档列表、文档预签名/上传/确认以及活体
+链接读写接口仍然可用。
+
+此例外不适用于第三方提交件，也不适用于产品和资金接口。终态为
+`rejected` 的提交件仍返回 `403`；请使用账户正常的支持或重新开户流程。
+补充操作会继续使用现有提交件，不会创建重复案件。
+
 ### 通过 API 上传证件
 
 创建时证件为可选项（如缺失，合规团队会通过 `more_info_required` 要求补充）。三步流程：
