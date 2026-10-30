@@ -5,6 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.197 · 1 个版本 - 2026年10月30日
+### v2.197
+**变更**
+- `EC/USD` `bank_transfer` payout 走廊的单笔上限提高至 USD 100,000；
+  最低金额仍为 USD 1，并继续支持最多 2 位小数。
 ## v2.196 · 3 个版本 - 2026年10月29日
 ### v2.196
 **变更**

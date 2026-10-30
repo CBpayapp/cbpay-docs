@@ -331,6 +331,7 @@ Errors from the review of operations held by the transactional firewall ([guide]
 | HTTP | `error` | Meaning |
 |---|---|---|
 | 400 | `invalid_status` | Invalid `status` filter — use `in_review`, `info_requested`, `released`, `rejected` or `all` |
+| 400 | `invalid_search` | The `search` filter needs at least 2 characters |
 | 400 | `invalid_range` | Invalid `from`/`to` dates — `YYYY-MM-DD` format (organization timezone) |
 | 400 | `invalid_name` | Missing filename in the `name` query param (max 200 chars, no path separators) |
 | 400 | `empty_file` | The file body arrived empty |

@@ -315,6 +315,7 @@ Errores de la revisión de operaciones retenidas por el firewall transaccional (
 | HTTP | `error` | Significado |
 |---|---|---|
 | 400 | `invalid_status` | El filtro `status` no es válido — usa `in_review`, `info_requested`, `released`, `rejected` o `all` |
+| 400 | `invalid_search` | El filtro `search` necesita al menos 2 caracteres |
 | 400 | `invalid_range` | Fechas `from`/`to` inválidas — formato `YYYY-MM-DD` (zona horaria de tu organización) |
 | 400 | `invalid_name` | Falta el nombre del archivo en el query param `name` (máx. 200 caracteres, sin separadores de ruta) |
 | 400 | `empty_file` | El body del archivo llegó vacío |

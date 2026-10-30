@@ -308,6 +308,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | HTTP | `error` | 含义 |
 |---|---|---|
 | 400 | `invalid_status` | `status` 过滤条件无效——请使用 `in_review`、`info_requested`、`released`、`rejected` 或 `all` |
+| 400 | `invalid_search` | `search` 过滤条件至少需要 2 个字符 |
 | 400 | `invalid_range` | `from`/`to` 日期无效——格式为 `YYYY-MM-DD`（组织时区） |
 | 400 | `invalid_name` | 缺少查询参数 `name` 中的文件名（最多 200 个字符，不含路径分隔符） |
 | 400 | `empty_file` | 文件请求体为空 |
