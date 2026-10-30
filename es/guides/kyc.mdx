@@ -220,6 +220,20 @@ curl https://api.qbank.cl/platform/v1/kyb/links/{link_id} \
 | `completed` | Formulario enviado — nace la submission (webhook `kyb_link_completed` / `kyc_link_completed`) |
 | `expired` | Venció sin completarse |
 
+### UBOs y directores invitados
+
+En un flujo KYB alojado, cada UBO o director invitado completa su propio
+wizard `/on/ubo` (flujo compartido con directores). Antes de enviar, la persona debe revisar y
+firmar la declaración jurada de fondos que muestra el wizard. Es un paso del
+formulario, no una ruta API nueva ni un desafío OTP.
+
+Si la persona invitada envía sin una firma activa, la submission responde
+`409 declaration_required`. No crees otra invitación ni reintentes con una ruta
+nueva: vuelve a entregar el mismo wizard, completa la declaración y envía de
+nuevo. Al firmar, la declaración se adjunta automáticamente al expediente
+como ítem `swornDeclaration`. El caso KYB padre solo puede continuar cuando
+cada UBO/director requerido completó su propio flujo.
+
 ### Opción B — Datos por API
 
 Si ya tienes los datos del cliente en tu sistema, créale la verificación
