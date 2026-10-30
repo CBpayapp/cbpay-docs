@@ -1,26 +1,32 @@
 ---
-title: "关联交易的支持工单"
-description: "从交易创建经过认证的支持对话，分享凭证，关闭工单并评价答复。"
+title: "支持工单"
+description: "创建认证工单，可选关联交易，跟踪首次回复 SLA 并评价解决结果。"
 slug: zh/guides/support-tickets
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/support-tickets
 ---
-支持工单把账户的问题与相关交易放在一起。对于错误、疑问、延迟或金额不符，请从交易创建工单；没有来源交易时才使用 `kind: general`。交易工单保存只读的收据快照。
+支持工单是与组织的可审计对话。可以从交易创建，也可以针对账户问题创建；之后可以关联、更换或解除交易。快照是只读证据，不会修改账本。
 
 ```mermaid
 sequenceDiagram
   participant A as 账户
   participant C as CBPay
-  participant O as 组织支持
-  A->>C: POST 工单 + 幂等键
-  C-->>A: SUP 编号 + 快照
-  C-->>O: support_ticket_created（仅 ID 和状态）
-  O->>C: 公开答复或内部备注
-  C-->>A: 签名事件 / GET 对话
+  participant O as 支持团队
+  A->>C: 选择交易或创建一般工单
+  C-->>A: 工单 + 自动优先级 + 三步跟进
+  C-->>O: 事件（仅 ID 和状态）
+  O->>C: 回复、路由、暂停或解决
+  C-->>A: 首次回复 + 状态更新
   A->>C: 解决后关闭并评价
 ```
 
-## 创建工单
+## 1. 选择流程
+
+可以从交易详情创建，也可以在没有交易时使用 `kind: general`。后者必须使用 `category: other`；旧的 `general` 类别会在兼容期内转换为 `other`。
+
+11 个类别为：交易类 `error`、`question`、`delay`、`amount_mismatch`、`unrecognized_operation`、`refund_request`；账户或其他 `account_verification`、`access_security`、`fraud`、`fees_limits`、`other`。另需发送 `money_stuck`：`yes`、`no` 或 `unknown`。
+
+## 2. 创建工单
 
 `kind` 必须是 `payout`、`payin`、`payin_refund`、`transfer`、`crypto_withdrawal`、`crypto_deposit`、`swap`、`card_purchase`、`banking_operation`、`wallet_send` 或 `wallet_deposit`。发送 `resource_id`；`general` 工单必须使用 `general` 类别并省略该字段。
 
@@ -28,10 +34,20 @@ sequenceDiagram
 curl -X POST https://api.qbank.cl/platform/v1/support/tickets \
   -H "Authorization: Bearer $ACCOUNT_TOKEN" -H "Content-Type: application/json" \
   -H "Idempotency-Key: support-payout-2026-0001" \
-  -d '{"kind":"payout","resource_id":"payout-123","subject":"付款延迟","category":"delay","priority":"high","message":"请检查此付款。","idempotency_key":"support-payout-2026-0001"}'
+  -d '{"kind":"payout","resource_id":"payout-123","subject":"付款延迟","category":"delay","money_stuck":"yes","message":"请检查此付款。","idempotency_key":"support-payout-2026-0001"}'
 ```
 
-首次请求返回 `201`。 `idempotency_key` 最多 128 个字符；超过限制会返回 `400 invalid_payload`。 幂等键按账户限定：去重使用 `(组织、账户、idempotency_key)`，不同账户可以独立使用相同密钥。使用相同密钥重放会返回原工单并带有 `idempotency_hit: true`，不会创建重复工单。同一交易已有开放工单时返回 `409 ticket_already_open`，并附上现有工单。
+首次请求返回 `201`，包含 `SUP-YYYY-NNNNNN` 编号、快照、SLA、`money_stuck` 和 `priority_source: auto`。客户不能选择优先级：欺诈/未识别 → urgent；资金卡住 → urgent；高金额交易错误 → high；访问安全 → high；其他 → normal。默认金额门槛为 USD 1,000。
+
+幂等键按组织和账户限定，必须放在 body 或 header。重放返回 `idempotency_hit: true`；同一交易已有开放工单返回 `409 ticket_already_open`。网络超时后使用同一个密钥读取，不要生成新密钥。
+
+## 3. 三步跟进
+
+`open` 表示处理中；首次公开回复进入 `pending_customer`；`resolved` 后可以 CSAT；`closed` 是终态。账户回复会重新打开等待或已解决的工单。账户看不到内部备注和 Activity。
+
+## 4. 搜索和关联交易
+
+使用 `GET /v1/support/transactions?q=125&from=2026-10-01&to=2026-10-31&page=1&page_size=50`，结果含 11 种可关联交易和 `has_open_ticket`。为 true 时继续现有工单。
 
 ## 查看并继续对话
 
@@ -47,7 +63,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 
 ## 附件
 
-使用 multipart 字段 `file` 上传一个 `PDF`、`PNG` 或 `JPG`，最大 10 MiB。服务器会检查真实文件签名。下载是经过认证的二进制响应，不要公开 `download_url`。
+使用 multipart 字段 `file` 上传一个 `PDF`、`PNG` 或 `JPG`，最大 10 MiB。服务器检查真实签名并按工单 SHA-256 去重。下载是认证二进制响应，不要公开 `download_url`。
 
 ## 关闭和评价
 
@@ -63,19 +79,20 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 | `resolved` | 支持已解决 | 评价或发送消息重新打开 |
 | `closed` | 终态 | 创建新工单 |
 
-默认首次回复 SLA 按 low、normal、high、urgent 分别为 4 小时、2 小时、1 小时和 30 分钟；解决 SLA 为 48、24、8 和 4 小时。组织可以配置这些值，`sla_breached` 由服务器计算。
+默认首次回复 SLA 按 low、normal、high、urgent 分别为 4、2、1、0.5 小时；解决 SLA 为 48、24、8、4 小时。组织可以配置日历及等待客户时暂停 SLA，`sla_breached` 由服务器计算。
 
 | HTTP | 代码 | 解决方案 |
 |---:|---|---|
 | 400 | `idempotency_key_required` | 在 body 或 `Idempotency-Key` header 发送密钥。 |
-| 400 | `invalid_kind` 等验证错误 | 使用规定的枚举和值限制。 |
+| 400 | `invalid_kind`、`invalid_category`、`invalid_money_stuck` 等 | 使用规定的枚举和值限制；优先级由服务器决定。 |
+| 403 | `forbidden` | 使用拥有该工单的账户令牌。 |
 | 404 | `not_found` | 确认交易或工单属于当前账户。 |
-| 409 | `ticket_already_open` | 继续返回的开放工单。 |
-| 409 | `ticket_closed`、`already_rated` | 创建新工单或保留原评价。 |
+| 409 | `ticket_already_open`、`ticket_closed`、`already_rated`、`attachment_duplicate` | 继续现有工单、创建新工单或保留评价。 |
+| 422 | `invalid_attachment` | 使用允许的类型和大小。 |
 | 503 | `storage_unavailable` | 等待后只重新上传一次，不创建重复工单。 |
 
 请参阅[错误目录](https://docs.cbpayapp.com/zh/errors)和[webhook 事件](https://docs.cbpayapp.com/zh/webhooks#支持工单事件)。
 
 ## 常见问题
 
-#### 可以不关联交易创建工单吗？可以。使用 `kind: general`，省略 `resource_id` 并设置 `category: general`。#### 账户能看到内部备注吗？不能。内部备注仅供组织管理员查看，也不会出现在账户响应或事件中。#### 事件是否包含消息正文？不包含。事件只有 ID 和状态；请使用认证接口读取对话。????:https://cryptobank.qbank.cl/platform
+#### 可以不关联交易创建工单吗？可以。使用 `kind: general`，省略 `resource_id` 并设置 `category: other`；旧别名会被转换。#### 可以选择 urgent 吗？不可以。优先级由 first-match 规则自动计算，旧的 `priority` 字段会被忽略。#### 如何避免重复工单？先搜索交易并在重试时复用同一个幂等键；服务器也会阻止同一交易出现两个开放工单。#### 账户能看到内部备注或 Activity 吗？不能。这些内容只对管理员开放，webhook 也不包含备注正文。#### 何时可以提交 CSAT？工单处于 `resolved` 或 `closed` 后，每个工单只能提交一次。????:https://cryptobank.qbank.cl/platform

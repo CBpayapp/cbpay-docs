@@ -8,6 +8,7 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ## v2.195 · 2 versiones - 29 de octubre de 2026
 ### v2.195
 **Agregado**
+- Soporte v2: un ticket puede iniciar con una transacción opcional y luego vincularla, cambiarla o desvincularla. Se agregan 11 categorías, `money_stuck`, prioridad automática first-match, buscador de transacciones, anti-duplicado, deduplicación SHA-256 de adjuntos, SLA visible de primera respuesta, seguimiento en tres pasos y CSAT después de resolver o cerrar.
 - La submission propia de self-onboarding se puede consultar y subsanar antes
   de aprobar la cuenta en `pending_review`, `in_review`, `changes_requested`,
   `more_info_required` o `escalated`; terceros, productos y dinero conservan

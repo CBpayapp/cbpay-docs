@@ -8,6 +8,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ## v2.195 · 2 versions - October 29, 2026
 ### v2.195
 **Added**
+- Support tickets v2: one ticket can start with an optional transaction and can be linked, changed or unlinked later. Added the 11-category vocabulary, `money_stuck`, automatic first-match priority, transaction search, duplicate prevention, attachment SHA-256 deduplication, customer-visible first-response SLA, three-step follow-up and CSAT after resolution or closure.
 - Your own self-onboarding submission can be read and remediated before
   approval while it is `pending_review`, `in_review`, `changes_requested`,
   `more_info_required` or `escalated`; third-party, product and money routes
