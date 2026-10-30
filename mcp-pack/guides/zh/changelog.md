@@ -8,6 +8,10 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 ## v2.195 · 2 个版本 - 2026年10月29日
 ### v2.195
 **新增**
+- 账户自己的 self-onboarding 提交件在批准前、处于 `pending_review`、
+  `in_review`、`changes_requested`、`more_info_required` 或 `escalated` 时，
+  可以继续读取和补充；第三方、产品和资金接口保留原有门槛，终态
+  `rejected` 仍返回 `403`。
 - 待处理的 QR payin 现在支持可分享的公开付款链接。
   `GET /v1/track-link?kind=payin&id=...` 返回 `{track_url, code}`；公开
   tracker 暴露付款人可见的 `pay` 区块，其中包含 QR 数据、转换和过期时间。

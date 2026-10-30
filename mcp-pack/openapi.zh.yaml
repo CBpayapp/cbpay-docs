@@ -24161,6 +24161,11 @@ paths:
           - {name: to, in: query, required: true, schema: {type: string, format: date}}
           - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
           - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+          - {name: status, in: query, schema: {type: string}}
+          - {name: category, in: query, schema: {type: string}}
+          - {name: priority, in: query, schema: {type: string}}
+          - {name: kind, in: query, schema: {type: string}}
+          - {name: has_resource, in: query, schema: {type: string, enum: [with, without]}}
         responses:
           '200':
             description: Successful response
@@ -24192,7 +24197,7 @@ paths:
                     type: string
                     maxLength: 128
                     description: Maximum 128 characters.
-              example: {kind: payout, resource_id: payout-123, subject: Payout delayed, category: delay, priority: high, message: Please check this payout., idempotency_key: support-001}
+              example: {kind: payout, resource_id: payout-123, subject: Payout delayed, category: delay, money_stuck: yes, message: Please check this payout., idempotency_key: support-001}
         responses:
           '201':
             description: Successful response
@@ -24209,6 +24214,52 @@ paths:
             content:
               application/json:
                 example: {error: not_found, message: 支持工单 not found}
+          '409':
+            description: Transaction already has an open ticket
+            content:
+              application/json:
+                example: {error: ticket_already_open, message: 该交易已有未关闭的支持工单}
+  /v1/support/tickets/open:
+    get:
+        tags: [Support]
+        operationId: getSupportOpenTicket
+        summary: 查询交易是否有未关闭工单
+        parameters:
+          - {name: kind, in: query, required: true, schema: {type: string}}
+          - {name: resource_id, in: query, required: true, schema: {type: string}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {open: true, ticket_id: ticket-01, number: SUP-2026-000123, subject: Payout delayed, status: open}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
+  /v1/support/transactions:
+    get:
+        tags: [Support]
+        operationId: listSupportTransactions
+        summary: 列出可关联的交易
+        parameters:
+          - {name: q, in: query, schema: {type: string}}
+          - {name: from, in: query, required: true, schema: {type: string, format: date}}
+          - {name: to, in: query, required: true, schema: {type: string, format: date}}
+          - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+          - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {page: 1, page_size: 50, transactions: [{kind: payout, resource_id: payout-123, status: completed, created_at: '2026-10-24T12:00:00Z', country: AR, counterparty: Acme, amount_minor: '50000', amount_asset: ARS, has_open_ticket: false}]}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid 支持request}
   /v1/support/tickets/{id}:
     parameters:
       - name: id
@@ -24288,6 +24339,11 @@ paths:
                 type: object
               example: {file: receipt.png}
         responses:
+          '200':
+            description: 文件已存在（去重）
+            content:
+              application/json:
+                example: {attachment_id: attachment-01, filename: receipt.png, content_type: image/png, bytes: 1204, sha256: sha256:abc123, download_url: /v1/support/tickets/ticket-01/attachments/attachment-01, duplicates_omitted: 1}
           '201':
             description: Successful response
             content:
@@ -24368,7 +24424,7 @@ paths:
     post:
         tags: [Support]
         operationId: rateSupportTicket
-        summary: 评价resolved 工单
+        summary: 评价已解决或已关闭的工单
         requestBody:
           required: true
           content:

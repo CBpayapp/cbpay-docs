@@ -8,6 +8,10 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ## v2.195 · 2 versions - October 29, 2026
 ### v2.195
 **Added**
+- Your own self-onboarding submission can be read and remediated before
+  approval while it is `pending_review`, `in_review`, `changes_requested`,
+  `more_info_required` or `escalated`; third-party, product and money routes
+  keep their gates, and terminal `rejected` still returns `403`.
 - Pending QR payins now support a shareable public payment link. `GET
   /v1/track-link?kind=payin&id=...` returns `{track_url, code}`; the public
   tracker exposes the payer-facing `pay` block with QR data, conversion and
