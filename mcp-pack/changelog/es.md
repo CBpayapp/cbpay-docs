@@ -11,6 +11,9 @@ source_url: https://docs.cbpayapp.com/es/changelog
 - Se elevó a USD 100.000 por operación el límite del corredor de payouts
   `EC/USD` `bank_transfer`; el mínimo sigue siendo USD 1 y se mantienen
   hasta dos decimales.
+- Se documentó el paso de firma de la declaración jurada para UBOs/directores
+  invitados, el gate existente `409 declaration_required` y el ítem automático
+  `swornDeclaration` del expediente en el flujo KYB alojado.
 ## v2.196 · 3 versiones - 29 de octubre de 2026
 ### v2.196
 **Cambiado**
