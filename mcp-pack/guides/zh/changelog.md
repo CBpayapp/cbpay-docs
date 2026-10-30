@@ -10,6 +10,8 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 **变更**
 - `EC/USD` `bank_transfer` payout 走廊的单笔上限提高至 USD 100,000；
   最低金额仍为 USD 1，并继续支持最多 2 位小数。
+- 已记录受邀 UBO/董事在提交前签署资金宣誓声明的步骤、现有的
+  `409 declaration_required` gate，以及自动加入档案的 `swornDeclaration` 项目。
 ## v2.196 · 3 个版本 - 2026年10月29日
 ### v2.196
 **变更**

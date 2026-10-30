@@ -221,6 +221,20 @@ curl https://api.qbank.cl/platform/v1/kyb/links/{link_id} \
 | `completed` | Form submitted — the submission is born (`kyb_link_completed` / `kyc_link_completed` webhook) |
 | `expired` | Expired without completion |
 
+### Invited UBOs and directors
+
+In a hosted KYB flow, each invited UBO or director completes their own
+`/on/ubo` wizard (directors use the same flow). Before submitting, the invited person must
+review and sign the sworn funds declaration shown by the wizard. This is a
+form step, not a new API route or an OTP challenge.
+
+If the invited person submits without an active signature, the submission
+returns `409 declaration_required`. Do not create another invite or retry with
+a new route: return the same wizard to the person, complete the declaration,
+and submit again. Once signed, the declaration is attached automatically to
+the dossier as the `swornDeclaration` item. The parent KYB case can continue
+only after every required UBO/director child has completed its own flow.
+
 ### Option B — Data through the API
 
 If you already hold the customer's data, create the verification directly

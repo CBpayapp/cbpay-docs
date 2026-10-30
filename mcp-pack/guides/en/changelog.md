@@ -9,6 +9,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ### v2.197
 **Changed**
 - Raised the EC/USD `bank_transfer` payout corridor limit to USD 100,000 per operation; amounts remain USD 1 minimum with up to two decimal places.
+- Documented the invited UBO/director sworn-funds signature step, the existing `409 declaration_required` gate, and automatic `swornDeclaration` dossier item in the hosted KYB flow.
 ## v2.196 · 3 versions - October 29, 2026
 ### v2.196
 **Changed**

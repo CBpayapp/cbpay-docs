@@ -201,6 +201,18 @@ curl https://api.qbank.cl/platform/v1/kyb/links/{link_id} \
 | `completed` | 表单已提交——生成提交件（`kyb_link_completed` / `kyc_link_completed` webhook） |
 | `expired` | 未完成即已过期 |
 
+### 受邀 UBO 和董事
+
+在托管 KYB 流程中，每位受邀的 UBO 或董事都要完成自己的
+`/on/ubo`（董事使用同一流程） 向导。在提交前，受邀人员必须查看并签署向导
+显示的资金宣誓声明。这是表单步骤，不是新的 API 路由，也不是 OTP 挑战。
+
+如果受邀人员在没有有效签名的情况下提交，提交件会返回
+`409 declaration_required`。不要创建新的邀请，也不要改用新路由重试：
+让该人员重新打开同一个向导，完成声明后再次提交。签署后，声明会自动以
+`swornDeclaration` 项目附加到档案。只有所有必需的 UBO/董事子流程都完成
+后，KYB 父案件才能继续。
+
 ### 方式 B——通过 API 提交数据
 
 如果您已持有客户的数据，可直接创建验证（无需向导）。提交件会进入同一个审核队列：
