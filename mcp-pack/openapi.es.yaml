@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.195"
+  version: "2.196"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -8305,9 +8305,9 @@ paths:
               properties:
                 expires_in_days:
                   type: integer
-                  description: Vencimiento opcional del link (1-30 días). Omitido, no vence.
+                  description: Vencimiento opcional del invite nativo (1-90 días). Omitido, el link nativo vence en 90 días. El simulador no tiene tope explícito y omitido significa sin expiración.
             example:
-              expires_in_days: 14
+              expires_in_days: 90
       responses:
         '201':
           description: Link de onboarding creado (200 cuando se reutiliza uno vigente).
@@ -8805,7 +8805,7 @@ paths:
             example:
               external_customer_id: cust_123
               label: Ana Perez
-              expires_in_days: 14
+              expires_in_days: 90
               idempotency_key: kyc-link-cust-123-1
       responses:
         '201':
@@ -9908,9 +9908,9 @@ paths:
               properties:
                 expires_in_days:
                   type: integer
-                  description: 1-30, default 7.
+                  description: 1-90, default 90.
             example:
-              expires_in_days: 7
+              expires_in_days: 90
       responses:
         '200':
           description: Liveness link.

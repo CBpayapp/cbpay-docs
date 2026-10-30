@@ -126,7 +126,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/links \
   -d '{
     "external_customer_id": "cust_123",
     "label": "Ana Pérez",
-    "expires_in_days": 14,
+    "expires_in_days": 90,
     "idempotency_key": "kyc-link-cust-123-1"
   }'
 ```
@@ -139,7 +139,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
     "external_customer_id": "cust_456",
     "country": "cl",
     "label": "Comercial Andina SpA",
-    "expires_in_days": 14,
+    "expires_in_days": 90,
     "idempotency_key": "kyb-link-cust-456-1"
   }'
 ```
@@ -147,7 +147,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
 - `external_customer_id`（必填）：您对被验证客户的自有引用——会在每个 webhook 和查询中原样返回。等于 `self` 或以 `:self` 结尾的值保留给账户入驻使用，会被拒绝并返回 `400 invalid_payload`。
 - `idempotency_key`（必填）：使用相同 key 的重试会返回原始链接，**绝不会重复扣费**。
 - `country`（仅 KYB）：`us`、`cl`、`ve`、`br`、`mx`、`co`、`pe`、`bo`、`py`、`ar`、`uk`、`es`、`vg` 或 `generic`（配合 ISO alpha-2 的 `generic_country`，例如 `"ES"`）。个人 KYC 不需要国家。
-- `expires_in_days`（可选，1–30）：省略时链接永不过期。
+- `expires_in_days`（可选，1–90）：省略时，原生链接默认 90 天后过期。模拟器不同：省略表示永不过期，且没有显式上限。
 
 `201` 响应：
 
@@ -363,7 +363,7 @@ curl https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/documents 
 curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/liveness_link \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "expires_in_days": 7 }'
+  -d '{ "expires_in_days": 90 }'
 ```
 
 ```json
