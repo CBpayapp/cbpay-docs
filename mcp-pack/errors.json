@@ -1,5 +1,5 @@
 {
-  "count": 375,
+  "count": 376,
   "errors": [
     {
       "category": {
@@ -5166,6 +5166,16 @@
         "en": "Trust Center & NDA"
       },
       "code": "invalid_comment",
+      "http": 400,
+      "meaning": {
+        "en": "Use the documented closed vocabulary and limits."
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA"
+      },
+      "code": "invalid_money_stuck",
       "http": 400,
       "meaning": {
         "en": "Use the documented closed vocabulary and limits."

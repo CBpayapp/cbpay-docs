@@ -8,6 +8,10 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ## v2.195 · 2 versiones - 29 de octubre de 2026
 ### v2.195
 **Agregado**
+- La submission propia de self-onboarding se puede consultar y subsanar antes
+  de aprobar la cuenta en `pending_review`, `in_review`, `changes_requested`,
+  `more_info_required` o `escalated`; terceros, productos y dinero conservan
+  sus gates y `rejected` terminal sigue respondiendo `403`.
 - Los payins QR pendientes ahora soportan un link público de pago compartible.
   `GET /v1/track-link?kind=payin&id=...` devuelve `{track_url, code}`; el
   tracker público expone el bloque `pay` visible para el pagador, con datos QR,
