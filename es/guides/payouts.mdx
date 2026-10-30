@@ -764,13 +764,14 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 </Tab>
 <Tab title="Ecuador">
 
-Remesas en **USD** (1 a 10,000 por operación, máx. 2 decimales) con cuatro
+Remesas en **USD** (1 a 100.000 por operación, máx. 2 decimales; fuera del rango
+devuelve `amount_below_minimum`/`amount_above_maximum` y los montos mayores se
+dividen) con cuatro
 métodos: transferencia bancaria, billetera **DE UNA** (por celular),
 retiro en **ventanilla** (`cash_pickup`) y retiro en **corresponsal no
 bancario** (`cnb`). Es un corredor de remesas: además del beneficiario, el
 rail exige los datos del **ordenante** (quien envía), que van planos
 dentro del mismo `beneficiary` con prefijo `sender_*`.
-
 <CodeGroup>
 
 ```bash bank_transfer (a cuenta)
@@ -850,7 +851,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ```
 
 </CodeGroup>
-
 ```json
 {
   "payout_id": "9f3a…",
@@ -866,14 +866,14 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "bank_reference": ""
 }
 ```
-
 - Ecuador está dolarizado: la moneda local ES el USD (`fx_rate: "1"`).
 - `document_value` es la cédula del beneficiario; `document_type` acepta
   `IDCD` (cédula, default), `CCPT` (pasaporte) o `TXID` (RUC).
 - En `bank_transfer`, si omites `bank_code` la cuenta es del banco emisor
   del corredor; para **otro banco** envía el `bank_code` del catálogo
   (`GET /v1/payouts/banks?country=EC`) más `account_type`
-  (`checking` o `savings`).
+  (`checking` o `savings`); un beneficiario incompleto devuelve
+  `invalid_beneficiary` con el campo exacto.
 - Nombres estructurados opcionales (`given_name`, `middle_name`,
   `first_surname`, `second_surname` y sus pares `sender_*`): si los
   tienes, envíalos — mandan sobre la separación automática de `name`.

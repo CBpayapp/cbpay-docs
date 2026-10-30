@@ -5,6 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.197 · 1 version - October 30, 2026
+### v2.197
+**Changed**
+- Raised the EC/USD `bank_transfer` payout corridor limit to USD 100,000 per operation; amounts remain USD 1 minimum with up to two decimal places.
 ## v2.196 · 3 versions - October 29, 2026
 ### v2.196
 **Changed**

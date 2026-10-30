@@ -5,6 +5,12 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.197 · 1 versión - 30 de octubre de 2026
+### v2.197
+**Cambiado**
+- Se elevó a USD 100.000 por operación el límite del corredor de payouts
+  `EC/USD` `bank_transfer`; el mínimo sigue siendo USD 1 y se mantienen
+  hasta dos decimales.
 ## v2.196 · 3 versiones - 29 de octubre de 2026
 ### v2.196
 **Cambiado**

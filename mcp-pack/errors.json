@@ -1,5 +1,5 @@
 {
-  "count": 376,
+  "count": 377,
   "errors": [
     {
       "category": {
@@ -3135,6 +3135,20 @@
         "en": "The account has no active seal to revoke — activate one first with `POST /v1/qscore/my-seal`; a revoked seal stays revoked permanently (create a new one instead)",
         "es": "La cuenta no tiene un sello activo que revocar — activa uno primero con `POST /v1/qscore/my-seal`; un sello revocado queda revocado permanentemente (crea uno nuevo)",
         "zh": "该账户没有可撤销的有效印章 — 请先通过 `POST /v1/qscore/my-seal` 激活;已撤销的印章将永久失效(可创建新印章)"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "invalid_search",
+      "http": 400,
+      "meaning": {
+        "en": "The `search` filter needs at least 2 characters",
+        "es": "El filtro `search` necesita al menos 2 caracteres",
+        "zh": "`search` 过滤条件至少需要 2 个字符"
       }
     },
     {

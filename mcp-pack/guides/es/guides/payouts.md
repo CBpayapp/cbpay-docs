@@ -738,7 +738,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 #### Ecuador
 
-Remesas en **USD** (1 a 10.000 por operación, máx. 2 decimales; fuera del rango
+Remesas en **USD** (1 a 100.000 por operación, máx. 2 decimales; fuera del rango
 devuelve `amount_below_minimum`/`amount_above_maximum` y los montos mayores se
 dividen) con cuatro
 métodos: transferencia bancaria, billetera **DE UNA** (por celular),

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-29 22:57 UTC",
-    "_content_sha256": "940927533c34e59e116b622e1e196d09eda8d91a9163c2ead26e5b1c4a77b2ec"
+    "_generated_at": "2026-10-30 02:20 UTC",
+    "_content_sha256": "e9d878d88f635d9a98f7d7e04bb2e45998ebf0ad47a81da68b04d12ec0240746"
   },
   "auth": {
     "type": "bearer",
@@ -2810,7 +2810,7 @@
             "description": "Returns the account's own identity-verification link (person accounts get a KYC link, company accounts a KYB link — derived from the account type). The hosted wizard covers the full flow: form, document uploads and video liveness. Free. A new self-service request requires a confirmed TOTP or a registered passkey; an existing open link is re-served before this gate and API-key automation remains exempt. If an open link already exists it is returned with 200; an already-approved account gets 409 already_verified. Until the account's verification is approved, every outgoing-money action answers 403 verification_required (funding and reads stay available).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"expires_in_days\": 14\n}",
+              "raw": "{\n  \"expires_in_days\": 90\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3107,7 +3107,7 @@
             "description": "Company accounts only: generates a hosted KYC link for one of YOUR end customers. The wizard covers form, documents and video liveness. Bills the fixed `kyc_verification` fee when configured (refunded if creation fails); `idempotency_key` is required — a retry with the same key returns the original link and never double-charges.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"external_customer_id\": \"cust_123\",\n  \"label\": \"Ana Perez\",\n  \"expires_in_days\": 14,\n  \"idempotency_key\": \"kyc-link-cust-123-1\"\n}",
+              "raw": "{\n  \"external_customer_id\": \"cust_123\",\n  \"label\": \"Ana Perez\",\n  \"expires_in_days\": 90,\n  \"idempotency_key\": \"kyc-link-cust-123-1\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4607,7 +4607,7 @@
             "description": "Hosted page where your customer completes ONLY the video liveness check (camera gestures + server-side face match against the uploaded identity document). Free — the service was billed when the submission was created. If an open link exists the same one is returned; if the check already passed, 400 liveness_already_completed. On submissions predating native verification it returns 422 legacy_frozen; request a new native invite instead.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"expires_in_days\": 7\n}",
+              "raw": "{\n  \"expires_in_days\": 90\n}",
               "options": {
                 "raw": {
                   "language": "json"

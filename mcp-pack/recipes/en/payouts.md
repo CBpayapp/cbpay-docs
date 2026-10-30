@@ -739,7 +739,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 #### Ecuador
 
-Remittances in **USD** (1 to 10,000 per operation, up to 2 decimals) with
+Remittances in **USD** (1 to 100,000 per operation, up to 2 decimals) with
 four methods: bank transfer, the **DE UNA** wallet (by mobile number),
 **cash pickup** at a branch (`cash_pickup`) and cash at a **non-bank
 correspondent** (`cnb`). This is a remittance corridor: besides the
