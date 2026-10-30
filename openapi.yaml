@@ -25125,6 +25125,11 @@ paths:
           - {name: to, in: query, required: true, schema: {type: string, format: date}}
           - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
           - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+          - {name: status, in: query, schema: {type: string}}
+          - {name: category, in: query, schema: {type: string}}
+          - {name: priority, in: query, schema: {type: string}}
+          - {name: kind, in: query, schema: {type: string}}
+          - {name: has_resource, in: query, schema: {type: string, enum: [with, without]}}
         responses:
           '200':
             description: Successful response
@@ -25145,7 +25150,7 @@ paths:
         tags: [Support]
         operationId: createSupportTicket
         summary: Open a support ticket
-        description: The idempotency key is deduplicated by organization, account and key.
+        description: The idempotency key is deduplicated by organization, account and key. Priority is computed by the organization rules; a priority field in the body is accepted but ignored.
         requestBody:
           required: true
           content:
@@ -25157,7 +25162,7 @@ paths:
                     type: string
                     maxLength: 128
                     description: Maximum 128 characters.
-              example: {kind: payout, resource_id: payout-123, subject: Payout delayed, category: delay, priority: high, message: Please check this payout., idempotency_key: support-001}
+              example: {kind: payout, resource_id: payout-123, subject: Payout delayed, category: delay, money_stuck: yes, message: Please check this payout., idempotency_key: support-001}
         responses:
           '201':
             description: Successful response
@@ -25174,6 +25179,52 @@ paths:
             content:
               application/json:
                 example: {error: not_found, message: support ticket not found}
+          '409':
+            description: Transaction already has an open ticket
+            content:
+              application/json:
+                example: {error: ticket_already_open, message: this transaction already has an open support ticket}
+  /v1/support/tickets/open:
+    get:
+        tags: [Support]
+        operationId: getSupportOpenTicket
+        summary: Check for an open ticket on a transaction
+        parameters:
+          - {name: kind, in: query, required: true, schema: {type: string}}
+          - {name: resource_id, in: query, required: true, schema: {type: string}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {open: true, ticket_id: ticket-01, number: SUP-2026-000123, subject: Payout delayed, status: open}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
+  /v1/support/transactions:
+    get:
+        tags: [Support]
+        operationId: listSupportTransactions
+        summary: List linkable account transactions
+        parameters:
+          - {name: q, in: query, schema: {type: string}}
+          - {name: from, in: query, required: true, schema: {type: string, format: date}}
+          - {name: to, in: query, required: true, schema: {type: string, format: date}}
+          - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+          - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        responses:
+          '200':
+            description: Successful response
+            content:
+              application/json:
+                example: {page: 1, page_size: 50, transactions: [{kind: payout, resource_id: payout-123, status: completed, created_at: '2026-10-24T12:00:00Z', country: AR, counterparty: Acme, amount_minor: '50000', amount_asset: ARS, has_open_ticket: false}]}
+          '400':
+            description: Invalid request
+            content:
+              application/json:
+                example: {error: invalid_payload, message: invalid support request}
   /v1/support/tickets/{id}:
     parameters:
       - name: id
@@ -25253,6 +25304,11 @@ paths:
                 type: object
               example: {file: receipt.png}
         responses:
+          '200':
+            description: File already attached (deduplicated)
+            content:
+              application/json:
+                example: {attachment_id: attachment-01, filename: receipt.png, content_type: image/png, bytes: 1204, sha256: sha256:abc123, download_url: /v1/support/tickets/ticket-01/attachments/attachment-01, duplicates_omitted: 1}
           '201':
             description: Successful response
             content:
@@ -25333,7 +25389,7 @@ paths:
     post:
         tags: [Support]
         operationId: rateSupportTicket
-        summary: Rate a resolved ticket
+        summary: Rate a resolved or closed ticket
         requestBody:
           required: true
           content:

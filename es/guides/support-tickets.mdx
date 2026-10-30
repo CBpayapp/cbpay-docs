@@ -1,27 +1,33 @@
 ---
-title: "Tickets de soporte ligados a una transacción"
-description: "Abre un hilo autenticado desde cualquier transacción, comparte evidencia, ciérralo y califica la respuesta."
+title: "Tickets de soporte"
+description: "Abre un ticket autenticado, vincula una transacción opcional, sigue el SLA de respuesta y califica la resolución."
 icon: "headset"
 ---
 
 Para pruebas usa `https://cryptobank.qbank.cl/platform`.
 
-Un ticket mantiene la consulta de la cuenta junto con la transacción relevante. Ábrelo desde una transacción para errores, consultas, demoras o diferencias de monto; usa `kind: general` solo si no existe una transacción de origen. Los tickets de transacción guardan un snapshot de comprobante de solo lectura.
+Un ticket mantiene una conversación auditable con la organización. Puedes abrirlo desde una transacción o por un tema de cuenta; soporte puede vincular, cambiar o desvincular la transacción después. El snapshot es evidencia de solo lectura y nunca modifica el ledger.
 
 ```mermaid
 sequenceDiagram
   participant A as Cuenta
   participant C as CBPay
-  participant O as Soporte de la organización
-  A->>C: POST ticket + idempotency_key
-  C-->>A: Número SUP + snapshot
-  C-->>O: support_ticket_created (solo IDs y estado)
-  O->>C: Respuesta pública o nota interna
-  C-->>A: Evento firmado / GET del hilo
-  A->>C: Cierra y califica tras la resolución
+  participant O as Equipo de soporte
+  A->>C: Elige transacción o abre ticket general
+  C-->>A: Ticket + prioridad automática + seguimiento en 3 pasos
+  C-->>O: Evento (solo IDs y estado)
+  O->>C: Responde, enruta, pausa o resuelve
+  C-->>A: Primera respuesta + cambios de estado
+  A->>C: Cierra y califica después de resolver
 ```
 
-## Abrir un ticket
+## 1. Elegir el flujo
+
+Hay dos formas de abrirlo: desde el detalle de una transacción o desde Soporte sin transacción (`kind: general`). En el segundo caso usa `category: other`; el alias antiguo `general` se normaliza temporalmente.
+
+Las 11 categorías son cerradas: con transacción `error`, `question`, `delay`, `amount_mismatch`, `unrecognized_operation`, `refund_request`; de cuenta u otro tema `account_verification`, `access_security`, `fraud`, `fees_limits`, `other`. `money_stuck` es una señal separada y acepta `yes`, `no` o `unknown`.
+
+## 2. Abrir un ticket
 
 `kind` debe ser `payout`, `payin`, `payin_refund`, `transfer`, `crypto_withdrawal`, `crypto_deposit`, `swap`, `card_purchase`, `banking_operation`, `wallet_send` o `wallet_deposit`. Envía `resource_id`; los tickets `general` deben usar categoría `general` y omitirlo.
 
@@ -29,10 +35,20 @@ sequenceDiagram
 curl -X POST https://api.qbank.cl/platform/v1/support/tickets \
   -H "Authorization: Bearer $ACCOUNT_TOKEN" -H "Content-Type: application/json" \
   -H "Idempotency-Key: support-payout-2026-0001" \
-  -d '{"kind":"payout","resource_id":"payout-123","subject":"El payout está demorado","category":"delay","priority":"high","message":"Revisen este payout.","idempotency_key":"support-payout-2026-0001"}'
+  -d '{"kind":"payout","resource_id":"payout-123","subject":"El payout está demorado","category":"delay","money_stuck":"yes","message":"Revisen este payout.","idempotency_key":"support-payout-2026-0001"}'
 ```
 
-La primera solicitud responde `201`. `idempotency_key` puede tener como máximo 128 caracteres; un valor más largo devuelve `400 invalid_payload`. La clave de idempotencia está ligada a la cuenta: la deduplicación usa `(organización, cuenta, idempotency_key)`, por lo que distintas cuentas pueden usar la misma clave de forma independiente. Repetir la misma clave devuelve el ticket original con `idempotency_hit: true`; nunca crea otro. Un segundo ticket abierto para la misma transacción devuelve `409 ticket_already_open` con el ticket existente.
+La respuesta `201` incluye número `SUP-YYYY-NNNNNN`, snapshot, `money_stuck`, SLA y `priority_source: auto`. El cliente no elige prioridad: first-match aplica fraude/no reconocida → urgent; dinero retenido → urgent; error/demora/monto sobre el piso USD → high; seguridad → high; catch-all → normal. El piso por defecto es USD 1.000.
+
+La clave se exige en body o header y es por organización+cuenta. Repetirla devuelve `idempotency_hit: true`; otro ticket abierto para la misma transacción devuelve `409 ticket_already_open`. Ante timeout, consulta usando la misma clave: no generes otra.
+
+## 3. Seguimiento en 3 pasos
+
+`open` significa investigación; la primera respuesta cambia a `pending_customer`; `resolved` permite CSAT y `closed` es terminal. Una respuesta de la cuenta reabre `pending_customer`, `on_hold` o `resolved`. La cuenta no ve notas internas ni Actividad.
+
+## 4. Buscar y vincular transacciones
+
+`GET /v1/support/transactions?q=125&from=2026-10-01&to=2026-10-31&page=1&page_size=50` devuelve los 11 tipos vinculables y `has_open_ticket`. Si es `true`, continúa el ticket existente. Soporte puede vincular, reemplazar o desvincular la transacción con ownership verificado.
 
 ## Leer y continuar el hilo
 
@@ -46,9 +62,9 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 
 Un mensaje de la cuenta reabre tickets `pending_customer`, `on_hold` o `resolved` como `open`. `closed` es terminal; abre uno nuevo.
 
-## Adjuntos
+## Adjuntos y deduplicación
 
-Sube un `PDF`, `PNG` o `JPG` como campo multipart `file`, hasta 10 MiB. El servidor verifica la firma real del archivo. Las descargas son binarias y autenticadas; no expongas `download_url`.
+Sube un `PDF`, `PNG` o `JPG` como `file`, hasta 10 MiB. Se verifica la firma real y se deduplica por SHA-256 dentro del ticket. Las descargas son binarias y autenticadas; no expongas `download_url`.
 
 ## Cerrar y calificar
 
@@ -64,15 +80,16 @@ Sube un `PDF`, `PNG` o `JPG` como campo multipart `file`, hasta 10 MiB. El servi
 | `resolved` | Soporte resolvió la solicitud | Califica o reabre con un mensaje |
 | `closed` | Estado terminal | Abre otro ticket |
 
-El SLA predeterminado de primera respuesta es 4 h, 2 h, 1 h y 30 min para prioridad low, normal, high y urgent. El de resolución es 48 h, 24 h, 8 h y 4 h. La organización puede configurarlos y `sla_breached` lo calcula el servidor.
+El SLA predeterminado de primera respuesta es 4 h, 2 h, 1 h y 30 min; resolución 48 h, 24 h, 8 h y 4 h. La organización puede configurar agenda hábil y pausa mientras espera al cliente; `sla_breached` lo calcula el servidor. El cliente ve el compromiso de primera respuesta, no la actividad interna.
 
 | HTTP | Código | Solución |
 |---:|---|---|
 | 400 | `idempotency_key_required` | Envía la clave en el body o header `Idempotency-Key`. |
-| 400 | `invalid_kind`, `invalid_category`, `invalid_priority`, `invalid_subject`, `invalid_message`, `invalid_rating`, `invalid_comment` | Usa el vocabulario cerrado y sus límites. |
+| 400 | `invalid_kind`, `invalid_category`, `invalid_subject`, `invalid_message`, `invalid_money_stuck`, `invalid_rating`, `invalid_comment` | Usa el vocabulario cerrado y sus límites; la prioridad es automática. |
+| 403 | `forbidden` | Usa un token de cuenta con ownership del ticket. |
 | 404 | `not_found` | Confirma ownership de la transacción o ticket. |
-| 409 | `ticket_already_open` | Continúa el ticket abierto retornado. |
-| 409 | `ticket_closed`, `already_rated` | Abre uno nuevo o conserva la calificación. |
+| 409 | `ticket_already_open`, `ticket_closed`, `already_rated`, `attachment_duplicate` | Continúa el existente, abre uno nuevo o conserva la calificación. |
+| 422 | `invalid_attachment` | Usa tipo y tamaño permitidos. |
 | 503 | `storage_unavailable` | Espera y vuelve a subirlo una vez; no dupliques el ticket. |
 
 Revisa el [catálogo de errores](/es/errors) y los [eventos webhook](/es/webhooks#eventos-de-tickets-de-soporte).
@@ -80,7 +97,9 @@ Revisa el [catálogo de errores](/es/errors) y los [eventos webhook](/es/webhook
 ## Preguntas frecuentes
 
 <AccordionGroup>
-<Accordion title="¿Puedo abrir un ticket sin transacción?">Sí. Usa `kind: general`, omite `resource_id` y define `category: general`.</Accordion>
-<Accordion title="¿La cuenta ve notas internas?">No. Solo las ven administradores de la organización; tampoco salen en respuestas ni eventos de cuenta.</Accordion>
-<Accordion title="¿Los eventos contienen cuerpos de mensajes?">No. Solo contienen identificadores y estado; lee el hilo autenticado.</Accordion>
+<Accordion title="¿Puedo abrir un ticket sin transacción?">Sí. Usa `kind: general`, omite `resource_id` y define `category: other`; el alias `general` se normaliza temporalmente.</Accordion>
+<Accordion title="¿Puedo elegir urgent?">No. El motor de prioridad aplica reglas first-match; el campo `priority` antiguo se ignora.</Accordion>
+<Accordion title="¿Cómo evito duplicados?">Busca la transacción y reutiliza la misma clave de idempotencia ante reintentos. El servidor también impide dos tickets abiertos para una transacción.</Accordion>
+<Accordion title="¿La cuenta ve notas internas o Actividad?">No. Son superficies solo para administradores y los webhooks no incluyen cuerpos de notas.</Accordion>
+<Accordion title="¿Cuándo envío CSAT?">Después de `resolved` o `closed`, una sola vez, con nota opcional de hasta 1.000 caracteres.</Accordion>
 </AccordionGroup>

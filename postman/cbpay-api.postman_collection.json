@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-29 20:08 UTC",
-    "_content_sha256": "9f30ebe6449a53abef2491c25d15a37c8ba9868405c5819ece1095b5d17c98e4"
+    "_generated_at": "2026-10-29 22:57 UTC",
+    "_content_sha256": "940927533c34e59e116b622e1e196d09eda8d91a9163c2ead26e5b1c4a77b2ec"
   },
   "auth": {
     "type": "bearer",
@@ -29395,6 +29395,36 @@
                   "value": "",
                   "disabled": true,
                   "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "priority",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "has_resource",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
                 }
               ]
             },
@@ -29439,6 +29469,36 @@
                       "value": "",
                       "disabled": true,
                       "description": ""
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "category",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "priority",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "kind",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "has_resource",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
                     }
                   ]
                 }
@@ -29477,10 +29537,10 @@
                 "tickets"
               ]
             },
-            "description": "The idempotency key is deduplicated by organization, account and key.",
+            "description": "The idempotency key is deduplicated by organization, account and key. Priority is computed by the organization rules; a priority field in the body is accepted but ignored.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"kind\": \"payout\",\n  \"resource_id\": \"payout-123\",\n  \"subject\": \"Payout delayed\",\n  \"category\": \"delay\",\n  \"priority\": \"high\",\n  \"message\": \"Please check this payout.\",\n  \"idempotency_key\": \"support-001\"\n}",
+              "raw": "{\n  \"kind\": \"payout\",\n  \"resource_id\": \"payout-123\",\n  \"subject\": \"Payout delayed\",\n  \"category\": \"delay\",\n  \"money_stuck\": true,\n  \"message\": \"Please check this payout.\",\n  \"idempotency_key\": \"support-001\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -29515,6 +29575,196 @@
                 }
               ],
               "body": "{\n  \"ticket_id\": \"ticket-01\",\n  \"number\": \"SUP-2026-000123\",\n  \"status\": \"open\",\n  \"idempotency_hit\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Check for an open ticket on a transaction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/tickets/open",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "tickets",
+                "open"
+              ],
+              "query": [
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "resource_id",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Successful response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/tickets/open",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "tickets",
+                    "open"
+                  ],
+                  "query": [
+                    {
+                      "key": "kind",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "resource_id",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"open\": true,\n  \"ticket_id\": \"ticket-01\",\n  \"number\": \"SUP-2026-000123\",\n  \"subject\": \"Payout delayed\",\n  \"status\": \"open\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List linkable account transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/support/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "support",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 Successful response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/support/transactions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "support",
+                    "transactions"
+                  ],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Successful response",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"transactions\": [\n    {\n      \"kind\": \"payout\",\n      \"resource_id\": \"payout-123\",\n      \"status\": \"completed\",\n      \"created_at\": \"2026-10-24T12:00:00Z\",\n      \"country\": \"AR\",\n      \"counterparty\": \"Acme\",\n      \"amount_minor\": \"50000\",\n      \"amount_asset\": \"ARS\",\n      \"has_open_ticket\": false\n    }\n  ]\n}"
             }
           ]
         },
@@ -29682,7 +29932,7 @@
           },
           "response": [
             {
-              "name": "201 Successful response",
+              "name": "200 File already attached (deduplicated)",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -29699,8 +29949,8 @@
                   ]
                 }
               },
-              "status": "Successful response",
-              "code": 201,
+              "status": "File already attached (deduplicated)",
+              "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
                 {
@@ -29708,7 +29958,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"attachment_id\": \"attachment-01\",\n  \"filename\": \"receipt.png\",\n  \"content_type\": \"image/png\",\n  \"bytes\": 1204,\n  \"sha256\": \"sha256:abc123\",\n  \"download_url\": \"/v1/support/tickets/ticket-01/attachments/attachment-01\"\n}"
+              "body": "{\n  \"attachment_id\": \"attachment-01\",\n  \"filename\": \"receipt.png\",\n  \"content_type\": \"image/png\",\n  \"bytes\": 1204,\n  \"sha256\": \"sha256:abc123\",\n  \"download_url\": \"/v1/support/tickets/ticket-01/attachments/attachment-01\",\n  \"duplicates_omitted\": 1\n}"
             }
           ]
         },
@@ -29819,7 +30069,7 @@
           ]
         },
         {
-          "name": "Rate a resolved ticket",
+          "name": "Rate a resolved or closed ticket",
           "request": {
             "method": "POST",
             "header": [
