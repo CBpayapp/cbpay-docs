@@ -1,7 +1,7 @@
 {
-  "content_sha256": "e91062e64ad46405126139fc4ec487758303dbe6826b45227579134d234ab22b",
+  "content_sha256": "caefffbd46c4f1b46567e26e235669646feb0f1390f05336f2ae0b41328e1e61",
   "counts": {
-    "chunks": 4754,
+    "chunks": 4758,
     "errors": 376,
     "languages": [
       "en",
@@ -35,8 +35,8 @@
       "sha256": "ecc9f5cb30dd3e3dde13a8db670aaffd947c5819439e39b4a535739aa7f6f8f9"
     },
     "chunks/zh.jsonl": {
-      "bytes": 1546866,
-      "sha256": "26594cf54238b5d93c91190118406dbf168f17b2b8b3fca7bc7d9c595b2d9259"
+      "bytes": 1548525,
+      "sha256": "f837780e527cf6015839697146a3289c8a6c571e0105d58d0b5766edaad44a11"
     },
     "errors.json": {
       "bytes": 215474,
@@ -743,8 +743,8 @@
       "sha256": "75fb9be0b597c56ddb4c055388240257996ef965536e8e6d7db64276f5e483a3"
     },
     "guides/zh/guides/kyc-remediation.md": {
-      "bytes": 1685,
-      "sha256": "d8da2a048eb72dd8a4b6c4daf150bb74757a2a3ca6c6d2f6186c1db7df5c1f88"
+      "bytes": 2034,
+      "sha256": "5344b89bbe6508f0b68d9893978237190173d2cdbacce03f22dcc197b634d060"
     },
     "guides/zh/guides/kyc.md": {
       "bytes": 38070,
@@ -875,8 +875,8 @@
       "sha256": "7a562124edefd00ca5b93359756dd9ecb8dbcaea8468d11760ed154953943e31"
     },
     "guides/zh/guides/wolfsberg-cbddq.md": {
-      "bytes": 1344,
-      "sha256": "1087187df462f8f673a39c30d5e74d5f64733934568aa94eb5c3b5cc467f0b9a"
+      "bytes": 1522,
+      "sha256": "fd8d669e5546d570a7bf4f901fc25a3f71412384b2f0cff6414c982ed0269604"
     },
     "guides/zh/introduction.md": {
       "bytes": 1897,
@@ -1015,7 +1015,7 @@
       "sha256": "6a44dddf6c6bb164a4377f0cd569536a7c5714ed0b8350a1e94a9e6574bd3e20"
     }
   },
-  "generated_at": "2026-10-30T00:10:00Z",
+  "generated_at": "2026-10-30T03:17:51Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
