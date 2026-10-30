@@ -36,7 +36,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets \
   -d '{"kind":"payout","resource_id":"payout-123","subject":"付款延迟","category":"delay","money_stuck":"yes","message":"请检查此付款。","idempotency_key":"support-payout-2026-0001"}'
 ```
 
-首次请求返回 `201`，包含 `SUP-YYYY-NNNNNN` 编号、快照、SLA、`money_stuck` 和 `priority_source: auto`。客户不能选择优先级：欺诈/未识别 → urgent；资金卡住 → urgent；高金额交易错误 → high；访问安全 → high；其他 → normal。默认金额门槛为 USD 1,000。
+首次请求返回 `201`，包含 `SUP-YYYY-NNNNNN` 编号、快照、`money_stuck`、计算出的优先级和首次回复 SLA。优先级内部字段、团队与解决目标保留在服务端。客户不能选择优先级：欺诈/未识别 → urgent；资金卡住 → urgent；高金额交易错误 → high；访问安全 → high；其他 → normal。默认金额门槛为 USD 1,000。
 
 幂等键按组织和账户限定，必须放在 body 或 header。重放返回 `idempotency_hit: true`；同一交易已有开放工单返回 `409 ticket_already_open`。网络超时后使用同一个密钥读取，不要生成新密钥。
 
@@ -83,11 +83,11 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 | HTTP | 代码 | 解决方案 |
 |---:|---|---|
 | 400 | `idempotency_key_required` | 在 body 或 `Idempotency-Key` header 发送密钥。 |
-| 400 | `invalid_kind`、`invalid_category`、`invalid_money_stuck` 等 | 使用规定的枚举和值限制；优先级由服务器决定。 |
-| 403 | `forbidden` | 使用拥有该工单的账户令牌。 |
+| 400 | `invalid_kind`、`invalid_category`、`invalid_money_stuck`、`invalid_payload` 等 | 使用规定的枚举和值限制；优先级由服务器决定。附件失败（类型、大小、签名）同样返回 `invalid_payload`。 |
+| 401 | `unauthorized` | 发送有效的账户 API 密钥。 |
+| 403 | `account_required` | 使用拥有该工单的账户凭证（非组织/管理员）。 |
 | 404 | `not_found` | 确认交易或工单属于当前账户。 |
-| 409 | `ticket_already_open`、`ticket_closed`、`already_rated`、`attachment_duplicate` | 继续现有工单、创建新工单或保留评价。 |
-| 422 | `invalid_attachment` | 使用允许的类型和大小。 |
+| 409 | `ticket_already_open`、`ticket_closed`、`already_rated` | 继续现有工单、创建新工单或保留评价。重复上传相同字节返回已有附件及 `duplicates_omitted`（HTTP 200，非错误）。 |
 | 503 | `storage_unavailable` | 等待后只重新上传一次，不创建重复工单。 |
 
 请参阅[错误目录](/zh/errors)和[webhook 事件](/zh/webhooks#支持工单事件)。

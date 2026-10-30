@@ -39,7 +39,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets \
   -d '{"kind":"payout","resource_id":"payout-123","subject":"El payout está demorado","category":"delay","money_stuck":"yes","message":"Revisen este payout.","idempotency_key":"support-payout-2026-0001"}'
 ```
 
-La respuesta `201` incluye número `SUP-YYYY-NNNNNN`, snapshot, `money_stuck`, SLA y `priority_source: auto`. El cliente no elige prioridad: first-match aplica fraude/no reconocida → urgent; dinero retenido → urgent; error/demora/monto sobre el piso USD → high; seguridad → high; catch-all → normal. El piso por defecto es USD 1.000.
+La respuesta `201` incluye número `SUP-YYYY-NNNNNN`, snapshot, `money_stuck`, prioridad calculada y SLA de primera respuesta. Los internos de prioridad, el equipo y la resolución objetivo quedan en el servidor. El cliente no elige prioridad: first-match aplica fraude/no reconocida → urgent; dinero retenido → urgent; error/demora/monto sobre el piso USD → high; seguridad → high; catch-all → normal. El piso por defecto es USD 1.000.
 
 La clave se exige en body o header y es por organización+cuenta. Repetirla devuelve `idempotency_hit: true`; otro ticket abierto para la misma transacción devuelve `409 ticket_already_open`. Ante timeout, consulta usando la misma clave: no generes otra.
 
@@ -86,11 +86,12 @@ El SLA predeterminado de primera respuesta es 4 h, 2 h, 1 h y 30 min; resolució
 | HTTP | Código | Solución |
 |---:|---|---|
 | 400 | `idempotency_key_required` | Envía la clave en el body o header `Idempotency-Key`. |
-| 400 | `invalid_kind`, `invalid_category`, `invalid_subject`, `invalid_message`, `invalid_money_stuck`, `invalid_rating`, `invalid_comment` | Usa el vocabulario cerrado y sus límites; la prioridad es automática. |
-| 403 | `forbidden` | Usa un token de cuenta con ownership del ticket. |
+| 400 | `invalid_kind`, `invalid_category`, `invalid_subject`, `invalid_message`, `invalid_money_stuck`, `invalid_rating`, `invalid_comment`, `invalid_payload` | Usa el vocabulario cerrado y sus límites; la prioridad es automática. Los fallos de adjunto (tipo, tamaño, firma) también son `invalid_payload`. |
+| 401 | `unauthorized` | Envía una API key de cuenta válida. |
+| 403 | `account_required` | Usa una credencial de cuenta (no org/admin) con ownership del ticket. |
 | 404 | `not_found` | Confirma ownership de la transacción o ticket. |
-| 409 | `ticket_already_open`, `ticket_closed`, `already_rated`, `attachment_duplicate` | Continúa el existente, abre uno nuevo o conserva la calificación. |
-| 422 | `invalid_attachment` | Usa tipo y tamaño permitidos. |
+| 409 | `ticket_already_open`, `ticket_closed`, `already_rated` | Continúa el existente, abre uno nuevo o conserva la calificación. Re-subir bytes idénticos devuelve el adjunto existente con `duplicates_omitted` (HTTP 200, no es error). |
+| 503 | `storage_unavailable` | Espera y sube una vez; no dupliques. |
 | 503 | `storage_unavailable` | Espera y vuelve a subirlo una vez; no dupliques el ticket. |
 
 Revisa el [catálogo de errores](https://docs.cbpayapp.com/es/errors) y los [eventos webhook](https://docs.cbpayapp.com/es/webhooks#eventos-de-tickets-de-soporte).
