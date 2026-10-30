@@ -47,7 +47,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets \
   -d '{"kind":"payout","resource_id":"payout-123","subject":"Payout is delayed","category":"delay","money_stuck":"yes","message":"Please check this payout.","idempotency_key":"support-payout-2026-0001"}'
 ```
 
-The response is `201 Created` and includes `ticket_id`, `number` (`SUP-YYYY-NNNNNN`), the read-only `snapshot`, `priority`, `priority_source: "auto"`, `priority_rule`, `money_stuck`, `team`, `first_response_due_at`, `resolution_due_at`, and status.
+The response is `201 Created` and includes `ticket_id`, `number` (`SUP-YYYY-NNNNNN`), the read-only `snapshot`, `priority`, `money_stuck`, `first_response_due_at`, and status. Priority internals (`priority_source`, `priority_rule`), team routing and the resolution target stay server-side: the account only sees the first-response commitment.
 
 The client **does not choose priority**. The organization evaluates enabled rules in position order and applies the first match:
 
@@ -72,11 +72,8 @@ The key is required in the body or `Idempotency-Key` header and is scoped to org
   "category": "delay",
   "money_stuck": "yes",
   "priority": "urgent",
-  "priority_source": "auto",
-  "priority_rule": "money_stuck",
   "status": "open",
   "first_response_due_at": "2026-10-30T12:00:00Z",
-  "resolution_due_at": "2026-10-30T16:00:00Z",
   "snapshot": {"status": "processing", "amount": "125.00", "currency": "USD"},
   "messages": []
 }
@@ -155,12 +152,12 @@ Default first-response SLA is low 4h, normal 2h, high 1h, and urgent 30m. Resolu
 
 | HTTP | Code | Solution |
 |---:|---|---|
-| 400 | `idempotency_key_required`, `invalid_kind`, `invalid_category`, `invalid_subject`, `invalid_message`, `invalid_money_stuck`, `invalid_rating`, `invalid_comment` | Send the required key and use the closed vocabulary and limits. Priority is automatic; do not send it as a customer choice. |
-| 403 | `forbidden` | Use an account token that owns the ticket and linked transaction. |
+| 400 | `idempotency_key_required`, `invalid_kind`, `invalid_category`, `invalid_subject`, `invalid_message`, `invalid_money_stuck`, `invalid_rating`, `invalid_comment`, `invalid_payload` | Send the required key and use the closed vocabulary and limits. Priority is automatic; do not send it as a customer choice. Attachment failures (type, size, signature) also return `invalid_payload`. |
+| 401 | `unauthorized` | Send a valid account API key. |
+| 403 | `account_required` | Use an account credential (not an org/admin key) that owns the ticket and linked transaction. |
 | 404 | `not_found` | Confirm the transaction or ticket belongs to the authenticated account. |
 | 409 | `ticket_already_open` | Continue the returned open ticket; do not create a duplicate. |
-| 409 | `ticket_closed`, `already_rated`, `attachment_duplicate` | Open a new ticket, keep the existing rating, or reuse the existing attachment. |
-| 422 | `invalid_attachment` | Use a supported file type and size; the signature must match. |
+| 409 | `ticket_closed`, `already_rated` | Open a new ticket or keep the existing rating. Re-uploading identical bytes returns the existing attachment with `duplicates_omitted` (HTTP 200, not an error). |
 | 503 | `storage_unavailable` | Read the ticket with the same key later; never invent a new key after an ambiguous timeout. |
 
 See the [error catalog](/en/errors) and [webhook events](/en/webhooks#support-ticket-events).
