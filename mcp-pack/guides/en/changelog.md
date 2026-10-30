@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.195 · 2 versions - October 29, 2026
+## v2.196 · 3 versions - October 29, 2026
+### v2.196
+**Changed**
+- Native KYC/KYB invite links, liveness links and related UBO/director invites now default to 90 days and accept an explicit `expires_in_days` from 1 to 90. Replays preserve the original expiration. The simulator remains separate: omitted expiry means no expiration.
+
 ### v2.195
 **Added**
 - Support tickets v2: one ticket can start with an optional transaction and can be linked, changed or unlinked later. Added the 11-category vocabulary, `money_stuck`, automatic first-match priority, transaction search, duplicate prevention, attachment SHA-256 deduplication, customer-visible first-response SLA, three-step follow-up and CSAT after resolution or closure.

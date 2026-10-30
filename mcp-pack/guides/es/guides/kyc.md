@@ -143,7 +143,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/links \
   -d '{
     "external_customer_id": "cust_123",
     "label": "Ana Pérez",
-    "expires_in_days": 14,
+    "expires_in_days": 90,
     "idempotency_key": "kyc-link-cust-123-1"
   }'
 ```
@@ -156,7 +156,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
     "external_customer_id": "cust_456",
     "country": "cl",
     "label": "Comercial Andina SpA",
-    "expires_in_days": 14,
+    "expires_in_days": 90,
     "idempotency_key": "kyb-link-cust-456-1"
   }'
 ```
@@ -170,7 +170,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
 - `country` (solo KYB): `us`, `cl`, `ve`, `br`, `mx`, `co`, `pe`, `bo`,
   `py`, `ar`, `uk`, `es`, `vg` o `generic` (con `generic_country` ISO alpha-2, ej. `"ES"`).
   El KYC individual no lleva país.
-- `expires_in_days` (opcional, 1–30): sin enviarlo, el link no vence.
+- `expires_in_days` (opcional, 1–90): si se omite, un link nativo vence en 90 días. El simulador es distinto: omitido significa sin expiración y no tiene tope explícito.
 
 Respuesta `201`:
 
@@ -389,7 +389,7 @@ mínimo hosteado para que tu cliente la complete:
 curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/liveness_link \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "expires_in_days": 7 }'
+  -d '{ "expires_in_days": 90 }'
 ```
 
 ```json

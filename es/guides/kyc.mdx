@@ -152,7 +152,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/links \
   -d '{
     "external_customer_id": "cust_123",
     "label": "Ana Pérez",
-    "expires_in_days": 14,
+    "expires_in_days": 90,
     "idempotency_key": "kyc-link-cust-123-1"
   }'
 ```
@@ -165,7 +165,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
     "external_customer_id": "cust_456",
     "country": "cl",
     "label": "Comercial Andina SpA",
-    "expires_in_days": 14,
+    "expires_in_days": 90,
     "idempotency_key": "kyb-link-cust-456-1"
   }'
 ```
@@ -181,7 +181,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyb/links \
 - `country` (solo KYB): `us`, `cl`, `ve`, `br`, `mx`, `co`, `pe`, `bo`,
   `py`, `ar`, `uk`, `es`, `vg` o `generic` (con `generic_country` ISO alpha-2, ej. `"ES"`).
   El KYC individual no lleva país.
-- `expires_in_days` (opcional, 1–30): sin enviarlo, el link no vence.
+- `expires_in_days` (opcional, 1–90): si se omite, un link nativo vence en 90 días. El simulador es distinto: omitido significa sin expiración y no tiene tope explícito.
 
 Respuesta `201`:
 
@@ -406,7 +406,7 @@ mínimo hosteado para que tu cliente la complete:
 curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/liveness_link \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "expires_in_days": 7 }'
+  -d '{ "expires_in_days": 90 }'
 ```
 
 ```json
@@ -848,7 +848,7 @@ submission abierta y liveness links no cobran de nuevo.
 | 403 | `service_disabled` | El servicio `kyc` está deshabilitado para tu cuenta | Contacta a tu operador |
 | 404 | `not_found` | El link/submission no existe o no es tuyo | Verifica el id |
 | 404 | `verification_not_found` | Pediste tu informe self sin una verificación registrada | Completa tu onboarding primero |
-| 409 | `already_verified` | Pediste link de onboarding con la cuenta ya aprobada | Nada que hacer |
+| 409 | `already_verified` / `self_verification_in_progress` | Pediste link de onboarding con la cuenta ya aprobada, o con una verificación ya en curso | Nada que hacer, o completa esa verificación |
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible | Reintenta más tarde |
 
 ## Preguntas frecuentes

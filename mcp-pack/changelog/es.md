@@ -5,7 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.195 · 2 versiones - 29 de octubre de 2026
+## v2.196 · 3 versiones - 29 de octubre de 2026
+### v2.196
+**Cambiado**
+- Los links nativos de KYC/KYB, los links de prueba de vida y los invites relacionados de UBO/director ahora vencen por defecto en 90 días y aceptan `expires_in_days` explícito entre 1 y 90. Los reintentos conservan el vencimiento original. El simulador sigue separado: omitido significa sin expiración.
+
 ### v2.195
 **Agregado**
 - Soporte v2: un ticket puede iniciar con una transacción opcional y luego vincularla, cambiarla o desvincularla. Se agregan 11 categorías, `money_stuck`, prioridad automática first-match, buscador de transacciones, anti-duplicado, deduplicación SHA-256 de adjuntos, SLA visible de primera respuesta, seguimiento en tres pasos y CSAT después de resolver o cerrar.
