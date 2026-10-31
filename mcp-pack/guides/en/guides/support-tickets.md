@@ -137,6 +137,31 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/rate \
   -d '{"rating":5,"comment":"The explanation was clear."}'
 ```
 
+## Automatic support updates
+
+When the organization enables support automation, the account may receive
+these system-authored messages in the ticket thread:
+
+| When | What you receive |
+|---|---|
+| Ticket creation | An acknowledgement with the first-response commitment, plus a verified account, fee, transaction, banking, deposit, refund or access detail when the relevant data is available |
+| 30 minutes without a first response | A progress nudge |
+| 24 hours and 48 hours while waiting for your reply | Reminders; the 48-hour message includes the planned 72-hour close date |
+| Resolution | A one-time survey invitation |
+| Reassignment | The first name of the new agent |
+
+Automatic messages are labeled **Automatic message**. They do not move money,
+block an account, expose provider names or disclose internal notes. Data
+messages are read-only and are omitted when the server cannot verify enough
+account-owned data; the ticket continues to a human agent.
+
+An organization agent can disable automation for one ticket. This stops
+future automatic messages for that ticket, without deleting the conversation
+or changing its status. A customer reply reopens `pending_customer`, `on_hold`
+or `resolved` as `open`; `closed` remains terminal. If automation closes a
+ticket after 72 hours without a customer reply, use the normal Support flow to
+open a new ticket or reply before the close deadline.
+
 ## Status, SLA and errors
 
 | Status | Meaning | Account action |
