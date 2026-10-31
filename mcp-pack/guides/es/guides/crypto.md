@@ -456,7 +456,8 @@ Los retiros sobre el umbral USD de Travel Rule de tu organización exigen
 No — GOLD es un saldo solo de ledger sin riel on-chain. Conviértelo primero
 con [Swaps](https://docs.cbpayapp.com/es/guides/swaps) a un asset retirable.
 #### ¿Por qué mi retiro se bloqueó con compliance_hold?
-La dirección de destino no pasó el screening de compliance. La operación
-queda registrada como fallida y tus fondos se reembolsan; contacta a tu
-equipo CBPay si crees que es un falso positivo.
+El retiro quedó retenido para revisión y **no** fue procesado: no se movieron
+fondos y tu `idempotency_key` no se consumió. El portal muestra una línea de
+referencia copiable con hora UTC, código del error y request corto. Inclúyela
+al contactar a soporte; la razón exacta de compliance no se informa.
 Los errores de límites money-out están en la referencia pública de errores.

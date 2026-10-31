@@ -435,6 +435,8 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 不可以 —— GOLD 是仅账本余额，没有链上通道。请先用
 [兑换](https://docs.cbpayapp.com/zh/guides/swaps) 转换为可提现资产。
 #### 为什么我的提现被 compliance_hold 拦截？
-目标地址未通过合规筛查。操作记录为 failed 且资金已退回；如你认为是
-误报，请联系你的 CBPay 团队。
+提现被保留审核且**未被**处理：没有资金移动，你的
+`idempotency_key` 也未被消耗。门户会显示可复制的引用行，其中包含 UTC
+时间、错误代码和短请求 ID。联系支持团队时请提供该引用；不会披露具体的
+合规原因。
 出金限额错误见公开错误参考。

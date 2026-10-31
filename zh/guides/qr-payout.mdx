@@ -179,7 +179,7 @@ GET /v1/payouts/{payoutID}
 | 400 | `invalid_qr_payload` | QR 无法读取、已损坏或为动态 QR（暂不支持）—— 未创建任何内容，你的 key 也未被消耗；请向付款人索取静态 QR |
 | 400 | `idempotency_key_required` | 可复用的静态 QR 在 confirm 时必须显式提供 `idempotency_key` |
 | 402 | `insufficient_funds` | 充值余额后用相同的 key 重试 |
-| 403 | `compliance_hold` | 受益人未通过筛查；payout 未被创建 |
+| 403 | `compliance_hold` | payout 被保留审核且未被处理：没有资金移动，`idempotency_key` 也未被消耗。响应包含可复制的 UTC 时间、错误代码和短请求引用；不会披露具体的合规原因 |
 | 422 | payout `failed` + 退款 | 金额与固定金额 QR 不符，或通道拒绝了付款 —— 扣款自动退回 |
 | 503 | `channel_unavailable` | 通道暂时不可用；稍后用相同的 key 重试 |
 
