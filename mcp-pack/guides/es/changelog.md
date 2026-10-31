@@ -5,17 +5,16 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.199 · 3 versiones - 30 de octubre de 2026
-### v2.199
-**Cambiado**
-- Se alinearon las guías de retiros crypto y payouts por QR con `403 compliance_hold`: la operación queda retenida para revisión, no se procesa, no mueve fondos y no consume la `idempotency_key`. Para soporte se entrega la referencia copiable con hora UTC, código del error y request corto; la razón exacta de compliance no se informa.
-
+## v2.198 · 2 versiones - 30 de octubre de 2026
 ### v2.198
 **Cambiado**
 - Se aclaró `403 compliance_hold`: la operación quedó retenida para revisión,
   no fue procesada y no movió fondos. La respuesta ahora dirige a soporte a
   `X-Request-ID`; el portal muestra una referencia copiable con hora UTC,
   código del error y request corto.
+- Se alinearon las guías de retiros crypto y payouts por QR con el mismo
+  contrato: no se mueven fondos, la `idempotency_key` no se consume y la razón
+  exacta de compliance no se informa.
 
 ### v2.197
 **Cambiado**
