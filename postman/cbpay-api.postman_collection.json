@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-31 12:18 UTC",
-    "_content_sha256": "348260c070ade0f275668df4d3320cfe286022bbf0baf965707541f52485e895"
+    "_generated_at": "2026-10-31 16:53 UTC",
+    "_content_sha256": "c6aefa3f8288769077987ffdfe940691bdde9ed23e88eb8f0c325a18f22d5ca9"
   },
   "auth": {
     "type": "bearer",
@@ -26584,6 +26584,102 @@
     {
       "name": "Analytics",
       "item": [
+        {
+          "name": "Product analytics config for this account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/analytics-config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "analytics-config"
+              ]
+            },
+            "description": "Opaque analytics identity (HMAC-bound distinct and group IDs) plus feature flags for the first-party JS tracker. The browser never derives identities or reads API keys: everything comes from here after opt-in consent. Account credential only."
+          },
+          "response": [
+            {
+              "name": "200 Analytics config for the account.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/analytics-config",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "analytics-config"
+                  ]
+                }
+              },
+              "status": "Analytics config for the account.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"enabled\": true,\n  \"proxy_path\": \"/a\",\n  \"replay\": true,\n  \"consent_required\": true,\n  \"cb_env\": \"live\",\n  \"distinct_id\": \"9f2c4a1e8b3d4f6a9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2\",\n  \"group_id\": \"1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1\",\n  \"project_token\": \"phc_examplepublictoken000000000000000\",\n  \"posthog_host_hint\": \"eu\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Anonymous product analytics config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/public/analytics-config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "public",
+                "analytics-config"
+              ]
+            },
+            "description": "Public analytics bootstrap for anonymous surfaces (tracker, consent links, signature verification, embeds). No identity is issued: the tracker uses an ephemeral ID and session replay stays off. No authentication required."
+          },
+          "response": [
+            {
+              "name": "200 Anonymous analytics config.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/public/analytics-config",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "public",
+                    "analytics-config"
+                  ]
+                }
+              },
+              "status": "Anonymous analytics config.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"enabled\": true,\n  \"proxy_path\": \"/a\",\n  \"replay\": false,\n  \"consent_required\": true,\n  \"cb_env\": \"live\",\n  \"project_token\": \"phc_examplepublictoken000000000000000\",\n  \"posthog_host_hint\": \"eu\"\n}"
+            }
+          ]
+        },
         {
           "name": "Account summary for dashboards",
           "request": {

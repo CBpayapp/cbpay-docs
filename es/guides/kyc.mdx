@@ -398,11 +398,26 @@ curl https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/documents 
 }
 ```
 
-`outcome`: `MATCH` (coincide), `REVIEW` (revisión manual), `NO_MATCH`. Cada item expone además:
+`status` es `pending` mientras el trabajo OCR nativo espera, `running` mientras
+se procesa, `completed` cuando se guarda el resultado o `failed` después de
+reintentos acotados. Mientras esté en `pending` o `running`, trátalo como
+pendiente y espera el webhook `kyc_document_validated` /
+`kyb_document_validated`. `failed` falla cerrado: queda en `REVIEW` y nunca
+se convierte automáticamente en match.
+
+`outcome`: `MATCH` (coincide), `REVIEW` (revisión manual), `NO_MATCH`. Cada item
+completado expone además `score` (confianza media de los campos) y un
+`summary` legible:
 
 - `id`: identificador de la validación (lo usa el equipo de cumplimiento para revisarla).
 - `effective_outcome`: el resultado que rige hoy — si un administrador resolvió la validación manualmente desde el panel admin, ese resultado; si no, el del motor OCR. En el detalle de la submission (`GET /v1/kyc/submissions/{id}`) el bloque `documents_gate` resume si TODOS los documentos ya están resueltos (`ok: true`), con `matched`/`total` y la lista `unresolved` de los pendientes.
 - `manual_review`: presente solo cuando un administrador resolvió manualmente la validación desde el panel admin. En la vista de cuenta trae `outcome` y `reviewed_at` (sin la nota interna ni el revisor).
+
+La respuesta visible para la cuenta puede incluir `ocr` con valores y confianza
+por campo, tipo de documento, comprobaciones MRZ, fechas detectadas, calidad y
+señales de fraude. Es evidencia para compliance, no una aprobación por sí sola.
+Si el sidecar nativo no está disponible, el documento queda en `REVIEW`; no
+existe fallback externo ni `MATCH` automático.
 
 <Note>
 La revisión manual de una validación de documento es una operación exclusiva del panel de administración (CBPay Admin); no se expone por API pública. Cuando el equipo de cumplimiento la aplica, tu cuenta ve el resultado actualizado en `effective_outcome` y `manual_review`, y el webhook `kyc_document_validated` / `kyb_document_validated` correspondiente.
