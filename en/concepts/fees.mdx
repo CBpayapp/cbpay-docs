@@ -271,3 +271,17 @@ No. Fees are only charged when the operation is created and accepted; failed val
 Responses and webhooks expose the fee breakdown, and statements itemize fees per operation.
 </Accordion>
 </AccordionGroup>
+
+## Card verticals and the fee shown on a payin
+
+For card acquiring, `payin_card` may have separate terms for `highrisk` and `servicios7372`. CBPay stamps the account's selected vertical onto the payin when it is created and uses that value to resolve the fee. A missing configuration falls back first to the generic `payin_card` row and then to generic `payin`.
+
+For example, if the gross collection is 100 USDT and the matching `servicios7372` fee is 2% plus 0.20 USDT, the fee is 2.20 USDT and the credited net is 97.80 USDT. The payin response includes `vertical: "servicios7372"` when it is non-empty, so you can reconcile the fee and net using the same dimension. Legacy payins omit the key.
+
+This does not apply to `card_purchase_virtual` or `card_purchase_physical`: those are issuing products, not card acquiring, and never carry a card-acquiring vertical.
+
+### FAQ
+
+- **Which vertical applies?** The profile selected for the account by an authorized org admin.
+- **What if no profile was selected?** `highrisk` is the effective default, and legacy rows use the generic fallback.
+- **Why is `product: card` not verticalized?** It represents issuing, while this dimension represents acquiring payins only.\n
