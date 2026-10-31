@@ -117,13 +117,13 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `recipient_required` / `self_transfer` | 转账目标无效 |
 | `invalid_chain` / `invalid_asset` | 不支持的网络或资产 |
 | `to_address_required` | 缺少提现目标地址 |
-| `invalid_payload` | 缺少必填字段（例如 AML 监控的 `enabled`、身份验证的 `external_customer_id`） |
+| `invalid_payload` | 缺少必填字段（例如 AML/CFT 监控的 `enabled`、身份验证的 `external_customer_id`） |
 | `invalid_iban` | SEPA payout 的 IBAN 无效、不支持 `EU` 路由，或在 SEPA Instant V1 中属于 GB；请修正后使用新的幂等键重试 |
 | `invalid_qr_payload` | 出金二维码不可读或不受支持（BR Code 损坏、校验和无效或动态 PIX 二维码）；`message` 说明具体原因 |
 | `liveness_already_completed` | 该验证的活体检测已经通过 |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Webhook 订阅无效 |
 | `invalid_phone` | 手机号无法规范化为 E.164 格式（联系人和 `to_phone`） |
-| `invalid_language` | PDF 报告的 `lang` 不是 `en`、`es` 或 `zh`（AML 报告与验证报告） |
+| `invalid_language` | PDF 报告的 `lang` 不是 `en`、`es` 或 `zh`（AML/CFT 报告与验证报告） |
 | `invalid_locale` | `PATCH /v1/me`（或注册）发送了非空且不属于 `en` / `es` / `zh` 的 locale。空字符串会存为英语。不同于 `invalid_language`（PDF 报告的 `lang`），也不同于组织管理员在 `default_locale` 上的 `invalid_value` |
 | `invalid_format` | 验证报告的 `format` 不是 `pdf` 或 `json` |
 | `batch_too_large` | 联系人导入超过 1,000 条（请分批上传） |
@@ -177,7 +177,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `already_verified` | 使用已通过验证的账户请求了入驻链接 |
 | 409 | `superseded` | 验证 ID 是冻结的迁移墓碑；读取内容来自活跃案件 | 不要在墓碑上作出决定、上传证据、创建活体链接、预签名/确认文档或 PATCH banking intent。读取 `migrated_to` 并操作活跃案件 |
 | 409 | `identity_locked` | 验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持 |
-| 409 | `no_screening` | 在没有先行筛查的情况下发起 AML 重新筛查/监控 |
+| 409 | `no_screening` | 在没有先行筛查的情况下发起 AML/CFT 重新筛查/监控 |
 | 409 | `no_banking_customer` | 传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程 |
 | 400 | `banking_eur_requires_viban` | EUR Banking 账户通过虚拟 IBAN 开立。请在 Operar EUR 中请求 `purpose: "banking_eur"`，不要创建通用 banking customer |
 | 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
@@ -209,7 +209,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 400 | `invalid_occupation` | `occupation` 不是目录中的代码（`GET /v1/cards/catalog/occupations`） |
 | 400 | `invalid_kind_of_business` | `kind_of_business` 不是目录中的代码（`GET /v1/cards/catalog/business-activities`） |
 | 422 | `issuer_data_incomplete` | request、验证自动填充和 KYB 派生数据组装后仍缺少或存在无效的发卡方字段；请根据 `message` 中列出的键修正并重试 |
-| 422 | `screening_required` | 账户没有可用于派生持卡人 PEP 的 AML 身份验证 screening；请完成 screening 后使用同一个卡片 request 重试 |
+| 422 | `screening_required` | 账户没有可用于派生持卡人 PEP 的 AML/CFT 身份验证 screening；请完成 screening 后使用同一个卡片 request 重试 |
 | 422 | `cardholder_name_too_long` | 个人的 `first_name` 与 `last_name` 合计超过发卡方 22 个字符的卡面打印限制；请缩短姓名后重试 |
 | 400 | `invalid_settlement_asset` | `settlement_asset` 不是 USDT、USDC、BTC 或 GOLD |
 | 400 | `settlement_asset_disabled` | 您的组织已禁用该资产作为结算来源 |
@@ -356,7 +356,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 502 | `rates_unavailable` | 汇率暂时不可用 |
 | 502 | `core_unavailable` | 处理方暂时不可用 |
 | 502 | `core_invalid_response` | 处理方返回了意外响应；请使用**相同的**幂等键重试 |
-| 502 | `compliance_unavailable` | AML 筛查暂时不可用 |
+| 502 | `compliance_unavailable` | AML/CFT 筛查暂时不可用 |
 | 503 | `verifications_unavailable` | 身份验证暂时不可用 |
 | 503 | `org_credential_missing` | 服务正在配置中；请联系 CBPay 支持 |
 | 503 | `withdrawals_unavailable` | 该通道未启用链上提现 |

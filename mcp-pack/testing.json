@@ -111,12 +111,12 @@
     },
     {
       "outcome": "Screens with hits, risk `prohibited`",
-      "product": "AML screening",
+      "product": "AML/CFT screening",
       "value": "Name containing `SANCTION`"
     },
     {
       "outcome": "Screens with hits, risk `high`",
-      "product": "AML screening",
+      "product": "AML/CFT screening",
       "value": "Name containing `PEP`"
     },
     {

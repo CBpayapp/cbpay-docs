@@ -45,9 +45,9 @@
     },
     {
       "description": {
-        "en": "Fires when the AML screening finishes, a case changes, the risk changes or a monitored transaction is reviewed.",
-        "es": "Se emite cuando el screening AML termina, un caso cambia, el riesgo cambia o una transacción monitoreada es revisada.",
-        "zh": "当 AML 筛查完成、案件变化、风险变化或受监控交易被审核时触发。"
+        "en": "Fires when the AML/CFT screening finishes, a case changes, the risk changes or a monitored transaction is reviewed.",
+        "es": "Se emite cuando el screening AML/CFT termina, un caso cambia, el riesgo cambia o una transacción monitoreada es revisada.",
+        "zh": "当 AML/CFT 筛查完成、案件变化、风险变化或受监控交易被审核时触发。"
       },
       "event": "aml_screening_updated",
       "payload_example": {
@@ -59,9 +59,9 @@
         "screening_event": "compliance_risk_changed"
       },
       "summary": {
-        "en": "AML screening updated",
-        "es": "Novedades del AML screening",
-        "zh": "AML 筛查已更新"
+        "en": "AML/CFT screening updated",
+        "es": "Novedades del AML/CFT screening",
+        "zh": "AML/CFT 筛查已更新"
       }
     },
     {
@@ -405,9 +405,9 @@
     },
     {
       "description": {
-        "en": "Fires on every KYB submission lifecycle change, including AML/risk/report signals from the review. decision_source tells whether the decision was made by the automatic engine (auto) or by a human reviewer (admin); it is present on final decisions.",
-        "es": "Se emite en cada cambio del ciclo de una submission KYB, incluidas las señales AML/riesgo/reporte de la revisión. decision_source indica si la decisión la tomó el motor automático (auto) o un revisor humano (admin); está presente en las decisiones finales.",
-        "zh": "在每次 KYB submission 生命周期变更时触发,包括审核中的 AML/风险/报告信号。decision_source 表示该决定由自动引擎 (auto) 还是人工审核员 (admin) 作出;它出现在最终决定上。"
+        "en": "Fires on every KYB submission lifecycle change, including AML/CFT/risk/report signals from the review. decision_source tells whether the decision was made by the automatic engine (auto) or by a human reviewer (admin); it is present on final decisions.",
+        "es": "Se emite en cada cambio del ciclo de una submission KYB, incluidas las señales AML/CFT/riesgo/reporte de la revisión. decision_source indica si la decisión la tomó el motor automático (auto) o un revisor humano (admin); está presente en las decisiones finales.",
+        "zh": "在每次 KYB submission 生命周期变更时触发,包括审核中的 AML/CFT/风险/报告信号。decision_source 表示该决定由自动引擎 (auto) 还是人工审核员 (admin) 作出;它出现在最终决定上。"
       },
       "event": "kyb_verification_status_changed",
       "payload_example": {

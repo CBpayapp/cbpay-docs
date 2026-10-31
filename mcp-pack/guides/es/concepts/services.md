@@ -39,7 +39,7 @@ curl https://api.qbank.cl/platform/v1/services \
 | `crypto` | Wallets on-chain y retiros USDT |
 | `banking` | Cuentas bancarias internacionales (perfil, cuentas, pagos) |
 | `kyc` | Verificación de identidad KYC/KYB de terceros (links, submissions, documentos, liveness) |
-| `aml` | AML screening contra listas, rescreening y monitoreo |
+| `aml` | AML/CFT screening contra listas, rescreening y monitoreo |
 | `cards` | Emisión y operación de tarjetas |
 | `swaps` | Conversión entre saldos (USDT/USDC/BTC/GOLD/SILVER/PLATINUM) |
 | `wallets` | [Wallets segregadas](https://docs.cbpayapp.com/es/guides/segregated-wallets) con saldo on-chain propio (solo empresas) |

@@ -135,13 +135,13 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `recipient_required` / `self_transfer` | Invalid transfer destination |
 | `invalid_chain` / `invalid_asset` | Unsupported network or asset |
 | `to_address_required` | Missing withdrawal destination address |
-| `invalid_payload` | Missing a required field (e.g. `enabled` on AML monitoring, `external_customer_id` on verifications) |
+| `invalid_payload` | Missing a required field (e.g. `enabled` on AML/CFT monitoring, `external_customer_id` on verifications) |
 | `invalid_iban` | The SEPA payout IBAN is invalid, unsupported for the `EU` route, or belongs to GB in SEPA Instant V1; correct it and retry with a new payout idempotency key |
 | `invalid_qr_payload` | The payout QR is unreadable or unsupported (corrupt BR Code, bad checksum, or a dynamic PIX QR); the `message` explains the exact reason |
 | `liveness_already_completed` | That verification's liveness check already passed |
 | `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Invalid webhook subscription |
 | `invalid_phone` | Phone not normalizable to E.164 (contacts and `to_phone`) |
-| `invalid_language` | The PDF report `lang` is not `en`, `es` or `zh` (AML report and verification report) |
+| `invalid_language` | The PDF report `lang` is not `en`, `es` or `zh` (AML/CFT report and verification report) |
 | `invalid_locale` | `PATCH /v1/me` (or register) sent a non-empty locale outside `en` / `es` / `zh`. Empty string stores English. Distinct from `invalid_language` (PDF report `lang`) and from org-admin `invalid_value` on `default_locale` |
 | `invalid_format` | The verification report `format` is not `pdf` or `json` |
 | `batch_too_large` | Contact import with more than 1,000 entries (paginate the upload) |
@@ -199,7 +199,7 @@ part of the replay identity. Read the live status with
 | 409 | `already_verified` | Onboarding link requested with an already-verified account |
 | 409 | `superseded` | The verification ID is a frozen migrated tombstone; its data is served from the live case | Do not decide, upload evidence, create liveness links, presign/confirm documents, or patch banking intent on the tombstone. Read the response's `migrated_to` ID and operate that live case instead |
 | 409 | `identity_locked` | With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support |
-| 409 | `no_screening` | AML rescreen/monitoring without a prior screening |
+| 409 | `no_screening` | AML/CFT rescreen/monitoring without a prior screening |
 | 409 | `no_banking_customer` | Classic Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
 | 400 | `banking_eur_requires_viban` | EUR Banking accounts are opened as virtual IBANs. Request `purpose: "banking_eur"` from Operar EUR instead of creating a generic banking customer |
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
@@ -233,7 +233,7 @@ part of the replay identity. Read the live status with
 | 400 | `invalid_occupation` | `occupation` is not a catalog code (`GET /v1/cards/catalog/occupations`) |
 | 400 | `invalid_kind_of_business` | `kind_of_business` is not a catalog code (`GET /v1/cards/catalog/business-activities`) |
 | 422 | `issuer_data_incomplete` | Cardholder issuer fields are missing or invalid after request data, verification autofill and KYB-derived values are assembled; fix the keys listed in `message` and retry |
-| 422 | `screening_required` | The account has no AML verification screening from which to derive the account holder's PEP value; complete screening and retry the same card request |
+| 422 | `screening_required` | The account has no AML/CFT verification screening from which to derive the account holder's PEP value; complete screening and retry the same card request |
 | 422 | `cardholder_name_too_long` | The person's `first_name` and `last_name` exceed the issuer's 22-character combined card-printing limit; shorten the printed name and retry |
 | 400 | `invalid_settlement_asset` | `settlement_asset` is not USDT, USDC, BTC or GOLD |
 | 400 | `settlement_asset_disabled` | Your organization disabled that asset as settlement source |
@@ -382,7 +382,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 502 | `rates_unavailable` | FX rates temporarily unavailable |
 | 502 | `core_unavailable` | Processor temporarily unavailable |
 | 502 | `core_invalid_response` | The processor returned an unexpected response; retry with the **same** idempotency key |
-| 502 | `compliance_unavailable` | AML screening temporarily unavailable |
+| 502 | `compliance_unavailable` | AML/CFT screening temporarily unavailable |
 | 503 | `verifications_unavailable` | Identity verification temporarily unavailable |
 | 503 | `org_credential_missing` | Service being configured; contact CBPay support |
 | 503 | `withdrawals_unavailable` | On-chain withdrawals not enabled for the corridor |

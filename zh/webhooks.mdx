@@ -123,7 +123,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `kyc_link_completed` / `kyb_link_completed` | 一个托管验证链接已完成 |
 | `kyc_document_validated` / `kyb_document_validated` | 通过 API 上传的文档已完成 OCR |
 | `kyc_liveness_completed` | 通过活体检测链接完成了一次活体检测 |
-| `aml_screening_updated` | AML 筛查更新（结果、案件、风险、已复核交易） |
+| `aml_screening_updated` | AML/CFT 筛查更新（结果、案件、风险、已复核交易） |
 | `risk_report_ready` | [Qscore](/zh/guides/qscore) 信用报告已生成完毕(携带评分和等级) |
 | `risk_score_changed` | 受监控主体的评分发生变化(信用局新数据后的重新评估) |
 | `risk_monitoring_alert` | 受监控的 [Qscore](/zh/guides/qscore) 主体触发了警报:评分跌破你设定的阈值、信用局出现新记录或记录被移除 |

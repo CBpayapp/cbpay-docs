@@ -144,7 +144,7 @@ Telegram 通知、发卡行的 3-D Secure **挑战**页，以及从右到左的�
 |---|---|---|---|
 | 400 | `invalid_locale` | `PATCH /v1/me` 或注册发送了非空且不属于 `en`/`es`/`zh` 的 locale | 发送 `en`、`es` 或 `zh`（空字符串存储为英语） |
 | 400 | `invalid_value` | 组织设置 `default_locale` 不是 `en`/`es`/`zh` 或 `""` | 仅平台管理员；见[错误](/zh/errors) |
-| 400 | `invalid_language` | **PDF 报告**的 `lang`（AML / 身份验证）不是 `en`/`es`/`zh` | 另一错误码 —— 报告语言，不是账户 locale |
+| 400 | `invalid_language` | **PDF 报告**的 `lang`（AML/CFT / 身份验证）不是 `en`/`es`/`zh` | 另一错误码 —— 报告语言，不是账户 locale |
 
 完整目录：[错误](/zh/errors)。档案字段：[您的档案](/zh/guides/profile)。
 

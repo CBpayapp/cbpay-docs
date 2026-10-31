@@ -150,7 +150,7 @@ and right-to-left scripts are not localized by this chain.
 |---|---|---|---|
 | 400 | `invalid_locale` | `PATCH /v1/me` or register sent a non-empty locale outside `en`/`es`/`zh` | Send `en`, `es` or `zh` (empty string stores English) |
 | 400 | `invalid_value` | Org setting `default_locale` is not `en`/`es`/`zh` or `""` | Platform-admin only; see [errors](https://docs.cbpayapp.com/en/errors) |
-| 400 | `invalid_language` | A **PDF report** `lang` (AML / verification) is not `en`/`es`/`zh` | Different code — report language, not account locale |
+| 400 | `invalid_language` | A **PDF report** `lang` (AML/CFT / verification) is not `en`/`es`/`zh` | Different code — report language, not account locale |
 
 Full catalog: [Errors](https://docs.cbpayapp.com/en/errors). Profile fields: [Your profile](https://docs.cbpayapp.com/en/guides/profile).
 

@@ -68,10 +68,10 @@ tags:
   description: "面向拥有实体 POS 终端的处理商（企业账户）的定额加密货币二维码收款：已验证商户、每笔收款专属地址 + 二维码、支付早期检测、按商户对账，以及经加密货币提现通道的退款。"
 - name: KYC / KYB
   description: 身份验证:个人 KYC、企业 KYB——你自己的入驻验证,以及企业账户的第三方验证。
-- name: AML 筛查
-  description: 针对个人与企业的独立 AML 筛查(制裁、PEP 与负面媒体名单),含重新筛查、持续监控与可下载的 PDF 报告。
+- name: AML/CFT 筛查
+  description: 针对个人与企业的独立 AML/CFT 筛查(制裁、PEP 与负面媒体名单),含重新筛查、持续监控与可下载的 PDF 报告。
 - name: 钱包筛查
-  description: 区块链地址的 AML 风险评估(制裁、非法资金暴露),按次收费;另附提现与充值的免费自动防护。
+  description: 区块链地址的 AML/CFT 风险评估(制裁、非法资金暴露),按次收费;另附提现与充值的免费自动防护。
 - name: Qscore
   description: API 优先的信用局。签发完整的信用报告，评分为 1-999（A-E 等级，无数据时为 SC），查询主体的最新评分，并管理
     ARCO 争议。智利先行，设计上与国家无关。每份签发的报告都带有公开验证码。
@@ -626,7 +626,7 @@ paths:
       summary: 验证报告真伪（公开）
       description: >-
         每份验证报告上印的二维码背后的公开端点（无需凭证）。验证码经加密签名 - 被篡改或伪造的验证码将返回 404 且
-        valid=false。响应仅暴露类型（KYC/KYB）、当前的决定状态及其日期 - 绝不暴露主体身份、文件或 AML 结果。浏览器收到品牌化 HTML 页面；API 客户端收到 JSON。按
+        valid=false。响应仅暴露类型（KYC/KYB）、当前的决定状态及其日期 - 绝不暴露主体身份、文件或 AML/CFT 结果。浏览器收到品牌化 HTML 页面；API 客户端收到 JSON。按
         IP 限流。
       parameters:
       - name: code
@@ -7104,9 +7104,9 @@ paths:
   /v1/aml/screenings:
     post:
       tags:
-      - AML 筛查
+      - AML/CFT 筛查
       operationId: submitAmlScreening
-      summary: 提交 AML 筛查
+      summary: 提交 AML/CFT 筛查
       description: 通过合规服务对个人或企业（由 payload 判定）进行制裁、PEP 与负面媒体名单筛查。仅名单筛查——带证件与活体核验的身份验证见 /v1/kyc 与 /v1/kyb。身份字段均为可选并完整转发；信息越完整结果越精确。若配置合规费用，调用前扣款，失败则退款。结果本地保存供审计（`GET
         /v1/aml/screenings`）。必须提供 `idempotency_key`——相同键重放返回原记录且 `idempotency_hit` true，不会重复扣费。
       requestBody:
@@ -7389,10 +7389,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     get:
       tags:
-      - AML 筛查
+      - AML/CFT 筛查
       operationId: listAmlScreenings
-      summary: 列出 AML 筛查记录
-      description: 账户 AML 筛查历史（个人、企业及重新筛查），按时间倒序。需要 from/to 日期范围；支持分页与风险筛选。
+      summary: 列出 AML/CFT 筛查记录
+      description: 账户 AML/CFT 筛查历史（个人、企业及重新筛查），按时间倒序。需要 from/to 日期范围；支持分页与风险筛选。
       parameters:
       - name: from
         in: query
@@ -7449,9 +7449,9 @@ paths:
   /v1/aml/screenings/{screeningID}:
     get:
       tags:
-      - AML 筛查
+      - AML/CFT 筛查
       operationId: getAmlScreening
-      summary: 获取 AML 筛查详情
+      summary: 获取 AML/CFT 筛查详情
       description: 筛查详情（含完整存储结果）。其他账户的 ID 返回 404。
       parameters:
       - name: screeningID
@@ -7489,9 +7489,9 @@ paths:
   /v1/aml/screenings/{screeningID}/report:
     get:
       tags:
-      - AML 筛查
+      - AML/CFT 筛查
       operationId: getAmlScreeningReport
-      summary: 下载 AML 筛查报告（PDF）
+      summary: 下载 AML/CFT 筛查报告（PDF）
       description: 品牌化的筛查 PDF 报告 — 含决策封面、风险指标（制裁、观察名单、PEP、负面媒体等）、合并匹配、别名、术语表，以及列明所查国际数据源的最终背书章节。通过
         `lang` 支持三语（默认英文）。纯读取 — 无费用、无幂等键。其他账户的 ID 返回 404。
       parameters:
@@ -7535,9 +7535,9 @@ paths:
   /v1/aml/rescreen:
     post:
       tags:
-      - AML 筛查
+      - AML/CFT 筛查
       operationId: rescreenAml
-      summary: 重新运行 AML 筛查
+      summary: 重新运行 AML/CFT 筛查
       description: 重新运行账户筛查，需先有筛查记录。若配置则收取 `compliance_rescreen` 费用，上游失败则退款。每次重新筛查写入历史（`GET /v1/aml/screenings`）。必须提供
         `idempotency_key`——相同键重放返回原记录且不会重复扣费。
       requestBody:
@@ -7597,9 +7597,9 @@ paths:
   /v1/aml/monitoring:
     patch:
       tags:
-      - AML 筛查
+      - AML/CFT 筛查
       operationId: setAmlMonitoring
-      summary: 启用或停用 AML 监控
+      summary: 启用或停用 AML/CFT 监控
       description: 切换账户已验证身份的持续合规监控。启用时若配置则收取 `compliance_monitoring` 费用；停用免费。需先有筛查记录。 每次状态变更写入审计历史（`GET
         /v1/aml/screenings`，筛选 kind monitoring）。状态实际变更时 必须提供 `idempotency_key`——相同键重放返回原事件且 `idempotency_hit`
         true。若已是目标状态则返回 unchanged true 且不扣费。
@@ -7663,7 +7663,7 @@ paths:
   /v1/aml/catalogs:
     get:
       tags:
-      - AML 筛查
+      - AML/CFT 筛查
       operationId: getAmlCatalogs
       summary: 合规表单目录
       description: 返回前端构建一致的合规与验证表单所需的全部目录(value/label 对列表):性别、公司状态、地址类型、公司法律形式(全局列表加各国级联)、收入/财富来源、行业标准及其各国默认值,以及完整的
@@ -7784,7 +7784,7 @@ paths:
   /v1/aml/catalogs/cities:
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: getAmlCatalogCities
       summary: 按国家/地区获取城市目录
       description: '返回指定 ISO 3166-1 alpha-2 国家/地区的城市，按行政区划分组：
@@ -7864,7 +7864,7 @@ paths:
   /v1/aml/catalogs/postal-code:
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: getAmlCatalogPostalCode
       summary: 按邮政编码查询城市和州/省
       description: '从嵌入式公开数据集将邮政编码解析为其城市和州/省——目前仅覆盖美国 ZIP 编码。用于在地址表单中用户输入
@@ -8000,7 +8000,7 @@ paths:
       summary: 下载我的验证报告（PDF/JSON）
       description: >-
         由平台生成的您自身入驻验证的合规报告：已验证身份、生命周期、文件 + OCR、活体检测（每次会话一条记录 - 入驻门槛检查
-        加上后续任何证据补录，各自带有独立的 session_id 和 purpose），以及聚合的 AML 部分（制裁 / PEP / 负面媒体状态，绝不包含匹配明细）。使用
+        加上后续任何证据补录，各自带有独立的 session_id 和 purpose），以及聚合的 AML/CFT 部分（制裁 / PEP / 负面媒体状态，绝不包含匹配明细）。使用
         format=pdf（默认）或 format=json，以及 lang=en|es|zh。免费 - 验证本身在创建时已计费。PDF 上印有公开验证码 + 二维码，任何人都可在
         /verify/reports/{code} 查验。
       parameters:
@@ -8201,7 +8201,7 @@ paths:
       - 钱包筛查
       operationId: createAddressScreening
       summary: 筛查区块链地址
-      description: '依托全球链上情报评估区块链地址的 AML 风险(受制裁实体、非法资金暴露),返回归一化的风险等级(Low/Medium/High/Severe)及完整证据。与网络无关:地址会一次性在所有受支持的链上评估;`chain`
+      description: '依托全球链上情报评估区块链地址的 AML/CFT 风险(受制裁实体、非法资金暴露),返回归一化的风险等级(Low/Medium/High/Severe)及完整证据。与网络无关:地址会一次性在所有受支持的链上评估;`chain`
         仅用于标注你的记录。按固定 `address_screening` 费用计费(筛查失败自动退款),因此必须提供 `idempotency_key`——使用相同键重放会返回原始筛查并带 `idempotency_hit:
         true`,绝不重复扣费。需要启用 `screenings` 服务且账户验证已通过。'
       requestBody:
@@ -9613,9 +9613,9 @@ paths:
       description: >-
         您对客户发起的验证的完整合规报告（仅限企业账户）：已验证档案、生命周期、文件 +
         OCR、活体检测（每次会话一条记录 - 入驻门槛检查加上后续任何证据补录，各自带有独立的 session_id 和 purpose；在 KYB
-        中，每个关联方也可能有多次会话），以及包含匹配明细的完整 AML 筛查部分 - 您是您第三方数据的控制者。如果该 submission
-        是您自己的入驻验证，AML 部分将降级为聚合版本。使用 format=pdf（默认）或 format=json，以及 lang=en|es|zh。免费 -
-        读取已计费的验证。若该 submission 尚无关联的 AML 筛查，将按需幂等触发一次（不收费）；不可用时报告照常输出，并在 partial 字段声明缺口。
+        中，每个关联方也可能有多次会话），以及包含匹配明细的完整 AML/CFT 筛查部分 - 您是您第三方数据的控制者。如果该 submission
+        是您自己的入驻验证，AML/CFT 部分将降级为聚合版本。使用 format=pdf（默认）或 format=json，以及 lang=en|es|zh。免费 -
+        读取已计费的验证。若该 submission 尚无关联的 AML/CFT 筛查，将按需幂等触发一次（不收费）；不可用时报告照常输出，并在 partial 字段声明缺口。
       parameters:
       - name: submissionID
         in: path
@@ -9874,9 +9874,9 @@ paths:
       description: >-
         您对客户发起的验证的完整合规报告（仅限企业账户）：已验证档案、生命周期、文件 +
         OCR、活体检测（每次会话一条记录 - 入驻门槛检查加上后续任何证据补录，各自带有独立的 session_id 和 purpose；在 KYB
-        中，每个关联方也可能有多次会话），以及包含匹配明细的完整 AML 筛查部分 - 您是您第三方数据的控制者。如果该 submission
-        是您自己的入驻验证，AML 部分将降级为聚合版本。使用 format=pdf（默认）或 format=json，以及 lang=en|es|zh。免费 -
-        读取已计费的验证。若该 submission 尚无关联的 AML 筛查，将按需幂等触发一次（不收费）；不可用时报告照常输出，并在 partial 字段声明缺口。
+        中，每个关联方也可能有多次会话），以及包含匹配明细的完整 AML/CFT 筛查部分 - 您是您第三方数据的控制者。如果该 submission
+        是您自己的入驻验证，AML/CFT 部分将降级为聚合版本。使用 format=pdf（默认）或 format=json，以及 lang=en|es|zh。免费 -
+        读取已计费的验证。若该 submission 尚无关联的 AML/CFT 筛查，将按需幂等触发一次（不收费）；不可用时报告照常输出，并在 partial 字段声明缺口。
       parameters:
       - name: submissionID
         in: path
@@ -26987,7 +26987,7 @@ webhooks:
   kyb_verification_status_changed:
     post:
       summary: KYB 验证状态已变更
-      description: 在每次 KYB submission 生命周期变更时触发,包括审核中的 AML/风险/报告信号。decision_source 表示该决定由自动引擎
+      description: 在每次 KYB submission 生命周期变更时触发,包括审核中的 AML/CFT/风险/报告信号。decision_source 表示该决定由自动引擎
         (auto) 还是人工审核员 (admin) 作出;它出现在最终决定上。
       requestBody:
         content:
@@ -27097,8 +27097,8 @@ webhooks:
           description: 返回任意 2xx 以确认。
   aml_screening_updated:
     post:
-      summary: AML 筛查已更新
-      description: 当 AML 筛查完成、案件变化、风险变化或受监控交易被审核时触发。
+      summary: AML/CFT 筛查已更新
+      description: 当 AML/CFT 筛查完成、案件变化、风险变化或受监控交易被审核时触发。
       requestBody:
         content:
           application/json:

@@ -1,5 +1,5 @@
 ---
-title: "AML screening"
+title: "AML/CFT screening"
 icon: "shield-halved"
 description: "Screening de personas y empresas contra listas de sanciones, PEP y prensa adversa, con rescreening y monitoreo continuo"
 ---
@@ -8,7 +8,7 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="es" />
 
-El **AML screening** contrasta la identidad de una persona o empresa contra
+El **AML/CFT screening** contrasta la identidad de una persona o empresa contra
 listas globales — sanciones, PEP, prensa adversa — y devuelve el resultado
 del análisis con su nivel de riesgo. Es un producto de compliance puro:
 **no** verifica la identidad con documentos ni prueba de vida (eso es la
@@ -419,12 +419,12 @@ Suscríbete igual que al resto de eventos (ver [Webhooks](/es/webhooks)).
 ## Preguntas frecuentes
 
 <AccordionGroup>
-<Accordion title="¿Cuál es la diferencia entre AML screening y la verificación KYC/KYB?">
+<Accordion title="¿Cuál es la diferencia entre AML/CFT screening y la verificación KYC/KYB?">
 El screening contrasta una identidad contra listas (sanciones, PEP, prensa
 adversa) — no pide documentos. La [verificación KYC/KYB](/es/guides/kyc)
 comprueba que la persona/empresa es quien dice ser, con formulario,
 documentos y prueba de vida en video. Se complementan: verifica la identidad
-con KYC/KYB y vigila su riesgo con AML.
+con KYC/KYB y vigila su riesgo con AML/CFT.
 </Accordion>
 <Accordion title="¿Puedo screenear a mis propios clientes?">
 Sí: el objeto `customer` acepta cualquier identidad, no solo la de tu

@@ -47,10 +47,10 @@ payin:   usdt_gross    = local_amount / payin_rate
 | `wallet_import` | 每次导入固定费用 | 将外部钱包导入为[隔离钱包](/zh/guides/segregated-wallets)时（`POST /v1/segregated-wallets/import`） |
 | `wallet_export` | 每次导出固定费用 | 导出隔离钱包私钥时（`POST /v1/segregated-wallets/{id}/export`） |
 | `wallet_send` | 每次发送固定费用 | 从隔离钱包发起链上转账时（`POST /v1/segregated-wallets/{id}/sends`）；网络 gas 由客户承担 |
-| `compliance_person` | 每次调用固定费用 | 对个人进行 AML 筛查时（`POST /v1/aml/screenings`） |
-| `compliance_company` | 每次调用固定费用 | 对企业进行 AML 筛查时 |
-| `compliance_rescreen` | 每次调用固定费用 | 重新执行 AML 筛查时 |
-| `compliance_monitoring` | 每次启用固定费用 | 启用持续 AML 监控时（停用免费） |
+| `compliance_person` | 每次调用固定费用 | 对个人进行 AML/CFT 筛查时（`POST /v1/aml/screenings`） |
+| `compliance_company` | 每次调用固定费用 | 对企业进行 AML/CFT 筛查时 |
+| `compliance_rescreen` | 每次调用固定费用 | 重新执行 AML/CFT 筛查时 |
+| `compliance_monitoring` | 每次启用固定费用 | 启用持续 AML/CFT 监控时（停用免费） |
 | `kyc_verification` | 每次验证固定费用 | 为第三方创建 KYC 链接或提交时（[身份验证](/zh/guides/kyc)）；您自己的开户验证免费 |
 | `kyb_verification` | 每次验证固定费用 | 为第三方创建 KYB 链接或提交时 |
 | `address_screening` | 每次扫描固定费用 | 评估区块链地址风险时（[钱包筛查](/zh/guides/screenings)）；自动的提现/充值防护免费 |

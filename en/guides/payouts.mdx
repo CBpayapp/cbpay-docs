@@ -1212,7 +1212,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - **US payouts stay `processing` until the bank confirms the manual payment.**
   Create already returns the CBF in `bank_reference`. Listen to
   `payout_status_changed` for `completed` or `failed` (refunded).
-- There is no extra AML hold of the beneficiary in this rail: the operator
+- There is no extra AML/CFT hold of the beneficiary in this rail: the operator
   pays by hand and the poller reconciles.
 - **Minimums**: `wire` and `swift` require at least **USD 25.00**; below
   that the creation is rejected with `422` and `status_message`

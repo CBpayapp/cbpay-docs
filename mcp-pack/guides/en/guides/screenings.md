@@ -1,6 +1,6 @@
 ---
 title: "Wallet screening"
-description: "Assess the AML risk of any blockchain address — sanctions, illicit funds, exposure — before transacting with it"
+description: "Assess the AML/CFT risk of any blockchain address — sanctions, illicit funds, exposure — before transacting with it"
 slug: en/guides/screenings
 lang: en
 source_url: https://docs.cbpayapp.com/en/guides/screenings
@@ -14,7 +14,7 @@ markets, thefts) and which categories it is exposed to. Use it before
 sending funds to a third-party address, when a customer hands you a new
 wallet, or as part of your own compliance program.
 
-It is the on-chain counterpart of [AML screening](https://docs.cbpayapp.com/en/guides/aml) (which
+It is the on-chain counterpart of [AML/CFT screening](https://docs.cbpayapp.com/en/guides/aml) (which
 evaluates person/company identities): here the subject is the **address**.
 
 ```mermaid

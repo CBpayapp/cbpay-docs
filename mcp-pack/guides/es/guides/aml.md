@@ -1,5 +1,5 @@
 ---
-title: "AML screening"
+title: "AML/CFT screening"
 description: "Screening de personas y empresas contra listas de sanciones, PEP y prensa adversa, con rescreening y monitoreo continuo"
 slug: es/guides/aml
 lang: es
@@ -7,7 +7,7 @@ source_url: https://docs.cbpayapp.com/es/guides/aml
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-El **AML screening** contrasta la identidad de una persona o empresa contra
+El **AML/CFT screening** contrasta la identidad de una persona o empresa contra
 listas globales — sanciones, PEP, prensa adversa — y devuelve el resultado
 del análisis con su nivel de riesgo. Es un producto de compliance puro:
 **no** verifica la identidad con documentos ni prueba de vida (eso es la
@@ -389,12 +389,12 @@ Suscríbete igual que al resto de eventos (ver [Webhooks](https://docs.cbpayapp.
 
 ## Preguntas frecuentes
 
-#### ¿Cuál es la diferencia entre AML screening y la verificación KYC/KYB?
+#### ¿Cuál es la diferencia entre AML/CFT screening y la verificación KYC/KYB?
 El screening contrasta una identidad contra listas (sanciones, PEP, prensa
 adversa) — no pide documentos. La [verificación KYC/KYB](https://docs.cbpayapp.com/es/guides/kyc)
 comprueba que la persona/empresa es quien dice ser, con formulario,
 documentos y prueba de vida en video. Se complementan: verifica la identidad
-con KYC/KYB y vigila su riesgo con AML.
+con KYC/KYB y vigila su riesgo con AML/CFT.
 #### ¿Puedo screenear a mis propios clientes?
 Sí: el objeto `customer` acepta cualquier identidad, no solo la de tu
 cuenta. Cada screening cobra su comisión (persona o empresa según el

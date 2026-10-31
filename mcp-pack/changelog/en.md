@@ -6,6 +6,10 @@ lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
 ## v2.198 · 2 versions - October 30, 2026
+### Documentation terminology
+**Changed**
+- Renamed visible AML references to AML/CFT across guides and API descriptions; API routes, fields and operation IDs are unchanged.
+
 ### v2.198
 **Changed**
 - Clarified `403 compliance_hold`: the operation was held for review, was not

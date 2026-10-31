@@ -1,5 +1,5 @@
 ---
-title: "AML 筛查"
+title: "AML/CFT 筛查"
 description: "对个人和企业进行制裁名单、PEP 与负面媒体筛查，支持重新筛查与持续监控"
 slug: zh/guides/aml
 lang: zh
@@ -7,7 +7,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/aml
 ---
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
-**AML 筛查**将个人或企业的身份与全球名单进行比对——制裁名单、PEP（政治公众人物）、负面媒体——并返回带有风险等级的分析结果。它是纯粹的合规产品：它**不**通过证件或活体检测来验证身份（那是
+**AML/CFT 筛查**将个人或企业的身份与全球名单进行比对——制裁名单、PEP（政治公众人物）、负面媒体——并返回带有风险等级的分析结果。它是纯粹的合规产品：它**不**通过证件或活体检测来验证身份（那是
 [KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)的职责）；它分析的是该身份是否存在名单风险。
 
 ```mermaid
@@ -369,11 +369,11 @@ curl "https://api.qbank.cl/platform/v1/aml/screenings/a1b2c3d4-e5f6-7890-abcd-ef
 
 ## 常见问题
 
-#### AML 筛查与 KYC/KYB 验证有什么区别？
+#### AML/CFT 筛查与 KYC/KYB 验证有什么区别？
 筛查将身份与名单进行比对（制裁名单、PEP、负面媒体）
 ——不涉及证件。[KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)则通过表单、证件和视频
 活体检测来证明个人/企业确实是其声称的身份。两者互为补充：用 KYC/KYB 验证身份，
-用 AML 监控其风险。
+用 AML/CFT 监控其风险。
 #### 我可以筛查我自己的客户吗？
 可以：`customer` 对象接受任何身份，不限于你账户本身的身份。
 每次筛查都会收取相应费用（根据请求体判定为个人或企业）。
