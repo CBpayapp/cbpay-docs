@@ -176,7 +176,7 @@ el payout original con `idempotency_hit: true`.
 | 400 | `invalid_qr_payload` | El QR es ilegible, está corrupto o es un QR dinámico (no soportado) — nada se creó y tu clave no se consumió; pide al pagador un QR estático |
 | 400 | `idempotency_key_required` | Los QR estáticos reusables exigen `idempotency_key` explícita en el confirm |
 | 402 | `insufficient_funds` | Fondea tu saldo y reintenta con la misma clave |
-| 403 | `compliance_hold` | El payout quedó retenido para revisión y no fue procesado: no se movieron fondos y tu `idempotency_key` no se consumió. La respuesta incluye hora UTC, código del error y una referencia corta copiable; la razón exacta de compliance no se informa |
+| 403 | `compliance_hold` | El payout quedó retenido para revisión y no fue procesado: no se movieron fondos y tu `idempotency_key` no se consumió. El portal muestra una línea de referencia copiable con hora UTC, código del error y request ID corto; la razón exacta de compliance no se informa |
 | 422 | payout `failed` + refund | El monto no calza con un QR de monto fijo, o el riel rechazó el pago — el débito se reembolsa automáticamente |
 | 503 | `channel_unavailable` | Riel temporalmente no disponible; reintenta más tarde con la misma clave |
 
