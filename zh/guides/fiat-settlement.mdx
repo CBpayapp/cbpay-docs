@@ -9,13 +9,17 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 <EnvUrls lang="zh" />
 
 <Note>
-本页介绍 BOB、MXN 和 ARS 的同币种结算。不支持将一种法币余额转换为另一种
+本页介绍 BOB、MXN、ARS 和 CLP 的同币种结算。不支持将一种法币余额转换为另一种
 法币。
 </Note>
 
 当 payout 货币与 `settlement_asset` 相同时，payout 可以从本地法币余额
 扣款。settlement rate 为 `"1"`，settlement spread 为零。以 USDT 配置的
 费用会按锁定报价换算为 payout 货币，并向上取整到该货币的最小单位。
+
+CLP 使用零位小数，只能发送整数比索。`settlement_asset: "CLP"` 仅在
+CLP payout 时从同币种身份余额扣款；CL payout 从 root 账户发起。CLP
+跨币种 settlement fail-closed，并返回 `503 pricing_unavailable`。
 
 ```mermaid
 sequenceDiagram
@@ -96,7 +100,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ```
 
 对于 BOB、MXN 和 ARS，超过两位小数的金额会返回 `400 invalid_amount`；
-例如 `"100.001"`。请使用 payout 货币的最小单位，CBPay 不会静默四舍五入
+例如 `"100.001"`。CLP 的任何非零小数（例如 `"100.50"`）也会返回该错误。
+请使用 payout 货币的最小单位，CBPay 不会静默四舍五入
 本地金额。
 
 请参阅[错误](../errors)了解公开错误契约。
