@@ -87,7 +87,7 @@ See the [error catalog](/en/errors) for `service_unavailable`,
 
 <AccordionGroup>
 <Accordion title="Does CBPay send personal data to analytics?"><br />No. The allowlist excludes direct identifiers and exact financial values. IDs are opaque HMACs and amounts are represented by bands.</Accordion>
-<Accordion title="Can I use replay on an admin or public page?"><br>No. Replay is portal-only and masked. Admin and public configurations return `replay: false`.</Accordion>
+<Accordion title="Can I use replay on an admin or public page?"><br />No. Replay is portal-only and masked. Admin and public configurations return `replay: false`.</Accordion>
 <Accordion title="Why does the browser call /a instead of PostHog directly?"><br>The first-party proxy keeps the browser same-origin, removes forwarding metadata and pins requests to the configured EU project.</Accordion>
 <Accordion title="What happens when PostHog is not configured?"><br>Config endpoints return disabled flags and proxy requests return `503 service_unavailable`; the business request continues without analytics.</Accordion>
 <Accordion title="Where are retention and deletion rules defined?"><br>The tracking plan defines one-year event retention, 90-day replay retention and deletion of the HMAC identity when an account is deleted.</Accordion>
