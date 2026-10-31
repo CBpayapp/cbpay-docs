@@ -187,8 +187,8 @@
                 "pages": [
                   "en/security-2fa",
                   "en/webhooks",
-                  "en/guides/product-analytics",
                   "en/guides/integrations",
+                  "en/guides/product-analytics",
                   "en/realtime-events",
                   "en/service-status",
                   "en/errors",
