@@ -2726,9 +2726,9 @@
       "code": "compliance_hold",
       "http": 403,
       "meaning": {
-        "en": "The operation was held by the platform's compliance controls. It is not a request error: contact support with the timestamp — by policy the exact reason is not disclosed",
-        "es": "La operación fue retenida por los controles de cumplimiento de la plataforma. No es un error de tu request: contacta a soporte con el timestamp — por política no se informa la razón exacta",
-        "zh": "该操作已被平台的合规控制拦截。这不是请求错误：请携带时间戳联系支持团队 — 根据政策，不会披露具体原因"
+        "en": "The operation was held for review and was not processed; no funds were moved. The API message is `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. The portal shows a copyable reference line with UTC time, error code and short request ID; include it when contacting support.",
+        "es": "La operación quedó retenida para revisión y no fue procesada; no se movieron fondos. El mensaje de la API es `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. El portal muestra una línea de referencia copiable con hora UTC, código del error y request corto; inclúyela al contactar a soporte.",
+        "zh": "该操作已被保留审核且未被处理；没有资金移动。API 消息为 `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`。门户会显示可复制的引用行，其中包含 UTC 时间、错误代码和短请求 ID；联系支持团队时请一并提供。"
       }
     },
     {

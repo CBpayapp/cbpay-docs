@@ -1317,7 +1317,7 @@ Pagar un QR de cobro (Bolivia, PIX de Brasil) ahora tiene su propia guía:
 | 402 | `insufficient_funds` | Fondea la cuenta; el payout no se creó |
 | 403 | `account_blocked` | La cuenta no está activa; contacta al equipo de CBPay |
 | 403 | `service_disabled` | Payouts no está habilitado para tu cuenta — ver [servicios](/es/concepts/services) |
-| 403 | `compliance_hold` | El payout fue retenido por los controles de cumplimiento de la plataforma y NO se creó (sin débito). Por política no se informa la razón exacta — contacta a soporte con el timestamp; ver [errores](/es/errors) |
+| 403 | `compliance_hold` | El payout quedó retenido para revisión y NO fue procesado (no se movieron fondos). El mensaje de la API es `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. Copia la línea de referencia del portal (hora UTC, código del error y request corto) al contactar a soporte; ver [errores](/es/errors) |
 | 422 | `currency_not_supported` | No hay tasa FX para esa moneda |
 | 422 | (payout con `status: failed`) | El corredor rechazó los datos; el débito ya fue reembolsado — corrige `beneficiary` y reintenta con clave nueva |
 | 503 | `channel_unavailable` | El canal de pago está temporalmente no disponible; reintenta más tarde con la MISMA `idempotency_key` |
@@ -1381,9 +1381,9 @@ débito si el resultado es `rejected`.
 </Accordion>
 
 <Accordion title="¿Qué significa compliance_hold (403)?">
-El beneficiario no pasó el screening de compliance: el payout **no** se
-creó y tu `idempotency_key` no se consumió. Revisa los datos del
-beneficiario o contacta a tu equipo CBPay.
+El payout quedó retenido para revisión y **no** fue procesado: no se movieron fondos y tu `idempotency_key` no se consumió. El portal muestra una línea de
+referencia copiable con hora UTC, código del error y request corto. Inclúyela
+al contactar a soporte; la razón exacta de compliance no se informa.
 </Accordion>
 <Accordion title="¿Cómo reintento sin riesgo tras un timeout o 5xx?">
 Reintenta con la **misma** `idempotency_key`: recibes el payout original

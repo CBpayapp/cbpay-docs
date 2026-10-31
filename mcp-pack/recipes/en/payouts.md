@@ -1267,7 +1267,7 @@ Paying a collection QR (Bolivia, Brazil PIX) now has its own guide:
 | 402 | `insufficient_funds` | Fund the account; the payout was not created |
 | 403 | `account_blocked` | The account is not active; contact the CBPay team |
 | 403 | `service_disabled` | Payouts is not enabled for your account — see [services](https://docs.cbpayapp.com/en/concepts/services) |
-| 403 | `compliance_hold` | The payout was held by the platform's compliance controls and was NOT created (no debit). By policy the exact reason is not disclosed — contact support with the timestamp; see [errors](https://docs.cbpayapp.com/en/errors) |
+| 403 | `compliance_hold` | The payout was held for review and was NOT processed (no funds moved). The API message is `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. Copy the portal reference line (UTC time, error code and short request ID) when contacting support; see [errors](https://docs.cbpayapp.com/en/errors) |
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | (payout with `status: failed`) | The corridor rejected the data; the debit was already refunded — fix `beneficiary` and retry with a new key |
 | 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the SAME `idempotency_key` |
@@ -1323,9 +1323,9 @@ Replay with the same idempotency key returns the same resource. Wait for the
 `process`, enter the firewall for a valid `hold`, or become `failed` without a
 debit if the result is `rejected`.
 #### What does compliance_hold (403) mean?
-The beneficiary failed the compliance screening: the payout was **not**
-created and your `idempotency_key` was not consumed. Review the beneficiary
-data or contact your CBPay team.
+The payout was held for review and was **not** processed: no funds moved and your `idempotency_key` was not consumed. The portal shows a copyable reference
+line with UTC time, error code and short request ID. Include it when you
+contact support; the exact compliance reason is not disclosed.
 #### How do I retry safely after a timeout or 5xx?
 Retry with the **same** `idempotency_key`: you get the original payout
 back (`idempotency_hit: true`) — never a duplicate. A new key is a new,

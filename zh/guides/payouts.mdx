@@ -1314,7 +1314,7 @@ V1，并会在派发前以 HTTP 400 快速拒绝；英国的 SEPA Credit Transfe
 | 402 | `insufficient_funds` | 为账户充值；该出金未被创建 |
 | 403 | `account_blocked` | 账户未处于激活状态；请联系 CBPay 团队 |
 | 403 | `service_disabled` | 您的账户未启用出金服务 —— 参见[服务](/zh/concepts/services) |
-| 403 | `compliance_hold` | 该出金被平台的合规控制拦截，未被创建（未扣款）。按政策不披露具体原因 —— 请携带时间戳联系支持；参见[错误](/zh/errors) |
+| 403 | `compliance_hold` | 该出金被保留审核且未被处理（没有资金移动）。API 消息为 `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`。联系支持团队时请复制门户中的引用行（UTC 时间、错误代码和短请求 ID）；参见[错误](/zh/errors) |
 | 422 | `currency_not_supported` | 该货币没有可用的外汇汇率 |
 | 422 | （出金处于 `status: failed`） | 通道拒绝了该数据；扣款已退回 —— 修正 `beneficiary` 后使用新的键重试 |
 | 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的** `idempotency_key` 重试 |
@@ -1373,8 +1373,8 @@ payout；结果为 `process` 时继续，`hold` 时进入防火墙，`rejected` 
 </Accordion>
 
 <Accordion title="compliance_hold（403）是什么意思？">
-受益人未通过合规筛查：payout **未被**创建，你的 `idempotency_key` 也未
-被消耗。请核对受益人信息或联系你的 CBPay 团队。
+payout 被保留审核且**未被**处理：没有资金移动，你的 `idempotency_key` 也未被消耗。门户会显示可复制的引用行，其中包含 UTC 时间、错误代码和短请求 ID。
+联系支持团队时请提供该引用；不会披露具体的合规原因。
 </Accordion>
 <Accordion title="超时或 5xx 之后如何安全重试？">
 用**相同**的 `idempotency_key` 重试：会返回原始 payout
