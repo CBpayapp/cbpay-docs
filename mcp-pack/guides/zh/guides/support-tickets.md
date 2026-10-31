@@ -5,8 +5,6 @@ slug: zh/guides/support-tickets
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/support-tickets
 ---
-> **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
-
 支持工单是与组织的可审计对话。可以从交易创建，也可以针对账户问题创建；之后可以关联、更换或解除交易。快照是只读证据，不会修改账本。
 
 ```mermaid
@@ -71,27 +69,6 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 
 `POST /v1/support/tickets/{id}/close` 具有收敛性：关闭已关闭工单会返回当前详情。解决后只能评价一次，`rating` 为 1 到 5，评论最多 1,000 个字符。重复评价返回 `409 already_rated`。
 
-## 自动支持更新
-
-组织启用支持自动化后，账户可能在工单对话中收到以下系统消息：
-
-| 时间 | 收到的内容 |
-|---|---|
-| 创建工单时 | 确认消息和首次回复承诺；如果有已验证数据，还会提供账户、费率、交易、银行、存款、退款或访问状态 |
-| 首次回复超过 30 分钟 | 进度提醒 |
-| 等待账户回复达到 24 小时和 48 小时 | 回复提醒；48 小时提醒包含预计 72 小时关闭日期 |
-| 工单解决时 | 一次性的评价邀请 |
-| 工单重新分配时 | 新处理专员的名字 |
-
-自动消息会标记为 **Automatic message**。它们不会移动资金、冻结账户、
-暴露服务商名称或泄露内部备注。数据消息仅使用只读且已验证的账户数据；
-如果数据不足，系统会省略该消息并继续由人工处理。
-
-组织专员可以为单个工单关闭自动化。此操作只停止该工单未来的自动消息，
-不会删除对话或改变状态。账户回复会将 `pending_customer`、`on_hold` 或
-`resolved` 重新打开为 `open`；`closed` 仍是终态。如果工单在 72 小时内
-没有账户回复而自动关闭，请在关闭期限前按普通支持流程回复，或创建新工单。
-
 ## 状态、SLA 和错误
 
 | 状态 | 含义 | 操作 |
@@ -118,4 +95,4 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 
 ## 常见问题
 
-#### 可以不关联交易创建工单吗？可以。使用 `kind: general`，省略 `resource_id` 并设置 `category: other`；旧别名会被转换。#### 可以选择 urgent 吗？不可以。优先级由 first-match 规则自动计算，旧的 `priority` 字段会被忽略。#### 如何避免重复工单？先搜索交易并在重试时复用同一个幂等键；服务器也会阻止同一交易出现两个开放工单。#### 账户能看到内部备注或 Activity 吗？不能。这些内容只对管理员开放，webhook 也不包含备注正文。#### 何时可以提交 CSAT？工单处于 `resolved` 或 `closed` 后，每个工单只能提交一次。
+#### 可以不关联交易创建工单吗？可以。使用 `kind: general`，省略 `resource_id` 并设置 `category: other`；旧别名会被转换。#### 可以选择 urgent 吗？不可以。优先级由 first-match 规则自动计算，旧的 `priority` 字段会被忽略。#### 如何避免重复工单？先搜索交易并在重试时复用同一个幂等键；服务器也会阻止同一交易出现两个开放工单。#### 账户能看到内部备注或 Activity 吗？不能。这些内容只对管理员开放，webhook 也不包含备注正文。#### 何时可以提交 CSAT？工单处于 `resolved` 或 `closed` 后，每个工单只能提交一次。????:https://cryptobank.qbank.cl/platform
