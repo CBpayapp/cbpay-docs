@@ -9,6 +9,7 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ### v2.199
 **Agregado**
 - Se agregaron `customer.document` opcional (texto plano, máx. 50) y `service_type` top-level (texto plano, máx. 120) a los payins con tarjeta para el perfil de adquirencia MDD 7372 shippeado.
+- Se documentaron las automatizaciones visibles para la cuenta: acuse y datos verificados, avisos de avance, cierre automático a las 72 horas, encuesta de resolución, aviso de reasignación y opt-out por ticket controlado por el agente.
 
 ## v2.198 · 2 versiones - 30 de octubre de 2026
 ### Documentation terminology

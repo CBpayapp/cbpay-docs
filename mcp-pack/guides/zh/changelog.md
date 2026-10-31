@@ -9,6 +9,7 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 ### v2.199
 **新增**
 - 为已发布的 MDD 7372 收单 profile，银行卡收款新增可选 `customer.document`（纯文本，最多 50 个字符）和顶层 `service_type`（纯文本，最多 120 个字符）。
+- 记录账户可见的支持自动化：确认和已验证数据消息、进度提醒、72 小时自动关闭、解决评价、重新分配通知，以及由专员控制的单工单退出自动化。
 
 ## v2.198 · 2 个版本 - 2026年10月30日
 ### Documentation terminology
