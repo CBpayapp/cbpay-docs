@@ -400,10 +400,11 @@ Detalles del flujo:
 
 - `customer` es un prefill **opcional** de los datos de facturación
   (`email`, `first_name`, `last_name`, `phone_number`, `address1`, `locality`,
-  `administrative_area`, `postal_code`, `country` — texto plano, máx 120
-  caracteres por campo); el pagador puede completarlos/corregirlos en la
-  página. `administrative_area` es el estado/región de facturación: un
-  código ISO 3166-2 (`US-CA`) o su sufijo (`CA`).
+  `administrative_area`, `postal_code`, `country` y `document` opcional — texto
+  plano, máx. 50 para MDD 11; 120 para los demás campos); el pagador puede
+  completarlos/corregirlos en la página. `administrative_area` es el estado/región
+  de facturación: un código ISO 3166-2 (`US-CA`) o su sufijo (`CA`). `service_type`
+  es un override top-level opcional de texto plano para MDD 90, máx. 120.
 
 **Dirección de facturación — estado/región requerido según el país**: la
 página hosted recolecta la **dirección de facturación completa** (nombre,

@@ -5,6 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.199 · 1 version - 31 de octubre de 2026
+### v2.199
+**Agregado**
+- Se agregaron `customer.document` opcional (texto plano, máx. 50) y `service_type` top-level (texto plano, máx. 120) a los payins con tarjeta para el perfil de adquirencia MDD 7372 shippeado.
+
 ## v2.198 · 2 versiones - 30 de octubre de 2026
 ### Documentation terminology
 **Cambiado**
