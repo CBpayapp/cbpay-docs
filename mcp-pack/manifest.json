@@ -1,5 +1,5 @@
 {
-  "content_sha256": "889255b3ee632b48bd10ed465be0b623a9a75905d4d0f2ea0bd4955ab1c9592d",
+  "content_sha256": "a4f99a16a33aae8385bb284137fb232959f80678da8b96c07f380de161b1e69a",
   "counts": {
     "chunks": 4794,
     "errors": 377,
@@ -27,8 +27,8 @@
       "sha256": "01a5a6c0b9e7fab9089f853f28a38b8891a7244792404b2c04440f813be0ed58"
     },
     "chunks/en.jsonl": {
-      "bytes": 1638540,
-      "sha256": "cc488e9df003b482ec1bf3bc332de2db09c94749b8f56db3e957ce7436813461"
+      "bytes": 1638638,
+      "sha256": "f8256355bf8c215c2c3ced048af174d83597543a315975f27e761f240bfa1ccd"
     },
     "chunks/es.jsonl": {
       "bytes": 1662780,
@@ -183,8 +183,8 @@
       "sha256": "c2d98e9b870eb7c047f19ff825521b497ad31e174092f54dbf03b8e38ce1ead2"
     },
     "guides/en/guides/payins.md": {
-      "bytes": 61866,
-      "sha256": "e3a2ebf12dee5a15cc1b4ea147d3cac9037cb37d3d0bfa2142e9e4e6b1e66f8f"
+      "bytes": 61963,
+      "sha256": "70a3641d3d9b4d961b7f4c41df61d1b605d6ca44ecc7f464a4b579bf59b49e33"
     },
     "guides/en/guides/payout-destination-retries.md": {
       "bytes": 5306,
@@ -931,8 +931,8 @@
       "sha256": "ac27f19a04d7b350596416a549569258625a9c88d24c4308f0f14c4ac7be00ef"
     },
     "recipes/en/payins.md": {
-      "bytes": 61801,
-      "sha256": "493d84d8c480d13e3d8eb80a04081b55362171f36e595afe96ea7d2957119578"
+      "bytes": 61898,
+      "sha256": "113d1a843e69f04e2e0c38006a9fe6549e25151a51468bac555769534ce7283a"
     },
     "recipes/en/payouts.md": {
       "bytes": 51329,
@@ -1015,7 +1015,7 @@
       "sha256": "b035c650221914f52336e463db5f4bfbc51a9152869ae8c5f36f1d6270c667e4"
     }
   },
-  "generated_at": "2026-10-31T15:36:58Z",
+  "generated_at": "2026-10-31T15:43:08Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
