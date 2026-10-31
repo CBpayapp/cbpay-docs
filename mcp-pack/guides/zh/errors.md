@@ -264,7 +264,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 
 | HTTP | `error` | 含义 |
 |---|---|---|
-| 403 | `compliance_hold` | 该操作已被平台的合规控制拦截。这不是请求错误：请携带时间戳联系支持团队 — 根据政策，不会披露具体原因 |
+| 403 | `compliance_hold` | 该操作已被保留审核且未被处理；没有资金移动。API 消息为 `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`。门户会显示可复制的引用行，其中包含 UTC 时间、错误代码和短请求 ID；联系支持团队时请一并提供。 |
 | 403 | `geo_restricted` | 该服务或操作不适用于发起方或交易对手所在的司法辖区 |
 | 503 | `compliance_check_unavailable` | 合规校验无法完成，且 payout 无法写入技术筛查队列；请使用**相同**幂等键重试。队列可用时，`POST /v1/payouts` 会返回 `202` 且资源为 `status: pending`。其他校验和安全错误仍使用各自代码 |
 | 422 | `travel_rule_required` | 超过 Travel Rule 阈值的链上提现缺少受益人数据 — 补充 `travel_address` 或 `wallet_type: "self_hosted"` + `beneficiary_name`（[加密货币指南](https://docs.cbpayapp.com/zh/guides/crypto)） |

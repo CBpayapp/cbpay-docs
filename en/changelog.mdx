@@ -4,7 +4,14 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="October 30, 2026" description="v2.197 · 1 version">
+<Update label="October 30, 2026" description="v2.198 · 2 versions">
+### v2.198
+**Changed**
+- Clarified `403 compliance_hold`: the operation was held for review, was not
+  processed, and moved no funds. The response now points support requests to
+  the `X-Request-ID`; the portal shows a copyable UTC timestamp, error code and
+  short request reference.
+
 ### v2.197
 **Changed**
 - Raised the EC/USD `bank_transfer` payout corridor limit to USD 100,000 per operation; amounts remain USD 1 minimum with up to two decimal places.

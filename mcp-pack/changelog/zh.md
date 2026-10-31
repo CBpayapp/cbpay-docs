@@ -5,7 +5,13 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.197 · 1 个版本 - 2026年10月30日
+## v2.198 · 2 个版本 - 2026年10月30日
+### v2.198
+**变更**
+- 明确了 `403 compliance_hold`：操作被保留审核、未被处理且没有资金移动。
+  响应现在引导支持团队使用 `X-Request-ID`；门户显示可复制的 UTC 时间、
+  错误代码和短请求引用。
+
 ### v2.197
 **变更**
 - `EC/USD` `bank_transfer` payout 走廊的单笔上限提高至 USD 100,000；

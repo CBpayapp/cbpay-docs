@@ -5,7 +5,14 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.197 · 1 versión - 30 de octubre de 2026
+## v2.198 · 2 versiones - 30 de octubre de 2026
+### v2.198
+**Cambiado**
+- Se aclaró `403 compliance_hold`: la operación quedó retenida para revisión,
+  no fue procesada y no movió fondos. La respuesta ahora dirige a soporte a
+  `X-Request-ID`; el portal muestra una referencia copiable con hora UTC,
+  código del error y request corto.
+
 ### v2.197
 **Cambiado**
 - Se elevó a USD 100.000 por operación el límite del corredor de payouts

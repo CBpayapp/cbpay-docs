@@ -269,7 +269,7 @@ de la identidad del replay. Consulta el estado vivo con
 
 | HTTP | `error` | Significado |
 |---|---|---|
-| 403 | `compliance_hold` | La operación fue retenida por los controles de cumplimiento de la plataforma. No es un error de tu request: contacta a soporte con el timestamp — por política no se informa la razón exacta |
+| 403 | `compliance_hold` | La operación quedó retenida para revisión y no fue procesada; no se movieron fondos. El mensaje de la API es `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. El portal muestra una línea de referencia copiable con hora UTC, código del error y request corto; inclúyela al contactar a soporte. |
 | 403 | `geo_restricted` | El servicio o la operación no están disponibles para la jurisdicción de origen o de la contraparte |
 | 503 | `compliance_check_unavailable` | No se pudo evaluar compliance y el payout no pudo guardarse en su cola técnica de screening; reintenta con la **misma** idempotency key. Cuando la cola está disponible, `POST /v1/payouts` devuelve `202` con `status: pending`. Los demás errores de validación y seguridad conservan sus códigos |
 | 422 | `travel_rule_required` | Retiro on-chain sobre el umbral Travel Rule sin datos del beneficiario — agrega `travel_address` o `wallet_type: "self_hosted"` + `beneficiary_name` ([guía crypto](https://docs.cbpayapp.com/es/guides/crypto)) |
