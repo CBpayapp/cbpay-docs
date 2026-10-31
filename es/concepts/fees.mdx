@@ -274,3 +274,7 @@ No. Las comisiones solo se cobran cuando la operación se crea y acepta; las val
 Las respuestas y webhooks exponen el desglose de comisiones, y las cartolas las itemizan por operación.
 </Accordion>
 </AccordionGroup>
+
+## Vertical de tarjeta y comisión del payin
+
+Los cobros con tarjeta pueden usar `payin_card` por `highrisk` o `servicios7372`. CBPay estampa la vertical en el payin y la respuesta incluye `vertical` cuando no está vacía. La resolución cae primero a `payin_card` genérico y luego a `payin`. `card_purchase_virtual` y `card_purchase_physical` son issuing y no usan esta dimensión.\n
