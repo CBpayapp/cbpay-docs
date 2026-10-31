@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.199"
+  version: "2.200"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -18709,6 +18709,72 @@ paths:
                   retrieved: 1
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/analytics-config:
+    get:
+      tags: [Analytics]
+      operationId: getMyAnalyticsConfig
+      summary: Product analytics config for this account
+      description: 'Opaque analytics identity (HMAC-bound distinct and group IDs) plus feature flags for the first-party JS tracker. The browser never derives identities or reads API keys: everything comes from here after opt-in consent. Account credential only.'
+      responses:
+        '200':
+          description: Analytics config for the account.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled, proxy_path, replay, consent_required, cb_env, distinct_id, group_id, project_token, posthog_host_hint]
+                properties:
+                  enabled: {type: boolean}
+                  proxy_path: {type: string}
+                  replay: {type: boolean}
+                  consent_required: {type: boolean}
+                  cb_env: {type: string, enum: [live, test]}
+                  distinct_id: {type: string}
+                  group_id: {type: string}
+                  project_token: {type: string}
+                  posthog_host_hint: {type: string}
+              example:
+                enabled: true
+                proxy_path: /a
+                replay: true
+                consent_required: true
+                cb_env: live
+                distinct_id: 9f2c4a1e8b3d4f6a9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2
+                group_id: 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1
+                project_token: phc_examplepublictoken000000000000000
+                posthog_host_hint: eu
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/public/analytics-config:
+    get:
+      tags: [Analytics]
+      operationId: getPublicAnalyticsConfig
+      summary: Anonymous product analytics config
+      description: 'Public analytics bootstrap for anonymous surfaces (tracker, consent links, signature verification, embeds). No identity is issued: the tracker uses an ephemeral ID and session replay stays off. No authentication required.'
+      responses:
+        '200':
+          description: Anonymous analytics config.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled, proxy_path, replay, consent_required, cb_env, project_token, posthog_host_hint]
+                properties:
+                  enabled: {type: boolean}
+                  proxy_path: {type: string}
+                  replay: {type: boolean}
+                  consent_required: {type: boolean}
+                  cb_env: {type: string, enum: [live, test]}
+                  project_token: {type: string}
+                  posthog_host_hint: {type: string}
+              example:
+                enabled: true
+                proxy_path: /a
+                replay: false
+                consent_required: true
+                cb_env: live
+                project_token: phc_examplepublictoken000000000000000
+                posthog_host_hint: eu
   /v1/analytics/summary:
     get:
       tags:
