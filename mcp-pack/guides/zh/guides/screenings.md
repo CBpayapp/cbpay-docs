@@ -1,6 +1,6 @@
 ---
 title: "钱包筛查"
-description: "在与任意区块链地址交易之前，评估其 AML 风险——制裁、非法资金、风险敞口"
+description: "在与任意区块链地址交易之前，评估其 AML/CFT 风险——制裁、非法资金、风险敞口"
 slug: zh/guides/screenings
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/guides/screenings
@@ -14,7 +14,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/screenings
 汇款之前、当客户向你提供新钱包时，或作为你自身
 合规计划的一部分时使用它。
 
-它是 [AML 筛查](https://docs.cbpayapp.com/zh/guides/aml)（评估个人/企业身份）在链上的
+它是 [AML/CFT 筛查](https://docs.cbpayapp.com/zh/guides/aml)（评估个人/企业身份）在链上的
 对应产品：这里的评估对象是**地址**。
 
 ```mermaid

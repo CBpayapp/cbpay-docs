@@ -1018,9 +1018,9 @@
       "code": "invalid_payload",
       "http": 400,
       "meaning": {
-        "en": "Missing a required field (e.g. `enabled` on AML monitoring, `external_customer_id` on verifications)",
-        "es": "Falta un campo requerido (ej. `enabled` en monitoreo AML, `external_customer_id` en verificaciones)",
-        "zh": "缺少必填字段（例如 AML 监控的 `enabled`、身份验证的 `external_customer_id`）"
+        "en": "Missing a required field (e.g. `enabled` on AML/CFT monitoring, `external_customer_id` on verifications)",
+        "es": "Falta un campo requerido (ej. `enabled` en monitoreo AML/CFT, `external_customer_id` en verificaciones)",
+        "zh": "缺少必填字段（例如 AML/CFT 监控的 `enabled`、身份验证的 `external_customer_id`）"
       }
     },
     {
@@ -1130,9 +1130,9 @@
       "code": "invalid_language",
       "http": 400,
       "meaning": {
-        "en": "The PDF report `lang` is not `en`, `es` or `zh` (AML report and verification report)",
-        "es": "`lang` del informe PDF no es `en`, `es` ni `zh` (informe AML e informe de verificación)",
-        "zh": "PDF 报告的 `lang` 不是 `en`、`es` 或 `zh`（AML 报告与验证报告）"
+        "en": "The PDF report `lang` is not `en`, `es` or `zh` (AML/CFT report and verification report)",
+        "es": "`lang` del informe PDF no es `en`, `es` ni `zh` (informe AML/CFT e informe de verificación)",
+        "zh": "PDF 报告的 `lang` 不是 `en`、`es` 或 `zh`（AML/CFT 报告与验证报告）"
       }
     },
     {
@@ -1648,9 +1648,9 @@
       "code": "no_screening",
       "http": 409,
       "meaning": {
-        "en": "AML rescreen/monitoring without a prior screening",
-        "es": "Rescreen/monitoreo AML sin un screening previo",
-        "zh": "在没有先行筛查的情况下发起 AML 重新筛查/监控"
+        "en": "AML/CFT rescreen/monitoring without a prior screening",
+        "es": "Rescreen/monitoreo AML/CFT sin un screening previo",
+        "zh": "在没有先行筛查的情况下发起 AML/CFT 重新筛查/监控"
       }
     },
     {
@@ -2096,9 +2096,9 @@
       "code": "screening_required",
       "http": 422,
       "meaning": {
-        "en": "The account has no AML verification screening from which to derive the account holder's PEP value; complete screening and retry the same card request",
-        "es": "La cuenta no tiene un screening AML de verificación para derivar el PEP del titular; completa el screening y reintenta el mismo request de tarjeta",
-        "zh": "账户没有可用于派生持卡人 PEP 的 AML 身份验证 screening；请完成 screening 后使用同一个卡片 request 重试"
+        "en": "The account has no AML/CFT verification screening from which to derive the account holder's PEP value; complete screening and retry the same card request",
+        "es": "La cuenta no tiene un screening AML/CFT de verificación para derivar el PEP del titular; completa el screening y reintenta el mismo request de tarjeta",
+        "zh": "账户没有可用于派生持卡人 PEP 的 AML/CFT 身份验证 screening；请完成 screening 后使用同一个卡片 request 重试"
       }
     },
     {
@@ -3524,9 +3524,9 @@
       "code": "compliance_unavailable",
       "http": 502,
       "meaning": {
-        "en": "AML screening temporarily unavailable",
-        "es": "Screening AML temporalmente no disponible",
-        "zh": "AML 筛查暂时不可用"
+        "en": "AML/CFT screening temporarily unavailable",
+        "es": "Screening AML/CFT temporalmente no disponible",
+        "zh": "AML/CFT 筛查暂时不可用"
       }
     },
     {

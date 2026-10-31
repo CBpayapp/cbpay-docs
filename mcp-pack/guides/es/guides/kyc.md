@@ -113,7 +113,7 @@ Cuando compliance aprueba, tu `kyc_status` pasa a `approved`
 webhook `kyc_verification_status_changed` con `self_onboarding: true`.
 
 > **Nota**
-**Motor de decisión automática:** un expediente completamente limpio (documentos legibles, liveness aprobado, sin sanciones ni coincidencias PEP y sin señales de riesgo) se aprueba **en segundos y sin intervención humana**. Las zonas grises pasan a la cola humana del operador. Las sanciones AML severas (incluida una parte KYB), los países prohibidos, el fraude/expiración documental explícita y los rechazos explícitos del proveedor también pasan a la cola humana con sus razones preservadas; el motor ya no auto-rechaza. El campo `decision_source` del webhook (`"auto"` / `"admin"`) indica quién decidió.
+**Motor de decisión automática:** un expediente completamente limpio (documentos legibles, liveness aprobado, sin sanciones ni coincidencias PEP y sin señales de riesgo) se aprueba **en segundos y sin intervención humana**. Las zonas grises pasan a la cola humana del operador. Las sanciones AML/CFT severas (incluida una parte KYB), los países prohibidos, el fraude/expiración documental explícita y los rechazos explícitos del proveedor también pasan a la cola humana con sus razones preservadas; el motor ya no auto-rechaza. El campo `decision_source` del webhook (`"auto"` / `"admin"`) indica quién decidió.
 La aprobación además **rellena el perfil de tu cuenta con la identidad
 verificada**: `display_name` (persona = nombre + apellido; empresa = razón
 social), `tax_id` y `country` se toman de la verificación y desde ese
@@ -474,7 +474,7 @@ completo, no un resumen: identidad verificada (persona o empresa), perfil
 económico declarado, declaraciones de riesgo, cuenta bancaria enmascarada,
 ciclo de vida de la decisión, documentos con su validación documental, prueba
 de vida, **partes relacionadas con su propio screening** (KYB) y screening
-AML con el detalle de cada coincidencia — todo con hash de integridad y
+AML/CFT con el detalle de cada coincidencia — todo con hash de integridad y
 código de verificación pública. Dos formatos (`?format=pdf|json`, default
 `pdf`) y tres idiomas (`?lang=en|es|zh`, default `en`). Es gratuito: es la
 lectura de una verificación ya pagada.
@@ -489,8 +489,8 @@ Secciones del informe:
 | Cuenta bancaria | Banco, titular y número **enmascarado en origen** (nunca completo) |
 | Documentos | Categoría, archivo, estado, resultado de validación, score, fecha de validación y motivo de rechazo. El PDF agrega **fotos del documento de identidad** cuando el proveedor las entrega (si no hay, la sección se omite) |
 | Prueba de vida | Por rol (titular, UBO N): resultado, gate, scores de liveness / antispoofing / similitud facial. **Una fila por sesión** — un sujeto puede tener el check de onboarding `gate` más una o más recapturas de evidencia `media_recapture` posteriores, cada una con su propio `session_id` y `purpose`. El PDF embebe selfie/frames cuando hay media viva; el JSON solo declara metadata (`has_selfie`, `has_video`, `frame_gestures`, hashes) sin URLs |
-| Partes relacionadas | Solo KYB: UBOs, personas de control y firmantes, cada una con identidad, participación, sus documentos, **todas sus sesiones de liveness** (`liveness_sessions[]`) y **su propio screening AML** |
-| Screening AML | Nivel de riesgo, indicadores, coincidencias con alias, listas de sanciones con fuente y vigencia, posiciones PEP, vínculos RCA y medios adversos. El cierre del PDF incluye el anexo AML completo (atribución y fuentes) cuando hubo screening |
+| Partes relacionadas | Solo KYB: UBOs, personas de control y firmantes, cada una con identidad, participación, sus documentos, **todas sus sesiones de liveness** (`liveness_sessions[]`) y **su propio screening AML/CFT** |
+| Screening AML/CFT | Nivel de riesgo, indicadores, coincidencias con alias, listas de sanciones con fuente y vigencia, posiciones PEP, vínculos RCA y medios adversos. El cierre del PDF incluye el anexo AML/CFT completo (atribución y fuentes) cuando hubo screening |
 
 > **Nota**
 **La prueba de vida trae una fila por sesión, no una por sujeto.** La sesión
@@ -508,9 +508,9 @@ siempre apunta a la sesión `gate` de esa parte, mientras
 **Cómo se lee el PDF.** El informe abre con una **portada navegable**: un
 índice de tarjetas con icono, título y número de página que son **clicables**
 y saltan a su sección. Cada sección lleva su propio icono y barra de acento
-(el mismo lenguaje visual del informe AML), las fotos del documento y de la
+(el mismo lenguaje visual del informe AML/CFT), las fotos del documento y de la
 prueba de vida conservan su proporción real, y ningún encabezado queda solo
-al pie de una página. Los medios adversos del anexo AML llevan un chip
+al pie de una página. Los medios adversos del anexo AML/CFT llevan un chip
 **“ver fuente”** y la URL de verificación pública del cierre es clicable —
 por seguridad **solo se embeben enlaces `http` y `https`**; cualquier otro
 esquema se descarta y el texto queda sin enlace.
@@ -526,7 +526,7 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
   -H "Authorization: Bearer <token>"
 ```
 
-El informe de un tercero es **completo**: la sección AML incluye nivel de
+El informe de un tercero es **completo**: la sección AML/CFT incluye nivel de
 riesgo, indicadores y coincidencias (nombres, listas de sanciones, PEP,
 medios adversos). Tú realizas la diligencia sobre tu cliente y este informe
 es tu evidencia.
@@ -717,7 +717,7 @@ Respuesta `format=json` (resumen del shape — el PDF sale del mismo modelo):
 ```
 
 > **Nota**
-Si la verificación aún no tiene screening AML enlazado (verificaciones
+Si la verificación aún no tiene screening AML/CFT enlazado (verificaciones
 antiguas), la primera descarga lo ejecuta automáticamente **sin costo**. Si
 el screening no está disponible en ese momento, el informe sale igual con
 `"partial": ["aml_unavailable"]` — la sección jamás se inventa.
@@ -726,7 +726,7 @@ el screening no está disponible en ese momento, el informe sale igual con
 En una verificación de empresa, cada UBO, persona de control y firmante del
 expediente sale como una entrada de `parties[]` con su identidad completa,
 su participación, los documentos y la prueba de vida que le corresponden, y
-**su propio screening AML con monitoreo continuo activado**. El par
+**su propio screening AML/CFT con monitoreo continuo activado**. El par
 `(source, index)` es la identidad estable de la parte dentro del expediente:
 es lo que enlaza sus documentos (`uboIdentity:0`) y lo que hace que su
 screening sea siempre el mismo, sin importar cuántas veces descargues el
@@ -747,11 +747,11 @@ curl -o informe.pdf "https://api.qbank.cl/platform/v1/me/verification/report?lan
   -H "Authorization: Bearer <token>"
 ```
 
-En el informe de tu propia verificación la sección AML va **agregada**
+En el informe de tu propia verificación la sección AML/CFT va **agregada**
 (`aml_detail: false`): verás el estado por categoría — `sanctions`, `pep` y
 `adverse_media` como `clear` o `under_review` — sin el detalle de
 coincidencias. Lo mismo aplica al screening de tus partes relacionadas: sus
-secciones AML también van agregadas. El resto del expediente (identidad,
+secciones AML/CFT también van agregadas. El resto del expediente (identidad,
 perfil económico, documentos, prueba de vida, partes) sale completo.
 
 ### Verificación pública del informe
@@ -860,9 +860,9 @@ cuenta persona solo necesita su onboarding gratis en `/v1/me/verification`.
 #### Compliance pidió más documentos, ¿cómo los mando?
 Recibirás `more_info_required` con `pending_documents`. Usa el flujo presign
 → upload → confirm de esta página; luego la submission vuelve a revisión.
-#### ¿Esto reemplaza al AML screening?
+#### ¿Esto reemplaza al AML/CFT screening?
 No: son complementarios. La verificación prueba la identidad con evidencia;
-el [AML screening](https://docs.cbpayapp.com/es/guides/aml) consulta listas de sanciones/PEP/prensa
+el [AML/CFT screening](https://docs.cbpayapp.com/es/guides/aml) consulta listas de sanciones/PEP/prensa
 adversa y puede vigilar la identidad de forma continua.
 #### ¿Puedo reusar la verificación de un cliente en otros productos?
 Sí — una verificación aprobada es la identidad reutilizable. Pasa su

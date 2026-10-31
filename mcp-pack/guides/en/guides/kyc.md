@@ -113,7 +113,7 @@ When compliance approves, your `kyc_status` becomes `approved`
 `kyc_verification_status_changed` webhook with `self_onboarding: true`.
 
 > **Note**
-**Automatic decision engine:** a fully clean application (documents read correctly, liveness passed, no sanctions or PEP matches, no risk signals) is approved **in seconds without human intervention**. Grey areas go to the operator's human review queue. Severe AML sanctions (including a KYB party), prohibited jurisdictions, explicit document fraud/expiry and explicit provider rejection signals also go to the human queue with their reasons preserved; the engine no longer auto-rejects. The `decision_source` field of the status webhook (`"auto"` / `"admin"`) tells you who decided.
+**Automatic decision engine:** a fully clean application (documents read correctly, liveness passed, no sanctions or PEP matches, no risk signals) is approved **in seconds without human intervention**. Grey areas go to the operator's human review queue. Severe AML/CFT sanctions (including a KYB party), prohibited jurisdictions, explicit document fraud/expiry and explicit provider rejection signals also go to the human queue with their reasons preserved; the engine no longer auto-rejects. The `decision_source` field of the status webhook (`"auto"` / `"admin"`) tells you who decided.
 The approval also **backfills your account profile with the verified
 identity**: `display_name` (person = first + last name; company = legal
 name), `tax_id` and `country` are taken from the verification and from then
@@ -473,7 +473,7 @@ Besides the processor's report, every decided KYC or KYB submission has its
 summary: verified identity (person or company), declared economic profile,
 risk attestations, masked bank account, decision lifecycle, documents with
 their document validation, liveness check, **related parties with their own
-screening** (KYB) and the AML screening with the detail of every match — all
+screening** (KYB) and the AML/CFT screening with the detail of every match — all
 with an integrity hash and a public verification code. Two formats
 (`?format=pdf|json`, default `pdf`) and three languages (`?lang=en|es|zh`,
 default `en`). It is free: it is a read of a verification you already paid
@@ -489,8 +489,8 @@ Report sections:
 | Bank account | Bank, holder and account number **masked at the source** (never in full) |
 | Documents | Category, file, status, validation outcome, score, validation timestamp and rejection reason. The PDF adds **identity document photos** when the provider supplies them (if none, the section is omitted) |
 | Liveness | Per role (holder, UBO N): outcome, gate, liveness / antispoofing / face similarity scores. **One entry per session** — a subject can have the onboarding `gate` check plus one or more later evidence `media_recapture`s, each with its own `session_id` and `purpose`. The PDF embeds selfie/frames when live media exists; JSON only declares metadata (`has_selfie`, `has_video`, `frame_gestures`, hashes) without URLs |
-| Related parties | KYB only: UBOs, control persons and signers, each with identity, ownership, their documents, **all their liveness sessions** (`liveness_sessions[]`) and **their own AML screening** |
-| AML screening | Risk level, indicators, matches with aliases, sanctions lists with source and validity, PEP positions, RCA links and adverse media. The PDF closing includes the full AML annex (attribution and sources) when a screening exists |
+| Related parties | KYB only: UBOs, control persons and signers, each with identity, ownership, their documents, **all their liveness sessions** (`liveness_sessions[]`) and **their own AML/CFT screening** |
+| AML/CFT screening | Risk level, indicators, matches with aliases, sanctions lists with source and validity, PEP positions, RCA links and adverse media. The PDF closing includes the full AML/CFT annex (attribution and sources) when a screening exists |
 
 > **Note**
 **Liveness has one entry per session, not one per subject.** A `gate`
@@ -508,9 +508,9 @@ that party.
 **How to read the PDF.** The report opens with a **navigable cover**: an index
 of cards with icon, title and page number that are **clickable** and jump to
 their section. Every section carries its own icon and accent bar (the same
-visual language as the AML report), identity document and liveness photos keep
+visual language as the AML/CFT report), identity document and liveness photos keep
 their real aspect ratio, and no heading is ever left alone at the bottom of a
-page. Adverse media entries in the AML annex carry a **“view source”** chip and
+page. Adverse media entries in the AML/CFT annex carry a **“view source”** chip and
 the public verification URL in the closing block is clickable — for safety
 **only `http` and `https` links are embedded**; any other scheme is dropped and
 the text stays unlinked.
@@ -526,7 +526,7 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
   -H "Authorization: Bearer <token>"
 ```
 
-A third party's report is **complete**: the AML section includes the risk
+A third party's report is **complete**: the AML/CFT section includes the risk
 level, indicators and matches (names, sanctions lists, PEP, adverse media).
 You perform the due diligence on your customer and this report is your
 evidence.
@@ -717,7 +717,7 @@ evidence.
 ```
 
 > **Note**
-If the verification does not yet have a linked AML screening (older
+If the verification does not yet have a linked AML/CFT screening (older
 verifications), the first download runs it automatically **at no cost**. If
 the screening is unavailable at that moment, the report is generated anyway
 with `"partial": ["aml_unavailable"]` — the section is never fabricated.
@@ -725,7 +725,7 @@ with `"partial": ["aml_unavailable"]` — the section is never fabricated.
 
 In a company verification, every UBO, control person and signer in the file
 comes out as a `parties[]` entry with their full identity, their ownership,
-the documents and liveness check that belong to them, and **their own AML
+the documents and liveness check that belong to them, and **their own AML/CFT
 screening with continuous monitoring enabled**. The `(source, index)` pair is
 the party's stable identity inside the file: it is what links their documents
 (`uboIdentity:0`) and what makes their screening always the same, no matter
@@ -746,10 +746,10 @@ curl -o report.pdf "https://api.qbank.cl/platform/v1/me/verification/report?lang
   -H "Authorization: Bearer <token>"
 ```
 
-In the report of your own verification the AML section is **aggregated**
+In the report of your own verification the AML/CFT section is **aggregated**
 (`aml_detail: false`): you see the status per category — `sanctions`, `pep`
 and `adverse_media` as `clear` or `under_review` — without the match details.
-The same applies to the screening of your related parties: their AML sections
+The same applies to the screening of your related parties: their AML/CFT sections
 are aggregated too. The rest of the file (identity, economic profile,
 documents, liveness, parties) is complete.
 
@@ -859,9 +859,9 @@ account only needs its free `/v1/me/verification` onboarding.
 #### Compliance asked for more documents — how do I send them?
 You will receive `more_info_required` with `pending_documents`. Use this
 page's presign → upload → confirm flow; the submission then returns to review.
-#### Does this replace AML screening?
+#### Does this replace AML/CFT screening?
 No: they complement each other. Verification proves identity with evidence;
-[AML screening](https://docs.cbpayapp.com/en/guides/aml) checks sanctions/PEP/adverse-media lists and
+[AML/CFT screening](https://docs.cbpayapp.com/en/guides/aml) checks sanctions/PEP/adverse-media lists and
 can watch the identity continuously.
 #### Can I reuse a customer's verification in other products?
 Yes — an approved verification is the reusable identity. Pass its

@@ -108,7 +108,7 @@ curl https://api.qbank.cl/platform/v1/me/verification \
 合规团队批准后，您的 `kyc_status` 会**自动**变为 `approved`，所有服务随即解锁（您会收到带 `self_onboarding: true` 的 `kyc_verification_status_changed` webhook）。
 
 <Note>
-**自动决策引擎：**资料完全干净（文件可读、活体通过、没有制裁或 PEP 命中且没有风险信号）会在**几秒内自动批准，无需人工介入**。灰色情况会进入 运营人员的人工队列。严重 AML 制裁（包括 KYB 关联方）、禁止司法辖区、明确的 文件欺诈/过期以及提供方明确拒绝也会进入人工队列，并保留原因；引擎不再自动拒绝。状态 webhook 的 `decision_source`（`"auto"` / `"admin"`）表示决定来源。
+**自动决策引擎：**资料完全干净（文件可读、活体通过、没有制裁或 PEP 命中且没有风险信号）会在**几秒内自动批准，无需人工介入**。灰色情况会进入 运营人员的人工队列。严重 AML/CFT 制裁（包括 KYB 关联方）、禁止司法辖区、明确的 文件欺诈/过期以及提供方明确拒绝也会进入人工队列，并保留原因；引擎不再自动拒绝。状态 webhook 的 `decision_source`（`"auto"` / `"admin"`）表示决定来源。
 </Note>
 
 批准后还会**用已验证的身份回填您的账户档案**：`display_name`（个人 =
@@ -443,7 +443,7 @@ curl -o report.pdf https://api.qbank.cl/platform/v1/kyb/submissions/{submission_
 
 ## 验证报告（PDF + JSON）
 
-除处理方的报告外，每条已决定的 KYC 或 KYB 提交件都有由平台生成的**验证报告**。它是完整的档案，而不是摘要：已验证身份（个人或企业）、申报的经济概况、风险声明、脱敏的银行账户、决定生命周期、带证件校验结果的证件、活体检测、**带各自筛查的关联方**（KYB）以及含每一条匹配明细的 AML 筛查——全部附完整性哈希和公开验证码。支持两种格式（`?format=pdf|json`，默认 `pdf`）和三种语言（`?lang=en|es|zh`，默认 `en`）。它是免费的：这是对您已付费验证的读取。
+除处理方的报告外，每条已决定的 KYC 或 KYB 提交件都有由平台生成的**验证报告**。它是完整的档案，而不是摘要：已验证身份（个人或企业）、申报的经济概况、风险声明、脱敏的银行账户、决定生命周期、带证件校验结果的证件、活体检测、**带各自筛查的关联方**（KYB）以及含每一条匹配明细的 AML/CFT 筛查——全部附完整性哈希和公开验证码。支持两种格式（`?format=pdf|json`，默认 `pdf`）和三种语言（`?lang=en|es|zh`，默认 `en`）。它是免费的：这是对您已付费验证的读取。
 
 报告章节：
 
@@ -455,8 +455,8 @@ curl -o report.pdf https://api.qbank.cl/platform/v1/kyb/submissions/{submission_
 | 银行账户 | 银行、持有人及**在来源处即已脱敏**的账号（绝不完整展示） |
 | 证件 | 类别、文件、状态、校验结果、评分、校验时间与拒绝原因。当提供商交付证件照片时，PDF 会加入**身份证件照片**（若无则省略该区块） |
 | 活体检测 | 按角色（持有人、UBO N）：结果、门槛、活体 / 防伪 / 人脸相似度评分。**每个会话一行** —— 同一主体可能既有开通门槛检测 `gate`，也有一次或多次后续证据补录 `media_recapture`，每个会话都有各自的 `session_id` 与 `purpose`。存在可用媒体时 PDF 嵌入自拍/手势帧；JSON 仅声明元数据（`has_selfie`、`has_video`、`frame_gestures`、哈希），不含 URL |
-| 关联方 | 仅 KYB：UBO、控制人与签署人，每位均含身份、持股、其证件、**其全部活体检测会话**（`liveness_sessions[]`）以及**各自的 AML 筛查** |
-| AML 筛查 | 风险等级、指标、含别名的匹配项、带来源与有效期的制裁名单、PEP 职位、RCA 关联与负面媒体。存在筛查时 PDF 结尾包含完整 AML 附录（归属声明与数据源） |
+| 关联方 | 仅 KYB：UBO、控制人与签署人，每位均含身份、持股、其证件、**其全部活体检测会话**（`liveness_sessions[]`）以及**各自的 AML/CFT 筛查** |
+| AML/CFT 筛查 | 风险等级、指标、含别名的匹配项、带来源与有效期的制裁名单、PEP 职位、RCA 关联与负面媒体。存在筛查时 PDF 结尾包含完整 AML/CFT 附录（归属声明与数据源） |
 
 <Note>
 **活体检测按会话计数，而不是按主体计数。** `gate` 会话是开通入驻的门槛检测——
@@ -471,9 +471,9 @@ curl -o report.pdf https://api.qbank.cl/platform/v1/kyb/submissions/{submission_
 
 <Note>
 **如何阅读该 PDF。** 报告首页为**可导航封面**：索引卡片包含图标、标题与页码，
-**可点击**并跳转到对应章节。每个章节都带有自己的图标与强调条（与 AML 报告一致的
+**可点击**并跳转到对应章节。每个章节都带有自己的图标与强调条（与 AML/CFT 报告一致的
 视觉语言），证件照片与活体检测照片保持真实比例，任何标题都不会单独留在页面底部。
-AML 附录中的负面媒体条目带有**“查看来源”**标签，结尾处的公开验证链接可点击——
+AML/CFT 附录中的负面媒体条目带有**“查看来源”**标签，结尾处的公开验证链接可点击——
 出于安全考虑**仅嵌入 `http` 与 `https` 链接**，其他协议一律丢弃，文本保持不可
 点击。
 </Note>
@@ -490,7 +490,7 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
   -H "Authorization: Bearer <token>"
 ```
 
-第三方的报告是**完整的**：AML 部分包含风险等级、指标和匹配项（名称、制裁名单、PEP、负面媒体）。您对客户执行尽职调查，这份报告就是您的证据。
+第三方的报告是**完整的**：AML/CFT 部分包含风险等级、指标和匹配项（名称、制裁名单、PEP、负面媒体）。您对客户执行尽职调查，这份报告就是您的证据。
 
 `format=json` 响应（结构摘要——PDF 由同一模型渲染）：
 
@@ -678,12 +678,12 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
 ```
 
 <Note>
-如果该验证尚未关联 AML 筛查（较早的验证），首次下载会自动**免费**执行筛查。若此时筛查不可用，报告仍会生成，并带有 `"partial": ["aml_unavailable"]` —— 该部分绝不会被虚构。
+如果该验证尚未关联 AML/CFT 筛查（较早的验证），首次下载会自动**免费**执行筛查。若此时筛查不可用，报告仍会生成，并带有 `"partial": ["aml_unavailable"]` —— 该部分绝不会被虚构。
 </Note>
 
 ### 关联方及其筛查（KYB）
 
-在企业验证中，档案里的每一位 UBO、控制人与签署人都会作为一条 `parties[]` 记录输出，包含其完整身份、持股比例、归属于其的证件与活体检测，以及**开启持续监控的独立 AML 筛查**。`(source, index)` 组合是该关联方在档案内的稳定标识：它用于关联其证件（`uboIdentity:0`），也确保无论您下载多少次报告，其筛查始终是同一条。
+在企业验证中，档案里的每一位 UBO、控制人与签署人都会作为一条 `parties[]` 记录输出，包含其完整身份、持股比例、归属于其的证件与活体检测，以及**开启持续监控的独立 AML/CFT 筛查**。`(source, index)` 组合是该关联方在档案内的稳定标识：它用于关联其证件（`uboIdentity:0`），也确保无论您下载多少次报告，其筛查始终是同一条。
 
 关联方筛查是**免费**的（这是尽职调查义务，而非可计费产品），并处于持续监控之下：若某位 UBO 在入驻之后进入制裁名单，告警会自动出现。
 
@@ -698,7 +698,7 @@ curl -o report.pdf "https://api.qbank.cl/platform/v1/me/verification/report?lang
   -H "Authorization: Bearer <token>"
 ```
 
-在您自己验证的报告中，AML 部分为**汇总形式**（`aml_detail: false`）：您会看到每个类别的状态——`sanctions`、`pep` 和 `adverse_media` 为 `clear` 或 `under_review`——但不含匹配项明细。关联方的筛查同样如此：其 AML 部分也是汇总形式。档案的其余内容（身份、经济概况、证件、活体检测、关联方）均为完整版。
+在您自己验证的报告中，AML/CFT 部分为**汇总形式**（`aml_detail: false`）：您会看到每个类别的状态——`sanctions`、`pep` 和 `adverse_media` 为 `clear` 或 `under_review`——但不含匹配项明细。关联方的筛查同样如此：其 AML/CFT 部分也是汇总形式。档案的其余内容（身份、经济概况、证件、活体检测、关联方）均为完整版。
 
 ### 报告的公开验证
 
@@ -796,8 +796,8 @@ curl "https://api.qbank.cl/platform/verify/reports/Bc3d4e5f6a7b84c9d0e1f2a3b4c5d
 <Accordion title="合规团队要求补充更多证件——如何提交？">
 您会收到 `more_info_required`，提交件详情中带有 `pending_documents`。按本页的预签名 → 上传 → 确认流程上传每份证件；确认后提交件会返回审核队列。
 </Accordion>
-<Accordion title="这能替代 AML 筛查吗？">
-不能：两者互为补充。身份验证用证据（证件、视频）证明身份；[AML 筛查](/zh/guides/aml)则将该身份与制裁/PEP/负面媒体名单比对，并可对其进行持续监控。
+<Accordion title="这能替代 AML/CFT 筛查吗？">
+不能：两者互为补充。身份验证用证据（证件、视频）证明身份；[AML/CFT 筛查](/zh/guides/aml)则将该身份与制裁/PEP/负面媒体名单比对，并可对其进行持续监控。
 </Accordion>
 <Accordion title="我可以在其他产品中复用客户的验证吗？">
 可以——这正是设计初衷：一条已批准的验证即为唯一身份。在注册第三方银行用户或为指定人员发卡时，将其 `submission_id` 作为 `verification_id` 传入：数据和证件会自动填充。参见[可复用身份](#one-verification-for-everything-reusable-identity)。

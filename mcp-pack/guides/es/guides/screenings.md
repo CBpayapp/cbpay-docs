@@ -1,6 +1,6 @@
 ---
 title: "Screening de wallets"
-description: "Evalúa el riesgo AML de cualquier dirección blockchain — sanciones, fondos ilícitos, exposición — antes de operar con ella"
+description: "Evalúa el riesgo AML/CFT de cualquier dirección blockchain — sanciones, fondos ilícitos, exposición — antes de operar con ella"
 slug: es/guides/screenings
 lang: es
 source_url: https://docs.cbpayapp.com/es/guides/screenings
@@ -14,7 +14,7 @@ darknet, robos) y a qué categorías está expuesta. Úsalo antes de enviar
 fondos a una dirección de un tercero, al recibir una wallet nueva de un
 cliente, o como parte de tu propio programa de compliance.
 
-Es el complemento on-chain del [AML screening](https://docs.cbpayapp.com/es/guides/aml) (que evalúa
+Es el complemento on-chain del [AML/CFT screening](https://docs.cbpayapp.com/es/guides/aml) (que evalúa
 identidades de personas/empresas): aquí lo que se evalúa es la **dirección**.
 
 ```mermaid

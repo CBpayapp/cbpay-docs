@@ -1233,7 +1233,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - **美国 payout 会保持 `processing`，直到银行确认人工付款。**
   创建响应已在 `bank_reference` 返回 CBF。监听 `payout_status_changed`
   以获得 `completed` 或 `failed`（已退款）。
-- 该通道没有额外的收款人 AML hold：运营方手工付款，poller 对账。
+- 该通道没有额外的收款人 AML/CFT hold：运营方手工付款，poller 对账。
 - **最低金额**：`wire` 和 `swift` 至少 **USD 25.00**；低于该金额会在创建时
   被拒绝（`422`，`status_message` 为
   `"…payouts require an amount of at least USD 25"`）。ACH 无已验证的最低金额。
@@ -1385,7 +1385,7 @@ payout。
 创建时就已经返回 `bank_reference`（CBF）。payout 保持 `processing`，直到银行确认人工付款。
 预计 ACH 为 24–48 个工作小时，wire/Fedwire 为同一工作日（最长 24 小时），
 SWIFT 为 24–48 个工作小时且可能因收款银行而延长。监听
-`payout_status_changed` 以获得 `completed` 或 `failed`（已退款）。该通道没有额外的收款人 AML hold。
+`payout_status_changed` 以获得 `completed` 或 `failed`（已退款）。该通道没有额外的收款人 AML/CFT hold。
 </Accordion>
 </AccordionGroup>
 

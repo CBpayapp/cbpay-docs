@@ -46,10 +46,10 @@ de las tasas de tu cuenta para ese país. Cotizado = cobrado, siempre.
 | `wallet_import` | Fijo por importación | Al importar una wallet externa a una [wallet segregada](https://docs.cbpayapp.com/es/guides/segregated-wallets) (`POST /v1/segregated-wallets/import`) |
 | `wallet_export` | Fijo por exportación | Al exportar la llave privada de una wallet segregada (`POST /v1/segregated-wallets/{id}/export`) |
 | `wallet_send` | Fijo por envío | Al enviar on-chain desde una wallet segregada (`POST /v1/segregated-wallets/{id}/sends`); el gas de red lo pone el cliente |
-| `compliance_person` | Fijo por llamada | Al screenear una persona por AML (`POST /v1/aml/screenings`) |
-| `compliance_company` | Fijo por llamada | Al screenear una empresa por AML |
-| `compliance_rescreen` | Fijo por llamada | Al re-ejecutar un screening AML |
-| `compliance_monitoring` | Fijo por activación | Al activar monitoreo AML continuo (desactivar es gratis) |
+| `compliance_person` | Fijo por llamada | Al screenear una persona por AML/CFT (`POST /v1/aml/screenings`) |
+| `compliance_company` | Fijo por llamada | Al screenear una empresa por AML/CFT |
+| `compliance_rescreen` | Fijo por llamada | Al re-ejecutar un screening AML/CFT |
+| `compliance_monitoring` | Fijo por activación | Al activar monitoreo AML/CFT continuo (desactivar es gratis) |
 | `kyc_verification` | Fijo por verificación | Al crear un link o submission KYC de un tercero ([verificación](https://docs.cbpayapp.com/es/guides/kyc)); tu propio onboarding es gratis |
 | `kyb_verification` | Fijo por verificación | Al crear un link o submission KYB de un tercero |
 | `address_screening` | Fijo por scan | Al evaluar el riesgo de una dirección blockchain ([screening de wallets](https://docs.cbpayapp.com/es/guides/screenings)); la protección automática de retiros/depósitos es gratis |

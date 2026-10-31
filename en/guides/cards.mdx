@@ -317,7 +317,7 @@ The response exposes the effective value as `cardholder_name`:
 }
 ```
 
-## Issuer fields and AML-derived PEP
+## Issuer fields and AML/CFT-derived PEP
 
 The first issuance creates the issuer-side cardholder. The platform validates
 the issuer fields **before charging the issuance fee or creating a hold**.
@@ -330,7 +330,7 @@ again.
 | Company account holder | `kind_of_business`, `registered_name`, `email` | `kind_of_business` must be a catalog code; `registered_name` and `email` are filled from the request, account display name or legal KYB name, and account email fallback; `email` must contain `@` |
 | Designated person | `occupation`, `place_of_work`, `salary_usd`, `email`, `pep` | Catalog code plus names from approved KYC or explicit values (non-empty after assembly), `email` containing `@`, and explicit boolean `pep`; account-holder screening is not available for a designated person |
 
-For an account holder, the supported PEP source is the account's AML
+For an account holder, the supported PEP source is the account's AML/CFT
 verification screening. The screening gate is mandatory: an explicit
 `pep: true` does **not** bypass `422 screening_required`; once screening
 exists, the value sent to the issuer is the conservative OR of the request
@@ -380,8 +380,8 @@ the firewall checklist, so a value can be present and still be marked
 `ok: false` when it is not in the catalog.
 
 <AccordionGroup>
-<Accordion title="What if the account has no AML screening yet?">
-The issuer-side PEP value cannot be derived. Complete an approved AML
+<Accordion title="What if the account has no AML/CFT screening yet?">
+The issuer-side PEP value cannot be derived. Complete an approved AML/CFT
 verification and retry the same card request; do not guess a PEP value.
 </Accordion>
 <Accordion title="What happens to a designated person's PEP value?">
@@ -397,7 +397,7 @@ an explicit boolean `cardholder.pep`. It has no default.
 | 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
 | 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
 | 422 | `issuer_data_incomplete` | Required issuer fields are missing or invalid after request data, verification autofill and KYB-derived values are assembled. Fix the listed keys in `message` and retry. |
-| 422 | `screening_required` | The account has no AML verification screening from which to derive the account holder's PEP value. Complete screening and retry the same card request. |
+| 422 | `screening_required` | The account has no AML/CFT verification screening from which to derive the account holder's PEP value. Complete screening and retry the same card request. |
 ### Occupation and business activity (catalog codes)
 
 When designating a **person**, `occupation` must be a **code** from the

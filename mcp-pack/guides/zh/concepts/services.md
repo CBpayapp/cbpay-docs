@@ -39,7 +39,7 @@ curl https://api.qbank.cl/platform/v1/services \
 | `crypto` | 链上钱包与 USDT 提现 |
 | `banking` | 国际银行账户（档案、账户、付款） |
 | `kyc` | 第三方 KYC/KYB 身份验证（链接、提交、文件、活体检测） |
-| `aml` | AML 名单筛查、重新筛查与监控 |
+| `aml` | AML/CFT 名单筛查、重新筛查与监控 |
 | `cards` | 卡片发行与运营 |
 | `swaps` | 余额之间的兑换（USDT/USDC/BTC/GOLD/SILVER/PLATINUM） |
 | `wallets` | 拥有独立链上余额的[隔离钱包](https://docs.cbpayapp.com/zh/guides/segregated-wallets)（仅限企业） |

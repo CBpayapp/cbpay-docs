@@ -24,7 +24,7 @@ The type is set at account creation and does not change. You see it in
 | **Members with login** (`POST /v1/members`) | No (`403 company_only`) | Yes — `owner` / `operator` / `viewer` roles |
 | **Identity verification** (`/v1/me/verification`) | **KYC** onboarding (wizard with documents + liveness) | **KYB** onboarding (wizard with corporate documents) |
 | **Verify third parties** (`/v1/{kyc,kyb}/links` and submissions) | No (`403 company_account_required`) | Yes — hosted links or API data, bills `kyc_verification`/`kyb_verification` |
-| **AML screening** (`POST /v1/aml/screenings`) | **Person** screening (`customer.person`), bills `compliance_person` | **Company** screening (`customer.company`), bills `compliance_company` |
+| **AML/CFT screening** (`POST /v1/aml/screenings`) | **Person** screening (`customer.person`), bills `compliance_person` | **Company** screening (`customer.company`), bills `compliance_company` |
 | Card holder (first issuance) | Personal data + identity documents | Corporate data + corporate documents (or the designated person's) |
 | Registration | `type: "person"` | `type: "company"` (+ `tax_id` recommended) |
 

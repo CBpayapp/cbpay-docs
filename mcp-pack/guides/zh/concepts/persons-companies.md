@@ -23,7 +23,7 @@ CBPay 有两种账户类型 — **个人**（`type: "person"`）和**企业**
 | **可登录的成员**（`POST /v1/members`） | 否（`403 company_only`） | 是 — `owner` / `operator` / `viewer` 角色 |
 | **身份验证**（`/v1/me/verification`） | **KYC** 开户验证（含证件 + 活体检测的向导） | **KYB** 开户验证（含企业文件的向导） |
 | **为第三方做验证**（`/v1/{kyc,kyb}/links` 及提交） | 否（`403 company_account_required`） | 是 — 托管链接或 API 数据提交，计费 `kyc_verification`/`kyb_verification` |
-| **AML 筛查**（`POST /v1/aml/screenings`） | **个人**筛查（`customer.person`），计费 `compliance_person` | **企业**筛查（`customer.company`），计费 `compliance_company` |
+| **AML/CFT 筛查**（`POST /v1/aml/screenings`） | **个人**筛查（`customer.person`），计费 `compliance_person` | **企业**筛查（`customer.company`），计费 `compliance_company` |
 | 持卡人（首次发卡） | 个人资料 + 身份证件 | 企业资料 + 企业文件（或指定人员的资料） |
 | 注册 | `type: "person"` | `type: "company"`（建议附带 `tax_id`） |
 

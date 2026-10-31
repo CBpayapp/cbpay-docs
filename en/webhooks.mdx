@@ -113,7 +113,7 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `kyc_link_completed` / `kyb_link_completed` | A hosted verification link was completed |
 | `kyc_document_validated` / `kyb_document_validated` | OCR finished for a document uploaded through the API |
 | `kyc_liveness_completed` | A liveness check was completed from a liveness link |
-| `aml_screening_updated` | AML screening updates (result, cases, risk, reviewed transaction) |
+| `aml_screening_updated` | AML/CFT screening updates (result, cases, risk, reviewed transaction) |
 | `risk_report_ready` | A [Qscore](/en/guides/qscore) credit report finished generating (it carries the score and band) |
 | `risk_score_changed` | The score of a monitored subject moved (re-evaluation after new bureau data) |
 | `risk_monitoring_alert` | A monitored [Qscore](/en/guides/qscore) subject triggered an alert: the score dropped below your threshold, new bureau records appeared, or records were removed |

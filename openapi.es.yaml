@@ -98,10 +98,10 @@ tags:
   description: 'Verificación de identidad: KYC para personas, KYB para empresas — tu propio onboarding
     y verificaciones de terceros para cuentas empresa.'
 - name: Screening de wallets
-  description: Evaluación de riesgo AML de direcciones blockchain (sanciones, exposición a fondos ilícitos)
+  description: Evaluación de riesgo AML/CFT de direcciones blockchain (sanciones, exposición a fondos ilícitos)
     con comisión por scan, más protección automática gratuita en retiros y depósitos.
-- name: AML screening
-  description: Screening AML standalone de personas y empresas contra listas de sanciones, PEP y medios
+- name: AML/CFT screening
+  description: Screening AML/CFT standalone de personas y empresas contra listas de sanciones, PEP y medios
     adversos, con re-screening, monitoreo continuo e informe PDF descargable.
 - name: Qscore
   description: Buró de crédito API-first. Emite informes crediticios completos con score 1-999 (bandas A-E, o SC cuando
@@ -679,7 +679,7 @@ paths:
         Endpoint público (sin credenciales) detrás del QR impreso en cada informe de verificación. El
         código va firmado criptográficamente - uno adulterado o inventado responde 404 con valid=false.
         La respuesta solo expone el tipo (KYC/KYB), el estado VIGENTE de la decisión y su fecha - jamás
-        la identidad del sujeto, sus documentos ni resultados AML. Los navegadores reciben una página
+        la identidad del sujeto, sus documentos ni resultados AML/CFT. Los navegadores reciben una página
         HTML brandeada; los clientes API reciben JSON. Rate limit por IP.
       parameters:
       - name: code
@@ -7425,9 +7425,9 @@ paths:
   /v1/aml/screenings:
     post:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: submitAmlScreening
-      summary: Enviar un screening AML
+      summary: Enviar un screening AML/CFT
       description: Screenea una persona o empresa (detectado desde el payload) contra listas de sanciones,
         PEP y prensa adversa vía el servicio de compliance. Es solo screening de listas — la verificación
         de identidad con documentos y prueba de vida vive en /v1/kyc y /v1/kyb. Todos los campos de identidad
@@ -7720,10 +7720,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: listAmlScreenings
-      summary: Listar screenings AML
-      description: Historial de screenings AML de la cuenta (persona, empresa y rescreens), del más nuevo
+      summary: Listar screenings AML/CFT
+      description: Historial de screenings AML/CFT de la cuenta (persona, empresa y rescreens), del más nuevo
         al más antiguo. Exige el rango from/to; admite paginación y filtro por riesgo.
       parameters:
       - name: from
@@ -7781,9 +7781,9 @@ paths:
   /v1/aml/screenings/{screeningID}:
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: getAmlScreening
-      summary: Obtener un screening AML
+      summary: Obtener un screening AML/CFT
       description: Detalle de un screening, incluyendo el resultado guardado. Un id de otra cuenta devuelve
         404.
       parameters:
@@ -7822,9 +7822,9 @@ paths:
   /v1/aml/screenings/{screeningID}/report:
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: getAmlScreeningReport
-      summary: Descargar el informe del screening AML (PDF)
+      summary: Descargar el informe del screening AML/CFT (PDF)
       description: Informe PDF brandeado del screening — portada ejecutiva con la decisión, indicadores
         de riesgo (sanciones, watchlists, PEP, prensa adversa...), coincidencias consolidadas, alias,
         glosario y una sección final de respaldo con las fuentes internacionales consultadas. Trilingüe
@@ -7871,9 +7871,9 @@ paths:
   /v1/aml/rescreen:
     post:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: rescreenAml
-      summary: Re-ejecutar un screening AML
+      summary: Re-ejecutar un screening AML/CFT
       description: Re-ejecuta el screening de la cuenta. Requiere un screening previo. Cobra `compliance_rescreen`
         si está configurado; se reembolsa si falla el upstream. Cada rescreen queda en el historial (`GET
         /v1/aml/screenings`). `idempotency_key` es obligatoria — repetir con la misma clave devuelve el
@@ -7936,9 +7936,9 @@ paths:
   /v1/aml/monitoring:
     patch:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: setAmlMonitoring
-      summary: Habilitar o deshabilitar el monitoreo AML
+      summary: Habilitar o deshabilitar el monitoreo AML/CFT
       description: Activa o desactiva el monitoreo continuo de compliance de la identidad verificada de
         la cuenta. Habilitar cobra la comisión `compliance_monitoring` si está configurada; deshabilitar
         es gratis. Requiere un screening previo. Cada cambio de estado queda guardado en el historial
@@ -8006,7 +8006,7 @@ paths:
   /v1/aml/catalogs:
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: getAmlCatalogs
       summary: Catálogos para formularios de compliance
       description: 'Devuelve todos los catálogos (listas de pares value/label) que el front debe usar
@@ -8131,7 +8131,7 @@ paths:
   /v1/aml/catalogs/cities:
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: getAmlCatalogCities
       summary: Catálogo de ciudades de un país
       description: 'Devuelve las ciudades de un país ISO 3166-1 alpha-2, agrupadas por subdivisión:
@@ -8211,7 +8211,7 @@ paths:
   /v1/aml/catalogs/postal-code:
     get:
       tags:
-      - AML screening
+      - AML/CFT screening
       operationId: getAmlCatalogPostalCode
       summary: Busca ciudad y estado por código postal
       description: 'Resuelve un código postal a su ciudad y estado desde un dataset
@@ -8359,7 +8359,7 @@ paths:
         Informe de compliance de tu propia verificación de onboarding, generado por la plataforma:
         identidad verificada, ciclo de vida, documentos + OCR, liveness (una entrada por sesión - el
         check de onboarding más cualquier recaptura de evidencia posterior, cada una con su propio
-        session_id y purpose) y una sección AML AGREGADA (estado de sanciones / PEP / medios adversos,
+        session_id y purpose) y una sección AML/CFT AGREGADA (estado de sanciones / PEP / medios adversos,
         jamás el detalle de coincidencias). Usa format=pdf (default) o format=json, y lang=en|es|zh.
         Gratis - la verificación ya se cobró al crearse. El PDF imprime un código público de
         verificación + QR consultable por cualquiera en /verify/reports/{code}.
@@ -8563,7 +8563,7 @@ paths:
       - Screening de wallets
       operationId: createAddressScreening
       summary: Screenear una dirección blockchain
-      description: 'Evalúa el riesgo AML de una dirección blockchain (entidad sancionada, exposición a
+      description: 'Evalúa el riesgo AML/CFT de una dirección blockchain (entidad sancionada, exposición a
         fondos ilícitos) contra inteligencia on-chain global y devuelve un nivel de riesgo normalizado
         (Low/Medium/High/Severe) con la evidencia completa. Agnóstico a la red: la dirección se evalúa
         sobre todas las chains soportadas a la vez; `chain` solo etiqueta tu registro. Cobra la comisión
@@ -10006,10 +10006,10 @@ paths:
         empresa): perfil verificado, ciclo de vida, documentos + OCR, liveness (una entrada por sesión -
         el check de onboarding más cualquier recaptura de evidencia posterior, cada una con su propio
         session_id y purpose; en un KYB, cada parte relacionada puede tener más de una sesión también) y
-        la sección AML COMPLETA con detalle de coincidencias - eres el responsable de los datos de tus
-        terceros. Si la submission resulta ser tu propio onboarding, la sección AML baja a la versión
+        la sección AML/CFT COMPLETA con detalle de coincidencias - eres el responsable de los datos de tus
+        terceros. Si la submission resulta ser tu propio onboarding, la sección AML/CFT baja a la versión
         agregada. Usa format=pdf (default) o format=json, y lang=en|es|zh. Gratis - es lectura de una
-        verificación ya cobrada. Si la submission aún no tiene screening AML enlazado, se dispara uno
+        verificación ya cobrada. Si la submission aún no tiene screening AML/CFT enlazado, se dispara uno
         on-demand (idempotente, sin fee); si no está disponible, el informe sale igual con el hueco
         declarado en el campo partial.
       parameters:
@@ -10272,10 +10272,10 @@ paths:
         empresa): perfil verificado, ciclo de vida, documentos + OCR, liveness (una entrada por sesión -
         el check de onboarding más cualquier recaptura de evidencia posterior, cada una con su propio
         session_id y purpose; en un KYB, cada parte relacionada puede tener más de una sesión también) y
-        la sección AML COMPLETA con detalle de coincidencias - eres el responsable de los datos de tus
-        terceros. Si la submission resulta ser tu propio onboarding, la sección AML baja a la versión
+        la sección AML/CFT COMPLETA con detalle de coincidencias - eres el responsable de los datos de tus
+        terceros. Si la submission resulta ser tu propio onboarding, la sección AML/CFT baja a la versión
         agregada. Usa format=pdf (default) o format=json, y lang=en|es|zh. Gratis - es lectura de una
-        verificación ya cobrada. Si la submission aún no tiene screening AML enlazado, se dispara uno
+        verificación ya cobrada. Si la submission aún no tiene screening AML/CFT enlazado, se dispara uno
         on-demand (idempotente, sin fee); si no está disponible, el informe sale igual con el hueco
         declarado en el campo partial.
       parameters:
@@ -27829,7 +27829,7 @@ webhooks:
   kyb_verification_status_changed:
     post:
       summary: Cambió el estado de una verificación KYB
-      description: Se emite en cada cambio del ciclo de una submission KYB, incluidas las señales AML/riesgo/reporte
+      description: Se emite en cada cambio del ciclo de una submission KYB, incluidas las señales AML/CFT/riesgo/reporte
         de la revisión. decision_source indica si la decisión la tomó el motor automático (auto) o un revisor
         humano (admin); está presente en las decisiones finales.
       requestBody:
@@ -27940,8 +27940,8 @@ webhooks:
           description: Responde cualquier 2xx para confirmar la entrega.
   aml_screening_updated:
     post:
-      summary: Novedades del AML screening
-      description: Se emite cuando el screening AML termina, un caso cambia, el riesgo cambia o una transacción
+      summary: Novedades del AML/CFT screening
+      description: Se emite cuando el screening AML/CFT termina, un caso cambia, el riesgo cambia o una transacción
         monitoreada es revisada.
       requestBody:
         content:
