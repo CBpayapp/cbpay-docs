@@ -14,6 +14,11 @@ series, the detail of every service with all its dimensions (country,
 currency, method, status, chain, merchant), what you spent on services and
 your balances valued in USD.
 
+CLP ledger balances and volumes are included in their native whole-peso unit.
+USD valuation uses the organization feed; when the feed has no valid CLP
+price, the asset remains visible in `unpriced_assets` and is excluded from
+USD totals. This is an explicit unpriced state, never a guessed FX rate.
+
 ```mermaid
 flowchart LR
     front["Your dashboard"] --> ep["GET /v1/analytics/summary"]
@@ -333,7 +338,7 @@ curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-
 - `assets` also includes the banking account mirrors (`BANK_USD`,
   `BANK_EUR`) as their own series in their own currency (2 decimals) —
   handy for a "Bank USD"/"Bank EUR" chip on the chart. They are **not**
-  part of the `total_usd` aggregate, which covers the ten ledger balances only.
+  part of the `total_usd` aggregate, which covers the eleven ledger balances only.
 - `total_usd` values BTC/GOLD/SILVER/PLATINUM at **each day's historical price**. When a
   day has no historical price yet, today's spot is used and that day is
   disclosed in `spot_priced_dates` (values are never invented).

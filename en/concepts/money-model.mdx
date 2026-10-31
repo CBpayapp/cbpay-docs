@@ -4,9 +4,9 @@ icon: "coins"
 description: "Per-currency virtual balances, FX conversion, holds and the immutable ledger"
 ---
 
-## Ten independent virtual balances
+## Eleven independent virtual balances
 
-Every account holds **ten virtual balances, one per asset**:
+Every account holds **eleven virtual balances, one per asset**:
 
 | Asset | What it is | Decimals | How it is funded |
 |---|---|---|---|
@@ -20,12 +20,13 @@ Every account holds **ten virtual balances, one per asset**:
 | `BOB` | Bolivian bolivianos — local hold | 2 | Fiat payins with local hold, transfers, adjustments |
 | `MXN` | Mexican pesos — local hold | 2 | Fiat payins with local hold, transfers, adjustments |
 | `ARS` | Argentine pesos — local hold | 2 | Fiat payins with local hold, transfers, adjustments |
+| `CLP` | Chilean pesos — local hold | 0 | Fiat payins with local hold, same-asset transfers, adjustments |
 
 They are fully independent: they never mix and are never converted
 automatically. (`BANK_USD` and `BANK_EUR` are separate banking mirror
 balances — see [Banking](/en/guides/banking).)
 
-`GET /v1/balances` always returns all ten (zeros if you have not used that
+`GET /v1/balances` always returns all eleven (zeros if you have not used that
 asset yet), as **decimal strings**:
 
 ```json
@@ -41,7 +42,8 @@ asset yet), as **decimal strings**:
     { "asset": "PLATINUM", "available": "0.000000", "held": "0.000000" },
     { "asset": "BOB", "available": "0.00", "held": "0.00" },
     { "asset": "MXN", "available": "0.00", "held": "0.00" },
-    { "asset": "ARS", "available": "0.00", "held": "0.00" }
+    { "asset": "ARS", "available": "0.00", "held": "0.00" },
+    { "asset": "CLP", "available": "0", "held": "0" }
   ]
 }
 ```
@@ -60,7 +62,7 @@ empty asset setting normalizes to USD.
 ## Choose which balance pays
 
 **Payouts** and **service fees** (KYC, wallet creation, banking) can be
-debited from any of your ten balances. The pricing pipeline does not
+debited from any of your eleven balances. The pricing pipeline does not
 change: the operation is quoted in USDT as always, and at the end the total
 translates to the chosen asset at the **effective settlement price** of the
 moment.
