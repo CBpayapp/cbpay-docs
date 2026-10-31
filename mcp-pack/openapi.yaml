@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.198"
+  version: "2.199"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5499,6 +5499,10 @@ paths:
                     country:
                       type: string
                       maxLength: 120
+                    document:
+                      type: string
+                      maxLength: 50
+                      description: Optional buyer document number for the card payin (plain text, MDD 11).
                 success_url:
                   type: string
                   description: Optional public https URL (`card` and `checkout` methods) the payer is
@@ -5542,6 +5546,10 @@ paths:
                     session; when absent, `customer.email` is used as the fallback. It scopes
                     stored-card discovery and charges within the calling account; the same email or
                     reference in another account cannot discover or use the credential.
+                service_type:
+                  type: string
+                  maxLength: 120
+                  description: Optional plain-text service type override for the card payin (MDD 90).
                 stored_card_id:
                   type: string
                   format: uuid

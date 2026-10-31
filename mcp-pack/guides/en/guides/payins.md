@@ -398,8 +398,8 @@ Share the `payment_url` (link, redirect or WebView). Flow details:
 
 - `customer` is an **optional** prefill of the billing details (`email`,
   `first_name`, `last_name`, `phone_number`, `address1`, `locality`,
-  `administrative_area`, `postal_code`, `country` — plain text, max 120 chars
-  per field); the
+  `administrative_area`, `postal_code`, `country`, and optional `document` (plain
+  text, max 50 chars for MDD 11) — max 120 chars per other field); the
   payer can complete/correct them on the page. `administrative_area` is
   the billing state/region: an ISO 3166-2 code (`US-CA`) or its suffix
   (`CA`).

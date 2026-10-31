@@ -369,12 +369,12 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 
 流程细节：
 
-- `customer` 是账单信息的**可选**预填（`email`、`first_name`、
-  `last_name`、`phone_number`、`address1`、`locality`、
-  `administrative_area`、`postal_code`、`country` —— 纯文本，每个字段
-  最多 120 个字符）；付款人可在页面上
-  补充或更正。`administrative_area` 是账单州/地区：ISO 3166-2 代码
-  （`US-CA`）或其后缀（`CA`）。
+- `customer` 是账单信息的**可选**预填（`email`、`first_name`、`last_name`、`phone_number`、`address1`、`locality`、
+  `administrative_area`、`postal_code`、`country`，以及可选的 `document` ——
+  纯文本，MDD 11 最多 50 个字符，其他字段最多 120 个字符）；付款人可在
+  页面上补充或更正。`administrative_area` 是账单州/地区：ISO 3166-2 代码
+  （`US-CA`）或其后缀（`CA`）。`service_type` 是 MDD 90 的可选顶层纯文本
+  覆盖值，最多 120 个字符。
 
 **账单地址 —— 按国家要求填写州/地区**：托管页面会收集**完整的账单
 地址**（姓名、邮箱、街道、国家、城市、州/地区和邮政编码）。当账单
