@@ -187,6 +187,7 @@
                 "pages": [
                   "en/security-2fa",
                   "en/webhooks",
+                  "en/guides/product-analytics",
                   "en/guides/integrations",
                   "en/realtime-events",
                   "en/service-status",
@@ -333,6 +334,7 @@
                 "pages": [
                   "es/security-2fa",
                   "es/webhooks",
+                  "es/guides/product-analytics",
                   "es/guides/integrations",
                   "es/realtime-events",
                   "es/service-status",
@@ -479,6 +481,7 @@
                 "pages": [
                   "zh/security-2fa",
                   "zh/webhooks",
+                  "zh/guides/product-analytics",
                   "zh/guides/integrations",
                   "zh/realtime-events",
                   "zh/service-status",
