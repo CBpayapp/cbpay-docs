@@ -456,7 +456,8 @@ Withdrawals above your organization's Travel Rule USD threshold require
 No — GOLD is a ledger-only balance without an on-chain rail. Convert it
 with [Swaps](https://docs.cbpayapp.com/en/guides/swaps) to a withdrawable asset first.
 #### Why was my withdrawal blocked with compliance_hold?
-The destination address failed the compliance screening. The operation is
-recorded as failed and your funds are refunded; contact your CBPay team if
-you believe it is a false positive.
+The withdrawal was held for review and was **not** processed: no funds moved
+and your `idempotency_key` was not consumed. The portal shows a copyable
+reference line with UTC time, error code and short request ID. Include it when
+you contact support; the exact compliance reason is not disclosed.
 Money-out limit errors are listed in the public error reference.

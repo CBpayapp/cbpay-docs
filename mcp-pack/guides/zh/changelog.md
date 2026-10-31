@@ -5,7 +5,11 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.198 · 2 个版本 - 2026年10月30日
+## v2.199 · 3 个版本 - 2026年10月30日
+### v2.199
+**变更**
+- 已将加密货币提现和 QR payout 指南与 `403 compliance_hold` 对齐：操作会被保留审核，不会被处理，不会移动资金，也不会消耗 `idempotency_key`。支持团队可使用包含 UTC 时间、错误代码和短请求引用的可复制参考；不会披露具体的合规原因。
+
 ### v2.198
 **变更**
 - 明确了 `403 compliance_hold`：操作被保留审核、未被处理且没有资金移动。

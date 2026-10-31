@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.198 · 2 versions - October 30, 2026
+## v2.199 · 3 versions - October 30, 2026
+### v2.199
+**Changed**
+- Aligned the crypto withdrawal and QR payout guides with `403 compliance_hold`: the operation is held for review, not processed, with no funds moved and no `idempotency_key` consumption. The copyable UTC time, error code and short request reference are provided for support; the exact compliance reason is not disclosed.
+
 ### v2.198
 **Changed**
 - Clarified `403 compliance_hold`: the operation was held for review, was not
