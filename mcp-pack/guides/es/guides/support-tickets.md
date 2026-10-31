@@ -30,7 +30,7 @@ Las 11 categorías son cerradas: con transacción `error`, `question`, `delay`, 
 
 ## 2. Abrir un ticket
 
-`kind` debe ser `payout`, `payin`, `payin_refund`, `transfer`, `crypto_withdrawal`, `crypto_deposit`, `swap`, `card_purchase`, `banking_operation`, `wallet_send` o `wallet_deposit`. Envía `resource_id`; los tickets `general` deben usar categoría `other` y omitirlo.
+`kind` debe ser `payout`, `payin`, `payin_refund`, `transfer`, `crypto_withdrawal`, `crypto_deposit`, `swap`, `card_purchase`, `banking_operation`, `wallet_send` o `wallet_deposit`. Envía `resource_id`; los tickets `general` deben usar categoría `general` y omitirlo.
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/support/tickets \
@@ -71,33 +71,6 @@ Sube un `PDF`, `PNG` o `JPG` como `file`, hasta 10 MiB. Se verifica la firma rea
 
 `POST /v1/support/tickets/{id}/close` es convergente: un ticket ya cerrado devuelve su detalle actual. Tras la resolución, califica una sola vez con `rating` de 1 a 5 y comentario opcional de hasta 1.000 caracteres. La segunda calificación devuelve `409 already_rated`.
 
-## Actualizaciones automáticas de soporte
-
-Cuando la organización activa las automatizaciones, la cuenta puede recibir
-estos mensajes escritos por el sistema en el hilo:
-
-| Cuándo | Qué recibes |
-|---|---|
-| Al crear el ticket | Acuse con el compromiso de primera respuesta y, cuando existe información verificada, un detalle de cuenta, comisiones, operación, banca, depósito, devolución o acceso |
-| 30 minutos sin primera respuesta | Aviso de avance |
-| A las 24 y 48 horas mientras se espera tu respuesta | Recordatorios; el de 48 horas informa la fecha prevista de cierre a las 72 horas |
-| Al resolver | Invitación única a la encuesta |
-| Al reasignar | El nombre de pila del nuevo agente |
-
-Los mensajes automáticos aparecen identificados como **Automatic message**.
-No mueven dinero, bloquean cuentas, exponen nombres de proveedores ni
-comparten notas internas. Los datos se leen en modo solo lectura y se omiten
-si el servidor no puede verificar suficiente información propia de la cuenta;
-el ticket sigue con un agente.
-
-Un agente de la organización puede desactivar la automatización de un ticket.
-Esto detiene los mensajes automáticos futuros sin borrar la conversación ni
-cambiar su estado. Una respuesta de la cuenta reabre `pending_customer`,
-`on_hold` o `resolved` como `open`; `closed` sigue siendo terminal. Si el
-ticket se cierra automáticamente después de 72 horas sin respuesta, usa el
-flujo normal de Soporte para abrir uno nuevo o responde antes de la fecha de
-cierre.
-
 ## Estados, SLA y errores
 
 | Estado | Significado | Acción |
@@ -118,7 +91,8 @@ El SLA predeterminado de primera respuesta es 4 h, 2 h, 1 h y 30 min; resolució
 | 403 | `account_required` | Usa una credencial de cuenta (no org/admin) con ownership del ticket. |
 | 404 | `not_found` | Confirma ownership de la transacción o ticket. |
 | 409 | `ticket_already_open`, `ticket_closed`, `already_rated` | Continúa el existente, abre uno nuevo o conserva la calificación. Re-subir bytes idénticos devuelve el adjunto existente con `duplicates_omitted` (HTTP 200, no es error). |
-| 503 | `storage_unavailable` | Lee el ticket con la misma clave de idempotencia; no crees otro ticket ni uses una clave nueva. |
+| 503 | `storage_unavailable` | Espera y sube una vez; no dupliques. |
+| 503 | `storage_unavailable` | Espera y vuelve a subirlo una vez; no dupliques el ticket. |
 
 Revisa el [catálogo de errores](https://docs.cbpayapp.com/es/errors) y los [eventos webhook](https://docs.cbpayapp.com/es/webhooks#eventos-de-tickets-de-soporte).
 

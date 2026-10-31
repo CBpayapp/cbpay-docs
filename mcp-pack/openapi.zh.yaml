@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.199"
+  version: "2.200"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -17964,6 +17964,72 @@ paths:
                   retrieved: 1
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/analytics-config:
+    get:
+      tags: [Analytics]
+      operationId: getMyAnalyticsConfig
+      summary: 此帐户的产品分析配置
+      description: '不透明分析身份（HMAC 绑定的 distinct 和 group ID）以及第一方 JS 跟踪器的功能标志。浏览器从不派生身份或读取 API 密钥：经 opt-in 同意后一切均来自此处。仅限帐户凭证。'
+      responses:
+        '200':
+          description: 帐户的分析配置。
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled, proxy_path, replay, consent_required, cb_env, distinct_id, group_id, project_token, posthog_host_hint]
+                properties:
+                  enabled: {type: boolean}
+                  proxy_path: {type: string}
+                  replay: {type: boolean}
+                  consent_required: {type: boolean}
+                  cb_env: {type: string, enum: [live, test]}
+                  distinct_id: {type: string}
+                  group_id: {type: string}
+                  project_token: {type: string}
+                  posthog_host_hint: {type: string}
+              example:
+                enabled: true
+                proxy_path: /a
+                replay: true
+                consent_required: true
+                cb_env: live
+                distinct_id: 9f2c4a1e8b3d4f6a9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2
+                group_id: 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1
+                project_token: phc_examplepublictoken000000000000000
+                posthog_host_hint: eu
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/public/analytics-config:
+    get:
+      tags: [Analytics]
+      operationId: getPublicAnalyticsConfig
+      summary: 匿名产品分析配置
+      description: '面向匿名页面（tracker、consent 链接、签名验证、嵌入组件）的公共分析引导。不签发身份：跟踪器使用临时 ID，会话回放保持关闭。无需身份验证。'
+      responses:
+        '200':
+          description: 匿名分析配置。
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled, proxy_path, replay, consent_required, cb_env, project_token, posthog_host_hint]
+                properties:
+                  enabled: {type: boolean}
+                  proxy_path: {type: string}
+                  replay: {type: boolean}
+                  consent_required: {type: boolean}
+                  cb_env: {type: string, enum: [live, test]}
+                  project_token: {type: string}
+                  posthog_host_hint: {type: string}
+              example:
+                enabled: true
+                proxy_path: /a
+                replay: false
+                consent_required: true
+                cb_env: live
+                project_token: phc_examplepublictoken000000000000000
+                posthog_host_hint: eu
   /v1/analytics/summary:
     get:
       tags:
