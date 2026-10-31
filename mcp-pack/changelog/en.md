@@ -9,6 +9,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ### v2.199
 **Added**
 - Added optional `customer.document` (plain text, max 50) and top-level `service_type` (plain text, max 120) to card payins for the shipped MDD 7372 acquiring profile.
+- Documented account-facing support automations: acknowledgement and verified data messages, progress reminders, 72-hour auto-close, resolution survey, reassignment notice and agent-controlled per-ticket opt-out.
 
 ## v2.198 · 2 versions - October 30, 2026
 ### Documentation terminology
