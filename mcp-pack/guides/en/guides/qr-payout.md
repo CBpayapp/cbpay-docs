@@ -177,7 +177,7 @@ it receives the original payout with `idempotency_hit: true`.
 | 400 | `invalid_qr_payload` | The QR is unreadable, corrupt or a dynamic QR (not supported) — nothing was created and your key was not consumed; ask the payer for a static QR |
 | 400 | `idempotency_key_required` | Reusable static QRs require an explicit `idempotency_key` on confirm |
 | 402 | `insufficient_funds` | Top up your balance and retry with the same key |
-| 403 | `compliance_hold` | The payout was held for review and was not processed: no funds moved and your `idempotency_key` was not consumed. The response includes a copyable UTC time, error code and short request reference; the exact compliance reason is not disclosed |
+| 403 | `compliance_hold` | The payout was held for review and was not processed: no funds moved and your `idempotency_key` was not consumed. The portal shows a copyable reference line with UTC time, error code and short request ID; the exact compliance reason is not disclosed |
 | 422 | payout `failed` + refund | The amount does not match a fixed-amount QR, or the rail rejected the payment — the debit is refunded automatically |
 | 503 | `channel_unavailable` | Rail temporarily unavailable; retry later with the same key |
 

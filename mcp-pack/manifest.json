@@ -1,5 +1,5 @@
 {
-  "content_sha256": "1b81ca5b1e1c42e27510088828ff09d2bebc984ede4386deedfb798c84c98cc2",
+  "content_sha256": "9581aa28d5a520802294dda4d063595edc8b1396f0cec5e74a3617b62ef2e088",
   "counts": {
     "chunks": 4785,
     "errors": 377,
@@ -27,16 +27,16 @@
       "sha256": "ed43294ce1cdc489f08a07fd2729403322bff56ab44e069a30bb51d0f56b0fb5"
     },
     "chunks/en.jsonl": {
-      "bytes": 1637023,
-      "sha256": "ff63be9f400c9aa79a8828fa51275e81c52a7feac36ff3edd44b2f93f0e75627"
+      "bytes": 1637031,
+      "sha256": "47487fa428bcd21021fdc03d69fd5cf3fbe2ba538e15b21d974fd09da6ee1033"
     },
     "chunks/es.jsonl": {
-      "bytes": 1661106,
-      "sha256": "42a704eb9374b60a63af7d1a27818d8ac90afd4f40606e0d4f18f87889966c81"
+      "bytes": 1661128,
+      "sha256": "e813e84e5b46ef7c1c950bb192e4be671ef843dc5dc8d0b9a8343f3b11846485"
     },
     "chunks/zh.jsonl": {
-      "bytes": 1555643,
-      "sha256": "9dcba917290aa606783a4d7c46fbee5e2506532e11832a1262dec919dd195c66"
+      "bytes": 1555670,
+      "sha256": "d240b82e2340520d60e669b3e49aea9c41069e1daeb28e72af8900468c3e4a18"
     },
     "errors.json": {
       "bytes": 216492,
@@ -203,8 +203,8 @@
       "sha256": "46cba243e7be4a52c2b54751f1b66e541ec2b6ee61228f205043d9ee488e3835"
     },
     "guides/en/guides/qr-payout.md": {
-      "bytes": 8221,
-      "sha256": "6bd4f3328f74c26495b69d9442e527c1842ca3af17152033976076907a76cff5"
+      "bytes": 8229,
+      "sha256": "2505eaacc5373762189071d36af53384639cfd70b8575ee37a20138837c8bc09"
     },
     "guides/en/guides/qr-pos.md": {
       "bytes": 15552,
@@ -491,8 +491,8 @@
       "sha256": "81ec6d379c3f8dfec7b287f0b5b343a1be643cd593b8c6b9a36e5c8d2cab4ce4"
     },
     "guides/es/guides/qr-payout.md": {
-      "bytes": 8373,
-      "sha256": "b7fd760214e9ff23a76d00c618c0fb5ffaef4f109812db4e9091ee41c5bb9e12"
+      "bytes": 8395,
+      "sha256": "5f6bfdfd7f2309c6f506fadbbda53df9e99d7494b02e99794247a4954d2e9906"
     },
     "guides/es/guides/qr-pos.md": {
       "bytes": 15862,
@@ -779,8 +779,8 @@
       "sha256": "c784f70386ac40fff7479ff5075a757a799d38c04e87fa751e34b8f2ba980a4f"
     },
     "guides/zh/guides/qr-payout.md": {
-      "bytes": 8069,
-      "sha256": "bc8ea54b7e98d152dd52b57dce9e719123e07bf01cee4f62162f4bb26c190438"
+      "bytes": 8096,
+      "sha256": "b4b850aea01c4246d2d2401d8f6814bf0af5698294aa6ae392b8a53cfebbd65b"
     },
     "guides/zh/guides/qr-pos.md": {
       "bytes": 14789,
@@ -1015,7 +1015,7 @@
       "sha256": "6a44dddf6c6bb164a4377f0cd569536a7c5714ed0b8350a1e94a9e6574bd3e20"
     }
   },
-  "generated_at": "2026-10-31T01:52:40Z",
+  "generated_at": "2026-10-31T02:12:19Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
