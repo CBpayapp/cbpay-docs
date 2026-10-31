@@ -359,11 +359,23 @@ curl https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/documents 
 }
 ```
 
-`outcome`：`MATCH`、`REVIEW`（人工审核）、`NO_MATCH`。每项还包含：
+`status` 在原生 OCR 任务排队时为 `pending`，处理时为 `running`，保存结果
+后为 `completed`，有限重试耗尽后为 `failed`。处于 `pending` 或 `running`
+时应视为尚未解决，并等待 `kyc_document_validated` /
+`kyb_document_validated` webhook。`failed` 会 fail-closed：保持 `REVIEW`，
+不会自动变成匹配。
+
+`outcome`：`MATCH`、`REVIEW`（人工审核）、`NO_MATCH`。每个完成的项目还包含
+`score`（字段平均置信度）和可读的 `summary`，以及：
 
 - `id`：校验标识符（合规团队使用它进行审核）。
 - `effective_outcome`：当前生效的结果 — 如果管理员已在管理面板中人工处理了该校验，则为人工结果；否则为 OCR 引擎结果。在提交详情（`GET /v1/kyc/submissions/{id}`）中，`documents_gate` 块汇总了所有文档是否已解决（`ok: true`），包含 `matched`/`total` 以及未解决项的 `unresolved` 列表。
 - `manual_review`：仅当管理员在管理面板中人工处理了该校验时出现。账户视图中仅包含 `outcome` 和 `reviewed_at`（不含内部备注和审核人）。
+
+账户可见响应还可能包含 `ocr`：逐字段值与置信度、检测到的文档类型、
+MRZ 校验、检测日期、质量和欺诈信号。这些是合规证据，不是自动批准。
+原生 sidecar 不可用时，文档保持 `REVIEW`；没有外部 fallback，也不会
+自动发出 `MATCH`。
 
 > **注**
 人工处理文档校验是管理面板（CBPay Admin）的专属操作，不通过公共 API 提供。合规团队应用后，你的账户会在 `effective_outcome` 和 `manual_review` 中看到更新后的结果，并收到相应的 `kyc_document_validated` / `kyb_document_validated` webhook。

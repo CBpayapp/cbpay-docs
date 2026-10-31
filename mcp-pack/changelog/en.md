@@ -5,13 +5,12 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.200 · 2 versions - October 31, 2026
+## v2.199 · 1 version - October 31, 2026
 ### v2.199
 **Added**
 - Added optional `customer.document` (plain text, max 50) and top-level `service_type` (plain text, max 120) to card payins for the shipped MDD 7372 acquiring profile.
-
-### v2.200
-**Added**`n- Added privacy-first Product analytics guidance: opt-in consent, allowlisted event bands, HMAC identities, portal-only masked replay, first-party `/a` proxy and configuration endpoints.`n
+- Documented account-facing support automations: acknowledgement and verified data messages, progress reminders, 72-hour auto-close, resolution survey, reassignment notice and agent-controlled per-ticket opt-out.
+- Documented native OCR document states (`pending`/`running`/`completed`/`failed`), field-level evidence, score and summary fields, and fail-closed behavior when the self-hosted sidecar is unavailable.
 
 ## v2.198 · 2 versions - October 30, 2026
 ### Documentation terminology
