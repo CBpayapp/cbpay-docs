@@ -5,12 +5,33 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.199 · 1 version - 2026年10月31日
+## v2.204 · 1 个版本 - 2026年11月1日
+### v2.204
+**修复**
+- 修正公开工资发放和余额费用文档，统一使用资金库直接入账，不使用客户资金账户。
+### v2.203
+**变更**
+- 修正工资发放和余额费用文档，统一使用资金库直接入账、`payroll_credit:`/`org_expense_credit:` 参考号、账户事件，并明确不使用客户资金账户。
+- 无明确补件清单时验证详情的 `pending_documents` 为空，不再重复索要已传文件；看 `documents_gate` 与审核意见。API 无变化。
+### v2.202
+**变更**
+- 补件上传的文件现在即时进入验证单，补齐后自动回到待审。API 无变化。
+### v2.201
+**变更**
+- 对验证单发起补件现在会将邀请链接延长 90 天（刚过期的也会恢复），申请人总能完成补件。API 无变化。
+## v2.200 · 2 versions - 2026年10月31日
+- **卡收单垂直维度**：卡收款费用与公开 payin 响应在适用时返回 `highrisk` 或 `servicios7372`；发卡产品仍不使用该维度。
 ### v2.199
 **新增**
 - 为已发布的 MDD 7372 收单 profile，银行卡收款新增可选 `customer.document`（纯文本，最多 50 个字符）和顶层 `service_type`（纯文本，最多 120 个字符）。
 - 记录账户可见的支持自动化：确认和已验证数据消息、进度提醒、72 小时自动关闭、解决评价、重新分配通知，以及由专员控制的单工单退出自动化。
 - 已记录原生 OCR 文档状态（`pending`/`running`/`completed`/`failed`）、逐字段证据、`score` 与 `summary` 字段，以及自托管 sidecar 不可用时的 fail-closed 行为。
+
+### v2.200
+**新增**
+- 新增经过身份验证的工资单门户指南：按期间列表、查看详情并下载品牌 PDF。
+- 在关联 API 参考中补充了工资发放和周期性组织支出流程。
+- 新增隐私优先的产品分析指南：opt-in 同意、allowlist 区间事件、HMAC 身份、仅门户的遮盖 replay、first-party `/a` proxy 和配置端点。`n
 
 ## v2.198 · 2 个版本 - 2026年10月30日
 ### Documentation terminology
@@ -3783,3 +3804,5 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
   payin、内部转账、加密（链上入金与提现）、KYC、签名 webhook 及
   完整的错误目录。
 - 基于 OpenAPI 3.1 生成的交互式 API 参考。
+
+\n

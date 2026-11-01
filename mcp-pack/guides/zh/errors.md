@@ -678,3 +678,52 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `ticket_already_open` | 继续响应中返回的现有工单。 |
 | 409 | `ticket_closed` / `already_rated` | 创建新工单或保留原评价。 |
 | 503 | `storage_unavailable` | 等待后上传一次，不创建重复工单。 |
+
+## 工资单错误
+
+以下代码用于经过身份验证的工资单门户。
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_period` | 工资期间不是 YYYY-MM 格式 | 发送月份，例如 2026-10。 |
+| 500 | `receipt_render_failed` | 无法生成工资单 PDF | 重试读取；如果仍然失败，请向支持团队提供请求 ID。 |
+
+## 工资发放和周期性支出错误
+
+以下代码用于组织面板中的工资发放和周期性支出系列操作。
+
+| HTTP | `error` | 原因 | 解决方案 |
+|---:|---|---|---|
+| 400 | `invalid_country` | 国家/地区不是 ISO-3166 alpha-2 格式 | 发送两位 ISO-3166 国家/地区代码。 |
+| 400 | `invalid_doc_id` | 证件与所选国家/地区不匹配 | 更正证件后重新提交。 |
+| 400 | `invalid_account` | 关联账户或资金账户不是该组织的活跃账户 | 使用该组织的活跃非内部账户。 |
+| 400 | `invalid_method` | 付款方式不在支持的目录中 | 使用文档列出的付款方式。 |
+| 409 | `duplicate_employee` | 其他员工已使用相同的电子邮箱或关联账户 | 读取现有员工或使用不同数据。 |
+| 400 | `invalid_doc_type` | 文档类型不在目录中 | 使用文档类型接口中的值。 |
+| 400 | `invalid_expires_at` | 文件到期时间不是 RFC3339 格式 | 发送 RFC3339 时间戳或省略该字段。 |
+| 422 | `file_limit_reached` | 员工已达到 20 个文件的上限 | 管理现有文件后再添加。 |
+| 400 | `invalid_period` | 工资期间不是 YYYY-MM 格式 | 发送一个日历月份，例如 2026-10。 |
+| 409 | `duplicate_run` | 该组织和期间已有活动批次 | 读取并使用现有批次。 |
+| 422 | `empty_run` | 批次没有有效项目 | 批准前至少创建一个有效项目。 |
+| 400 | `invalid_earnings` | 应发项缺失或无效 | 至少发送一条带标签的正数应发项。 |
+| 400 | `invalid_deductions` | 扣除项无效 | 发送带标签的正数扣除项。 |
+| 422 | `invalid_net` | 净额不是正数 | 保持应发项大于扣除项。 |
+| 400 | `invalid_currency` | 货币为空 | 发送结算货币。 |
+| 400 | `invalid_destination` | 所选方式的目的地信息不完整 | 提供目的地所需字段。 |
+| 422 | `invalid_item_amount` | 工资项目金额无效 | 更正正数金额及其精度。 |
+| 422 | `invalid_item_destination` | 工资项目目的地无效 | 更正目的地或取消项目。 |
+| 422 | `invalid_item_method` | 工资项目付款方式无效 | 使用支持的付款方式。 |
+| 422 | `not_a_series` | 该支出不是月度周期性父支出 | 使用拥有该系列的父支出。 |
+| 400 | `invalid_payee` | 付款目的地信息不完整 | 提供所选方式所需字段。 |
+| 400 | `invalid_asset` | 不支持该加密资产 | 使用 USDT 或 USDC。 |
+| 422 | `hot_wallet_required` | 未为所选链和资产配置热钱包 | 先配置组织钱包。 |
+| 400 | `invalid_recurring_day` | 周期日不在 1–31 范围内 | 发送 1 到 31 之间的日期。 |
+| 503 | `core_unavailable` | 付款通道不可用 | 检查操作状态并稍后重试。 |
+| 503 | `core_bad_response` | 付款通道返回无法读取的响应 | 重试前先读取操作状态。 |
+| 500 | `treasury_credit_error` | 资金库直接入账失败 | 读取资源状态并重试同一笔幂等操作；不要创建第二笔付款。 |
+| 409 | `payment_in_flight` | 工资付款正在发放中 | 等待对账；不要重复操作。 |
+| 409 | `invalid_state` | 资源当前状态不接受此操作 | 读取当前状态并遵循允许的状态转换。 |
+| 400 | `reason_required` | 需要填写原因 | 在请求正文中发送明确原因。 |
+| 500 | `receipt_render_failed` | 无法生成工资单 PDF | 重试读取；若仍失败，请提供请求 ID。 |
+| 503 | `valuation_unavailable` | 无法将金额估值为美元 | 稍后重试；批准过程保持失败关闭。 |
+| 500 | `store_error` | 平台无法读取或保存记录 | 确认资源状态后重试。 |

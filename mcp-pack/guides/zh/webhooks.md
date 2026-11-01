@@ -109,6 +109,8 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `payin_settlement_scheduled` | 一笔银行卡收款已确认（`credited`，已发出 `payin_credited`），其余额被安排到未来的 `settle_at`（机构配置的结算延迟）。在付款确认时仅发出一次；余额在到期时可用 |
 | `payout_status_changed` | 一笔付款（payout）状态发生变化 |
 | `transfer_received` | 账户收到一笔内部转账 |
+| `payroll_credited` | 组织向该账户余额发放了一笔工资（财务直接入账）|
+| `org_expense_credited` | 组织向该账户余额支付了一笔运营费用（财务直接入账）|
 | `crypto_deposit_credited` | 一笔链上充值已确认并入账 |
 | `crypto_deposit_held` | 一笔入账充值因发送方风险被暂扣（[筛查](https://docs.cbpayapp.com/zh/guides/screenings)） |
 | `crypto_deposit_alert` | 一笔充值已入账，但发送方显示高风险（仅提示） |

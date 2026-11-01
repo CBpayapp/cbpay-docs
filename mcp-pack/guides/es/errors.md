@@ -700,3 +700,52 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 409 | `ticket_already_open` | Continúa el ticket existente de la respuesta. |
 | 409 | `ticket_closed` / `already_rated` | Abre otro ticket o conserva la calificación. |
 | 503 | `storage_unavailable` | Espera y sube una vez; no dupliques. |
+
+## Errores de liquidaciones
+
+Estos códigos se usan en el portal autenticado de liquidaciones.
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_period` | El período de nómina no tiene formato YYYY-MM | Envía un mes calendario, como 2026-10. |
+| 500 | `receipt_render_failed` | No se pudo generar el PDF de la liquidación | Reintenta la lectura; si persiste, entrega el id de solicitud a soporte. |
+
+## Errores de nómina y gastos recurrentes
+
+Estos códigos se usan en las operaciones de nómina y en la gestión de series recurrentes de gastos del panel de organización.
+
+| HTTP | `error` | Causa | Solución |
+|---:|---|---|---|
+| 400 | `invalid_country` | El país no tiene formato ISO-3166 alpha-2 | Envía un código de país ISO-3166 de dos letras. |
+| 400 | `invalid_doc_id` | El documento de identidad no es válido para el país seleccionado | Corrige el documento y vuelve a enviarlo. |
+| 400 | `invalid_account` | La cuenta vinculada o fondeadora no está activa en esta organización | Usa una cuenta activa no interna de la organización. |
+| 400 | `invalid_method` | El método de pago no pertenece al catálogo soportado | Usa uno de los métodos documentados. |
+| 409 | `duplicate_employee` | Otro empleado usa el mismo correo o cuenta vinculada | Lee el empleado existente o usa datos diferentes. |
+| 400 | `invalid_doc_type` | El tipo de documento no pertenece al catálogo | Usa un valor del endpoint de tipos de documento. |
+| 400 | `invalid_expires_at` | El vencimiento del archivo no tiene formato RFC3339 | Envía una marca RFC3339 o elimina el campo. |
+| 422 | `file_limit_reached` | El empleado ya tiene el máximo de 20 archivos | Administra los archivos existentes antes de agregar otro. |
+| 400 | `invalid_period` | El período de nómina no tiene formato YYYY-MM | Envía un mes calendario, como 2026-10. |
+| 409 | `duplicate_run` | Ya existe un lote activo para esta organización y período | Lee y usa el lote existente. |
+| 422 | `empty_run` | El lote no tiene ítems vigentes | Crea al menos un ítem vigente antes de aprobar. |
+| 400 | `invalid_earnings` | Las líneas de haberes faltan o son inválidas | Envía al menos una línea de haber positiva y con etiqueta. |
+| 400 | `invalid_deductions` | Una línea de descuento es inválida | Envía líneas de descuento positivas y con etiqueta. |
+| 422 | `invalid_net` | El monto neto no es positivo | Mantén los haberes por encima de los descuentos. |
+| 400 | `invalid_currency` | La moneda está vacía | Envía la moneda de liquidación. |
+| 400 | `invalid_destination` | El destino está incompleto para el método seleccionado | Entrega los campos requeridos del destino. |
+| 422 | `invalid_item_amount` | El monto del ítem de nómina es inválido | Corrige el monto positivo y su precisión. |
+| 422 | `invalid_item_destination` | El destino del ítem de nómina es inválido | Corrige el destino o cancela el ítem. |
+| 422 | `invalid_item_method` | El método del ítem de nómina es inválido | Usa un método de pago soportado. |
+| 422 | `not_a_series` | El gasto no es un padre recurrente mensual | Usa el gasto padre dueño de la serie. |
+| 400 | `invalid_payee` | El destino de pago está incompleto | Entrega los campos requeridos del método seleccionado. |
+| 400 | `invalid_asset` | El activo cripto no está soportado | Usa USDT o USDC. |
+| 422 | `hot_wallet_required` | No hay una hot wallet configurada para la cadena y activo seleccionados | Configura primero la wallet de la organización. |
+| 400 | `invalid_recurring_day` | El día recurrente está fuera de 1–31 | Envía un día entre 1 y 31. |
+| 503 | `core_unavailable` | El riel de pago no está disponible | Revisa el estado de la operación y reintenta más tarde. |
+| 503 | `core_bad_response` | El riel de pago devolvió una respuesta ilegible | Lee el estado de la operación antes de reintentar. |
+| 500 | `treasury_credit_error` | Falló el crédito directo de tesorería | Lee el estado del recurso y reintenta la misma operación idempotente; no crees un segundo pago. |
+| 409 | `payment_in_flight` | Hay un pago de nómina en proceso de dispersión | Espera la reconciliación; no lo dupliques. |
+| 409 | `invalid_state` | El recurso no acepta esta operación en su estado actual | Lee el estado actual y sigue la transición permitida. |
+| 400 | `reason_required` | Se requiere un motivo | Envía un motivo significativo en el cuerpo. |
+| 500 | `receipt_render_failed` | No se pudo generar el PDF de la liquidación | Reintenta la lectura y entrega el id de solicitud si persiste. |
+| 503 | `valuation_unavailable` | No se pudo valorizar el monto en USD | Reintenta más tarde; la aprobación permanece fail-closed. |
+| 500 | `store_error` | La plataforma no pudo leer o guardar el registro | Reintenta después de confirmar el estado del recurso. |

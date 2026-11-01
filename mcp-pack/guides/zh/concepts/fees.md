@@ -239,3 +239,6 @@ matching configuration.
 不会。仅在操作创建并被接受时收费；失败的验证绝不会产生费用。
 #### 我如何知道应用了哪项费用？
 响应和 webhook 会公开费用明细，账单也会按操作逐项列出。
+## 卡收款垂直维度与费用
+
+卡收款的 `payin_card` 可按 `highrisk` 或 `servicios7372` 配置。CBPay 创建 payin 时记录垂直维度，非空时响应返回 `vertical`；未配置时依次回退到通用 `payin_card` 和 `payin`。`card_purchase_virtual` 与 `card_purchase_physical` 属于发卡业务，不使用该维度。\n

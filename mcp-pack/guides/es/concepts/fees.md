@@ -260,3 +260,6 @@ En el panel admin, en comisiones: porcentaje más fijo por servicio, con las dim
 No. Las comisiones solo se cobran cuando la operación se crea y acepta; las validaciones fallidas jamás crean un cobro.
 #### ¿Cómo sé qué comisión se aplicó?
 Las respuestas y webhooks exponen el desglose de comisiones, y las cartolas las itemizan por operación.
+## Vertical de tarjeta y comisión del payin
+
+Los cobros con tarjeta pueden usar `payin_card` por `highrisk` o `servicios7372`. CBPay estampa la vertical en el payin y la respuesta incluye `vertical` cuando no está vacía. La resolución cae primero a `payin_card` genérico y luego a `payin`. `card_purchase_virtual` y `card_purchase_physical` son issuing y no usan esta dimensión.\n
