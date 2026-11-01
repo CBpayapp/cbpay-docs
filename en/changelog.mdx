@@ -8,7 +8,8 @@ description: "History of API and documentation changes"
 ### v2.205
 **Changed**
 - OTP challenge requests now reuse the same live member/action/channel/destination challenge and return `200` without sending another code; fresh sends are limited to 10 per member per hour (`429 too_many_attempts`, `Retry-After: 3600`). Edge logging now records the real client IP.
-
+**Fixed**
+- Resubmitting a verification after changes were requested now always resumes the same case (previously a reopened invite could spawn an empty duplicate). No API changes.
 ### v2.204
 **Fixed**
 - Corrected the public payroll and balance-expense documentation to use direct treasury credits with no customer funding account.
