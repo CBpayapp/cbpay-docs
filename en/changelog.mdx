@@ -4,6 +4,9 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+### v2.203
+**Fixed**
+- Verification detail without an explicit required-documents list now reports an empty `pending_documents` instead of re-asking for attached documents; follow `documents_gate` and the reviewer's comments. No API changes.
 ### v2.202
 **Fixed**
 - Remediation uploads now land on the verification immediately and reopen review when the requested set is complete. No API changes.
