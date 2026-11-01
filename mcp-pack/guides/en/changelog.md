@@ -5,12 +5,33 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.199 · 1 version - October 31, 2026
+## v2.204 · 1 version - November 1, 2026
+### v2.204
+**Fixed**
+- Corrected the public payroll and balance-expense documentation to use direct treasury credits with no customer funding account.
+### v2.203
+**Fixed**
+- Corrected payroll and balance-expense documentation to use direct treasury credits, `payroll_credit:`/`org_expense_credit:` references, account events, and no customer funding account.
+- Verification detail without an explicit required-documents list now reports an empty `pending_documents` instead of re-asking for attached documents; follow `documents_gate` and the reviewer's comments. No API changes.
+### v2.202
+**Fixed**
+- Remediation uploads now land on the verification immediately and reopen review when the requested set is complete. No API changes.
+### v2.201
+**Fixed**
+- Requesting changes on a verification now extends the invite link by 90 days (reviving it if it just expired), so applicants can always complete remediation. No API changes.
+## v2.200 · 2 versions - October 31, 2026
+- **Card acquiring verticals**: card payin fees and the public payin response now carry the applicable `highrisk` or `servicios7372` dimension when present; issuing card products remain unscoped.
 ### v2.199
 **Added**
 - Added optional `customer.document` (plain text, max 50) and top-level `service_type` (plain text, max 120) to card payins for the shipped MDD 7372 acquiring profile.
 - Documented account-facing support automations: acknowledgement and verified data messages, progress reminders, 72-hour auto-close, resolution survey, reassignment notice and agent-controlled per-ticket opt-out.
 - Documented native OCR document states (`pending`/`running`/`completed`/`failed`), field-level evidence, score and summary fields, and fail-closed behavior when the self-hosted sidecar is unavailable.
+
+### v2.200
+**Added**
+- Added the authenticated pay-slip portal guide: list by period, open a detail, and download the branded PDF.
+- Documented payroll and recurring organization expense flows in the linked API reference.
+- Added privacy-first Product analytics guidance: opt-in consent, allowlisted event bands, HMAC identities, portal-only masked replay, first-party `/a` proxy and configuration endpoints.`n
 
 ## v2.198 · 2 versions - October 30, 2026
 ### Documentation terminology
@@ -4313,3 +4334,5 @@ Corridor enablement is gradual; the catalog (`GET /v1/payouts/methods`,
   crypto (on-chain funding and withdrawals), KYC, signed webhooks and the
   full error catalog.
 - Interactive API Reference generated from OpenAPI 3.1.
+
+\n

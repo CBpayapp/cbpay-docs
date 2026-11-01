@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.199"
+  version: "2.204"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -24523,6 +24523,125 @@ paths:
               application/json:
                 example: {error: not_found, message: 支持工单 not found}
 
+  /v1/me/pay-slips:
+    get:
+      tags: [工资单]
+      operationId: listMyPaySlips
+      summary: 'List your pay slips'
+      description: 'Lists only the authenticated account''s paid or voided pay slips, with optional period and pagination filters.'
+      parameters:
+        - name: period
+          in: query
+          description: 'Payroll period in YYYY-MM format.'
+          schema: {type: string, pattern: '^\d{4}-(0[1-9]|1[0-2])$'}
+        - name: page
+          in: query
+          description: '页码。'
+          schema: {type: integer, default: 1}
+        - name: page_size
+          in: query
+          description: '分页大小，最大 200。'
+          schema: {type: integer, default: 50, maximum: 200}
+      responses:
+        '200':
+          description: 'Authenticated account pay slips.'
+          content:
+            application/json:
+              examples:
+                pay_slips:
+                  summary: 'Pay slip list'
+                  value: {pay_slips: [], page: 1, page_size: 50, total: 0}
+        '400':
+          description: 'invalid_period.'
+          content:
+            application/json:
+              examples:
+                invalid_period:
+                  summary: 'Invalid period'
+                  value: {error: invalid_period, message: period 必须是 YYYY-MM 格式}
+        '500':
+          description: 'store_error.'
+          content:
+            application/json:
+              examples:
+                store_error:
+                  summary: '存储失败'
+                  value: {error: store_error, message: 无法列出工资单}
+  /v1/me/pay-slips/{slipID}:
+    get:
+      tags: [工资单]
+      operationId: getMyPaySlip
+      summary: 'Get a pay slip'
+      description: 'Returns one paid or voided pay slip owned by the authenticated account; another account''s slip is not disclosed.'
+      parameters:
+        - name: slipID
+          in: path
+          required: true
+          description: 'Pay slip id.'
+          schema: {type: string}
+      responses:
+        '200':
+          description: 'Pay slip detail.'
+          content:
+            application/json:
+              examples:
+                pay_slip:
+                  summary: 'Pay slip'
+                  value: {id: slip_01, period: '2026-10', employer_name: Example Company, employee_name: Ana Pérez, employee_country: CL, employee_doc: id 12.345.678-5, earnings: [{label: Base salary, amount: '1500.00'}], deductions: [], gross_amount: '1500.00', deductions_total: '0.00', net_amount: '1500.00', currency: USD, amount_usd: '1500.00', method: cbpay_balance, destination_masked: CBPay ••0001, paid_at: '2026-10-31T12:00:00Z', core_ref: transfer:tr_01, created_at: '2026-10-31T12:00:01Z'}
+        '404':
+          description: 'not_found.'
+          content:
+            application/json:
+              examples:
+                not_found:
+                  summary: 'Pay slip not found'
+                  value: {error: not_found, message: 未找到工资单}
+        '500':
+          description: 'store_error.'
+          content:
+            application/json:
+              examples:
+                store_error:
+                  summary: '存储失败'
+                  value: {error: store_error, message: 无法获取工资单}
+  /v1/me/pay-slips/{slipID}/pdf:
+    get:
+      tags: [工资单]
+      operationId: getMyPaySlipPDF
+      summary: 'Download a pay slip PDF'
+      description: 'Downloads the branded PDF for a pay slip owned by the authenticated account.'
+      parameters:
+        - name: slipID
+          in: path
+          required: true
+          description: 'Pay slip id.'
+          schema: {type: string}
+      responses:
+        '200':
+          description: '工资单 PDF。'
+          content:
+            application/pdf:
+              schema: {type: string, format: binary}
+              examples:
+                pdf:
+                  summary: '工资单 PDF'
+                  value: PDF binary bytes
+        '404':
+          description: 'not_found.'
+          content:
+            application/json:
+              examples:
+                not_found:
+                  summary: 'Pay slip not found'
+                  value: {error: not_found, message: 未找到工资单}
+        '500':
+          description: 'receipt_render_failed.'
+          content:
+            application/json:
+              examples:
+                receipt_render_failed:
+                  summary: 'PDF 生成失败'
+                  value: {error: receipt_render_failed, message: 无法生成工资单 PDF}
 components:
   securitySchemes:
     bearerAuth:
@@ -25552,6 +25671,13 @@ components:
           type: string
           description: >-
             可选的 ISO-4217 币种维度。仅 payin_card 支持 —— 同一账户可按处理币种设置不同的 %（例如 BOB 与 USD）。留空适用于任何币种。
+        vertical:
+          type: string
+          enum:
+          - highrisk
+          - servicios7372
+          description: >-
+            在卡支付收款上加盖的卡收单垂直类别。legacy 或非卡 payin 会省略。费率行用空值表示通用回退；此维度从不适用于发卡消费。
         asset:
           type: string
           example: USDT
@@ -25757,6 +25883,13 @@ components:
           type: string
         method:
           type: string
+        vertical:
+          type: string
+          enum:
+          - highrisk
+          - servicios7372
+          description: >-
+            创建 payin 时根据账户画像加盖的卡收单垂直类别。legacy payin 和非卡收款会省略。
         local_amount:
           type: string
           description: >-
@@ -26801,6 +26934,74 @@ webhooks:
       responses:
         '200':
           description: 返回任意 2xx 以确认投递。
+  payroll_credited:
+    post:
+      summary: 工资已入账
+      description: '组织向该账户余额发放了一笔工资(工资批次明细的财务直接入账)。
+
+
+        每次投递均包含 `X-Webhook-Event`、`X-Webhook-Event-ID`、`X-Webhook-Delivery-ID`、`X-Webhook-Timestamp` 和
+        `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`。请返回 2xx;最多重试 5 次,间隔递增。'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entry_id: *id017
+                run_id: *id017
+                period: *id017
+                pay_item_id: *id017
+                employee_id: *id017
+                employee_name: *id017
+                to_account_id: *id017
+                asset: *id017
+                amount: *id017
+            example:
+              entry_id: 1a2b3c4d-5e6f-7a80-9b0c-1d2e3f4a5b6c
+              run_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
+              period: '2026-11'
+              pay_item_id: 3b8c0d2e-5f6a-7b81-9c0d-2e3f4a5b6c7d
+              employee_id: 4c9d1e3f-6a7b-8c92-0d1e-3f4a5b6c7d8e
+              employee_name: Jane Doe
+              to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+              asset: USDT
+              amount: '1500.000000'
+      responses:
+        '200':
+          description: 请返回任意 2xx 以确认投递。
+  org_expense_credited:
+    post:
+      summary: 组织费用已入账
+      description: '组织向该账户余额支付了一笔运营费用(财务直接入账)。
+
+
+        每次投递均包含 `X-Webhook-Event`、`X-Webhook-Event-ID`、`X-Webhook-Delivery-ID`、`X-Webhook-Timestamp` 和
+        `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`。请返回 2xx;最多重试 5 次,间隔递增。'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entry_id: *id017
+                expense_id: *id017
+                category: *id017
+                vendor_name: *id017
+                to_account_id: *id017
+                asset: *id017
+                amount: *id017
+            example:
+              entry_id: 1a2b3c4d-5e6f-7a80-9b0c-1d2e3f4a5b6c
+              expense_id: 6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c
+              category: operating_expenses
+              vendor_name: Acme Supplies
+              to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+              asset: USDT
+              amount: '250.000000'
+      responses:
+        '200':
+          description: 请返回任意 2xx 以确认投递。
   txn_review_status_changed:
     post:
       summary: 交易审核状态变更

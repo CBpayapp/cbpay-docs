@@ -1,5 +1,5 @@
 {
-  "count": 377,
+  "count": 401,
   "errors": [
     {
       "category": {
@@ -5235,6 +5235,342 @@
         "en": "Open a new ticket or keep the existing rating.",
         "es": "Abre otro ticket o conserva la calificación.",
         "zh": "创建新工单或保留原评价。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "receipt_render_failed",
+      "http": 500,
+      "meaning": {
+        "en": "The pay-slip PDF could not be rendered — Fix: Retry the read; if it persists, provide the request id to support.",
+        "es": "No se pudo generar el PDF de la liquidación — Fix: Reintenta la lectura; si persiste, entrega el id de solicitud a soporte.",
+        "zh": "无法生成工资单 PDF — Fix: 重试读取；如果仍然失败，请向支持团队提供请求 ID。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_method",
+      "http": 400,
+      "meaning": {
+        "en": "Payment method is outside the supported catalog — Fix: Use one of the documented payment methods.",
+        "es": "El método de pago no pertenece al catálogo soportado — Fix: Usa uno de los métodos documentados.",
+        "zh": "付款方式不在支持的目录中 — Fix: 使用文档列出的付款方式。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "duplicate_employee",
+      "http": 409,
+      "meaning": {
+        "en": "Another employee uses the same email or linked account — Fix: Read the existing employee or use different data.",
+        "es": "Otro empleado usa el mismo correo o cuenta vinculada — Fix: Lee el empleado existente o usa datos diferentes.",
+        "zh": "其他员工已使用相同的电子邮箱或关联账户 — Fix: 读取现有员工或使用不同数据。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_doc_type",
+      "http": 400,
+      "meaning": {
+        "en": "Document type is outside the catalog — Fix: Use a value from the document-types endpoint.",
+        "es": "El tipo de documento no pertenece al catálogo — Fix: Usa un valor del endpoint de tipos de documento.",
+        "zh": "文档类型不在目录中 — Fix: 使用文档类型接口中的值。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_expires_at",
+      "http": 400,
+      "meaning": {
+        "en": "File expiration is not RFC3339 — Fix: Send an RFC3339 timestamp or omit it.",
+        "es": "El vencimiento del archivo no tiene formato RFC3339 — Fix: Envía una marca RFC3339 o elimina el campo.",
+        "zh": "文件到期时间不是 RFC3339 格式 — Fix: 发送 RFC3339 时间戳或省略该字段。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "duplicate_run",
+      "http": 409,
+      "meaning": {
+        "en": "A live run already exists for this organization and period — Fix: Read and use the existing run.",
+        "es": "Ya existe un lote activo para esta organización y período — Fix: Lee y usa el lote existente.",
+        "zh": "该组织和期间已有活动批次 — Fix: 读取并使用现有批次。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "empty_run",
+      "http": 422,
+      "meaning": {
+        "en": "The run has no live items — Fix: Build at least one live item before approval.",
+        "es": "El lote no tiene ítems vigentes — Fix: Crea al menos un ítem vigente antes de aprobar.",
+        "zh": "批次没有有效项目 — Fix: 批准前至少创建一个有效项目。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_earnings",
+      "http": 400,
+      "meaning": {
+        "en": "Earnings lines are missing or invalid — Fix: Send at least one positive labeled earning line.",
+        "es": "Las líneas de haberes faltan o son inválidas — Fix: Envía al menos una línea de haber positiva y con etiqueta.",
+        "zh": "应发项缺失或无效 — Fix: 至少发送一条带标签的正数应发项。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_deductions",
+      "http": 400,
+      "meaning": {
+        "en": "A deduction line is invalid — Fix: Send positive labeled deduction lines.",
+        "es": "Una línea de descuento es inválida — Fix: Envía líneas de descuento positivas y con etiqueta.",
+        "zh": "扣除项无效 — Fix: 发送带标签的正数扣除项。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_net",
+      "http": 422,
+      "meaning": {
+        "en": "Net amount is not positive — Fix: Keep earnings greater than deductions.",
+        "es": "El monto neto no es positivo — Fix: Mantén los haberes por encima de los descuentos.",
+        "zh": "净额不是正数 — Fix: 保持应发项大于扣除项。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_currency",
+      "http": 400,
+      "meaning": {
+        "en": "Currency is empty — Fix: Send the settlement currency.",
+        "es": "La moneda está vacía — Fix: Envía la moneda de liquidación.",
+        "zh": "货币为空 — Fix: 发送结算货币。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_destination",
+      "http": 400,
+      "meaning": {
+        "en": "Destination is incomplete for the selected method — Fix: Provide the required destination fields.",
+        "es": "El destino está incompleto para el método seleccionado — Fix: Entrega los campos requeridos del destino.",
+        "zh": "所选方式的目的地信息不完整 — Fix: 提供目的地所需字段。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_item_amount",
+      "http": 422,
+      "meaning": {
+        "en": "Payroll item amount is invalid — Fix: Correct the positive amount and precision.",
+        "es": "El monto del ítem de nómina es inválido — Fix: Corrige el monto positivo y su precisión.",
+        "zh": "工资项目金额无效 — Fix: 更正正数金额及其精度。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_item_destination",
+      "http": 422,
+      "meaning": {
+        "en": "Payroll item destination is invalid — Fix: Correct the destination or cancel the item.",
+        "es": "El destino del ítem de nómina es inválido — Fix: Corrige el destino o cancela el ítem.",
+        "zh": "工资项目目的地无效 — Fix: 更正目的地或取消项目。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_item_method",
+      "http": 422,
+      "meaning": {
+        "en": "Payroll item method is invalid — Fix: Use a supported payment method.",
+        "es": "El método del ítem de nómina es inválido — Fix: Usa un método de pago soportado.",
+        "zh": "工资项目付款方式无效 — Fix: 使用支持的付款方式。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "not_a_series",
+      "http": 422,
+      "meaning": {
+        "en": "The expense is not a monthly recurring parent — Fix: Use the parent expense that owns the series.",
+        "es": "El gasto no es un padre recurrente mensual — Fix: Usa el gasto padre dueño de la serie.",
+        "zh": "该支出不是月度周期性父支出 — Fix: 使用拥有该系列的父支出。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_payee",
+      "http": 400,
+      "meaning": {
+        "en": "Payment destination is incomplete — Fix: Provide the required fields for the selected method.",
+        "es": "El destino de pago está incompleto — Fix: Entrega los campos requeridos del método seleccionado.",
+        "zh": "付款目的地信息不完整 — Fix: 提供所选方式所需字段。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "hot_wallet_required",
+      "http": 422,
+      "meaning": {
+        "en": "No hot wallet is configured for the selected chain and asset — Fix: Configure the organization wallet first.",
+        "es": "No hay una hot wallet configurada para la cadena y activo seleccionados — Fix: Configura primero la wallet de la organización.",
+        "zh": "未为所选链和资产配置热钱包 — Fix: 先配置组织钱包。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_recurring_day",
+      "http": 400,
+      "meaning": {
+        "en": "Recurring day is outside 1–31 — Fix: Send a day from 1 through 31.",
+        "es": "El día recurrente está fuera de 1–31 — Fix: Envía un día entre 1 y 31.",
+        "zh": "周期日不在 1–31 范围内 — Fix: 发送 1 到 31 之间的日期。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "core_bad_response",
+      "http": 503,
+      "meaning": {
+        "en": "The payment rail returned an unreadable response — Fix: Read the operation state before retrying.",
+        "es": "El riel de pago devolvió una respuesta ilegible — Fix: Lee el estado de la operación antes de reintentar.",
+        "zh": "付款通道返回无法读取的响应 — Fix: 重试前先读取操作状态。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "treasury_credit_error",
+      "http": 500,
+      "meaning": {
+        "en": "Direct treasury credit failed — Fix: Read the resource state and retry the same idempotent operation; do not create a second payment.",
+        "es": "Falló el crédito directo de tesorería — Fix: Lee el estado del recurso y reintenta la misma operación idempotente; no crees un segundo pago.",
+        "zh": "资金库直接入账失败 — Fix: 读取资源状态并重试同一笔幂等操作；不要创建第二笔付款。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "payment_in_flight",
+      "http": 409,
+      "meaning": {
+        "en": "A payroll payment is currently being dispatched — Fix: Wait for reconciliation; do not duplicate it.",
+        "es": "Hay un pago de nómina en proceso de dispersión — Fix: Espera la reconciliación; no lo dupliques.",
+        "zh": "工资付款正在发放中 — Fix: 等待对账；不要重复操作。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "valuation_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The amount could not be valued in USD — Fix: Retry later; approval remains fail-closed.",
+        "es": "No se pudo valorizar el monto en USD — Fix: Reintenta más tarde; la aprobación permanece fail-closed.",
+        "zh": "无法将金额估值为美元 — Fix: 稍后重试；批准过程保持失败关闭。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "store_error",
+      "http": 500,
+      "meaning": {
+        "en": "The platform could not read or persist the record — Fix: Retry after confirming the resource state.",
+        "es": "La plataforma no pudo leer o guardar el registro — Fix: Reintenta después de confirmar el estado del recurso.",
+        "zh": "平台无法读取或保存记录 — Fix: 确认资源状态后重试。"
       }
     }
   ]

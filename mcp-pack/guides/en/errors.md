@@ -707,3 +707,52 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 409 | `ticket_already_open` | Continue the existing ticket returned in the response. |
 | 409 | `ticket_closed` / `already_rated` | Open a new ticket or keep the existing rating. |
 | 503 | `storage_unavailable` | Wait and upload once; do not duplicate the ticket. |
+
+## Pay-slip errors
+
+These codes are used by the authenticated employee pay-slip portal.
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_period` | Payroll period is not YYYY-MM | Send a calendar month such as 2026-10. |
+| 500 | `receipt_render_failed` | The pay-slip PDF could not be rendered | Retry the read; if it persists, provide the request id to support. |
+
+## Payroll and recurring-expense errors
+
+These codes are used by organization payroll and recurring-expense series operations.
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_country` | Country is not ISO-3166 alpha-2 | Send a two-letter ISO-3166 country code. |
+| 400 | `invalid_doc_id` | Identity document is invalid for the selected country | Correct the document and submit it again. |
+| 400 | `invalid_account` | Linked or funding account is not active in this organization | Use an active non-internal organization account. |
+| 400 | `invalid_method` | Payment method is outside the supported catalog | Use one of the documented payment methods. |
+| 409 | `duplicate_employee` | Another employee uses the same email or linked account | Read the existing employee or use different data. |
+| 400 | `invalid_doc_type` | Document type is outside the catalog | Use a value from the document-types endpoint. |
+| 400 | `invalid_expires_at` | File expiration is not RFC3339 | Send an RFC3339 timestamp or omit it. |
+| 422 | `file_limit_reached` | The employee already has the maximum of 20 files | Manage the existing files before adding another. |
+| 400 | `invalid_period` | Payroll period is not YYYY-MM | Send a calendar month such as 2026-10. |
+| 409 | `duplicate_run` | A live run already exists for this organization and period | Read and use the existing run. |
+| 422 | `empty_run` | The run has no live items | Build at least one live item before approval. |
+| 400 | `invalid_earnings` | Earnings lines are missing or invalid | Send at least one positive labeled earning line. |
+| 400 | `invalid_deductions` | A deduction line is invalid | Send positive labeled deduction lines. |
+| 422 | `invalid_net` | Net amount is not positive | Keep earnings greater than deductions. |
+| 400 | `invalid_currency` | Currency is empty | Send the settlement currency. |
+| 400 | `invalid_destination` | Destination is incomplete for the selected method | Provide the required destination fields. |
+| 422 | `invalid_item_amount` | Payroll item amount is invalid | Correct the positive amount and precision. |
+| 422 | `invalid_item_destination` | Payroll item destination is invalid | Correct the destination or cancel the item. |
+| 422 | `invalid_item_method` | Payroll item method is invalid | Use a supported payment method. |
+| 422 | `not_a_series` | The expense is not a monthly recurring parent | Use the parent expense that owns the series. |
+| 400 | `invalid_payee` | Payment destination is incomplete | Provide the required fields for the selected method. |
+| 400 | `invalid_asset` | Crypto asset is unsupported | Use USDT or USDC. |
+| 422 | `hot_wallet_required` | No hot wallet is configured for the selected chain and asset | Configure the organization wallet first. |
+| 400 | `invalid_recurring_day` | Recurring day is outside 1–31 | Send a day from 1 through 31. |
+| 503 | `core_unavailable` | The payment rail is unavailable | Check the operation state and retry later. |
+| 503 | `core_bad_response` | The payment rail returned an unreadable response | Read the operation state before retrying. |
+| 500 | `treasury_credit_error` | Direct treasury credit failed | Read the resource state and retry the same idempotent operation; do not create a second payment. |
+| 409 | `payment_in_flight` | A payroll payment is currently being dispatched | Wait for reconciliation; do not duplicate it. |
+| 409 | `invalid_state` | The resource does not accept this operation in its current state | Read the current state and follow the allowed transition. |
+| 400 | `reason_required` | A reason is required | Send a meaningful reason in the request body. |
+| 500 | `receipt_render_failed` | The pay-slip PDF could not be rendered | Retry the read and provide the request id if it persists. |
+| 503 | `valuation_unavailable` | The amount could not be valued in USD | Retry later; approval remains fail-closed. |
+| 500 | `store_error` | The platform could not read or persist the record | Retry after confirming the resource state. |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.200"
+  version: "2.204"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -25273,6 +25273,125 @@ paths:
               application/json:
                 example: {error: not_found, message: support ticket not found}
 
+  /v1/me/pay-slips:
+    get:
+      tags: [Liquidaciones]
+      operationId: listMyPaySlips
+      summary: 'List your pay slips'
+      description: 'Lists only the authenticated account''s paid or voided pay slips, with optional period and pagination filters.'
+      parameters:
+        - name: period
+          in: query
+          description: 'Payroll period in YYYY-MM format.'
+          schema: {type: string, pattern: '^\d{4}-(0[1-9]|1[0-2])$'}
+        - name: page
+          in: query
+          description: 'Número de página.'
+          schema: {type: integer, default: 1}
+        - name: page_size
+          in: query
+          description: 'Tamaño de página, máximo 200.'
+          schema: {type: integer, default: 50, maximum: 200}
+      responses:
+        '200':
+          description: 'Authenticated account pay slips.'
+          content:
+            application/json:
+              examples:
+                pay_slips:
+                  summary: 'Pay slip list'
+                  value: {pay_slips: [], page: 1, page_size: 50, total: 0}
+        '400':
+          description: 'invalid_period.'
+          content:
+            application/json:
+              examples:
+                invalid_period:
+                  summary: 'Invalid period'
+                  value: {error: invalid_period, message: period debe tener formato YYYY-MM}
+        '500':
+          description: 'store_error.'
+          content:
+            application/json:
+              examples:
+                store_error:
+                  summary: 'Fallo de almacenamiento'
+                  value: {error: store_error, message: could not list pay slips}
+  /v1/me/pay-slips/{slipID}:
+    get:
+      tags: [Liquidaciones]
+      operationId: getMyPaySlip
+      summary: 'Get a pay slip'
+      description: 'Returns one paid or voided pay slip owned by the authenticated account; another account''s slip is not disclosed.'
+      parameters:
+        - name: slipID
+          in: path
+          required: true
+          description: 'Pay slip id.'
+          schema: {type: string}
+      responses:
+        '200':
+          description: 'Pay slip detail.'
+          content:
+            application/json:
+              examples:
+                pay_slip:
+                  summary: 'Pay slip'
+                  value: {id: slip_01, period: '2026-10', employer_name: Example Company, employee_name: Ana Pérez, employee_country: CL, employee_doc: id 12.345.678-5, earnings: [{label: Base salary, amount: '1500.00'}], deductions: [], gross_amount: '1500.00', deductions_total: '0.00', net_amount: '1500.00', currency: USD, amount_usd: '1500.00', method: cbpay_balance, destination_masked: CBPay ••0001, paid_at: '2026-10-31T12:00:00Z', core_ref: transfer:tr_01, created_at: '2026-10-31T12:00:01Z'}
+        '404':
+          description: 'not_found.'
+          content:
+            application/json:
+              examples:
+                not_found:
+                  summary: 'Pay slip not found'
+                  value: {error: not_found, message: pay slip not found}
+        '500':
+          description: 'store_error.'
+          content:
+            application/json:
+              examples:
+                store_error:
+                  summary: 'Fallo de almacenamiento'
+                  value: {error: store_error, message: could not get pay slip}
+  /v1/me/pay-slips/{slipID}/pdf:
+    get:
+      tags: [Liquidaciones]
+      operationId: getMyPaySlipPDF
+      summary: 'Download a pay slip PDF'
+      description: 'Downloads the branded PDF for a pay slip owned by the authenticated account.'
+      parameters:
+        - name: slipID
+          in: path
+          required: true
+          description: 'Pay slip id.'
+          schema: {type: string}
+      responses:
+        '200':
+          description: 'PDF de liquidación.'
+          content:
+            application/pdf:
+              schema: {type: string, format: binary}
+              examples:
+                pdf:
+                  summary: 'PDF de liquidación'
+                  value: PDF binary bytes
+        '404':
+          description: 'not_found.'
+          content:
+            application/json:
+              examples:
+                not_found:
+                  summary: 'Pay slip not found'
+                  value: {error: not_found, message: pay slip not found}
+        '500':
+          description: 'receipt_render_failed.'
+          content:
+            application/json:
+              examples:
+                receipt_render_failed:
+                  summary: 'Fallo al generar el PDF'
+                  value: {error: receipt_render_failed, message: no se pudo generar el PDF de la liquidación}
 components:
   securitySchemes:
     bearerAuth:
@@ -26222,6 +26341,13 @@ components:
           type: string
           description: >-
             Dimensión opcional de moneda ISO-4217. Solo la soporta payin_card — la misma cuenta puede tener un % distinto por moneda procesada (ej. BOB vs USD). Vacía aplica a cualquier moneda.
+        vertical:
+          type: string
+          enum:
+          - highrisk
+          - servicios7372
+          description: >-
+            Vertical de adquirencia card estampada en un cobro pagado con tarjeta. Se omite en payins legacy o no-card. Las filas de fee usan valor vacío para el fallback genérico; esta dimensión jamás aplica a compras issuing.
         asset:
           type: string
           example: USDT
@@ -26439,6 +26565,13 @@ components:
           type: string
         method:
           type: string
+        vertical:
+          type: string
+          enum:
+          - highrisk
+          - servicios7372
+          description: >-
+            Vertical de adquirencia card estampada al crear el payin desde el perfil de la cuenta. Se omite en payins legacy y cobros no-card.
         local_amount:
           type: string
           description: >-
@@ -27622,6 +27755,78 @@ webhooks:
               amount: '25.000000'
               description: Expense split
               created_at: '2026-07-07T12:00:00Z'
+      responses:
+        '200':
+          description: Devuelve cualquier 2xx para confirmar la entrega.
+  payroll_credited:
+    post:
+      summary: Sueldo acreditado
+      description: 'La organización acreditó un sueldo al saldo de la
+        cuenta (crédito directo de tesorería de un ítem del lote).
+
+
+        Cada entrega incluye `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp`
+        y `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`. Responde 2xx; hasta
+        5 intentos con backoff incremental.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entry_id: *id017
+                run_id: *id017
+                period: *id017
+                pay_item_id: *id017
+                employee_id: *id017
+                employee_name: *id017
+                to_account_id: *id017
+                asset: *id017
+                amount: *id017
+            example:
+              entry_id: 1a2b3c4d-5e6f-7a80-9b0c-1d2e3f4a5b6c
+              run_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
+              period: '2026-11'
+              pay_item_id: 3b8c0d2e-5f6a-7b81-9c0d-2e3f4a5b6c7d
+              employee_id: 4c9d1e3f-6a7b-8c92-0d1e-3f4a5b6c7d8e
+              employee_name: Jane Doe
+              to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+              asset: USDT
+              amount: '1500.000000'
+      responses:
+        '200':
+          description: Devuelve cualquier 2xx para confirmar la entrega.
+  org_expense_credited:
+    post:
+      summary: Gasto de la organización acreditado
+      description: 'La organización pagó un gasto operativo al saldo de
+        la cuenta (crédito directo de tesorería).
+
+
+        Cada entrega incluye `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp`
+        y `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`. Responde 2xx; hasta
+        5 intentos con backoff incremental.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entry_id: *id017
+                expense_id: *id017
+                category: *id017
+                vendor_name: *id017
+                to_account_id: *id017
+                asset: *id017
+                amount: *id017
+            example:
+              entry_id: 1a2b3c4d-5e6f-7a80-9b0c-1d2e3f4a5b6c
+              expense_id: 6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c
+              category: operating_expenses
+              vendor_name: Acme Supplies
+              to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+              asset: USDT
+              amount: '250.000000'
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.

@@ -5,12 +5,33 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.199 · 1 version - 31 de octubre de 2026
+## v2.204 · 1 versión - 1 de noviembre de 2026
+### v2.204
+**Corregido**
+- Se corrigió la documentación pública de remuneraciones y gastos a saldo para usar créditos directos de tesorería sin cuenta fondeadora de cliente.
+### v2.203
+**Cambiado**
+- Se corrigió la documentación de remuneraciones y gastos a saldo para reflejar créditos directos de tesorería, referencias `payroll_credit:`/`org_expense_credit:`, eventos de cuenta y ausencia de cuenta fondeadora de cliente.
+- El detalle de verificación sin lista explícita ahora trae `pending_documents` vacío en vez de pedir de nuevo los adjuntos; sigue `documents_gate` y los comentarios. Sin cambios en la API.
+### v2.202
+**Cambiado**
+- Los archivos subidos en una subsanación ahora llegan a la verificación al instante y reabren la revisión al completar lo pedido. Sin cambios en la API.
+### v2.201
+**Cambiado**
+- Pedir cambios en una verificación ahora extiende el link del invite por 90 días (reviviéndolo si acababa de vencer), para que los solicitantes siempre puedan completar la subsanación. Sin cambios en la API.
+## v2.200 · 2 versions - 31 de octubre de 2026
+- **Verticales de adquirencia**: las comisiones de payin con tarjeta y la respuesta pública del payin reflejan `highrisk` o `servicios7372` cuando corresponde; los productos issuing siguen sin dimensión.
 ### v2.199
 **Agregado**
 - Se agregaron `customer.document` opcional (texto plano, máx. 50) y `service_type` top-level (texto plano, máx. 120) a los payins con tarjeta para el perfil de adquirencia MDD 7372 shippeado.
 - Se documentaron las automatizaciones visibles para la cuenta: acuse y datos verificados, avisos de avance, cierre automático a las 72 horas, encuesta de resolución, aviso de reasignación y opt-out por ticket controlado por el agente.
 - Se documentaron los estados OCR nativos (`pending`/`running`/`completed`/`failed`), la evidencia por campo, los campos `score` y `summary`, y el comportamiento fail-closed cuando el sidecar autoalojado no está disponible.
+
+### v2.200
+**Agregado**
+- Se agregó la guía del portal autenticado de liquidaciones: listado por período, detalle y descarga del PDF brandeado.
+- Se documentaron los flujos de remuneraciones y gastos recurrentes en la referencia API enlazada.
+- Agregada la guía de Analítica de producto: consentimiento opt-in, eventos allowlisted por bandas, identidades HMAC, replay enmascarado solo en portal, proxy first-party `/a` y endpoints de configuración.`n
 
 ## v2.198 · 2 versiones - 30 de octubre de 2026
 ### Documentation terminology
@@ -4406,3 +4427,5 @@ disponibilidad en cada momento.
   internas, crypto (fondeo y retiros on-chain), KYC, webhooks firmados y
   catálogo completo de errores.
 - API Reference interactiva generada desde OpenAPI 3.1.
+
+\n
