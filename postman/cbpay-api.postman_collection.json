@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-10-31 16:53 UTC",
-    "_content_sha256": "c6aefa3f8288769077987ffdfe940691bdde9ed23e88eb8f0c325a18f22d5ca9"
+    "_generated_at": "2026-11-01 03:33 UTC",
+    "_content_sha256": "63060da9836978fccacc40d9a22a6c71a1e2b718245c3d8672df0fd5d92f3fc8"
   },
   "auth": {
     "type": "bearer",
@@ -30229,6 +30229,188 @@
               "body": "{\n  \"ticket_id\": \"ticket-01\",\n  \"status\": \"resolved\",\n  \"csat_rating\": 5\n}"
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "PaySlips",
+      "item": [
+        {
+          "name": "List your pay slips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/pay-slips",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "pay-slips"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Payroll period in YYYY-MM format."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Page number."
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Page size, maximum 200."
+                }
+              ]
+            },
+            "description": "Lists only the authenticated account's paid or voided pay slips, with optional period and pagination filters."
+          },
+          "response": [
+            {
+              "name": "200 Authenticated account pay slips.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/pay-slips",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "pay-slips"
+                  ],
+                  "query": [
+                    {
+                      "key": "period",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Payroll period in YYYY-MM format."
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Page number."
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Page size, maximum 200."
+                    }
+                  ]
+                }
+              },
+              "status": "Authenticated account pay slips.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"pay_slips\": [],\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 0\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get a pay slip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/pay-slips/:slipID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "pay-slips",
+                ":slipID"
+              ],
+              "variable": [
+                {
+                  "key": "slipID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Returns one paid or voided pay slip owned by the authenticated account; another account's slip is not disclosed."
+          },
+          "response": [
+            {
+              "name": "200 Pay slip detail.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/pay-slips/:slipID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "pay-slips",
+                    ":slipID"
+                  ],
+                  "variable": [
+                    {
+                      "key": "slipID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Pay slip detail.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"slip_01\",\n  \"period\": \"2026-10\",\n  \"employer_name\": \"Example Company\",\n  \"employee_name\": \"Ana Pérez\",\n  \"employee_country\": \"CL\",\n  \"employee_doc\": \"id 12.345.678-5\",\n  \"earnings\": [\n    {\n      \"label\": \"Base salary\",\n      \"amount\": \"1500.00\"\n    }\n  ],\n  \"deductions\": [],\n  \"gross_amount\": \"1500.00\",\n  \"deductions_total\": \"0.00\",\n  \"net_amount\": \"1500.00\",\n  \"currency\": \"USD\",\n  \"amount_usd\": \"1500.00\",\n  \"method\": \"cbpay_balance\",\n  \"destination_masked\": \"CBPay ••0001\",\n  \"paid_at\": \"2026-10-31T12:00:00Z\",\n  \"core_ref\": \"transfer:tr_01\",\n  \"created_at\": \"2026-10-31T12:00:01Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Download a pay slip PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/pay-slips/:slipID/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "pay-slips",
+                ":slipID",
+                "pdf"
+              ],
+              "variable": [
+                {
+                  "key": "slipID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Downloads the branded PDF for a pay slip owned by the authenticated account."
+          }
         }
       ]
     }
