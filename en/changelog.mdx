@@ -4,8 +4,10 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+
 ### v2.203
 **Fixed**
+- Corrected payroll and balance-expense documentation to use direct treasury credits, `payroll_credit:`/`org_expense_credit:` references, account events, and no customer funding account.
 - Verification detail without an explicit required-documents list now reports an empty `pending_documents` instead of re-asking for attached documents; follow `documents_gate` and the reviewer's comments. No API changes.
 ### v2.202
 **Fixed**
@@ -14,8 +16,6 @@ description: "History of API and documentation changes"
 **Fixed**
 - Requesting changes on a verification now extends the invite link by 90 days (reviving it if it just expired), so applicants can always complete remediation. No API changes.
 <Update label="October 31, 2026" description="v2.200 · 2 versions">
-### v2.200
-**Added**
 - **Card acquiring verticals**: card payin fees and the public payin response now carry the applicable `highrisk` or `servicios7372` dimension when present; issuing card products remain unscoped.
 ### v2.199
 **Added**
@@ -24,6 +24,11 @@ description: "History of API and documentation changes"
 - Documented native OCR document states (`pending`/`running`/`completed`/`failed`), field-level evidence, score and summary fields, and fail-closed behavior when the self-hosted sidecar is unavailable.
 
 </Update>
+### v2.200
+**Added**
+- Added the authenticated pay-slip portal guide: list by period, open a detail, and download the branded PDF.
+- Documented payroll and recurring organization expense flows in the linked API reference.
+- Added privacy-first Product analytics guidance: opt-in consent, allowlisted event bands, HMAC identities, portal-only masked replay, first-party `/a` proxy and configuration endpoints.`n
 
 <Update label="October 30, 2026" description="v2.198 · 2 versions">
 ### Documentation terminology
@@ -4500,4 +4505,4 @@ Corridor enablement is gradual; the catalog (`GET /v1/payouts/methods`,
   full error catalog.
 - Interactive API Reference generated from OpenAPI 3.1.
 
-</Update>
+</Update>\n
