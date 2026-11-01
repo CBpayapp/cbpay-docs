@@ -6,6 +6,7 @@ description: "Historial de cambios de la API y de esta documentación"
 
 ### v2.203
 **Cambiado**
+- Se corrigió la documentación de remuneraciones y gastos a saldo para reflejar créditos directos de tesorería, referencias `payroll_credit:`/`org_expense_credit:`, eventos de cuenta y ausencia de cuenta fondeadora de cliente.
 - El detalle de verificación sin lista explícita ahora trae `pending_documents` vacío en vez de pedir de nuevo los adjuntos; sigue `documents_gate` y los comentarios. Sin cambios en la API.
 ### v2.202
 **Cambiado**
@@ -14,8 +15,6 @@ description: "Historial de cambios de la API y de esta documentación"
 **Cambiado**
 - Pedir cambios en una verificación ahora extiende el link del invite por 90 días (reviviéndolo si acababa de vencer), para que los solicitantes siempre puedan completar la subsanación. Sin cambios en la API.
 <Update label="31 de octubre de 2026" description="v2.200 · 2 versions">
-### v2.200
-**Agregado**
 - **Verticales de adquirencia**: las comisiones de payin con tarjeta y la respuesta pública del payin reflejan `highrisk` o `servicios7372` cuando corresponde; los productos issuing siguen sin dimensión.
 ### v2.199
 **Agregado**
@@ -24,6 +23,11 @@ description: "Historial de cambios de la API y de esta documentación"
 - Se documentaron los estados OCR nativos (`pending`/`running`/`completed`/`failed`), la evidencia por campo, los campos `score` y `summary`, y el comportamiento fail-closed cuando el sidecar autoalojado no está disponible.
 
 </Update>
+### v2.200
+**Agregado**
+- Se agregó la guía del portal autenticado de liquidaciones: listado por período, detalle y descarga del PDF brandeado.
+- Se documentaron los flujos de remuneraciones y gastos recurrentes en la referencia API enlazada.
+- Agregada la guía de Analítica de producto: consentimiento opt-in, eventos allowlisted por bandas, identidades HMAC, replay enmascarado solo en portal, proxy first-party `/a` y endpoints de configuración.`n
 
 <Update label="30 de octubre de 2026" description="v2.198 · 2 versiones">
 ### Documentation terminology
@@ -4593,4 +4597,4 @@ disponibilidad en cada momento.
   catálogo completo de errores.
 - API Reference interactiva generada desde OpenAPI 3.1.
 
-</Update>
+</Update>\n
