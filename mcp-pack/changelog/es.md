@@ -5,7 +5,11 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.204 · 1 versión - 1 de noviembre de 2026
+## v2.205 · 2 versiones - 1 de noviembre de 2026
+### v2.205
+**Cambiado**
+- Las solicitudes de desafíos OTP ahora reutilizan el mismo desafío activo del miembro, acción, canal y destino, y responden `200` sin enviar otro código; los envíos frescos quedan limitados a 10 por miembro por hora (`429 too_many_attempts`, `Retry-After: 3600`). El edge ahora registra la IP real del cliente.
+
 ### v2.204
 **Corregido**
 - Se corrigió la documentación pública de remuneraciones y gastos a saldo para usar créditos directos de tesorería sin cuenta fondeadora de cliente.
