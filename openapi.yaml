@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.204"
+  version: "2.205"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2079,6 +2079,21 @@ paths:
               display_name: Ana Perez
               country: CL
       responses:
+        '200':
+          description: Existing live challenge reused; no new code is sent. The response body is the same as the original challenge.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPChallenge'
+              example:
+                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
+                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                action: payout
+                channel: whatsapp
+                phone: '********5678'
+                status: pending
+                created_at: '2026-07-08T21:00:00Z'
+                expires_at: '2026-07-08T21:10:00Z'
         '201':
           description: Registration started; no session is issued.
           content:
@@ -18360,14 +18375,20 @@ paths:
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP
                   codes
         '429':
-          description: Send quota reached (`too_many_attempts`).
+          description: More than 10 fresh code sends were requested for this member within one hour (`too_many_attempts`). Reused live challenges do not consume this budget. TOTP is exempt because it sends no code.
+          headers:
+            Retry-After:
+              description: Seconds until a fresh OTP send can be requested again.
+              schema:
+                type: integer
+                example: 3600
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 error: too_many_attempts
-                message: too many verification attempts; wait before retrying
+                message: too many verification codes sent; wait before requesting a new one
         '401':
           $ref: '#/components/responses/Unauthorized'
     get:

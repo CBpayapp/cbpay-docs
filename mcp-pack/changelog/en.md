@@ -5,7 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.204 · 1 version - November 1, 2026
+## v2.205 · 2 versions - November 1, 2026
+### v2.205
+**Changed**
+- OTP challenge requests now reuse the same live member/action/channel/destination challenge and return `200` without sending another code; fresh sends are limited to 10 per member per hour (`429 too_many_attempts`, `Retry-After: 3600`). Edge logging now records the real client IP.
+
 ### v2.204
 **Fixed**
 - Corrected the public payroll and balance-expense documentation to use direct treasury credits with no customer funding account.

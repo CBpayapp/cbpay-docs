@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.204"
+  version: "2.205"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -1937,6 +1937,21 @@ paths:
               display_name: Ana Perez
               country: CL
       responses:
+        '200':
+          description: 已复用现有的有效挑战;不会发送新验证码。响应体与原挑战相同。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPChallenge'
+              example:
+                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
+                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                action: payout
+                channel: whatsapp
+                phone: '********5678'
+                status: pending
+                created_at: '2026-07-08T21:00:00Z'
+                expires_at: '2026-07-08T21:10:00Z'
         '201':
           description: .......................................
           content:
@@ -17630,14 +17645,20 @@ paths:
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP
                   codes
         '429':
-          description: 发送配额已达上限(`too_many_attempts`)。
+          description: 一小时内为该成员请求了超过10次新验证码发送(`too_many_attempts`)。复用有效挑战不会消耗此额度。TOTP 不发送验证码,因此不受此限制。
+          headers:
+            Retry-After:
+              description: 再次请求新 OTP 发送前需要等待的秒数。
+              schema:
+                type: integer
+                example: 3600
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 error: too_many_attempts
-                message: too many verification attempts; wait before retrying
+                message: too many verification codes sent; wait before requesting a new one
         '401':
           $ref: '#/components/responses/Unauthorized'
     get:

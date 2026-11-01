@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月1日" description="v2.204 · 1 个版本">
+<Update label="2026年11月1日" description="v2.205 · 2 个版本">
+### v2.205
+**变更**
+- OTP 挑战请求现在会复用同一成员、操作、渠道和目标的有效挑战，并返回 `200` 而不再发送新验证码；新发送每位成员每小时最多 10 次(`429 too_many_attempts`, `Retry-After: 3600`)。Edge 现在记录客户端真实 IP。
+
 ### v2.204
 **修复**
 - 修正公开工资发放和余额费用文档，统一使用资金库直接入账，不使用客户资金账户。

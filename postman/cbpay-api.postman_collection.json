@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-01 03:33 UTC",
-    "_content_sha256": "63060da9836978fccacc40d9a22a6c71a1e2b718245c3d8672df0fd5d92f3fc8"
+    "_generated_at": "2026-11-01 16:16 UTC",
+    "_content_sha256": "8f2c5f02a13e28ea7e5b10b6806c85357518873e91b06ec161b4ad7b3eb67fd3"
   },
   "auth": {
     "type": "bearer",
@@ -8812,7 +8812,7 @@
           },
           "response": [
             {
-              "name": "201 Registration started; no session is issued.",
+              "name": "200 Existing live challenge reused; no new code is sent. The res",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -8827,8 +8827,8 @@
                   ]
                 }
               },
-              "status": "Registration started; no session is issued.",
-              "code": 201,
+              "status": "Existing live challenge reused; no new code is sent. The res",
+              "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
                 {
@@ -8836,7 +8836,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"status\": \"pending_verification\",\n  \"note\": \"check your email for the verification code; complete registration with POST /v1/auth/register/confirm\"\n}"
+              "body": "{\n  \"challenge_id\": \"6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"action\": \"payout\",\n  \"channel\": \"whatsapp\",\n  \"phone\": \"********5678\",\n  \"status\": \"pending\",\n  \"created_at\": \"2026-07-08T21:00:00Z\",\n  \"expires_at\": \"2026-07-08T21:10:00Z\"\n}"
             }
           ]
         },
