@@ -105,6 +105,13 @@ API key, and requires **no authentication**. The transport is streamable HTTP.
 | `get_endpoint` | Returns the documentation of one endpoint with its curl, request and response examples |
 | `list_groups` | Lists the products/groups (payouts, payins, banking, crypto, …) with their endpoint counts |
 | `get_errors_catalog` | Returns the API error catalog (HTTP code, `error` code, meaning and category), filterable by text |
+| `get_quickstart` | Returns the end-to-end integration quickstart |
+| `list_recipes` | Lists the available integration recipes |
+| `get_recipe` | Returns one complete integration recipe |
+| `list_webhook_events` | Lists the documented webhook event types and summaries |
+| `get_webhook_event` | Returns one webhook event with its description and payload example |
+| `get_testing_guide` | Returns test/live environments, key prefixes and simulator magic values |
+| `whats_new` | Returns the latest published documentation changes |
 
 ## Prompts to try
 
@@ -137,7 +144,8 @@ Once connected, ask your assistant things like:
     content as well.
 #### Is there an MCP server for the organization admin docs?
     Yes — a dedicated MCP server for the **organization administration**
-    documentation (`mcp-admin.cbpayapp.com`) is being deployed. It answers
+    documentation is live at [`mcp-admin.cbpayapp.com`](https://mcp-admin.cbpayapp.com).
+    It answers
     questions about the org-admin API (accounts, fees, treasury, compliance)
     and is aimed at organization administrators — this server here keeps
     covering the account-level API your clients integrate.
