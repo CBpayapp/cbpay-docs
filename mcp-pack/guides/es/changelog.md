@@ -5,6 +5,20 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.206 · 1 versión - 2 de noviembre de 2026
+### v2.206
+**Cambiado**
+- Checkout ahora omite del catálogo y de la cotización los corredores de pago
+  deshabilitados, en vez de ofrecer una opción que después fallaría con HTTP
+  `409`.
+- La página hosted de checkout restaura el formulario pull/collect. Para los
+  métodos wallet pull compatibles, el pagador ingresa sus datos; los campos de
+  banco y OTP aparecen solo cuando el método elegido los exige.
+- Las cotizaciones en COP de Colombia usan únicamente unidades enteras.
+**Corregido**
+- Los reintentos de materialización de checkout tienen un tope, y las
+  respuestas `409` finales se muestran honestamente en vez de reintentarse como
+  si la opción siguiera preparándose.
 ## v2.205 · 2 versiones - 1 de noviembre de 2026
 ### v2.205
 **Cambiado**

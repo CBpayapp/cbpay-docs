@@ -5,6 +5,19 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.206 · 1 version - November 2, 2026
+### v2.206
+**Changed**
+- Checkout now omits disabled payment corridors from the catalog and quote,
+  instead of offering an option that would fail later with HTTP `409`.
+- The hosted checkout page restores the pull/collect form. For supported
+  wallet pull methods, the payer enters their details; bank and OTP fields
+  appear only when the selected method requires them.
+- Colombian COP quotes use whole units only.
+**Fixed**
+- Checkout materialization retries are capped, and final `409` responses are
+  reported honestly instead of being retried as if the option were still
+  preparing.
 ## v2.205 · 2 versions - November 1, 2026
 ### v2.205
 **Changed**
