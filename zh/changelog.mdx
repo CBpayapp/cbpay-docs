@@ -4,6 +4,20 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年11月2日" description="v2.206 · 1 个版本">
+### v2.206
+**变更**
+- Checkout 现在会从目录和报价中隐藏已停用的支付走廊，不再先展示一个
+  随后以 HTTP `409` 失败的选项。
+- Checkout 托管页面恢复拉取式收款（pull/collect）表单。对于支持的
+  wallet pull 方式，付款人填写个人资料；仅当所选方式需要时才显示银行
+  和 OTP 字段。
+- 哥伦比亚 COP 报价现在只使用整数单位。
+**修复**
+- Checkout 物化重试现在有明确上限；最终的 `409` 响应会如实显示，不再
+  被当作仍在准备中的选项重复重试。
+</Update>
+
 <Update label="2026年11月1日" description="v2.205 · 2 个版本">
 ### v2.205
 **变更**

@@ -37,6 +37,8 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 - **Fiat** —— 付款人在**所有有可用代收走廊的国家**中选择自己的国家，
   即可看到可用方式（二维码、银行转账、托管支付页）及即时报出的当地
   金额。
+  被账户控制停用的走廊会从目录和报价中隐藏，因此不会向付款人展示
+  无法物化的选项。
 - **银行卡** —— 在安全的托管页面用信用卡或借记卡支付，按**扣款币种**
   列出（目前为 BOB 和 USD；未来收单机构的币种会自动出现）。每种币种
   都是独立的支付选项，各自有报出的金额。
@@ -172,6 +174,11 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   拉取式收款端点。该方式必须先物化；金额始终使用物化时冻结的金额，
   不由付款人提供。
 
+对于支持的 wallet pull 选项，托管页面会收集付款人的姓名、证件和电话，
+并仅在所选方式需要时显示银行或 OTP 字段。付款人在钱包或银行中批准请求；
+成功的 pull 会结算链接，待处理的 pull 会保持链接开启，审核中的 pull
+会返回带有 `review_id` 的 `202`。
+
 对于已物化的 `VE/VES` C2P 选项，付款人会将银行生成的
 `claveDinamica` 放在 `POST {checkout_url}/collect` 的 `otp` 字段中。
 不要为 C2P 调用 `/collect/otp`；该端点只适用于会在扣款前签发 OTP 的方式。
@@ -237,6 +244,7 @@ fintoc）支付的收款仍立即入账，与以往相同。详见
 | 400 | `currency_required` | 该国家以多种币种提供此方式；缺少 `?currency=YYY` |
 | 409 | `already_paid` | 链接已通过其他方式支付 |
 | 409 | `checkout_not_pending` | collect 尝试已不能再接受付款人数据，因为另一次尝试已决定该 payin；读取状态，不要创建第二个链接 |
+| 409 | `corridor_disabled` | 所选走廊已停用；请从当前目录或报价中选择其他选项 |
 | 410 | `checkout_expired` | 链接到期未支付 |
 | 422 | `method_unavailable` | 该方式对此链接或国家不可用 |
 | 422 | `country_unavailable` | 该国家没有可用的支付方式 |
