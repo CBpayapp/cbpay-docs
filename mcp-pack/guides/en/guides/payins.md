@@ -250,7 +250,6 @@ each deposit pays the regular payin fee. The optional `details.alias`,
 `details.bank_name` and `details.merchant_nit` fields are returned when the
 receiving rail provides them (`merchant_nit` is used by BO/BOB accounts).
 List your accounts with `GET /v1/payins/deposit-accounts`.
-
 ### Funding versus Banking destinations
 
 Deposit destinations have an explicit `purpose`:

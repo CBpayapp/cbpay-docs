@@ -795,7 +795,6 @@ destino sin anunciar con
 
 Algunos corredores ofrecen un cobro pull donde el pagador autoriza un débito.
 La cuenta debe tener su identidad aprobada antes del request.
-
 ### C2P de Venezuela
 
 Para `VE/VES/c2p`, el pagador primero genera una `claveDinamica` en la app de

@@ -4352,5 +4352,3 @@ Corridor enablement is gradual; the catalog (`GET /v1/payouts/methods`,
   crypto (on-chain funding and withdrawals), KYC, signed webhooks and the
   full error catalog.
 - Interactive API Reference generated from OpenAPI 3.1.
-
-\n

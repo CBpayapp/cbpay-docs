@@ -4,6 +4,7 @@ description: "Announced in-person cash collections"
 icon: "hand-holding-dollar"
 ---
 import { EnvUrls } from "/snippets/env-urls.jsx";
+
 <EnvUrls lang="en" />
 
 ## Cash payins (announced, in-person delivery)
@@ -98,10 +99,13 @@ Use the detail endpoint for `confirm_request` (org-admin and platform roles only
 
 
 <AccordionGroup>
-<Accordion title="Does cash return deposit instructions?">No. Delivery is physical, so the response has no `deposit_instructions`.
+<Accordion title="Does cash return deposit instructions?">
+No. Delivery is physical, so the response has no `deposit_instructions`.
 </Accordion>
-<Accordion title="Does confirm-received credit the balance?">No. Only the separate checker approval credits the account.
+<Accordion title="Does confirm-received credit the balance?">
+No. Only the separate checker approval credits the account.
 </Accordion>
-<Accordion title="When does a cash announcement expire?">After 24 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.
+<Accordion title="When does a cash announcement expire?">
+After 24 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.
 </Accordion>
 </AccordionGroup>
