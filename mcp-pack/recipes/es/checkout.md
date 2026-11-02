@@ -39,6 +39,9 @@ La página organiza el pago en **cuatro pestañas**:
   corredor de payin vivo** y ve los métodos disponibles (QR,
   transferencia bancaria, pago hosted) con el monto local cotizado al
   momento.
+  Los corredores deshabilitados por los controles de la cuenta se omiten del
+  catálogo y de la cotización, por lo que no se ofrece una opción que no pueda
+  materializarse.
 - **Tarjeta** — pago con tarjeta de crédito o débito en una página
   segura, listado **por moneda de cargo** (hoy BOB y USD; monedas de
   adquirentes futuros aparecen solas). Cada moneda es una opción de pago
@@ -194,6 +197,12 @@ motor de conversiones de tu cuenta (mismos spreads y límites que
   los endpoints de cobro pull. La opción debe materializarse primero; el
   monto siempre es el de esa materialización y nunca lo envía el pagador.
 
+Para una opción wallet pull compatible, la página hosted solicita nombre,
+documento y teléfono del pagador, y muestra los campos de banco u OTP solo
+cuando esa opción los exige. El pagador aprueba la solicitud en su wallet o
+banco; un pull exitoso liquida el link, uno pendiente lo mantiene abierto y
+uno en revisión responde `202` con su `review_id`.
+
 Para una opción C2P materializada de `VE/VES`, el pagador entrega la
 `claveDinamica` generada por su banco en el campo `otp` de
 `POST {checkout_url}/collect`. No llames a `/collect/otp` para C2P; ese
@@ -269,6 +278,7 @@ Errores propios del link (los ve quien abre la página):
 | 400 | `currency_required` | El país ofrece el método en varias monedas; falta `?currency=YYY` |
 | 409 | `already_paid` | El link ya se pagó por otro método |
 | 409 | `checkout_not_pending` | Un intento de collect ya no acepta datos porque otro intento decidió el payin; lee el estado y no crees otro link |
+| 409 | `corridor_disabled` | El corredor elegido fue deshabilitado; elige otra opción del catálogo o cotización vigente |
 | 410 | `checkout_expired` | El link venció sin pago |
 | 422 | `method_unavailable` | Ese método no está disponible para este link o país |
 | 422 | `country_unavailable` | Ese país no tiene métodos de pago disponibles |
