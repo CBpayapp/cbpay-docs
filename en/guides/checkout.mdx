@@ -44,6 +44,8 @@ The page organizes the payment into **four tabs**:
 - **Fiat** — the payer picks their country among **every country with a
   live payin corridor** and sees the available methods (QR, bank
   transfer, hosted payment) with the local amount quoted on the spot.
+  Corridors disabled by the account controls are omitted from the catalog and
+  quote, so the payer is not offered an option that cannot be materialized.
 - **Card** — credit or debit card payment on a secure hosted page,
   listed **by charge currency** (today BOB and USD; currencies from
   future acquirers show up on their own). Each currency is an
@@ -202,6 +204,12 @@ as `POST /v1/swaps`). The aggregate state travels in `conversion_status`:
   amount is always the frozen materialization amount and never comes from the
   payer.
 
+For a supported wallet pull option, the hosted page collects the payer's name,
+document and phone, then shows bank or OTP fields only when that option
+requires them. The payer approves the request in their wallet or bank; a
+successful pull settles the link, a pending pull keeps it open, and an
+in-review pull returns `202` with its `review_id`.
+
 For a materialized `VE/VES` C2P option, the payer supplies the
 bank-generated `claveDinamica` in the `otp` field of
 `POST {checkout_url}/collect`. Do not call `/collect/otp` for C2P; that
@@ -280,6 +288,7 @@ Link-specific errors (seen by whoever opens the page):
 | 400 | `currency_required` | The country offers the method in several currencies; `?currency=YYY` is missing |
 | 409 | `already_paid` | The link was already paid through another method |
 | 409 | `checkout_not_pending` | A collect attempt can no longer accept payer data because another attempt decided the payin; read the link state and do not create a second link |
+| 409 | `corridor_disabled` | The selected corridor was disabled; choose another option shown in the current catalog or quote |
 | 410 | `checkout_expired` | The link expired unpaid |
 | 422 | `method_unavailable` | That method is not available for this link or country |
 | 422 | `country_unavailable` | That country has no available payment methods |
