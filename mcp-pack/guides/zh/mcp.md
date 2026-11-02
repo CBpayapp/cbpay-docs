@@ -104,6 +104,13 @@ Cursor、VS Code、Claude 或任何兼容 MCP 的客户端后，你的 AI 助手
 | `get_endpoint` | 返回单个端点的文档，含 curl、请求与响应示例 |
 | `list_groups` | 列出产品/分组（payouts、payins、banking、crypto 等）及各自的端点数量 |
 | `get_errors_catalog` | 返回 API 错误目录（HTTP 状态码、`error` 码、含义与类别），可按文本过滤 |
+| `get_quickstart` | 返回端到端集成快速入门指南 |
+| `list_recipes` | 列出可用的集成配方 |
+| `get_recipe` | 返回一个完整的集成配方 |
+| `list_webhook_events` | 列出已文档化的 webhook 事件类型及摘要 |
+| `get_webhook_event` | 返回一个 webhook 事件的描述和 payload 示例 |
+| `get_testing_guide` | 返回测试/正式环境、key 前缀和模拟器魔术值 |
+| `whats_new` | 返回文档最新发布的变更 |
 
 ## 试试这些提示词
 
@@ -133,6 +140,7 @@ Cursor、VS Code、Claude 或任何兼容 MCP 的客户端后，你的 AI 助手
     是的——它由你正在阅读的这份文档生成，[更新日志](https://docs.cbpayapp.com/zh/changelog)中列出的
     每个版本都会同步反映到 MCP 内容中。
 #### 有组织管理文档的 MCP 服务器吗？
-    有——一个面向**组织管理**文档的专用 MCP 服务器（`mcp-admin.cbpayapp.com`）
-    正在部署中。它回答关于 org-admin API（账户、费率、资金库、合规）的问题，
+    有——一个面向**组织管理**文档的专用 MCP 服务器已在
+    [`mcp-admin.cbpayapp.com`](https://mcp-admin.cbpayapp.com) 上线。
+    它回答关于 org-admin API（账户、费率、资金库、合规）的问题，
     面向组织管理员——而这里的这个服务器继续覆盖你的客户所集成的账户级 API。

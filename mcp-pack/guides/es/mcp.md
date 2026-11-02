@@ -106,6 +106,13 @@ API key y **no requiere autenticación**. El transporte es HTTP streamable.
 | `get_endpoint` | Devuelve la documentación de un endpoint con sus ejemplos de curl, request y response |
 | `list_groups` | Lista los productos/grupos (payouts, payins, banking, crypto, …) con la cantidad de endpoints de cada uno |
 | `get_errors_catalog` | Devuelve el catálogo de errores de la API (código HTTP, código `error`, significado y categoría), filtrable por texto |
+| `get_quickstart` | Devuelve la guía rápida de integración de punta a punta |
+| `list_recipes` | Lista las recetas de integración disponibles |
+| `get_recipe` | Devuelve una receta completa de integración |
+| `list_webhook_events` | Lista los tipos y resúmenes de eventos de webhook documentados |
+| `get_webhook_event` | Devuelve un evento de webhook con su descripción y ejemplo de payload |
+| `get_testing_guide` | Devuelve los ambientes test/live, prefijos de keys y valores mágicos del simulador |
+| `whats_new` | Devuelve los últimos cambios publicados de la documentación |
 
 ## Prompts para probar
 
@@ -138,7 +145,8 @@ Una vez conectado, pídele a tu asistente cosas como:
     contenido del MCP.
 #### ¿Hay un servidor MCP para la docu de administración de la organización?
     Sí — un servidor MCP dedicado a la documentación de **administración de la
-    organización** (`mcp-admin.cbpayapp.com`) está en despliegue. Responde
+    organización** está disponible en [`mcp-admin.cbpayapp.com`](https://mcp-admin.cbpayapp.com).
+    Responde
     preguntas sobre la API org-admin (cuentas, comisiones, tesorería,
     compliance) y está pensado para administradores de la organización — este
     servidor de aquí sigue cubriendo la API de nivel cuenta que integran tus
