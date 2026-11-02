@@ -97,6 +97,9 @@ Use the detail endpoint for `confirm_request` (org-admin and platform roles only
 {"payin_id":"11111111-2222-4333-8444-555555555555","account_id":"66666666-7777-4888-8999-000000000000","country":"CL","currency":"CLP","local_amount":"47500","fx_rate":"950.00","rate_source":"lot","usdt_credited":"49.500000","fee":"0.500000"}
 ```
 
-#### Does cash return deposit instructions?No. Delivery is physical, so the response has no `deposit_instructions`.
-#### Does confirm-received credit the balance?No. Only the separate checker approval credits the account.
-#### When does a cash announcement expire?After 24 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.
+#### Does cash return deposit instructions?
+No. Delivery is physical, so the response has no `deposit_instructions`.
+#### Does confirm-received credit the balance?
+No. Only the separate checker approval credits the account.
+#### When does a cash announcement expire?
+After 24 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.

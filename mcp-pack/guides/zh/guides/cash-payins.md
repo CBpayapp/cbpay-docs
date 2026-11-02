@@ -94,6 +94,9 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-24&stat
 {"payin_id":"11111111-2222-4333-8444-555555555555","account_id":"66666666-7777-4888-8999-000000000000","country":"CL","currency":"CLP","local_amount":"47500","fx_rate":"950.00","rate_source":"lot","usdt_credited":"49.500000","fee":"0.500000"}
 ```
 
-#### 现金会返回存款指令吗？不会。现场交付，没有 `deposit_instructions`。
-#### confirm-received 会入账吗？不会，只有 checker 单独批准才入账。
-#### 现金申报何时到期？pending 24 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。
+#### 现金会返回存款指令吗？
+不会。现场交付，没有 `deposit_instructions`。
+#### confirm-received 会入账吗？
+不会，只有 checker 单独批准才入账。
+#### 现金申报何时到期？
+pending 24 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。

@@ -269,4 +269,4 @@ This does not apply to `card_purchase_virtual` or `card_purchase_physical`: thos
 
 - **Which vertical applies?** The profile selected for the account by an authorized org admin.
 - **What if no profile was selected?** `highrisk` is the effective default, and legacy rows use the generic fallback.
-- **Why is `product: card` not verticalized?** It represents issuing, while this dimension represents acquiring payins only.\n
+- **Why is `product: card` not verticalized?** It represents issuing, while this dimension represents acquiring payins only.

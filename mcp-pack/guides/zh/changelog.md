@@ -3821,5 +3821,3 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
   payin、内部转账、加密（链上入金与提现）、KYC、签名 webhook 及
   完整的错误目录。
 - 基于 OpenAPI 3.1 生成的交互式 API 参考。
-
-\n

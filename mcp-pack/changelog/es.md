@@ -4446,5 +4446,3 @@ disponibilidad en cada momento.
   internas, crypto (fondeo y retiros on-chain), KYC, webhooks firmados y
   catálogo completo de errores.
 - API Reference interactiva generada desde OpenAPI 3.1.
-
-\n

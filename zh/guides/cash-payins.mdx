@@ -4,6 +4,7 @@ description: "申报的现场现金收款"
 icon: "hand-holding-dollar"
 ---
 import { EnvUrls } from "/snippets/env-urls.jsx";
+
 <EnvUrls lang="zh" />
 
 ## 现金 payin（申报与现场交付）
@@ -95,10 +96,13 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-24&stat
 
 
 <AccordionGroup>
-<Accordion title="现金会返回存款指令吗？">不会。现场交付，没有 `deposit_instructions`。
+<Accordion title="现金会返回存款指令吗？">
+不会。现场交付，没有 `deposit_instructions`。
 </Accordion>
-<Accordion title="confirm-received 会入账吗？">不会，只有 checker 单独批准才入账。
+<Accordion title="confirm-received 会入账吗？">
+不会，只有 checker 单独批准才入账。
 </Accordion>
-<Accordion title="现金申报何时到期？">pending 24 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。
+<Accordion title="现金申报何时到期？">
+pending 24 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。
 </Accordion>
 </AccordionGroup>

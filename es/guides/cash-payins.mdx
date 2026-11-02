@@ -4,6 +4,7 @@ description: "Cobros cash anunciados y presenciales"
 icon: "hand-holding-dollar"
 ---
 import { EnvUrls } from "/snippets/env-urls.jsx";
+
 <EnvUrls lang="es" />
 
 ## Payins cash (anuncio y entrega presencial)
@@ -95,10 +96,13 @@ Usa el detalle para `confirm_request` (solo roles org-admin y plataforma — a n
 
 
 <AccordionGroup>
-<Accordion title="¿Cash entrega instrucciones de depósito?">No. Es entrega física y no hay `deposit_instructions`.
+<Accordion title="¿Cash entrega instrucciones de depósito?">
+No. Es entrega física y no hay `deposit_instructions`.
 </Accordion>
-<Accordion title="¿confirm-received abona?">No. Solo la aprobación separada del checker abona.
+<Accordion title="¿confirm-received abona?">
+No. Solo la aprobación separada del checker abona.
 </Accordion>
-<Accordion title="¿Cuándo vence un anuncio cash?">Después de 24 horas en pending. La solicitud maker no tiene TTL de sistema y no puede aprobarse cuando vence su payin.
+<Accordion title="¿Cuándo vence un anuncio cash?">
+Después de 24 horas en pending. La solicitud maker no tiene TTL de sistema y no puede aprobarse cuando vence su payin.
 </Accordion>
 </AccordionGroup>

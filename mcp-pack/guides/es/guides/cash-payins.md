@@ -94,6 +94,9 @@ Usa el detalle para `confirm_request` (solo roles org-admin y plataforma — a n
 {"payin_id":"11111111-2222-4333-8444-555555555555","account_id":"66666666-7777-4888-8999-000000000000","country":"CL","currency":"CLP","local_amount":"47500","fx_rate":"950.00","rate_source":"lot","usdt_credited":"49.500000","fee":"0.500000"}
 ```
 
-#### ¿Cash entrega instrucciones de depósito?No. Es entrega física y no hay `deposit_instructions`.
-#### ¿confirm-received abona?No. Solo la aprobación separada del checker abona.
-#### ¿Cuándo vence un anuncio cash?Después de 24 horas en pending. La solicitud maker no tiene TTL de sistema y no puede aprobarse cuando vence su payin.
+#### ¿Cash entrega instrucciones de depósito?
+No. Es entrega física y no hay `deposit_instructions`.
+#### ¿confirm-received abona?
+No. Solo la aprobación separada del checker abona.
+#### ¿Cuándo vence un anuncio cash?
+Después de 24 horas en pending. La solicitud maker no tiene TTL de sistema y no puede aprobarse cuando vence su payin.
