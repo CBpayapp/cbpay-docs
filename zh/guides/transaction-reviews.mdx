@@ -185,6 +185,25 @@ curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000
 - 最大大小：每个文件 **50 MB**。
 - 每条审核最多 **20 个文件**。
 
+### 定向文件请求
+
+当审核详情包含 `requested_documents` 时，这些就是账户仍需提交的文件。
+上传时在查询参数 `category` 中发送对应类别：
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000000000001/files?name=bank-statement.pdf&category=bankStatement" \
+  -H "Authorization: Bearer pk_..." \
+  -H "Content-Type: application/pdf" \
+  --data-binary "@bank-statement.pdf"
+```
+
+只要仍有请求类别待完成，省略 `category` 或发送未待完成的类别都会返回
+`400 invalid_category`，消息为
+`category must be one of the requested documents for this review: ...`。
+该消息包含当前待完成的列表。所有请求类别都已覆盖后，可以继续上传任何
+有效 banking 类别的额外文件。`bankStatement` 表示银行对账单（extracto
+bancario），不会被重新命名。
+
 ## 下载您自己的文件
 
 ```bash

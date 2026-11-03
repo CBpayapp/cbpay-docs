@@ -5,6 +5,14 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.207 · 1 versión - 3 de noviembre de 2026
+### v2.207
+**Cambiado**
+- Los pedidos dirigidos de las revisiones transaccionales ahora exponen las
+  categorías documentales solicitadas. Mientras quede un documento pendiente,
+  la cuenta debe enviar su categoría; cubiertas todas, se aceptan categorías
+  válidas adicionales. Los uploads dirigidos inválidos devuelven el error
+  existente `400 invalid_category`.
 ## v2.206 · 1 versión - 2 de noviembre de 2026
 ### v2.206
 **Cambiado**

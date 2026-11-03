@@ -5,6 +5,14 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.207 · 1 version - November 3, 2026
+### v2.207
+**Changed**
+- Directed transaction-review requests now expose the requested document
+  categories. Account uploads must send a pending category while any requested
+  document remains outstanding; after all requested categories are covered,
+  additional valid categories are accepted. Invalid directed uploads return
+  the existing `400 invalid_category` error.
 ## v2.206 · 1 version - November 2, 2026
 ### v2.206
 **Changed**

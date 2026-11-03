@@ -19898,7 +19898,7 @@ paths:
       summary: 为信息请求上传文件
       description: |-
         为处于 `info_requested` 状态的审核上传证明文件。以原始二进制形式发送请求体，携带对应的 `Content-Type`（PDF、PNG、JPEG、WEBP、TXT、CSV、DOC(X) 或 XLS(X)，最大 50 MB），并在 `name` 查询参数中提供文件名。上传文件后，审核将回到 `in_review` 状态，等待合规团队重新评估。
-        可选 query 参数 `category` 使用固定的 banking 文档词汇。省略时文件仍会显示在审核中，但不能同步到 banking provider。文件可在 `info_requested`，或此前 request-info 后仍为 `in_review` 时上传。
+        `category` 查询参数使用固定的 banking 文档词汇。当 `requested_documents` 仍有待完成类别时，必须发送该参数并匹配其中一项；省略或发送其他有效类别会返回 `400 invalid_category` 以及待完成列表。所有请求类别都已覆盖后，可以上传其他有效 banking 类别。文件可在 `info_requested`，或此前 request-info 后仍为 `in_review` 时上传。
       parameters:
       - name: reviewID
         in: path
@@ -19914,7 +19914,7 @@ paths:
       - name: category
         in: query
         required: false
-        description: 可选的固定 banking 文档类别。省略时文件可见，但不会同步到 provider。
+        description: 固定的 banking 文档类别。审核有待完成的 `requested_documents` 时必须匹配其中一项；全部完成后可使用任何有效类别。
         schema:
           type: string
           enum:
@@ -19928,12 +19928,18 @@ paths:
           - controlStructure
           - uboIdentity
           - uboProofOfAddress
+          - uboBankStatement
           - sourceOfWealth
           - financialStatements
           - amlPolicy
           - wolfsberg
           - mlroCV
           - businessLicense
+          - dividendEvidence
+          - evidenceOfActivity
+          - shareholderRegister
+          - directorsRegister
+          - swornDeclaration
       requestBody:
         required: true
         content:

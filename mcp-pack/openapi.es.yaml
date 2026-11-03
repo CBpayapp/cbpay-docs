@@ -20497,7 +20497,7 @@ paths:
       summary: Sube un archivo para una solicitud de información
       description: |-
         Sube un documento de respaldo para una revisión en `info_requested`. Envía el binario crudo con su `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) o XLS(X), hasta 50 MB) y el nombre del archivo en el query param `name`. Al subir un archivo la revisión vuelve a `in_review` para que el equipo de cumplimiento la re-evalúe.
-        El query param opcional `category` usa un vocabulario cerrado de documentos banking. Si se omite, el archivo queda visible en la review pero no puede sincronizarse con el proveedor banking. Los uploads se aceptan en `info_requested` o en `in_review después de un `request-info` previo.
+        El query param `category` usa un vocabulario cerrado de documentos banking. Cuando `requested_documents` todavía tiene pendientes, es obligatorio y debe ser una de esas categorías; omitirlo o enviar otra categoría válida responde `400 invalid_category` con la lista pendiente. Cubiertas todas las categorías pedidas, se aceptan categorías banking válidas adicionales. Los uploads se aceptan en `info_requested` o en `in_review` después de un `request-info` previo.
       parameters:
       - name: reviewID
         in: path
@@ -20513,7 +20513,7 @@ paths:
       - name: category
         in: query
         required: false
-        description: Categoría cerrada opcional de documento banking. Omítela para un archivo visible que no pueda sincronizarse con el proveedor.
+        description: Categoría cerrada de documento banking. Es obligatoria cuando la review tiene `requested_documents` pendientes y debe coincidir con una de ellas. Cubiertas todas las categorías pedidas, se acepta cualquier categoría válida.
         schema:
           type: string
           enum:
@@ -20527,12 +20527,18 @@ paths:
           - controlStructure
           - uboIdentity
           - uboProofOfAddress
+          - uboBankStatement
           - sourceOfWealth
           - financialStatements
           - amlPolicy
           - wolfsberg
           - mlroCV
           - businessLicense
+          - dividendEvidence
+          - evidenceOfActivity
+          - shareholderRegister
+          - directorsRegister
+          - swornDeclaration
       requestBody:
         required: true
         content:
