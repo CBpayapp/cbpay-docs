@@ -185,6 +185,27 @@ curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000
 - Max size: **50 MB** per file.
 - Max **20 files** per review.
 
+### Directed document requests
+
+When the review detail includes `requested_documents`, those are the documents
+still pending from the account. Upload with the matching `category` query
+parameter:
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000000000001/files?name=bank-statement.pdf&category=bankStatement" \
+  -H "Authorization: Bearer pk_..." \
+  -H "Content-Type: application/pdf" \
+  --data-binary "@bank-statement.pdf"
+```
+
+While any requested category is still pending, omitting `category` or sending
+a category that is not pending returns `400 invalid_category` with
+`category must be one of the requested documents for this review: ...`.
+The server returns the current pending list in that message. Once every
+requested category has been covered, additional files with any valid banking
+category are accepted. `bankStatement` means a bank statement (extracto
+bancario); it is not relabeled.
+
 ## Download your own files
 
 ```bash

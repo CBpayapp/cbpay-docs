@@ -185,6 +185,27 @@ Respuesta `201` — al subir un archivo la revisión **vuelve a `in_review`** pa
 - Tamaño máximo: **50 MB** por archivo.
 - Máximo **20 archivos** por revisión.
 
+### Pedidos dirigidos de documentos
+
+Cuando el detalle de la revisión incluye `requested_documents`, esos son los
+documentos que la cuenta todavía debe entregar. Sube cada archivo con su
+categoría correspondiente en el query param `category`:
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000000000001/files?name=estado-de-cuenta.pdf&category=bankStatement" \
+  -H "Authorization: Bearer pk_..." \
+  -H "Content-Type: application/pdf" \
+  --data-binary "@estado-de-cuenta.pdf"
+```
+
+Mientras quede alguna categoría pedida pendiente, omitir `category` o enviar
+una categoría que no esté pendiente responde `400 invalid_category`, con el
+mensaje `category must be one of the requested documents for this review: ...`.
+El servidor incluye en ese mensaje la lista pendiente vigente. Cuando todas
+las categorías pedidas ya están cubiertas, se aceptan archivos adicionales
+con cualquier categoría banking válida. `bankStatement` significa estado de
+cuenta (extracto bancario); no se relabela.
+
 ## Descarga tus propios archivos
 
 ```bash
