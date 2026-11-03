@@ -97,6 +97,31 @@ ticket se cierra automáticamente después de 72 horas sin respuesta, usa el
 flujo normal de Soporte para abrir uno nuevo o responde antes de la fecha de
 cierre.
 
+## Responder por correo y notificaciones
+
+Los correos de soporte incluyen el badge con el número, el asunto, la
+respuesta citada y un botón que abre el ticket en el portal. La dirección
+`Reply-To` está vinculada al ticket (`support+<token>@...`) y vence a los
+90 días. Responderla agrega el mensaje a ese hilo; un token inválido o
+vencido se rechaza y nunca crea un ticket nuevo.
+
+Cuando la cuenta responde por correo, se notifica al administrador primario y
+a los administradores extra. Las notificaciones del portal son clicables y
+abren directamente el ticket. Las imágenes compatibles muestran thumbnail
+inline; la descarga original sigue autenticada y privada.
+
+## Búsqueda y visibilidad de asignación
+
+Usa `q` en el listado de tickets de la cuenta para buscar
+por número, título o cuerpo del mensaje. `q` admite hasta 128 caracteres;
+un valor inválido devuelve `400 invalid_query`. Mantén `from`, `to` y la
+paginación junto con los demás filtros documentados.
+
+La organización puede asignar un administrador primario y hasta diez extras.
+Las notificaciones de asignación se envían a todos los asignados elegibles.
+El detalle de cuenta nunca expone tokens de respuesta ni Actividad interna, y
+los candidatos de tipo bank-partner quedan fuera de la asignación.
+
 ## Estados, SLA y errores
 
 | Estado | Significado | Acción |

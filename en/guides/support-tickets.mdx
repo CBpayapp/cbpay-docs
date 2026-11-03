@@ -163,6 +163,31 @@ or `resolved` as `open`; `closed` remains terminal. If automation closes a
 ticket after 72 hours without a customer reply, use the normal Support flow to
 open a new ticket or reply before the close deadline.
 
+## Reply by email and notifications
+
+Support emails include the ticket number badge, subject, quoted reply and a
+button that opens the ticket in the portal. The `Reply-To` address is
+ticket-scoped (`support+<token>@...`) and is valid for 90 days. Replying to
+that address appends the message to this ticket; invalid or expired tokens
+are rejected and never create a new ticket.
+
+When an account replies by email, the primary administrator and extra
+assignees are notified. Portal notifications are clickable and open the
+ticket directly. Supported image attachments show an inline thumbnail; the
+original download remains authenticated and private.
+
+## Search and assignment visibility
+
+Use `q` on account ticket lists to search the ticket number,
+subject or message body. `q` is capped at 128 characters; an invalid value
+returns `400 invalid_query`. Continue using `from`, `to`, pagination and the
+other documented filters.
+
+An organization may assign one primary administrator and up to ten extra
+assignees. Assignment notifications fan out to every eligible assignee. The
+account-facing detail never exposes reply tokens or internal activity, and
+bank-partner identities are excluded from support assignment candidates.
+
 ## Status, SLA and errors
 
 | Status | Meaning | Account action |
