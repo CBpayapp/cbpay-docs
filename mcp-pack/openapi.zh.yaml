@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.208"
+  version: "2.211"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -95,6 +95,9 @@ tags:
     Server-Sent Events 流，实时推送账户内（管理员则为整个组织）发生的所有事件，支持通过 `Last-Event-ID` 重放、可选的初始快照，以及 90 天可查询历史。
 - name: 合同
   description: 面向已验证企业账户的预填充 Grupo CB 主协议。
+- name: 推荐人门户
+  description: >-
+    推荐人只读门户（payout 账户凭证）：个人资料、已推荐客户、已计提佣金和三语对账单（JSON/PDF/XLSX）。
 paths:
   /v1/me/search:
     get:
@@ -19987,7 +19990,7 @@ paths:
       summary: 为信息请求上传文件
       description: |-
         为处于 `info_requested` 状态的审核上传证明文件。以原始二进制形式发送请求体，携带对应的 `Content-Type`（PDF、PNG、JPEG、WEBP、TXT、CSV、DOC(X) 或 XLS(X)，最大 50 MB），并在 `name` 查询参数中提供文件名。上传文件后，审核将回到 `in_review` 状态，等待合规团队重新评估。
-        可选 query 参数 `category` 使用固定的 banking 文档词汇。省略时文件仍会显示在审核中，但不能同步到 banking provider。文件可在 `info_requested`，或此前 request-info 后仍为 `in_review` 时上传。
+        `category` 查询参数使用固定的 banking 文档词汇。当 `requested_documents` 仍有待完成类别时，必须发送该参数并匹配其中一项；省略或发送其他有效类别会返回 `400 invalid_category` 以及待完成列表。所有请求类别都已覆盖后，可以上传其他有效 banking 类别。文件可在 `info_requested`，或此前 request-info 后仍为 `in_review` 时上传。
       parameters:
       - name: reviewID
         in: path
@@ -20003,7 +20006,7 @@ paths:
       - name: category
         in: query
         required: false
-        description: 可选的固定 banking 文档类别。省略时文件可见，但不会同步到 provider。
+        description: 固定的 banking 文档类别。审核有待完成的 `requested_documents` 时必须匹配其中一项；全部完成后可使用任何有效类别。
         schema:
           type: string
           enum:
@@ -20017,12 +20020,18 @@ paths:
           - controlStructure
           - uboIdentity
           - uboProofOfAddress
+          - uboBankStatement
           - sourceOfWealth
           - financialStatements
           - amlPolicy
           - wolfsberg
           - mlroCV
           - businessLicense
+          - dividendEvidence
+          - evidenceOfActivity
+          - shareholderRegister
+          - directorsRegister
+          - swornDeclaration
       requestBody:
         required: true
         content:
@@ -24752,6 +24761,82 @@ paths:
                 receipt_render_failed:
                   summary: 'PDF 生成失败'
                   value: {error: receipt_render_failed, message: 无法生成工资单 PDF}
+  /v1/referrer/me:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: getReferrerMe
+      summary: 我的推荐人资料
+      description: >-
+        调用方推荐人的资料（凭证必须属于推荐人 payout 账户）。
+      responses:
+        '200':
+          description: 推荐人。
+        '404':
+          description: not_found（非推荐人 payout 账户）。
+  /v1/referrer/clients:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: listReferrerClients
+      summary: 我推荐的客户
+      description: 调用方推荐人的分页分配。
+      parameters:
+      - {name: status, in: query, schema: {type: string, enum: [active, revoked]}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, assignments[]}。'
+  /v1/referrer/commissions:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: listReferrerCommissions
+      summary: 我的佣金
+      description: 调用方推荐人的分页已计提佣金。
+      parameters:
+      - {name: account_id, in: query, schema: {type: string}}
+      - {name: status, in: query, schema: {type: string}}
+      - {name: period, in: query, schema: {type: string}}
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, commissions[]}。'
+        '400':
+          description: invalid_range.
+  /v1/referrer/statement:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: getReferrerStatement
+      summary: 我的对账单
+      description: >-
+        调用方推荐人在区间内的完整对账单：合计、按客户汇总、按交易明细、结算和对账标志。`format`
+        json（默认）、pdf 或 xlsx；`lang` es/en/zh。
+      parameters:
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: format, in: query, schema: {type: string, enum: [json, pdf, xlsx], default: json}}
+      - {name: lang, in: query, schema: {type: string, enum: [es, en, zh]}}
+      responses:
+        '200':
+          description: 对账单（JSON 对象或 PDF/XLSX 下载）。
+        '400':
+          description: invalid_range 或 invalid_format。
+        '404':
+          description: not_found.
 components:
   securitySchemes:
     bearerAuth:

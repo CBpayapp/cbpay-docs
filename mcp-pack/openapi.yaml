@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.208"
+  version: "2.211"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -124,6 +124,11 @@ tags:
   description: Public Trust Center metadata and tokenized NDA-gated compliance document access.
 - name: Contracts
   description: Pre-filled Grupo CB framework agreements for verified company accounts.
+- name: Referrer portal
+  description: >-
+    Read-only portal for referrers (account credential of the payout account):
+    profile, referred clients, accrued commissions and the trilingual
+    statement (JSON/PDF/XLSX).
 paths:
   /v1/me/search:
     get:
@@ -20784,7 +20789,7 @@ paths:
       summary: Upload a file for an information request
       description: |-
         Uploads a supporting document for a review in `info_requested`. Send the raw binary body with its `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) or XLS(X), up to 50 MB) and the filename in the `name` query param. Uploading a file moves the review back to `in_review` so the compliance team re-evaluates it.
-        The optional `category` query parameter uses a closed banking-document vocabulary. Omitting it keeps the file visible in the review but it is not eligible for banking-provider synchronization. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`.
+        The `category` query parameter uses a closed banking-document vocabulary. When `requested_documents` still has pending entries, it is required and must be one of those pending categories; omitting it or sending another valid category returns `400 invalid_category` with the pending list. After all requested categories are covered, additional valid banking categories are accepted. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`.
       parameters:
       - name: reviewID
         in: path
@@ -20800,7 +20805,7 @@ paths:
       - name: category
         in: query
         required: false
-        description: Optional closed banking-document category. Omit for a visible file that is not eligible for provider synchronization.
+        description: Closed banking-document category. Required when the review has pending `requested_documents`; it must match one of them. After all requested categories are covered, any valid category is accepted.
         schema:
           type: string
           enum:
@@ -20814,12 +20819,18 @@ paths:
           - controlStructure
           - uboIdentity
           - uboProofOfAddress
+          - uboBankStatement
           - sourceOfWealth
           - financialStatements
           - amlPolicy
           - wolfsberg
           - mlroCV
           - businessLicense
+          - dividendEvidence
+          - evidenceOfActivity
+          - shareholderRegister
+          - directorsRegister
+          - swornDeclaration
       requestBody:
         required: true
         content:
@@ -25720,6 +25731,84 @@ paths:
                 receipt_render_failed:
                   summary: PDF render failure
                   value: {error: receipt_render_failed, message: could not render the pay slip PDF}
+  /v1/referrer/me:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: getReferrerMe
+      summary: My referrer profile
+      description: >-
+        Profile of the calling referrer (the credential must belong to a
+        referrer payout account).
+      responses:
+        '200':
+          description: Referrer.
+        '404':
+          description: not_found (not a referrer payout account).
+  /v1/referrer/clients:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: listReferrerClients
+      summary: My referred clients
+      description: Paginated assignments of the calling referrer.
+      parameters:
+      - {name: status, in: query, schema: {type: string, enum: [active, revoked]}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, assignments[]}.'
+  /v1/referrer/commissions:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: listReferrerCommissions
+      summary: My commissions
+      description: Paginated accrued commissions of the calling referrer.
+      parameters:
+      - {name: account_id, in: query, schema: {type: string}}
+      - {name: status, in: query, schema: {type: string}}
+      - {name: period, in: query, schema: {type: string}}
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, commissions[]}.'
+        '400':
+          description: invalid_range.
+  /v1/referrer/statement:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: getReferrerStatement
+      summary: My statement
+      description: >-
+        Full statement of the calling referrer in a range: totals, per-client
+        summary, per-transaction detail, closings and reconciliation flag.
+        `format` json (default), pdf or xlsx; `lang` es/en/zh.
+      parameters:
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: format, in: query, schema: {type: string, enum: [json, pdf, xlsx], default: json}}
+      - {name: lang, in: query, schema: {type: string, enum: [es, en, zh]}}
+      responses:
+        '200':
+          description: Statement (JSON object or PDF/XLSX download).
+        '400':
+          description: invalid_range or invalid_format.
+        '404':
+          description: not_found.
 
 components:
   securitySchemes:
