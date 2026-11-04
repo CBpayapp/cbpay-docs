@@ -5,25 +5,25 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.212 · 3 versiones - 4 de noviembre de 2026
-### v2.212
+## v2.211 · 3 versiones - 4 de noviembre de 2026
+### v2.211
 **Agregado**
 - Las cuentas empresa pueden configurar la marca de sus links KYC/KYB
   hosteados desde el portal, con preview, fallback cuenta → organización →
   CBPay y un pill fijo «Impulsado por CBPay» en el footer.
 - Se agregaron ejemplos de `GET` y `PUT /v1/account/branding` a la guía
   KYC/KYB. Cada link congela un snapshot sanitizado de la marca al crearse.
-### v2.211
+### v2.210
 **Agregado**
 - Se agregó la guía del Portal del referidor para perfil, clientes asignados,
   comisiones devengadas e informes JSON/PDF/XLSX.
 - Se documentaron el acceso acotado a la cuenta, el cálculo sobre utilidad
   neta, la paginación, la localización y los reintentos de solo lectura.
-### v2.210
+### v2.209
 **Cambiado**
 - Se agregó el resumen final del detalle de retiros crypto con estado, montos, dirección de destino, red, ID de transacción, recibo y tracking.
-## v2.209 · 3 versiones - 3 de noviembre de 2026
-### v2.209
+## v2.208 · 2 versiones - 3 de noviembre de 2026
+### v2.208
 **Cambiado**
 - Los correos de soporte ahora incluyen badge del ticket, respuesta citada y
   deep-link al portal. Las respuestas por `Reply-To`
@@ -32,19 +32,12 @@ source_url: https://docs.cbpayapp.com/es/changelog
 - El listado de tickets acepta búsqueda `q` acotada. La
   asignación documenta administrador primario más hasta diez extras,
   notificaciones clicables y previews inline de imágenes.
-### v2.208
+### v2.207
 **Cambiado**
 - `PATCH /v1/me` ahora devuelve `409 verification_in_progress` cuando el
   expediente de verificación propia está abierto. Si solo existe un link
   alojado abierto, cambiar el país revoca ese link y emite gratis uno nuevo
   para el país nuevo.
-### v2.207
-**Cambiado**
-- Los pedidos dirigidos de las revisiones transaccionales ahora exponen las
-  categorías documentales solicitadas. Mientras quede un documento pendiente,
-  la cuenta debe enviar su categoría; cubiertas todas, se aceptan categorías
-  válidas adicionales. Los uploads dirigidos inválidos devuelven el error
-  existente `400 invalid_category`.
 ## v2.206 · 1 versión - 2 de noviembre de 2026
 ### v2.206
 **Cambiado**

@@ -5,25 +5,25 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.212 · 3 versions - November 4, 2026
-### v2.212
+## v2.211 · 3 versions - November 4, 2026
+### v2.211
 **Added**
 - Company accounts can configure account-level branding for hosted KYC/KYB
   links from the portal, with preview, account → organization → CBPay
   fallback, and a fixed “Powered by CBPay” footer pill.
 - Added `GET` and `PUT /v1/account/branding` examples to the KYC/KYB guide.
   A link freezes a sanitized brand snapshot when it is created.
-### v2.211
+### v2.210
 **Added**
 - Added the read-only Referrer Portal guide for profiles, assigned clients,
   accrued commissions and JSON/PDF/XLSX statements.
 - Documented account-scoped access, net-profit calculation, pagination,
   localization and safe handling of read-only retries.
-### v2.210
+### v2.209
 **Changed**
 - Added the final crypto withdrawal detail summary with status, amounts, destination address, network, transaction ID, receipt and tracking actions.
-## v2.209 · 3 versions - November 3, 2026
-### v2.209
+## v2.208 · 2 versions - November 3, 2026
+### v2.208
 **Changed**
 - Support emails now include a ticket badge, quoted reply and portal deep link.
   Replies through the short-lived opaque `support+<token>` Reply-To address
@@ -32,19 +32,12 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - Account ticket lists support bounded `q` search. Support
   assignment details document a primary administrator plus up to ten extras,
   clickable portal notifications and inline image previews.
-### v2.208
+### v2.207
 **Changed**
 - `PATCH /v1/me` now returns `409 verification_in_progress` when the
   account's own verification submission is open. If only an open hosted link
   exists, changing country revokes that link and reissues a free link for the
   new country.
-### v2.207
-**Changed**
-- Directed transaction-review requests now expose the requested document
-  categories. Account uploads must send a pending category while any requested
-  document remains outstanding; after all requested categories are covered,
-  additional valid categories are accepted. Invalid directed uploads return
-  the existing `400 invalid_category` error.
 ## v2.206 · 1 version - November 2, 2026
 ### v2.206
 **Changed**

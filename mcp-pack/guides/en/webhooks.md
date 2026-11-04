@@ -102,6 +102,7 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `transfer_received` | The account received an internal transfer |
 | `payroll_credited` | The organization credited a salary to the account balance (direct treasury credit) |
 | `org_expense_credited` | The organization paid an operating expense to the account balance (direct treasury credit) |
+| `referral_credited` | The organization paid a referrer closing to the payout account balance (referral commission for the period) |
 | `crypto_deposit_credited` | An on-chain deposit was confirmed and credited |
 | `crypto_deposit_held` | An incoming deposit was held due to sender risk ([screening](https://docs.cbpayapp.com/en/guides/screenings)) |
 | `crypto_deposit_alert` | A deposit was credited but the sender shows high risk (informational) |
