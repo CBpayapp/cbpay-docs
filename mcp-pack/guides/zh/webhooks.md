@@ -111,6 +111,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `transfer_received` | 账户收到一笔内部转账 |
 | `payroll_credited` | 组织向该账户余额发放了一笔工资（财务直接入账）|
 | `org_expense_credited` | 组织向该账户余额支付了一笔运营费用（财务直接入账）|
+| `referral_credited` | 组织向 payout 账户余额支付了一笔推荐人结算（该期间的推荐人佣金）|
 | `crypto_deposit_credited` | 一笔链上充值已确认并入账 |
 | `crypto_deposit_held` | 一笔入账充值因发送方风险被暂扣（[筛查](https://docs.cbpayapp.com/zh/guides/screenings)） |
 | `crypto_deposit_alert` | 一笔充值已入账，但发送方显示高风险（仅提示） |

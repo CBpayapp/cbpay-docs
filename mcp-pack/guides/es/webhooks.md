@@ -101,6 +101,7 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `transfer_received` | La cuenta recibió una transferencia interna |
 | `payroll_credited` | La organización acreditó un sueldo al saldo de la cuenta (crédito directo de tesorería) |
 | `org_expense_credited` | La organización pagó un gasto operativo al saldo de la cuenta (crédito directo de tesorería) |
+| `referral_credited` | La organización pagó un cierre de referidor al saldo de la cuenta payout (comisión del período) |
 | `crypto_deposit_credited` | Un depósito on-chain fue confirmado y abonado |
 | `crypto_deposit_held` | Un depósito entrante quedó retenido por riesgo del remitente ([screening](https://docs.cbpayapp.com/es/guides/screenings)) |
 | `crypto_deposit_alert` | Un depósito se acreditó pero el remitente presenta riesgo alto (informativo) |

@@ -28224,6 +28224,40 @@ webhooks:
       responses:
         '200':
           description: Return any 2xx to acknowledge the delivery.
+  referral_credited:
+    post:
+      summary: Referral commission credited
+      description: 'The organization paid a referrer closing to the balance of
+        the payout account (referral commission for the period).
+
+
+        Every delivery includes `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp`
+        and `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`. Respond 2xx; up
+        to 5 attempts with incremental backoff.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                closing_id: *id017
+                referrer_id: *id017
+                referrer_code: *id017
+                period: *id017
+                to_account_id: *id017
+                asset: *id017
+                amount: *id017
+            example:
+              closing_id: 6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c
+              referrer_id: 7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d
+              referrer_code: hernan
+              period: '2026-11'
+              to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+              asset: USDC
+              amount: '0.009985'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge the delivery.
   org_expense_credited:
     post:
       summary: Organization expense credited

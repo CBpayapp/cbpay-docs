@@ -27165,6 +27165,39 @@ webhooks:
       responses:
         '200':
           description: 请返回任意 2xx 以确认投递。
+  referral_credited:
+    post:
+      summary: 推荐人佣金已入账
+      description: '组织向 payout 账户余额支付了一笔推荐人结算(该期间的推荐人佣金)。
+
+
+        每次投递均包含 `X-Webhook-Event`、`X-Webhook-Event-ID`、`X-Webhook-Delivery-ID`、`X-Webhook-Timestamp`
+        和 `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`。请返回 2xx；最多
+        5 次投递，退避递增。'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                closing_id: *id017
+                referrer_id: *id017
+                referrer_code: *id017
+                period: *id017
+                to_account_id: *id017
+                asset: *id017
+                amount: *id017
+            example:
+              closing_id: 6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c
+              referrer_id: 7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d
+              referrer_code: hernan
+              period: '2026-11'
+              to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
+              asset: USDC
+              amount: '0.009985'
+      responses:
+        '200':
+          description: 请返回任意 2xx 以确认投递。
   org_expense_credited:
     post:
       summary: 组织费用已入账
