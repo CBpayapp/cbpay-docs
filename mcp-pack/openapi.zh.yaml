@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.208"
+  version: "2.209"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -95,6 +95,9 @@ tags:
     Server-Sent Events 流，实时推送账户内（管理员则为整个组织）发生的所有事件，支持通过 `Last-Event-ID` 重放、可选的初始快照，以及 90 天可查询历史。
 - name: 合同
   description: 面向已验证企业账户的预填充 Grupo CB 主协议。
+- name: 推荐人门户
+  description: >-
+    推荐人只读门户（payout 账户凭证）：个人资料、已推荐客户、已计提佣金和三语对账单（JSON/PDF/XLSX）。
 paths:
   /v1/me/search:
     get:
@@ -1903,6 +1906,88 @@ paths:
                 timezone: America/New_York
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/account/branding:
+    get:
+      tags:
+      - 账户
+      operationId: getAccountBranding
+      summary: 获取企业品牌
+      description: 企业账户的有效品牌（名称、颜色、徽标），回退顺序为账户 → 组织 → CBPay 默认值。`custom` 表示该账户是否配置了自有品牌。仅企业账户；只读，无 PII。
+      responses:
+        '200':
+          description: 有效的账户品牌。
+          content:
+            application/json:
+              example:
+                brand_name: ACME Corp
+                website: www.acme.example
+                footer_address: ''
+                support_email: support@acme.example
+                colors:
+                  primary: '#1A2B3C'
+                  header: '#2E2E2E'
+                  accent: '#A16207'
+                logo_url: https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png
+                symbol_url: ''
+                custom: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: company_account_required 或 account_blocked。
+    put:
+      tags:
+      - 账户
+      operationId: updateAccountBranding
+      summary: 配置企业品牌
+      description: 设置 KYC/KYB 验证链接打开时使用的品牌（名称、颜色、徽标）。空白文本依次回退到组织品牌，再到 CBPay。徽标为 base64 PNG（省略=保留，""=删除；最大 512 KB、2000x2000 像素）。颜色为 6 位十六进制，可带或不带 '#'。仅企业账户。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                brand_name: {type: string, maxLength: 120}
+                website: {type: string, maxLength: 200}
+                footer_address: {type: string, maxLength: 200}
+                support_email: {type: string, maxLength: 254}
+                color_primary: {type: string}
+                color_header: {type: string}
+                color_accent: {type: string}
+                logo_png_base64: {type: string}
+                symbol_png_base64: {type: string}
+            example:
+              brand_name: ACME Corp
+              website: www.acme.example
+              support_email: support@acme.example
+              color_primary: 1A2B3C
+              color_header: ''
+              color_accent: ''
+      responses:
+        '200':
+          description: 已更新的有效品牌。
+          content:
+            application/json:
+              example:
+                brand_name: ACME Corp
+                website: www.acme.example
+                footer_address: ''
+                support_email: support@acme.example
+                colors:
+                  primary: '#1A2B3C'
+                  header: '#2E2E2E'
+                  accent: '#A16207'
+                logo_url: https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png
+                symbol_url: ''
+                custom: true
+        '400':
+          description: invalid_color、text_too_long、invalid_logo、logo_too_large 或 unsupported_logo。
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: company_account_required 或 account_blocked。
+        '413':
+          description: logo_too_large。
   /v1/auth/register:
     post:
       tags:
@@ -24670,6 +24755,82 @@ paths:
                 receipt_render_failed:
                   summary: 'PDF 生成失败'
                   value: {error: receipt_render_failed, message: 无法生成工资单 PDF}
+  /v1/referrer/me:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: getReferrerMe
+      summary: 我的推荐人资料
+      description: >-
+        调用方推荐人的资料（凭证必须属于推荐人 payout 账户）。
+      responses:
+        '200':
+          description: 推荐人。
+        '404':
+          description: not_found（非推荐人 payout 账户）。
+  /v1/referrer/clients:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: listReferrerClients
+      summary: 我推荐的客户
+      description: 调用方推荐人的分页分配。
+      parameters:
+      - {name: status, in: query, schema: {type: string, enum: [active, revoked]}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, assignments[]}。'
+  /v1/referrer/commissions:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: listReferrerCommissions
+      summary: 我的佣金
+      description: 调用方推荐人的分页已计提佣金。
+      parameters:
+      - {name: account_id, in: query, schema: {type: string}}
+      - {name: status, in: query, schema: {type: string}}
+      - {name: period, in: query, schema: {type: string}}
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, commissions[]}。'
+        '400':
+          description: invalid_range.
+  /v1/referrer/statement:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - 推荐人门户
+      operationId: getReferrerStatement
+      summary: 我的对账单
+      description: >-
+        调用方推荐人在区间内的完整对账单：合计、按客户汇总、按交易明细、结算和对账标志。`format`
+        json（默认）、pdf 或 xlsx；`lang` es/en/zh。
+      parameters:
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: format, in: query, schema: {type: string, enum: [json, pdf, xlsx], default: json}}
+      - {name: lang, in: query, schema: {type: string, enum: [es, en, zh]}}
+      responses:
+        '200':
+          description: 对账单（JSON 对象或 PDF/XLSX 下载）。
+        '400':
+          description: invalid_range 或 invalid_format。
+        '404':
+          description: not_found.
 components:
   securitySchemes:
     bearerAuth:
