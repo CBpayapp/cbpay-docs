@@ -177,6 +177,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `already_verified` | 使用已通过验证的账户请求了入驻链接 |
 | 409 | `superseded` | 验证 ID 是冻结的迁移墓碑；读取内容来自活跃案件 | 不要在墓碑上作出决定、上传证据、创建活体链接、预签名/确认文档或 PATCH banking intent。读取 `migrated_to` 并操作活跃案件 |
 | 409 | `identity_locked` | 验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持 |
+| 409 | `verification_in_progress` | 自有验证案件仍在进行时，`PATCH /v1/me` 不能修改国家；请先完成或关闭该案件 |
 | 409 | `no_screening` | 在没有先行筛查的情况下发起 AML/CFT 重新筛查/监控 |
 | 409 | `no_banking_customer` | 传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程 |
 | 400 | `banking_eur_requires_viban` | EUR Banking 账户通过虚拟 IBAN 开立。请在 Operar EUR 中请求 `purpose: "banking_eur"`，不要创建通用 banking customer |

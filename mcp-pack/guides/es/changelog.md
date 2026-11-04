@@ -5,14 +5,22 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.207 · 1 versión - 3 de noviembre de 2026
+## v2.208 · 2 versiones - 3 de noviembre de 2026
+### v2.208
+**Cambiado**
+- Los correos de soporte ahora incluyen badge del ticket, respuesta citada y
+  deep-link al portal. Las respuestas por `Reply-To`
+  `support+<token>` opaco de corta duración entran al hilo existente (tokens
+  válidos por 90 días); los tokens inválidos o vencidos fallan cerrado.
+- El listado de tickets acepta búsqueda `q` acotada. La
+  asignación documenta administrador primario más hasta diez extras,
+  notificaciones clicables y previews inline de imágenes.
 ### v2.207
 **Cambiado**
-- Los pedidos dirigidos de las revisiones transaccionales ahora exponen las
-  categorías documentales solicitadas. Mientras quede un documento pendiente,
-  la cuenta debe enviar su categoría; cubiertas todas, se aceptan categorías
-  válidas adicionales. Los uploads dirigidos inválidos devuelven el error
-  existente `400 invalid_category`.
+- `PATCH /v1/me` ahora devuelve `409 verification_in_progress` cuando el
+  expediente de verificación propia está abierto. Si solo existe un link
+  alojado abierto, cambiar el país revoca ese link y emite gratis uno nuevo
+  para el país nuevo.
 ## v2.206 · 1 versión - 2 de noviembre de 2026
 ### v2.206
 **Cambiado**

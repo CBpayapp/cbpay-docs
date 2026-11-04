@@ -5,14 +5,22 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.207 · 1 version - November 3, 2026
+## v2.208 · 2 versions - November 3, 2026
+### v2.208
+**Changed**
+- Support emails now include a ticket badge, quoted reply and portal deep link.
+  Replies through the short-lived opaque `support+<token>` Reply-To address
+  enter the existing thread (tokens valid 90 days); invalid or expired tokens
+  fail closed.
+- Account ticket lists support bounded `q` search. Support
+  assignment details document a primary administrator plus up to ten extras,
+  clickable portal notifications and inline image previews.
 ### v2.207
 **Changed**
-- Directed transaction-review requests now expose the requested document
-  categories. Account uploads must send a pending category while any requested
-  document remains outstanding; after all requested categories are covered,
-  additional valid categories are accepted. Invalid directed uploads return
-  the existing `400 invalid_category` error.
+- `PATCH /v1/me` now returns `409 verification_in_progress` when the
+  account's own verification submission is open. If only an open hosted link
+  exists, changing country revokes that link and reissues a free link for the
+  new country.
 ## v2.206 · 1 version - November 2, 2026
 ### v2.206
 **Changed**

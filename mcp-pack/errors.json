@@ -1,5 +1,5 @@
 {
-  "count": 401,
+  "count": 402,
   "errors": [
     {
       "category": {
@@ -1637,6 +1637,20 @@
         "en": "With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support",
         "es": "Con la verificación aprobada, `display_name`, `tax_id` y `country` vienen de la identidad verificada y no se cambian por `PATCH /v1/me`; contacta al soporte",
         "zh": "验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "verification_in_progress",
+      "http": 409,
+      "meaning": {
+        "en": "`PATCH /v1/me` cannot change country while the account's own verification submission is open; finish or close that case first",
+        "es": "`PATCH /v1/me` no cambia el país mientras el expediente de verificación propia está abierto; termina o cierra ese caso primero",
+        "zh": "自有验证案件仍在进行时，`PATCH /v1/me` 不能修改国家；请先完成或关闭该案件"
       }
     },
     {

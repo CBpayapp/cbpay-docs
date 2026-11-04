@@ -196,6 +196,7 @@ part of the replay identity. Read the live status with
 | 409 | `already_verified` | Onboarding link requested with an already-verified account |
 | 409 | `superseded` | The verification ID is a frozen migrated tombstone; its data is served from the live case | Do not decide, upload evidence, create liveness links, presign/confirm documents, or patch banking intent on the tombstone. Read the response's `migrated_to` ID and operate that live case instead |
 | 409 | `identity_locked` | With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support |
+| 409 | `verification_in_progress` | `PATCH /v1/me` cannot change country while the account's own verification submission is open; finish or close that case first |
 | 409 | `no_screening` | AML/CFT rescreen/monitoring without a prior screening |
 | 409 | `no_banking_customer` | Classic Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
 | 400 | `banking_eur_requires_viban` | EUR Banking accounts are opened as virtual IBANs. Request `purpose: "banking_eur"` from Operar EUR instead of creating a generic banking customer |
