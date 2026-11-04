@@ -186,6 +186,63 @@ curl https://api.qbank.cl/platform/v1/kyb/links/{link_id} \
 | `completed` | 表单已提交——生成提交件（`kyb_link_completed` / `kyc_link_completed` webhook） |
 | `expired` | 未完成即已过期 |
 
+### 为您的验证链接设置品牌
+
+企业账户可以在门户的**设置 → Branding** 中配置托管 KYC/KYB 链接的外观。
+预览使用新链接实际采用的有效品牌。您可以上传 PNG 徽标、查看预览，并调整
+企业名称、网站、页脚地址、支持邮箱和颜色。
+
+企业账户也可以通过 API 使用相同的设置。`brand_name` 最多 120 个字符，
+`website` 和 `footer_address` 最多 200 个字符，`support_email` 最多 254
+个字符。颜色接受六位十六进制值，可带或不带 `#`。徽标必须是最多 512 KB、
+尺寸不超过 2000×2000 像素的 base64 PNG；省略徽标字段表示保留当前图片，
+发送空字符串表示删除图片。
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/account/branding \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brand_name": "ACME Corp",
+    "website": "www.acme.example",
+    "support_email": "support@acme.example",
+    "color_primary": "1A2B3C",
+    "color_header": "",
+    "color_accent": ""
+  }'
+```
+
+`200 OK` 会返回更新后的有效品牌。`PUT` 和 `GET` 使用相同的响应结构：
+
+```json
+{
+  "brand_name": "ACME Corp",
+  "website": "www.acme.example",
+  "footer_address": "",
+  "support_email": "support@acme.example",
+  "colors": {
+    "primary": "#1A2B3C",
+    "header": "#2E2E2E",
+    "accent": "#A16207"
+  },
+  "logo_url": "https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png",
+  "symbol_url": "",
+  "custom": true
+}
+```
+
+在自己的设置页面展示品牌前，先读取当前有效值：
+
+```bash
+curl https://api.qbank.cl/platform/v1/account/branding \
+  -H "Authorization: Bearer <token>"
+```
+
+有效回退顺序是**账户 → 组织 → CBPay**。空文本值会从下一级继承。创建链接
+时会保存经过清理的品牌快照，因此之后更改账户品牌不会意外改变已经提供的
+链接。托管向导会显示选定的徽标、名称和颜色，但 **“Powered by CBPay”**
+标签始终固定，页脚也始终保留。
+
 ### 受邀 UBO 和董事
 
 在托管 KYB 流程中，每位受邀的 UBO 或董事都要完成自己的

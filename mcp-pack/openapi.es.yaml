@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.209"
+  version: "2.208"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -134,11 +134,6 @@ tags:
     Stream Server-Sent Events con todo lo que pasa en la cuenta (o en toda la organización para administradores), replay con `Last-Event-ID`, snapshot inicial opcional e historial consultable de 90 días.
 - name: Contratos
   description: Contratos Marco Grupo CB prellenados para cuentas empresa verificadas.
-- name: Portal del referidor
-  description: >-
-    Portal de solo lectura para referidores (credencial de la cuenta payout):
-    perfil, clientes referidos, comisiones devengadas e informe trilingüe
-    (JSON/PDF/XLSX).
 paths:
   /v1/me/search:
     get:
@@ -25510,84 +25505,6 @@ paths:
                 receipt_render_failed:
                   summary: 'Fallo al generar el PDF'
                   value: {error: receipt_render_failed, message: no se pudo generar el PDF de la liquidación}
-  /v1/referrer/me:
-    get:
-      security:
-        - bearerAuth: []
-      tags:
-      - Portal del referidor
-      operationId: getReferrerMe
-      summary: Mi perfil de referidor
-      description: >-
-        Perfil del referidor llamante (la credencial debe pertenecer a una
-        cuenta payout de referidor).
-      responses:
-        '200':
-          description: Referidor.
-        '404':
-          description: not_found (no es una cuenta payout de referidor).
-  /v1/referrer/clients:
-    get:
-      security:
-        - bearerAuth: []
-      tags:
-      - Portal del referidor
-      operationId: listReferrerClients
-      summary: Mis clientes referidos
-      description: Asignaciones paginadas del referidor llamante.
-      parameters:
-      - {name: status, in: query, schema: {type: string, enum: [active, revoked]}}
-      - {name: page, in: query, schema: {type: integer, default: 1}}
-      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
-      responses:
-        '200':
-          description: '{page, page_size, assignments[]}.'
-  /v1/referrer/commissions:
-    get:
-      security:
-        - bearerAuth: []
-      tags:
-      - Portal del referidor
-      operationId: listReferrerCommissions
-      summary: Mis comisiones
-      description: Comisiones devengadas paginadas del referidor llamante.
-      parameters:
-      - {name: account_id, in: query, schema: {type: string}}
-      - {name: status, in: query, schema: {type: string}}
-      - {name: period, in: query, schema: {type: string}}
-      - {name: from, in: query, schema: {type: string, format: date}}
-      - {name: to, in: query, schema: {type: string, format: date}}
-      - {name: page, in: query, schema: {type: integer, default: 1}}
-      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
-      responses:
-        '200':
-          description: '{page, page_size, commissions[]}.'
-        '400':
-          description: invalid_range.
-  /v1/referrer/statement:
-    get:
-      security:
-        - bearerAuth: []
-      tags:
-      - Portal del referidor
-      operationId: getReferrerStatement
-      summary: Mi informe
-      description: >-
-        Informe completo del referidor llamante en un rango: totales, resumen
-        por cliente, detalle por transacción, cierres y bandera de cuadratura.
-        `format` json (default), pdf o xlsx; `lang` es/en/zh.
-      parameters:
-      - {name: from, in: query, schema: {type: string, format: date}}
-      - {name: to, in: query, schema: {type: string, format: date}}
-      - {name: format, in: query, schema: {type: string, enum: [json, pdf, xlsx], default: json}}
-      - {name: lang, in: query, schema: {type: string, enum: [es, en, zh]}}
-      responses:
-        '200':
-          description: Informe (objeto JSON o descarga PDF/XLSX).
-        '400':
-          description: invalid_range o invalid_format.
-        '404':
-          description: not_found.
 components:
   securitySchemes:
     bearerAuth:
