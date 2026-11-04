@@ -306,6 +306,42 @@ curl https://api.qbank.cl/platform/v1/crypto/withdrawals/5e8c… \
 Para mover saldo a **otra cuenta CBPay** no uses la blockchain: las
 [transferencias internas](https://docs.cbpayapp.com/es/guides/transfers) son instantáneas y
 gratis.
+### Detalle del retiro y resumen final
+
+Después de crear un retiro, el portal abre
+`/crypto/withdrawals/{withdrawal_id}` y carga
+`GET /v1/crypto/withdrawals/{withdrawal_id}`. Esta página es el resumen final
+de la operación. Muestra el estado actual, activo, monto, comisión y débito
+total, dirección de destino, red, ID de transacción cuando existe y las
+acciones de recibo y tracking cuando viene `receipt_url`. La red se muestra
+como `TRON`, `Ethereum`, `Polygon` o `Bitcoin`, y el ID de transacción abre el
+enlace del explorador correspondiente.
+
+La página se actualiza mientras el estado es `pending` o `processing` y deja
+de hacerlo en un estado final. Un retiro completado incluye `tx_id`; uno
+fallido muestra el estado final y el reembolso automático descrito arriba.
+Un error 400, 403 o 404 se considera definitivo para la consulta y no se
+reintenta indefinidamente.
+
+```json
+{
+  "withdrawal_id": "5e8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "to_address": "TVJ6…",
+  "amount": "100.000000",
+  "fee": "1.000000",
+  "total_debit": "101.000000",
+  "status": "completed",
+  "tx_id": "7d1f…",
+  "receipt_url": "https://business.cbpayapp.com/t/example"
+}
+```
+
+La descarga del recibo y el enlace de tracking aparecen en el encabezado
+cuando la respuesta incluye `receipt_url`. El botón para volver regresa a la
+wallet de la misma red y activo.
+
 ### Travel Rule (retiros sobre el umbral)
 
 Por regulación internacional (FATF R.16, "Travel Rule"), los retiros

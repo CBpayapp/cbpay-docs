@@ -324,6 +324,42 @@ To move balance to **another CBPay account**, skip the blockchain:
 [internal transfers](/en/guides/transfers) are instant and free.
 </Note>
 
+### Withdrawal detail and final summary
+
+After creating a withdrawal, the portal opens
+`/crypto/withdrawals/{withdrawal_id}` and loads
+`GET /v1/crypto/withdrawals/{withdrawal_id}`. The detail page is the final
+summary for that operation. It shows the current status, asset and amount,
+fee and total debit, destination address, network, transaction ID when one
+exists, and the receipt/tracking actions when `receipt_url` is available.
+The network label is rendered from the chain (`TRON`, `Ethereum`, `Polygon`
+or `Bitcoin`), and the transaction ID opens the corresponding explorer link.
+
+The page refreshes while the status is `pending` or `processing` and stops
+refreshing in a final state. A completed withdrawal includes its `tx_id`;
+failed withdrawals show the final status and the automatic refund described
+above. A 400, 403 or 404 is treated as a definitive lookup error rather than
+being retried indefinitely.
+
+```json
+{
+  "withdrawal_id": "5e8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "to_address": "TVJ6…",
+  "amount": "100.000000",
+  "fee": "1.000000",
+  "total_debit": "101.000000",
+  "status": "completed",
+  "tx_id": "7d1f…",
+  "receipt_url": "https://business.cbpayapp.com/t/example"
+}
+```
+
+The receipt download and tracking link are available from the detail header
+when the response provides `receipt_url`. Use the back link to return to the
+wallet for the matching chain and asset.
+
 ### Travel Rule (withdrawals above the threshold)
 
 International regulation (FATF R.16, the "Travel Rule") requires on-chain

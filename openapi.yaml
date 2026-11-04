@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.208"
+  version: "2.209"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -124,6 +124,11 @@ tags:
   description: Public Trust Center metadata and tokenized NDA-gated compliance document access.
 - name: Contracts
   description: Pre-filled Grupo CB framework agreements for verified company accounts.
+- name: Referrer portal
+  description: >-
+    Read-only portal for referrers (account credential of the payout account):
+    profile, referred clients, accrued commissions and the trilingual
+    statement (JSON/PDF/XLSX).
 paths:
   /v1/me/search:
     get:
@@ -2045,6 +2050,88 @@ paths:
                 timezone: America/New_York
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/account/branding:
+    get:
+      tags:
+      - Account
+      operationId: getAccountBranding
+      summary: Get your company brand
+      description: Effective branding of your company account (name, colors, logos) with fallback account -> organization -> CBPay default. `custom` tells whether the account configured its own brand. Company accounts only; read-only, no PII.
+      responses:
+        '200':
+          description: Effective account branding.
+          content:
+            application/json:
+              example:
+                brand_name: ACME Corp
+                website: www.acme.example
+                footer_address: ''
+                support_email: support@acme.example
+                colors:
+                  primary: '#1A2B3C'
+                  header: '#2E2E2E'
+                  accent: '#A16207'
+                logo_url: https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png
+                symbol_url: ''
+                custom: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: company_account_required or account_blocked.
+    put:
+      tags:
+      - Account
+      operationId: updateAccountBranding
+      summary: Configure your company brand
+      description: Sets the brand (name, colors, logos) your KYC/KYB verification links open with. Empty texts fall back to the organization brand, then CBPay. Logos are base64 PNG (omitted = keep, "" = delete; max 512 KB and 2000x2000 px). Colors are 6-digit hex with or without '#'. Company accounts only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                brand_name: {type: string, maxLength: 120}
+                website: {type: string, maxLength: 200}
+                footer_address: {type: string, maxLength: 200}
+                support_email: {type: string, maxLength: 254}
+                color_primary: {type: string}
+                color_header: {type: string}
+                color_accent: {type: string}
+                logo_png_base64: {type: string}
+                symbol_png_base64: {type: string}
+            example:
+              brand_name: ACME Corp
+              website: www.acme.example
+              support_email: support@acme.example
+              color_primary: 1A2B3C
+              color_header: ''
+              color_accent: ''
+      responses:
+        '200':
+          description: Updated effective branding.
+          content:
+            application/json:
+              example:
+                brand_name: ACME Corp
+                website: www.acme.example
+                footer_address: ''
+                support_email: support@acme.example
+                colors:
+                  primary: '#1A2B3C'
+                  header: '#2E2E2E'
+                  accent: '#A16207'
+                logo_url: https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png
+                symbol_url: ''
+                custom: true
+        '400':
+          description: invalid_color, text_too_long, invalid_logo, logo_too_large or unsupported_logo.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: company_account_required or account_blocked.
+        '413':
+          description: logo_too_large.
   /v1/auth/register:
     post:
       tags:
@@ -25638,6 +25725,84 @@ paths:
                 receipt_render_failed:
                   summary: PDF render failure
                   value: {error: receipt_render_failed, message: could not render the pay slip PDF}
+  /v1/referrer/me:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: getReferrerMe
+      summary: My referrer profile
+      description: >-
+        Profile of the calling referrer (the credential must belong to a
+        referrer payout account).
+      responses:
+        '200':
+          description: Referrer.
+        '404':
+          description: not_found (not a referrer payout account).
+  /v1/referrer/clients:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: listReferrerClients
+      summary: My referred clients
+      description: Paginated assignments of the calling referrer.
+      parameters:
+      - {name: status, in: query, schema: {type: string, enum: [active, revoked]}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, assignments[]}.'
+  /v1/referrer/commissions:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: listReferrerCommissions
+      summary: My commissions
+      description: Paginated accrued commissions of the calling referrer.
+      parameters:
+      - {name: account_id, in: query, schema: {type: string}}
+      - {name: status, in: query, schema: {type: string}}
+      - {name: period, in: query, schema: {type: string}}
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, commissions[]}.'
+        '400':
+          description: invalid_range.
+  /v1/referrer/statement:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Referrer portal
+      operationId: getReferrerStatement
+      summary: My statement
+      description: >-
+        Full statement of the calling referrer in a range: totals, per-client
+        summary, per-transaction detail, closings and reconciliation flag.
+        `format` json (default), pdf or xlsx; `lang` es/en/zh.
+      parameters:
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: format, in: query, schema: {type: string, enum: [json, pdf, xlsx], default: json}}
+      - {name: lang, in: query, schema: {type: string, enum: [es, en, zh]}}
+      responses:
+        '200':
+          description: Statement (JSON object or PDF/XLSX download).
+        '400':
+          description: invalid_range or invalid_format.
+        '404':
+          description: not_found.
 
 components:
   securitySchemes:
