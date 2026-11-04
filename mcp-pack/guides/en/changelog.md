@@ -5,10 +5,6 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.209 · 1 version - November 4, 2026
-### v2.209
-**Changed**
-- Added the final crypto withdrawal detail summary with status, amounts, destination address, network, transaction ID, receipt and tracking actions.
 ## v2.208 · 2 versions - November 3, 2026
 ### v2.208
 **Changed**

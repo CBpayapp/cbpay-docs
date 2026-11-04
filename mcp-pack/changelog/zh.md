@@ -5,10 +5,6 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.209 · 1 个版本 - 2026年11月4日
-### v2.209
-**变更**
-- 新增加密货币提现详情最终摘要，包含状态、金额、目标地址、网络、交易 ID、收据和 tracking 操作。
 ## v2.208 · 2 个版本 - 2026年11月3日
 ### v2.208
 **变更**

@@ -291,37 +291,6 @@ curl https://api.qbank.cl/platform/v1/crypto/withdrawals/5e8c… \
 > **注**
 若要向**另一个 CBPay 账户**转移余额，无需经过区块链：
 [内部转账](https://docs.cbpayapp.com/zh/guides/transfers)即时且免费。
-### 提现详情和最终摘要
-
-创建提现后，门户会打开 `/crypto/withdrawals/{withdrawal_id}`，并加载
-`GET /v1/crypto/withdrawals/{withdrawal_id}`。该详情页是此次操作的最终
-摘要，显示当前状态、资产和金额、费用与总扣款、目标地址、网络、可用时
-的交易 ID，以及响应提供 `receipt_url` 时的收据和 tracking 操作。网络会
-显示为 `TRON`、`Ethereum`、`Polygon` 或 `Bitcoin`；交易 ID 会打开对应的
-区块浏览器链接。
-
-状态为 `pending` 或 `processing` 时页面会自动刷新，进入最终状态后停止。
-成功的提现包含 `tx_id`；失败的提现显示最终状态，并按上文说明自动退还。
-400、403 或 404 会被视为确定性的查询错误，不会无限重试。
-
-```json
-{
-  "withdrawal_id": "5e8c…",
-  "chain": "tron",
-  "asset": "USDT",
-  "to_address": "TVJ6…",
-  "amount": "100.000000",
-  "fee": "1.000000",
-  "total_debit": "101.000000",
-  "status": "completed",
-  "tx_id": "7d1f…",
-  "receipt_url": "https://business.cbpayapp.com/t/example"
-}
-```
-
-响应包含 `receipt_url` 时，详情页标题区域提供收据下载和 tracking 链接。
-返回按钮会回到相同网络和资产的钱包。
-
 ### Travel Rule（超过阈值的提现）
 
 国际监管（FATF R.16，即 "Travel Rule"）要求 **1,000 USD 起**的链上

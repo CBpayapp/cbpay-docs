@@ -220,6 +220,69 @@ curl https://api.qbank.cl/platform/v1/kyb/links/{link_id} \
 | `completed` | Formulario enviado — nace la submission (webhook `kyb_link_completed` / `kyc_link_completed`) |
 | `expired` | Venció sin completarse |
 
+### Marca tus links de verificación
+
+Las cuentas empresa pueden configurar la apariencia de sus links KYC/KYB
+hosteados desde **Ajustes → Branding** en el portal. El preview usa la misma
+marca efectiva que tendrá un link nuevo. Puedes subir un logo PNG, revisar el
+preview y ajustar el nombre de la empresa, sitio web, dirección del footer,
+correo de soporte y colores.
+
+La API expone estos mismos ajustes para cuentas empresa. Los campos de texto
+tienen un máximo de 120 caracteres para `brand_name`, 200 para `website` y
+`footer_address`, y 254 para `support_email`. Los colores aceptan hex de seis
+dígitos, con o sin `#`. El logo es un PNG en base64 de hasta 512 KB y
+2000×2000 píxeles; omite el campo para conservar la imagen actual o envía una
+cadena vacía para borrarla.
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/account/branding \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brand_name": "ACME Corp",
+    "website": "www.acme.example",
+    "support_email": "support@acme.example",
+    "color_primary": "1A2B3C",
+    "color_header": "",
+    "color_accent": ""
+  }'
+```
+
+`200 OK` devuelve la marca efectiva después de actualizar. La respuesta tiene
+la misma forma en `PUT` y `GET`:
+
+```json
+{
+  "brand_name": "ACME Corp",
+  "website": "www.acme.example",
+  "footer_address": "",
+  "support_email": "support@acme.example",
+  "colors": {
+    "primary": "#1A2B3C",
+    "header": "#2E2E2E",
+    "accent": "#A16207"
+  },
+  "logo_url": "https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png",
+  "symbol_url": "",
+  "custom": true
+}
+```
+
+Lee los valores efectivos antes de mostrar tu propia pantalla de ajustes:
+
+```bash
+curl https://api.qbank.cl/platform/v1/account/branding \
+  -H "Authorization: Bearer <token>"
+```
+
+El fallback efectivo es **cuenta → organización → CBPay**. Un texto vacío
+hereda del nivel siguiente. Al crear un link, se congela un snapshot
+sanitizado de la marca, por lo que cambiarla después no modifica
+inesperadamente un link que ya fue servido. El wizard hosteado muestra el
+logo, nombre y colores seleccionados, pero el pill **«Impulsado por CBPay»**
+queda fijo y el footer siempre está presente.
+
 ### UBOs y directores invitados
 
 En un flujo KYB alojado, cada UBO o director invitado completa su propio

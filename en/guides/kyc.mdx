@@ -221,6 +221,68 @@ curl https://api.qbank.cl/platform/v1/kyb/links/{link_id} \
 | `completed` | Form submitted — the submission is born (`kyb_link_completed` / `kyc_link_completed` webhook) |
 | `expired` | Expired without completion |
 
+### Brand your verification links
+
+Company accounts can configure the appearance of their hosted KYC/KYB links
+from **Settings → Branding** in the portal. The preview uses the same effective
+brand that a new link will use. You can upload a PNG logo, review the preview,
+and adjust the company name, website, footer address, support email and colors.
+
+The API exposes the same settings for company accounts. Text fields are
+limited to 120 characters for `brand_name`, 200 for `website` and
+`footer_address`, and 254 for `support_email`. Colors accept six-digit hex
+values with or without `#`. A logo is a base64-encoded PNG of at most 512 KB
+and 2000×2000 pixels; omit a logo field to keep the current image or send an
+empty string to delete it.
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/account/branding \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brand_name": "ACME Corp",
+    "website": "www.acme.example",
+    "support_email": "support@acme.example",
+    "color_primary": "1A2B3C",
+    "color_header": "",
+    "color_accent": ""
+  }'
+```
+
+`200 OK` returns the effective brand after the update. The response shape is
+the same for `PUT` and `GET`:
+
+```json
+{
+  "brand_name": "ACME Corp",
+  "website": "www.acme.example",
+  "footer_address": "",
+  "support_email": "support@acme.example",
+  "colors": {
+    "primary": "#1A2B3C",
+    "header": "#2E2E2E",
+    "accent": "#A16207"
+  },
+  "logo_url": "https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png",
+  "symbol_url": "",
+  "custom": true
+}
+```
+
+Read the current effective values before showing your own settings screen:
+
+```bash
+curl https://api.qbank.cl/platform/v1/account/branding \
+  -H "Authorization: Bearer <token>"
+```
+
+The effective fallback is **account → organization → CBPay**. An empty text
+value inherits from the next level. A link stores a sanitized snapshot when
+it is created, so changing the account brand later does not unexpectedly
+change a link that was already served. The hosted wizard shows the selected
+logo, name and colors, while the **“Powered by CBPay”** pill remains fixed and
+the footer remains present.
+
 ### Invited UBOs and directors
 
 In a hosted KYB flow, each invited UBO or director completes their own
