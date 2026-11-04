@@ -51,6 +51,17 @@ platform's support: it takes a new verification or an operational override by
 an administrator. `phone` stays editable at any time with its own
 verification flow (OTP to the previous number when the policy requires it).
 
+### Changing country before approval
+
+If you change `country` while your own verification has an open submission,
+`PATCH /v1/me` returns `409 verification_in_progress`. Finish or close that
+verification first; the API does not discard submitted evidence.
+
+If there is only an open hosted link and no submission yet, the country change
+is accepted and the platform automatically revokes the old link and issues a
+new one for the new country. This reissue is free. The response contains the
+updated account; do not continue using the revoked URL.
+
 ## Password
 
 <Steps>

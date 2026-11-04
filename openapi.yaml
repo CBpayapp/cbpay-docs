@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.206"
+  version: "2.208"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2926,8 +2926,11 @@ paths:
       summary: Update my profile
       description: Once your identity verification is approved, `display_name`,
         `tax_id` and `country` are filled from the verified identity and locked
-        (`409 identity_locked`); `phone` stays editable with its own
-        verification flow.
+        (`409 identity_locked`). If an own verification submission is open,
+        changing `country` returns `409 verification_in_progress`; if only an
+        open hosted link exists, the link is revoked and reissued for the new
+        country at no cost. `phone` stays editable with its own verification
+        flow.
       requestBody:
         required: true
         content:
@@ -2981,14 +2984,21 @@ paths:
                 error: invalid_locale
                 message: locale must be en, es or zh
         '409':
-          description: Identity fields are locked after verification approval.
+          description: Identity fields are locked after verification approval,
+            or an open own verification submission blocks a country change.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: identity_locked
-                message: display_name, tax_id and country come from your approved identity verification and cannot be changed here; contact support to update your verified identity
+              examples:
+                identity_locked:
+                  value:
+                    error: identity_locked
+                    message: display_name, tax_id and country come from your approved identity verification and cannot be changed here; contact support to update your verified identity
+                verification_in_progress:
+                  value:
+                    error: verification_in_progress
+                    message: an identity verification is in progress; finish it before changing country
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -20692,7 +20702,7 @@ paths:
       summary: Upload a file for an information request
       description: |-
         Uploads a supporting document for a review in `info_requested`. Send the raw binary body with its `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) or XLS(X), up to 50 MB) and the filename in the `name` query param. Uploading a file moves the review back to `in_review` so the compliance team re-evaluates it.
-        The `category` query parameter uses a closed banking-document vocabulary. When `requested_documents` still has pending entries, it is required and must be one of those pending categories; omitting it or sending another valid category returns `400 invalid_category` with the pending list. After all requested categories are covered, additional valid banking categories are accepted. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`.
+        The optional `category` query parameter uses a closed banking-document vocabulary. Omitting it keeps the file visible in the review but it is not eligible for banking-provider synchronization. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`.
       parameters:
       - name: reviewID
         in: path
@@ -20708,7 +20718,7 @@ paths:
       - name: category
         in: query
         required: false
-        description: Closed banking-document category. Required when the review has pending `requested_documents`; it must match one of them. After all requested categories are covered, any valid category is accepted.
+        description: Optional closed banking-document category. Omit for a visible file that is not eligible for provider synchronization.
         schema:
           type: string
           enum:
@@ -20722,18 +20732,12 @@ paths:
           - controlStructure
           - uboIdentity
           - uboProofOfAddress
-          - uboBankStatement
           - sourceOfWealth
           - financialStatements
           - amlPolicy
           - wolfsberg
           - mlroCV
           - businessLicense
-          - dividendEvidence
-          - evidenceOfActivity
-          - shareholderRegister
-          - directorsRegister
-          - swornDeclaration
       requestBody:
         required: true
         content:

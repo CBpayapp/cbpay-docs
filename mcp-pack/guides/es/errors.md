@@ -179,6 +179,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 409 | `already_verified` | Pediste link de onboarding con la cuenta ya verificada |
 | 409 | `superseded` | El ID de verificación es una tumba migrada congelada; sus lecturas vienen del caso vivo | No decidas, subas evidencia, crees links de liveness ni hagas presign/confirm o PATCH de banking intent sobre la tumba. Lee `migrated_to` y opera el caso vivo |
 | 409 | `identity_locked` | Con la verificación aprobada, `display_name`, `tax_id` y `country` vienen de la identidad verificada y no se cambian por `PATCH /v1/me`; contacta al soporte |
+| 409 | `verification_in_progress` | `PATCH /v1/me` no cambia el país mientras el expediente de verificación propia está abierto; termina o cierra ese caso primero |
 | 409 | `no_screening` | Rescreen/monitoreo AML/CFT sin un screening previo |
 | 409 | `no_banking_customer` | Operación Banking clásica sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
 | 400 | `banking_eur_requires_viban` | Las cuentas Banking EUR se abren como vIBAN. Solicita `purpose: "banking_eur"` desde Operar EUR en vez de crear un customer Banking genérico |

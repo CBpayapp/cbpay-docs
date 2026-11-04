@@ -49,6 +49,17 @@ override operativo de un administrador. `phone` sigue editable en todo
 momento con su propio flujo de verificación (OTP al número anterior cuando
 la política lo exige).
 
+### Cambiar el país antes de aprobar
+
+Si cambias `country` mientras tu verificación propia tiene un expediente
+abierto, `PATCH /v1/me` responde `409 verification_in_progress`. Termina o
+cierra esa verificación primero; la API no descarta la evidencia enviada.
+
+Si solo existe un link alojado abierto y todavía no hay expediente, el cambio
+de país se acepta y la plataforma revoca automáticamente el link anterior y
+emite otro para el país nuevo. Esta reemisión es gratuita. La respuesta trae
+la cuenta actualizada; no sigas usando la URL revocada.
+
 ## Contraseña
 
 ### Cambiarla (con sesión)

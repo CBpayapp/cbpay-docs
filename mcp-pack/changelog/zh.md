@@ -5,12 +5,19 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.207 · 1 个版本 - 2026年11月3日
+## v2.208 · 2 个版本 - 2026年11月3日
+### v2.208
+**变更**
+- 支持邮件现在包含工单徽章、引用回复和门户 deep-link。通过短时效 opaque
+  `support+<token>` Reply-To 回复会进入现有对话（token 有效期 90 天）；
+  无效或过期 token 会 fail closed。
+- 工单列表支持有上限的 `q` 搜索。分配支持一名主管理员和最多十名
+  额外负责人，并记录可点击门户通知和图片 inline 预览。
 ### v2.207
 **变更**
-- 交易审核现在会显示定向请求的文件类别。只要仍有请求文件待提交，账户上传
-  就必须发送对应类别；全部覆盖后可继续上传其他有效类别。无效的定向上传会
-  返回现有的 `400 invalid_category` 错误。
+- 当账户自有验证 submission 仍在进行时，`PATCH /v1/me` 现在返回
+  `409 verification_in_progress`。如果只有开放的托管链接，更改国家会撤销
+  旧链接，并为新国家免费重新签发链接。
 ## v2.206 · 1 个版本 - 2026年11月2日
 ### v2.206
 **变更**
