@@ -5,6 +5,23 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.211 · 3 versions - November 4, 2026
+### v2.211
+**Added**
+- Company accounts can configure account-level branding for hosted KYC/KYB
+  links from the portal, with preview, account → organization → CBPay
+  fallback, and a fixed “Powered by CBPay” footer pill.
+- Added `GET` and `PUT /v1/account/branding` examples to the KYC/KYB guide.
+  A link freezes a sanitized brand snapshot when it is created.
+### v2.210
+**Added**
+- Added the read-only Referrer Portal guide for profiles, assigned clients,
+  accrued commissions and JSON/PDF/XLSX statements.
+- Documented account-scoped access, net-profit calculation, pagination,
+  localization and safe handling of read-only retries.
+### v2.209
+**Changed**
+- Added the final crypto withdrawal detail summary with status, amounts, destination address, network, transaction ID, receipt and tracking actions.
 ## v2.208 · 2 versions - November 3, 2026
 ### v2.208
 **Changed**

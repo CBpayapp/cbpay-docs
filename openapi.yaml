@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.209"
+  version: "2.211"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -20789,7 +20789,7 @@ paths:
       summary: Upload a file for an information request
       description: |-
         Uploads a supporting document for a review in `info_requested`. Send the raw binary body with its `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) or XLS(X), up to 50 MB) and the filename in the `name` query param. Uploading a file moves the review back to `in_review` so the compliance team re-evaluates it.
-        The optional `category` query parameter uses a closed banking-document vocabulary. Omitting it keeps the file visible in the review but it is not eligible for banking-provider synchronization. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`.
+        The `category` query parameter uses a closed banking-document vocabulary. When `requested_documents` still has pending entries, it is required and must be one of those pending categories; omitting it or sending another valid category returns `400 invalid_category` with the pending list. After all requested categories are covered, additional valid banking categories are accepted. Uploads are accepted in `info_requested`, or in `in_review` after a previous `request-info`.
       parameters:
       - name: reviewID
         in: path
@@ -20805,7 +20805,7 @@ paths:
       - name: category
         in: query
         required: false
-        description: Optional closed banking-document category. Omit for a visible file that is not eligible for provider synchronization.
+        description: Closed banking-document category. Required when the review has pending `requested_documents`; it must match one of them. After all requested categories are covered, any valid category is accepted.
         schema:
           type: string
           enum:
@@ -20819,12 +20819,18 @@ paths:
           - controlStructure
           - uboIdentity
           - uboProofOfAddress
+          - uboBankStatement
           - sourceOfWealth
           - financialStatements
           - amlPolicy
           - wolfsberg
           - mlroCV
           - businessLicense
+          - dividendEvidence
+          - evidenceOfActivity
+          - shareholderRegister
+          - directorsRegister
+          - swornDeclaration
       requestBody:
         required: true
         content:

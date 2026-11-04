@@ -148,6 +148,7 @@
                       "en/guides/signature-proofs",
                       "en/guides/cards",
                       "en/guides/statement",
+                  "en/guides/pay-slips",
                       "en/guides/receipts",
                       "en/guides/tracking",
                       "en/guides/analytics"
@@ -177,7 +178,8 @@
                     "pages": [
                       "en/guides/contacts",
                       "en/guides/profile",
-                      "en/guides/locale"
+                      "en/guides/locale",
+                      "en/guides/referrer-portal"
                     ]
                   }
                 ]
@@ -187,8 +189,8 @@
                 "pages": [
                   "en/security-2fa",
                   "en/webhooks",
-                  "en/guides/integrations",
                   "en/guides/product-analytics",
+                  "en/guides/integrations",
                   "en/realtime-events",
                   "en/service-status",
                   "en/errors",
@@ -295,6 +297,7 @@
                       "es/guides/signature-proofs",
                       "es/guides/cards",
                       "es/guides/statement",
+                  "es/guides/pay-slips",
                       "es/guides/receipts",
                       "es/guides/tracking",
                       "es/guides/analytics"
@@ -324,7 +327,8 @@
                     "pages": [
                       "es/guides/contacts",
                       "es/guides/profile",
-                      "es/guides/locale"
+                      "es/guides/locale",
+                      "es/guides/referrer-portal"
                     ]
                   }
                 ]
@@ -442,6 +446,7 @@
                       "zh/guides/signature-proofs",
                       "zh/guides/cards",
                       "zh/guides/statement",
+                  "zh/guides/pay-slips",
                       "zh/guides/receipts",
                       "zh/guides/tracking",
                       "zh/guides/analytics"
@@ -471,7 +476,8 @@
                     "pages": [
                       "zh/guides/contacts",
                       "zh/guides/profile",
-                      "zh/guides/locale"
+                      "zh/guides/locale",
+                      "zh/guides/referrer-portal"
                     ]
                   }
                 ]

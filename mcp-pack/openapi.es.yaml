@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.208"
+  version: "2.211"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -134,6 +134,11 @@ tags:
     Stream Server-Sent Events con todo lo que pasa en la cuenta (o en toda la organización para administradores), replay con `Last-Event-ID`, snapshot inicial opcional e historial consultable de 90 días.
 - name: Contratos
   description: Contratos Marco Grupo CB prellenados para cuentas empresa verificadas.
+- name: Portal del referidor
+  description: >-
+    Portal de solo lectura para referidores (credencial de la cuenta payout):
+    perfil, clientes referidos, comisiones devengadas e informe trilingüe
+    (JSON/PDF/XLSX).
 paths:
   /v1/me/search:
     get:
@@ -20589,7 +20594,7 @@ paths:
       summary: Sube un archivo para una solicitud de información
       description: |-
         Sube un documento de respaldo para una revisión en `info_requested`. Envía el binario crudo con su `Content-Type` (PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) o XLS(X), hasta 50 MB) y el nombre del archivo en el query param `name`. Al subir un archivo la revisión vuelve a `in_review` para que el equipo de cumplimiento la re-evalúe.
-        El query param opcional `category` usa un vocabulario cerrado de documentos banking. Si se omite, el archivo queda visible en la review pero no puede sincronizarse con el proveedor banking. Los uploads se aceptan en `info_requested` o en `in_review después de un `request-info` previo.
+        El query param `category` usa un vocabulario cerrado de documentos banking. Cuando `requested_documents` todavía tiene pendientes, es obligatorio y debe ser una de esas categorías; omitirlo o enviar otra categoría válida responde `400 invalid_category` con la lista pendiente. Cubiertas todas las categorías pedidas, se aceptan categorías banking válidas adicionales. Los uploads se aceptan en `info_requested` o en `in_review` después de un `request-info` previo.
       parameters:
       - name: reviewID
         in: path
@@ -20605,7 +20610,7 @@ paths:
       - name: category
         in: query
         required: false
-        description: Categoría cerrada opcional de documento banking. Omítela para un archivo visible que no pueda sincronizarse con el proveedor.
+        description: Categoría cerrada de documento banking. Es obligatoria cuando la review tiene `requested_documents` pendientes y debe coincidir con una de ellas. Cubiertas todas las categorías pedidas, se acepta cualquier categoría válida.
         schema:
           type: string
           enum:
@@ -20619,12 +20624,18 @@ paths:
           - controlStructure
           - uboIdentity
           - uboProofOfAddress
+          - uboBankStatement
           - sourceOfWealth
           - financialStatements
           - amlPolicy
           - wolfsberg
           - mlroCV
           - businessLicense
+          - dividendEvidence
+          - evidenceOfActivity
+          - shareholderRegister
+          - directorsRegister
+          - swornDeclaration
       requestBody:
         required: true
         content:
@@ -25505,6 +25516,84 @@ paths:
                 receipt_render_failed:
                   summary: 'Fallo al generar el PDF'
                   value: {error: receipt_render_failed, message: no se pudo generar el PDF de la liquidación}
+  /v1/referrer/me:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Portal del referidor
+      operationId: getReferrerMe
+      summary: Mi perfil de referidor
+      description: >-
+        Perfil del referidor llamante (la credencial debe pertenecer a una
+        cuenta payout de referidor).
+      responses:
+        '200':
+          description: Referidor.
+        '404':
+          description: not_found (no es una cuenta payout de referidor).
+  /v1/referrer/clients:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Portal del referidor
+      operationId: listReferrerClients
+      summary: Mis clientes referidos
+      description: Asignaciones paginadas del referidor llamante.
+      parameters:
+      - {name: status, in: query, schema: {type: string, enum: [active, revoked]}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, assignments[]}.'
+  /v1/referrer/commissions:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Portal del referidor
+      operationId: listReferrerCommissions
+      summary: Mis comisiones
+      description: Comisiones devengadas paginadas del referidor llamante.
+      parameters:
+      - {name: account_id, in: query, schema: {type: string}}
+      - {name: status, in: query, schema: {type: string}}
+      - {name: period, in: query, schema: {type: string}}
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: page, in: query, schema: {type: integer, default: 1}}
+      - {name: page_size, in: query, schema: {type: integer, default: 50, maximum: 200}}
+      responses:
+        '200':
+          description: '{page, page_size, commissions[]}.'
+        '400':
+          description: invalid_range.
+  /v1/referrer/statement:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Portal del referidor
+      operationId: getReferrerStatement
+      summary: Mi informe
+      description: >-
+        Informe completo del referidor llamante en un rango: totales, resumen
+        por cliente, detalle por transacción, cierres y bandera de cuadratura.
+        `format` json (default), pdf o xlsx; `lang` es/en/zh.
+      parameters:
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: format, in: query, schema: {type: string, enum: [json, pdf, xlsx], default: json}}
+      - {name: lang, in: query, schema: {type: string, enum: [es, en, zh]}}
+      responses:
+        '200':
+          description: Informe (objeto JSON o descarga PDF/XLSX).
+        '400':
+          description: invalid_range o invalid_format.
+        '404':
+          description: not_found.
 components:
   securitySchemes:
     bearerAuth:
