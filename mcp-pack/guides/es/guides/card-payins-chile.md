@@ -88,6 +88,101 @@ significa que la venta se aprobó, pero la tarjeta no quedó guardada; muestra
 un mensaje claro y no cobres nuevamente. El campo se omite si no ofreciste o
 solicitaste guardar la tarjeta.
 
+## Cuotas Emisor
+
+En los payins con tarjeta CLP de Chile, el checkout alojado puede ofrecer
+cuotas financiadas por el emisor. Primero el pagador tokeniza una tarjeta
+nueva; solo si el token informa opciones diferidas la página muestra los
+plazos curados `3`, `6`, `12`, `24`, `36` y `48`, acotados al máximo informado
+por el emisor. Luego el pagador confirma el plazo y el checkout lo envía en la
+solicitud pública de `complete`:
+
+```json
+{
+  "payment_token": "tok_…",
+  "months": 6
+}
+```
+
+`months` es un entero. Omítelo, o envía `0` o `1`, para un pago único. Los
+valores de `2` a `48` solicitan cuotas Emisor. El valor se valida antes del
+claim del cobro: `-2` o `99` devuelve `400 invalid_payload` sin consumir un
+intento.
+
+Las cuotas solo funcionan con una tarjeta nueva tokenizada con front-token en
+el flujo de cuotas del emisor en Chile. No están disponibles para cobros MIT
+con tarjeta guardada y las Cuotas Comercio Beta quedan fuera de este contrato.
+Los rails de verificación reales rechazan una solicitud con cuotas; los caminos
+soportados son el rail Kushki con front-token y el simulador. Nunca envíes un
+segundo cobro después de un resultado ambiguo.
+
+Una respuesta aprobada incluye el plazo aprobado como recibo, y el mismo valor
+queda guardado en el payload de auditoría del cobro:
+
+```json
+{
+  "status": "paid",
+  "transaction_id": "710000000000123",
+  "months": 6
+}
+```
+
+| HTTP | Código | Solución |
+|---:|---|---|
+| 400 | `invalid_payload` | Envía un entero entre `0` y `48`; usa `0`, `1` u omítelo para pago único. |
+| 200 | `failed_attempt` | Si seleccionaste una tarjeta guardada con cuotas, usa una tarjeta nueva; el fallo permite reintentar. |
+| 200 | `review` | Si un rail real tiene dinero en curso, lee la sesión y reconcilia; nunca reintentes a ciegas. |
+
+## Cobros con tarjeta en UF
+
+El corredor de tarjetas de Chile también acepta `currency: "UF"`. Envía el
+monto como string decimal con hasta dos decimales:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: cl-uf-card-order-8842" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"CL","currency":"UF","method":"card","amount":"1.50","description":"Pedido 8842","idempotency_key":"cl-uf-card-order-8842"}'
+```
+
+La respuesta conserva `currency: "UF"` y `amount: "1.50"` en el payin y el
+recibo. El rail cobra el monto UF de forma nativa y lo convierte internamente
+a CLP; `1 UF` equivale aproximadamente a `41.274 CLP` y el valor exacto
+depende de la tasa UF aplicable. Puedes combinar UF con cuotas Emisor:
+incluye el mismo campo `months` descrito arriba en la solicitud `complete`
+con front-token. El plazo aprobado vuelve en el recibo.
+
+UF acepta como máximo dos decimales. `"1.50"` es válido, mientras
+`"1.501"` devuelve `400 invalid_amount` antes del claim del cobro. CLP sigue
+siendo una moneda entera, por lo que `"150000.50"` devuelve el mismo
+`400 invalid_amount` preexistente y honesto. Ante un resultado ambiguo, lee
+el recurso y no envíes un segundo cobro.
+
+Para consultar el contexto de conversión vigente, lee:
+
+```bash
+curl https://api.qbank.cl/v1/rates/usd/local \
+  -H "Authorization: Bearer <token>"
+```
+
+La respuesta incluye la llave `uf`, proveniente de la fuente OXR con ISO
+`CLF`. La liquidación convierte UF a USDT a la tasa spot aplicable; la tasa UF
+mostrada no garantiza un precio fijo de liquidación.
+
+Un webhook UF aprobado conserva la moneda y el monto UF:
+
+```json
+{
+  "event": "payin_credited",
+  "payin_id": "7a2b…",
+  "country": "CL",
+  "currency": "UF",
+  "amount": "1.50",
+  "status": "credited"
+}
+```
+
 ## Consultar, anular y reembolsar
 
 ```bash
@@ -112,7 +207,7 @@ un despacho ambiguo.
 
 | HTTP | Código | Solución |
 |---:|---|---|
-| 400 | `invalid_amount` | Envía un monto CLP entero |
+| 400 | `invalid_amount` | Envía un monto CLP entero o un monto UF con no más de dos decimales |
 | 400 | `idempotency_key_required` | Envía el campo o header |
 | 409 | `idempotency_conflict` | Usa el payload original con la clave original |
 | 422 | `core_rejected` | Muestra el fallo alojado; no reintentes a ciegas |
@@ -129,8 +224,9 @@ Verifica la firma antes de procesar. Los eventos relevantes son
 
 ## Preguntas frecuentes
 
-#### ¿Puedo enviar CLP con decimales?
-No. El peso chileno no tiene decimales; envía un string entero.
+#### ¿Puedo enviar CLP o UF con decimales?
+CLP debe ser entero. UF acepta hasta dos decimales, por ejemplo `"1.50"`;
+desde tres decimales devuelve `400 invalid_amount`.
 #### ¿Qué hago si crear el payin agota el tiempo?
 Lee el recurso o repite con la misma clave de idempotencia. No envíes otro cobro.
 #### ¿Cuándo termina un reembolso?
