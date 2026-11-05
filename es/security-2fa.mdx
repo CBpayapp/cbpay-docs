@@ -25,6 +25,58 @@ app autenticadora (TOTP), códigos de recuperación y passkeys — vive en
 [Perfil y seguridad](/es/guides/profile).
 </Note>
 
+## Enrolamiento del registro y reanudación del login
+
+El 2FA obligatorio del registro es distinto del OTP por acción. Después de
+confirmar el email, conserva el `pending_token` durante sus 30 minutos de
+vigencia y elige la app autenticadora (TOTP) o SMS:
+
+```mermaid
+sequenceDiagram
+  participant A as App
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin o sms/begin
+  API-->>A: 200 datos de configuración o teléfono enmascarado
+  A->>API: POST /v1/auth/register/2fa/totp/confirm o sms/confirm
+  API-->>A: 201 primera sesión
+```
+
+`register/confirm` responde `201 pending_2fa_enrollment` con
+`factors: ["totp", "sms"]` y `passkeys_available: false`. En TOTP, inicia,
+escanea el `otpauth_uri` y confirma el código de seis dígitos; la respuesta
+`201` entrega la sesión y 10 códigos de recuperación una sola vez.
+
+Para SMS, envía un teléfono E.164 si la cuenta aún no tiene uno:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+```
+
+La respuesta `200` contiene `phone_masked`, `steps` con la ventana de 10
+minutos y `note`. Nunca devuelve el código SMS. Confírmalo así:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","code":"482913"}'
+```
+
+La respuesta `201` entrega la primera sesión, la cuenta, `steps` que indican
+que los próximos logins pedirán SMS y `note`; no entrega códigos de
+recuperación. Los endpoints de passkey del registro responden
+`410 passkey_not_offered`; el login con passkey y `/v1/me/passkeys` siguen
+disponibles.
+
+Errores propios: `400 invalid_phone` con el mensaje
+`phone must be E.164 format: plus sign, country code and number (example +56912345678)`,
+`409 phone_required` o `sms_not_started`, `403 otp_invalid`, `429
+too_many_attempts`, `502 otp_send_failed`/`otp_check_failed` y `401
+invalid_pending_token`.
+
 ## Cómo funciona
 
 ```mermaid
@@ -202,10 +254,9 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 }
 ```
 <Note>
-**Un TOTP enrolado siempre se exige al iniciar sesión.** Cuando un member
-confirma una app autenticadora, el login devuelve el flujo OTP pendiente aunque
-la política de la organización no exija OTP para `login`. El login con passkey
-ya es un flujo de dos factores y no pide un código adicional.
+**Un TOTP enrolado o un SMS efectivo siempre se exige al iniciar sesión.**
+TOTP manda si existen ambos factores. El login con passkey sigue disponible y
+no pide un código adicional.
 </Note>
 
 
@@ -273,6 +324,22 @@ ya es un flujo de dos factores y no pide un código adicional.
     que una elección explícita más débil falla con
     `403 channel_locked_by_org` en vez de actualizarse en silencio.
   </Accordion>
+  <Accordion title="¿Puedo quitar el 2FA por SMS?">
+    Sí: revisa `GET /v1/me/sms-2fa` y usa `DELETE /v1/me/sms-2fa` con un
+    `X-OTP-Token` de un desafío `security_settings` verificado por SMS o
+    WhatsApp. El piso de la organización puede responder
+    `403 policy_locked_by_org`.
+  </Accordion>
+  <Accordion title="¿Puedo cambiar el teléfono con SMS activo?">
+    Sí, pero debes probar posesión del número anterior con un OTP
+    `phone_change`. Una API key no puede hacer ese cambio con SMS activo: la
+    solicitud falla cerrada. El teléfono nuevo queda sin verificar hasta que
+    se compruebe.
+  </Accordion>
+  <Accordion title="¿Por qué el registro responde 410 para passkey?">
+    Passkey se retiró solo del wizard de registro. Usa app autenticadora o
+    SMS; el login con passkey y `/v1/me/passkeys` siguen vivos.
+  </Accordion>
   <Accordion title="¿Cuánto dura un código y cuántos intentos tengo?">
     El código y el desafío duran 10 minutos. Tienes 5 verificaciones por
     desafío y un límite de envíos por hora. El `otp_token` resultante es de
@@ -289,21 +356,3 @@ ya es un flujo de dos factores y no pide un código adicional.
     duplicados.
   </Accordion>
 </AccordionGroup>
-
-## Enrolamiento y reanudación del login
-
-El 2FA obligatorio del registro es distinto del OTP por acción. Conserva el `pending_token` hasta 30 minutos y elige TOTP o passkey. Password login, OAuth y el primer login de miembros invitados devuelven `pending_2fa_enrollment` mientras `must_enroll_2fa` esté activo; una cuenta OAuth nueva devuelve `201` y `created: true`. Refresh y handoff rechazan miembros sin enrolar.
-
-```mermaid
-sequenceDiagram
-  participant A as App
-  participant API as CBPay API
-  A->>API: POST /v1/auth/register/confirm
-  API-->>A: 201 pending_2fa_enrollment + pending_token
-  A->>API: POST /v1/auth/register/2fa/totp/begin
-  API-->>A: 200 otpauth_uri + QR
-  A->>API: POST /v1/auth/register/2fa/totp/confirm
-  API-->>A: 201 sesión + recovery_codes
-```
-
-El login con passkey también respeta el gate de enrolamiento: si `must_enroll_2fa` es `true`, `POST /v1/auth/passkey/login/finish` devuelve `pending_2fa_enrollment` y el member completa el wizard antes de recibir sesión. Un member que siga en `RegisterPending` (email aún no verificado) recibe `invalid_credential` hasta confirmar el buzón; es un flujo separado del enrolamiento 2FA.

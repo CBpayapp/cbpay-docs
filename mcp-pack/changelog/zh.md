@@ -5,13 +5,25 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.214 · 5 个版本 - 2026年11月4日
-### v2.214
+## v2.215 · 6 个版本 - 2026年11月4日
+### v2.215
 **新增**
 - 企业账户可以在门户中为托管 KYC/KYB 链接配置账户品牌，支持预览、
   账户 → 组织 → CBPay 回退，以及固定显示在页脚的 “Powered by CBPay” 标签。
 - KYC/KYB 指南新增 `GET` 和 `PUT /v1/account/branding` 示例。链接创建时
   会保存经过清理的品牌快照。
+### v2.214
+**新增**
+- 注册强制双重认证新增短信第二因素选项：`POST /v1/auth/register/2fa/sms/begin`
+  发送验证码，`POST /v1/auth/register/2fa/sms/confirm`
+  验证电话、激活短信双重认证并签发首个会话。今后登录需要短信验证码；
+  `GET`/`DELETE /v1/me/sms-2fa` 查看或移除该因素（移除需号码持有证明）。
+**变更**
+- 注册认证现提供验证器应用或短信。通行密钥注册端点返回 `410
+  passkey_not_offered`；通行密钥登录与 `/v1/me/passkeys` 不受影响。
+**修复**
+- 修复了 `invalid_phone` 响应消息（PR #1774）：现在说明所需的 E.164
+  格式并提供具体示例。
 ### v2.213
 **新增**
 - 新增 `referral_credited` webhook：推荐人结算付款至 payout 账户余额时触发一次。

@@ -732,3 +732,10 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 500 | `receipt_render_failed` | 无法生成工资单 PDF | 重试读取；若仍失败，请提供请求 ID。 |
 | 503 | `valuation_unavailable` | 无法将金额估值为美元 | 稍后重试；批准过程保持失败关闭。 |
 | 500 | `store_error` | 平台无法读取或保存记录 | 确认资源状态后重试。 |
+
+## Expense platform errors
+
+| 400 | `duplicate_category` | 组织已存在该自定义费用类别 key | 选择其他 `c_` key |
+| 400 | `invalid_batch` | 批量操作的 ID 少于 1 个或超过 100 个 | 发送 1–100 个费用 UUID |
+| 400 | `invalid_horizon` | horizon 不是 3、6 或 12 个月 | 使用 `horizon=3`、`6` 或 `12` |
+| 400 | `invalid_icon` | 自定义图标格式或长度超出限制 | 使用不超过 40 个字母、数字、`_` 或 `-` |

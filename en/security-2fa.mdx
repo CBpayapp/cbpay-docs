@@ -28,7 +28,7 @@ authenticator app (TOTP), recovery codes and passkeys — lives in
 
 ## Registration enrollment and login resume
 
-Mandatory registration 2FA is a separate enrollment ceremony from per-action OTP. After email confirmation, keep the `pending_token` for up to 30 minutes and resume with either TOTP or passkey:
+Mandatory registration 2FA is separate from per-action OTP. After email confirmation, keep the `pending_token` for up to 30 minutes and choose the authenticator app (TOTP) or SMS:
 
 ```mermaid
 sequenceDiagram
@@ -36,15 +36,35 @@ sequenceDiagram
   participant API as CBPay API
   A->>API: POST /v1/auth/register/confirm
   API-->>A: 201 pending_2fa_enrollment + pending_token
-  A->>API: POST /v1/auth/register/2fa/totp/begin
-  API-->>A: 200 otpauth_uri + QR
-  A->>API: POST /v1/auth/register/2fa/totp/confirm
-  API-->>A: 201 session + recovery_codes
+  A->>API: POST /v1/auth/register/2fa/totp/begin OR sms/begin
+  API-->>A: 200 setup data OR masked phone + steps
+  A->>API: POST /v1/auth/register/2fa/totp/confirm OR sms/confirm
+  API-->>A: 201 first session
 ```
 
-Password login, OAuth login (including auto-link), and invited-member first login return `pending_2fa_enrollment` instead of a session when the member has `must_enroll_2fa`. OAuth-created accounts return `201` and include `created: true`; existing-account login returns `200`. The login OTP endpoint remains the second step for members who already have an enrolled factor and a login challenge. Refresh and environment handoff reject an unenrolled member; complete enrollment and sign in again.
+`POST /v1/auth/register/confirm` returns `201 pending_2fa_enrollment` with `factors: ["totp", "sms"]` and `passkeys_available: false`. Password login, OAuth login and invited-member first login use the same pending flow when `must_enroll_2fa` is active. Refresh and environment handoff reject an unenrolled member.
 
-Registration enrollment errors include `401 invalid_pending_token`, `409 totp_not_started`, `403 otp_invalid` (the code must be exactly six digits), `409 enrollment_complete`, `409 challenge_not_pending`, `503 passkeys_unavailable`, `409 passkey_exists`, `403 passkey_rejected`, and `400 invalid_credential` for malformed WebAuthn data.
+For TOTP, call `POST /v1/auth/register/2fa/totp/begin`, scan the returned `otpauth_uri`, then confirm with the six-digit code. The `201` response creates the first session and returns 10 recovery codes once. For SMS:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+```
+
+The successful `200` response contains `phone_masked`, `steps` for the ten-minute verification window, and a `note` pointing to `sms/confirm`. It never returns the SMS code.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","code":"482913"}'
+```
+
+The `201` response contains the first session, the account, `steps` saying that future sign-ins require SMS, and a `note`. It does not contain recovery codes. The SMS factor is effective only after the phone is verified.
+
+The registration passkey endpoints remain only to guide older clients: both `POST /v1/auth/register/2fa/passkey/begin` and `.../passkey/finish` return `410 passkey_not_offered`. Passkey login and `/v1/me/passkeys` remain available.
+
+Registration enrollment errors include `400 invalid_phone` with the message `phone must be E.164 format: plus sign, country code and number (example +56912345678)`, `401 invalid_pending_token`, `409 phone_required`, `409 sms_not_started`, `403 otp_invalid`, `429 too_many_attempts`, `502 otp_send_failed` or `otp_check_failed`, and `409 enrollment_complete`.
 
 
 ## How it works
@@ -223,10 +243,9 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 }
 ```
 <Note>
-**An enrolled TOTP is always enforced at login.** Once a member confirms an
-authenticator app, the login returns the normal pending OTP flow even when the
-organization policy does not require OTP for `login`. Passkey login remains a
-two-factor flow on its own and does not request a second code.
+**An enrolled TOTP or effective SMS factor is enforced at login.** TOTP takes
+precedence when both factors exist. Passkey login remains available and does
+not request a second code.
 </Note>
 
 
@@ -293,6 +312,23 @@ two-factor flow on its own and does not request a second code.
     so a weaker explicit choice fails with `403 channel_locked_by_org`
     instead of being silently upgraded.
   </Accordion>
+  <Accordion title="Can I remove SMS two-factor?">
+    Yes. `GET /v1/me/sms-2fa` shows the masked phone and status.
+    `DELETE /v1/me/sms-2fa` requires an `X-OTP-Token` from a
+    `security_settings` challenge verified over SMS or WhatsApp. The
+    organization floor can block removal with `403 policy_locked_by_org`.
+  </Accordion>
+  <Accordion title="Can I change the phone after SMS enrollment?">
+    Yes, but first prove possession of the previous number with a
+    `phone_change` OTP. API keys cannot perform this change while SMS 2FA is
+    active; the request fails closed. The new number is not verified until
+    its own verification succeeds.
+  </Accordion>
+  <Accordion title="Why did registration return 410 for passkey?">
+    Passkeys were removed from the registration wizard only. Use the
+    authenticator app or SMS during registration; passkey login and
+    `/v1/me/passkeys` continue to work.
+  </Accordion>
   <Accordion title="How long does a code last and how many attempts do I get?">
     The code and challenge last 10 minutes. You get 5 verifications per
     challenge and an hourly send limit. The resulting `otp_token` is single
@@ -309,4 +345,7 @@ two-factor flow on its own and does not request a second code.
   </Accordion>
 </AccordionGroup>
 
-Passkey login also respects the enrollment gate: when `must_enroll_2fa` is true, `POST /v1/auth/passkey/login/finish` returns `pending_2fa_enrollment` and the member completes the registration wizard before receiving a session. A member still marked `RegisterPending` (email not yet verified) receives `invalid_credential` until the mailbox is confirmed; that is separate from the 2FA enrollment gate.
+Passkey login still respects the enrollment gate: when `must_enroll_2fa` is
+true, it returns `pending_2fa_enrollment`; complete registration with TOTP or
+SMS before receiving a session. A member still marked `RegisterPending` must
+confirm the mailbox first.
