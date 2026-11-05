@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月5日" description="v2.218 · 2 个版本">
+<Update label="2026年11月5日" description="v2.219 · 3 个版本">
+### v2.219
+**修复**
+- 验证表单现在会在服务端拒绝 HTML/脚本内容并返回明确错误，恶意标记
+  无法再存入申请。API 无变化。
 ### v2.218
 **新增**
 - 电话注册认证新增 WhatsApp：`POST /v1/auth/register/2fa/sms/begin`

@@ -5,8 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.217 · 1 version - November 5, 2026
-### v2.217
+## v2.219 · 3 versions - November 5, 2026
+### v2.219
+**Fixed**
+- Verification forms now reject HTML/script content server-side with a
+  clear error, so hostile markup can no longer be stored in applications.
+  No API contract changes.
+### v2.218
 **Added**
 - Registration enrollment by phone now accepts WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` takes an optional `channel` (`sms` by
@@ -17,6 +22,9 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - The `invalid_phone` message in transfers and contacts now explains the
   required E.164 format with a concrete example instead of the generic
   provider error.
+### v2.217
+**Changed**
+- Card payins accept optional payer `document_type` and `document_number` in `bill_to`; Chile validates modulo-11 RUTs and returns `400 invalid_payload` for invalid values. Approved completes report `card_saved` when saving was offered and consented, so integrators can tell the payer whether the card was stored.
 ## v2.216 · 7 versions - November 4, 2026
 ### v2.216
 **Added**

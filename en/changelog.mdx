@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 5, 2026" description="v2.218 · 2 versions">
+<Update label="November 5, 2026" description="v2.219 · 3 versions">
+### v2.219
+**Fixed**
+- Verification forms now reject HTML/script content server-side with a
+  clear error, so hostile markup can no longer be stored in applications.
+  No API contract changes.
 ### v2.218
 **Added**
 - Registration enrollment by phone now accepts WhatsApp: `POST

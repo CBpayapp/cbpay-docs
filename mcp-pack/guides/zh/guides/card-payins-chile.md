@@ -52,6 +52,36 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 通用 checkout 只有在目录报告可用时才会报价 `CL/CLP/card`。显示该选项
 前请读取 `GET /platform/v1/payins/methods`。
 
+### 付款人证件（可选）
+
+对于银行卡收款，`customer` 会作为 `bill_to` 发送到核心服务。你可以提供
+`document_type` 和 `document_number` 用于反欺诈评分。证件可选：省略两个字段
+也有效。对于 `CL`，提供号码时 `document_type` 默认为 `RUT`，
+`document_number` 必须是有效的智利 RUT（模 11，可带或不带标点）。无效
+RUT 会在扣款 claim 前返回 `400 invalid_payload`。其他国家接受最多 50 个
+字符的纯文本；不接受 markup 或更长的值。
+
+```json
+{
+  "customer": {
+    "first_name": "Ana",
+    "last_name": "Rojas",
+    "email": "payer@example.com",
+    "country": "CL",
+    "document_type": "RUT",
+    "document_number": "11.111.111-1"
+  },
+  "save_card": true
+}
+```
+
+### 确认银行卡是否已保存
+
+当提供 `save_card: true` 且付款人同意保存时，已批准的 `complete` 响应会包含
+`card_saved`。`true` 表示凭据已保存，可以通过已保存银行卡流程使用。`false`
+表示付款成功但银行卡没有保存；应清楚提示付款人，不能再次扣款。未提供或未
+请求保存时不会返回此字段。
+
 ## 查询、撤销和退款
 
 ```bash

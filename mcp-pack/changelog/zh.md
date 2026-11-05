@@ -5,8 +5,12 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.217 · 1 个版本 - 2026年11月5日
-### v2.217
+## v2.219 · 3 个版本 - 2026年11月5日
+### v2.219
+**修复**
+- 验证表单现在会在服务端拒绝 HTML/脚本内容并返回明确错误，恶意标记
+  无法再存入申请。API 无变化。
+### v2.218
 **新增**
 - 电话注册认证新增 WhatsApp：`POST /v1/auth/register/2fa/sms/begin`
   接受可选 `channel`（默认 `sms`，可指定 `whatsapp`），其他值返回 `400
@@ -14,6 +18,9 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 **修复**
 - 转账与联系人的 `invalid_phone` 消息现说明所需的 E.164
   格式并提供具体示例，不再返回通用提供商错误。
+### v2.217
+**变更**
+- 银行卡收款的 `bill_to` 支持可选的 `document_type` 和 `document_number`；智利校验模 11 RUT，无效值返回 `400 invalid_payload`。在提供保存选项并取得同意时，批准的 `complete` 会返回 `card_saved`，便于集成方告知付款人银行卡是否已保存。
 ## v2.216 · 7 个版本 - 2026年11月4日
 ### v2.216
 **新增**

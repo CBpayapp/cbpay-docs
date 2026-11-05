@@ -315,15 +315,29 @@ La confirmación del email prueba el buzón, pero ya no crea una sesión. `POST
 
 TOTP: llama `totp/begin`, escanea el `otpauth_uri` y confirma el código de
 seis dígitos; la respuesta entrega la sesión y 10 `recovery_codes` de un solo
-uso. Para SMS:
+uso. Para SMS o WhatsApp:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
   -H "Content-Type: application/json" \
-  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
 ```
 
-La respuesta `200` tiene `phone_masked`, `steps` y `note`. Confirma el código:
+La respuesta `200` tiene `phone_masked`, el `channel` efectivo, `steps` y
+`note`. `channel` es `sms` por defecto; usa `whatsapp` para enviar el código
+por WhatsApp. Confirma el código:
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
@@ -331,11 +345,15 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
   -d '{"pending_token":"<pending-token>","code":"482913"}'
 ```
 
-La respuesta `201` entrega la primera sesión, `steps` y `note`, sin códigos de
-recuperación. Los endpoints passkey del registro responden `410
+La respuesta `201` entrega la primera sesión, `steps` que indican que los
+próximos logins pedirán un código SMS, y `note`, sin códigos de recuperación.
+La confirmación no depende del canal. Los endpoints passkey del registro responden `410
 passkey_not_offered`; passkey login y `/v1/me/passkeys` siguen vivos.
 
 Miembros invitados y miembros de cuentas creadas por un org-admin siguen el mismo wizard en su primer login.
+
+`channel` solo acepta `sms` o `whatsapp`; otro valor responde `400
+invalid_channel`.
 
 El login con passkey también respeta el gate de enrolamiento: si
 `must_enroll_2fa` es `true`, devuelve `pending_2fa_enrollment`; completa el
@@ -345,5 +363,5 @@ registro con TOTP o SMS antes de recibir sesión. Un member en
 Tanto `totp/begin` como `sms/begin` pueden devolver `201` con la sesión normal
 cuando un intento anterior ya guardó el factor y solo se interrumpió la
 limpieza del flag. TOTP devuelve `totp_secret`, `otpauth_uri`,
-`qr_png_base64` opcional, `steps` y `note`; SMS devuelve `phone_masked`,
-`steps` y `note`.
+`qr_png_base64` opcional, `steps` y `note`; SMS o WhatsApp devuelve
+`phone_masked`, `channel`, `steps` y `note`.

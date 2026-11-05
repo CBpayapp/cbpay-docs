@@ -54,6 +54,40 @@ endpoint server-side de tarjetas guardadas; el PAN nunca llega a tu servidor.
 El checkout universal cotiza `CL/CLP/card` cuando el catálogo lo informa
 disponible. Lee siempre `GET /platform/v1/payins/methods` antes de mostrarlo.
 
+### Documento del pagador (opcional)
+
+En los payins con tarjeta, `customer` se envía al core como `bill_to`. Puedes
+incluir `document_type` y `document_number` para scoring antifraude. El
+documento es opcional: omitir ambos campos es válido. Para `CL`,
+`document_type` queda en `RUT` cuando envías un número y `document_number`
+debe ser un RUT chileno válido (módulo 11, con o sin puntuación). Un RUT
+inválido se rechaza antes del claim del cobro con `400 invalid_payload`. En
+otros países se acepta texto plano de hasta 50 caracteres; se rechazan markup
+y valores más largos.
+
+```json
+{
+  "customer": {
+    "first_name": "Ana",
+    "last_name": "Rojas",
+    "email": "payer@example.com",
+    "country": "CL",
+    "document_type": "RUT",
+    "document_number": "11.111.111-1"
+  },
+  "save_card": true
+}
+```
+
+### Cómo saber si la tarjeta quedó guardada
+
+Cuando ofreciste `save_card: true` y el pagador consintió, una respuesta
+`complete` aprobada incluye `card_saved`. `true` significa que la credencial
+quedó guardada y puede usarse en el flujo de tarjetas guardadas. `false`
+significa que la venta se aprobó, pero la tarjeta no quedó guardada; muestra
+un mensaje claro y no cobres nuevamente. El campo se omite si no ofreciste o
+solicitaste guardar la tarjeta.
+
 ## Consultar, anular y reembolsar
 
 ```bash

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.217"
+  version: "2.219"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -5664,6 +5664,14 @@ paths:
                       type: string
                       maxLength: 50
                       description: Optional buyer document number for the card payin (plain text, MDD 11).
+                    document_type:
+                      type: string
+                      maxLength: 50
+                      description: Optional payer document type sent as bill_to.document_type; for CL, RUT is the default when document_number is present.
+                    document_number:
+                      type: string
+                      maxLength: 50
+                      description: Optional payer document number sent as bill_to.document_number. For CL it must be a valid modulo-11 RUT; invalid values return 400 invalid_payload. Other countries accept plain text up to 50 characters.
                 success_url:
                   type: string
                   description: Optional public https URL (`card` and `checkout` methods) the payer is
@@ -5846,6 +5854,9 @@ paths:
                     email: payer@example.com
                     first_name: Ana
                     last_name: Rojas
+                    country: CL
+                    document_type: RUT
+                    document_number: 11.111.111-1
                   success_url: https://your-app.com/payment/ok
                   failure_url: https://your-app.com/payment/error
                   save_card: true
