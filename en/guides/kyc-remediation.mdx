@@ -27,6 +27,12 @@ returns `409 self_verification_in_progress` without a new URL:
 Call `GET /v1/me/verification` and reopen the existing `link.url`. Do not
 create a second case or change the idempotency key.
 
+If a remediation-capable link expires while its submission is still
+`changes_requested` or `more_info_required`, opening it automatically
+reopens the link for another 90 days. Its state is `opened`, and the response
+reports `changes_requested` with `next_step: resubmit`. Terminal and revoked
+links remain closed.
+
 ## Resubmit in place
 
 While remediation is possible, the current submission exposes:
@@ -47,6 +53,14 @@ resubmits **in place**: the `submission_id` is unchanged and no new
 submission is created. When the last required document is accepted, the case
 automatically returns to `pending_review` and the portal shows **Waiting for
 approval**.
+
+For an invited UBO or director at `/on/ubo/`, if the declaration is still
+missing, the review card shows **Your sworn declaration still needs your
+signature**. The UBO can sign the declaration inline; signing is sufficient
+to continue, and the case remains in review.
+
+An expired-link screen is intentionally distinct and explains that your
+progress was saved, then asks you to request a new link.
 
 ```mermaid
 flowchart LR

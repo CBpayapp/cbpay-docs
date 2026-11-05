@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.215"
+  version: "2.217"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2299,7 +2299,7 @@ paths:
       security: []
       operationId: register2FASMSBegin
       summary: Start mandatory SMS enrollment
-      description: Sends the enrollment code by SMS to the account phone (or the phone in the request, which is saved). Uses the pending registration token, not a session.
+      description: Sends the enrollment code by SMS (or WhatsApp with channel=whatsapp) to the account phone (or the phone in the request, which is saved). Uses the pending registration token, not a session.
       requestBody:
         required: true
         content:
@@ -2310,25 +2310,27 @@ paths:
               properties:
                 pending_token: {type: string}
                 phone: {type: string, description: E.164 phone (+<country><number>); required when the account has no phone yet}
-            example: {pending_token: eyJ..., phone: '+56912345678'}
+                channel: {type: string, enum: [sms, whatsapp], default: sms, description: Delivery channel for the code}
+            example: {pending_token: eyJ..., phone: '+56912345678', channel: whatsapp}
       responses:
         '200':
-          description: SMS code sent.
+          description: Code sent over the requested channel.
           content:
             application/json:
               example:
                 phone_masked: '*******5678'
+                channel: sms
                 steps: ["1. We sent a code by SMS to *******5678.", "2. Enter the code within 10 minutes to verify your number."]
-                note: "enter the SMS code with POST /v1/auth/register/2fa/sms/confirm"
+                note: "enter the code with POST /v1/auth/register/2fa/sms/confirm"
         '201':
           description: An existing factor was found during crash recovery; enrollment is completed and a session is issued.
           content:
             application/json:
               example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
-        '400': {description: invalid_phone.}
+        '400': {description: invalid_phone or invalid_channel.}
         '401': {description: invalid_pending_token.}
         '409': {description: phone_required.}
-        '429': {description: too_many_attempts; SMS sends are rate limited.}
+        '429': {description: too_many_attempts; code sends are rate limited.}
         '502': {description: otp_send_failed.}
   /v1/auth/register/2fa/sms/confirm:
     post:

@@ -23,6 +23,11 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 调用 `GET /v1/me/verification` 并重新打开已有的 `link.url`。不要创建第二个案件，也不要更换幂等键。
 
+如果可补正的链接在提交件仍为 `changes_requested` 或
+`more_info_required` 时过期，打开链接会自动将其重新开放 90 天。其状态
+为 `opened`，响应会报告 `changes_requested` 以及
+`next_step: resubmit`。已终止或已撤销的链接仍保持关闭。
+
 ## 原地重新提交
 
 只要还可以补正，当前提交件就会暴露：
@@ -39,6 +44,12 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 ```
 
 在现有向导中上传 `pending_documents` 里的每一项。向导会**原地**重新提交：`submission_id` 不变，也不会创建新的提交件。最后一项所需文件通过后，案件自动回到 `pending_review`，门户显示**等待批准**。
+
+对于 `/on/ubo/` 中受邀的 UBO 或董事，如果缺少声明，审核卡会显示
+**仍缺少你对宣誓声明的签名**。UBO 可以直接在页面内签署；签署即可继续，
+案件仍保持在审核中。
+
+过期链接页面会明确区分，说明你的进度已保存，并要求申请新链接。
 
 ```mermaid
 flowchart LR
