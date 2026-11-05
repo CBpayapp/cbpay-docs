@@ -5,6 +5,18 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.216 · 1 version - November 5, 2026
+### v2.216
+**Added**
+- Registration enrollment by phone now accepts WhatsApp: `POST
+  /v1/auth/register/2fa/sms/begin` takes an optional `channel` (`sms` by
+  default, `whatsapp` on request) and answers `400 invalid_channel` for
+  anything else. Confirmation is channel-agnostic and future sign-ins ask
+  for an SMS code to the verified number.
+**Fixed**
+- The `invalid_phone` message in transfers and contacts now explains the
+  required E.164 format with a concrete example instead of the generic
+  provider error.
 ## v2.215 · 6 versions - November 4, 2026
 ### v2.215
 **Added**

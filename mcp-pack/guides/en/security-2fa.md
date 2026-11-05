@@ -24,7 +24,7 @@ authenticator app (TOTP), recovery codes and passkeys — lives in
 [Profile & security](https://docs.cbpayapp.com/en/guides/profile).
 ## Registration enrollment and login resume
 
-Mandatory registration 2FA is separate from per-action OTP. After email confirmation, keep the `pending_token` for up to 30 minutes and choose the authenticator app (TOTP) or SMS:
+Mandatory registration 2FA is separate from per-action OTP. After email confirmation, keep the `pending_token` for up to 30 minutes and choose the authenticator app (TOTP) or phone delivery by SMS or WhatsApp:
 
 ```mermaid
 sequenceDiagram
@@ -40,15 +40,27 @@ sequenceDiagram
 
 `POST /v1/auth/register/confirm` returns `201 pending_2fa_enrollment` with `factors: ["totp", "sms"]` and `passkeys_available: false`. Password login, OAuth login and invited-member first login use the same pending flow when `must_enroll_2fa` is active. Refresh and environment handoff reject an unenrolled member.
 
-For TOTP, call `POST /v1/auth/register/2fa/totp/begin`, scan the returned `otpauth_uri`, then confirm with the six-digit code. The `201` response creates the first session and returns 10 recovery codes once. For SMS:
+For TOTP, call `POST /v1/auth/register/2fa/totp/begin`, scan the returned `otpauth_uri`, then confirm with the six-digit code. The `201` response creates the first session and returns 10 recovery codes once. For SMS or WhatsApp:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
   -H "Content-Type: application/json" \
-  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
 ```
 
-The successful `200` response contains `phone_masked`, `steps` for the ten-minute verification window, and a `note` pointing to `sms/confirm`. It never returns the SMS code.
+The successful `200` response contains `phone_masked`, the effective `channel`, `steps` for the ten-minute verification window, and a `note` pointing to `sms/confirm`. The `channel` is `sms` by default; use `whatsapp` to deliver the code through WhatsApp. It never returns the code.
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
@@ -56,11 +68,11 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
   -d '{"pending_token":"<pending-token>","code":"482913"}'
 ```
 
-The `201` response contains the first session, the account, `steps` saying that future sign-ins require SMS, and a `note`. It does not contain recovery codes. The SMS factor is effective only after the phone is verified.
+The `201` response contains the first session, the account, `steps` saying that future sign-ins require an SMS code, and a `note`. It does not contain recovery codes. The SMS factor is effective only after the phone is verified, regardless of whether enrollment used SMS or WhatsApp.
 
 The registration passkey endpoints remain only to guide older clients: both `POST /v1/auth/register/2fa/passkey/begin` and `.../passkey/finish` return `410 passkey_not_offered`. Passkey login and `/v1/me/passkeys` remain available.
 
-Registration enrollment errors include `400 invalid_phone` with the message `phone must be E.164 format: plus sign, country code and number (example +56912345678)`, `401 invalid_pending_token`, `409 phone_required`, `409 sms_not_started`, `403 otp_invalid`, `429 too_many_attempts`, `502 otp_send_failed` or `otp_check_failed`, and `409 enrollment_complete`.
+Registration enrollment errors include `400 invalid_channel` with the message `channel must be sms or whatsapp`, `400 invalid_phone` with the message `phone must be E.164 format: plus sign, country code and number (example +56912345678)`, `401 invalid_pending_token`, `409 phone_required`, `409 sms_not_started`, `403 otp_invalid`, `429 too_many_attempts`, `502 otp_send_failed` or `otp_check_failed`, and `409 enrollment_complete`.
 
 ## How it works
 
@@ -309,6 +321,10 @@ not request a second code.
     `phone_change` OTP. API keys cannot perform this change while SMS 2FA is
     active; the request fails closed. The new number is not verified until
     its own verification succeeds.
+#### Why does login use SMS after WhatsApp enrollment?
+    WhatsApp is supported only for the registration delivery step. After the
+    phone is verified, future sign-ins request the code by SMS. The
+    confirmation endpoint remains the same for both enrollment channels.
 #### Why did registration return 410 for passkey?
     Passkeys were removed from the registration wizard only. Use the
     authenticator app or SMS during registration; passkey login and

@@ -211,6 +211,10 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
   <Accordion title="我可以选择 SMS 还是 WhatsApp 吗？">
     可以——创建质询时传入 `channel`（`sms`、`whatsapp`、`email` 或 `totp`）。省略时沿用运营方按操作配置的渠道（可按账户或整个组织配置——在 `GET /v1/otp/settings` 中查看）。校验使用有效底线——先用账户策略，再用组织默认值：更弱的显式选择将返回 `403 channel_locked_by_org`，而不会被静默升级。
   </Accordion>
+  <Accordion title="使用 WhatsApp 注册后，登录会通过哪个渠道发送？">
+    WhatsApp 仅用于注册时发送验证码。手机号验证后，后续登录会通过 SMS
+    请求验证码；无论注册时使用哪个渠道，确认端点都相同。
+  </Accordion>
   <Accordion title="验证码有效期多长？我有多少次尝试机会？">
     验证码与质询的有效期为 10 分钟。每个质询最多可验证 5 次，另有每小时发送限额。产生的 `otp_token` 为一次性使用。
   </Accordion>
@@ -225,7 +229,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 ## 注册认证与登录恢复
 
 注册强制 2FA 独立于操作 OTP。邮箱确认后保留有效 30 分钟的
-`pending_token`，选择验证器应用（TOTP）或短信。`register/confirm` 返回
+`pending_token`，选择验证器应用（TOTP）或通过 SMS/WhatsApp 发送到手机。
+`register/confirm` 返回
 `201 pending_2fa_enrollment`、`factors: ["totp", "sms"]` 和
 `passkeys_available: false`。密码登录、OAuth 登录和受邀成员首次登录在
 `must_enroll_2fa` 时使用相同的待注册流程。
@@ -242,16 +247,31 @@ sequenceDiagram
   API-->>A: 201 首个会话
 ```
 
-短信注册示例：
+SMS 或 WhatsApp 注册示例：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
   -H "Content-Type: application/json" \
-  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
 ```
 
-成功的 `200` 响应包含 `phone_masked`、10 分钟验证窗口的 `steps` 和
-`note`，不会返回短信验证码。确认请求：
+成功的 `200` 响应包含 `phone_masked`、生效的 `channel`、10 分钟验证窗口的
+`steps` 和 `note`。`channel` 默认为 `sms`；指定 `whatsapp` 会通过
+WhatsApp 发送验证码。不会返回验证码。
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
+
+确认请求：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
@@ -260,8 +280,10 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
 ```
 
 `201` 响应签发首个会话，`steps` 说明今后登录需要短信验证码，且不包含
-恢复代码。验证器应用流程仍返回一次性的 10 个恢复代码。
+恢复代码。无论使用哪个渠道发送，确认端点都相同；验证器应用流程仍返回
+一次性的 10 个恢复代码。
 
+`channel` 只接受 `sms` 或 `whatsapp`；其他值返回 `400 invalid_channel`。
 注册通行密钥端点现在返回 `410 passkey_not_offered`；通行密钥登录和
 `/v1/me/passkeys` 仍然可用。常见错误包括 `400 invalid_phone`（消息为
 `phone must be E.164 format: plus sign, country code and number (example +56912345678)`）、

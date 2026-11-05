@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.215"
+  version: "2.216"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2276,7 +2276,7 @@ paths:
       security: []
       operationId: register2FASMSBegin
       summary: Iniciar enrolamiento SMS obligatorio
-      description: Envía el código de enrolamiento por SMS al teléfono de la cuenta (o al teléfono del request, que se guarda). Usa el token pendiente de registro, no una sesión.
+      description: Envía el código de enrolamiento por SMS (o WhatsApp con channel=whatsapp) al teléfono de la cuenta (o al teléfono del request, que se guarda). Usa el token pendiente de registro, no una sesión.
       requestBody:
         required: true
         content:
@@ -2287,25 +2287,27 @@ paths:
               properties:
                 pending_token: {type: string}
                 phone: {type: string, description: Teléfono E.164 (+<país><número>); obligatorio cuando la cuenta aún no tiene teléfono}
-            example: {pending_token: eyJ..., phone: '+56912345678'}
+                channel: {type: string, enum: [sms, whatsapp], default: sms, description: Canal de entrega del código}
+            example: {pending_token: eyJ..., phone: '+56912345678', channel: whatsapp}
       responses:
         '200':
-          description: Código SMS enviado.
+          description: Código enviado por el canal pedido.
           content:
             application/json:
               example:
                 phone_masked: '*******5678'
+                channel: sms
                 steps: ["1. Enviamos un código por SMS al *******5678.", "2. Ingresa el código dentro de 10 minutos para verificar tu número."]
-                note: "ingresa el código SMS con POST /v1/auth/register/2fa/sms/confirm"
+                note: "ingresa el código con POST /v1/auth/register/2fa/sms/confirm"
         '201':
           description: Se encontró un factor existente durante la recuperación tras un fallo; el enrolamiento terminó y se entrega una sesión.
           content:
             application/json:
               example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
-        '400': {description: Teléfono inválido.}
+        '400': {description: Teléfono o canal inválido.}
         '401': {description: token pendiente inválido.}
         '409': {description: Falta el teléfono.}
-        '429': {description: too_many_attempts; los envíos SMS tienen límite.}
+        '429': {description: too_many_attempts; los envíos de códigos tienen límite.}
         '502': {description: otp_send_failed.}
   /v1/auth/register/2fa/sms/confirm:
     post:
