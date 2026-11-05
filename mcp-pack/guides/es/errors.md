@@ -394,6 +394,10 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | HTTP | Código | Significado y solución |
 |---|---|---|
 | 409 | `corridor_disabled` | El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización. |
+| 409 | `banking_corridor_disabled` | El país o riel banking seleccionado está deshabilitado administrativamente. Usa otro riel habilitado o contacta al operador de la organización. |
+| 409 | `crypto_disabled` | La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización. |
+| 400 | `invalid_crypto_control` | El toggle de red crypto es inválido (red/activo desconocido, scope o motivo faltante). Corrige el request. |
+| 409 | `rail_not_registered` | El riel seleccionado no está configurado en este ambiente. Elige un riel registrado (ver pantalla de corredores del admin). |
 
 ## Banking creation recovery errors
 

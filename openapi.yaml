@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.211"
+  version: "2.215"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -2218,7 +2218,7 @@ paths:
           description: Pending 2FA enrollment returned; no session is issued yet.
           content:
             application/json:
-              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, passkey], passkeys_available: true, next: [Choose an authenticator app or passkey], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
+              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, sms], passkeys_available: false, next: [Choose an authenticator app or SMS], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400':
           description: invalid_code when code shape is invalid.
         '401':
@@ -2293,13 +2293,85 @@ paths:
         '401': {description: invalid_pending_token.}
         '403': {description: otp_invalid; the 6-digit code is invalid or expired.}
         '409': {description: totp_not_started or enrollment_complete.}
+  /v1/auth/register/2fa/sms/begin:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FASMSBegin
+      summary: Start mandatory SMS enrollment
+      description: Sends the enrollment code by SMS to the account phone (or the phone in the request, which is saved). Uses the pending registration token, not a session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+                phone: {type: string, description: E.164 phone (+<country><number>); required when the account has no phone yet}
+            example: {pending_token: eyJ..., phone: '+56912345678'}
+      responses:
+        '200':
+          description: SMS code sent.
+          content:
+            application/json:
+              example:
+                phone_masked: '*******5678'
+                steps: ["1. We sent a code by SMS to *******5678.", "2. Enter the code within 10 minutes to verify your number."]
+                note: "enter the SMS code with POST /v1/auth/register/2fa/sms/confirm"
+        '201':
+          description: An existing factor was found during crash recovery; enrollment is completed and a session is issued.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '400': {description: invalid_phone.}
+        '401': {description: invalid_pending_token.}
+        '409': {description: phone_required.}
+        '429': {description: too_many_attempts; SMS sends are rate limited.}
+        '502': {description: otp_send_failed.}
+  /v1/auth/register/2fa/sms/confirm:
+    post:
+      tags: [Authentication]
+      security: []
+      operationId: register2FASMSConfirm
+      summary: Confirm mandatory SMS enrollment
+      description: Verifies the SMS code, marks the phone verified with SMS two-factor active, and returns the first session. Future sign-ins ask for an SMS code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, code]
+              properties:
+                pending_token: {type: string}
+                code: {type: string, minLength: 1}
+            example: {pending_token: eyJ..., code: '482913'}
+      responses:
+        '201':
+          description: Enrollment completed and first session issued.
+          content:
+            application/json:
+              example:
+                access_token: eyJ...
+                expires_at: '2026-10-22T19:00:00Z'
+                refresh_token: rt_...
+                refresh_expires_at: '2026-11-20T19:00:00Z'
+                account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}
+                steps: ["Your phone number is verified: future sign-ins ask for an SMS code.", "For stronger protection, add an authenticator app later in Settings / Security."]
+                note: "phone verified: future sign-ins require an SMS code"
+        '401': {description: invalid_pending_token.}
+        '403': {description: otp_invalid; the SMS code is invalid or expired.}
+        '409': {description: sms_not_started or enrollment_complete.}
+        '502': {description: otp_check_failed.}
   /v1/auth/register/2fa/passkey/begin:
     post:
       tags: [Authentication]
       security: []
       operationId: register2FAPasskeyBegin
-      summary: Start mandatory passkey enrollment
-      description: Starts a WebAuthn registration using the pending registration token.
+      summary: Start mandatory passkey enrollment (retired)
+      description: "Retired 2026-11-04 (410 gone): passkeys are no longer offered during registration — enroll the authenticator app or SMS instead. Passkey login and /v1/me/passkeys are unaffected."
       requestBody:
         required: true
         content:
@@ -2311,30 +2383,14 @@ paths:
                 pending_token: {type: string}
             example: {pending_token: eyJ...}
       responses:
-        '200':
-          description: WebAuthn creation options.
-          content:
-            application/json:
-              example:
-                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
-                options: {publicKey: {challenge: Y2hhbG..., rp: {name: CBPay, id: cbpayapp.com}, user: {name: ana@example.com}}}
-                expires_at: '2026-10-22T19:02:00Z'
-                steps: ["1. Approve the system dialog on this device", "2. Name this device on the next screen"]
-                note: "pass options.publicKey to navigator.credentials.create() and send the result to POST /v1/auth/register/2fa/passkey/finish"
-        '201':
-          description: An existing factor was found during crash recovery; enrollment is completed and a session is issued.
-          content:
-            application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
-        '401': {description: invalid_pending_token.}
-        '503': {description: passkeys_unavailable.}
+        '410': {description: passkey_not_offered.}
   /v1/auth/register/2fa/passkey/finish:
     post:
       tags: [Authentication]
       security: []
       operationId: register2FAPasskeyFinish
-      summary: Finish mandatory passkey enrollment
-      description: Validates the WebAuthn attestation, stores the credential and returns the first session.
+      summary: Finish mandatory passkey enrollment (retired)
+      description: "Retired 2026-11-04 (410 gone): passkeys are no longer offered during registration — enroll the authenticator app or SMS instead. Passkey login and /v1/me/passkeys are unaffected."
       requestBody:
         required: true
         content:
@@ -2349,16 +2405,7 @@ paths:
                 credential: {type: object}
             example: {pending_token: eyJ..., challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69, name: Taylor's MacBook, credential: {id: Y3JlZGVudGlhbA..., type: public-key, response: {clientDataJSON: eyJ..., attestationObject: o2N...}}}
       responses:
-        '201':
-          description: Enrollment completed and first session issued.
-          content:
-            application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
-        '400': {description: invalid_credential.}
-        '401': {description: invalid_pending_token.}
-        '403': {description: passkey_rejected.}
-        '409': {description: "challenge_not_pending, passkey_exists or enrollment_complete."}
-        '503': {description: passkeys_unavailable.}
+        '410': {description: passkey_not_offered.}
 
   /v1/auth/environment-handoff:
     post:
@@ -20124,6 +20171,43 @@ paths:
                 status: disabled
         '403':
           description: Invalid code (`otp_invalid`) or required by org (`policy_locked_by_org`).
+  /v1/me/sms-2fa:
+    get:
+      tags:
+      - Security (OTP)
+      operationId: getMySMS2FA
+      summary: My SMS two-factor status
+      description: Whether SMS two-factor is active, the masked account phone and if it is verified.
+      responses:
+        '200':
+          description: SMS two-factor status.
+          content:
+            application/json:
+              example:
+                enrolled: true
+                phone: '*******5678'
+                phone_verified: true
+    delete:
+      tags:
+      - Security (OTP)
+      operationId: disableMySMS2FA
+      summary: Remove SMS two-factor
+      description: Disables SMS two-factor. Requires proof of possession of the number (X-OTP-Token header
+        from a security_settings challenge verified over sms or whatsapp) and respects the org floor — if
+        the organization mandates a phone channel it cannot be removed. The number stays verified as a
+        contact; it only stops being a second factor.
+      responses:
+        '200':
+          description: SMS two-factor disabled.
+          content:
+            application/json:
+              example:
+                enrolled: false
+                status: disabled
+        '401':
+          description: Invalid or used OTP token (`invalid_otp`).
+        '403':
+          description: Missing proof (`otp_required`), wrong channel (`phone_proof_required`) or required by org (`policy_locked_by_org`).
   /v1/me/totp/enroll:
     post:
       tags:

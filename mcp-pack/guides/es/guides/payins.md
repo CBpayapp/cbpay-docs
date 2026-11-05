@@ -68,7 +68,7 @@ Corredores y modalidades de cobro:
 
 | País | Moneda | Modalidades |
 |---|---|---|
-| Chile | CLP | Página de pago hosted (`fintoc`), transferencia anunciada |
+| Chile | CLP | Página de pago hosted (`fintoc`), página de pago con tarjeta hosted (`card`), transferencia anunciada |
 | Perú | PEN | Transferencia anunciada |
 | México | MXN | Cuenta CLABE dedicada, transferencia anunciada |
 | Bolivia | BOB / USD | Cuenta BOB dedicada (`bank_transfer`), QR de cobro, página de pago con tarjeta (`card`), cash anunciado presencial |
