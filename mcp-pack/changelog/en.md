@@ -5,13 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.219 · 3 versions - November 5, 2026
-### v2.219
+## v2.221 · 5 versions - November 5, 2026
+### v2.221
 **Fixed**
 - Verification forms now reject HTML/script content server-side with a
   clear error, so hostile markup can no longer be stored in applications.
   No API contract changes.
-### v2.218
+### v2.220
 **Added**
 - Registration enrollment by phone now accepts WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` takes an optional `channel` (`sms` by
@@ -22,6 +22,16 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - The `invalid_phone` message in transfers and contacts now explains the
   required E.164 format with a concrete example instead of the generic
   provider error.
+### v2.219
+**Fixed**
+- KYB links with legacy alpha-3 country slugs (such as `/on/usa/...`) no
+  longer return 404: they redirect to the canonical slug preserving the
+  invite, and newly issued links always use canonical slugs. No API changes.
+### v2.218
+**Added**
+- Chilean CLP card payins can request issuer installments with integer `months` from `2` to `48` during `complete`. The hosted checkout shows issuer-reported, curated terms, and an approved payment returns `months` in the receipt.
+**Changed**
+- `months` omitted, `0`, or `1` means a single payment. Values below `0` or above `48` return `400 invalid_payload` before the payment claim. Stored-card MIT charges and Commerce Installments Beta are excluded.
 ### v2.217
 **Changed**
 - Card payins accept optional payer `document_type` and `document_number` in `bill_to`; Chile validates modulo-11 RUTs and returns `400 invalid_payload` for invalid values. Approved completes report `card_saved` when saving was offered and consented, so integrators can tell the payer whether the card was stored.

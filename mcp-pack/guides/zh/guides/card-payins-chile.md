@@ -82,6 +82,93 @@ RUT 会在扣款 claim 前返回 `400 invalid_payload`。其他国家接受最�
 表示付款成功但银行卡没有保存；应清楚提示付款人，不能再次扣款。未提供或未
 请求保存时不会返回此字段。
 
+## 发卡行分期
+
+对于智利 CLP 银行卡收款，托管结账页可以提供发卡行分期。付款人先为新卡
+完成 token 化；只有 token 返回延期付款选项时，页面才显示受理的期限
+`3`、`6`、`12`、`24`、`36` 和 `48`，并按发卡行返回的最大期限限制。付款人
+确认后，结账页在公开的 `complete` 请求中发送期限：
+
+```json
+{
+  "payment_token": "tok_…",
+  "months": 6
+}
+```
+
+`months` 必须是整数。省略它，或发送 `0` 或 `1`，表示一次性付款。`2` 到
+`48` 表示请求发卡行分期。该值会在扣款 claim 前校验；`-2` 或 `99` 返回
+`400 invalid_payload`，且不会消耗尝试次数。
+
+分期只适用于智利发卡行分期流程中通过 front-token 完成 token 化的新卡。
+不适用于已保存银行卡的 MIT 扣款，且不包含 Commerce Installments Beta。
+真实的 verify rail 会拒绝分期请求；支持的路径是 Kushki front-token rail
+和模拟器。结果不明确时，绝不要提交第二笔扣款。
+
+付款获批时，响应会在回单中包含获批期限；同一数值也会保存在扣款审计
+payload 中：
+
+```json
+{
+  "status": "paid",
+  "transaction_id": "710000000000123",
+  "months": 6
+}
+```
+
+| HTTP | 代码 | 解决方法 |
+|---:|---|---|
+| 400 | `invalid_payload` | 发送 `0` 到 `48` 的整数；一次性付款使用 `0`、`1` 或省略。 |
+| 200 | `failed_attempt` | 如果使用已保存银行卡请求分期，请改用新卡；该失败可以重新尝试。 |
+| 200 | `review` | 如果真实 rail 中已有资金在途，请读取会话并对账；不要盲目重试。 |
+
+## UF 银行卡收款
+
+智利银行卡通道也接受 `currency: "UF"`。金额必须使用最多两位小数的
+十进制字符串：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: cl-uf-card-order-8842" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"CL","currency":"UF","method":"card","amount":"1.50","description":"订单 8842","idempotency_key":"cl-uf-card-order-8842"}'
+```
+
+响应会在 payin 和回单中保留 `currency: "UF"` 与 `amount: "1.50"`。银行卡
+通道原生收取 UF 金额，并在内部换算为 CLP；`1 UF` 约为 `41,274 CLP`，
+准确值取决于适用的 UF 汇率。UF 金额可以与发卡行分期组合：在上面的
+front-token `complete` 请求中使用相同的 `months` 字段。获批期限会返回在
+回单中。
+
+UF 最多接受两位小数。`"1.50"` 有效，而 `"1.501"` 会在扣款 claim 前返回
+`400 invalid_amount`。CLP 仍然必须是整数，因此 `"150000.50"` 会返回同样
+诚实且既有的 `400 invalid_amount`。结果不明确时请读取资源，不要提交第二笔
+扣款。
+
+要读取当前换算上下文，请调用：
+
+```bash
+curl https://api.qbank.cl/v1/rates/usd/local \
+  -H "Authorization: Bearer <token>"
+```
+
+响应包含来自 OXR `CLF` ISO 来源的 `uf` 键。结算会按适用的 spot 汇率将
+UF 换算为 USDT；显示的 UF 汇率不保证固定的结算价格。
+
+获批的 UF webhook 会保留 UF 货币和金额：
+
+```json
+{
+  "event": "payin_credited",
+  "payin_id": "7a2b…",
+  "country": "CL",
+  "currency": "UF",
+  "amount": "1.50",
+  "status": "credited"
+}
+```
+
 ## 查询、撤销和退款
 
 ```bash
@@ -104,7 +191,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-11-01&to=2026-11-30&coun
 
 | HTTP | 代码 | 解决方法 |
 |---:|---|---|
-| 400 | `invalid_amount` | 发送整数 CLP 金额 |
+| 400 | `invalid_amount` | 发送整数 CLP 金额，或发送不超过两位小数的 UF 金额 |
 | 400 | `idempotency_key_required` | 发送 body 字段或 header |
 | 409 | `idempotency_conflict` | 使用原 payload 和原 key |
 | 422 | `core_rejected` | 显示托管页失败，不要盲目重试 |
@@ -121,8 +208,9 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-11-01&to=2026-11-30&coun
 
 ## 常见问题
 
-#### 可以发送带小数的 CLP 吗？
-不可以。智利比索没有小数单位，请发送整数字符串。
+#### CLP 或 UF 可以发送小数吗？
+CLP 必须是整数。UF 最多接受两位小数，例如 `"1.50"`；三位或更多小数会
+返回 `400 invalid_amount`。
 #### 创建请求超时怎么办？
 读取资源，或使用相同幂等 key 重复请求。不要发送新的扣款。
 #### 退款什么时候完成？
