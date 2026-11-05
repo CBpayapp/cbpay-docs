@@ -105,6 +105,7 @@
                     "group": "Money in",
                     "pages": [
                       "en/guides/payins",
+                      "en/guides/card-payins-chile",
                       "en/guides/cash-payins",
                       "en/guides/fintoc-business-accounts",
                       "en/guides/regional-payouts-payins",
@@ -254,6 +255,7 @@
                     "group": "Cobrar (money in)",
                     "pages": [
                       "es/guides/payins",
+                      "es/guides/card-payins-chile",
                       "es/guides/cash-payins",
                       "es/guides/fintoc-business-accounts",
                       "es/guides/regional-payouts-payins",
@@ -403,6 +405,7 @@
                     "group": "收款（Money in）",
                     "pages": [
                       "zh/guides/payins",
+                      "zh/guides/card-payins-chile",
                       "zh/guides/cash-payins",
                       "zh/guides/fintoc-business-accounts",
                       "zh/guides/regional-payouts-payins",

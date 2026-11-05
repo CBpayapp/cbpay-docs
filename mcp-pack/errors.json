@@ -1,5 +1,5 @@
 {
-  "count": 402,
+  "count": 406,
   "errors": [
     {
       "category": {
@@ -3681,6 +3681,62 @@
         "en": "The selected corridor is administratively disabled. Use another enabled method or contact the organization operator.",
         "es": "El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización.",
         "zh": "所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "banking_corridor_disabled",
+      "http": 409,
+      "meaning": {
+        "en": "The selected banking country or rail is administratively disabled. Use another enabled rail or contact the organization operator.",
+        "es": "El país o riel banking seleccionado está deshabilitado administrativamente. Usa otro riel habilitado o contacta al operador de la organización.",
+        "zh": "所选 banking 国家或通道被管理员禁用。请选择其他启用的通道或联系组织运营人员。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "crypto_disabled",
+      "http": 409,
+      "meaning": {
+        "en": "The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator.",
+        "es": "La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización.",
+        "zh": "所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "invalid_crypto_control",
+      "http": 400,
+      "meaning": {
+        "en": "The crypto network toggle is invalid (unknown chain/asset, scope, or missing reason). Fix the request.",
+        "es": "El toggle de red crypto es inválido (red/activo desconocido, scope o motivo faltante). Corrige el request.",
+        "zh": "crypto 网络开关无效（未知的链/资产、scope 或缺少原因）。请修正请求。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "rail_not_registered",
+      "http": 409,
+      "meaning": {
+        "en": "The selected rail is not configured in this environment. Pick a registered rail (see the admin corridors screen).",
+        "es": "El riel seleccionado no está configurado en este ambiente. Elige un riel registrado (ver pantalla de corredores del admin).",
+        "zh": "所选通道在此环境中未配置。请选择已注册的通道（见管理后台走廊页面）。"
       }
     },
     {

@@ -410,6 +410,10 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | HTTP | Code | Meaning and fix |
 |---|---|---|
 | 409 | `corridor_disabled` | The selected corridor is administratively disabled. Use another enabled method or contact the organization operator. |
+| 409 | `banking_corridor_disabled` | The selected banking country or rail is administratively disabled. Use another enabled rail or contact the organization operator. |
+| 409 | `crypto_disabled` | The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator. |
+| 400 | `invalid_crypto_control` | The crypto network toggle is invalid (unknown chain/asset, scope, or missing reason). Fix the request. |
+| 409 | `rail_not_registered` | The selected rail is not configured in this environment. Pick a registered rail (see the admin corridors screen). |
 
 ## Banking creation recovery errors
 

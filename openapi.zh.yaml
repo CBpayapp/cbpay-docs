@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.211"
+  version: "2.215"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -2074,7 +2074,7 @@ paths:
           description: 返回待注册 2FA；暂不签发会话。
           content:
             application/json:
-              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, passkey], passkeys_available: true, next: [Choose an authenticator app or passkey], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
+              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, sms], passkeys_available: false, next: [Choose an authenticator app or SMS], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400': {description: ........................... invalid_code...}
         '401': {description: ................................................ invalid_code...}
         '502': {description: otp_check_failed...}
@@ -2147,13 +2147,85 @@ paths:
         '401': {description: 待处理令牌无效。}
         '403': {description: otp_invalid；六位代码无效或已过期。}
         '409': {description: TOTP 尚未开始或 enrollment_complete。}
+  /v1/auth/register/2fa/sms/begin:
+    post:
+      tags: [身份认证]
+      security: []
+      operationId: register2FASMSBegin
+      summary: 开始强制短信注册
+      description: 向账户电话（或请求中的电话，会保存）发送注册短信验证码。使用注册待处理令牌，而非会话令牌。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+                phone: {type: string, description: E.164 电话（+<国家><号码>）；账户尚无电话时必填}
+            example: {pending_token: eyJ..., phone: '+56912345678'}
+      responses:
+        '200':
+          description: 短信验证码已发送。
+          content:
+            application/json:
+              example:
+                phone_masked: '*******5678'
+                steps: ["1. 已向 *******5678 发送短信验证码。", "2. 请在 10 分钟内输入验证码以验证号码。"]
+                note: "用 POST /v1/auth/register/2fa/sms/confirm 输入短信验证码"
+        '201':
+          description: 崩溃恢复发现已有因子；注册已完成并签发会话。
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '400': {description: 电话无效。}
+        '401': {description: 待处理令牌无效。}
+        '409': {description: 缺少电话。}
+        '429': {description: too_many_attempts；短信发送限流。}
+        '502': {description: otp_send_failed。}
+  /v1/auth/register/2fa/sms/confirm:
+    post:
+      tags: [身份认证]
+      security: []
+      operationId: register2FASMSConfirm
+      summary: 确认强制短信注册
+      description: 验证短信验证码，将电话标记为已验证并激活短信双重认证，返回首个会话。今后登录需要短信验证码。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, code]
+              properties:
+                pending_token: {type: string}
+                code: {type: string, minLength: 1}
+            example: {pending_token: eyJ..., code: '482913'}
+      responses:
+        '201':
+          description: 注册完成并签发首个会话。
+          content:
+            application/json:
+              example:
+                access_token: eyJ...
+                expires_at: '2026-10-22T19:00:00Z'
+                refresh_token: rt_...
+                refresh_expires_at: '2026-11-20T19:00:00Z'
+                account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}
+                steps: ["你的电话已验证：今后登录需要短信验证码。", "如需更强保护，请稍后在“设置/安全”中添加身份验证器应用。"]
+                note: "电话已验证：今后登录需要短信验证码"
+        '401': {description: 待处理令牌无效。}
+        '403': {description: otp_invalid；短信验证码无效或已过期。}
+        '409': {description: 短信流程尚未开始或 enrollment_complete。}
+        '502': {description: otp_check_failed。}
   /v1/auth/register/2fa/passkey/begin:
     post:
       tags: [身份认证]
       security: []
       operationId: register2FAPasskeyBegin
-      summary: 开始强制通行密钥注册
-      description: 使用注册待处理令牌开始 WebAuthn 注册。
+      summary: 开始强制通行密钥注册（已下线）
+      description: 已于 2026-11-04 下线（410 gone）：注册不再提供通行密钥——请注册身份验证器应用或短信。通行密钥登录与 /v1/me/passkeys 不受影响。
       requestBody:
         required: true
         content:
@@ -2165,30 +2237,14 @@ paths:
                 pending_token: {type: string}
             example: {pending_token: eyJ...}
       responses:
-        '200':
-          description: WebAuthn 创建选项。
-          content:
-            application/json:
-              example:
-                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
-                options: {publicKey: {challenge: Y2hhbG..., rp: {name: CBPay, id: cbpayapp.com}, user: {name: ana@example.com}}}
-                expires_at: '2026-10-22T19:02:00Z'
-                steps: ["1. 批准此设备上的系统对话框", "2. 在下一步为此设备命名"]
-                note: "将 options.publicKey 传给 navigator.credentials.create()，并将结果发送到 POST /v1/auth/register/2fa/passkey/finish"
-        '201':
-          description: 崩溃恢复发现已有因子；注册已完成并签发会话。
-          content:
-            application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
-        '401': {description: 待处理令牌无效。}
-        '503': {description: 通行密钥不可用。}
+        '410': {description: passkey_not_offered。}
   /v1/auth/register/2fa/passkey/finish:
     post:
       tags: [身份认证]
       security: []
       operationId: register2FAPasskeyFinish
-      summary: 完成强制通行密钥注册
-      description: 验证 WebAuthn attestation，保存凭据并返回首个会话。
+      summary: 完成强制通行密钥注册（已下线）
+      description: 已于 2026-11-04 下线（410 gone）：注册不再提供通行密钥——请注册身份验证器应用或短信。通行密钥登录与 /v1/me/passkeys 不受影响。
       requestBody:
         required: true
         content:
@@ -2203,16 +2259,7 @@ paths:
                 credential: {type: object}
             example: {pending_token: eyJ..., challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69, name: Taylor's MacBook, credential: {id: Y3JlZGVudGlhbA..., type: public-key, response: {clientDataJSON: eyJ..., attestationObject: o2N...}}}
       responses:
-        '201':
-          description: 注册完成并签发首个会话。
-          content:
-            application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
-        '400': {description: 凭据无效。}
-        '401': {description: 待处理令牌无效。}
-        '403': {description: 通行密钥验证失败。}
-        '409': {description: "challenge_not_pending、passkey_exists 或 enrollment_complete。"}
-        '503': {description: 通行密钥不可用。}
+        '410': {description: passkey_not_offered。}
 
   /v1/auth/environment-handoff:
     post:
@@ -19333,6 +19380,40 @@ paths:
                 status: disabled
         '403':
           description: 验证码无效(`otp_invalid`)或被组织强制要求(`policy_locked_by_org`)。
+  /v1/me/sms-2fa:
+    get:
+      tags:
+      - 安全(OTP)
+      operationId: getMySMS2FA
+      summary: 我的短信双重认证状态
+      description: 短信双重认证是否激活、账户脱敏电话及其是否已验证。
+      responses:
+        '200':
+          description: 短信双重认证状态。
+          content:
+            application/json:
+              example:
+                enrolled: true
+                phone: '*******5678'
+                phone_verified: true
+    delete:
+      tags:
+      - 安全(OTP)
+      operationId: disableMySMS2FA
+      summary: 移除短信双重认证
+      description: 停用短信双重认证。需要号码持有证明（经 sms 或 whatsapp 验证的 security_settings 挑战的 X-OTP-Token 请求头），并遵守组织下限——若组织强制要求电话渠道，则无法移除。号码仍保持已验证联系方式；仅不再作为第二因素。
+      responses:
+        '200':
+          description: 短信双重认证已停用。
+          content:
+            application/json:
+              example:
+                enrolled: false
+                status: disabled
+        '401':
+          description: OTP 令牌无效或已使用(`invalid_otp`)。
+        '403':
+          description: 缺少证明(`otp_required`)、渠道错误(`phone_proof_required`)或被组织强制要求(`policy_locked_by_org`)。
   /v1/me/totp/enroll:
     post:
       tags:

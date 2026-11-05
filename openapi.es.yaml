@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.211"
+  version: "2.215"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2195,7 +2195,7 @@ paths:
           description: Enrolamiento 2FA pendiente; todavía no se emite sesión.
           content:
             application/json:
-              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, passkey], passkeys_available: true, next: [Choose an authenticator app or passkey], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
+              example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, sms], passkeys_available: false, next: [Choose an authenticator app or SMS], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400':
           description: invalid_code cuando la forma del codigo es invalida.
         '401':
@@ -2270,13 +2270,85 @@ paths:
         '401': {description: token pendiente inválido.}
         '403': {description: otp_invalid; el código de 6 dígitos es inválido o venció.}
         '409': {description: TOTP no iniciado o enrollment_complete.}
+  /v1/auth/register/2fa/sms/begin:
+    post:
+      tags: [Autenticación]
+      security: []
+      operationId: register2FASMSBegin
+      summary: Iniciar enrolamiento SMS obligatorio
+      description: Envía el código de enrolamiento por SMS al teléfono de la cuenta (o al teléfono del request, que se guarda). Usa el token pendiente de registro, no una sesión.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token]
+              properties:
+                pending_token: {type: string}
+                phone: {type: string, description: Teléfono E.164 (+<país><número>); obligatorio cuando la cuenta aún no tiene teléfono}
+            example: {pending_token: eyJ..., phone: '+56912345678'}
+      responses:
+        '200':
+          description: Código SMS enviado.
+          content:
+            application/json:
+              example:
+                phone_masked: '*******5678'
+                steps: ["1. Enviamos un código por SMS al *******5678.", "2. Ingresa el código dentro de 10 minutos para verificar tu número."]
+                note: "ingresa el código SMS con POST /v1/auth/register/2fa/sms/confirm"
+        '201':
+          description: Se encontró un factor existente durante la recuperación tras un fallo; el enrolamiento terminó y se entrega una sesión.
+          content:
+            application/json:
+              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
+        '400': {description: Teléfono inválido.}
+        '401': {description: token pendiente inválido.}
+        '409': {description: Falta el teléfono.}
+        '429': {description: too_many_attempts; los envíos SMS tienen límite.}
+        '502': {description: otp_send_failed.}
+  /v1/auth/register/2fa/sms/confirm:
+    post:
+      tags: [Autenticación]
+      security: []
+      operationId: register2FASMSConfirm
+      summary: Confirmar enrolamiento SMS obligatorio
+      description: Verifica el código SMS, deja el teléfono verificado con 2FA por SMS activo y devuelve la primera sesión. Los próximos inicios de sesión pedirán un código SMS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pending_token, code]
+              properties:
+                pending_token: {type: string}
+                code: {type: string, minLength: 1}
+            example: {pending_token: eyJ..., code: '482913'}
+      responses:
+        '201':
+          description: Enrolamiento completado y primera sesión emitida.
+          content:
+            application/json:
+              example:
+                access_token: eyJ...
+                expires_at: '2026-10-22T19:00:00Z'
+                refresh_token: rt_...
+                refresh_expires_at: '2026-11-20T19:00:00Z'
+                account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}
+                steps: ["Tu número quedó verificado: los próximos inicios de sesión pedirán un código por SMS.", "Para mayor protección, agrega una app autenticadora en Ajustes / Seguridad."]
+                note: "teléfono verificado: los próximos inicios de sesión requieren un código SMS"
+        '401': {description: token pendiente inválido.}
+        '403': {description: otp_invalid; el código SMS es inválido o venció.}
+        '409': {description: SMS no iniciado o enrollment_complete.}
+        '502': {description: otp_check_failed.}
   /v1/auth/register/2fa/passkey/begin:
     post:
       tags: [Autenticación]
       security: []
       operationId: register2FAPasskeyBegin
-      summary: Iniciar enrolamiento obligatorio de passkey
-      description: Inicia un registro WebAuthn usando el token pendiente de registro.
+      summary: Iniciar enrolamiento obligatorio de passkey (retirado)
+      description: "Retirado el 2026-11-04 (410 gone): las passkeys ya no se ofrecen en el registro — enrolar la app autenticadora o SMS. El login con passkey y /v1/me/passkeys no cambian."
       requestBody:
         required: true
         content:
@@ -2288,30 +2360,14 @@ paths:
                 pending_token: {type: string}
             example: {pending_token: eyJ...}
       responses:
-        '200':
-          description: Opciones para crear WebAuthn.
-          content:
-            application/json:
-              example:
-                challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69
-                options: {publicKey: {challenge: Y2hhbG..., rp: {name: CBPay, id: cbpayapp.com}, user: {name: ana@example.com}}}
-                expires_at: '2026-10-22T19:02:00Z'
-                steps: ["1. Aprueba el diálogo del sistema en este dispositivo", "2. Nombra este dispositivo en la siguiente pantalla"]
-                note: "pasa options.publicKey a navigator.credentials.create() y envía el resultado a POST /v1/auth/register/2fa/passkey/finish"
-        '201':
-          description: Se encontró un factor existente durante la recuperación tras un fallo; el enrolamiento terminó y se entrega una sesión.
-          content:
-            application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
-        '401': {description: token pendiente inválido.}
-        '503': {description: passkeys no disponibles.}
+        '410': {description: passkey_not_offered.}
   /v1/auth/register/2fa/passkey/finish:
     post:
       tags: [Autenticación]
       security: []
       operationId: register2FAPasskeyFinish
-      summary: Finalizar enrolamiento obligatorio de passkey
-      description: Valida la attestation WebAuthn, guarda la credencial y devuelve la primera sesión.
+      summary: Finalizar enrolamiento obligatorio de passkey (retirado)
+      description: "Retirado el 2026-11-04 (410 gone): las passkeys ya no se ofrecen en el registro — enrolar la app autenticadora o SMS. El login con passkey y /v1/me/passkeys no cambian."
       requestBody:
         required: true
         content:
@@ -2326,16 +2382,7 @@ paths:
                 credential: {type: object}
             example: {pending_token: eyJ..., challenge_id: 6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69, name: Taylor's MacBook, credential: {id: Y3JlZGVudGlhbA..., type: public-key, response: {clientDataJSON: eyJ..., attestationObject: o2N...}}}
       responses:
-        '201':
-          description: Enrolamiento completado y primera sesión emitida.
-          content:
-            application/json:
-              example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
-        '400': {description: credencial inválida.}
-        '401': {description: token pendiente inválido.}
-        '403': {description: passkey rechazada.}
-        '409': {description: "challenge_not_pending, passkey_exists o enrollment_complete."}
-        '503': {description: passkeys no disponibles.}
+        '410': {description: passkey_not_offered.}
 
   /v1/auth/environment-handoff:
     post:
@@ -19929,6 +19976,43 @@ paths:
                 status: disabled
         '403':
           description: Código inválido (`otp_invalid`) o requerido por la org (`policy_locked_by_org`).
+  /v1/me/sms-2fa:
+    get:
+      tags:
+      - Seguridad (OTP)
+      operationId: getMySMS2FA
+      summary: Estado de mi 2FA por SMS
+      description: Si el 2FA por SMS está activo, el teléfono enmascarado de la cuenta y si está verificado.
+      responses:
+        '200':
+          description: Estado del 2FA por SMS.
+          content:
+            application/json:
+              example:
+                enrolled: true
+                phone: '*******5678'
+                phone_verified: true
+    delete:
+      tags:
+      - Seguridad (OTP)
+      operationId: disableMySMS2FA
+      summary: Quitar mi 2FA por SMS
+      description: Desactiva el 2FA por SMS. Exige prueba de posesión del número (header X-OTP-Token de un
+        desafío security_settings verificado por sms o whatsapp) y respeta el piso de la org — si la
+        organización exige un canal telefónico, no se puede quitar. El número sigue verificado como
+        contacto; solo deja de ser segundo factor.
+      responses:
+        '200':
+          description: 2FA por SMS desactivado.
+          content:
+            application/json:
+              example:
+                enrolled: false
+                status: disabled
+        '401':
+          description: Token OTP inválido o usado (`invalid_otp`).
+        '403':
+          description: Falta la prueba (`otp_required`), canal incorrecto (`phone_proof_required`) o requerido por la org (`policy_locked_by_org`).
   /v1/me/totp/enroll:
     post:
       tags:
