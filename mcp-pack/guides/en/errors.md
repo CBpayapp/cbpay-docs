@@ -761,3 +761,10 @@ These codes are used by organization payroll and recurring-expense series operat
 | 500 | `receipt_render_failed` | The pay-slip PDF could not be rendered | Retry the read and provide the request id if it persists. |
 | 503 | `valuation_unavailable` | The amount could not be valued in USD | Retry later; approval remains fail-closed. |
 | 500 | `store_error` | The platform could not read or persist the record | Retry after confirming the resource state. |
+
+## Expense platform errors
+
+| 400 | `duplicate_category` | The organization already has the custom expense category key | Choose another `c_` key |
+| 400 | `invalid_batch` | A bulk expense operation has fewer than 1 or more than 100 IDs | Send 1–100 expense UUIDs |
+| 400 | `invalid_horizon` | The forecast horizon is not 3, 6 or 12 months | Use `horizon=3`, `6` or `12` |
+| 400 | `invalid_icon` | A custom expense icon exceeds the allowed format or length | Use up to 40 letters, digits, `_` or `-` |

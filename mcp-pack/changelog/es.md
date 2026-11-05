@@ -5,14 +5,31 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.214 · 5 versiones - 4 de noviembre de 2026
-### v2.214
+## v2.215 · 6 versiones - 4 de noviembre de 2026
+### v2.215
 **Agregado**
 - Las cuentas empresa pueden configurar la marca de sus links KYC/KYB
   hosteados desde el portal, con preview, fallback cuenta → organización →
   CBPay y un pill fijo «Impulsado por CBPay» en el footer.
 - Se agregaron ejemplos de `GET` y `PUT /v1/account/branding` a la guía
   KYC/KYB. Cada link congela un snapshot sanitizado de la marca al crearse.
+### v2.214
+**Agregado**
+- Se agregó SMS como opción de segundo factor en el enrolamiento
+  obligatorio del registro: `POST /v1/auth/register/2fa/sms/begin` envía
+  el código y `POST /v1/auth/register/2fa/sms/confirm` verifica el
+  teléfono, activa el 2FA por SMS y entrega la primera sesión. Los
+  próximos inicios de sesión pedirán un código SMS, y
+  `GET`/`DELETE /v1/me/sms-2fa` muestran o quitan el factor (quitarlo
+  exige prueba de posesión del número).
+**Cambiado**
+- El enrolamiento del registro ahora ofrece app autenticadora o SMS. Los
+  endpoints de enrolamiento con passkey responden `410
+  passkey_not_offered`; el login con passkey y `/v1/me/passkeys` no
+  cambian.
+**Corregido**
+- Se corrigió el mensaje de `invalid_phone` (PR #1774): ahora explica el
+  formato E.164 requerido e incluye un ejemplo concreto.
 ### v2.213
 **Agregado**
 - Nuevo webhook `referral_credited`: se dispara una vez cuando un cierre de

@@ -183,7 +183,13 @@ flowchart TD
 
 OAuth login follows the same factor gate as password login. A new OAuth account returns `201` with `created: true`, `account`, and `status: "pending_2fa_enrollment"` instead of a session. An existing member without an enrolled factor receives `200` with the same pending enrollment shape. Follow `next` and use the returned `pending_token` with the public registration enrollment endpoints; do not send it as a bearer session.
 
-After TOTP or passkey enrollment, the API returns the normal session. OAuth auto-linking does not bypass mandatory enrollment. If the account already has OTP enabled on login, the normal login second step also remains available: `POST /v1/auth/oauth` returns `otp_required: true` and a `pending_token`, completed with `POST /v1/auth/login/otp`. Passkey login with `must_enroll_2fa` likewise returns `pending_2fa_enrollment`; `RegisterPending` remains `invalid_credential` until the email is verified.
+After TOTP or SMS enrollment, the API returns the normal session. OAuth
+auto-linking does not bypass mandatory enrollment. If the account already has
+OTP enabled on login, the normal login second step also remains available:
+`POST /v1/auth/oauth` returns `otp_required: true` and a `pending_token`,
+completed with `POST /v1/auth/login/otp`. Passkey login with
+`must_enroll_2fa` likewise returns `pending_2fa_enrollment`; complete the
+registration with TOTP or SMS before receiving a session.
 
 ## 5. Link and unlink providers
 

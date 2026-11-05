@@ -1,5 +1,5 @@
 {
-  "count": 406,
+  "count": 410,
   "errors": [
     {
       "category": {
@@ -5641,6 +5641,62 @@
         "en": "The platform could not read or persist the record — Fix: Retry after confirming the resource state.",
         "es": "La plataforma no pudo leer o guardar el registro — Fix: Reintenta después de confirmar el estado del recurso.",
         "zh": "平台无法读取或保存记录 — Fix: 确认资源状态后重试。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "duplicate_category",
+      "http": 400,
+      "meaning": {
+        "en": "The organization already has the custom expense category key — Fix: Choose another `c_` key",
+        "es": "La organización ya tiene la key de categoría personalizada — Fix: Elige otra key `c_`",
+        "zh": "组织已存在该自定义费用类别 key — Fix: 选择其他 `c_` key"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_batch",
+      "http": 400,
+      "meaning": {
+        "en": "A bulk expense operation has fewer than 1 or more than 100 IDs — Fix: Send 1–100 expense UUIDs",
+        "es": "Una operación masiva tiene menos de 1 o más de 100 IDs — Fix: Envía UUIDs de gastos, entre 1 y 100",
+        "zh": "批量操作的 ID 少于 1 个或超过 100 个 — Fix: 发送 1–100 个费用 UUID"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_horizon",
+      "http": 400,
+      "meaning": {
+        "en": "The forecast horizon is not 3, 6 or 12 months — Fix: Use `horizon=3`, `6` or `12`",
+        "es": "El horizonte no es 3, 6 ni 12 meses — Fix: Usa `horizon=3`, `6` o `12`",
+        "zh": "horizon 不是 3、6 或 12 个月 — Fix: 使用 `horizon=3`、`6` 或 `12`"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_icon",
+      "http": 400,
+      "meaning": {
+        "en": "A custom expense icon exceeds the allowed format or length — Fix: Use up to 40 letters, digits, `_` or `-`",
+        "es": "El icono supera el formato o largo permitido — Fix: Usa hasta 40 letras, dígitos, `_` o `-`",
+        "zh": "自定义图标格式或长度超出限制 — Fix: 使用不超过 40 个字母、数字、`_` 或 `-`"
       }
     }
   ]

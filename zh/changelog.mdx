@@ -20,6 +20,9 @@ description: "API and documentation change history"
 **变更**
 - 注册认证现提供验证器应用或短信。通行密钥注册端点返回 `410
   passkey_not_offered`；通行密钥登录与 `/v1/me/passkeys` 不受影响。
+**修复**
+- 修复了 `invalid_phone` 响应消息（PR #1774）：现在说明所需的 E.164
+  格式并提供具体示例。
 ### v2.213
 **新增**
 - 新增 `referral_credited` webhook：推荐人结算付款至 payout 账户余额时触发一次。

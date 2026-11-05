@@ -31,7 +31,11 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register \
 {"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
 ```
 
-Confirma el código para verificar el buzón. El endpoint devuelve `201 pending_2fa_enrollment` con `pending_token` válido por 30 minutos, `factors`, `passkeys_available`, `next` y `account`; no crea una sesión. La sesión se entrega solo después del enrolamiento TOTP o passkey en [Enrolamiento 2FA obligatorio después del registro](#enrolamiento-2fa-obligatorio-después-del-registro):
+Confirma el código para verificar el buzón. El endpoint devuelve `201
+pending_2fa_enrollment` con `pending_token` válido por 30 minutos,
+`factors: ["totp", "sms"]`, `passkeys_available: false`, `next` y `account`;
+no crea una sesión. La sesión se entrega solo después del enrolamiento TOTP o
+SMS en [Enrolamiento 2FA obligatorio después del registro](#enrolamiento-2fa-obligatorio-después-del-registro):
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
@@ -323,12 +327,43 @@ En una cuenta persona, `POST /v1/members` responde `403 company_only`.
 
 ## Enrolamiento 2FA obligatorio después del registro
 
-La confirmación del email prueba el buzón, pero ya no crea una sesión. `POST /v1/auth/register/confirm` devuelve `201` con `status: "pending_2fa_enrollment"`, `pending_token` válido por 30 minutos, `expires_at`, `factors`, `passkeys_available`, `next`, `note` y `account`. Usa el token solo en `/v1/auth/register/2fa/*`.
+La confirmación del email prueba el buzón, pero ya no crea una sesión. `POST
+/v1/auth/register/confirm` devuelve `201` con `status:
+"pending_2fa_enrollment"`, `pending_token` válido por 30 minutos,
+`factors: ["totp", "sms"]`, `passkeys_available: false`, `next`, `note` y
+`account`. Usa el token solo en `/v1/auth/register/2fa/*`.
 
-TOTP: llama `totp/begin` con `{ "pending_token": "..." }` y luego `totp/confirm` con `{ "pending_token": "...", "code": "482913" }`; la respuesta entrega la sesión y 10 `recovery_codes` de un solo uso. Passkey: llama `passkey/begin`, pasa `options.publicKey` a `navigator.credentials.create()` y completa `passkey/finish` con `pending_token`, `challenge_id`, `name` opcional y `credential`.
+TOTP: llama `totp/begin`, escanea el `otpauth_uri` y confirma el código de
+seis dígitos; la respuesta entrega la sesión y 10 `recovery_codes` de un solo
+uso. Para SMS:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+```
+
+La respuesta `200` tiene `phone_masked`, `steps` y `note`. Confirma el código:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","code":"482913"}'
+```
+
+La respuesta `201` entrega la primera sesión, `steps` y `note`, sin códigos de
+recuperación. Los endpoints passkey del registro responden `410
+passkey_not_offered`; passkey login y `/v1/me/passkeys` siguen vivos.
 
 Miembros invitados y miembros de cuentas creadas por un org-admin siguen el mismo wizard en su primer login.
 
-El login con passkey también respeta el gate de enrolamiento: si `must_enroll_2fa` es `true`, `POST /v1/auth/passkey/login/finish` devuelve `pending_2fa_enrollment` y el member completa el wizard antes de recibir sesión. Un member que siga en `RegisterPending` (email aún no verificado) recibe `invalid_credential` hasta confirmar el buzón; es un flujo separado del enrolamiento 2FA.
+El login con passkey también respeta el gate de enrolamiento: si
+`must_enroll_2fa` es `true`, devuelve `pending_2fa_enrollment`; completa el
+registro con TOTP o SMS antes de recibir sesión. Un member en
+`RegisterPending` debe confirmar el buzón primero.
 
-Tanto `totp/begin` como `passkey/begin` también pueden devolver `201` con la sesión normal cuando un intento anterior ya guardó el factor y solo se interrumpió la limpieza del flag; este recovery seguro completa el enrolamiento. La respuesta normal de begin contiene `totp_secret`, `otpauth_uri`, `qr_png_base64` opcional, `steps` y `note` (sin `expires_at`).
+Tanto `totp/begin` como `sms/begin` pueden devolver `201` con la sesión normal
+cuando un intento anterior ya guardó el factor y solo se interrumpió la
+limpieza del flag. TOTP devuelve `totp_secret`, `otpauth_uri`,
+`qr_png_base64` opcional, `steps` y `note`; SMS devuelve `phone_masked`,
+`steps` y `note`.

@@ -200,4 +200,7 @@ SMS/WhatsApp OTP 挑战：`POST /v1/otp/challenges` + verify）。号码未验�
 不会。社交登录以提供方标识，而非邮箱，因此它们会继续正常工作。
 ### 首个因子在注册时完成
 
-新注册必须使用[身份验证](https://docs.cbpayapp.com/zh/authentication)中的 `pending_token` 向导。TOTP（`begin` → `confirm`）返回 10 个恢复码；通行密钥（`begin` → `finish`）完成 WebAuthn。现有 `/v1/me/totp/*` 和 `/v1/me/passkeys/register/*` 仍用于后续管理。
+新注册必须使用[身份验证](https://docs.cbpayapp.com/zh/authentication)中的 `pending_token` 向导。
+TOTP（`begin` → `confirm`）返回 10 个恢复码；短信（`begin` → `confirm`）
+验证 E.164 手机号并创建首个会话。现有 `/v1/me/totp/*` 和
+`/v1/me/passkeys/register/*` 仍用于后续管理。

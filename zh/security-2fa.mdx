@@ -171,9 +171,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 }
 ```
 <Note>
-**已注册的 TOTP 在登录时始终会被要求。** member 确认验证器应用后，即使组织
-策略没有要求 `login` 使用 OTP，登录也会返回正常的待验证 OTP 流程。通行密钥
-登录本身已经是双因素流程，因此不会再要求第二个验证码。
+**已注册的 TOTP 或有效的短信因素在登录时始终会被要求。** 两者同时存在时
+优先使用 TOTP。通行密钥登录仍然可用，且不会再要求第二个验证码。
 </Note>
 
 
@@ -223,9 +222,13 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
   </Accordion>
 </AccordionGroup>
 
-## 注册与登录恢复
+## 注册认证与登录恢复
 
-注册强制 2FA 独立于操作 OTP。保留 `pending_token` 最多 30 分钟并选择 TOTP 或通行密钥。密码登录、OAuth 登录和受邀成员首次登录在 `must_enroll_2fa` 时返回 `pending_2fa_enrollment`；新 OAuth 账户为 `201` 且带 `created: true`。未完成注册的成员不能 refresh 或 handoff。
+注册强制 2FA 独立于操作 OTP。邮箱确认后保留有效 30 分钟的
+`pending_token`，选择验证器应用（TOTP）或短信。`register/confirm` 返回
+`201 pending_2fa_enrollment`、`factors: ["totp", "sms"]` 和
+`passkeys_available: false`。密码登录、OAuth 登录和受邀成员首次登录在
+`must_enroll_2fa` 时使用相同的待注册流程。
 
 ```mermaid
 sequenceDiagram
@@ -233,10 +236,35 @@ sequenceDiagram
   participant API as CBPay API
   A->>API: POST /v1/auth/register/confirm
   API-->>A: 201 pending_2fa_enrollment + pending_token
-  A->>API: POST /v1/auth/register/2fa/totp/begin
-  API-->>A: 200 otpauth_uri + QR
-  A->>API: POST /v1/auth/register/2fa/totp/confirm
-  API-->>A: 201 会话 + recovery_codes
+  A->>API: POST /v1/auth/register/2fa/totp/begin 或 sms/begin
+  API-->>A: 200 设置数据或掩码手机号
+  A->>API: POST /v1/auth/register/2fa/totp/confirm 或 sms/confirm
+  API-->>A: 201 首个会话
 ```
 
-通行密钥登录也遵循注册门控：`must_enroll_2fa` 为 `true` 时，`POST /v1/auth/passkey/login/finish` 返回 `pending_2fa_enrollment`，成员完成注册向导后才获得会话。仍处于 `RegisterPending`（邮箱未验证）的成员在确认邮箱前会收到 `invalid_credential`；这与 2FA 注册门控是两个独立流程。
+短信注册示例：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+```
+
+成功的 `200` 响应包含 `phone_masked`、10 分钟验证窗口的 `steps` 和
+`note`，不会返回短信验证码。确认请求：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","code":"482913"}'
+```
+
+`201` 响应签发首个会话，`steps` 说明今后登录需要短信验证码，且不包含
+恢复代码。验证器应用流程仍返回一次性的 10 个恢复代码。
+
+注册通行密钥端点现在返回 `410 passkey_not_offered`；通行密钥登录和
+`/v1/me/passkeys` 仍然可用。常见错误包括 `400 invalid_phone`（消息为
+`phone must be E.164 format: plus sign, country code and number (example +56912345678)`）、
+`409 phone_required`/`sms_not_started`、`403 otp_invalid`、`429
+too_many_attempts`、`502 otp_send_failed`/`otp_check_failed` 和
+`401 invalid_pending_token`。
