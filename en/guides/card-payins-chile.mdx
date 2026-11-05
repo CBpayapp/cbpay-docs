@@ -64,6 +64,39 @@ The universal checkout quotes `CL/CLP/card` when the catalog reports it as
 available. Always read `GET /platform/v1/payins/methods` before showing the
 option.
 
+### Payer document (optional)
+
+For card payins, `customer` is sent to the core as `bill_to`. You may provide
+`document_type` and `document_number` for fraud scoring. The document is
+optional: omitting both fields is valid. For `CL`, `document_type` defaults to
+`RUT` when a number is present and `document_number` must be a valid Chilean
+RUT (modulo 11, with or without punctuation). An invalid RUT is rejected
+before the charge claim with `400 invalid_payload`. Other countries accept
+plain text up to 50 characters; markup and longer values are rejected.
+
+```json
+{
+  "customer": {
+    "first_name": "Ana",
+    "last_name": "Rojas",
+    "email": "payer@example.com",
+    "country": "CL",
+    "document_type": "RUT",
+    "document_number": "11.111.111-1"
+  },
+  "save_card": true
+}
+```
+
+### Knowing whether the card was saved
+
+When `save_card: true` was offered and the payer consented, an approved
+`complete` response includes `card_saved`. `true` means the credential was
+stored and can be used through the stored-card flow. `false` means the sale
+was approved but the card was not stored; show a clear message and do not
+charge the payer again. The field is omitted when saving was not offered or
+requested.
+
 ## Read, void, and refund
 
 ```bash

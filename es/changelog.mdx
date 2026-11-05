@@ -4,8 +4,8 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="5 de noviembre de 2026" description="v2.217 · 1 versión">
-### v2.217
+<Update label="5 de noviembre de 2026" description="v2.218 · 2 versiones">
+### v2.218
 **Agregado**
 - El enrolamiento por teléfono acepta WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` recibe `channel` opcional (`sms` por
@@ -16,6 +16,9 @@ description: "Historial de cambios de la API y de esta documentación"
 - El mensaje de `invalid_phone` en transferencias y contactos ahora
   explica el formato E.164 requerido con un ejemplo concreto en vez del
   error genérico de proveedor.
+### v2.217
+**Cambiado**
+- Los payins con tarjeta aceptan `document_type` y `document_number` opcionales en `bill_to`; Chile valida el RUT con módulo 11 y devuelve `400 invalid_payload` si es inválido. Los `complete` aprobados informan `card_saved` cuando se ofreció guardar la tarjeta y hubo consentimiento, para que el integrador indique al pagador si quedó guardada.
 </Update>
 <Update label="4 de noviembre de 2026" description="v2.216 · 7 versiones">
 ### v2.216
