@@ -26,6 +26,12 @@ ya existe una solicitud en curso, `POST /v1/me/verification/link` responde
 Consulta `GET /v1/me/verification` y vuelve a abrir el `link.url` existente.
 No crees un segundo expediente ni cambies la clave de idempotencia.
 
+Si un link subsanable vence mientras su submission sigue en
+`changes_requested` o `more_info_required`, al abrirlo se reabre
+automáticamente por 90 días más. Su estado queda en `opened` y la respuesta
+reporta `changes_requested` con `next_step: resubmit`. Los links terminales o
+revocados permanecen cerrados.
+
 ## Resubmisión en el mismo expediente
 
 Mientras se pueda subsanar, la submission vigente expone:
@@ -46,6 +52,14 @@ resubmisión ocurre **en el mismo expediente**: se conserva el
 `submission_id` y no se crea otra submission. Al aceptar el último documento
 exigido, el caso vuelve automáticamente a `pending_review` y el portal muestra
 **Esperando aprobación**.
+
+Para un UBO o director invitado en `/on/ubo/`, si falta la declaración jurada,
+la tarjeta de revisión muestra **Falta tu firma en la declaración jurada**.
+El UBO puede firmarla inline; basta con firmar y el caso mantiene su lugar en
+revisión.
+
+La pantalla de link vencido es distinguible, explica que tu avance quedó
+guardado y solicita pedir un link nuevo.
 
 ```mermaid
 flowchart LR

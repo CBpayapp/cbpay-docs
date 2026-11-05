@@ -5,8 +5,8 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.216 · 1 version - November 5, 2026
-### v2.216
+## v2.217 · 1 version - November 5, 2026
+### v2.217
 **Added**
 - Registration enrollment by phone now accepts WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` takes an optional `channel` (`sms` by
@@ -17,15 +17,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - The `invalid_phone` message in transfers and contacts now explains the
   required E.164 format with a concrete example instead of the generic
   provider error.
-## v2.215 · 6 versions - November 4, 2026
-### v2.215
+## v2.216 · 7 versions - November 4, 2026
+### v2.216
 **Added**
 - Company accounts can configure account-level branding for hosted KYC/KYB
   links from the portal, with preview, account → organization → CBPay
   fallback, and a fixed “Powered by CBPay” footer pill.
 - Added `GET` and `PUT /v1/account/branding` examples to the KYC/KYB guide.
   A link freezes a sanitized brand snapshot when it is created.
-### v2.214
+### v2.215
 **Added**
 - Added SMS as a second-factor option during mandatory registration
   enrollment: `POST /v1/auth/register/2fa/sms/begin` sends the code and
@@ -40,16 +40,26 @@ source_url: https://docs.cbpayapp.com/en/changelog
 **Fixed**
 - Fixed the `invalid_phone` response message (PR #1774): it now explains the
   required E.164 format and includes a concrete example.
-### v2.213
+### v2.214
 **Added**
 - New `referral_credited` webhook: fires once when a referrer closing pays
   out to the payout account balance.
-### v2.212
+### v2.213
 **Added**
 - Added the read-only Referrer Portal guide for profiles, assigned clients,
   accrued commissions and JSON/PDF/XLSX statements.
 - Documented account-scoped access, net-profit calculation, pagination,
   localization and safe handling of read-only retries.
+### v2.212
+**Changed**
+- Remediation-capable KYC/KYB links that expire while their submission is
+  `changes_requested` or `more_info_required` reopen automatically for 90 days
+  when opened; terminal and revoked links remain closed. The response reports
+  `opened`, `changes_requested`, and `next_step: resubmit`. A backfill extended
+  135 existing eligible cases (108 links in production).
+- Invited UBO/director review cards now allow the missing sworn declaration to
+  be signed inline without leaving review. Expired-link screens distinguish the
+  saved progress and request a new link. No API contract changes.
 ### v2.211
 **Added**
 - Added the provider-neutral Chile card payin guide for integer CLP, hosted 3-D Secure checkout, idempotent retries, stored-card consent, voids, refunds, disputes, and signed webhooks.

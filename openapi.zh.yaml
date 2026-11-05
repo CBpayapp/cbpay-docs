@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.215"
+  version: "2.217"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -2153,7 +2153,7 @@ paths:
       security: []
       operationId: register2FASMSBegin
       summary: 开始强制短信注册
-      description: 向账户电话（或请求中的电话，会保存）发送注册短信验证码。使用注册待处理令牌，而非会话令牌。
+      description: 向账户电话（或请求中的电话，会保存）发送注册验证码，默认短信（channel=whatsapp 可切换 WhatsApp）。使用注册待处理令牌，而非会话令牌。
       requestBody:
         required: true
         content:
@@ -2164,25 +2164,27 @@ paths:
               properties:
                 pending_token: {type: string}
                 phone: {type: string, description: E.164 电话（+<国家><号码>）；账户尚无电话时必填}
-            example: {pending_token: eyJ..., phone: '+56912345678'}
+                channel: {type: string, enum: [sms, whatsapp], default: sms, description: 验证码发送渠道}
+            example: {pending_token: eyJ..., phone: '+56912345678', channel: whatsapp}
       responses:
         '200':
-          description: 短信验证码已发送。
+          description: 已按所选渠道发送验证码。
           content:
             application/json:
               example:
                 phone_masked: '*******5678'
+                channel: sms
                 steps: ["1. 已向 *******5678 发送短信验证码。", "2. 请在 10 分钟内输入验证码以验证号码。"]
-                note: "用 POST /v1/auth/register/2fa/sms/confirm 输入短信验证码"
+                note: "用 POST /v1/auth/register/2fa/sms/confirm 输入验证码"
         '201':
           description: 崩溃恢复发现已有因子；注册已完成并签发会话。
           content:
             application/json:
               example: {access_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', refresh_token: rt_..., refresh_expires_at: '2026-11-20T19:00:00Z', account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d}}
-        '400': {description: 电话无效。}
+        '400': {description: 电话或渠道无效。}
         '401': {description: 待处理令牌无效。}
         '409': {description: 缺少电话。}
-        '429': {description: too_many_attempts；短信发送限流。}
+        '429': {description: too_many_attempts；验证码发送限流。}
         '502': {description: otp_send_failed。}
   /v1/auth/register/2fa/sms/confirm:
     post:

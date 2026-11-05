@@ -5,8 +5,8 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.216 · 1 个版本 - 2026年11月5日
-### v2.216
+## v2.217 · 1 个版本 - 2026年11月5日
+### v2.217
 **新增**
 - 电话注册认证新增 WhatsApp：`POST /v1/auth/register/2fa/sms/begin`
   接受可选 `channel`（默认 `sms`，可指定 `whatsapp`），其他值返回 `400
@@ -14,14 +14,14 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 **修复**
 - 转账与联系人的 `invalid_phone` 消息现说明所需的 E.164
   格式并提供具体示例，不再返回通用提供商错误。
-## v2.215 · 6 个版本 - 2026年11月4日
-### v2.215
+## v2.216 · 7 个版本 - 2026年11月4日
+### v2.216
 **新增**
 - 企业账户可以在门户中为托管 KYC/KYB 链接配置账户品牌，支持预览、
   账户 → 组织 → CBPay 回退，以及固定显示在页脚的 “Powered by CBPay” 标签。
 - KYC/KYB 指南新增 `GET` 和 `PUT /v1/account/branding` 示例。链接创建时
   会保存经过清理的品牌快照。
-### v2.214
+### v2.215
 **新增**
 - 注册强制双重认证新增短信第二因素选项：`POST /v1/auth/register/2fa/sms/begin`
   发送验证码，`POST /v1/auth/register/2fa/sms/confirm`
@@ -33,14 +33,23 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 **修复**
 - 修复了 `invalid_phone` 响应消息（PR #1774）：现在说明所需的 E.164
   格式并提供具体示例。
-### v2.213
+### v2.214
 **新增**
 - 新增 `referral_credited` webhook：推荐人结算付款至 payout 账户余额时触发一次。
-### v2.212
+### v2.213
 **新增**
 - 新增只读推荐人门户指南，涵盖资料、客户分配、已计提佣金以及
   JSON/PDF/XLSX 报表。
 - 记录账户范围访问、净利润计算、分页、本地化和只读请求的安全重试。
+### v2.212
+**变更**
+- 当可补正的 KYC/KYB 链接在提交件处于 `changes_requested` 或
+  `more_info_required` 时过期，打开链接会自动重新开放 90 天；已终止或已
+  撤销的链接仍保持关闭。响应会报告 `opened`、`changes_requested` 和
+  `next_step: resubmit`。回填扩展了 135 个现有可补正案件（生产环境 108
+  个链接）。
+- 受邀 UBO/董事的审核卡现在可以在页面内签署缺失的宣誓声明，无需离开
+  审核。过期链接页面会区分已保存的进度并要求新链接。API 合约不变。
 ### v2.211
 **新增**
 - 新增不暴露服务商的智利银行卡收款指南，涵盖整数 CLP、托管式 3-D Secure、幂等重放、保存卡同意、撤销、退款、争议和签名 webhook。

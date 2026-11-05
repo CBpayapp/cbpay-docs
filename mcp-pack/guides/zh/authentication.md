@@ -289,29 +289,15 @@ curl "https://api.qbank.cl/platform/v1/members?page_size=50" \
 `/v1/auth/register/2fa/*`。
 
 TOTP 先调用 `totp/begin`，扫描 `otpauth_uri`，再确认六位代码；成功响应
-包含会话和 10 个一次性 `recovery_codes`。SMS 或 WhatsApp 流程如下：
+包含会话和 10 个一次性 `recovery_codes`。短信流程如下：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
   -H "Content-Type: application/json" \
-  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
 ```
 
-`200` 响应包含 `phone_masked`、生效的 `channel`、`steps` 和 `note`。
-`channel` 默认为 `sms`；指定 `whatsapp` 会通过 WhatsApp 发送验证码。
-请在 10 分钟内确认：
-
-```json
-{
-  "phone_masked": "********5678",
-  "channel": "whatsapp",
-  "steps": [
-    "1. We sent a code by WhatsApp to ********5678.",
-    "2. Enter the code within 10 minutes to verify your number."
-  ],
-  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
-}
-```
+`200` 响应包含 `phone_masked`、`steps` 和 `note`。请在 10 分钟内确认：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
@@ -319,17 +305,15 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
   -d '{"pending_token":"<pending-token>","code":"482913"}'
 ```
 
-`201` 响应签发首个会话，`steps` 说明今后登录需要短信验证码，包含
-`note`，不包含恢复代码。无论发送渠道是什么，确认端点都相同。受邀
+`201` 响应签发首个会话，包含 `steps` 和 `note`，不包含恢复代码。受邀
 成员和 org-admin 创建账户的成员首次登录也使用同一向导。
 
-`channel` 只接受 `sms` 或 `whatsapp`；其他值返回 `400 invalid_channel`。
 注册通行密钥端点返回 `410 passkey_not_offered`；通行密钥登录和
 `/v1/me/passkeys` 仍然可用。通行密钥登录也遵循注册门控：
 `must_enroll_2fa` 为 `true` 时返回 `pending_2fa_enrollment`，成员必须先
-用 TOTP、SMS 或 WhatsApp 完成注册。仍处于 `RegisterPending` 的成员必须先确认邮箱。
+用 TOTP 或短信完成注册。仍处于 `RegisterPending` 的成员必须先确认邮箱。
 
 `totp/begin` 和 `sms/begin` 在之前的尝试已保存因子、但清理标志被中断时，
 也可能返回带正常会话的 `201`。TOTP begin 返回 `totp_secret`、
 `otpauth_uri`、可选的 `qr_png_base64`、`steps` 和 `note`；SMS begin 返回
-`phone_masked`、`channel`、`steps` 和 `note`。
+`phone_masked`、`steps` 和 `note`。
