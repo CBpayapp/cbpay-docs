@@ -53,18 +53,31 @@ The response fields are: `status: pending_2fa_enrollment`, a
 `passkeys_available: false`, `next`, `note`, and `account`. It does not
 contain a session.
 
-Choose the authenticator app or SMS. TOTP uses `totp/begin` and
+Choose the authenticator app or phone delivery by SMS or WhatsApp. TOTP uses `totp/begin` and
 `totp/confirm`, and returns the first session plus 10 recovery codes once.
-SMS uses:
+SMS or WhatsApp uses:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
   -H "Content-Type: application/json" \
-  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
 ```
 
-The `200` response contains `phone_masked`, `steps` and `note`. Confirm the
-code within 10 minutes:
+The `200` response contains `phone_masked`, the effective `channel`, `steps`
+and `note`. `channel` defaults to `sms`; set it to `whatsapp` to deliver the
+registration code through WhatsApp. Confirm the code within 10 minutes:
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
@@ -72,14 +85,16 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
   -d '{"pending_token":"<pending-token>","code":"482913"}'
 ```
 
-The `201` response issues the first session and includes `steps` and `note`;
-it does not include recovery codes. Registration passkey endpoints return
+The `201` response issues the first session and includes `steps` saying that
+future sign-ins require an SMS code, plus `note`; it does not include recovery
+codes. The confirmation endpoint is channel-agnostic. Registration passkey endpoints return
 `410 passkey_not_offered`. Passkey login and `/v1/me/passkeys` remain live.
 
-Use the pending token only with the enrollment endpoints. TOTP uses
+Use the pending token only with the enrollment endpoints. `channel` accepts
+only `sms` or `whatsapp`; another value returns `400 invalid_channel`. TOTP uses
 `totp/begin` with the pending token, then `totp/confirm` with the six-digit
 code; confirmation returns the normal session plus 10 recovery codes shown
-once. SMS uses `sms/begin` and `sms/confirm` as shown below. Passkey
+once. SMS or WhatsApp uses `sms/begin` and `sms/confirm` as shown below. Passkey
 registration is no longer accepted in this wizard (`410
 passkey_not_offered`); use passkey login or manage passkeys after sign-in.
 
