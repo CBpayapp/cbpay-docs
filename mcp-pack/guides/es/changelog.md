@@ -5,6 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.216 · 1 versión - 5 de noviembre de 2026
+### v2.216
+**Agregado**
+- El enrolamiento por teléfono acepta WhatsApp: `POST
+  /v1/auth/register/2fa/sms/begin` recibe `channel` opcional (`sms` por
+  defecto, `whatsapp` a pedido) y responde `400 invalid_channel` ante
+  cualquier otro valor. La confirmación no depende del canal y los
+  próximos inicios de sesión piden un código SMS al número verificado.
+**Corregido**
+- El mensaje de `invalid_phone` en transferencias y contactos ahora
+  explica el formato E.164 requerido con un ejemplo concreto en vez del
+  error genérico de proveedor.
 ## v2.215 · 6 versiones - 4 de noviembre de 2026
 ### v2.215
 **Agregado**

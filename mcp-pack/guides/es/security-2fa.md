@@ -26,7 +26,7 @@ app autenticadora (TOTP), códigos de recuperación y passkeys — vive en
 
 El 2FA obligatorio del registro es distinto del OTP por acción. Después de
 confirmar el email, conserva el `pending_token` durante sus 30 minutos de
-vigencia y elige la app autenticadora (TOTP) o SMS:
+vigencia y elige la app autenticadora (TOTP) o el envío al teléfono por SMS o WhatsApp:
 
 ```mermaid
 sequenceDiagram
@@ -45,16 +45,31 @@ sequenceDiagram
 escanea el `otpauth_uri` y confirma el código de seis dígitos; la respuesta
 `201` entrega la sesión y 10 códigos de recuperación una sola vez.
 
-Para SMS, envía un teléfono E.164 si la cuenta aún no tiene uno:
+Para SMS o WhatsApp, envía un teléfono E.164 si la cuenta aún no tiene uno:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
   -H "Content-Type: application/json" \
-  -d '{"pending_token":"<pending-token>","phone":"+56912345678"}'
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
 ```
 
-La respuesta `200` contiene `phone_masked`, `steps` con la ventana de 10
-minutos y `note`. Nunca devuelve el código SMS. Confírmalo así:
+La respuesta `200` contiene `phone_masked`, el `channel` efectivo, `steps`
+con la ventana de 10 minutos y `note`. `channel` es `sms` por defecto;
+usa `whatsapp` para enviar el código por WhatsApp. Nunca devuelve el código.
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
+
+Confírmalo así:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
@@ -63,12 +78,14 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
 ```
 
 La respuesta `201` entrega la primera sesión, la cuenta, `steps` que indican
-que los próximos logins pedirán SMS y `note`; no entrega códigos de
-recuperación. Los endpoints de passkey del registro responden
+que los próximos logins pedirán un código SMS y `note`; no entrega códigos de
+recuperación. La confirmación es independiente del canal usado para enviar el
+código. Los endpoints de passkey del registro responden
 `410 passkey_not_offered`; el login con passkey y `/v1/me/passkeys` siguen
 disponibles.
 
-Errores propios: `400 invalid_phone` con el mensaje
+Errores propios: `400 invalid_channel` con el mensaje `channel must be sms or whatsapp`,
+`400 invalid_phone` con el mensaje
 `phone must be E.164 format: plus sign, country code and number (example +56912345678)`,
 `409 phone_required` o `sms_not_started`, `403 otp_invalid`, `429
 too_many_attempts`, `502 otp_send_failed`/`otp_check_failed` y `401
@@ -323,6 +340,10 @@ no pide un código adicional.
     `phone_change`. Una API key no puede hacer ese cambio con SMS activo: la
     solicitud falla cerrada. El teléfono nuevo queda sin verificar hasta que
     se compruebe.
+#### ¿Por qué el login usa SMS si enrolé con WhatsApp?
+    WhatsApp se admite solo para el envío durante el enrolamiento. Después de
+    verificar el teléfono, los próximos logins piden el código por SMS. La
+    confirmación es la misma para ambos canales.
 #### ¿Por qué el registro responde 410 para passkey?
     Passkey se retiró solo del wizard de registro. Usa app autenticadora o
     SMS; el login con passkey y `/v1/me/passkeys` siguen vivos.
