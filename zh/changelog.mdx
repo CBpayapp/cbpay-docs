@@ -4,6 +4,16 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年11月5日" description="v2.216 · 1 个版本">
+### v2.216
+**新增**
+- 电话注册认证新增 WhatsApp：`POST /v1/auth/register/2fa/sms/begin`
+  接受可选 `channel`（默认 `sms`，可指定 `whatsapp`），其他值返回 `400
+  invalid_channel`。确认与渠道无关，今后登录向已验证号码发送短信验证码。
+**修复**
+- 转账与联系人的 `invalid_phone` 消息现说明所需的 E.164
+  格式并提供具体示例，不再返回通用提供商错误。
+</Update>
 <Update label="2026年11月4日" description="v2.215 · 6 个版本">
 ### v2.215
 **新增**
