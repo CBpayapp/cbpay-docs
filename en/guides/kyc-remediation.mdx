@@ -82,3 +82,84 @@ flowchart LR
 </AccordionGroup>
 
 See the [error catalog](/en/errors) for actionable error codes.
+
+## Company's own third-party cases
+
+A company can read its own third-party KYC/KYB cases before the account is
+approved. These routes exist to break the remediation loop: they are
+read-only, scoped to the authenticated company account, and do not adopt,
+create, or change a verification.
+
+### List cases
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party?page=1&page_size=50&from=2026-11-01&to=2026-11-07&status=changes_requested" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "submissions": [{
+    "submission_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+    "kind": "kyb",
+    "status": "changes_requested",
+    "external_customer_id": "link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f",
+    "created_at": "2026-11-03T16:18:20Z",
+    "updated_at": "2026-11-06T16:37:23Z"
+  }]
+}
+```
+
+The list accepts `page`, `page_size` (maximum 200), `status`, and optional
+`from`/`to` filters. When omitted, the API applies its default date range;
+passing the range explicitly is recommended for reproducible pagination. It
+is a platform mirror and does not make a core request for every row.
+
+### Read remediation detail
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+```json
+{
+  "submission_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "kind": "kyb",
+  "status": "changes_requested",
+  "external_customer_id": "link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f",
+  "pending_documents": ["proofOfAddress", "financialStatements"],
+  "changes_requested_comments": "Please upload the listed documents.",
+  "created_at": "2026-11-03T16:18:20Z",
+  "updated_at": "2026-11-06T16:37:23Z"
+}
+```
+
+The detail reads the current core state when available. If that enrichment is
+temporarily unavailable, the safe mirror is returned. A migrated case is
+reported as `status: "migrated"` with `migrated_from` and `migrated_to`.
+
+| HTTP | Code | Solution |
+|---:|---|---|
+| 400 | `invalid_range` | Correct malformed `from`/`to` values and use the documented date format. |
+| 401 | `unauthorized` | Refresh the account token and send it as a Bearer token. |
+| 403 | `company_account_required` | Use a company account; person accounts cannot own third-party cases. |
+| 404 | `not_found` | Verify the case belongs to the authenticated account. |
+
+<AccordionGroup>
+  <Accordion title="Does the account need to be approved first?">
+    No. The company may read its own third-party cases in any state so it can
+    complete remediation. Write operations retain their existing approval and
+    permission gates.
+  </Accordion>
+  <Accordion title="Does reading create or adopt a case?">
+    No. Both routes are pure reads. They never create a submission, send a
+    decision, adopt an approval, or change account state.
+  </Accordion>
+  <Accordion title="How do I submit the requested documents?">
+    Use the existing hosted flow for the same submission. Keep its
+    `submission_id`; do not create a replacement case.
+  </Accordion>
+</AccordionGroup>

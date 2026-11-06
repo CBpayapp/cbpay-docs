@@ -69,3 +69,76 @@ flowchart LR
 </AccordionGroup>
 
 可操作的错误码见[错误目录](/zh/errors)。
+
+## 公司自己的第三方案件
+
+公司账户在尚未批准时，也可以读取自己提交的第三方 KYC/KYB 案件。这些
+接口只读，并限定到已认证的公司账户；不会创建、采用或修改验证。
+
+### 列出案件
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party?page=1&page_size=50&from=2026-11-01&to=2026-11-07&status=changes_requested" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "submissions": [{
+    "submission_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+    "kind": "kyb",
+    "status": "changes_requested",
+    "external_customer_id": "link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f",
+    "created_at": "2026-11-03T16:18:20Z",
+    "updated_at": "2026-11-06T16:37:23Z"
+  }]
+}
+```
+
+支持 `page`、`page_size`（最多 200）、`status`，以及可选的
+`from`/`to` 筛选。省略时 API 使用默认日期范围；建议显式传递以保证分页
+可复现。列表来自平台镜像，不会对每一行单独请求 core。
+
+### 读取补正详情
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+```json
+{
+  "submission_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "kind": "kyb",
+  "status": "changes_requested",
+  "external_customer_id": "link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f",
+  "pending_documents": ["proofOfAddress", "financialStatements"],
+  "changes_requested_comments": "Please upload the listed documents.",
+  "created_at": "2026-11-03T16:18:20Z",
+  "updated_at": "2026-11-06T16:37:23Z"
+}
+```
+
+详情会在可用时读取 core 的最新状态；临时无法增强时返回安全镜像。迁移
+案件会返回 `status: "migrated"`、`migrated_from` 和 `migrated_to`。
+
+| HTTP | 代码 | 解决方案 |
+|---:|---|---|
+| 400 | `invalid_range` | 修正格式错误的 `from`/`to`，并使用文档规定的日期格式。 |
+| 401 | `unauthorized` | 刷新账户令牌并使用 Bearer 发送。 |
+| 403 | `company_account_required` | 使用公司账户。 |
+| 404 | `not_found` | 确认案件属于当前认证账户。 |
+
+<AccordionGroup>
+  <Accordion title="账户必须先批准吗？">
+    不需要。公司可读取任何状态的第三方案件以完成补正；写入操作仍遵守原有权限门槛。
+  </Accordion>
+  <Accordion title="读取会创建或采用案件吗？">
+    不会。两个接口都是纯读取，不会改变状态。
+  </Accordion>
+  <Accordion title="如何提交所要求的文件？">
+    使用同一个托管流程，并保留原来的 `submission_id`。
+  </Accordion>
+</AccordionGroup>

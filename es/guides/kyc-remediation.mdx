@@ -82,3 +82,82 @@ flowchart LR
 </AccordionGroup>
 
 Consulta el [catálogo de errores](/es/errors) para los códigos accionables.
+
+## Casos terceros propios de la empresa
+
+Una empresa puede leer sus propios casos KYC/KYB de terceros antes de estar
+aprobada. Son rutas de solo lectura, acotadas a la cuenta empresa autenticada:
+no adoptan, crean ni cambian una verificación.
+
+### Listar casos
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party?page=1&page_size=50&from=2026-11-01&to=2026-11-07&status=changes_requested" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "submissions": [{
+    "submission_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+    "kind": "kyb",
+    "status": "changes_requested",
+    "external_customer_id": "link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f",
+    "created_at": "2026-11-03T16:18:20Z",
+    "updated_at": "2026-11-06T16:37:23Z"
+  }]
+}
+```
+
+Acepta `page`, `page_size` (máximo 200), `status` y filtros opcionales
+`from`/`to`. Si los omites, la API aplica su rango de fechas predeterminado;
+se recomienda enviarlos explícitamente para que la paginación sea reproducible.
+La lista sale del espejo de plataforma y no hace una consulta al core por cada
+fila.
+
+### Leer el detalle de subsanación
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+```json
+{
+  "submission_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "kind": "kyb",
+  "status": "changes_requested",
+  "external_customer_id": "link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f",
+  "pending_documents": ["proofOfAddress", "financialStatements"],
+  "changes_requested_comments": "Please upload the listed documents.",
+  "created_at": "2026-11-03T16:18:20Z",
+  "updated_at": "2026-11-06T16:37:23Z"
+}
+```
+
+El detalle lee el estado vigente del core cuando está disponible; si el
+enriquecimiento falla temporalmente, devuelve el espejo seguro. Un caso
+migrado se identifica con `status: "migrated"`, `migrated_from` y
+`migrated_to`.
+
+| HTTP | Código | Solución |
+|---:|---|---|
+| 400 | `invalid_range` | Corrige `from`/`to` malformados y usa el formato de fecha documentado. |
+| 401 | `unauthorized` | Renueva el token y envíalo como Bearer. |
+| 403 | `company_account_required` | Usa una cuenta empresa. |
+| 404 | `not_found` | Verifica que el caso pertenezca a la cuenta autenticada. |
+
+<AccordionGroup>
+  <Accordion title="¿La cuenta debe estar aprobada?">
+    No. Puede leer sus casos terceros en cualquier estado para completar la
+    subsanación; las escrituras mantienen sus gates actuales.
+  </Accordion>
+  <Accordion title="¿Leer crea o adopta un caso?">
+    No. Ambas rutas son lecturas puras y no cambian el estado.
+  </Accordion>
+  <Accordion title="¿Cómo envío los documentos solicitados?">
+    Usa el flujo alojado existente y conserva el mismo `submission_id`.
+  </Accordion>
+</AccordionGroup>
