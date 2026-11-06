@@ -281,6 +281,9 @@ part of the replay identity. Read the live status with
 | 422 | `settlement_pending` | The payin's balance is still scheduled for [settlement](https://docs.cbpayapp.com/en/concepts/fees#card-payin-settlement-delay) and cannot be [refunded](https://docs.cbpayapp.com/en/guides/refunds) until it is released (at `settle_at` or by an org-admin release) |
 | 400 | `invalid_amount` | The [refund](https://docs.cbpayapp.com/en/guides/refunds) `amount` must be a positive decimal in the payin currency |
 | 503 | `refund_event_pending` | The refund result is stored, but its final event is still being persisted. Retry with the **same** idempotency key; do not send a new refund |
+| 422 | `preauth_not_supported` | Captures and voids only apply to card-acquired payins (other rails have no holds to close) |
+| 422 | `payin_not_capturable` | The payin is not a pending manual pre-authorization (automatic capture, already settled, or no processor charge reference) |
+| 202 | `action_pending` | The capture or void is being reconciled with the processor; retry with the **same** `idempotency_key` (a new key opens a conflicting action) |
 | 503 | `payin_event_pending` | The payin is credited, but its final event is still being reconciled. Retry with the **same** idempotency key; do not create a new payin |
 
 ### Compliance (403 / 503)
@@ -406,7 +409,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 429 | `too_many_attempts` | Public fraud verification is rate-limited — retry after a short delay |
 | 502 | `generation_failed` | Fraud report generation failed after the charge path — the fee is refunded; retry with a new idempotency key |
 
-### Corridor lifecycle
+## Corridor lifecycle
 
 | HTTP | Code | Meaning and fix |
 |---|---|---|
@@ -763,7 +766,7 @@ These codes are used by organization payroll and recurring-expense series operat
 | 503 | `valuation_unavailable` | The amount could not be valued in USD | Retry later; approval remains fail-closed. |
 | 500 | `store_error` | The platform could not read or persist the record | Retry after confirming the resource state. |
 
-### Expense platform errors
+## Expense platform errors
 
 | 400 | `duplicate_category` | The organization already has the custom expense category key | Choose another `c_` key |
 | 400 | `invalid_batch` | A bulk expense operation has fewer than 1 or more than 100 IDs | Send 1–100 expense UUIDs |

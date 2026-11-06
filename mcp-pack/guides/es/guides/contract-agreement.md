@@ -354,16 +354,4 @@ La respuesta PDF es binaria y usa `contrato-marco-<short>.pdf` en espa?ol o `mas
 Los emails de emisi?n y firma mencionan el otro idioma del portal solo cuando es servible; sin counsel se omite ingl?s.
 
 ### FAQ
-#### ?El PDF traducido vale como contrato firmado?No. Es una contrapartida de lectura. El PDF del idioma de emisi?n sigue siendo el documento firmado y su hash es la referencia.#### ?Por qu? no veo ingl?s?El ingl?s exige counsel y plantilla vigente. Revisa `available_langs`; el portal habilita los botones desde ese campo.## Modo de firma tipeada (portal y wizard)
-
-El paso de firma ofrece un pad para dibujar o escribir el nombre completo.
-Ambos envían `signature_png`; el modo tipeado agrega `signature_mode: "typed"`
-y `typed_name`, que debe coincidir exactamente con `signer_name`.
-
-```json
-{"signer_name":"Jordan Lee","signer_title":"Director","consent":true,
- "signature_png":"<PNG_BASE64>","signature_mode":"typed","typed_name":"Jordan Lee"}
-```
-
-Un modo desconocido responde `422 invalid_signature_mode`; una diferencia
-responde `422 typed_name_mismatch`. El OTP fresco sigue en `X-OTP-Token`.
+#### ?El PDF traducido vale como contrato firmado?No. Es una contrapartida de lectura. El PDF del idioma de emisi?n sigue siendo el documento firmado y su hash es la referencia.#### ?Por qu? no veo ingl?s?El ingl?s exige counsel y plantilla vigente. Revisa `available_langs`; el portal habilita los botones desde ese campo.

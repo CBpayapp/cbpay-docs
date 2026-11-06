@@ -68,7 +68,7 @@ curl https://api.qbank.cl/platform/v1/payouts/methods \
 | 厄瓜多尔 | USD | `bank_transfer`、`deuna`、`cash_pickup`、`cnb` |
 | 巴拉圭 | PYG | `bank_transfer` |
 | 阿根廷 | ARS / USD | `bank_transfer`（CBU 或 CVU） |
-| 哥伦比亚 | COP | `bank_transfer`（整数金额，无小数）、`breb` |
+| 哥伦比亚 | COP | `bank_transfer`（整数金额，无小数） |
 | 美国 | USD | `ach`、`wire`、`swift` |
 
 可用性可能变化；目录（`GET /v1/payouts/methods`）始终是唯一可信来源。
@@ -402,7 +402,6 @@ curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&sta
 | VE | `pago_movil` | `name`（名 + 第一姓氏，与证件一致）、`phone`、`bank_code`（SUDEBAN）、`document_value` |
 | VE | `bank_transfer` | `name`、`account_number`（20 位）、`document_value` |
 | BO | `bank_transfer` | `name`、`tax_id`、`bank_code`、`account_number` |
-| CO | `breb` | `name`、`tax_id`/`document_value`、`document_type`、`phone`、`address`、`breb_key`、`breb_key_type` |
 | BR | `pix` | `name`、`tax_id` +（`pix_key` 和 `pix_key_type`）或（`bank_code` ISPB、`branch_code`、`account_number`） |
 | EC | `bank_transfer` | `name`、`document_value`（身份证 cédula）、`sender_name`、`account_number`（转到其他银行还需 `bank_code` 和 `account_type`） |
 | EC | `deuna` | `name`、`document_value`、`sender_name`、`phone`（钱包手机号） |

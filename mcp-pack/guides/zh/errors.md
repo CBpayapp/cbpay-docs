@@ -260,6 +260,9 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `settlement_pending` | 该收款的余额仍在[结算](https://docs.cbpayapp.com/zh/concepts/fees#银行卡收款结算延迟)排期中，释放（到达 `settle_at` 或由组织管理员释放）前无法[退款](https://docs.cbpayapp.com/zh/guides/refunds) |
 | 400 | `invalid_amount` | [退款](https://docs.cbpayapp.com/zh/guides/refunds)的 `amount` 必须是以收款币种表示的正十进制数 |
 | 503 | `refund_event_pending` | 退款结果已保存，但最终事件仍在持久化。请使用**相同**幂等键重试；不要发送第二笔退款 |
+| 422 | `preauth_not_supported` | 捕获与作废仅适用于银行卡收款（其他通道没有可关闭的 hold） |
+| 422 | `payin_not_capturable` | 该收款不是待处理的手动预授权（自动捕获、已结算或没有处理方 charge 引用） |
+| 202 | `action_pending` | 捕获或作废正在与处理方核对；请使用**相同** `idempotency_key` 重试（新 key 会开启一个冲突动作） |
 | 503 | `payin_event_pending` | 收款已入账，但最终事件仍在核对中。请使用**相同**幂等键重试；不要创建新的收款 |
 
 ### 合规（403 / 503）
@@ -734,7 +737,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 503 | `valuation_unavailable` | 无法将金额估值为美元 | 稍后重试；批准过程保持失败关闭。 |
 | 500 | `store_error` | 平台无法读取或保存记录 | 确认资源状态后重试。 |
 
-### Expense platform errors
+## Expense platform errors
 
 | 400 | `duplicate_category` | 组织已存在该自定义费用类别 key | 选择其他 `c_` key |
 | 400 | `invalid_batch` | 批量操作的 ID 少于 1 个或超过 100 个 | 发送 1–100 个费用 UUID |

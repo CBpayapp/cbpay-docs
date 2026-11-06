@@ -170,34 +170,6 @@ is `completed` or `failed`; a confirmation `failed` result means the debit
 has already been refunded. If the client repeats confirm with the same key,
 it receives the original payout with `idempotency_hit: true`.
 
-## Brazil PIX keys that need a document
-
-For a Brazil PIX QR, `POST /v1/payouts/qr/scan` returns `key_type` with one
-of `tax_id`, `email`, `phone` or `evp`, plus `requires_document`. A `tax_id`
-key is the CPF/CNPJ itself and can be confirmed without another document.
-For an email, phone or EVP key, confirm with both `document_type` (`CPF` or
-`CNPJ`) and `document_id`:
-
-```json
-{
-  "country": "BR",
-  "currency": "BRL",
-  "provider_reference": "<provider_reference from scan>",
-  "amount": "75.00",
-  "document_type": "CPF",
-  "document_id": "52998224725",
-  "idempotency_key": "qr-br-doc-001"
-}
-```
-
-The two document fields are optional for `tax_id` and must be supplied
-together for every other key type. If a non-`tax_id` QR is confirmed without
-them, the API returns `422 core_rejected` with instructions to repeat the
-confirm with the beneficiary document. A document that does not match a
-`tax_id` key is rejected. Reusing the same idempotency key with a different
-document returns `409 idempotency_conflict`; keep the original key and
-payload when reconciling an ambiguous response.
-
 ## Errors
 
 | HTTP | Code | What to do |

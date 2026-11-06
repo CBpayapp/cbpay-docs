@@ -265,6 +265,9 @@ de la identidad del replay. Consulta el estado vivo con
 | 422 | `settlement_pending` | El saldo del cobro sigue programado para [settlement](https://docs.cbpayapp.com/es/concepts/fees#settlement-de-payins-con-tarjeta) y no se puede [devolver](https://docs.cbpayapp.com/es/guides/refunds) hasta liberarse (a `settle_at` o por liberación del admin de la organización) |
 | 400 | `invalid_amount` | El `amount` de la [devolución](https://docs.cbpayapp.com/es/guides/refunds) debe ser un decimal positivo en la moneda del cobro |
 | 503 | `refund_event_pending` | El resultado de la devolución quedó guardado, pero todavía se está persistiendo su evento final. Reintenta con la **misma** clave de idempotencia; no envíes otra devolución |
+| 422 | `preauth_not_supported` | Las capturas y anulaciones solo aplican a cobros con tarjeta (los otros rieles no tienen holds que cerrar) |
+| 422 | `payin_not_capturable` | El payin no es una pre-autorización manual pendiente (captura automática, ya liquidado o sin referencia de cargo) |
+| 202 | `action_pending` | La captura o anulación se está conciliando con el procesador; reintenta con la **misma** `idempotency_key` (una clave nueva abre una acción en conflicto) |
 | 503 | `payin_event_pending` | El payin quedó acreditado, pero su evento final todavía se está reconciliando. Reintenta con la **misma** clave de idempotencia; no crees un nuevo payin |
 
 ### Cumplimiento (403 / 503)
@@ -756,7 +759,7 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 503 | `valuation_unavailable` | No se pudo valorizar el monto en USD | Reintenta más tarde; la aprobación permanece fail-closed. |
 | 500 | `store_error` | La plataforma no pudo leer o guardar el registro | Reintenta después de confirmar el estado del recurso. |
 
-### Expense platform errors
+## Expense platform errors
 
 | 400 | `duplicate_category` | La organización ya tiene la key de categoría personalizada | Elige otra key `c_` |
 | 400 | `invalid_batch` | Una operación masiva tiene menos de 1 o más de 100 IDs | Envía UUIDs de gastos, entre 1 y 100 |
