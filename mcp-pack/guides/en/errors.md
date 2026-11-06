@@ -118,6 +118,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_settings` | Organization settings are not a valid JSON object or could not be normalized; correct the settings payload and retry |
 | `invalid_type` | `type` must be `person` or `company` |
 | `invalid_email` / `invalid_display_name` | Invalid required field |
+| `invalid_characters` | A name or label (`display_name`, contact `alias`, destination `label`, API key `label`) contains HTML or executable script and was rejected; send plain text |
 | `weak_password` | Password shorter than 8 characters |
 | `invalid_role` | Invalid member role |
 | `unknown_org` | Wrong organization slug (use `cbpay`) |
@@ -405,7 +406,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 429 | `too_many_attempts` | Public fraud verification is rate-limited — retry after a short delay |
 | 502 | `generation_failed` | Fraud report generation failed after the charge path — the fee is refunded; retry with a new idempotency key |
 
-## Corridor lifecycle
+### Corridor lifecycle
 
 | HTTP | Code | Meaning and fix |
 |---|---|---|
@@ -762,7 +763,7 @@ These codes are used by organization payroll and recurring-expense series operat
 | 503 | `valuation_unavailable` | The amount could not be valued in USD | Retry later; approval remains fail-closed. |
 | 500 | `store_error` | The platform could not read or persist the record | Retry after confirming the resource state. |
 
-## Expense platform errors
+### Expense platform errors
 
 | 400 | `duplicate_category` | The organization already has the custom expense category key | Choose another `c_` key |
 | 400 | `invalid_batch` | A bulk expense operation has fewer than 1 or more than 100 IDs | Send 1–100 expense UUIDs |

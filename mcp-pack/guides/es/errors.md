@@ -101,6 +101,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_settings` | Los settings de la organización no son un objeto JSON válido o no pudieron normalizarse; corrige el payload y reintenta |
 | `invalid_type` | `type` debe ser `person` o `company` |
 | `invalid_email` / `invalid_display_name` | Campo requerido inválido |
+| `invalid_characters` | Un nombre o etiqueta (`display_name`, `alias` de contacto, `label` de destino o de API key) contiene HTML o script ejecutable y fue rechazado; envía texto plano |
 | `weak_password` | Contraseña menor a 8 caracteres |
 | `invalid_role` | Rol de miembro inválido |
 | `unknown_org` | Slug de organización incorrecto (usa `cbpay`) |
@@ -755,7 +756,7 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 503 | `valuation_unavailable` | No se pudo valorizar el monto en USD | Reintenta más tarde; la aprobación permanece fail-closed. |
 | 500 | `store_error` | La plataforma no pudo leer o guardar el registro | Reintenta después de confirmar el estado del recurso. |
 
-## Expense platform errors
+### Expense platform errors
 
 | 400 | `duplicate_category` | La organización ya tiene la key de categoría personalizada | Elige otra key `c_` |
 | 400 | `invalid_batch` | Una operación masiva tiene menos de 1 o más de 100 IDs | Envía UUIDs de gastos, entre 1 y 100 |

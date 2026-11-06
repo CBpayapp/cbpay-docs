@@ -1,5 +1,5 @@
 {
-  "count": 410,
+  "count": 411,
   "errors": [
     {
       "category": {
@@ -783,6 +783,20 @@
         "en": "Invalid required field",
         "es": "Campo requerido inválido",
         "zh": "必填字段无效"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "invalid_characters",
+      "http": 400,
+      "meaning": {
+        "en": "A name or label (`display_name`, contact `alias`, destination `label`, API key `label`) contains HTML or executable script and was rejected; send plain text",
+        "es": "Un nombre o etiqueta (`display_name`, `alias` de contacto, `label` de destino o de API key) contiene HTML o script ejecutable y fue rechazado; envía texto plano",
+        "zh": "名称或标签（`display_name`、联系人 `alias`、目的地或 API 密钥 `label`）包含 HTML 或可执行脚本，已被拒绝；请发送纯文本"
       }
     },
     {
@@ -3671,7 +3685,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3685,7 +3699,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3699,7 +3713,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3713,7 +3727,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3727,7 +3741,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3741,7 +3755,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)"
       },
       "code": "idempotency_key_mismatch",
@@ -3753,7 +3767,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3767,7 +3781,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3781,7 +3795,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3795,7 +3809,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)"
       },
       "code": "banking_customer_creation_in_progress",
@@ -3807,7 +3821,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)"
       },
       "code": "banking_invalid_response",
@@ -3819,7 +3833,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3833,7 +3847,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3847,7 +3861,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3861,7 +3875,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3875,7 +3889,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3889,7 +3903,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3903,7 +3917,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3917,7 +3931,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3931,7 +3945,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3945,7 +3959,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3959,7 +3973,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3973,7 +3987,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -3987,7 +4001,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4001,7 +4015,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4015,7 +4029,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4029,7 +4043,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4043,7 +4057,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4057,7 +4071,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4071,7 +4085,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4085,7 +4099,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4099,7 +4113,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4113,7 +4127,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4127,7 +4141,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4141,7 +4155,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4155,7 +4169,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4169,7 +4183,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4183,7 +4197,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4197,7 +4211,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4211,7 +4225,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4225,7 +4239,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4239,7 +4253,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4253,7 +4267,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4267,7 +4281,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4281,7 +4295,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4295,7 +4309,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4309,7 +4323,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -4323,7 +4337,7 @@
     },
     {
       "category": {
-        "en": "Service (5xx)",
+        "en": "Corridor lifecycle",
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
@@ -5645,9 +5659,9 @@
     },
     {
       "category": {
-        "en": "Trust Center & NDA",
-        "es": "Enrolamiento 2FA del registro",
-        "zh": "注册 2FA 错误"
+        "en": "Expense platform errors",
+        "es": "Expense platform errors",
+        "zh": "Expense platform errors"
       },
       "code": "duplicate_category",
       "http": 400,
@@ -5659,9 +5673,9 @@
     },
     {
       "category": {
-        "en": "Trust Center & NDA",
-        "es": "Enrolamiento 2FA del registro",
-        "zh": "注册 2FA 错误"
+        "en": "Expense platform errors",
+        "es": "Expense platform errors",
+        "zh": "Expense platform errors"
       },
       "code": "invalid_batch",
       "http": 400,
@@ -5673,9 +5687,9 @@
     },
     {
       "category": {
-        "en": "Trust Center & NDA",
-        "es": "Enrolamiento 2FA del registro",
-        "zh": "注册 2FA 错误"
+        "en": "Expense platform errors",
+        "es": "Expense platform errors",
+        "zh": "Expense platform errors"
       },
       "code": "invalid_horizon",
       "http": 400,
@@ -5687,9 +5701,9 @@
     },
     {
       "category": {
-        "en": "Trust Center & NDA",
-        "es": "Enrolamiento 2FA del registro",
-        "zh": "注册 2FA 错误"
+        "en": "Expense platform errors",
+        "es": "Expense platform errors",
+        "zh": "Expense platform errors"
       },
       "code": "invalid_icon",
       "http": 400,
