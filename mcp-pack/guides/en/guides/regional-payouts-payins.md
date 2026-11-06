@@ -180,6 +180,23 @@ idempotently. Final payin states are `completed` and `failed`; `pending` and
 | 422 | `invalid_payload` | Correct the country-specific beneficiary or payer fields. |
 | 502/503 | `payin_provider_failed` / `payins_unavailable` | Keep the same key and reconcile; do not create a second money operation. |
 
+## Colombia Bre-B
+
+`CO/COP/breb` is an instant P2P payout. COP is an integer currency with a
+minimum of `1000`; the beneficiary requires `address`, `tax_id` or
+`document_value`, `document_type`, a `+573XXXXXXXXX` phone, and a
+`breb_key` plus the optional `breb_key_type` hint. Supported keys are a 10-digit phone starting
+with `3`, an `@alias` of 6–19 characters, an email of 10–92 characters, or a
+5–18 character alphanumeric user ID. B2B is rejected and P2P remitters use
+names only.
+
+## Brazil portal payout methods
+
+Brazil exposes TED (`bank_transfer`) and PIX. The portal's PIX method toggles
+between **By key** and **Scan QR**; QR is scan, review, then confirm. A
+`method=qr` deep link opens the same PIX QR mode. Bolivia's existing QR card
+is unchanged.
+
 ## FAQ
 
 #### Can I select a provider or the PY fallback rail?

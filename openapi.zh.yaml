@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.226"
+  version: "2.228"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -2966,6 +2966,39 @@ paths:
           $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/member:
+    get:
+      tags:
+      - 账户
+      operationId: getMyMember
+      summary: 获取我的成员资料
+      description: 当前会话成员的个人资料(登录邮箱、角色、状态)——不是企业账户资料。仅限人工会话。
+      responses:
+        '200':
+          description: 本人成员资料。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+              example:
+                id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                email: ops@example.com
+                role: operator
+                status: active
+                created_at: '2026-07-07T12:00:00Z'
+        '404':
+          description: API key 没有成员资料(`member_not_found`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: member_not_found
+                message: API keys have no member profile
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/members:
     get:
       tags:
@@ -3047,6 +3080,269 @@ paths:
               example:
                 error: company_only
                 message: members are only available for company accounts
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/{memberID}/role:
+    put:
+      tags:
+      - 账户
+      operationId: updateMemberRole
+      summary: 更改成员角色
+      description: 更改成员角色(owner/operator/viewer)。仅 owner、仅企业账户、OTP `member_add`。最后一个 owner 不能被降级。立即生效。
+      parameters:
+      - name: memberID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - role
+              properties:
+                role:
+                  type: string
+                  enum:
+                  - owner
+                  - operator
+                  - viewer
+            example:
+              role: operator
+      responses:
+        '200':
+          description: 角色已更新(或无变化)。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                member_id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                role: operator
+                changed: true
+        '400':
+          description: 角色无效(`invalid_role`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_role
+                message: role must be owner, operator or viewer
+        '404':
+          description: 成员不存在。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '409':
+          description: 账户必须至少保留一位 owner(`last_owner_required`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: last_owner_required
+                message: the account must keep at least one owner
+        '403':
+          description: 仅 owner(`owner_required`);仅企业账户(`company_only`);或需要 OTP(`otp_required`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: owner_required
+                message: this action requires the owner role
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/{memberID}/status:
+    put:
+      tags:
+      - 账户
+      operationId: updateMemberStatus
+      summary: 封禁或解封成员登录
+      description: 封禁会立即撤销该成员的所有会话。仅 owner、仅企业账户、OTP `member_add`。不能更改自己的状态。
+      parameters:
+      - name: memberID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - active
+                  - disabled
+            example:
+              status: disabled
+      responses:
+        '200':
+          description: 状态已更新(或无变化)。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+                  sessions_revoked:
+                    type: integer
+              example:
+                member_id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                status: disabled
+                changed: true
+                sessions_revoked: 2
+        '400':
+          description: 状态无效(`invalid_status`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_status
+                message: status must be active or disabled
+        '404':
+          description: 成员不存在。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '409':
+          description: 不能更改自己的登录状态(`self_action_forbidden`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: self_action_forbidden
+                message: you cannot change your own login status; ask another owner
+        '403':
+          description: 仅 owner(`owner_required`);仅企业账户(`company_only`);或需要 OTP(`otp_required`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: owner_required
+                message: this action requires the owner role
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/{memberID}/reset-password:
+    post:
+      tags:
+      - 账户
+      operationId: resetMemberPassword
+      summary: 重置成员密码
+      description: 设置新密码并撤销该成员的所有会话。仅 owner、仅企业账户、OTP `member_add`。不能在此重置自己的密码(请使用 `POST /v1/me/password`)。
+      parameters:
+      - name: memberID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - password
+              properties:
+                password:
+                  type: string
+                  minLength: 8
+            example:
+              password: another-secure-pass
+      responses:
+        '200':
+          description: 密码已重置。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  sessions_revoked:
+                    type: integer
+              example:
+                member_id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                status: password_reset
+                sessions_revoked: 1
+        '400':
+          description: 密码强度不足(`weak_password`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: weak_password
+                message: password must be at least 8 characters
+        '404':
+          description: 成员不存在。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '409':
+          description: 不能在此重置自己的密码(`self_action_forbidden`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: self_action_forbidden
+                message: to change your own password use POST /v1/me/password
+        '403':
+          description: 仅 owner(`owner_required`);仅企业账户(`company_only`);或需要 OTP(`otp_required`)。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: owner_required
+                message: this action requires the owner role
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/api-keys:
@@ -4034,7 +4330,7 @@ paths:
                   description: 本地货币(例如 CLP、PEN、MXN)。
                 method:
                   type: string
-                  description: 来自 `GET /v1/payouts/methods` 的 payout 方式(例如 `bank_transfer`)。
+                  description: 来自 `GET /v1/payouts/methods` 的 payout 方式(例如 `bank_transfer` 或 `breb`)。
                 amount:
                   type: string
                   description: 本地货币金额,正数十进制字符串。
@@ -4062,11 +4358,20 @@ paths:
                     first_surname:
                       type: string
                       description: 个人第一姓氏；与 given_name 同时提供时使用。
+                    breb_key:
+                      type: string
+                      description: 哥伦比亚 `CO`/`COP`/`breb` 的 Bre-B 密钥（手机号、`@alias`、Email 或 User ID）。
+                    breb_key_type:
+                      type: string
+                      enum: [phone, alias, email, userid]
+                      description: 可选的 Bre-B 密钥类型提示；服务器会校验密钥格式。
                   additionalProperties:
                     type: string
                   description: '目标账户详情。所需键取决于国家与方式;参见 `GET /v1/payouts/methods` 和
 
-                    `GET /v1/payouts/banks`。示例:智利为 RUT + 银行,墨西哥为 CLABE,秘鲁为 CCI。巴西 PIX:`pix_key` + `pix_key_type`(cpf、
+                    `GET /v1/payouts/banks`。哥伦比亚 Bre-B 使用 `breb_key` 和可选的
+                    `breb_key_type`，并要求 `tax_id`/`document_value`、`document_type`、`phone` 和 `address`。
+                    示例:智利为 RUT + 银行,墨西哥为 CLABE,秘鲁为 CCI。巴西 PIX:`pix_key` + `pix_key_type`(cpf、
 
                     cnpj、phone、email、evp),或不用键的银行账户,使用
 
@@ -4303,6 +4608,22 @@ paths:
                     pix_key_type: cpf
                     pix_key: '12345678909'
                   idempotency_key: br-pix-3321
+              co_breb:
+                summary: 哥伦比亚 — Bre-B P2P (COP)
+                value:
+                  country: CO
+                  currency: COP
+                  method: breb
+                  amount: '1000'
+                  beneficiary:
+                    name: Ana Torres
+                    tax_id: '123456789'
+                    document_type: CC
+                    phone: '+573001234567'
+                    address: Calle 10 #20-30
+                    breb_key: ana@example.com
+                    breb_key_type: email
+                  idempotency_key: co-breb-001
               ec_bank_transfer:
                 summary: 厄瓜多尔 — 银行转账(USD,含汇款人数据的汇款)
                 value:
@@ -8661,6 +8982,88 @@ paths:
                   updated_at: '2026-07-11T16:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/verification/children:
+    get:
+      tags:
+      - KYC / KYB
+      operationId: listMyVerificationChildren
+      summary: 列出我的 KYB 邀请的董事和受益人
+      description: >-
+        企业账户邀请的 UBO 和董事及其验证状态（案件状态、声明签署）。KYB
+        审核中也可使用。邀请链接 URL 永不返回（仅通过邮件发送给被邀请人）。
+      responses:
+        '200':
+          description: 我的 KYB 案件的被邀请人。
+          content:
+            application/json:
+              example:
+                children:
+                - child_link_id: b7c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e
+                  flow: ubo
+                  email: owner@example.com
+                  name: Jane Owner
+                  link_status: opened
+                  submission_id: f0e1d2c3-e4f5-4a6b-8c9d-0e1f2a3b4c5d
+                  submission_status: changes_requested
+                  reused: false
+                  expires_at: '2027-01-15T12:00:00Z'
+                  created_at: '2026-11-01T12:00:00Z'
+                  declaration_signed: false
+                  needs_signature: true
+                  decision_note: Please sign the beneficial owner declaration.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 个人账户没有被邀请人。
+          content:
+            application/json:
+              example:
+                error:
+                  code: company_account_required
+                  message: only company accounts have invited directors or beneficial owners
+        '404':
+          description: 该账户没有 KYB 案件。
+  /v1/me/verification/children/{childID}/resend:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: resendMyVerificationChild
+      summary: 通过邮件重发邀请链接
+      description: >-
+        向 UBO 或董事重发相同的邀请邮件（不生成新链接，不重复建案）。每位
+        被邀请人每天限重发一次（429）；已决案件返回 409。
+      parameters:
+      - name: childID
+        in: path
+        required: true
+        description: 子邀请 ID（列表中的 child_link_id）。
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 已尝试重发；查看 sent 确认邮件结果。
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@example.com
+                expires_at: '2027-01-15T12:00:00Z'
+        '400':
+          description: 缺少子邀请 ID。
+          content:
+            application/json:
+              example:
+                error:
+                  code: invalid_child
+                  message: child invite id is required
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 邀请不存在或属于其他案件。
+        '409':
+          description: 案件已决或邀请已关闭（already_decided、invite_closed）。
+        '429':
+          description: 该邀请在过去 24 小时内已重发。
   /v1/screenings/addresses:
     post:
       tags:
@@ -14100,8 +14503,9 @@ paths:
                   type: string
                   description: 扫描 QR 的原始内容(在巴西同时是 PIX "copia e cola" 代码)。
             example:
+              country: BR
               qr_payload: <QR content>
-              currency: BOB
+              currency: BRL
       responses:
         '200':
           description: 供用户确认的收款人数据。
@@ -14126,15 +14530,24 @@ paths:
                     type: string
                   status:
                     type: string
+                  key_type:
+                    type: string
+                    enum: [tax_id, email, phone, evp]
+                    description: 扫码返回的巴西 PIX 密钥分类。
+                  requires_document:
+                    type: boolean
+                    description: 巴西 PIX confirm 是否必须同时提供 `document_type` 和 `document_id`。
               example:
                 scan_id: 5c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
                 provider_reference: QR-REF-889923
-                beneficiary_name: Juan Quispe
+                beneficiary_name: LOJA DA MARIA
                 destination_account: '****4521'
-                amount: '700.00'
-                currency: BOB
+                amount: '75.00'
+                currency: BRL
                 glosa: ''
                 status: scanned
+                key_type: tax_id
+                requires_document: false
         '400':
           description: 缺少 qr_payload(invalid_request),或二维码不可读/不受支持(invalid_qr_payload——BR Code 损坏、校验和无效或动态
             PIX 二维码;message 说明具体原因)。
@@ -14199,6 +14612,13 @@ paths:
                 amount:
                   type: string
                   description: 本地金额,正数十进制字符串。
+                document_type:
+                  type: string
+                  enum: [CPF, CNPJ]
+                  description: 对于非 `tax_id` 的巴西 PIX 密钥必须与 `document_id` 一起提供；`tax_id` 可选。
+                document_id:
+                  type: string
+                  description: 收款人 CPF/CNPJ。对于非 tax ID 的 PIX 密钥必须与 `document_type` 一起发送。
                 description:
                   type: string
                 settlement_asset:
@@ -14305,8 +14725,16 @@ paths:
               example:
                 error: account_blocked
                 message: account is not active
+        '409':
+          description: 相同幂等键再次使用时提交了不同的 QR 证件字段(`idempotency_conflict`)。
+          content:
+            application/json:
+              schema: *id010
+              example:
+                error: idempotency_conflict
+                message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: 被处理方拒绝;扣款已退回(payout 状态为 failed)。
+          description: 处理方拒绝(`core_rejected`)，包括非 tax ID 的巴西 PIX QR 未同时提供两个证件字段；创建 payout 后扣款会退回。
           content:
             application/json:
               schema:

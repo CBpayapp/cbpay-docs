@@ -44,6 +44,9 @@ Todos los errores comparten el mismo formato:
 | 403 | `member_disabled` | El usuario está bloqueado para iniciar sesión; contacta al administrador de tu organización |
 | 403 | `passkey_rejected` | La verificación de la passkey falló; reintenta o entra con contraseña |
 | 403 | `owner_required` | Solo el miembro owner de la cuenta puede ejecutar esa acción |
+| 403 | `read_only_role` | El rol viewer es de solo lectura — entra como owner u operator para modificar |
+| 404 | `member_not_found` | Esta credencial no tiene ficha de miembro (las API keys no tienen miembro) |
+| 409 | `self_action_forbidden` | No puedes cambiar tu propio estado de login ni restablecer tu propia contraseña aquí — pide a otro owner (tu contraseña se cambia con `POST /v1/me/password`) |
 
 ### OTP / 2FA
 
@@ -177,6 +180,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 422 | `verification_kind_mismatch` | El kind de la verificación no calza con el producto (KYC ⇒ persona/INDIVIDUAL, KYB ⇒ empresa/COMPANY) |
 | 422 | `verification_invalid` | Referenciaste una verificación de onboarding propio donde se exige la de un tercero |
 | 403 | `company_account_required` | La verificación de terceros (links/submissions KYC-KYB) es solo para cuentas empresa |
+| 400 | `invalid_child` | Falta el id de la invitación hija — pasa el `child_link_id` de `GET /v1/me/verification/children` |
 | 409 | `already_verified` | Pediste link de onboarding con la cuenta ya verificada |
 | 409 | `superseded` | El ID de verificación es una tumba migrada congelada; sus lecturas vienen del caso vivo | No decidas, subas evidencia, crees links de liveness ni hagas presign/confirm o PATCH de banking intent sobre la tumba. Lee `migrated_to` y opera el caso vivo |
 | 409 | `identity_locked` | Con la verificación aprobada, `display_name`, `tax_id` y `country` vienen de la identidad verificada y no se cambian por `PATCH /v1/me`; contacta al soporte |

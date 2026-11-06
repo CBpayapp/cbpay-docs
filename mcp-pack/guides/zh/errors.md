@@ -39,6 +39,9 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 403 | `member_disabled` | 该用户已被禁止登录；请联系您组织的管理员 |
 | 403 | `passkey_rejected` | 通行密钥（passkey）验证失败；请重试或使用密码登录 |
 | 403 | `owner_required` | 只有账户的 owner 成员才能执行该操作 |
+| 403 | `read_only_role` | 查看者（viewer）角色为只读 —— 请以 owner 或 operator 身份登录后再操作 |
+| 404 | `member_not_found` | 此凭证没有成员资料（API key 没有成员档案） |
+| 409 | `self_action_forbidden` | 您不能在此更改自己的登录状态或重置自己的密码 —— 请联系另一位 owner（更改自己的密码请使用 `POST /v1/me/password`） |
 | 403 | `service_disabled` | 该服务未对您的账户启用（查看 `GET /v1/services`） |
 | 403 | `org_suspended` | 服务已暂停；请联系 CBPay 团队 |
 | 403 | `company_only` | 仅企业账户可用的功能 |
@@ -175,6 +178,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `verification_kind_mismatch` | 验证类型与产品不匹配（KYC ⇒ person/INDIVIDUAL，KYB ⇒ company/COMPANY） |
 | 422 | `verification_invalid` | 在需要第三方验证的场景引用了自身入驻的验证 |
 | 403 | `company_account_required` | 第三方验证（KYC/KYB 链接/提交）仅限企业账户 |
+| 400 | `invalid_child` | 缺少子邀请 ID — 请传入 `GET /v1/me/verification/children` 返回的 `child_link_id` |
 | 409 | `already_verified` | 使用已通过验证的账户请求了入驻链接 |
 | 409 | `superseded` | 验证 ID 是冻结的迁移墓碑；读取内容来自活跃案件 | 不要在墓碑上作出决定、上传证据、创建活体链接、预签名/确认文档或 PATCH banking intent。读取 `migrated_to` 并操作活跃案件 |
 | 409 | `identity_locked` | 验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持 |

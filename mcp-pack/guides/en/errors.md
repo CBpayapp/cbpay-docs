@@ -43,7 +43,10 @@ All errors share the same shape:
 | 403 | `human_session_required` | The operation handles a private key (segregated wallet import/export) and requires a signed-in user session with 2FA — API keys are not allowed |
 | 403 | `member_disabled` | The mirror user is disabled in the test environment; contact support |
 | 403 | `passkey_rejected` | The passkey could not be verified; retry or sign in with another method |
-| 403 | `owner_required` | Only the account owner can change the 2FA preferences |
+| 403 | `owner_required` | Only the account owner can perform this action (2FA preferences, members, API keys, webhooks, account identity) |
+| 403 | `read_only_role` | The viewer role is read-only — sign in as owner or operator to mutate |
+| 404 | `member_not_found` | This credential has no member profile (API keys have no member) |
+| 409 | `self_action_forbidden` | You cannot change your own login status or reset your own password here — ask another owner (change your own password with `POST /v1/me/password`) |
 
 ### Registration 2FA enrollment
 
@@ -194,6 +197,7 @@ part of the replay identity. Read the live status with
 | 422 | `verification_kind_mismatch` | The verification kind does not match the product (KYC ⇒ person/INDIVIDUAL, KYB ⇒ company/COMPANY) |
 | 422 | `verification_invalid` | You referenced an own-onboarding verification where a third-party one is required |
 | 403 | `company_account_required` | Third-party verification (KYC/KYB links/submissions) is for company accounts only |
+| 400 | `invalid_child` | The child invite id is missing — pass the `child_link_id` from `GET /v1/me/verification/children` |
 | 409 | `already_verified` | Onboarding link requested with an already-verified account |
 | 409 | `superseded` | The verification ID is a frozen migrated tombstone; its data is served from the live case | Do not decide, upload evidence, create liveness links, presign/confirm documents, or patch banking intent on the tombstone. Read the response's `migrated_to` ID and operate that live case instead |
 | 409 | `identity_locked` | With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support |

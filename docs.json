@@ -159,6 +159,7 @@
                     "group": "Identity & compliance",
                     "pages": [
                       "en/guides/kyc",
+                      "en/guides/kyc-ubo-children",
                       "en/guides/kyc-remediation",
                       "en/guides/wolfsberg-cbddq",
                       "en/guides/aml",
@@ -309,6 +310,7 @@
                     "group": "Identidad y compliance",
                     "pages": [
                       "es/guides/kyc",
+                      "es/guides/kyc-ubo-children",
                       "es/guides/kyc-remediation",
                       "es/guides/wolfsberg-cbddq",
                       "es/guides/aml",
@@ -459,6 +461,7 @@
                     "group": "身份与合规",
                     "pages": [
                       "zh/guides/kyc",
+                      "zh/guides/kyc-ubo-children",
                       "zh/guides/kyc-remediation",
                       "zh/guides/wolfsberg-cbddq",
                       "zh/guides/aml",
