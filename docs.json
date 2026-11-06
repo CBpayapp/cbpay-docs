@@ -137,6 +137,7 @@
                       "en/guides/transfers",
                       "en/guides/swaps",
                       "en/guides/crypto",
+                      "en/guides/members-roles",
                       "en/guides/segregated-wallets",
                       "en/guides/banking",
                       "en/guides/fiat-ledger-assets"
@@ -205,13 +206,6 @@
                   "en/postman",
                   "en/mcp",
                   "en/changelog"
-                ]
-              },
-              {
-                "group": "Legal",
-                "pages": [
-                  "en/legal/privacy",
-                  "en/legal/terms"
                 ]
               }
             ]
@@ -295,6 +289,7 @@
                       "es/guides/transfers",
                       "es/guides/swaps",
                       "es/guides/crypto",
+                      "es/guides/members-roles",
                       "es/guides/segregated-wallets",
                       "es/guides/banking",
                       "es/guides/fiat-ledger-assets"
@@ -363,13 +358,6 @@
                   "es/postman",
                   "es/mcp",
                   "es/changelog"
-                ]
-              },
-              {
-                "group": "Legal",
-                "pages": [
-                  "es/legal/privacy",
-                  "es/legal/terms"
                 ]
               }
             ]
@@ -453,6 +441,7 @@
                       "zh/guides/transfers",
                       "zh/guides/swaps",
                       "zh/guides/crypto",
+                      "zh/guides/members-roles",
                       "zh/guides/segregated-wallets",
                       "zh/guides/banking",
                       "zh/guides/fiat-ledger-assets"
@@ -521,13 +510,6 @@
                   "zh/postman",
                   "zh/mcp",
                   "zh/changelog"
-                ]
-              },
-              {
-                "group": "法律",
-                "pages": [
-                  "zh/legal/privacy",
-                  "zh/legal/terms"
                 ]
               }
             ]
