@@ -4,21 +4,44 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="6 de noviembre de 2026" description="v2.230 · 3 versiones">
-### v2.230
+<Update label="6 de noviembre de 2026" description="v2.232 · 5 versiones">
+### v2.232
 **Agregado**
 
 - Las cuentas empresa pueden listar UBOs y directores invitados mientras el
   KYB está en curso, con el estado de submission y declaración.
 - Se agregó una acción aislada por tenant para reenviar por email el mismo
   link hijo sin crear otro link ni verificación.
-### v2.229
+### v2.231
 **Agregado**
 - Las cuentas de empresa pueden administrar miembros humanos con roles
   `owner`, `operator` y `viewer` desde el portal o la API de Account. Los
   owners pueden agregar miembros, cambiar roles, bloquear o desbloquear
   logins y restablecer la contraseña de otro miembro. Estas acciones requieren
   el OTP `member_add`; los viewers siguen siendo de solo lectura.
+### v2.230
+**Agregado**
+- Las empresas pueden leer sus propios casos KYC/KYB de terceros antes de la
+  aprobación mediante endpoints de solo lectura acotados a la cuenta.
+**Cambiado**
+- Las solicitudes de subsanación conservan una checklist estructurada y solo
+  notifican de nuevo cuando cambia el contenido solicitado.
+### v2.229
+**Agregado**
+- El registro público ahora expone `POST /v1/auth/pow-challenge` para un
+  desafío Hashcash de vida corta. Cuando se activa el modo de ataque, incluye
+  el campo resuelto `pow: {challenge, suffix}` en las solicitudes de registro
+  y confirmación del email. El tráfico normal sigue siendo compatible con
+  clientes que lo omiten.
+**Cambiado**
+- Los controles antiabuso del registro ahora aplican límites de velocidad
+  globales, un tope diario de OTP y un feed ampliado de dominios desechables.
+**Corregido**
+- Los intentos de registro con dominios bloqueados devuelven la respuesta
+  documentada `400 email_domain_blocked`.
+**Errores**
+- El registro en modo de ataque sin una prueba de trabajo válida devuelve
+  `400 pow_required`.
 ### v2.228
 **Agregado**
 - `GET /v1/me/txn-reviews` acepta `?kind=` (payout, payin,

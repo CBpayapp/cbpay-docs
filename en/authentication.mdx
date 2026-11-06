@@ -43,6 +43,86 @@ A code with the wrong shape returns `400 invalid_code`; an invalid or expired co
 returns `401 invalid_code` uniformly. If the verification service cannot be checked,
 the API returns `502 otp_check_failed`. A successful confirmation returns the pending-enrollment shape described above; use its token with the enrollment wizard.
 
+## Adaptive proof of work for registration
+
+CBPay uses an optional Hashcash-style proof of work to slow automated registration
+bursts without adding friction to normal traffic. It is required only while the
+public registration velocity is in attack mode. The same gate applies independently
+to registration and email confirmation, so request a challenge with the matching
+`purpose` and the exact lowercase email that you will submit.
+
+The challenge is short-lived (600 seconds), has difficulty `20`, and is bound to
+the email and purpose. Solve it in your client, preferably in a background worker
+while the person or company form is open:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"register","email":"ana@example.com"}'
+```
+
+```json
+{
+  "challenge": "<challenge>",
+  "difficulty": 20,
+  "algorithm": "sha256-leading-zero-bits-v1",
+  "expires_in": 600,
+  "input": "sha256(nonce_bytes || lowercase(email) || be64(suffix)); find suffix with difficulty leading zero bits",
+  "nonce_bytes": "first 16 bytes of the base64url payload (part before the dot)"
+}
+```
+
+Find a non-negative `suffix` whose SHA-256 digest has at least `difficulty`
+leading zero bits, using the first 16 bytes of the challenge payload, the
+lowercase email and the suffix encoded as an unsigned big-endian 64-bit integer.
+Submit the result in the registration request:
+
+```json
+{
+  "org": "cbpay",
+  "type": "person",
+  "email": "ana@example.com",
+  "password": "a-secure-password",
+  "display_name": "Ana Perez",
+  "country": "CL",
+  "pow": {"challenge": "<challenge>", "suffix": 1847293}
+}
+```
+
+For a company account, use the same flow with `"type": "company"` and the
+company's registration fields. After receiving the verification code, request a
+new challenge with `"purpose":"confirm"` and submit it with confirmation:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"confirm","email":"ana@example.com"}'
+
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@example.com","code":"123456","pow":{"challenge":"<challenge>","suffix":1847293}}'
+```
+
+In normal conditions, registration and confirmation remain compatible with clients
+that omit `pow`. During attack mode, either endpoint returns `400 pow_required`
+until the matching challenge is solved. See the central
+[authentication errors](/en/errors#authentication-and-registration-errors) page
+for the required action. The challenge is stateless and expires after 10 minutes;
+request a fresh one when it expires rather than retrying a stale solution.
+
+<AccordionGroup>
+<Accordion title="Do existing clients need a release?">
+Not during normal traffic: omitting `pow` remains accepted. If attack mode is
+active, clients must implement the challenge flow and retry the same operation
+with `pow`; the server does not accept a challenge for another email or purpose.
+</Accordion>
+<Accordion title="How long does solving take?">
+Difficulty 20 is calibrated for a short client-side computation, commonly a few
+seconds depending on the device. Run it off the UI thread and request a new
+challenge if the 10-minute expiry is reached.
+</Accordion>
+</AccordionGroup>
+
 
 ## Mandatory 2FA enrollment after registration
 

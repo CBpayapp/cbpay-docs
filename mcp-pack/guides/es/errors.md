@@ -631,6 +631,7 @@ flujo normal de validación y despacho.
 | 400 | `invalid_code` | El código de registro o reset no tiene 4–10 dígitos. Envíalo con la forma esperada. |
 | 401 | `invalid_code` | La identidad o el código de confirmación/reset es inválido o vencido. Usa el último código; la respuesta es deliberadamente uniforme. |
 | 401 | `invalid_credentials` | Falló el login, la cuenta está pendiente de verificación o quedó bloqueada temporalmente después de 8 fallos en 15 minutos. Espera o confirma el registro. |
+| 400 | `pow_required` | Se requiere prueba de trabajo en modo de ataque. Pide un desafío con `POST /v1/auth/pow-challenge`, resuélvelo y reintenta con el campo `pow`. |
 | 502 | `otp_check_failed` | No se pudo consultar el servicio de verificación. Mantén el mismo flujo y reintenta después; no crees otra cuenta ni otra solicitud. |
 
 `POST /v1/auth/password/forgot` siempre responde `200` para evitar enumeración. Silencia envíos reales después de 5 por cuenta por hora; `POST /v1/auth/password/reset` permite 8 intentos de código por cuenta cada 15 minutos.

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-06 18:26 UTC",
-    "_content_sha256": "a9e737c569700c4e9ac103aef05e23f2e90e2cb9b6575d2120c1a294a09a8706"
+    "_generated_at": "2026-11-06 22:40 UTC",
+    "_content_sha256": "684b6d23ccfb042a25f651fa16e3fc014f3683cbb25315d2dc312044f4fad031"
   },
   "auth": {
     "type": "bearer",
@@ -9892,6 +9892,71 @@
       "name": "Authentication",
       "item": [
         {
+          "name": "Create a proof-of-work challenge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/pow-challenge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "pow-challenge"
+              ]
+            },
+            "description": "Creates a short-lived proof-of-work challenge for public registration or registration confirmation. The challenge is bound to the purpose and email supplied in the request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purpose\": \"register\",\n  \"email\": \"ana@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Proof-of-work challenge created.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/auth/pow-challenge",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "auth",
+                    "pow-challenge"
+                  ]
+                }
+              },
+              "status": "Proof-of-work challenge created.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"challenge\": \"eyJjaGFsbGVuZ2UiOiJleGFtcGxlIn0.sig\",\n  \"difficulty\": 20,\n  \"algorithm\": \"sha256-leading-zero-bits-v1\",\n  \"expires_in\": 600,\n  \"input\": \"sha256(nonce_bytes || lowercase(email) || be64(suffix)); find suffix with difficulty leading zero bits\",\n  \"nonce_bytes\": \"first 16 bytes of the base64url payload (part before the dot)\"\n}"
+            }
+          ]
+        },
+        {
           "name": "Start account registration",
           "request": {
             "method": "POST",
@@ -17922,6 +17987,54 @@
                 }
               ],
               "body": "{\n  \"wallet_id\": \"b7e3a940-6f1d-4c2b-9a8e-5d4c3b2a1f0e\",\n  \"chain\": \"tron\",\n  \"asset\": \"USDT\",\n  \"address\": \"TQmZ1kfWzcmRDYkqLnybXnbWzPMYNvbYqT\",\n  \"label\": \"Main treasury\",\n  \"type\": \"deposit\",\n  \"receive_only\": true,\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"creation_fee\": \"1.000000\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List enabled crypto networks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/crypto/networks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "crypto",
+                "networks"
+              ]
+            },
+            "description": "Returns every on-chain network and pair with its effective enabled state (organization controls resolved). Disabled pairs answer 409 crypto_disabled on withdrawals and wallet creation."
+          },
+          "response": [
+            {
+              "name": "200 The org's crypto networks with effective states.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/crypto/networks",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "crypto",
+                    "networks"
+                  ]
+                }
+              },
+              "status": "The org's crypto networks with effective states.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"chains\": [\n    {\n      \"chain\": \"polygon\",\n      \"enabled\": true,\n      \"pairs\": [\n        {\n          \"asset\": \"usdt\",\n          \"enabled\": true\n        },\n        {\n          \"asset\": \"usdc\",\n          \"enabled\": true\n        },\n        {\n          \"asset\": \"usdce\",\n          \"enabled\": false\n        }\n      ]\n    }\n  ]\n}"
             }
           ]
         }

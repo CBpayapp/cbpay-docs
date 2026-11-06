@@ -1988,6 +1988,53 @@ paths:
           description: company_account_required 或 account_blocked。
         '413':
           description: logo_too_large。
+  /v1/auth/pow-challenge:
+    post:
+      tags: [身份认证]
+      security: []
+      operationId: createPoWChallenge
+      summary: 创建工作量证明挑战
+      description: 为公开注册或注册确认创建短期工作量证明挑战。挑战会绑定到请求中提供的用途和邮箱。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purpose, email]
+              properties:
+                purpose: {type: string, enum: [register, confirm]}
+                email: {type: string, format: email}
+            example: {purpose: register, email: ana@example.com}
+      responses:
+        '200':
+          description: 工作量证明挑战已创建。
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [challenge, difficulty, algorithm, expires_in, input, nonce_bytes]
+                properties:
+                  challenge: {type: string}
+                  difficulty: {type: integer}
+                  algorithm: {type: string}
+                  expires_in: {type: integer}
+                  input: {type: string}
+                  nonce_bytes: {type: string}
+              example:
+                challenge: eyJjaGFsbGVuZ2UiOiJleGFtcGxlIn0.sig
+                difficulty: 20
+                algorithm: sha256-leading-zero-bits-v1
+                expires_in: 600
+                input: sha256(nonce_bytes || lowercase(email) || be64(suffix)); find suffix with difficulty leading zero bits
+                nonce_bytes: first 16 bytes of the base64url payload (part before the dot)
+        '400':
+          description: 当用途或邮箱无效时返回 invalid_request。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: {error: invalid_request, message: purpose must be register or confirm and email must be valid}
   /v1/auth/register:
     post:
       tags:
@@ -2014,6 +2061,11 @@ paths:
                 country: {type: string}
                 locale: {type: string, enum: [en, es, zh]}
                 profile: {type: object}
+                pow:
+                  type: object
+                  properties:
+                    challenge: {type: string}
+                    suffix: {type: integer, format: int64}
             example:
               org: cbpay
               type: person
@@ -2045,7 +2097,7 @@ paths:
                 status: pending_verification
                 note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm
         '400':
-          description: invalid_type...invalid_email...invalid_display_name ... weak_password...
+          description: invalid_type...invalid_email...invalid_display_name ... weak_password...或 pow_required...
         '403':
           description: org_suspended...
         '502':
@@ -2068,6 +2120,11 @@ paths:
                 org: {type: string}
                 email: {type: string, format: email}
                 code: {type: string}
+                pow:
+                  type: object
+                  properties:
+                    challenge: {type: string}
+                    suffix: {type: integer, format: int64}
             example: {org: cbpay, email: ana@example.com, code: '123456'}
       responses:
         '201':
@@ -2075,7 +2132,7 @@ paths:
           content:
             application/json:
               example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, sms], passkeys_available: false, next: [Choose an authenticator app or SMS], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
-        '400': {description: ........................... invalid_code...}
+        '400': {description: ........................... invalid_code... 或攻击模式下的 pow_required...}
         '401': {description: ................................................ invalid_code...}
         '502': {description: otp_check_failed...}
   /v1/auth/register/2fa/totp/begin:
@@ -13226,6 +13283,68 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/AccountRequired'
+  /v1/crypto/networks:
+    get:
+      tags:
+      - 加密货币
+      operationId: listCryptoNetworks
+      summary: 列出可用的加密网络
+      description: 返回每条链上网络及其交易对的有效启用状态（已解析组织控制）。已禁用的交易对在提现和创建钱包时返回 409 crypto_disabled。
+      responses:
+        '200':
+          description: 该组织的加密网络及其有效状态。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chains:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - chain
+                      - enabled
+                      - pairs
+                      properties:
+                        chain:
+                          type: string
+                        enabled:
+                          type: boolean
+                        pairs:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - asset
+                            - enabled
+                            properties:
+                              asset:
+                                type: string
+                              enabled:
+                                type: boolean
+              example:
+                chains:
+                - chain: polygon
+                  enabled: true
+                  pairs:
+                  - asset: usdt
+                    enabled: true
+                  - asset: usdc
+                    enabled: true
+                  - asset: usdce
+                    enabled: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '503':
+          description: crypto_controls_unavailable（可重试）。
+          content:
+            application/json:
+              example:
+                error: crypto_controls_unavailable
+                message: crypto controls are temporarily unavailable
   /v1/segregated-wallets:
     post:
       tags:

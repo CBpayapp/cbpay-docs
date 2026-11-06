@@ -44,7 +44,10 @@ All errors share the same shape:
 | 403 | `human_session_required` | The operation handles a private key (segregated wallet import/export) and requires a signed-in user session with 2FA — API keys are not allowed |
 | 403 | `member_disabled` | The mirror user is disabled in the test environment; contact support |
 | 403 | `passkey_rejected` | The passkey could not be verified; retry or sign in with another method |
-| 403 | `owner_required` | Only the account owner can change the 2FA preferences |
+| 403 | `owner_required` | Only the account owner can perform this action (2FA preferences, members, API keys, webhooks, account identity) |
+| 403 | `read_only_role` | The viewer role is read-only — sign in as owner or operator to mutate |
+| 404 | `member_not_found` | This credential has no member profile (API keys have no member) |
+| 409 | `self_action_forbidden` | You cannot change your own login status or reset your own password here — ask another owner (change your own password with `POST /v1/me/password`) |
 
 
 ### Registration 2FA enrollment
@@ -197,6 +200,7 @@ part of the replay identity. Read the live status with
 | 422 | `verification_kind_mismatch` | The verification kind does not match the product (KYC ⇒ person/INDIVIDUAL, KYB ⇒ company/COMPANY) |
 | 422 | `verification_invalid` | You referenced an own-onboarding verification where a third-party one is required |
 | 403 | `company_account_required` | Third-party verification (KYC/KYB links/submissions) is for company accounts only |
+| 400 | `invalid_child` | The child invite id is missing — pass the `child_link_id` from `GET /v1/me/verification/children` |
 | 409 | `already_verified` | Onboarding link requested with an already-verified account |
 | 409 | `superseded` | The verification ID is a frozen migrated tombstone; its data is served from the live case | Do not decide, upload evidence, create liveness links, presign/confirm documents, or patch banking intent on the tombstone. Read the response's `migrated_to` ID and operate that live case instead |
 | 409 | `identity_locked` | With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support |
@@ -284,6 +288,9 @@ part of the replay identity. Read the live status with
 | 422 | `settlement_pending` | The payin's balance is still scheduled for [settlement](/en/concepts/fees#card-payin-settlement-delay) and cannot be [refunded](/en/guides/refunds) until it is released (at `settle_at` or by an org-admin release) |
 | 400 | `invalid_amount` | The [refund](/en/guides/refunds) `amount` must be a positive decimal in the payin currency |
 | 503 | `refund_event_pending` | The refund result is stored, but its final event is still being persisted. Retry with the **same** idempotency key; do not send a new refund |
+| 422 | `preauth_not_supported` | Captures and voids only apply to card-acquired payins (other rails have no holds to close) |
+| 422 | `payin_not_capturable` | The payin is not a pending manual pre-authorization (automatic capture, already settled, or no processor charge reference) |
+| 202 | `action_pending` | The capture or void is being reconciled with the processor; retry with the **same** `idempotency_key` (a new key opens a conflicting action) |
 | 503 | `payin_event_pending` | The payin is credited, but its final event is still being reconciled. Retry with the **same** idempotency key; do not create a new payin |
 
 ### Compliance (403 / 503)
@@ -417,6 +424,10 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | HTTP | Code | Meaning and fix |
 |---|---|---|
 | 409 | `corridor_disabled` | The selected corridor is administratively disabled. Use another enabled method or contact the organization operator. |
+| 409 | `banking_corridor_disabled` | The selected banking country or rail is administratively disabled. Use another enabled rail or contact the organization operator. |
+| 409 | `crypto_disabled` | The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator. |
+| 400 | `invalid_crypto_control` | The crypto network toggle is invalid (unknown chain/asset, scope, or missing reason). Fix the request. |
+| 409 | `rail_not_registered` | The selected rail is not configured in this environment. Pick a registered rail (see the admin corridors screen). |
 
 ## Banking creation recovery errors
 
@@ -642,6 +653,7 @@ a recent rejection continue through their normal validation and dispatch path.
 | 400 | `invalid_code` | The registration or reset code is not 4–10 digits. Send the code in the expected shape. |
 | 401 | `invalid_code` | Registration confirmation or password-reset identity/code is invalid or expired. Use the latest code; the response is intentionally uniform. |
 | 401 | `invalid_credentials` | Login failed, the account is pending verification, or the account is temporarily blocked after 8 failures in 15 minutes. Wait for the window or confirm registration. |
+| 400 | `pow_required` | Proof of work is required in attack mode. Request a challenge with `POST /v1/auth/pow-challenge`, solve it, and retry with the `pow` field. |
 | 502 | `otp_check_failed` | The verification service could not be checked. Keep the same flow and retry later; do not create a second account or reset request. |
 
 `POST /v1/auth/password/forgot` always returns `200` to prevent enumeration. It silently stops real sends after 5 per account per hour; `POST /v1/auth/password/reset` allows 8 code attempts per account per 15 minutes.
@@ -765,3 +777,11 @@ These codes are used by organization payroll and recurring-expense series operat
 | 500 | `receipt_render_failed` | The pay-slip PDF could not be rendered | Retry the read and provide the request id if it persists. |
 | 503 | `valuation_unavailable` | The amount could not be valued in USD | Retry later; approval remains fail-closed. |
 | 500 | `store_error` | The platform could not read or persist the record | Retry after confirming the resource state. |
+
+
+## Expense platform errors
+
+| 400 | `duplicate_category` | The organization already has the custom expense category key | Choose another `c_` key |
+| 400 | `invalid_batch` | A bulk expense operation has fewer than 1 or more than 100 IDs | Send 1–100 expense UUIDs |
+| 400 | `invalid_horizon` | The forecast horizon is not 3, 6 or 12 months | Use `horizon=3`, `6` or `12` |
+| 400 | `invalid_icon` | A custom expense icon exceeds the allowed format or length | Use up to 40 letters, digits, `_` or `-` |

@@ -47,6 +47,87 @@ Un código con forma inválida responde `400 invalid_code`; un código incorrect
 vencido responde uniformemente `401 invalid_code`. Si no se puede consultar el
 servicio de verificación, responde `502 otp_check_failed`. La confirmación exitosa devuelve la forma pendiente descrita arriba; usa su token con el wizard de enrolamiento.
 
+## Prueba de trabajo adaptativa para el registro
+
+CBPay usa una prueba de trabajo tipo Hashcash opcional para frenar oleadas
+automatizadas de registros sin agregar fricción al tráfico normal. Solo se exige
+cuando la velocidad pública de registro entra en modo de ataque. El mismo gate se
+aplica por separado al registro y a la confirmación del email: pide el desafío
+con el `purpose` correspondiente y usa exactamente el email en minúsculas que
+enviarás.
+
+El desafío dura 600 segundos, tiene dificultad `20` y queda ligado al email y al
+propósito. Resuélvelo en tu cliente, idealmente en un worker en segundo plano
+mientras la persona o empresa completa el formulario:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"register","email":"ana@ejemplo.com"}'
+```
+
+```json
+{
+  "challenge": "<challenge>",
+  "difficulty": 20,
+  "algorithm": "sha256-leading-zero-bits-v1",
+  "expires_in": 600,
+  "input": "sha256(nonce_bytes || lowercase(email) || be64(suffix)); find suffix with difficulty leading zero bits",
+  "nonce_bytes": "first 16 bytes of the base64url payload (part before the dot)"
+}
+```
+
+Encuentra un `suffix` no negativo cuyo digest SHA-256 tenga al menos
+`difficulty` bits iniciales en cero, usando los primeros 16 bytes del payload del
+desafío, el email en minúsculas y el sufijo codificado como entero unsigned
+big-endian de 64 bits. Envía el resultado en el registro:
+
+```json
+{
+  "org": "cbpay",
+  "type": "person",
+  "email": "ana@ejemplo.com",
+  "password": "una-clave-segura",
+  "display_name": "Ana Pérez",
+  "country": "CL",
+  "pow": {"challenge": "<challenge>", "suffix": 1847293}
+}
+```
+
+Para una cuenta empresa usa el mismo flujo con `"type": "company"` y sus campos
+de registro. Después de recibir el código de verificación, pide un desafío nuevo
+con `"purpose":"confirm"` y envíalo al confirmar:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"confirm","email":"ana@ejemplo.com"}'
+
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@ejemplo.com","code":"123456","pow":{"challenge":"<challenge>","suffix":1847293}}'
+```
+
+En condiciones normales, registro y confirmación siguen siendo compatibles con
+clientes que omiten `pow`. Durante el modo de ataque, cada endpoint responde
+`400 pow_required` hasta resolver el desafío correcto. Revisa la página central
+de [errores de autenticación](/es/errors#errores-de-autenticacion-y-registro)
+para la acción requerida. El desafío es stateless y vence en 10 minutos; pide
+uno nuevo cuando expire en vez de reintentar una solución antigua.
+
+<AccordionGroup>
+<Accordion title="¿Los clientes existentes necesitan una nueva versión?">
+No durante el tráfico normal: omitir `pow` sigue siendo válido. Si se activa el
+modo de ataque, los clientes deben implementar el desafío y reintentar la misma
+operación con `pow`; el servidor no acepta un desafío de otro email o propósito.
+</Accordion>
+<Accordion title="¿Cuánto tarda resolverlo?">
+La dificultad 20 está calibrada para un cálculo corto en el cliente, normalmente
+de algunos segundos según el dispositivo. Ejecútalo fuera del hilo de la interfaz
+y pide un desafío nuevo si pasan los 10 minutos.
+</Accordion>
+</AccordionGroup>
+
 ## Límites antiabuso de autenticación
 
 Los fallos de login se cuentan por cuenta normalizada (organización/email): después de
