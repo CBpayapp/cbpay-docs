@@ -1,5 +1,5 @@
 {
-  "count": 414,
+  "count": 418,
   "errors": [
     {
       "category": {
@@ -248,9 +248,51 @@
       "code": "owner_required",
       "http": 403,
       "meaning": {
-        "en": "Only the account owner can change the 2FA preferences",
+        "en": "Only the account owner can perform this action (2FA preferences, members, API keys, webhooks, account identity)",
         "es": "Solo el miembro owner de la cuenta puede ejecutar esa acción",
         "zh": "只有账户的 owner 成员才能执行该操作"
+      }
+    },
+    {
+      "category": {
+        "en": "Authentication and permissions",
+        "es": "Autenticación y permisos",
+        "zh": "身份认证与权限"
+      },
+      "code": "read_only_role",
+      "http": 403,
+      "meaning": {
+        "en": "The viewer role is read-only — sign in as owner or operator to mutate",
+        "es": "El rol viewer es de solo lectura — entra como owner u operator para modificar",
+        "zh": "查看者（viewer）角色为只读 —— 请以 owner 或 operator 身份登录后再操作"
+      }
+    },
+    {
+      "category": {
+        "en": "Authentication and permissions",
+        "es": "Autenticación y permisos",
+        "zh": "身份认证与权限"
+      },
+      "code": "member_not_found",
+      "http": 404,
+      "meaning": {
+        "en": "This credential has no member profile (API keys have no member)",
+        "es": "Esta credencial no tiene ficha de miembro (las API keys no tienen miembro)",
+        "zh": "此凭证没有成员资料（API key 没有成员档案）"
+      }
+    },
+    {
+      "category": {
+        "en": "Authentication and permissions",
+        "es": "Autenticación y permisos",
+        "zh": "身份认证与权限"
+      },
+      "code": "self_action_forbidden",
+      "http": 409,
+      "meaning": {
+        "en": "You cannot change your own login status or reset your own password here — ask another owner (change your own password with `POST /v1/me/password`)",
+        "es": "No puedes cambiar tu propio estado de login ni restablecer tu propia contraseña aquí — pide a otro owner (tu contraseña se cambia con `POST /v1/me/password`)",
+        "zh": "您不能在此更改自己的登录状态或重置自己的密码 —— 请联系另一位 owner（更改自己的密码请使用 `POST /v1/me/password`）"
       }
     },
     {
@@ -1609,6 +1651,20 @@
         "en": "Third-party verification (KYC/KYB links/submissions) is for company accounts only",
         "es": "La verificación de terceros (links/submissions KYC-KYB) es solo para cuentas empresa",
         "zh": "第三方验证（KYC/KYB 链接/提交）仅限企业账户"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "invalid_child",
+      "http": 400,
+      "meaning": {
+        "en": "The child invite id is missing — pass the `child_link_id` from `GET /v1/me/verification/children`",
+        "es": "Falta el id de la invitación hija — pasa el `child_link_id` de `GET /v1/me/verification/children`",
+        "zh": "缺少子邀请 ID — 请传入 `GET /v1/me/verification/children` 返回的 `child_link_id`"
       }
     },
     {

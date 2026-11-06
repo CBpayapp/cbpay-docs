@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.226"
+  version: "2.228"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -3139,6 +3139,39 @@ paths:
           $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/member:
+    get:
+      tags:
+      - Account
+      operationId: getMyMember
+      summary: Get my member profile
+      description: The calling member's own profile (login email, role, status) — not the company account. Human sessions only.
+      responses:
+        '200':
+          description: Own member profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+              example:
+                id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                email: ops@example.com
+                role: operator
+                status: active
+                created_at: '2026-07-07T12:00:00Z'
+        '404':
+          description: API keys have no member profile (`member_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: member_not_found
+                message: API keys have no member profile
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/members:
     get:
       tags:
@@ -3220,6 +3253,269 @@ paths:
               example:
                 error: company_only
                 message: members are only available for company accounts
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/{memberID}/role:
+    put:
+      tags:
+      - Account
+      operationId: updateMemberRole
+      summary: Change a member role
+      description: Changes a member role (owner/operator/viewer). Owner-only, company-only, OTP `member_add`. The last owner cannot be demoted. Applies instantly.
+      parameters:
+      - name: memberID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - role
+              properties:
+                role:
+                  type: string
+                  enum:
+                  - owner
+                  - operator
+                  - viewer
+            example:
+              role: operator
+      responses:
+        '200':
+          description: Role updated (or unchanged).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                member_id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                role: operator
+                changed: true
+        '400':
+          description: Invalid role (`invalid_role`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_role
+                message: role must be owner, operator or viewer
+        '404':
+          description: Member not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '409':
+          description: The account must keep at least one owner (`last_owner_required`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: last_owner_required
+                message: the account must keep at least one owner
+        '403':
+          description: Owner-only (`owner_required`), company-only (`company_only`) or OTP required (`otp_required`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: owner_required
+                message: this action requires the owner role
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/{memberID}/status:
+    put:
+      tags:
+      - Account
+      operationId: updateMemberStatus
+      summary: Block or unblock a member login
+      description: Disabling revokes all member sessions immediately. Owner-only, company-only, OTP `member_add`. You cannot change your own status.
+      parameters:
+      - name: memberID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - active
+                  - disabled
+            example:
+              status: disabled
+      responses:
+        '200':
+          description: Status updated (or unchanged).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+                  sessions_revoked:
+                    type: integer
+              example:
+                member_id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                status: disabled
+                changed: true
+                sessions_revoked: 2
+        '400':
+          description: Invalid status (`invalid_status`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_status
+                message: status must be active or disabled
+        '404':
+          description: Member not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '409':
+          description: You cannot change your own login status (`self_action_forbidden`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: self_action_forbidden
+                message: you cannot change your own login status; ask another owner
+        '403':
+          description: Owner-only (`owner_required`), company-only (`company_only`) or OTP required (`otp_required`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: owner_required
+                message: this action requires the owner role
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/{memberID}/reset-password:
+    post:
+      tags:
+      - Account
+      operationId: resetMemberPassword
+      summary: Reset a member password
+      description: Sets a new password and revokes all member sessions. Owner-only, company-only, OTP `member_add`. You cannot reset your own password here (use `POST /v1/me/password`).
+      parameters:
+      - name: memberID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - password
+              properties:
+                password:
+                  type: string
+                  minLength: 8
+            example:
+              password: another-secure-pass
+      responses:
+        '200':
+          description: Password reset.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  sessions_revoked:
+                    type: integer
+              example:
+                member_id: 5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d
+                status: password_reset
+                sessions_revoked: 1
+        '400':
+          description: Weak password (`weak_password`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: weak_password
+                message: password must be at least 8 characters
+        '404':
+          description: Member not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '409':
+          description: You cannot reset your own password here (`self_action_forbidden`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: self_action_forbidden
+                message: to change your own password use POST /v1/me/password
+        '403':
+          description: Owner-only (`owner_required`), company-only (`company_only`) or OTP required (`otp_required`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: owner_required
+                message: this action requires the owner role
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/api-keys:
@@ -4257,7 +4553,7 @@ paths:
                   description: Local currency (e.g. CLP, PEN, MXN).
                 method:
                   type: string
-                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer` or `sepa`).
+                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer`, `breb` or `sepa`).
                 amount:
                   type: string
                   description: Local currency amount as a positive decimal string.
@@ -4285,6 +4581,13 @@ paths:
                     first_surname:
                       type: string
                       description: Individual first surname; used with given_name when provided.
+                    breb_key:
+                      type: string
+                      description: Colombia Bre-B key for `CO`/`COP`/`breb` (phone, `@alias`, email or user ID).
+                    breb_key_type:
+                      type: string
+                      enum: [phone, alias, email, userid]
+                      description: Optional Bre-B key hint; the server validates the key shape.
                   additionalProperties:
                     type: string
                   description: 'Destination account details. Required keys depend on the
@@ -4293,7 +4596,9 @@ paths:
 
                     `GET /v1/payouts/banks`. Examples: RUT + bank in Chile, CLABE in
 
-                    Mexico, CCI in Peru. Brazil PIX: `pix_key` + `pix_key_type` (cpf,
+                    Mexico, CCI in Peru. Colombia Bre-B: `breb_key` plus optional
+                    `breb_key_type`, `tax_id`/`document_value`, `document_type`,
+                    `phone` and `address`. Brazil PIX: `pix_key` + `pix_key_type` (cpf,
 
                     cnpj, phone, email, evp), or a bank account without key using
 
@@ -4565,6 +4870,22 @@ paths:
                     pix_key_type: cpf
                     pix_key: '12345678909'
                   idempotency_key: br-pix-3321
+              co_breb:
+                summary: Colombia — Bre-B P2P (COP)
+                value:
+                  country: CO
+                  currency: COP
+                  method: breb
+                  amount: '1000'
+                  beneficiary:
+                    name: Ana Torres
+                    tax_id: '123456789'
+                    document_type: CC
+                    phone: '+573001234567'
+                    address: Calle 10 #20-30
+                    breb_key: ana@example.com
+                    breb_key_type: email
+                  idempotency_key: co-breb-001
               ec_bank_transfer:
                 summary: Ecuador — bank transfer (USD, remittance with sender data)
                 value:
@@ -9076,6 +9397,91 @@ paths:
                   updated_at: '2026-07-11T16:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/verification/children:
+    get:
+      tags:
+      - KYC / KYB
+      operationId: listMyVerificationChildren
+      summary: List my KYB invited directors and beneficial owners
+      description: >-
+        Invited UBOs and directors of the calling company account and their
+        verification state (submission status, declaration signature). Works
+        while the company KYB is still in review. The invite link URL is never
+        returned (it only travels by email to the invitee).
+      responses:
+        '200':
+          description: Invited children of my KYB case.
+          content:
+            application/json:
+              example:
+                children:
+                - child_link_id: b7c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e
+                  flow: ubo
+                  email: owner@example.com
+                  name: Jane Owner
+                  link_status: opened
+                  submission_id: f0e1d2c3-e4f5-4a6b-8c9d-0e1f2a3b4c5d
+                  submission_status: changes_requested
+                  reused: false
+                  expires_at: '2027-01-15T12:00:00Z'
+                  created_at: '2026-11-01T12:00:00Z'
+                  declaration_signed: false
+                  needs_signature: true
+                  decision_note: Please sign the beneficial owner declaration.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Person accounts have no invited children.
+          content:
+            application/json:
+              example:
+                error:
+                  code: company_account_required
+                  message: only company accounts have invited directors or beneficial owners
+        '404':
+          description: No KYB case for this account.
+  /v1/me/verification/children/{childID}/resend:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: resendMyVerificationChild
+      summary: Re-send a child invite link by email
+      description: >-
+        Re-sends the SAME invite link email to the UBO or director (no new
+        link, no duplicate case). Throttled to once per child per day (429);
+        decided cases answer 409.
+      parameters:
+      - name: childID
+        in: path
+        required: true
+        description: Child invite id (child_link_id from the list).
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Resend attempted; check sent for the email outcome.
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@example.com
+                expires_at: '2027-01-15T12:00:00Z'
+        '400':
+          description: Missing child invite id.
+          content:
+            application/json:
+              example:
+                error:
+                  code: invalid_child
+                  message: child invite id is required
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Invite not found or belongs to another case.
+        '409':
+          description: Decided case or closed invite (already_decided, invite_closed).
+        '429':
+          description: This invite was already resent in the last 24 hours.
   /v1/screenings/addresses:
     post:
       tags:
@@ -14753,8 +15159,9 @@ paths:
                   type: string
                   description: Raw content of the scanned QR (in Brazil, also the PIX "copia e cola" code).
             example:
+              country: BR
               qr_payload: <QR content>
-              currency: BOB
+              currency: BRL
       responses:
         '200':
           description: Recipient data for user confirmation.
@@ -14779,15 +15186,24 @@ paths:
                     type: string
                   status:
                     type: string
+                  key_type:
+                    type: string
+                    enum: [tax_id, email, phone, evp]
+                    description: Brazil PIX key classification returned by the scan.
+                  requires_document:
+                    type: boolean
+                    description: Whether Brazil PIX confirm must include both `document_type` and `document_id`.
               example:
                 scan_id: 5c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
                 provider_reference: QR-REF-889923
-                beneficiary_name: Juan Quispe
+                beneficiary_name: LOJA DA MARIA
                 destination_account: '****4521'
-                amount: '700.00'
-                currency: BOB
+                amount: '75.00'
+                currency: BRL
                 glosa: ''
                 status: scanned
+                key_type: tax_id
+                requires_document: false
         '400':
           description: qr_payload missing (invalid_request) or unreadable/unsupported QR (invalid_qr_payload
             — corrupt BR Code, bad checksum, or a dynamic PIX QR; the message explains the exact reason).
@@ -14857,6 +15273,13 @@ paths:
                 amount:
                   type: string
                   description: Local amount as a positive decimal string.
+                document_type:
+                  type: string
+                  enum: [CPF, CNPJ]
+                  description: Required with `document_id` for Brazil PIX keys other than `tax_id`; optional for `tax_id`.
+                document_id:
+                  type: string
+                  description: Beneficiary CPF/CNPJ. Send together with `document_type` for non-tax-ID PIX keys.
                 description:
                   type: string
                 settlement_asset:
@@ -14964,8 +15387,16 @@ paths:
               example:
                 error: account_blocked
                 message: account is not active
+        '409':
+          description: The same idempotency key was reused with different QR confirmation document fields (`idempotency_conflict`).
+          content:
+            application/json:
+              schema: *id010
+              example:
+                error: idempotency_conflict
+                message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: Rejected by the processor; the debit was refunded (payout with status failed).
+          description: Rejected by the processor (`core_rejected`), including a non-tax-ID Brazil PIX QR confirmed without both document fields; the debit was refunded when a payout was created.
           content:
             application/json:
               schema:

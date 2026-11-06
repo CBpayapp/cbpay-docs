@@ -5,13 +5,21 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.226 · 10 versions - November 5, 2026
-### v2.226
+## v2.228 · 1 version - November 6, 2026
+### v2.228
+**Added**
+
+- Company accounts can list invited UBOs and directors while KYB is in
+  progress, including submission and declaration state.
+- Added a tenant-scoped action to resend the same child invite link by email
+  without creating a duplicate link or verification.
+## v2.227 · 11 versions - November 5, 2026
+### v2.227
 **Fixed**
 - Verification forms now reject HTML/script content server-side with a
   clear error, so hostile markup can no longer be stored in applications.
   No API contract changes.
-### v2.225
+### v2.226
 **Added**
 - Registration enrollment by phone now accepts WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` takes an optional `channel` (`sms` by
@@ -22,40 +30,49 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - The `invalid_phone` message in transfers and contacts now explains the
   required E.164 format with a concrete example instead of the generic
   provider error.
-### v2.224
+### v2.225
 **Fixed**
 - KYB links with legacy alpha-3 country slugs (such as `/on/usa/...`) no
   longer return 404: they redirect to the canonical slug preserving the
   invite, and newly issued links always use canonical slugs. No API changes.
-### v2.223
+### v2.224
 **Added**
 - Card payins can open a pre-authorization (hold) with `capture_method: "manual"`: the payer authorizes on the hosted page and the payin stays `pending` until you capture (full amount via `POST /v1/payins/{payinID}/captures`) or void (`POST /v1/payins/{payinID}/voids`, releases without moving money), with paginated history on both `GET` routes. Un-captured holds release automatically (7 days debit, 28 credit) with notification.
 **Changed**
 - Capture/void replies are idempotent by key (`200` + `idempotency_hit` on replay, `409` on closed holds, `202` while reconciling — same-key retry only, never a new key). Manual requires an interactive full payment (no stored cards, no installments) and needs no OTP.
-### v2.222
+### v2.223
 **Added**
 - Chilean card payins accept `currency: "UF"`. The card rail charges the UF amount natively (up to two decimals, e.g. `"1.50"`) and converts it internally; webhooks and receipts preserve `currency: "UF"`. UF combines with issuer installments (`months` 2–48) and is also accepted for announced cash payins (`CL/UF`). The `uf` rate key (OXR `CLF` source) is available for conversion context.
 **Changed**
 - Decimal violations now surface as 422 `core_rejected` ("amount has too many decimals for this currency"): CLP stays integer-only and UF allows at most two decimals. UF is payin-only — it is rejected as checkout `settlement_asset` and has no balance, swaps, or payouts.
-### v2.221
+### v2.222
 **Added**
 - Chilean CLP card payins can request issuer installments with integer `months` from `2` to `48` during `complete`. The hosted checkout shows issuer-reported, curated terms, and an approved payment returns `months` in the receipt.
 **Changed**
 - `months` omitted, `0`, or `1` means a single payment. Values below `0` or above `48` return `400 invalid_payload` before the payment claim. Stored-card MIT charges and Commerce Installments Beta are excluded.
-### v2.220
+### v2.221
 **Changed**
 - Card payins accept optional payer `document_type` and `document_number` in `bill_to`; Chile validates modulo-11 RUTs and returns `400 invalid_payload` for invalid values. Approved completes report `card_saved` when saving was offered and consented, so integrators can tell the payer whether the card was stored.
-### v2.219
+### v2.220
 **Fixed**
 - Account and contact names and labels (`display_name`, contact `alias`,
   destination and deposit `label`, API key `label`) now reject HTML/script
   content server-side with `400 invalid_characters`, so hostile markup can
   no longer be stored. Send plain text.
-### v2.218
+### v2.219
 **Added**
 - `GET /v1/cards/summary` exposes `has_holder`: whether the account already
   has a cardholder created, so the request wizard only asks issuer data
   when needed. Read-only, account-scoped; the internal id is never exposed.
+### v2.218
+**Added**
+- Colombia Bre-B payouts in whole COP pesos, with supported phone, alias,
+  email and user-ID keys, required address and E.164 phone, and P2P-only
+  validation.
+- Brazil PIX QR confirmation now reports the scanned key type and tells
+  integrators when a CPF/CNPJ document is required for email, phone or EVP
+  keys. Brazil's portal payout card exposes TED and PIX, including the PIX
+  key/QR toggle.
 ### v2.217
 **Added**
 - `GET /v1/banking/operations` accepts `?scope=eur`: with no USD banking

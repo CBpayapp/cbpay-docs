@@ -169,6 +169,34 @@ No crees otro payout ni uses una clave nueva. Repite la lectura hasta obtener
 fue reembolsado. Si el cliente repite el confirm con la misma clave, recibe
 el payout original con `idempotency_hit: true`.
 
+## Llaves PIX de Brasil que requieren documento
+
+Para un QR PIX de Brasil, `POST /v1/payouts/qr/scan` devuelve `key_type` con
+uno de estos valores: `tax_id`, `email`, `phone` o `evp`, además de
+`requires_document`. Una llave `tax_id` es el propio CPF/CNPJ y puede
+confirmarse sin otro documento. Para una llave email, teléfono o EVP,
+confirma enviando `document_type` (`CPF` o `CNPJ`) y `document_id`:
+
+```json
+{
+  "country": "BR",
+  "currency": "BRL",
+  "provider_reference": "<provider_reference del scan>",
+  "amount": "75.00",
+  "document_type": "CPF",
+  "document_id": "52998224725",
+  "idempotency_key": "qr-br-doc-001"
+}
+```
+
+Los dos campos de documento son opcionales para `tax_id` y deben enviarse
+juntos para cualquier otra llave. Si confirmas un QR no-`tax_id` sin ellos,
+la API devuelve `422 core_rejected` con instrucciones para repetir el confirm
+con el documento del beneficiario. Un documento distinto de la llave
+`tax_id` se rechaza. Reutilizar la misma llave de idempotencia con otro
+documento devuelve `409 idempotency_conflict`; conserva la llave y el payload
+originales al reconciliar una respuesta ambigua.
+
 ## Errores
 
 | HTTP | Código | Qué hacer |
