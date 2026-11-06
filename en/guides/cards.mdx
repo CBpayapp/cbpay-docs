@@ -142,6 +142,135 @@ the original card and never double-charges).
 New physical issuance is temporarily unavailable. A request with `physical: true` returns `400 physical_temporarily_unavailable`; this cutoff is checked after idempotency replay, so a replay of an existing physical request still returns its original card. Physical cards that were already issued continue operating.
 </Warning>
 
+### Wizard decision tree
+
+The portal should call the summary before opening the issuance form. It uses
+`has_holder` to choose the shortest safe path; this is a boolean only and never
+exposes the internal holder identifier:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "total": 0,
+  "by_status": {},
+  "new_30d": 0,
+  "spend_24h_usdt": "0.000000",
+  "spend_30d_usdt": "0.000000",
+  "declined_24h": 0,
+  "has_holder": false
+}
+```
+
+1. **Person account:** if `has_holder` is `false`, show the approved KYC
+   data plus issuer fields (`occupation`, `place_of_work`, `salary_usd` and
+   email). If it is `true`, skip holder creation and ask only for card
+   settings. A person account can have one live digital card and one open
+   application; a second request returns `409 card_limit_reached`.
+2. **Company account:** let the user choose **company holder** or
+   **designated person**. The company path uses the account's KYB data. The
+   designated-person path must show a picker containing only approved KYC
+   verifications, then collect issuer fields and an explicit `pep` boolean.
+3. **Card settings:** show digital-only issuance (`physical: false`), choose
+   the spending asset, and optionally set USD limits. Recommend the account's
+   `settlement_asset`; expose the other enabled assets as advanced choices.
+4. **Submit once:** send the same `idempotency_key` in the body or
+   `Idempotency-Key` header. If the network result is ambiguous, query the
+   same request/status with that key; do not create a new key.
+
+The portal should not ask for an issuer holder ID. It is created or reused
+server-side. For a company designated person, the picker supplies the approved
+`verification_id`; never accept an arbitrary person ID.
+
+### Creation request and responses
+
+This is a complete digital request with limits and an explicit spending asset:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: card-portal-2026-0001" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-portal-2026-0001",
+    "spending_asset": "USDC",
+    "limits": {
+      "per_transaction": "500.00",
+      "daily": "1000.00",
+      "monthly": "5000.00"
+    },
+    "cardholder": {
+      "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "salary_usd": 1800,
+      "email": "ana@example.com",
+      "first_name": "Ana",
+      "last_name": "Rojas"
+    }
+  }'
+```
+
+Successful direct issuance returns `201`:
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "physical": false,
+  "cardholder_kind": "account",
+  "cardholder_name": "Ana Rojas",
+  "status": "active",
+  "spending_asset": "USDC",
+  "limits": {
+    "per_transaction": "500.000000",
+    "daily": "1000.000000",
+    "monthly": "5000.000000"
+  },
+  "creation_fee": "3.000000"
+}
+```
+
+If the organization requires a human application review, the same request
+returns `202` and no card exists yet:
+
+```json
+{
+  "status": "in_review",
+  "kind": "card_application",
+  "review_id": "7a1c2e94-3b5f-4c8a-9d2e-6f0a1b2c3d4e",
+  "message": "application received; it is pending review by our compliance team"
+}
+```
+
+Track that application through the `txn_review_status_changed` webhook or
+`GET /v1/me/txn-reviews`. The issuance fee is charged when the application is
+held and automatically refunded if compliance rejects it. A retry with the
+same idempotency key returns the same application and never charges twice.
+
+Use these stable errors to keep the wizard actionable:
+
+| HTTP | Error | Portal action |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | Keep digital issuance selected; new physical cards are paused. |
+| 400 | `spending_asset_unavailable` / `settlement_asset_disabled` | Refresh enabled assets and choose one that is available. |
+| 409 | `card_limit_reached` | Resolve or cancel the open application; a person account cannot create a second live card. |
+| 422 | `verification_required` / `verification_not_approved` / `verification_kind_mismatch` | Select an approved KYC verification for the designated person. |
+| 422 | `issuer_data_incomplete` | Show the missing keys and collect only those fields. |
+| 422 | `cardholder_name_too_long` | Shorten the printed name to 22 UTF-8 bytes or fewer. |
+| 402 | `insufficient_funds` | Fund the account; do not resubmit with a new idempotency key. |
+
+### Issuance holds and tracking
+
+An application hold is not a completed card. While it is `in_review`, show the
+`review_id`, keep the form read-only, and wait for the webhook or review
+endpoint. Do not create another application to poll progress. Once approved,
+the original idempotency key resolves to the created card; if rejected, the
+issuance fee is refunded and the response includes the final review status.
+This flow is auditable as `card_application`.
+
 <Tabs>
 <Tab title="Person account">
 
@@ -179,8 +308,6 @@ explicitly to the `cardholder` (`first_name`, `email`, `address`,
 **A second issuance request** is not available for a person account once it
 already has one live card or one open application. It returns
 `409 card_limit_reached`:
- (the physical one, for example) asks for no data —
-your holder is already verified:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/cards \
@@ -540,6 +667,15 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
   -H "Authorization: Bearer <token>"
 ```
 
+### Replacing a card
+
+There is no separate blind re-issue operation in the portal API. To replace a
+card, freeze it first if compromise is suspected, then cancel it and submit a
+new digital application with a **new** idempotency key. A company can issue
+another card immediately. A person account must have no live card or open
+application, so cancellation is required before the replacement request.
+Never reuse an old key for a genuinely new card.
+
 ## Webhooks
 
 | Event | When |
@@ -616,6 +752,18 @@ have an [approved KYC verification](/en/guides/kyc) — you pass their
 auto-fill. The card always spends from the balance of the issuing company
 account.
 </Accordion>
+<Accordion title="Why does the wizard ask for my occupation or the company's business activity?">
+These are issuer and AML/CFT fields, not a replacement for your approved
+KYC/KYB. Select a code from the live catalog: `occupation` for a person or
+`kind_of_business` for a company. The issuer uses it to create the cardholder
+and apply its compliance checks.
+</Accordion>
+<Accordion title="What happens if I top up while issuance is in progress?">
+An issuance hold or review does not silently retry and does not create a
+second card. Top up the same account, then wait for the existing application
+to finish or retry with the same idempotency key after a balance error. Never
+submit a new key to work around an ambiguous timeout.
+</Accordion>
 </AccordionGroup>
 The general error catalog lives in [Errors](/en/errors).
 
@@ -665,8 +813,12 @@ curl "https://api.qbank.cl/platform/v1/cards?q=finance&physical=false&spending_a
 ```
 
 For organization administrators, `GET /v1/cards/summary?account_id=...` returns
-Aggregate fields: `total`, `by_status`, `new_30d`, `spend_24h_usdt`,
-`spend_30d_usdt`, and `declined_24h`.
+aggregate fields (`total`, `by_status`, `new_30d`, `spend_*_usdt`, `declined_24h`).
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary?account_id=9b1d0000-0000-4000-8000-000000000001" \
+  -H "Authorization: Bearer <admin-token>"
+```
 
 ```json
 {
@@ -674,14 +826,18 @@ Aggregate fields: `total`, `by_status`, `new_30d`, `spend_24h_usdt`,
   "by_status": {"active": 10, "frozen": 2},
   "new_30d": 3,
   "spend_24h_usdt": "1250.000000", "spend_30d_usdt": "18400.000000",
-  "declined_24h": 4
+  "declined_24h": 4, "has_holder": true
 }
 ```
 
-`GET /v1/cards/transactions` is the organization-wide transaction feed. It
-supports `card_id` (UUID), `account_id`, `status`, `merchant`, `mcc`, `from`,
-`to`, `page`, and `page_size`; malformed `card_id` returns
-`400 invalid_filter`. Items add account and optional cardholder context.
+`has_holder` tells the portal whether the account already has an issuer cardholder:
+scoped to the requested account, best-effort, no holder ID or personal data. Use it
+only to branch the wizard; the create endpoint remains the source of truth.
+
+`GET /v1/cards/transactions` is the organization-wide transaction feed (`card_id`,
+`account_id`, `status`, `merchant`, `mcc`, `from`, `to`, `page`, `page_size`;
+malformed `card_id` returns `400 invalid_filter`). Items add account and optional
+cardholder context.
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/cards/transactions?status=settled&merchant=market&mcc=5411&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
@@ -701,24 +857,26 @@ curl "https://api.qbank.cl/platform/v1/cards/transactions?status=settled&merchan
     "account_email": "finance@example.com",
     "cardholder_name": "Operations",
     "card_status": "active",
-    "merchant": "MARKET",
-    "mcc": "5411",
-    "status": "settled",
-    "amount_usd": "25.00",
-    "amount_usdt": "25.000000",
+    "merchant": "MARKET", "mcc": "5411", "status": "settled",
+    "amount_usd": "25.00", "amount_usdt": "25.000000",
     "created_at": "2026-10-24T15:04:05Z"
   }]
 }
 ```
 
-`GET /v1/cards/{card_id}` enriches the card with `spent_daily` and
-`spent_monthly`, using the same UTC windows and authorized/settled states as
-JIT enforcement; declined and reversed transactions are excluded.
+`GET /v1/cards/{card_id}` enriches the card with `spent_daily` and `spent_monthly`
+(same UTC windows and authorized/settled states as JIT enforcement; declined and
+reversed transactions excluded).
 
 <AccordionGroup>
+<Accordion title="Can an account see another account's cards?">
+No: account credentials see only their account; org admins need `ops:read` (scope with `account_id`).
+</Accordion>
 <Accordion title="Does the summary expose customer information?">
-No. The summary contains aggregate counts and amounts only. Customer context
-is available on enriched card and feed items according to the caller scope.
+No: aggregate counts and amounts only; customer context follows the caller scope on enriched items.
+</Accordion>
+<Accordion title="What happens with an invalid filter or date?">
+`400 invalid_filter` (bad `physical`/`spending_asset`/`card_id`) or `400 invalid_range` (bad `from`/`to`); filters are never silently ignored.
 </Accordion>
 </AccordionGroup>
 
