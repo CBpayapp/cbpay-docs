@@ -40,6 +40,9 @@ description: "错误格式与完整的错误码目录"
 | 403 | `member_disabled` | 该用户已被禁止登录；请联系您组织的管理员 |
 | 403 | `passkey_rejected` | 通行密钥（passkey）验证失败；请重试或使用密码登录 |
 | 403 | `owner_required` | 只有账户的 owner 成员才能执行该操作 |
+| 403 | `read_only_role` | 查看者（viewer）角色为只读 —— 请以 owner 或 operator 身份登录后再操作 |
+| 404 | `member_not_found` | 此凭证没有成员资料（API key 没有成员档案） |
+| 409 | `self_action_forbidden` | 您不能在此更改自己的登录状态或重置自己的密码 —— 请联系另一位 owner（更改自己的密码请使用 `POST /v1/me/password`） |
 | 403 | `service_disabled` | 该服务未对您的账户启用（查看 `GET /v1/services`） |
 | 403 | `org_suspended` | 服务已暂停；请联系 CBPay 团队 |
 | 403 | `company_only` | 仅企业账户可用的功能 |
@@ -176,6 +179,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `verification_kind_mismatch` | 验证类型与产品不匹配（KYC ⇒ person/INDIVIDUAL，KYB ⇒ company/COMPANY） |
 | 422 | `verification_invalid` | 在需要第三方验证的场景引用了自身入驻的验证 |
 | 403 | `company_account_required` | 第三方验证（KYC/KYB 链接/提交）仅限企业账户 |
+| 400 | `invalid_child` | 缺少子邀请 ID — 请传入 `GET /v1/me/verification/children` 返回的 `child_link_id` |
 | 409 | `already_verified` | 使用已通过验证的账户请求了入驻链接 |
 | 409 | `superseded` | 验证 ID 是冻结的迁移墓碑；读取内容来自活跃案件 | 不要在墓碑上作出决定、上传证据、创建活体链接、预签名/确认文档或 PATCH banking intent。读取 `migrated_to` 并操作活跃案件 |
 | 409 | `identity_locked` | 验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持 |
@@ -261,6 +265,9 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `settlement_pending` | 该收款的余额仍在[结算](/zh/concepts/fees#银行卡收款结算延迟)排期中，释放（到达 `settle_at` 或由组织管理员释放）前无法[退款](/zh/guides/refunds) |
 | 400 | `invalid_amount` | [退款](/zh/guides/refunds)的 `amount` 必须是以收款币种表示的正十进制数 |
 | 503 | `refund_event_pending` | 退款结果已保存，但最终事件仍在持久化。请使用**相同**幂等键重试；不要发送第二笔退款 |
+| 422 | `preauth_not_supported` | 捕获与作废仅适用于银行卡收款（其他通道没有可关闭的 hold） |
+| 422 | `payin_not_capturable` | 该收款不是待处理的手动预授权（自动捕获、已结算或没有处理方 charge 引用） |
+| 202 | `action_pending` | 捕获或作废正在与处理方核对；请使用**相同** `idempotency_key` 重试（新 key 会开启一个冲突动作） |
 | 503 | `payin_event_pending` | 收款已入账，但最终事件仍在核对中。请使用**相同**幂等键重试；不要创建新的收款 |
 
 ### 合规（403 / 503）
@@ -392,6 +399,10 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | HTTP | 代码 | 含义与处理 |
 |---|---|---|
 | 409 | `corridor_disabled` | 所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。 |
+| 409 | `banking_corridor_disabled` | 所选 banking 国家或通道被管理员禁用。请选择其他启用的通道或联系组织运营人员。 |
+| 409 | `crypto_disabled` | 所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。 |
+| 400 | `invalid_crypto_control` | crypto 网络开关无效（未知的链/资产、scope 或缺少原因）。请修正请求。 |
+| 409 | `rail_not_registered` | 所选通道在此环境中未配置。请选择已注册的通道（见管理后台走廊页面）。 |
 
 ## Banking 创建恢复错误
 
@@ -602,6 +613,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 400 | `invalid_code` | 注册或重置验证码不是 4–10 位数字。请按预期格式发送验证码。 |
 | 401 | `invalid_code` | 注册确认或密码重置的身份/验证码无效或已过期。请使用最新验证码；该响应为有意统一的。 |
 | 401 | `invalid_credentials` | 登录失败、账户待验证，或账户在 15 分钟内失败 8 次后被暂时锁定。请等待窗口结束或完成注册确认。 |
+| 400 | `pow_required` | 攻击模式下需要工作量证明。请通过 `POST /v1/auth/pow-challenge` 请求挑战，完成计算后在 `pow` 字段中重试。 |
 | 502 | `otp_check_failed` | 无法查询验证服务。请保持同一流程稍后重试；不要创建第二个账户或重置请求。 |
 
 `POST /v1/auth/password/forgot` 为防止枚举始终返回 `200`。每个账户每小时静默停止实际发送（上限 5 次）；`POST /v1/auth/password/reset` 允许每个账户每 15 分钟尝试 8 次验证码。
@@ -734,3 +746,11 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 500 | `receipt_render_failed` | 无法生成工资单 PDF | 重试读取；若仍失败，请提供请求 ID。 |
 | 503 | `valuation_unavailable` | 无法将金额估值为美元 | 稍后重试；批准过程保持失败关闭。 |
 | 500 | `store_error` | 平台无法读取或保存记录 | 确认资源状态后重试。 |
+
+
+## Expense platform errors
+
+| 400 | `duplicate_category` | 组织已存在该自定义费用类别 key | 选择其他 `c_` key |
+| 400 | `invalid_batch` | 批量操作的 ID 少于 1 个或超过 100 个 | 发送 1–100 个费用 UUID |
+| 400 | `invalid_horizon` | horizon 不是 3、6 或 12 个月 | 使用 `horizon=3`、`6` 或 `12` |
+| 400 | `invalid_icon` | 自定义图标格式或长度超出限制 | 使用不超过 40 个字母、数字、`_` 或 `-` |

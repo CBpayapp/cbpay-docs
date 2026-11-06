@@ -45,6 +45,9 @@ Todos los errores comparten el mismo formato:
 | 403 | `member_disabled` | El usuario está bloqueado para iniciar sesión; contacta al administrador de tu organización |
 | 403 | `passkey_rejected` | La verificación de la passkey falló; reintenta o entra con contraseña |
 | 403 | `owner_required` | Solo el miembro owner de la cuenta puede ejecutar esa acción |
+| 403 | `read_only_role` | El rol viewer es de solo lectura — entra como owner u operator para modificar |
+| 404 | `member_not_found` | Esta credencial no tiene ficha de miembro (las API keys no tienen miembro) |
+| 409 | `self_action_forbidden` | No puedes cambiar tu propio estado de login ni restablecer tu propia contraseña aquí — pide a otro owner (tu contraseña se cambia con `POST /v1/me/password`) |
 
 ### OTP / 2FA
 
@@ -178,6 +181,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 422 | `verification_kind_mismatch` | El kind de la verificación no calza con el producto (KYC ⇒ persona/INDIVIDUAL, KYB ⇒ empresa/COMPANY) |
 | 422 | `verification_invalid` | Referenciaste una verificación de onboarding propio donde se exige la de un tercero |
 | 403 | `company_account_required` | La verificación de terceros (links/submissions KYC-KYB) es solo para cuentas empresa |
+| 400 | `invalid_child` | Falta el id de la invitación hija — pasa el `child_link_id` de `GET /v1/me/verification/children` |
 | 409 | `already_verified` | Pediste link de onboarding con la cuenta ya verificada |
 | 409 | `superseded` | El ID de verificación es una tumba migrada congelada; sus lecturas vienen del caso vivo | No decidas, subas evidencia, crees links de liveness ni hagas presign/confirm o PATCH de banking intent sobre la tumba. Lee `migrated_to` y opera el caso vivo |
 | 409 | `identity_locked` | Con la verificación aprobada, `display_name`, `tax_id` y `country` vienen de la identidad verificada y no se cambian por `PATCH /v1/me`; contacta al soporte |
@@ -266,6 +270,9 @@ de la identidad del replay. Consulta el estado vivo con
 | 422 | `settlement_pending` | El saldo del cobro sigue programado para [settlement](/es/concepts/fees#settlement-de-payins-con-tarjeta) y no se puede [devolver](/es/guides/refunds) hasta liberarse (a `settle_at` o por liberación del admin de la organización) |
 | 400 | `invalid_amount` | El `amount` de la [devolución](/es/guides/refunds) debe ser un decimal positivo en la moneda del cobro |
 | 503 | `refund_event_pending` | El resultado de la devolución quedó guardado, pero todavía se está persistiendo su evento final. Reintenta con la **misma** clave de idempotencia; no envíes otra devolución |
+| 422 | `preauth_not_supported` | Las capturas y anulaciones solo aplican a cobros con tarjeta (los otros rieles no tienen holds que cerrar) |
+| 422 | `payin_not_capturable` | El payin no es una pre-autorización manual pendiente (captura automática, ya liquidado o sin referencia de cargo) |
+| 202 | `action_pending` | La captura o anulación se está conciliando con el procesador; reintenta con la **misma** `idempotency_key` (una clave nueva abre una acción en conflicto) |
 | 503 | `payin_event_pending` | El payin quedó acreditado, pero su evento final todavía se está reconciliando. Reintenta con la **misma** clave de idempotencia; no crees un nuevo payin |
 
 ### Cumplimiento (403 / 503)
@@ -399,6 +406,10 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | HTTP | Código | Significado y solución |
 |---|---|---|
 | 409 | `corridor_disabled` | El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización. |
+| 409 | `banking_corridor_disabled` | El país o riel banking seleccionado está deshabilitado administrativamente. Usa otro riel habilitado o contacta al operador de la organización. |
+| 409 | `crypto_disabled` | La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización. |
+| 400 | `invalid_crypto_control` | El toggle de red crypto es inválido (red/activo desconocido, scope o motivo faltante). Corrige el request. |
+| 409 | `rail_not_registered` | El riel seleccionado no está configurado en este ambiente. Elige un riel registrado (ver pantalla de corredores del admin). |
 
 ## Banking creation recovery errors
 
@@ -624,6 +635,7 @@ flujo normal de validación y despacho.
 | 400 | `invalid_code` | El código de registro o reset no tiene 4–10 dígitos. Envíalo con la forma esperada. |
 | 401 | `invalid_code` | La identidad o el código de confirmación/reset es inválido o vencido. Usa el último código; la respuesta es deliberadamente uniforme. |
 | 401 | `invalid_credentials` | Falló el login, la cuenta está pendiente de verificación o quedó bloqueada temporalmente después de 8 fallos en 15 minutos. Espera o confirma el registro. |
+| 400 | `pow_required` | Se requiere prueba de trabajo en modo de ataque. Pide un desafío con `POST /v1/auth/pow-challenge`, resuélvelo y reintenta con el campo `pow`. |
 | 502 | `otp_check_failed` | No se pudo consultar el servicio de verificación. Mantén el mismo flujo y reintenta después; no crees otra cuenta ni otra solicitud. |
 
 `POST /v1/auth/password/forgot` siempre responde `200` para evitar enumeración. Silencia envíos reales después de 5 por cuenta por hora; `POST /v1/auth/password/reset` permite 8 intentos de código por cuenta cada 15 minutos.
@@ -756,3 +768,11 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 500 | `receipt_render_failed` | No se pudo generar el PDF de la liquidación | Reintenta la lectura y entrega el id de solicitud si persiste. |
 | 503 | `valuation_unavailable` | No se pudo valorizar el monto en USD | Reintenta más tarde; la aprobación permanece fail-closed. |
 | 500 | `store_error` | La plataforma no pudo leer o guardar el registro | Reintenta después de confirmar el estado del recurso. |
+
+
+## Expense platform errors
+
+| 400 | `duplicate_category` | La organización ya tiene la key de categoría personalizada | Elige otra key `c_` |
+| 400 | `invalid_batch` | Una operación masiva tiene menos de 1 o más de 100 IDs | Envía UUIDs de gastos, entre 1 y 100 |
+| 400 | `invalid_horizon` | El horizonte no es 3, 6 ni 12 meses | Usa `horizon=3`, `6` o `12` |
+| 400 | `invalid_icon` | El icono supera el formato o largo permitido | Usa hasta 40 letras, dígitos, `_` o `-` |

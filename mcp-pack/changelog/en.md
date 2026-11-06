@@ -5,20 +5,44 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.230 · 3 versions - November 6, 2026
-### v2.230
+## v2.232 · 5 versions - November 6, 2026
+### v2.232
 **Added**
 
 - Company accounts can list invited UBOs and directors while KYB is in
   progress, including submission and declaration state.
 - Added a tenant-scoped action to resend the same child invite link by email
   without creating a duplicate link or verification.
-### v2.229
+### v2.231
 **Added**
 - Company accounts can manage human members with `owner`, `operator` and
   `viewer` roles from the portal or Account API. Owners can add members,
   change roles, block or unblock logins, and reset another member's password.
   These actions require the `member_add` OTP; viewers remain read-only.
+### v2.230
+**Added**
+- Companies can read their own third-party KYC/KYB cases before approval through
+  account-scoped, read-only list and detail endpoints, including remediation
+  documents and guidance when available.
+**Changed**
+- Remediation requests preserve a structured document checklist. Identical
+  decision content is deduplicated; new requested content can notify again.
+### v2.229
+**Added**
+- Public registration now exposes `POST /v1/auth/pow-challenge` for a
+  short-lived Hashcash challenge. When attack mode is active, include the
+  solved `pow: {challenge, suffix}` field in registration and email
+  confirmation requests. Normal traffic remains compatible with clients that
+  omit it.
+**Changed**
+- Registration abuse controls now apply global velocity limits, a daily OTP
+  ceiling and a larger disposable-email domain feed.
+**Fixed**
+- Registration attempts for blocked email domains return the documented
+  `400 email_domain_blocked` response.
+**Errors**
+- Attack-mode registration without a valid proof of work returns
+  `400 pow_required`.
 ### v2.228
 **Added**
 - `GET /v1/me/txn-reviews` accepts `?kind=` (payout, payin,

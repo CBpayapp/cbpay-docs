@@ -42,6 +42,74 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
 
 格式错误的验证码返回 `400 invalid_code`；无效或过期的验证码统一返回 `401 invalid_code`。如果无法查询验证服务，API 返回 `502 otp_check_failed`。确认成功后返回上面的待注册结构；请将 token 交给注册向导。
 
+## 注册的自适应工作量证明
+
+CBPay 使用可选的 Hashcash 风格工作量证明来减缓自动化注册洪峰，
+而不会给正常流量增加额外摩擦。只有公共注册速度进入攻击模式时才会
+强制要求。注册和邮箱确认分别使用此 gate；请使用相匹配的 `purpose`
+请求挑战，并提交完全相同的小写邮箱。
+
+挑战有效期为 600 秒，难度为 `20`，并绑定邮箱和 purpose。请在客户端中
+计算，最好在用户填写个人或企业表单时使用后台 worker：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"register","email":"ana@example.com"}'
+```
+
+```json
+{
+  "challenge": "<challenge>",
+  "difficulty": 20,
+  "algorithm": "sha256-leading-zero-bits-v1",
+  "expires_in": 600,
+  "input": "sha256(nonce_bytes || lowercase(email) || be64(suffix)); find suffix with difficulty leading zero bits",
+  "nonce_bytes": "first 16 bytes of the base64url payload (part before the dot)"
+}
+```
+
+找到一个非负 `suffix`，使 SHA-256 摘要至少有 `difficulty` 个前导零位。
+输入由挑战 payload 的前 16 个字节、小写邮箱以及作为无符号大端 64 位
+整数编码的 suffix 组成。将结果放入注册请求：
+
+```json
+{
+  "org": "cbpay",
+  "type": "person",
+  "email": "ana@example.com",
+  "password": "a-secure-password",
+  "display_name": "Ana",
+  "country": "CL",
+  "pow": {"challenge": "<challenge>", "suffix": 1847293}
+}
+```
+
+企业账户使用同样的流程，将 `"type"` 设为 `"company"` 并提交企业注册字段。
+收到验证码后，用 `"purpose":"confirm"` 请求新的挑战，并在确认时提交：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"confirm","email":"ana@example.com"}'
+
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@example.com","code":"123456","pow":{"challenge":"<challenge>","suffix":1847293}}'
+```
+
+正常情况下，省略 `pow` 的客户端仍可注册和确认。攻击模式启用后，两个
+端点都会返回 `400 pow_required`，直到解决匹配的挑战。请参阅
+[认证错误](https://docs.cbpayapp.com/zh/errors#认证与注册错误)页面了解处理方式。挑战是无状态的，
+10 分钟后过期；过期时请请求新挑战，不要重复提交旧解。
+
+#### 现有客户端需要发布新版本吗？
+正常流量下不需要：省略 `pow` 仍然有效。攻击模式启用后，客户端必须实现
+挑战流程，并在同一操作中携带 `pow` 重试；服务器不会接受其他邮箱或
+其他 purpose 的挑战。
+#### 计算需要多长时间？
+难度 20 设计为客户端的短时计算，通常需要数秒，具体取决于设备。请在
+界面线程之外计算；如果超过 10 分钟，请请求新的挑战。
 ## 身份验证滥用限制
 
 登录失败按归一化账户（组织/邮箱）计数：15 分钟内失败 8 次后，窗口期内的后续尝试返回相同的 `401 invalid_credentials`，且不再执行 bcrypt。待验证的注册成员也会收到该统一响应，无法使用注册密码登录。

@@ -2109,6 +2109,53 @@ paths:
           description: company_account_required o account_blocked.
         '413':
           description: logo_too_large.
+  /v1/auth/pow-challenge:
+    post:
+      tags: [Autenticación]
+      security: []
+      operationId: createPoWChallenge
+      summary: Crear un desafío de prueba de trabajo
+      description: Crea un desafío de prueba de trabajo de corta duración para el registro público o la confirmación del registro. El desafío queda vinculado al propósito y al email enviados en el request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purpose, email]
+              properties:
+                purpose: {type: string, enum: [register, confirm]}
+                email: {type: string, format: email}
+            example: {purpose: register, email: ana@ejemplo.com}
+      responses:
+        '200':
+          description: Desafío de prueba de trabajo creado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [challenge, difficulty, algorithm, expires_in, input, nonce_bytes]
+                properties:
+                  challenge: {type: string}
+                  difficulty: {type: integer}
+                  algorithm: {type: string}
+                  expires_in: {type: integer}
+                  input: {type: string}
+                  nonce_bytes: {type: string}
+              example:
+                challenge: eyJjaGFsbGVuZ2UiOiJleGFtcGxlIn0.sig
+                difficulty: 20
+                algorithm: sha256-leading-zero-bits-v1
+                expires_in: 600
+                input: sha256(nonce_bytes || lowercase(email) || be64(suffix)); find suffix with difficulty leading zero bits
+                nonce_bytes: first 16 bytes of the base64url payload (part before the dot)
+        '400':
+          description: invalid_request cuando el propósito o el email no son válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: {error: invalid_request, message: purpose must be register or confirm and email must be valid}
   /v1/auth/register:
     post:
       tags:
@@ -2135,6 +2182,11 @@ paths:
                 country: {type: string}
                 locale: {type: string, enum: [en, es, zh]}
                 profile: {type: object}
+                pow:
+                  type: object
+                  properties:
+                    challenge: {type: string}
+                    suffix: {type: integer, format: int64}
             example:
               org: cbpay
               type: person
@@ -2166,7 +2218,7 @@ paths:
                 status: pending_verification
                 note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm
         '400':
-          description: invalid_type, invalid_email, invalid_display_name o weak_password.
+          description: invalid_type, invalid_email, invalid_display_name, weak_password o pow_required.
         '403':
           description: org_suspended.
         '502':
@@ -2189,6 +2241,11 @@ paths:
                 org: {type: string}
                 email: {type: string, format: email}
                 code: {type: string}
+                pow:
+                  type: object
+                  properties:
+                    challenge: {type: string}
+                    suffix: {type: integer, format: int64}
             example: {org: cbpay, email: ana@ejemplo.com, code: '123456'}
       responses:
         '201':
@@ -2197,7 +2254,7 @@ paths:
             application/json:
               example: {status: pending_2fa_enrollment, pending_token: eyJ..., expires_at: '2026-10-22T19:00:00Z', factors: [totp, sms], passkeys_available: false, next: [Choose an authenticator app or SMS], note: enroll with POST /v1/auth/register/2fa/totp/begin, account: {id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d, type: person}}
         '400':
-          description: invalid_code cuando la forma del codigo es invalida.
+          description: invalid_code cuando la forma del código es inválida, o pow_required en modo de ataque.
         '401':
           description: invalid_code para codigo invalido, vencido o sin coincidencia.
         '502': {description: otp_check_failed.}
@@ -13675,6 +13732,68 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/AccountRequired'
+  /v1/crypto/networks:
+    get:
+      tags:
+      - Crypto
+      operationId: listCryptoNetworks
+      summary: Lista las redes crypto habilitadas
+      description: Devuelve cada red on-chain y sus pares con su estado efectivo (controles de la organización resueltos). Los pares apagados responden 409 crypto_disabled en retiros y creación de wallets.
+      responses:
+        '200':
+          description: Las redes crypto de la org con sus estados efectivos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chains:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - chain
+                      - enabled
+                      - pairs
+                      properties:
+                        chain:
+                          type: string
+                        enabled:
+                          type: boolean
+                        pairs:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - asset
+                            - enabled
+                            properties:
+                              asset:
+                                type: string
+                              enabled:
+                                type: boolean
+              example:
+                chains:
+                - chain: polygon
+                  enabled: true
+                  pairs:
+                  - asset: usdt
+                    enabled: true
+                  - asset: usdc
+                    enabled: true
+                  - asset: usdce
+                    enabled: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '503':
+          description: crypto_controls_unavailable (reintentable).
+          content:
+            application/json:
+              example:
+                error: crypto_controls_unavailable
+                message: crypto controls are temporarily unavailable
   /v1/segregated-wallets:
     post:
       tags:
