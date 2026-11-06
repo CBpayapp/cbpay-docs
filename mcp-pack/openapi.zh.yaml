@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.228"
+  version: "2.230"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -9064,6 +9064,115 @@ paths:
           description: 案件已决或邀请已关闭（already_decided、invite_closed）。
         '429':
           description: 该邀请在过去 24 小时内已重发。
+  /v1/me/verifications/{kind}/third-party:
+    get:
+      tags:
+      - KYC / KYB
+      operationId: listMyThirdPartyVerifications
+      summary: 列出我的企业第三方验证
+      description: >-
+        调用企业账户开立的第三方 KYC/KYB 案件（任何状态），无需已批准的
+        验证。仅镜像读取（快速）；用详情接口获取实时补件状态。
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        description: 验证类型。
+        schema:
+          type: string
+          enum: [kyc, kyb]
+      - name: status
+        in: query
+        required: false
+        description: 按案件状态过滤。
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: true
+        description: 开始日期（YYYY-MM-DD）。
+        schema:
+          type: string
+      - name: to
+        in: query
+        required: true
+        description: 结束日期（YYYY-MM-DD）。
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        description: 页码（默认 1）。
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        required: false
+        description: 每页条数（默认 50，最大 200）。
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: 名下第三方案件。
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                submissions:
+                - submission_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
+                  kind: kyb
+                  status: changes_requested
+                  external_customer_id: link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f
+                  created_at: '2026-11-03T16:18:20Z'
+                  updated_at: '2026-11-06T16:37:23Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 个人账户没有第三方验证。
+  /v1/me/verifications/{kind}/third-party/{submissionID}:
+    get:
+      tags:
+      - KYC / KYB
+      operationId: getMyThirdPartyVerification
+      summary: 读取我的企业第三方验证
+      description: >-
+        一起自有第三方案件，含核心实时补件明细（待补文件、指导意见，
+        如有）。只读：永不持久化或采纳状态。
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        description: 验证类型。
+        schema:
+          type: string
+          enum: [kyc, kyb]
+      - name: submissionID
+        in: path
+        required: true
+        description: 列表中的 submission id。
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 含补件明细的自有第三方案件。
+          content:
+            application/json:
+              example:
+                submission_id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
+                kind: kyb
+                status: changes_requested
+                external_customer_id: link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f
+                pending_documents: [proofOfAddress, financialStatements]
+                changes_requested_comments: Please upload the listed documents.
+                created_at: '2026-11-03T16:18:20Z'
+                updated_at: '2026-11-06T16:37:23Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 个人账户没有第三方验证。
+        '404':
+          description: 案件不存在或属于其他账户。
   /v1/screenings/addresses:
     post:
       tags:
@@ -20524,6 +20633,144 @@ paths:
               example:
                 error: not_found
                 message: push token not found
+  /v1/me/push/vapid-public-key:
+    get:
+      tags:
+      - Account
+      operationId: getMyPushVapidKey
+      summary: 获取 WebPush VAPID 公钥
+      description: |-
+        返回 VAPID 公钥，用于为账户推送通知订阅浏览器（审核流转）。在此环境未配置推送时返回 503 push_unavailable。私钥永不外泄。
+      responses:
+        '200':
+          description: VAPID 公钥。
+          content:
+            application/json:
+              example:
+                public_key: BEl62iUYgUivxIkv69yViEuiAaZ5HSg1vD8d9kP2s3q4r5t6u7v8w9x0y1z2a3b4c5d6e7f
+        '503':
+          description: 此环境未配置网页推送。
+          content:
+            application/json:
+              example:
+                error: push_unavailable
+                message: web push is not configured in this environment
+  /v1/me/push/subscriptions:
+    get:
+      tags:
+      - Account
+      operationId: listMyPushSubscriptions
+      summary: 列出我的推送订阅
+      description: 该账户已订阅的浏览器（端点脱敏，密钥永不暴露）。
+      responses:
+        '200':
+          description: 脱敏订阅列表。
+          content:
+            application/json:
+              example:
+                subscriptions:
+                - id: 7a3f2b1c-0000-4000-8000-000000000001
+                  endpoint_host: fcm.googleapis.com
+                  user_agent: Mozilla/5.0
+                  locale: es
+                  last_status: 201
+    post:
+      tags:
+      - Account
+      operationId: subscribeMyPush
+      summary: 为本账户订阅浏览器推送
+      description: |-
+        为调用账户注册或刷新 WebPush 订阅（仅活跃账户）。该账户随后将收到审核流转推送（索取信息、放行、拒绝），带深链且无 PII。未配置推送时返回 503 push_unavailable；端点/密钥契约失败时返回 400 invalid_subscription。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - endpoint
+              - keys
+              properties:
+                endpoint:
+                  type: string
+                  format: uri
+                keys:
+                  type: object
+                  required:
+                  - p256dh
+                  - auth
+                  properties:
+                    p256dh:
+                      type: string
+                    auth:
+                      type: string
+                locale:
+                  type: string
+                  enum: [en, es, zh]
+            example:
+              endpoint: https://fcm.googleapis.com/fcm/send/subscription-id
+              keys:
+                p256dh: BFHxY9zQwErTyUiOpAsDfGhJkLzXcVbNm1234567890abcdefghijklmnop
+                auth: 16bytesOfAuthKey12
+              locale: es
+      responses:
+        '201':
+          description: 订阅已保存（脱敏视图 + subscribed 标志）。
+          content:
+            application/json:
+              example:
+                id: 7a3f2b1c-0000-4000-8000-000000000001
+                endpoint_host: fcm.googleapis.com
+                subscribed: true
+        '400':
+          description: 订阅契约无效（invalid_subscription）。
+          content:
+            application/json:
+              example:
+                error: invalid_subscription
+                message: endpoint must be an https URL
+        '403':
+          description: 账户未激活（account_blocked）。
+          content:
+            application/json:
+              example:
+                error: account_blocked
+                message: account is not active
+        '503':
+          description: 此环境未配置网页推送。
+          content:
+            application/json:
+              example:
+                error: push_unavailable
+                message: web push is not configured in this environment
+  /v1/me/push/subscriptions/{id}:
+    delete:
+      tags:
+      - Account
+      operationId: unsubscribeMyPush
+      summary: 删除我的推送订阅
+      description: 按 id 删除调用账户的一个推送订阅。
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 已退订。
+          content:
+            application/json:
+              example:
+                unsubscribed: true
+        '404':
+          description: 未找到推送订阅（not_found）。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: push subscription not found
   /v1/me/security/events:
     get:
       tags:
@@ -20778,6 +21025,19 @@ paths:
           - released
           - rejected
           - all
+      - name: kind
+        in: query
+        description: '按审核类型过滤：payout、payin、crypto_withdrawal、banking、crypto_deposit、banking_application 或 card_application。'
+        schema:
+          type: string
+          enum:
+          - payout
+          - payin
+          - crypto_withdrawal
+          - banking
+          - crypto_deposit
+          - banking_application
+          - card_application
       - name: from
         in: query
         schema:
@@ -20832,6 +21092,11 @@ paths:
                   value:
                     error: invalid_status
                     message: status must be one of in_review, info_requested, released, rejected, all
+                invalid_kind:
+                  summary: Unknown kind
+                  value:
+                    error: invalid_kind
+                    message: kind must be payout, payin, crypto_withdrawal, banking, crypto_deposit, banking_application or card_application
                 invalid_range:
                   summary: Bad date range
                   value:

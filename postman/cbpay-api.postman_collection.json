@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-06 15:45 UTC",
-    "_content_sha256": "efefafe79b38bdaaf85b6423113f98abe7e1f34d85deaf13ec8ca63c07aefd0b"
+    "_generated_at": "2026-11-06 18:26 UTC",
+    "_content_sha256": "a9e737c569700c4e9ac103aef05e23f2e90e2cb9b6575d2120c1a294a09a8706"
   },
   "auth": {
     "type": "bearer",
@@ -1956,6 +1956,234 @@
           ]
         },
         {
+          "name": "Get the WebPush VAPID public key",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/push/vapid-public-key",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "push",
+                "vapid-public-key"
+              ]
+            },
+            "description": "Returns the VAPID public key to subscribe the browser for account push notifications (review transitions). 503 push_unavailable when push is not configured in this environment. The private key never leaves the server."
+          },
+          "response": [
+            {
+              "name": "200 VAPID public key.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/push/vapid-public-key",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "push",
+                    "vapid-public-key"
+                  ]
+                }
+              },
+              "status": "VAPID public key.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"public_key\": \"BEl62iUYgUivxIkv69yViEuiAaZ5HSg1vD8d9kP2s3q4r5t6u7v8w9x0y1z2a3b4c5d6e7f\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List my push subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/push/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "push",
+                "subscriptions"
+              ]
+            },
+            "description": "Browsers subscribed for this account (masked endpoints, keys never exposed)."
+          },
+          "response": [
+            {
+              "name": "200 Masked subscription list.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/push/subscriptions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "push",
+                    "subscriptions"
+                  ]
+                }
+              },
+              "status": "Masked subscription list.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"subscriptions\": [\n    {\n      \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n      \"endpoint_host\": \"fcm.googleapis.com\",\n      \"user_agent\": \"Mozilla/5.0\",\n      \"locale\": \"es\",\n      \"last_status\": 201\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Subscribe this browser for account push",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/push/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "push",
+                "subscriptions"
+              ]
+            },
+            "description": "Registers or refreshes a WebPush subscription for the calling account (active accounts only). The account then receives review transitions (info requested, released, rejected) with a deep-link and no PII. 503 push_unavailable when push is not configured; 400 invalid_subscription when the endpoint/keys contract fails.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"endpoint\": \"https://fcm.googleapis.com/fcm/send/subscription-id\",\n  \"keys\": {\n    \"p256dh\": \"BFHxY9zQwErTyUiOpAsDfGhJkLzXcVbNm1234567890abcdefghijklmnop\",\n    \"auth\": \"16bytesOfAuthKey12\"\n  },\n  \"locale\": \"es\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Subscription saved (masked view + subscribed flag).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/push/subscriptions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "push",
+                    "subscriptions"
+                  ]
+                }
+              },
+              "status": "Subscription saved (masked view + subscribed flag).",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n  \"endpoint_host\": \"fcm.googleapis.com\",\n  \"subscribed\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove one of my push subscriptions",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/push/subscriptions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "push",
+                "subscriptions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Deletes one of the calling account's push subscriptions by id."
+          },
+          "response": [
+            {
+              "name": "200 Unsubscribed.",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/push/subscriptions/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "push",
+                    "subscriptions",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Unsubscribed.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"unsubscribed\": true\n}"
+            }
+          ]
+        },
+        {
           "name": "My security activity",
           "request": {
             "method": "GET",
@@ -2080,6 +2308,12 @@
                   "description": "`in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`)."
                 },
                 {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by review kind: payout, payin, crypto_withdrawal, banking, crypto_deposit, banking_application or card_application."
+                },
+                {
                   "key": "from",
                   "value": "",
                   "disabled": true,
@@ -2128,6 +2362,12 @@
                       "value": "",
                       "disabled": true,
                       "description": "`in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`)."
+                    },
+                    {
+                      "key": "kind",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by review kind: payout, payin, crypto_withdrawal, banking, crypto_deposit, banking_application or card_application."
                     },
                     {
                       "key": "from",
@@ -3646,6 +3886,208 @@
                 }
               ],
               "body": "{\n  \"sent\": true,\n  \"reminded_to\": \"owner@example.com\",\n  \"expires_at\": \"2027-01-15T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List my company's third-party verifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/verifications/:kind/third-party",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "verifications",
+                ":kind",
+                "third-party"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by case status."
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Start date (YYYY-MM-DD)."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false,
+                  "description": "End date (YYYY-MM-DD)."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Page number (default 1)."
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Page size (default 50, max 200)."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "kind",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Third-party KYC/KYB cases filed by the calling company account, in any state, without requiring an approved verification. Mirror-only read (fast); use the detail route for live remediation state."
+          },
+          "response": [
+            {
+              "name": "200 Own third-party cases.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/verifications/:kind/third-party",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "verifications",
+                    ":kind",
+                    "third-party"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by case status."
+                    },
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Start date (YYYY-MM-DD)."
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": false,
+                      "description": "End date (YYYY-MM-DD)."
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Page number (default 1)."
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Page size (default 50, max 200)."
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "kind",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Own third-party cases.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"submissions\": [\n    {\n      \"submission_id\": \"c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f\",\n      \"kind\": \"kyb\",\n      \"status\": \"changes_requested\",\n      \"external_customer_id\": \"link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f\",\n      \"created_at\": \"2026-11-03T16:18:20Z\",\n      \"updated_at\": \"2026-11-06T16:37:23Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Read one of my company's third-party verifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/verifications/:kind/third-party/:submissionID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "verifications",
+                ":kind",
+                "third-party",
+                ":submissionID"
+              ],
+              "variable": [
+                {
+                  "key": "kind",
+                  "value": ""
+                },
+                {
+                  "key": "submissionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "One own third-party case with live remediation detail from the core (pending documents, guidance comments) when available. Read-only: never persists nor adopts state."
+          },
+          "response": [
+            {
+              "name": "200 Own third-party case with remediation detail.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/verifications/:kind/third-party/:submissionID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "verifications",
+                    ":kind",
+                    "third-party",
+                    ":submissionID"
+                  ],
+                  "variable": [
+                    {
+                      "key": "kind",
+                      "value": ""
+                    },
+                    {
+                      "key": "submissionID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Own third-party case with remediation detail.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"submission_id\": \"c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f\",\n  \"kind\": \"kyb\",\n  \"status\": \"changes_requested\",\n  \"external_customer_id\": \"link:7f8e9d0c-1b2a-4c3d-8e4f-0a1b2c3d4e5f\",\n  \"pending_documents\": [\n    \"proofOfAddress\",\n    \"financialStatements\"\n  ],\n  \"changes_requested_comments\": \"Please upload the listed documents.\",\n  \"created_at\": \"2026-11-03T16:18:20Z\",\n  \"updated_at\": \"2026-11-06T16:37:23Z\"\n}"
             }
           ]
         },

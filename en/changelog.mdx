@@ -4,14 +4,32 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 6, 2026" description="v2.228 · 1 version">
-### v2.228
+<Update label="November 6, 2026" description="v2.230 · 3 versions">
+### v2.230
 **Added**
 
 - Company accounts can list invited UBOs and directors while KYB is in
   progress, including submission and declaration state.
 - Added a tenant-scoped action to resend the same child invite link by email
   without creating a duplicate link or verification.
+### v2.229
+**Added**
+- Company accounts can manage human members with `owner`, `operator` and
+  `viewer` roles from the portal or Account API. Owners can add members,
+  change roles, block or unblock logins, and reset another member's password.
+  These actions require the `member_add` OTP; viewers remain read-only.
+### v2.228
+**Added**
+- `GET /v1/me/txn-reviews` accepts `?kind=` (payout, payin,
+  crypto_withdrawal, banking, crypto_deposit, banking_application,
+  card_application) so clients can track open reviews per flow.
+- Account WebPush: `GET /v1/me/push/vapid-public-key`, subscribe/list/
+  unsubscribe under `/v1/me/push/subscriptions`, and push on review
+  transitions (`review_info_requested`, `review_released`,
+  `review_rejected`) with a deep-link and no PII.
+- Verification request-changes now emails the submission holder
+  (account or third party) automatically, deduplicated; manual Remind
+  stays as explicit re-send.
 </Update>
 <Update label="November 5, 2026" description="v2.227 · 11 versions">
 ### v2.227

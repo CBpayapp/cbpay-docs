@@ -4,14 +4,33 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="6 de noviembre de 2026" description="v2.228 · 1 versión">
-### v2.228
+<Update label="6 de noviembre de 2026" description="v2.230 · 3 versiones">
+### v2.230
 **Agregado**
 
 - Las cuentas empresa pueden listar UBOs y directores invitados mientras el
   KYB está en curso, con el estado de submission y declaración.
 - Se agregó una acción aislada por tenant para reenviar por email el mismo
   link hijo sin crear otro link ni verificación.
+### v2.229
+**Agregado**
+- Las cuentas de empresa pueden administrar miembros humanos con roles
+  `owner`, `operator` y `viewer` desde el portal o la API de Account. Los
+  owners pueden agregar miembros, cambiar roles, bloquear o desbloquear
+  logins y restablecer la contraseña de otro miembro. Estas acciones requieren
+  el OTP `member_add`; los viewers siguen siendo de solo lectura.
+### v2.228
+**Agregado**
+- `GET /v1/me/txn-reviews` acepta `?kind=` (payout, payin,
+  crypto_withdrawal, banking, crypto_deposit, banking_application,
+  card_application) para seguir revisiones abiertas por flujo.
+- WebPush por cuenta: `GET /v1/me/push/vapid-public-key`, suscribir/listar/
+  dar de baja en `/v1/me/push/subscriptions`, y push en transiciones de
+  revisión (`review_info_requested`, `review_released`,
+  `review_rejected`) con deep-link y sin PII.
+- El pedido de cambios en verificaciones avisa por mail al titular
+  (cuenta o tercero) automáticamente, deduplicado; Remind manual
+  sigue como re-envío explícito.
 </Update>
 <Update label="5 de noviembre de 2026" description="v2.227 · 11 versiones">
 ### v2.227
