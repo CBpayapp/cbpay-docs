@@ -1,7 +1,7 @@
 {
-  "content_sha256": "1626d16677aa72bb9e5ff757eda56347790dea5ae30bf9e93f10891b85628877",
+  "content_sha256": "ab581c12668876eb06fa1a6b5509c58c3e7e180d99c16689ad00581ccb6ab502",
   "counts": {
-    "chunks": 5160,
+    "chunks": 5178,
     "errors": 418,
     "languages": [
       "en",
@@ -27,16 +27,16 @@
       "sha256": "e7ac116635727cddb330d047878080b1b20d64bd4cf9d3046f9dff710c3e2727"
     },
     "chunks/en.json": {
-      "bytes": 1753082,
-      "sha256": "6a8bb247456d90eebd08c2abc6c82d88e1f4f24ab46e0d87cfc3263f1ac0d279"
+      "bytes": 1758017,
+      "sha256": "d3cf0d0f65fc858f7b75400d4c7b9e05baf5b0ad93715feddcded1cfa942d9b2"
     },
     "chunks/es.json": {
-      "bytes": 1781741,
-      "sha256": "a87e4a5cc91f27f9e835809db4575f3909c79ece0f2c909931c38cc9232d82da"
+      "bytes": 1786486,
+      "sha256": "1536c42e7d5da0f2610b3f5c37d212d2801f8bc8a76de1b963682e33b7233a8d"
     },
     "chunks/zh.json": {
-      "bytes": 1665269,
-      "sha256": "3256668c7066586b008960a17ee2a8c69ed3661888cfec5acaf7b5ce077a0d7f"
+      "bytes": 1669697,
+      "sha256": "ac24088db331653cd775bf37647de605b654b2f9a14d21de2bd87edccdc912fc"
     },
     "errors.json": {
       "bytes": 241063,
@@ -171,8 +171,8 @@
       "sha256": "bc0f34270659cbbd13963fd12810c7ce79f5a72ff931d748400b45d40e71ed3c"
     },
     "guides/en/guides/kyc-remediation.md": {
-      "bytes": 2919,
-      "sha256": "433e372efe401df42bbe6127188533119f4ffb7e9519504524fdd2f5cd31b9dc"
+      "bytes": 5895,
+      "sha256": "e98971f2894314707b468d7c06735c1850b510815bdd180192269efe3717465d"
     },
     "guides/en/guides/kyc-ubo-children.md": {
       "bytes": 3492,
@@ -483,8 +483,8 @@
       "sha256": "bf6874eddebc1ec4cbedc006953db5976bf60e4b3a8a9f2a8942376aec50922b"
     },
     "guides/es/guides/kyc-remediation.md": {
-      "bytes": 2936,
-      "sha256": "e40b5b6bcc9cb3b41f0b65bf7162a4c732364c61b955dd8a4cafb4b6d821ecee"
+      "bytes": 5670,
+      "sha256": "3495cea849f4a8c8a85fc11643cc1efc4acc20b4889f24d1f808e4bc400b5316"
     },
     "guides/es/guides/kyc-ubo-children.md": {
       "bytes": 3456,
@@ -795,8 +795,8 @@
       "sha256": "75fb9be0b597c56ddb4c055388240257996ef965536e8e6d7db64276f5e483a3"
     },
     "guides/zh/guides/kyc-remediation.md": {
-      "bytes": 2641,
-      "sha256": "b653fc862d49f2b5228cabf7676a937eae93bd437c7f5becf25521bb6bc5f9ca"
+      "bytes": 5195,
+      "sha256": "946321c0dcb58508ed082727ace923fdf65c53e40f42164b1de0508f31879e9b"
     },
     "guides/zh/guides/kyc-ubo-children.md": {
       "bytes": 3335,
@@ -1087,7 +1087,7 @@
       "sha256": "471d87a39618b80c76304fe4192d702fb71197c067b2411dab48e82aab2f3996"
     }
   },
-  "generated_at": "2026-11-06T20:20:37Z",
+  "generated_at": "2026-11-06T21:05:38Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
