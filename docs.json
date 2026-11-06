@@ -206,6 +206,13 @@
                   "en/mcp",
                   "en/changelog"
                 ]
+              },
+              {
+                "group": "Legal",
+                "pages": [
+                  "en/legal/privacy",
+                  "en/legal/terms"
+                ]
               }
             ]
           },
@@ -357,6 +364,13 @@
                   "es/mcp",
                   "es/changelog"
                 ]
+              },
+              {
+                "group": "Legal",
+                "pages": [
+                  "es/legal/privacy",
+                  "es/legal/terms"
+                ]
               }
             ]
           },
@@ -507,6 +521,13 @@
                   "zh/postman",
                   "zh/mcp",
                   "zh/changelog"
+                ]
+              },
+              {
+                "group": "法律",
+                "pages": [
+                  "zh/legal/privacy",
+                  "zh/legal/terms"
                 ]
               }
             ]
