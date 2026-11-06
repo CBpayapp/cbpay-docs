@@ -5,13 +5,13 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.223 · 7 versiones - 5 de noviembre de 2026
-### v2.223
+## v2.226 · 10 versiones - 5 de noviembre de 2026
+### v2.226
 **Corregido**
 - Los formularios de verificación ahora rechazan contenido HTML/script en
   el servidor con un error claro, de modo que el marcado hostil ya no
   puede guardarse en las solicitudes. Sin cambios en la API.
-### v2.222
+### v2.225
 **Agregado**
 - El enrolamiento por teléfono acepta WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` recibe `channel` opcional (`sms` por
@@ -22,28 +22,41 @@ source_url: https://docs.cbpayapp.com/es/changelog
 - El mensaje de `invalid_phone` en transferencias y contactos ahora
   explica el formato E.164 requerido con un ejemplo concreto en vez del
   error genérico de proveedor.
-### v2.221
+### v2.224
 **Corregido**
 - Los links KYB con slug de país legacy alpha-3 (como `/on/usa/...`) ya no
   devuelven 404: redirigen al slug canónico preservando el invite, y los
   links nuevos siempre usan slugs canónicos. Sin cambios en la API.
-### v2.220
+### v2.223
+**Agregado**
+- Los payins con tarjeta pueden abrir una pre-autorización (hold) con `capture_method: "manual"`: el pagador autoriza en la página y el payin queda `pending` hasta que capturas (monto total vía `POST /v1/payins/{payinID}/captures`) o anulas (`POST /v1/payins/{payinID}/voids`, libera sin mover plata), con historial paginado en ambas rutas `GET`. Los holds no capturados se liberan solos (7 días débito, 28 crédito) con notificación.
+**Cambiado**
+- Captura/anulación son idempotentes por llave (`200` + `idempotency_hit` en replay, `409` en holds cerrados, `202` en conciliación — repite con la misma llave, nunca una nueva). Manual exige pago interactivo completo (sin guardadas, sin cuotas) y no requiere OTP.
+### v2.222
+**Agregado**
+- Los payins con tarjeta de Chile aceptan `currency: "UF"`. El riel cobra el monto UF nativo (máximo dos decimales, ej. `"1.50"`) y lo convierte internamente; webhooks y recibos conservan `currency: "UF"`. UF se combina con cuotas Emisor (`months` 2–48) y también se acepta en anuncios de efectivo (`CL/UF`). La tasa `uf` (fuente OXR `CLF`) está disponible como contexto de conversión.
+**Cambiado**
+- Las violaciones de decimales ahora responden 422 `core_rejected` ("amount has too many decimals for this currency"): CLP sigue entero y UF acepta máximo dos decimales. UF es solo-payin — se rechaza como `settlement_asset` de checkout y no tiene saldo, swaps ni payouts.
+### v2.221
 **Agregado**
 - Los payins con tarjeta CLP de Chile pueden solicitar cuotas Emisor con `months` entero de `2` a `48` durante `complete`. El checkout alojado muestra plazos curados según lo informado por el emisor y un pago aprobado devuelve `months` en el recibo.
 **Cambiado**
 - Omitir `months`, o enviarlo como `0` o `1`, significa pago único. Valores menores que `0` o mayores que `48` devuelven `400 invalid_payload` antes del claim. Se excluyen los cobros MIT con tarjeta guardada y Cuotas Comercio Beta.
-### v2.219
+### v2.220
 **Cambiado**
 - Los payins con tarjeta aceptan `document_type` y `document_number` opcionales en `bill_to`; Chile valida el RUT con módulo 11 y devuelve `400 invalid_payload` si es inválido. Los `complete` aprobados informan `card_saved` cuando se ofreció guardar la tarjeta y hubo consentimiento, para que el integrador indique al pagador si quedó guardada.
+### v2.219
+**Corregido**
+- Los nombres y etiquetas de cuentas y contactos (`display_name`, `alias`
+  de contacto, `label` de destino y de depósito, `label` de API keys)
+  ahora rechazan contenido HTML/script en el servidor con
+  `400 invalid_characters`, de modo que el marcado hostil ya no puede
+  guardarse. Envía texto plano.
 ### v2.218
 **Agregado**
-- Payouts Bre-B de Colombia en pesos COP enteros, con llaves de teléfono,
-  alias, email y user ID, dirección y teléfono E.164 obligatorios, y
-  validación exclusiva P2P.
-- La confirmación de QR PIX de Brasil informa el tipo de llave escaneada y
-  cuándo requiere un documento CPF/CNPJ para llaves email, teléfono o EVP.
-  La tarjeta de payouts de Brasil en el portal expone TED y PIX, incluido el
-  selector PIX por llave/QR.
+- `GET /v1/cards/summary` expone `has_holder`: si la cuenta ya tiene titular
+  creado, para que el asistente pida datos del emisor solo cuando falta.
+  Solo lectura, acotado a la cuenta; el id interno jamás se expone.
 ### v2.217
 **Agregado**
 - `GET /v1/banking/operations` acepta `?scope=eur`: sin perfil bancario USD

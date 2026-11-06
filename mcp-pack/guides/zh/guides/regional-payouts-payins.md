@@ -116,20 +116,6 @@ Payin 的最终状态是 `completed` 和 `failed`；`pending` 和 `processing`
 | 422 | `invalid_payload` | 修正收款人或付款人字段。 |
 | 502/503 | `payin_provider_failed` / `payins_unavailable` | 使用同一个 key 做对账。 |
 
-## 哥伦比亚 Bre-B
-
-`CO/COP/breb` 是即时 P2P 出金。COP 金额必须为整数，最低为 `1000`；
-收款人必须提供 `address`、`tax_id` 或 `document_value`、`document_type`、
-`+573XXXXXXXXX` 手机号以及 `breb_key`；`breb_key_type` 为可选提示。支持以 `3` 开头的
-10 位手机号、6–19 个字符的 `@alias`、10–92 个字符的 Email，或 5–18
-个字母数字字符的 User ID。B2B 会被拒绝，P2P 汇款人只使用姓名。
-
-## 门户中的巴西 payout 方式
-
-巴西提供 TED（`bank_transfer`）和 PIX。门户 PIX 在**按密钥**与**扫描
-QR**之间切换；QR 流程为扫描、复核、确认。`method=qr` 深链接会打开
-相同的 PIX QR 模式。玻利维亚现有 QR 卡片保持不变。
-
 ## FAQ
 
 #### 可以选择供应商或 PY fallback 吗？

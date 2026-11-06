@@ -71,7 +71,7 @@ Available corridors and methods:
 | Ecuador | USD | `bank_transfer`, `deuna`, `cash_pickup`, `cnb` |
 | Paraguay | PYG | `bank_transfer` |
 | Argentina | ARS / USD | `bank_transfer` (CBU or CVU) |
-| Colombia | COP | `bank_transfer` (integer amounts, no decimals), `breb` |
+| Colombia | COP | `bank_transfer` (integer amounts, no decimals) |
 | United States | USD | `ach`, `wire`, `swift` |
 
 Availability may vary; the catalog (`GET /v1/payouts/methods`) is always
@@ -377,7 +377,6 @@ when configured; `0.30` here).
 | VE | `pago_movil` | `name` (first name + first last name, as on the ID), `phone`, `bank_code` (SUDEBAN), `document_value` |
 | VE | `bank_transfer` | `name`, `account_number` (20 digits), `document_value` |
 | BO | `bank_transfer` | `name`, `tax_id`, `bank_code`, `account_number` |
-| CO | `breb` | `name`, `tax_id`/`document_value`, `document_type`, `phone`, `address`, `breb_key`, `breb_key_type` |
 | BR | `pix` | `name`, `tax_id` + (`pix_key` and `pix_key_type`) or (`bank_code` ISPB, `branch_code`, `account_number`) |
 | EC | `bank_transfer` | `name`, `document_value` (cédula), `sender_name`, `account_number` (+ `bank_code` and `account_type` for other banks) |
 | EC | `deuna` | `name`, `document_value`, `sender_name`, `phone` (wallet mobile number) |
@@ -1250,6 +1249,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   `400 invalid_document_key`.
 - The `document_key` stays stored: if the create fails for another
   reason, you reuse it on the retry — **no need to re-upload the file**.
+
 ## QR payout
 
 Paying a collection QR (Bolivia, Brazil PIX) now has its own guide:

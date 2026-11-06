@@ -1,15 +1,23 @@
----
-title: "Changelog"
-icon: "clock-rotate-left"
-description: "API and documentation change history"
----
+<Update label="2026年11月5日" description="v2.226 · 9 个版本">
+### v2.226
 
-<Update label="2026年11月5日" description="v2.223 · 7 个版本">
-### v2.223
+**新增**
+- 银行卡收款可使用 `capture_method: "manual"` 开立预授权（hold）：付款人在托管页授权后，payin 保持 `pending`，直到你捕获（经 `POST /v1/payins/{payinID}/captures` 全额扣款）或作废（经 `POST /v1/payins/{payinID}/voids` 释放，不移动资金），两个 `GET` 路由提供分页历史。未捕获的 hold 会自动释放（借记卡 7 天、信用卡 28 天）并通知。
+**变更**
+- 捕获/作废按键幂等（重放返回 `200` + `idempotency_hit`，已关闭返回 `409`，核对中返回 `202` —— 请使用相同 key 重试，绝不换新 key）。manual 要求交互式全额支付（不可用已存卡、不可分期），不需要 OTP。
+### v2.225
+
+**新增**
+- 智利银行卡收款接受 `currency: "UF"`。银行卡轨道按 UF 金额原生扣款（最多两位小数，例如 `"1.50"`），内部再兑换；webhook 与回单保留 `currency: "UF"`。UF 可与发卡行分期叠加（`months` 2–48），现金预告收款（`CL/UF`）同样接受。`uf` 汇率键（OXR `CLF` 来源）可作兑换参考。
+**变更**
+- 小数位数违规现在返回 422 `core_rejected`（"amount has too many decimals for this currency"）：CLP 仍为整数，UF 最多两位小数。UF 仅用于收款 —— checkout `settlement_asset` 会拒绝它，且没有余额、兑换或出金。
+### v2.224
+
 **修复**
 - 验证表单现在会在服务端拒绝 HTML/脚本内容并返回明确错误，恶意标记
   无法再存入申请。API 无变化。
-### v2.222
+### v2.223
+
 **新增**
 - 电话注册认证新增 WhatsApp：`POST /v1/auth/register/2fa/sms/begin`
   接受可选 `channel`（默认 `sms`，可指定 `whatsapp`），其他值返回 `400
@@ -17,26 +25,31 @@ description: "API and documentation change history"
 **修复**
 - 转账与联系人的 `invalid_phone` 消息现说明所需的 E.164
   格式并提供具体示例，不再返回通用提供商错误。
-### v2.221
+### v2.222
+
 **修复**
 - 使用旧版 alpha-3 国家短链的 KYB 链接（如 `/on/usa/...`）不再返回 404：
   会重定向到规范短链并保留邀请，新签发的链接一律使用规范短链。API 无变化。
-### v2.220
+### v2.221
+
 **新增**
 - 智利 CLP 银行卡收款可在 `complete` 中使用 `2` 到 `48` 的整数 `months` 请求发卡行分期。托管结账页显示按发卡行返回结果筛选的期限，付款获批后回单会返回 `months`。
 **变更**
 - 省略 `months`，或发送 `0` 或 `1`，表示一次性付款。小于 `0` 或大于 `48` 的值会在扣款 claim 前返回 `400 invalid_payload`。已保存银行卡的 MIT 扣款和 Commerce Installments Beta 不在范围内。
-### v2.219
+### v2.220
+
 **变更**
 - 银行卡收款的 `bill_to` 支持可选的 `document_type` 和 `document_number`；智利校验模 11 RUT，无效值返回 `400 invalid_payload`。在提供保存选项并取得同意时，批准的 `complete` 会返回 `card_saved`，便于集成方告知付款人银行卡是否已保存。
-### v2.218
+### v2.219
+
 **新增**
 - 哥伦比亚 Bre-B 出金支持整数 COP 金额，以及手机号、别名、Email 和
   User ID 密钥；地址和 E.164 手机号为必填，并且仅支持 P2P。
 - 巴西 PIX QR 确认会返回扫描密钥类型，并提示 email、手机号或 EVP 密钥
   何时需要 CPF/CNPJ 证件。门户中的巴西 payout 卡片提供 TED 和 PIX，
   包括 PIX 按密钥/QR 切换。
-### v2.217
+### v2.218
+
 **新增**
 - `GET /v1/banking/operations` 支持 `?scope=eur`：没有 USD 银行档案时返回
   `200` 空列表（`banking_customer: none`），不再返回 `409
@@ -51,6 +64,7 @@ description: "API and documentation change history"
   `id_issued_country`（以前只读供应商的 `govId*` 字段），已有到期日的
   已批准档案不再重复要求填写日期。
 </Update>
+
 <Update label="2026年11月4日" description="v2.216 · 7 个版本">
 ### v2.216
 **新增**

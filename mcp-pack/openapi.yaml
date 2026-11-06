@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.223"
+  version: "2.226"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -4257,7 +4257,7 @@ paths:
                   description: Local currency (e.g. CLP, PEN, MXN).
                 method:
                   type: string
-                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer`, `breb` or `sepa`).
+                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer` or `sepa`).
                 amount:
                   type: string
                   description: Local currency amount as a positive decimal string.
@@ -4285,13 +4285,6 @@ paths:
                     first_surname:
                       type: string
                       description: Individual first surname; used with given_name when provided.
-                    breb_key:
-                      type: string
-                      description: Colombia Bre-B key for `CO`/`COP`/`breb` (phone, `@alias`, email or user ID).
-                    breb_key_type:
-                      type: string
-                      enum: [phone, alias, email, userid]
-                      description: Optional Bre-B key hint; the server validates the key shape.
                   additionalProperties:
                     type: string
                   description: 'Destination account details. Required keys depend on the
@@ -4300,9 +4293,7 @@ paths:
 
                     `GET /v1/payouts/banks`. Examples: RUT + bank in Chile, CLABE in
 
-                    Mexico, CCI in Peru. Colombia Bre-B: `breb_key` plus optional
-                    `breb_key_type`, `tax_id`/`document_value`, `document_type`,
-                    `phone` and `address`. Brazil PIX: `pix_key` + `pix_key_type` (cpf,
+                    Mexico, CCI in Peru. Brazil PIX: `pix_key` + `pix_key_type` (cpf,
 
                     cnpj, phone, email, evp), or a bank account without key using
 
@@ -4574,22 +4565,6 @@ paths:
                     pix_key_type: cpf
                     pix_key: '12345678909'
                   idempotency_key: br-pix-3321
-              co_breb:
-                summary: Colombia — Bre-B P2P (COP)
-                value:
-                  country: CO
-                  currency: COP
-                  method: breb
-                  amount: '1000'
-                  beneficiary:
-                    name: Ana Torres
-                    tax_id: '123456789'
-                    document_type: CC
-                    phone: '+573001234567'
-                    address: Calle 10 #20-30
-                    breb_key: ana@example.com
-                    breb_key_type: email
-                  idempotency_key: co-breb-001
               ec_bank_transfer:
                 summary: Ecuador — bank transfer (USD, remittance with sender data)
                 value:
@@ -5548,7 +5523,7 @@ paths:
         response is `429 too_many_open_card_sessions`.
         With `method: "checkout"` the response carries a public `checkout_url` — a branded universal
         checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC,
-        BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS/CLP are rejected). The payer picks any country with a live payin corridor (quoted local amount), any
+        BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS/CLP/UF are rejected). The payer picks any country with a live payin corridor (quoted local amount), any
         of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from
         the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset
         unless paid in the same asset. The first method that completes the payment wins. Charging is
@@ -5592,11 +5567,15 @@ paths:
                   example: BOB
                   description: Corridor currency. Required for every method except `checkout`,
                     which rejects it with 400 — the charge is denominated in `settlement_asset`.
+                    Chile card payins accept `CLP` (integer amounts) and `UF` (at most two decimals,
+                    charged natively on the card rail and converted internally).
                 amount:
                   type: string
                   description: Positive decimal string. Local currency amount for corridor methods;
                     for `checkout` it is denominated in the `settlement_asset` ("50" USDT,
-                    "0.001" BTC, "2" grams of gold).
+                    "0.001" BTC, "2" grams of gold). Decimal places are capped per currency
+                    (CLP admits no decimals, UF at most two); violations surface as 422
+                    `core_rejected` with the message "amount has too many decimals for this currency".
                 description:
                   type: string
                 channel:
@@ -5631,7 +5610,9 @@ paths:
                     where the payer transfers from any Chilean bank or wallet and the deposit is detected
                     automatically; `pix` (Brazil only) returns a hosted `payment_url` for a PIX redirect
                     checkout (`payer_name` and `payer_document` required, minimum 1 BRL); `card` returns a hosted `payment_url` for a 3-D Secure card checkout
-                    (Bolivia in BOB, or international cards in USD when `country` is `US`);
+                    (Bolivia in BOB, international cards in USD when `country` is `US`, or Chile cards in CLP or UF);
+                    on the Chile card page the payer may split the charge into 2-48 issuer installments
+                    (the receipt shows `months`; one-click payments with a stored card are always single-charge);
                     `checkout` returns a public `checkout_url` where the payer picks the
                     payment method (QR, card, bank transfer or crypto). Use /v1/payins/collect for pull
                     collections. `wallet` is hosted or collect-only depending on
@@ -5723,7 +5704,7 @@ paths:
                   description: Checkout only — the virtual balance the charge is denominated in and
                     settles into. When omitted it resolves to your `payin_settlement_asset`
                     (`USD` is the principal balance). Every payment is auto-converted to this asset on credit (same-asset
-                    payments skip conversion). Local fiat (BOB, MXN, ARS, CLP) is rejected. Must be enabled for your organization
+                    payments skip conversion). Local fiat (BOB, MXN, ARS, CLP, UF) is rejected. Must be enabled for your organization
                     (`422 settlement_asset_disabled` otherwise).
                 save_card:
                   type: boolean
@@ -6257,7 +6238,8 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: The core rejected the charge (`core_rejected`), the announced bank-transfer
+          description: The core rejected the charge (`core_rejected` — including decimal violations
+            such as a CLP amount with decimals or a UF amount with more than two), the announced bank-transfer
             amount is below the account-specific fee minimum (`amount_below_minimum`), or the announced-transfer
             corridor requires a registered destination account and your organization has not
             configured one yet (`deposit_instructions_unavailable` — today CL, PY and US).
@@ -6271,6 +6253,11 @@ paths:
                   value:
                     error: core_rejected
                     message: amount is below the minimum for this corridor
+                core_rejected_decimals:
+                  summary: Too many decimals for the currency (pre-claim, nothing was charged)
+                  value:
+                    error: core_rejected
+                    message: amount has too many decimals for this currency
                 amount_too_small:
                   value:
                     error: amount_too_small
@@ -6917,6 +6904,297 @@ paths:
                   updated_at: '2026-07-25T13:10:03Z'
         '400':
           $ref: '#/components/responses/InvalidRange'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/payins/{payinID}/captures:
+    parameters:
+    - name: payinID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      tags:
+      - Payins
+      operationId: createPayinCapture
+      summary: Capture a pre-authorized card payin
+      description: >-
+        Charges a hold created with `capture_method: manual` for the FULL
+        authorized amount (v1; anything else is declined) and credits your
+        balance through the normal payin flow. Only pending manual card
+        payins can be captured (`preauth_not_supported` on other rails,
+        `payin_not_capturable` otherwise). `idempotency_key` is mandatory; a
+        replay returns the same action and never dispatches twice. No OTP is
+        required (a capture credits your account; it never debits it).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - idempotency_key
+              properties:
+                amount:
+                  type: string
+                  description: Must equal the authorized amount when sent; omit it to capture the total.
+                idempotency_key:
+                  type: string
+            example:
+              idempotency_key: capture-order-8842
+      responses:
+        '201':
+          description: Capture completed and settled (verdict completed).
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
+                action_id: 7c8d9e0f-1a2b-4c3d-8e9f-0a1b2c3d4e5f
+                kind: capture
+                status: completed
+                amount: '10000'
+                provider_ticket: '710000000000123'
+                verdict: completed
+                idempotency_key: capture-order-8842
+                created_at: '2026-11-05T13:10:00Z'
+        '202':
+          description: >-
+            Ambiguous dispatch (`action_pending` or a pending verdict): the
+            capture is being reconciled with the processor. We NEVER retry on
+            our side — retry with the SAME `idempotency_key`.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
+                action_id: 7c8d9e0f-1a2b-4c3d-8e9f-0a1b2c3d4e5f
+                kind: capture
+                status: pending
+                amount: '10000'
+                verdict: pending
+                idempotency_key: capture-order-8842
+                created_at: '2026-11-05T13:10:00Z'
+        '400':
+          description: '`idempotency_key_required` or `invalid_payload`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: idempotency_key_required
+                message: idempotency_key is required
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`already_captured`, `hold_released`, `hold_expired`, or `idempotency_conflict` (propagated from the processor with its message).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: already_captured
+                message: the hold was already captured
+        '422':
+          description: >-
+            `preauth_not_supported`, `payin_not_capturable`,
+            `partial_capture_unsupported`, or a capture the processor declined
+            (the body is the action with `status: failed` and `failure_reason`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: payin_not_capturable
+                message: only a pending pre-authorized payin can be captured or voided
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags:
+      - Payins
+      operationId: listPayinCaptures
+      summary: List captures of a payin
+      description: Capture history of the payin. Paginated (page, page_size).
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Captures page.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                page: 1
+                page_size: 50
+                total: 1
+                captures:
+                - id: 7c8d9e0f-1a2b-4c3d-8e9f-0a1b2c3d4e5f
+                  charge_id: 5f6a7b8c-9d0e-4f1a-2b3c-4d5e6f7a8b9c
+                  kind: capture
+                  status: completed
+                  amount: '10000'
+                  provider_ticket: '710000000000123'
+                  idempotency_key: capture-order-8842
+                  created_at: '2026-11-05T13:10:00Z'
+                payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/payins/{payinID}/voids:
+    parameters:
+    - name: payinID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      tags:
+      - Payins
+      operationId: createPayinVoid
+      summary: Void a pre-authorized card payin
+      description: >-
+        Releases the hold WITHOUT moving money. Only pending manual card
+        payins can be voided (`preauth_not_supported` on other rails,
+        `payin_not_capturable` otherwise). `idempotency_key` is mandatory; a
+        replay returns the same action and never dispatches twice. No OTP is
+        required (a void moves no funds).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - idempotency_key
+              properties:
+                idempotency_key:
+                  type: string
+            example:
+              idempotency_key: void-order-8842
+      responses:
+        '201':
+          description: Hold released (verdict completed).
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
+                action_id: 8d9e0f1a-2b3c-4d5e-9f0a-1b2c3d4e5f6a
+                kind: void
+                status: completed
+                amount: '10000'
+                provider_ticket: '661793928526134415'
+                verdict: completed
+                idempotency_key: void-order-8842
+                created_at: '2026-11-05T13:10:00Z'
+        '202':
+          description: >-
+            Ambiguous dispatch (`action_pending` or a pending verdict): the
+            void is being reconciled with the processor. We NEVER retry on our
+            side — retry with the SAME `idempotency_key`.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
+                action_id: 8d9e0f1a-2b3c-4d5e-9f0a-1b2c3d4e5f6a
+                kind: void
+                status: pending
+                amount: '10000'
+                verdict: pending
+                idempotency_key: void-order-8842
+                created_at: '2026-11-05T13:10:00Z'
+        '400':
+          description: '`idempotency_key_required` or `invalid_payload`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: idempotency_key_required
+                message: idempotency_key is required
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`already_captured`, `hold_released`, `hold_expired`, or `idempotency_conflict` (propagated from the processor with its message).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: hold_released
+                message: the authorization was voided
+        '422':
+          description: >-
+            `preauth_not_supported`, `payin_not_capturable`, or a void the
+            processor declined (the body is the action with `status: failed`
+            and `failure_reason`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: payin_not_capturable
+                message: only a pending pre-authorized payin can be captured or voided
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags:
+      - Payins
+      operationId: listPayinVoids
+      summary: List voids of a payin
+      description: Void history of the payin. Paginated (page, page_size).
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Voids page.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                page: 1
+                page_size: 50
+                total: 1
+                voids:
+                - id: 8d9e0f1a-2b3c-4d5e-9f0a-1b2c3d4e5f6a
+                  charge_id: 5f6a7b8c-9d0e-4f1a-2b3c-4d5e6f7a8b9c
+                  kind: void
+                  status: completed
+                  amount: '10000'
+                  provider_ticket: '661793928526134415'
+                  idempotency_key: void-order-8842
+                  created_at: '2026-11-05T13:10:00Z'
+                payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
+        '404':
+          $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/payin-refunds:
@@ -14475,9 +14753,8 @@ paths:
                   type: string
                   description: Raw content of the scanned QR (in Brazil, also the PIX "copia e cola" code).
             example:
-              country: BR
               qr_payload: <QR content>
-              currency: BRL
+              currency: BOB
       responses:
         '200':
           description: Recipient data for user confirmation.
@@ -14502,24 +14779,15 @@ paths:
                     type: string
                   status:
                     type: string
-                  key_type:
-                    type: string
-                    enum: [tax_id, email, phone, evp]
-                    description: Brazil PIX key classification returned by the scan.
-                  requires_document:
-                    type: boolean
-                    description: Whether Brazil PIX confirm must include both `document_type` and `document_id`.
               example:
                 scan_id: 5c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
                 provider_reference: QR-REF-889923
-                beneficiary_name: LOJA DA MARIA
+                beneficiary_name: Juan Quispe
                 destination_account: '****4521'
-                amount: '75.00'
-                currency: BRL
+                amount: '700.00'
+                currency: BOB
                 glosa: ''
                 status: scanned
-                key_type: tax_id
-                requires_document: false
         '400':
           description: qr_payload missing (invalid_request) or unreadable/unsupported QR (invalid_qr_payload
             — corrupt BR Code, bad checksum, or a dynamic PIX QR; the message explains the exact reason).
@@ -14589,13 +14857,6 @@ paths:
                 amount:
                   type: string
                   description: Local amount as a positive decimal string.
-                document_type:
-                  type: string
-                  enum: [CPF, CNPJ]
-                  description: Required with `document_id` for Brazil PIX keys other than `tax_id`; optional for `tax_id`.
-                document_id:
-                  type: string
-                  description: Beneficiary CPF/CNPJ. Send together with `document_type` for non-tax-ID PIX keys.
                 description:
                   type: string
                 settlement_asset:
@@ -14703,16 +14964,8 @@ paths:
               example:
                 error: account_blocked
                 message: account is not active
-        '409':
-          description: The same idempotency key was reused with different QR confirmation document fields (`idempotency_conflict`).
-          content:
-            application/json:
-              schema: *id010
-              example:
-                error: idempotency_conflict
-                message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: Rejected by the processor (`core_rejected`), including a non-tax-ID Brazil PIX QR confirmed without both document fields; the debit was refunded when a payout was created.
+          description: Rejected by the processor; the debit was refunded (payout with status failed).
           content:
             application/json:
               schema:
