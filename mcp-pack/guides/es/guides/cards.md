@@ -136,6 +136,126 @@ la misma clave devuelve la tarjeta original y nunca cobra dos veces).
 
 > **Importante**
 La emisión de tarjetas físicas nuevas está temporalmente no disponible. Una solicitud con `physical: true` devuelve `400 physical_temporarily_unavailable`; el corte se evalúa después del replay de idempotencia, por lo que una solicitud física existente se sigue resolviendo con su tarjeta original. Las físicas ya emitidas siguen operativas.
+### Árbol de decisión del wizard
+El portal debe consultar el resumen antes de abrir el formulario. Usa
+`has_holder` para elegir el camino más corto y seguro; es solo un booleano y
+nunca expone el identificador interno del titular:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary" \
+  -H "Authorization: Bearer <token>"
+```
+```json
+{
+  "total": 0,
+  "by_status": {},
+  "new_30d": 0,
+  "spend_24h_usdt": "0.000000",
+  "spend_30d_usdt": "0.000000",
+  "declined_24h": 0,
+  "has_holder": false
+}
+```
+1. **Cuenta persona:** si `has_holder` es `false`, muestra los datos KYC
+   aprobados y pide los campos del emisor (`occupation`, `place_of_work`,
+   `salary_usd` y email). Si es `true`, omite la creación del titular y pide
+   solo la configuración de la tarjeta. Una cuenta persona puede tener una
+   tarjeta digital viva y una solicitud abierta; la segunda devuelve
+   `409 card_limit_reached`.
+2. **Cuenta empresa:** permite elegir **titular empresa** o **persona
+   designada**. El camino empresa usa los datos KYB de la cuenta. El camino
+   designado debe mostrar un picker con solo verificaciones KYC aprobadas,
+   y luego pedir los campos del emisor y un booleano `pep` explícito.
+3. **Configuración:** muestra emisión solo digital (`physical: false`),
+   recomienda el `settlement_asset` de la cuenta y deja los demás assets
+   habilitados como opciones avanzadas. Los límites son en USD.
+4. **Envío único:** manda la misma `idempotency_key` en el body o en el
+   header `Idempotency-Key`. Si el resultado de red es ambiguo, consulta con
+   esa misma clave; no generes una nueva.
+
+El portal no debe pedir un ID interno de titular. CBPay lo crea o reutiliza
+en el servidor. Para una persona designada, el picker entrega el
+   `verification_id` KYC aprobado; no aceptes un ID arbitrario.
+
+### Request y respuestas de emisión
+Este es un request digital completo, con límites y asset explícito:
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: card-portal-2026-0001" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-portal-2026-0001",
+    "spending_asset": "USDC",
+    "limits": {
+      "per_transaction": "500.00",
+      "daily": "1000.00",
+      "monthly": "5000.00"
+    },
+    "cardholder": {
+      "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "salary_usd": 1800,
+      "email": "ana@example.com",
+      "first_name": "Ana",
+      "last_name": "Rojas"
+    }
+  }'
+```
+Una emisión directa exitosa devuelve `201`:
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "physical": false,
+  "cardholder_kind": "account",
+  "cardholder_name": "Ana Rojas",
+  "status": "active",
+  "spending_asset": "USDC",
+  "limits": {
+    "per_transaction": "500.000000",
+    "daily": "1000.000000",
+    "monthly": "5000.000000"
+  },
+  "creation_fee": "3.000000"
+}
+```
+Si la organización exige revisión humana, el mismo request devuelve `202` y
+todavía no existe una tarjeta:
+
+```json
+{
+  "status": "in_review",
+  "kind": "card_application",
+  "review_id": "7a1c2e94-3b5f-4c8a-9d2e-6f0a1b2c3d4e",
+  "message": "application received; it is pending review by our compliance team"
+}
+```
+Sigue la solicitud con el webhook `txn_review_status_changed` o con
+`GET /v1/me/txn-reviews`. El fee se cobra al retener la solicitud y se
+reembolsa automáticamente si compliance la rechaza. Un retry con la misma
+clave devuelve la misma solicitud y nunca cobra dos veces.
+
+Usa estos errores estables para mantener el wizard accionable:
+| HTTP | Error | Acción del portal |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | Mantén emisión digital; las físicas nuevas están pausadas. |
+| 400 | `spending_asset_unavailable` / `settlement_asset_disabled` | Actualiza los assets habilitados y elige uno disponible. |
+| 409 | `card_limit_reached` | Resuelve o cancela la solicitud abierta; persona no puede crear otra tarjeta viva. |
+| 422 | `verification_required` / `verification_not_approved` / `verification_kind_mismatch` | Selecciona una verificación KYC aprobada para la persona designada. |
+| 422 | `issuer_data_incomplete` | Muestra las claves faltantes y pide solo esos campos. |
+| 422 | `cardholder_name_too_long` | Acorta el nombre impreso a 22 bytes UTF-8 o menos. |
+| 402 | `insufficient_funds` | Fondea la cuenta; no reenvíes con una clave nueva. |
+
+### Holds y seguimiento de la emisión
+Un hold o una revisión no equivalen a una tarjeta creada. Mientras esté
+`in_review`, muestra el `review_id`, deja el formulario en solo lectura y
+espera el webhook o el endpoint de revisión. No abras otra solicitud para
+consultar el avance. Al aprobarse, la clave original resuelve a la tarjeta
+creada; si se rechaza, el fee se devuelve y queda el estado final auditable
+como `card_application`.
+
 #### Cuenta persona
 
 Una cuenta persona emite tarjetas **para sí misma** (máximo 1 tarjeta viva total; la emisión física nueva está temporalmente no disponible).
@@ -515,8 +635,12 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
   -H "Authorization: Bearer <token>"
 ```
 
-## Webhooks
+### Reemplazar una tarjeta
+No existe reemisión ciega: congela si sospechas compromiso, cancela y solicita
+una nueva tarjeta digital con otra `idempotency_key`. Empresa puede emitir de
+inmediato; persona debe quedar sin tarjeta viva ni solicitud abierta.
 
+## Webhooks
 | Evento | Cuándo |
 |---|---|
 | `card_transaction` | Compra autorizada, anulada o ajustada |
@@ -525,7 +649,6 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
 Suscríbete igual que al resto de eventos (ver [Webhooks](https://docs.cbpayapp.com/es/webhooks)).
 
 ## Preguntas frecuentes
-
 #### ¿Tengo que prefondear las tarjetas?
 No. Las tarjetas no tienen saldo propio: cada compra se autoriza en tiempo
 real contra el saldo de la cuenta (en el asset de gasto de la tarjeta). Si
@@ -573,6 +696,12 @@ persona debe tener su [verificación KYC aprobada](https://docs.cbpayapp.com/es/
 `verification_id` en el `cardholder` y sus datos y documentos se completan
 solos. La tarjeta gasta siempre del saldo de la cuenta empresa que la
 emitió.
+#### ¿Por qué el wizard pide mi ocupación o el giro de la empresa?
+Son campos del emisor y AML/CFT, no reemplazan tu KYC/KYB aprobado. Usa el
+código vivo `occupation` (persona) o `kind_of_business` (empresa).
+#### ¿Qué pasa si recargo mientras la emisión está en curso?
+Un hold o revisión no reintenta ni crea otra tarjeta. Recarga la misma cuenta y
+espera, o reintenta con la misma key tras error de saldo; nunca uses una nueva.
 #### ¿Por qué el fee de una compra cambió entre la autorización y la liquidación?
 La comisión por compra se calcula dos veces: estimada al autorizar (va en
 el hold) y definitiva al liquidar, con la configuración vigente en ese
@@ -647,9 +776,15 @@ curl "https://api.qbank.cl/platform/v1/cards/summary?account_id=9b1d0000-0000-40
   "new_30d": 3,
   "spend_24h_usdt": "1250.000000",
   "spend_30d_usdt": "18400.000000",
-  "declined_24h": 4
+  "declined_24h": 4,
+  "has_holder": true
 }
 ```
+
+`has_holder` indica si la cuenta ya tiene un titular de tarjetas en el emisor.
+Está acotado a la cuenta solicitada, es best-effort y no contiene el ID del
+titular ni otros datos personales. Úsalo solo para ramificar el wizard; el
+endpoint de creación sigue siendo la fuente de verdad.
 
 `GET /v1/cards/transactions` es el feed de transacciones de toda la
 organización (o de la cuenta para una credencial de cuenta). Soporta

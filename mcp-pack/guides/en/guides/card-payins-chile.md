@@ -97,101 +97,6 @@ was approved but the card was not stored; show a clear message and do not
 charge the payer again. The field is omitted when saving was not offered or
 requested.
 
-## Issuer installments
-
-For Chilean CLP card payins, the hosted checkout can offer issuer-financed
-installments. The payer first tokenizes the new card; only when the token
-reports deferred payment options does the page display the curated choices
-`3`, `6`, `12`, `24`, `36`, and `48`, limited to the issuer's reported maximum.
-The payer then confirms the selected term and the checkout sends it in the
-public session completion request:
-
-```json
-{
-  "payment_token": "tok_…",
-  "months": 6
-}
-```
-
-`months` is an integer. Omit it, or send `0` or `1`, for a single payment.
-Values from `2` through `48` request issuer installments. The value is
-validated before the payment claim, so `-2` or `99` returns
-`400 invalid_payload` without consuming an attempt.
-
-Installments are supported only for a new front-tokenized card in the Chile
-issuer-installment flow. They are not supported for stored-card
-merchant-initiated charges (MIT), and the Commerce Installments beta is not
-part of this contract. Real verification rails reject an installment request;
-the front-token Kushki rail and the simulator are the supported paths.
-Never submit a second charge after an ambiguous result.
-
-An approved response includes the approved term as a receipt field, and the
-same value is retained in the charge audit payload:
-
-```json
-{
-  "status": "paid",
-  "transaction_id": "710000000000123",
-  "months": 6
-}
-```
-
-| HTTP | Code | Solution |
-|---:|---|---|
-| 400 | `invalid_payload` | Send an integer from `0` to `48`; use `0`, `1`, or omit it for a single payment. |
-| 200 | `failed_attempt` | If a stored card was selected with installments, use a new card; the failure is reattemptable. |
-| 200 | `review` | If a real verification rail has money in flight, read the session and reconcile; never blind-retry. |
-
-## UF card payins
-
-The Chile card corridor also accepts `currency: "UF"`. Send the amount as a
-decimal string with up to two decimal places:
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payins \
-  -H "Authorization: Bearer <token>" \
-  -H "Idempotency-Key: cl-uf-card-order-8842" \
-  -H "Content-Type: application/json" \
-  -d '{"country":"CL","currency":"UF","method":"card","amount":"1.50","description":"Order 8842","idempotency_key":"cl-uf-card-order-8842"}'
-```
-
-The response keeps `currency: "UF"` and `amount: "1.50"` in the payin and
-receipt. The card rail charges the UF amount natively and converts it to CLP
-internally; `1 UF` is approximately `41,274 CLP` and the exact value depends
-on the applicable UF rate. UF amounts can be combined with issuer
-installments: include the same `months` field described above in the
-front-token `complete` request. The approved term is returned in the receipt.
-
-UF accepts at most two fractional digits. `"1.50"` is valid, while `"1.501"`
-returns `400 invalid_amount` before the payment claim. CLP remains an integer
-currency, so `"150000.50"` returns the same honest pre-existing
-`400 invalid_amount`. As with every payin, read the resource after an
-ambiguous result and do not submit a second charge.
-
-For the current conversion context, read:
-
-```bash
-curl https://api.qbank.cl/v1/rates/usd/local \
-  -H "Authorization: Bearer <token>"
-```
-
-The response includes the `uf` key from the OXR `CLF` ISO source. Settlement
-converts UF to USDT at the applicable spot rate; the displayed UF rate is
-not a promise of a fixed settlement price.
-
-An approved UF webhook preserves `currency: "UF"` and the UF amount:
-
-```json
-{
-  "event": "payin_credited",
-  "payin_id": "7a2b…",
-  "country": "CL",
-  "currency": "UF",
-  "amount": "1.50",
-  "status": "credited"
-}
-```
-
 ## Read, void, and refund
 
 ```bash
@@ -218,7 +123,7 @@ dispatch automatically.
 
 | HTTP | Code | Solution |
 |---:|---|---|
-| 400 | `invalid_amount` | Send an integer CLP amount or a UF amount with no more than two decimal places |
+| 400 | `invalid_amount` | Send an integer CLP amount |
 | 400 | `idempotency_key_required` | Send the body field or header |
 | 409 | `idempotency_conflict` | Use the original payload with the original key |
 | 422 | `core_rejected` | Show the hosted failure and do not blind-retry |
@@ -242,9 +147,8 @@ Verify the signature before processing. Relevant events are
 
 ## FAQ
 
-#### Can I send decimal CLP or UF?
-CLP must be an integer. UF accepts up to two decimal places, for example
-`"1.50"`; three or more decimal places return `400 invalid_amount`.
+#### Can I send decimal CLP?
+No. Chilean pesos have no decimal minor unit; send an integer string.
 #### What if the create request times out?
 Read the resource or repeat the request with the same idempotency key. Do
 not submit a new charge.

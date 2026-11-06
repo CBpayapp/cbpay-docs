@@ -95,6 +95,125 @@ BTC/GOLD/SILVER/PLATINUM 按事件计价的规则一致。被拒消费（`declin
 
 > **重要**
 新实体卡发行暂时不可用。请求中使用 `physical: true` 会返回 `400 physical_temporarily_unavailable`；该限制在幂等重放之后检查，因此已存在的实体卡请求仍会返回原始卡片。已经发行的实体卡继续正常使用。
+### 向导决策树
+
+门户应在打开发卡表单前先调用汇总接口。使用 `has_holder` 选择最短且
+安全的流程；它只是布尔值，绝不会暴露内部持卡人 ID：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "total": 0,
+  "by_status": {},
+  "new_30d": 0,
+  "spend_24h_usdt": "0.000000",
+  "spend_30d_usdt": "0.000000",
+  "declined_24h": 0,
+  "has_holder": false
+}
+```
+
+1. **个人账户：** `has_holder` 为 `false` 时，显示已批准 KYC 数据并收集
+   发卡方字段（`occupation`、`place_of_work`、`salary_usd` 和 email）。
+   为 `true` 时跳过持卡人创建，只询问卡片设置。个人账户最多拥有一张
+   有效数字卡和一条开放申请；第二次请求返回 `409 card_limit_reached`。
+2. **企业账户：** 让用户选择**企业持卡人**或**指定人员**。企业路径使用
+   账户 KYB 数据；指定人员路径只能从已批准 KYC 验证中选择，然后收集
+   发卡方字段和显式布尔值 `pep`。
+3. **卡片设置：** 只显示数字卡发行（`physical: false`），推荐账户的
+   `settlement_asset`，其他已启用资产作为高级选项。限额使用美元。
+4. **只提交一次：** 在 body 或 `Idempotency-Key` header 中发送同一个
+   `idempotency_key`。网络结果不明确时，使用同一 key 查询；不要生成新 key。
+
+门户不应要求内部持卡人 ID。CBPay 会在服务器端创建或复用它。指定人员
+必须来自已批准 KYC picker 的 `verification_id`，不能接受任意人员 ID。
+
+### 发卡 request 与响应
+
+以下是包含限额和明确消费资产的完整数字卡 request：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: card-portal-2026-0001" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-portal-2026-0001",
+    "spending_asset": "USDC",
+    "limits": {
+      "per_transaction": "500.00",
+      "daily": "1000.00",
+      "monthly": "5000.00"
+    },
+    "cardholder": {
+      "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "salary_usd": 1800,
+      "email": "ana@example.com",
+      "first_name": "Ana",
+      "last_name": "Rojas"
+    }
+  }'
+```
+
+直接发卡成功返回 `201`：
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "physical": false,
+  "cardholder_kind": "account",
+  "cardholder_name": "Ana Rojas",
+  "status": "active",
+  "spending_asset": "USDC",
+  "limits": {
+    "per_transaction": "500.000000",
+    "daily": "1000.000000",
+    "monthly": "5000.000000"
+  },
+  "creation_fee": "3.000000"
+}
+```
+
+如果组织要求人工审核，同一个 request 返回 `202`，此时还没有卡片：
+
+```json
+{
+  "status": "in_review",
+  "kind": "card_application",
+  "review_id": "7a1c2e94-3b5f-4c8a-9d2e-6f0a1b2c3d4e",
+  "message": "application received; it is pending review by our compliance team"
+}
+```
+
+通过 `txn_review_status_changed` webhook 或 `GET /v1/me/txn-reviews` 跟踪。
+申请被挂起时收取发卡费用，被 compliance 拒绝时自动退款。使用同一个
+idempotency key 重试会返回同一申请，绝不会重复收费。
+
+使用以下稳定错误让向导可以给出明确动作：
+
+| HTTP | 错误 | 门户动作 |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | 保持数字卡选项；新实体卡已暂停。 |
+| 400 | `spending_asset_unavailable` / `settlement_asset_disabled` | 刷新可用资产并选择可用项。 |
+| 409 | `card_limit_reached` | 处理或取消开放申请；个人账户不能再创建有效卡。 |
+| 422 | `verification_required` / `verification_not_approved` / `verification_kind_mismatch` | 为指定人员选择已批准的 KYC 验证。 |
+| 422 | `issuer_data_incomplete` | 显示缺失字段，只收集这些字段。 |
+| 422 | `cardholder_name_too_long` | 将卡面姓名缩短到不超过 22 个 UTF-8 字节。 |
+| 402 | `insufficient_funds` | 为账户充值；不要使用新 key 重发。 |
+
+### 发卡 hold 与跟踪
+
+申请 hold 或审核并不代表卡片已创建。在状态为 `in_review` 时显示
+`review_id`，将表单设为只读，并等待 webhook 或审核接口。不要为了轮询
+进度创建另一条申请。批准后，原始 idempotency key 会解析到已创建卡片；
+拒绝后发卡费用会退回，最终状态以 `card_application` 留痕。
+
 #### 个人账户
 
 个人账户**为自己**发卡（最多 1 张有效卡；新实体卡发行暂时不可用）。
@@ -426,6 +545,13 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
   -H "Authorization: Bearer <token>"
 ```
 
+### 更换卡片
+
+门户 API 没有单独的盲目补发操作。要更换卡片，若怀疑泄露先冻结，
+然后注销并使用**新的** `idempotency_key` 提交数字卡申请。企业账户可以
+立即发行另一张卡；个人账户必须先没有有效卡或开放申请，因此需要先注销。
+真正申请新卡时绝不要复用旧 key。
+
 ## Webhooks
 
 | 事件 | 触发时机 |
@@ -457,6 +583,14 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
 卡片会被自动冻结（`card_status_changed` 事件，`reason: monthly_fee_unpaid`）。不会产生欠款；余额补足后，用 `PATCH { "frozen": false }` 解冻即可。
 #### 我可以为公司以外的人发卡吗？
 企业账户可以为任何指定人员发卡。该人员必须拥有[已批准的 KYC 验证](https://docs.cbpayapp.com/zh/guides/kyc)——您在 `cardholder` 中传入其 `verification_id`，其数据和证件会自动填充。卡片始终从发卡企业账户的余额消费。
+#### 为什么向导要求我的职业或公司的经营活动？
+这些是发卡方和 AML/CFT 字段，不会替代已批准的 KYC/KYB。请从实时目录
+选择代码：个人使用 `occupation`，企业使用 `kind_of_business`。发卡方用
+它创建持卡人并执行合规检查。
+#### 发卡进行中充值会怎样？
+发卡 hold 或审核不会静默重试，也不会创建第二张卡。请为同一账户充值，
+等待现有申请完成；如果收到余额错误，用同一个 `idempotency_key` 重试。
+不要为了绕过不明确的 timeout 提交新 key。
 ## 卡片列表、汇总与组织交易流
 
 `GET /v1/cards` 同时支持账户凭证（仅查看自己的卡片）和组织管理员
@@ -517,9 +651,14 @@ curl "https://api.qbank.cl/platform/v1/cards/summary?account_id=9b1d0000-0000-40
   "new_30d": 3,
   "spend_24h_usdt": "1250.000000",
   "spend_30d_usdt": "18400.000000",
-  "declined_24h": 4
+  "declined_24h": 4,
+  "has_holder": true
 }
 ```
+
+`has_holder` 表示账户是否已经在发卡方拥有账户持卡人。它限定在请求的
+账户范围内，是 best-effort 值，不包含持卡人 ID 或其他个人数据。它只用
+于决定向导分支；创建接口仍是最终事实来源。
 
 `GET /v1/cards/transactions` 是组织级交易流（账户凭证只看到自己的
 账户）。它支持 `card_id`（UUID）、`account_id`、`status`、`merchant`、

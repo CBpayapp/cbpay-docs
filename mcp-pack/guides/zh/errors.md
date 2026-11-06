@@ -101,6 +101,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_settings` | 组织设置不是有效的 JSON 对象或无法规范化；请修正设置请求体后重试 |
 | `invalid_type` | `type` 必须为 `person` 或 `company` |
 | `invalid_email` / `invalid_display_name` | 必填字段无效 |
+| `invalid_characters` | 名称或标签（`display_name`、联系人 `alias`、目的地或 API 密钥 `label`）包含 HTML 或可执行脚本，已被拒绝；请发送纯文本 |
 | `weak_password` | 密码少于 8 个字符 |
 | `invalid_role` | 成员角色无效 |
 | `unknown_org` | 组织 slug 错误（应使用 `cbpay`） |
@@ -733,7 +734,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 503 | `valuation_unavailable` | 无法将金额估值为美元 | 稍后重试；批准过程保持失败关闭。 |
 | 500 | `store_error` | 平台无法读取或保存记录 | 确认资源状态后重试。 |
 
-## Expense platform errors
+### Expense platform errors
 
 | 400 | `duplicate_category` | 组织已存在该自定义费用类别 key | 选择其他 `c_` key |
 | 400 | `invalid_batch` | 批量操作的 ID 少于 1 个或超过 100 个 | 发送 1–100 个费用 UUID |

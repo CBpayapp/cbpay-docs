@@ -102,6 +102,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_settings` | Los settings de la organización no son un objeto JSON válido o no pudieron normalizarse; corrige el payload y reintenta |
 | `invalid_type` | `type` debe ser `person` o `company` |
 | `invalid_email` / `invalid_display_name` | Campo requerido inválido |
+| `invalid_characters` | Un nombre o etiqueta (`display_name`, `alias` de contacto, `label` de destino o de API key) contiene HTML o script ejecutable y fue rechazado; envía texto plano |
 | `weak_password` | Contraseña menor a 8 caracteres |
 | `invalid_role` | Rol de miembro inválido |
 | `unknown_org` | Slug de organización incorrecto (usa `cbpay`) |
