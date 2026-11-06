@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the eleven balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-05 18:17 UTC",
-    "_content_sha256": "5281a6cc617feb222c0b60876f74bce1c4ed1d1a53776a849be8796b9e3ab209"
+    "_generated_at": "2026-11-06 00:56 UTC",
+    "_content_sha256": "a0564f4922ff4018d4308dc0cd0567e578279dc6bbd5564c85d3f3710e3fd447"
   },
   "auth": {
     "type": "bearer",
@@ -1504,6 +1504,178 @@
                 }
               ],
               "body": "{\n  \"status\": \"revoked\",\n  \"sessions_revoked\": 3\n}"
+            }
+          ]
+        },
+        {
+          "name": "List my push devices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/push-tokens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "push-tokens"
+              ]
+            },
+            "description": "Lists the registered mobile devices with masked token tails."
+          },
+          "response": [
+            {
+              "name": "200 Push devices.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/push-tokens",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "push-tokens"
+                  ]
+                }
+              },
+              "status": "Push devices.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"tokens\": [\n    {\n      \"id\": \"8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"platform\": \"ios\",\n      \"device_id\": \"iphone-17-pro\",\n      \"token_tail\": \"…90abcdef\",\n      \"locale\": \"en\",\n      \"last_seen_at\": \"2026-11-05T21:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register a mobile push token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/push-tokens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "push-tokens"
+              ]
+            },
+            "description": "Registers or refreshes the FCM/APNs token of a mobile device for the account. Call at login; call DELETE on logout. Validation failures use invalid_push_token or invalid_device.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"ios\",\n  \"token\": \"fcm-token-1234567890abcdef\",\n  \"device_id\": \"iphone-17-pro\",\n  \"locale\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Push token registered (tail only, never the full token).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/push-tokens",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "push-tokens"
+                  ]
+                }
+              },
+              "status": "Push token registered (tail only, never the full token).",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"token_tail\": \"…90abcdef\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove a push device",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/push-tokens/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "push-tokens",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Deletes a registered push token (logout or device retirement). Unknown ids return not_found; a missing id returns missing_id."
+          },
+          "response": [
+            {
+              "name": "200 Push token deleted.",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/push-tokens/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "push-tokens",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Push token deleted.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"deleted\": true\n}"
             }
           ]
         },
@@ -11602,6 +11774,71 @@
           ]
         },
         {
+          "name": "Create a payout — Colombia — Bre-B P2P (COP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payouts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payouts"
+              ]
+            },
+            "description": "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (`default_settlement_asset` — USD is the principal balance; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM) to pay this specific operation from another balance: the total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD/SILVER/PLATINUM is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the technical screening queue is available, the response is `202` with a payout resource in `status: pending`, `status_code: compliance_pending`, `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch. After screening returns `process`, the same resource can remain `pending` with `compliance_dispatch_pending`, `compliance_dispatching` or `core_unreachable` while `funds_debited` is true; keep the same idempotency key and wait for reconciliation. A terminal screening failure before the debit path can return `failed` with `predebit_failure: true` and `funds_debited: false`; it has no `receipt_url`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"CO\",\n  \"currency\": \"COP\",\n  \"method\": \"breb\",\n  \"amount\": \"1000\",\n  \"beneficiary\": {\n    \"name\": \"Ana Torres\",\n    \"tax_id\": \"123456789\",\n    \"document_type\": \"CC\",\n    \"phone\": \"+573001234567\",\n    \"address\": \"Calle 10\",\n    \"breb_key\": \"ana@example.com\",\n    \"breb_key_type\": \"email\"\n  },\n  \"idempotency_key\": \"co-breb-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Idempotency replay of an existing payout....",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payouts",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payouts"
+                  ]
+                }
+              },
+              "status": "Idempotency replay of an existing payout....",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payout_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"idempotency_key\": \"invoice-8841\",\n  \"country\": \"MX\",\n  \"currency\": \"MXN\",\n  \"method\": \"bank_transfer\",\n  \"local_amount\": \"1500.00\",\n  \"fx_rate\": \"17.50\",\n  \"usdt_amount\": \"85.714286\",\n  \"fee\": \"0.300000\",\n  \"total_debit\": \"86.014286\",\n  \"settlement_asset\": \"USDT\",\n  \"settlement_amount\": \"86.014286\",\n  \"settlement_rate\": \"1\",\n  \"beneficiary\": {\n    \"name\": \"Maria Lopez\",\n    \"account_type\": \"clabe\",\n    \"account_number\": \"012180001234567895\"\n  },\n  \"description\": \"Invoice 8841\",\n  \"status\": \"processing\",\n  \"status_code\": \"\",\n  \"status_message\": \"\",\n  \"bank_reference\": \"\",\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-07-07T12:00:00Z\",\n  \"idempotency_hit\": true\n}"
+            }
+          ]
+        },
+        {
           "name": "Create a payout — Ecuador — bank transfer (USD, remittance with sender data)",
           "request": {
             "method": "POST",
@@ -12821,7 +13058,7 @@
             "description": "Step 1 of the QR payout — Bolivia (local interoperable QR) and Brazil (PIX QR, including the \"copia e cola\" code): reads a collection QR and returns the recipient's data plus the `provider_reference` needed to confirm. **Free of charge** — nothing is debited until the confirm step. Defaults to Bolivia; for Brazil send `country: \"BR\"` and `currency: \"BRL\"`. Brazil supports **static** PIX QRs (key embedded); a dynamic QR (PSP URL payload) answers `400` — ask the beneficiary for their PIX key and use the `pix` method. An empty `amount` in the scan response means an open-amount QR.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"qr_payload\": \"<QR content>\",\n  \"currency\": \"BOB\"\n}",
+              "raw": "{\n  \"country\": \"BR\",\n  \"qr_payload\": \"<QR content>\",\n  \"currency\": \"BRL\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -12856,7 +13093,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"scan_id\": \"5c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f\",\n  \"provider_reference\": \"QR-REF-889923\",\n  \"beneficiary_name\": \"Juan Quispe\",\n  \"destination_account\": \"****4521\",\n  \"amount\": \"700.00\",\n  \"currency\": \"BOB\",\n  \"glosa\": \"\",\n  \"status\": \"scanned\"\n}"
+              "body": "{\n  \"scan_id\": \"5c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f\",\n  \"provider_reference\": \"QR-REF-889923\",\n  \"beneficiary_name\": \"LOJA DA MARIA\",\n  \"destination_account\": \"****4521\",\n  \"amount\": \"75.00\",\n  \"currency\": \"BRL\",\n  \"glosa\": \"\",\n  \"status\": \"scanned\",\n  \"key_type\": \"tax_id\",\n  \"requires_document\": false\n}"
             }
           ]
         },

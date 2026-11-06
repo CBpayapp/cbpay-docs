@@ -118,6 +118,23 @@ Los estados finales del payin son `completed` y `failed`; `pending` y
 | 422 | `invalid_payload` | Corrige los datos del beneficiario o pagador. |
 | 502/503 | `payin_provider_failed` / `payins_unavailable` | Reconcilia con la misma clave. |
 
+## Bre-B de Colombia
+
+`CO/COP/breb` es un payout P2P instantáneo. COP es una moneda entera con
+mínimo `1000`; el beneficiario requiere `address`, `tax_id` o
+`document_value`, `document_type`, un teléfono `+573XXXXXXXXX` y
+`breb_key`, con `breb_key_type` opcional como pista. Las llaves aceptadas son un teléfono de 10
+dígitos que empieza con `3`, un `@alias` de 6–19 caracteres, un email de
+10–92 caracteres o un user ID alfanumérico de 5–18 caracteres. B2B se rechaza
+y el remitente P2P usa solo nombres.
+
+## Métodos de payout de Brasil en el portal
+
+Brasil expone TED (`bank_transfer`) y PIX. El método PIX del portal alterna
+entre **Por llave** y **Escanear QR**; el QR se escanea, se revisa y se
+confirma. Un deep link `method=qr` abre el mismo modo QR de PIX. La tarjeta QR
+existente de Bolivia no cambia.
+
 ## FAQ
 
 #### ¿Puedo elegir el proveedor o el fallback de PY?

@@ -70,7 +70,7 @@ Corredores y métodos disponibles:
 | Ecuador | USD | `bank_transfer`, `deuna`, `cash_pickup`, `cnb` |
 | Paraguay | PYG | `bank_transfer` |
 | Argentina | ARS / USD | `bank_transfer` (CBU o CVU) |
-| Colombia | COP | `bank_transfer` (montos enteros, sin decimales) |
+| Colombia | COP | `bank_transfer` (montos enteros, sin decimales), `breb` |
 | Estados Unidos | USD | `ach`, `wire`, `swift` |
 
 La disponibilidad puede variar; el catálogo (`GET /v1/payouts/methods`) es
@@ -378,6 +378,7 @@ las de tu cuenta en `GET /v1/rates`; el débito es `usdt_amount + fee`
 | VE | `pago_movil` | `name` (nombre + primer apellido, tal como en la cédula), `phone`, `bank_code` (SUDEBAN), `document_value` |
 | VE | `bank_transfer` | `name`, `account_number` (20 dígitos), `document_value` |
 | BO | `bank_transfer` | `name`, `tax_id`, `bank_code`, `account_number` |
+| CO | `breb` | `name`, `tax_id`/`document_value`, `document_type`, `phone`, `address`, `breb_key`, `breb_key_type` |
 | BR | `pix` | `name`, `tax_id` + (`pix_key` y `pix_key_type`) o (`bank_code` ISPB, `branch_code`, `account_number`) |
 | EC | `bank_transfer` | `name`, `document_value` (cédula), `sender_name`, `account_number` (+ `bank_code` y `account_type` si es a otro banco) |
 | EC | `deuna` | `name`, `document_value`, `sender_name`, `phone` (celular de la billetera) |
@@ -1250,7 +1251,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   `400 invalid_document_key`.
 - La `document_key` queda almacenada: si el create falla por otra causa,
   la reutilizas en el reintento — **no necesitas re-subir el archivo**.
-
 ## Payout QR
 
 Pagar un QR de cobro (Bolivia, PIX de Brasil) ahora tiene su propia guía:
