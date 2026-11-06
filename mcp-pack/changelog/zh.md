@@ -5,12 +5,12 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.221 · 5 个版本 - 2026年11月5日
-### v2.221
+## v2.223 · 7 个版本 - 2026年11月5日
+### v2.223
 **修复**
 - 验证表单现在会在服务端拒绝 HTML/脚本内容并返回明确错误，恶意标记
   无法再存入申请。API 无变化。
-### v2.220
+### v2.222
 **新增**
 - 电话注册认证新增 WhatsApp：`POST /v1/auth/register/2fa/sms/begin`
   接受可选 `channel`（默认 `sms`，可指定 `whatsapp`），其他值返回 `400
@@ -18,18 +18,39 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 **修复**
 - 转账与联系人的 `invalid_phone` 消息现说明所需的 E.164
   格式并提供具体示例，不再返回通用提供商错误。
-### v2.219
+### v2.221
 **修复**
 - 使用旧版 alpha-3 国家短链的 KYB 链接（如 `/on/usa/...`）不再返回 404：
   会重定向到规范短链并保留邀请，新签发的链接一律使用规范短链。API 无变化。
-### v2.218
+### v2.220
 **新增**
 - 智利 CLP 银行卡收款可在 `complete` 中使用 `2` 到 `48` 的整数 `months` 请求发卡行分期。托管结账页显示按发卡行返回结果筛选的期限，付款获批后回单会返回 `months`。
 **变更**
 - 省略 `months`，或发送 `0` 或 `1`，表示一次性付款。小于 `0` 或大于 `48` 的值会在扣款 claim 前返回 `400 invalid_payload`。已保存银行卡的 MIT 扣款和 Commerce Installments Beta 不在范围内。
-### v2.217
+### v2.219
 **变更**
 - 银行卡收款的 `bill_to` 支持可选的 `document_type` 和 `document_number`；智利校验模 11 RUT，无效值返回 `400 invalid_payload`。在提供保存选项并取得同意时，批准的 `complete` 会返回 `card_saved`，便于集成方告知付款人银行卡是否已保存。
+### v2.218
+**新增**
+- 哥伦比亚 Bre-B 出金支持整数 COP 金额，以及手机号、别名、Email 和
+  User ID 密钥；地址和 E.164 手机号为必填，并且仅支持 P2P。
+- 巴西 PIX QR 确认会返回扫描密钥类型，并提示 email、手机号或 EVP 密钥
+  何时需要 CPF/CNPJ 证件。门户中的巴西 payout 卡片提供 TED 和 PIX，
+  包括 PIX 按密钥/QR 切换。
+### v2.217
+**新增**
+- `GET /v1/banking/operations` 支持 `?scope=eur`：没有 USD 银行档案时返回
+  `200` 空列表（`banking_customer: none`），不再返回 `409
+  no_banking_customer`，纯 EUR 账户的欧元动态不再报错。不带 `scope`
+  时行为不变。
+- `POST /v1/banking/virtual-ibans` 支持 `document_no_expiry`（个人）和
+  `ubo_{i}_no_expiry`（企业）：无到期日的证件（西班牙 NIE、永久证件）
+  不再返回 422——声明该标志后，通道将收到一个远期日期，并在请求中审计。
+  已验证档案或请求中的有效到期日始终优先于该标志。
+**修复**
+- EUR 注册信息现会读取原生 KYC 档案中的 `id_expiry_date` /
+  `id_issued_country`（以前只读供应商的 `govId*` 字段），已有到期日的
+  已批准档案不再重复要求填写日期。
 ## v2.216 · 7 个版本 - 2026年11月4日
 ### v2.216
 **新增**

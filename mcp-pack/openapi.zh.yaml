@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.221"
+  version: "2.223"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -4034,7 +4034,7 @@ paths:
                   description: 本地货币(例如 CLP、PEN、MXN)。
                 method:
                   type: string
-                  description: 来自 `GET /v1/payouts/methods` 的 payout 方式(例如 `bank_transfer`)。
+                  description: 来自 `GET /v1/payouts/methods` 的 payout 方式(例如 `bank_transfer` 或 `breb`)。
                 amount:
                   type: string
                   description: 本地货币金额,正数十进制字符串。
@@ -4062,11 +4062,20 @@ paths:
                     first_surname:
                       type: string
                       description: 个人第一姓氏；与 given_name 同时提供时使用。
+                    breb_key:
+                      type: string
+                      description: 哥伦比亚 `CO`/`COP`/`breb` 的 Bre-B 密钥（手机号、`@alias`、Email 或 User ID）。
+                    breb_key_type:
+                      type: string
+                      enum: [phone, alias, email, userid]
+                      description: 可选的 Bre-B 密钥类型提示；服务器会校验密钥格式。
                   additionalProperties:
                     type: string
                   description: '目标账户详情。所需键取决于国家与方式;参见 `GET /v1/payouts/methods` 和
 
-                    `GET /v1/payouts/banks`。示例:智利为 RUT + 银行,墨西哥为 CLABE,秘鲁为 CCI。巴西 PIX:`pix_key` + `pix_key_type`(cpf、
+                    `GET /v1/payouts/banks`。哥伦比亚 Bre-B 使用 `breb_key` 和可选的
+                    `breb_key_type`，并要求 `tax_id`/`document_value`、`document_type`、`phone` 和 `address`。
+                    示例:智利为 RUT + 银行,墨西哥为 CLABE,秘鲁为 CCI。巴西 PIX:`pix_key` + `pix_key_type`(cpf、
 
                     cnpj、phone、email、evp),或不用键的银行账户,使用
 
@@ -4303,6 +4312,22 @@ paths:
                     pix_key_type: cpf
                     pix_key: '12345678909'
                   idempotency_key: br-pix-3321
+              co_breb:
+                summary: 哥伦比亚 — Bre-B P2P (COP)
+                value:
+                  country: CO
+                  currency: COP
+                  method: breb
+                  amount: '1000'
+                  beneficiary:
+                    name: Ana Torres
+                    tax_id: '123456789'
+                    document_type: CC
+                    phone: '+573001234567'
+                    address: Calle 10 #20-30
+                    breb_key: ana@example.com
+                    breb_key_type: email
+                  idempotency_key: co-breb-001
               ec_bank_transfer:
                 summary: 厄瓜多尔 — 银行转账(USD,含汇款人数据的汇款)
                 value:
@@ -13809,8 +13834,9 @@ paths:
                   type: string
                   description: 扫描 QR 的原始内容(在巴西同时是 PIX "copia e cola" 代码)。
             example:
+              country: BR
               qr_payload: <QR content>
-              currency: BOB
+              currency: BRL
       responses:
         '200':
           description: 供用户确认的收款人数据。
@@ -13835,15 +13861,24 @@ paths:
                     type: string
                   status:
                     type: string
+                  key_type:
+                    type: string
+                    enum: [tax_id, email, phone, evp]
+                    description: 扫码返回的巴西 PIX 密钥分类。
+                  requires_document:
+                    type: boolean
+                    description: 巴西 PIX confirm 是否必须同时提供 `document_type` 和 `document_id`。
               example:
                 scan_id: 5c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
                 provider_reference: QR-REF-889923
-                beneficiary_name: Juan Quispe
+                beneficiary_name: LOJA DA MARIA
                 destination_account: '****4521'
-                amount: '700.00'
-                currency: BOB
+                amount: '75.00'
+                currency: BRL
                 glosa: ''
                 status: scanned
+                key_type: tax_id
+                requires_document: false
         '400':
           description: 缺少 qr_payload(invalid_request),或二维码不可读/不受支持(invalid_qr_payload——BR Code 损坏、校验和无效或动态
             PIX 二维码;message 说明具体原因)。
@@ -13908,6 +13943,13 @@ paths:
                 amount:
                   type: string
                   description: 本地金额,正数十进制字符串。
+                document_type:
+                  type: string
+                  enum: [CPF, CNPJ]
+                  description: 对于非 `tax_id` 的巴西 PIX 密钥必须与 `document_id` 一起提供；`tax_id` 可选。
+                document_id:
+                  type: string
+                  description: 收款人 CPF/CNPJ。对于非 tax ID 的 PIX 密钥必须与 `document_type` 一起发送。
                 description:
                   type: string
                 settlement_asset:
@@ -14014,8 +14056,16 @@ paths:
               example:
                 error: account_blocked
                 message: account is not active
+        '409':
+          description: 相同幂等键再次使用时提交了不同的 QR 证件字段(`idempotency_conflict`)。
+          content:
+            application/json:
+              schema: *id010
+              example:
+                error: idempotency_conflict
+                message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: 被处理方拒绝;扣款已退回(payout 状态为 failed)。
+          description: 处理方拒绝(`core_rejected`)，包括非 tax ID 的巴西 PIX QR 未同时提供两个证件字段；创建 payout 后扣款会退回。
           content:
             application/json:
               schema:
@@ -19710,6 +19760,101 @@ paths:
               example:
                 status: revoked
                 sessions_revoked: 3
+  /v1/me/push-tokens:
+    post:
+      tags:
+      - 账户
+      operationId: registerPushToken
+      summary: 注册移动推送令牌
+      description: 为该帐户注册或刷新移动设备的 FCM/APNs 令牌。登录时调用；登出时调用
+        DELETE。验证失败使用 invalid_push_token 或 invalid_device。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - platform
+              - token
+              properties:
+                platform:
+                  type: string
+                  enum: [ios, android]
+                token:
+                  type: string
+                device_id:
+                  type: string
+                locale:
+                  type: string
+                  enum: [en, es, zh]
+            example:
+              platform: ios
+              token: fcm-token-1234567890abcdef
+              device_id: iphone-17-pro
+              locale: zh
+      responses:
+        '200':
+          description: 推送令牌已注册（仅尾部，从不返回完整令牌）。
+          content:
+            application/json:
+              example:
+                id: 8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                token_tail: …90abcdef
+        '400':
+          description: 平台或令牌无效（invalid_push_token，invalid_device）。
+          content:
+            application/json:
+              example:
+                error: invalid_push_token
+                message: platform must be ios or android
+    get:
+      tags:
+      - 账户
+      operationId: listPushTokens
+      summary: 列出我的推送设备
+      description: 列出已注册的移动设备（令牌已掩码，仅显示尾部）。
+      responses:
+        '200':
+          description: 推送设备。
+          content:
+            application/json:
+              example:
+                tokens:
+                - id: 8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  platform: ios
+                  device_id: iphone-17-pro
+                  token_tail: …90abcdef
+                  locale: zh
+                  last_seen_at: '2026-11-05T21:00:00Z'
+  /v1/me/push-tokens/{id}:
+    delete:
+      tags:
+      - 账户
+      operationId: deletePushToken
+      summary: 删除推送设备
+      description: 删除已注册的推送令牌（登出或设备退役）。未知 id 返回 not_found；缺少
+        id 返回 missing_id。
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 推送令牌已删除。
+          content:
+            application/json:
+              example:
+                deleted: true
+        '404':
+          description: 未找到推送令牌（not_found）。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: push token not found
   /v1/me/security/events:
     get:
       tags:

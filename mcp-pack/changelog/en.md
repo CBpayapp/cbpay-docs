@@ -5,13 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.221 · 5 versions - November 5, 2026
-### v2.221
+## v2.223 · 7 versions - November 5, 2026
+### v2.223
 **Fixed**
 - Verification forms now reject HTML/script content server-side with a
   clear error, so hostile markup can no longer be stored in applications.
   No API contract changes.
-### v2.220
+### v2.222
 **Added**
 - Registration enrollment by phone now accepts WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` takes an optional `channel` (`sms` by
@@ -22,19 +22,43 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - The `invalid_phone` message in transfers and contacts now explains the
   required E.164 format with a concrete example instead of the generic
   provider error.
-### v2.219
+### v2.221
 **Fixed**
 - KYB links with legacy alpha-3 country slugs (such as `/on/usa/...`) no
   longer return 404: they redirect to the canonical slug preserving the
   invite, and newly issued links always use canonical slugs. No API changes.
-### v2.218
+### v2.220
 **Added**
 - Chilean CLP card payins can request issuer installments with integer `months` from `2` to `48` during `complete`. The hosted checkout shows issuer-reported, curated terms, and an approved payment returns `months` in the receipt.
 **Changed**
 - `months` omitted, `0`, or `1` means a single payment. Values below `0` or above `48` return `400 invalid_payload` before the payment claim. Stored-card MIT charges and Commerce Installments Beta are excluded.
-### v2.217
+### v2.219
 **Changed**
 - Card payins accept optional payer `document_type` and `document_number` in `bill_to`; Chile validates modulo-11 RUTs and returns `400 invalid_payload` for invalid values. Approved completes report `card_saved` when saving was offered and consented, so integrators can tell the payer whether the card was stored.
+### v2.218
+**Added**
+- Colombia Bre-B payouts in whole COP pesos, with supported phone, alias,
+  email and user-ID keys, required address and E.164 phone, and P2P-only
+  validation.
+- Brazil PIX QR confirmation now reports the scanned key type and tells
+  integrators when a CPF/CNPJ document is required for email, phone or EVP
+  keys. Brazil's portal payout card exposes TED and PIX, including the PIX
+  key/QR toggle.
+### v2.217
+**Added**
+- `GET /v1/banking/operations` accepts `?scope=eur`: with no USD banking
+  profile it answers `200` with empty lists (`banking_customer: none`)
+  instead of `409 no_banking_customer`, so the EUR activity view no longer
+  fails for EUR-only accounts. Without `scope` the behavior is unchanged.
+- `POST /v1/banking/virtual-ibans` accepts `document_no_expiry` (person)
+  and `ubo_{i}_no_expiry` (companies): documents without an expiry date
+  (Spanish NIE, permanent IDs) no longer 422 — declare the flag and the
+  rail receives a far-future date, audited in the request payload. A valid
+  expiry from the verified profile or the request always wins over the flag.
+**Fixed**
+- The EUR registrant now reads `id_expiry_date` / `id_issued_country` from
+  the native KYC profile (previously only provider `govId*` keys), so
+  approved profiles with an expiry no longer ask for the date again.
 ## v2.216 · 7 versions - November 4, 2026
 ### v2.216
 **Added**

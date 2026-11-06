@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.221"
+  version: "2.223"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -4257,7 +4257,7 @@ paths:
                   description: Local currency (e.g. CLP, PEN, MXN).
                 method:
                   type: string
-                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer` or `sepa`).
+                  description: Payout method from `GET /v1/payouts/methods` (e.g. `bank_transfer`, `breb` or `sepa`).
                 amount:
                   type: string
                   description: Local currency amount as a positive decimal string.
@@ -4285,6 +4285,13 @@ paths:
                     first_surname:
                       type: string
                       description: Individual first surname; used with given_name when provided.
+                    breb_key:
+                      type: string
+                      description: Colombia Bre-B key for `CO`/`COP`/`breb` (phone, `@alias`, email or user ID).
+                    breb_key_type:
+                      type: string
+                      enum: [phone, alias, email, userid]
+                      description: Optional Bre-B key hint; the server validates the key shape.
                   additionalProperties:
                     type: string
                   description: 'Destination account details. Required keys depend on the
@@ -4293,7 +4300,9 @@ paths:
 
                     `GET /v1/payouts/banks`. Examples: RUT + bank in Chile, CLABE in
 
-                    Mexico, CCI in Peru. Brazil PIX: `pix_key` + `pix_key_type` (cpf,
+                    Mexico, CCI in Peru. Colombia Bre-B: `breb_key` plus optional
+                    `breb_key_type`, `tax_id`/`document_value`, `document_type`,
+                    `phone` and `address`. Brazil PIX: `pix_key` + `pix_key_type` (cpf,
 
                     cnpj, phone, email, evp), or a bank account without key using
 
@@ -4565,6 +4574,22 @@ paths:
                     pix_key_type: cpf
                     pix_key: '12345678909'
                   idempotency_key: br-pix-3321
+              co_breb:
+                summary: Colombia — Bre-B P2P (COP)
+                value:
+                  country: CO
+                  currency: COP
+                  method: breb
+                  amount: '1000'
+                  beneficiary:
+                    name: Ana Torres
+                    tax_id: '123456789'
+                    document_type: CC
+                    phone: '+573001234567'
+                    address: Calle 10 #20-30
+                    breb_key: ana@example.com
+                    breb_key_type: email
+                  idempotency_key: co-breb-001
               ec_bank_transfer:
                 summary: Ecuador — bank transfer (USD, remittance with sender data)
                 value:
@@ -14450,8 +14475,9 @@ paths:
                   type: string
                   description: Raw content of the scanned QR (in Brazil, also the PIX "copia e cola" code).
             example:
+              country: BR
               qr_payload: <QR content>
-              currency: BOB
+              currency: BRL
       responses:
         '200':
           description: Recipient data for user confirmation.
@@ -14476,15 +14502,24 @@ paths:
                     type: string
                   status:
                     type: string
+                  key_type:
+                    type: string
+                    enum: [tax_id, email, phone, evp]
+                    description: Brazil PIX key classification returned by the scan.
+                  requires_document:
+                    type: boolean
+                    description: Whether Brazil PIX confirm must include both `document_type` and `document_id`.
               example:
                 scan_id: 5c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
                 provider_reference: QR-REF-889923
-                beneficiary_name: Juan Quispe
+                beneficiary_name: LOJA DA MARIA
                 destination_account: '****4521'
-                amount: '700.00'
-                currency: BOB
+                amount: '75.00'
+                currency: BRL
                 glosa: ''
                 status: scanned
+                key_type: tax_id
+                requires_document: false
         '400':
           description: qr_payload missing (invalid_request) or unreadable/unsupported QR (invalid_qr_payload
             — corrupt BR Code, bad checksum, or a dynamic PIX QR; the message explains the exact reason).
@@ -14554,6 +14589,13 @@ paths:
                 amount:
                   type: string
                   description: Local amount as a positive decimal string.
+                document_type:
+                  type: string
+                  enum: [CPF, CNPJ]
+                  description: Required with `document_id` for Brazil PIX keys other than `tax_id`; optional for `tax_id`.
+                document_id:
+                  type: string
+                  description: Beneficiary CPF/CNPJ. Send together with `document_type` for non-tax-ID PIX keys.
                 description:
                   type: string
                 settlement_asset:
@@ -14661,8 +14703,16 @@ paths:
               example:
                 error: account_blocked
                 message: account is not active
+        '409':
+          description: The same idempotency key was reused with different QR confirmation document fields (`idempotency_conflict`).
+          content:
+            application/json:
+              schema: *id010
+              example:
+                error: idempotency_conflict
+                message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: Rejected by the processor; the debit was refunded (payout with status failed).
+          description: Rejected by the processor (`core_rejected`), including a non-tax-ID Brazil PIX QR confirmed without both document fields; the debit was refunded when a payout was created.
           content:
             application/json:
               schema:
@@ -20511,6 +20561,102 @@ paths:
               example:
                 status: revoked
                 sessions_revoked: 3
+  /v1/me/push-tokens:
+    post:
+      tags:
+      - Account
+      operationId: registerPushToken
+      summary: Register a mobile push token
+      description: Registers or refreshes the FCM/APNs token of a mobile device
+        for the account. Call at login; call DELETE on logout. Validation
+        failures use invalid_push_token or invalid_device.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - platform
+              - token
+              properties:
+                platform:
+                  type: string
+                  enum: [ios, android]
+                token:
+                  type: string
+                device_id:
+                  type: string
+                locale:
+                  type: string
+                  enum: [en, es, zh]
+            example:
+              platform: ios
+              token: fcm-token-1234567890abcdef
+              device_id: iphone-17-pro
+              locale: en
+      responses:
+        '200':
+          description: Push token registered (tail only, never the full token).
+          content:
+            application/json:
+              example:
+                id: 8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                token_tail: …90abcdef
+        '400':
+          description: Invalid platform or token (invalid_push_token, invalid_device).
+          content:
+            application/json:
+              example:
+                error: invalid_push_token
+                message: platform must be ios or android
+    get:
+      tags:
+      - Account
+      operationId: listPushTokens
+      summary: List my push devices
+      description: Lists the registered mobile devices with masked token tails.
+      responses:
+        '200':
+          description: Push devices.
+          content:
+            application/json:
+              example:
+                tokens:
+                - id: 8b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  platform: ios
+                  device_id: iphone-17-pro
+                  token_tail: …90abcdef
+                  locale: en
+                  last_seen_at: '2026-11-05T21:00:00Z'
+  /v1/me/push-tokens/{id}:
+    delete:
+      tags:
+      - Account
+      operationId: deletePushToken
+      summary: Remove a push device
+      description: Deletes a registered push token (logout or device retirement).
+        Unknown ids return not_found; a missing id returns missing_id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Push token deleted.
+          content:
+            application/json:
+              example:
+                deleted: true
+        '404':
+          description: Push token not found (not_found).
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: push token not found
   /v1/me/security/events:
     get:
       tags:

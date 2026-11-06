@@ -5,13 +5,13 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.221 · 5 versiones - 5 de noviembre de 2026
-### v2.221
+## v2.223 · 7 versiones - 5 de noviembre de 2026
+### v2.223
 **Corregido**
 - Los formularios de verificación ahora rechazan contenido HTML/script en
   el servidor con un error claro, de modo que el marcado hostil ya no
   puede guardarse en las solicitudes. Sin cambios en la API.
-### v2.220
+### v2.222
 **Agregado**
 - El enrolamiento por teléfono acepta WhatsApp: `POST
   /v1/auth/register/2fa/sms/begin` recibe `channel` opcional (`sms` por
@@ -22,19 +22,43 @@ source_url: https://docs.cbpayapp.com/es/changelog
 - El mensaje de `invalid_phone` en transferencias y contactos ahora
   explica el formato E.164 requerido con un ejemplo concreto en vez del
   error genérico de proveedor.
-### v2.219
+### v2.221
 **Corregido**
 - Los links KYB con slug de país legacy alpha-3 (como `/on/usa/...`) ya no
   devuelven 404: redirigen al slug canónico preservando el invite, y los
   links nuevos siempre usan slugs canónicos. Sin cambios en la API.
-### v2.218
+### v2.220
 **Agregado**
 - Los payins con tarjeta CLP de Chile pueden solicitar cuotas Emisor con `months` entero de `2` a `48` durante `complete`. El checkout alojado muestra plazos curados según lo informado por el emisor y un pago aprobado devuelve `months` en el recibo.
 **Cambiado**
 - Omitir `months`, o enviarlo como `0` o `1`, significa pago único. Valores menores que `0` o mayores que `48` devuelven `400 invalid_payload` antes del claim. Se excluyen los cobros MIT con tarjeta guardada y Cuotas Comercio Beta.
-### v2.217
+### v2.219
 **Cambiado**
 - Los payins con tarjeta aceptan `document_type` y `document_number` opcionales en `bill_to`; Chile valida el RUT con módulo 11 y devuelve `400 invalid_payload` si es inválido. Los `complete` aprobados informan `card_saved` cuando se ofreció guardar la tarjeta y hubo consentimiento, para que el integrador indique al pagador si quedó guardada.
+### v2.218
+**Agregado**
+- Payouts Bre-B de Colombia en pesos COP enteros, con llaves de teléfono,
+  alias, email y user ID, dirección y teléfono E.164 obligatorios, y
+  validación exclusiva P2P.
+- La confirmación de QR PIX de Brasil informa el tipo de llave escaneada y
+  cuándo requiere un documento CPF/CNPJ para llaves email, teléfono o EVP.
+  La tarjeta de payouts de Brasil en el portal expone TED y PIX, incluido el
+  selector PIX por llave/QR.
+### v2.217
+**Agregado**
+- `GET /v1/banking/operations` acepta `?scope=eur`: sin perfil bancario USD
+  responde `200` con listas vacías (`banking_customer: none`) en vez de
+  `409 no_banking_customer`, así la actividad EUR ya no falla para cuentas
+  solo-EUR. Sin `scope` el comportamiento no cambia.
+- `POST /v1/banking/virtual-ibans` acepta `document_no_expiry` (personas)
+  y `ubo_{i}_no_expiry` (empresas): los documentos sin vencimiento (NIE
+  español, IDs permanentes) ya no devuelven 422 — declara el flag y el riel
+  recibe una fecha far-future, auditada en el payload. Un vencimiento
+  válido del perfil o del request siempre gana al flag.
+**Corregido**
+- El registrante EUR ahora lee `id_expiry_date` / `id_issued_country` del
+  perfil KYC nativo (antes solo claves `govId*` del proveedor), así los
+  perfiles aprobados con vencimiento ya no piden la fecha de nuevo.
 ## v2.216 · 7 versiones - 4 de noviembre de 2026
 ### v2.216
 **Agregado**

@@ -172,6 +172,32 @@ GET /v1/payouts/{payoutID}
 使用相同 key 重复 confirm 时，会收到原始 payout 以及
 `idempotency_hit: true`。
 
+## 需要补充证件的巴西 PIX 密钥
+
+对于巴西 PIX QR，`POST /v1/payouts/qr/scan` 会返回 `key_type`，值为
+`tax_id`、`email`、`phone` 或 `evp`，并返回 `requires_document`。
+`tax_id` 密钥本身就是 CPF/CNPJ，可直接确认，无需额外证件。对于
+email、手机号或 EVP 密钥，确认时同时发送 `document_type`（`CPF` 或
+`CNPJ`）和 `document_id`：
+
+```json
+{
+  "country": "BR",
+  "currency": "BRL",
+  "provider_reference": "<scan 返回的 provider_reference>",
+  "amount": "75.00",
+  "document_type": "CPF",
+  "document_id": "52998224725",
+  "idempotency_key": "qr-br-doc-001"
+}
+```
+
+对于 `tax_id`，两个证件字段均为可选；对于其他密钥类型，两个字段
+必须同时提供。非 `tax_id` QR 未提供证件时，API 返回 `422
+core_rejected`，并提示使用收款人证件重新确认。与 `tax_id` 密钥不匹配
+的证件会被拒绝。相同幂等键搭配不同证件会返回
+`409 idempotency_conflict`；处理不明确响应时，保留原始幂等键和 payload。
+
 ## 错误
 
 | HTTP | 代码 | 处理方式 |
