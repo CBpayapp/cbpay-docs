@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.232"
+  version: "2.233"
   description: 'CBPay is a multi-currency payment platform: fiat payouts and collections
 
     across Latin America, internal transfers, on-chain funding and
@@ -9650,6 +9650,61 @@ paths:
           description: Person accounts have no third-party verifications.
         '404':
           description: Case not found or belongs to another account.
+  /v1/me/verifications/{kind}/third-party/{submissionID}/resend-link:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: resendMyThirdPartyLink
+      summary: Resend a case link to my company email
+      description: >-
+        Re-sends the SAME verification link of one own third-party case
+        (changes_requested or expired-but-remediable) to the calling company
+        account email. Never mints a new link and never returns the URL or any
+        credential in the response. Honest delivery: the 200 always carries
+        sent plus reminded_to (the account email), expires_at when known and
+        email_error when the mail could not be sent. Throttled to one resend
+        per case per day (429); audited.
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        description: Verification kind.
+        schema:
+          type: string
+          enum: [kyc, kyb]
+      - name: submissionID
+        in: path
+        required: true
+        description: Submission id from the list.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Resend outcome (no credentials included).
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@ownit.example
+                expires_at: '2026-11-30T12:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Person accounts have no third-party verifications.
+        '404':
+          description: Case not found or belongs to another account.
+        '409':
+          description: The case is already decided; there is no live link to resend.
+        '410':
+          description: The case link expired and the case is not remediable.
+        '422':
+          description: The account has no usable email or the case cannot be resent.
+        '429':
+          description: A resend for this case was already emailed in the last 24 hours.
+        '502':
+          description: The verification backend answered with an unusable response.
+        '503':
+          description: The organization is not fully configured or the verification backend failed.
   /v1/screenings/addresses:
     post:
       tags:

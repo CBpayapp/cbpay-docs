@@ -81,6 +81,49 @@ flowchart LR
   </Accordion>
 </AccordionGroup>
 
+## Reenviar el link del caso
+
+Si la empresa necesita nuevamente el mismo link alojado, puede reenviarlo al
+email que ya está asociado a la cuenta empresa:
+
+```bash
+curl -X POST \
+  "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f/resend-link"
+```
+
+Esta acción no usa Bearer. Nunca crea otro caso, cambia el link ni devuelve la
+URL. Está limitada a un reenvío por caso cada 24 horas.
+
+```json
+{
+  "sent": true,
+  "reminded_to": "owner@ownit.example",
+  "expires_at": "2026-11-30T12:00:00Z"
+}
+```
+
+`reminded_to` confirma el email de la cuenta empresa elegido para el envío.
+Se incluye `expires_at` cuando se conoce; si el envío falla, la respuesta
+también incluye `email_error`.
+
+| HTTP | Significado |
+|---:|---|
+| 409 | El caso ya fue decidido y no tiene un link vivo que reenviar. |
+| 410 | El link venció y el caso no permite subsanación. |
+| 422 | La cuenta no tiene un email usable o el caso no admite reenvío. |
+| 429 | Este caso ya recibió un reenvío por email en las últimas 24 horas. |
+
+<AccordionGroup>
+  <Accordion title="¿El link llegará a mi email?">
+    Sí. Se envía al email asociado a la cuenta empresa y la respuesta confirma
+    esa dirección en `reminded_to`.
+  </Accordion>
+  <Accordion title="¿Puedo reenviarlo a otro email?">
+    No. El destino queda pineado al email de la cuenta empresa. Actualiza la
+    cuenta mediante su proceso habilitado antes de pedir otro reenvío.
+  </Accordion>
+</AccordionGroup>
+
 Consulta el [catálogo de errores](/es/errors) para los códigos accionables.
 
 ## Casos terceros propios de la empresa

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.232"
+  version: "2.233"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -9230,6 +9230,58 @@ paths:
           description: 个人账户没有第三方验证。
         '404':
           description: 案件不存在或属于其他账户。
+  /v1/me/verifications/{kind}/third-party/{submissionID}/resend-link:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: resendMyThirdPartyLink
+      summary: 将案件链接重发到我的企业邮箱
+      description: >-
+        将自有第三方案件(changes_requested 或过期但可补正)的同一验证链接重发到调用企业账户邮箱。
+        绝不签发新链接,也绝不在响应中返回 URL 或任何凭证。诚实投递:200 始终携带 sent、
+        reminded_to(账户邮箱)、已知时的 expires_at 以及邮件未能发出时的 email_error。
+        每案每天限重发一次(429);已审计。
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        description: 验证类型。
+        schema:
+          type: string
+          enum: [kyc, kyb]
+      - name: submissionID
+        in: path
+        required: true
+        description: 列表中的 submission id。
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 重发结果(不含凭证)。
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@ownit.example
+                expires_at: '2026-11-30T12:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 个人账户没有第三方验证。
+        '404':
+          description: 案件不存在或属于其他账户。
+        '409':
+          description: 案件已裁决;没有可重发的有效链接。
+        '410':
+          description: 案件链接已过期且案件不可补正。
+        '422':
+          description: 账户没有可用邮箱或案件不支持重发。
+        '429':
+          description: 该案件在过去 24 小时内已重发过。
+        '502':
+          description: 验证后端返回了不可用响应。
+        '503':
+          description: 组织尚未完全配置或验证后端失败。
   /v1/screenings/addresses:
     post:
       tags:

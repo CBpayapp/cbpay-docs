@@ -5,29 +5,29 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.232 · 5 versiones - 6 de noviembre de 2026
-### v2.232
+## v2.233 · 6 versiones - 6 de noviembre de 2026
+### v2.233
 **Agregado**
 
 - Las cuentas empresa pueden listar UBOs y directores invitados mientras el
   KYB está en curso, con el estado de submission y declaración.
 - Se agregó una acción aislada por tenant para reenviar por email el mismo
   link hijo sin crear otro link ni verificación.
-### v2.231
+### v2.232
 **Agregado**
 - Las cuentas de empresa pueden administrar miembros humanos con roles
   `owner`, `operator` y `viewer` desde el portal o la API de Account. Los
   owners pueden agregar miembros, cambiar roles, bloquear o desbloquear
   logins y restablecer la contraseña de otro miembro. Estas acciones requieren
   el OTP `member_add`; los viewers siguen siendo de solo lectura.
-### v2.230
+### v2.231
 **Agregado**
 - Las empresas pueden leer sus propios casos KYC/KYB de terceros antes de la
   aprobación mediante endpoints de solo lectura acotados a la cuenta.
 **Cambiado**
 - Las solicitudes de subsanación conservan una checklist estructurada y solo
   notifican de nuevo cuando cambia el contenido solicitado.
-### v2.229
+### v2.230
 **Agregado**
 - El registro público ahora expone `POST /v1/auth/pow-challenge` para un
   desafío Hashcash de vida corta. Cuando se activa el modo de ataque, incluye
@@ -43,6 +43,10 @@ source_url: https://docs.cbpayapp.com/es/changelog
 **Errores**
 - El registro en modo de ataque sin una prueba de trabajo válida devuelve
   `400 pow_required`.
+### v2.229
+**Agregado**
+- Las empresas pueden reenviar el mismo link de subsanación de sus casos
+  terceros al email de la cuenta, una vez por caso al día y sin Bearer.
 ### v2.228
 **Agregado**
 - `GET /v1/me/txn-reviews` acepta `?kind=` (payout, payin,
