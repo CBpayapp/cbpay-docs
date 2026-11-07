@@ -74,6 +74,7 @@ Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/securit
 | 403 | `otp_required` | The action requires OTP: verify a challenge and retry with `X-OTP-Token` |
 | 403 | `otp_invalid` | OTP token invalid, expired or already used |
 | 403 | `session_required` | OTP challenges require a user session, not an API key |
+| 403 | `account_blocked` | The account is blocked or closed; no code is sent |
 | 403 | `phone_binding_cooldown` | Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email). Lift early with `POST /v1/me/phone/unlock-cooldown` (email/totp token) or ask your operator (`POST /v1/accounts/{id}/phone/clear-cooldown`) |
 | 409 | `phone_verification_required` | Verify your phone (OTP challenge) before enabling login 2FA over SMS/WhatsApp |
 | 401 | `invalid_code` | The code does not match |

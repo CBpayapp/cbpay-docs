@@ -306,6 +306,7 @@ no pide un código adicional.
 | 403 | `otp_required` | La acción exige OTP y no enviaste `X-OTP-Token` | Crea y verifica un desafío, reintenta con el header |
 | 403 | `otp_invalid` | Token inválido, expirado o ya usado | Verifica un desafío nuevo |
 | 403 | `session_required` | Pediste un desafío con una API key | Los desafíos son solo para sesiones de usuario |
+| 403 | `account_blocked` | La cuenta está bloqueada o cerrada | Pide a tu operador que la reactive |
 | 403 | `channel_locked_by_org` | Tu canal explícito es más débil que el mínimo efectivo para esta acción (la política de tu cuenta primero, luego el default de la org) | Omite `channel` o elige un factor más fuerte |
 | 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 4 h sin verificación y sin factor alternativo (app autenticadora o email verificado) | Enrola la app autenticadora o verifica tu email; libéralo antes con `POST /v1/me/phone/unlock-cooldown`, o pide a tu operador quitar el cooldown |
 | 401 | `invalid_code` | El código no coincide | Revisa el SMS/WhatsApp y reintenta (5 intentos) |

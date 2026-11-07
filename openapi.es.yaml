@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.233"
+  version: "2.235"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -19348,7 +19348,7 @@ paths:
                   value: { error: invalid_channel, message: 'channel must be sms, whatsapp, email or totp' }
         '403':
           description: Credencial API key (`session_required`), canal más débil que el piso de la org (`channel_locked_by_org`),
-            o teléfono recién enlazado sin verificación y sin factor alternativo (`phone_binding_cooldown`). Con el teléfono
+            o teléfono recién enlazado sin verificación y sin factor alternativo (`phone_binding_cooldown`), o cuenta bloqueada/cerrada (`account_blocked`). Con el teléfono
             en cooldown y sin canal explícito, el desafío cae automáticamente a la app autenticadora (si está enrolada)
             o al email de login verificado; el canal efectivo llega en la respuesta del desafío. Un canal explícito queda
             ligado a tu elección — nunca cae a otro.
@@ -19363,6 +19363,9 @@ paths:
                 channel_locked_by_org:
                   summary: Canal pedido más débil que el piso de la org para la acción
                   value: { error: channel_locked_by_org, message: your organization requires a stronger channel for this action }
+                account_blocked:
+                  summary: Cuenta bloqueada o cerrada
+                  value: { error: account_blocked, message: 'account is not active' }
         '409':
           description: La cuenta no tiene teléfono (`phone_required`).
           content:

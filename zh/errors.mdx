@@ -58,6 +58,7 @@ description: "错误格式与完整的错误码目录"
 | 403 | `otp_required` | 该操作需要 OTP：验证一个质询后携带 `X-OTP-Token` 重试 |
 | 403 | `otp_invalid` | OTP 令牌无效、已过期或已被使用 |
 | 403 | `session_required` | OTP 质询需要用户会话，不能使用 API 密钥 |
+| 403 | `account_blocked` | 账户被封禁或已关闭；不会发送验证码 |
 | 403 | `phone_binding_cooldown` | 手机号绑定未满 4 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱）。可用 `POST /v1/me/phone/unlock-cooldown`（邮箱/totp 令牌）提前解除，或请运营方执行（`POST /v1/accounts/{id}/phone/clear-cooldown`） |
 | 409 | `phone_verification_required` | 通过 SMS/WhatsApp 启用登录 2FA 前需先验证手机号（OTP 挑战） |
 | 401 | `invalid_code` | 验证码不匹配 |

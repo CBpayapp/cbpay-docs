@@ -5,7 +5,28 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.233 · 6 个版本 - 2026年11月6日
+## v2.235 · 1 个版本 - 2026年11月7日
+### v2.235
+**修复**
+- 被封禁或已关闭账户调用 `POST /v1/otp/challenges` 现返回 `403
+  account_blocked`，且不会发送任何验证码（此前有效会话可在 TTL
+  窗口内继续请求短信）。403 门禁（`gateOTPChallenge`）仍返回原来的空 403。
+- 注册新增拒绝四个已观测到的农场域名：`gmail10p.com`、`inboxes.com`、
+  `rommiui.com` 和 `voewo.com`（`400 email_domain_blocked`）。
+## v2.234 · 7 个版本 - 2026年11月6日
+### v2.234
+**新增**
+- Polygon USDT、USDC 与 `USDC.e`（桥接 USDC）作为独立资产
+  `polygon:usdt`、`polygon:usdc` 和 `polygon:usdce`，可用于钱包、充值、
+  提现、转账、隔离余额、历史记录和余额视图。均使用六位小数，合约详见
+  crypto 指南。
+- Polygon 充值在 128 个确认（约 4–5 分钟）后入账，提现按 `tx_id` 异步
+  对账；Polygon gas 使用 POL。
+- Settlement、限额、Travel Rule、KYT 与 analytics 按 1:1 计价 USDC.e。
+**变更**
+- 无法完成的自动转换保持 `pending_retry`。
+**V1 不支持**
+- V1 的 swaps、卡、checkout/QR PoS 和 OTC 不支持 `polygon:usdce`（USDC.e）。
 ### v2.233
 **新增**
 

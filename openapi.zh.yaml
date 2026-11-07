@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.233"
+  version: "2.235"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -18793,7 +18793,7 @@ paths:
                   summary: sms、whatsapp、email、totp 集合之外的渠道
                   value: { error: invalid_channel, message: 'channel must be sms, whatsapp, email or totp' }
         '403':
-          description: API key 凭证（`session_required`）、弱于组织下限的渠道（`channel_locked_by_org`），或最近绑定且未验证的手机号且无替代因素（`phone_binding_cooldown`）。未指定显式渠道且手机号处于冷却期时，质询会自动改用身份验证器应用（若已注册）或已验证的登录邮箱；实际使用的渠道会在质询响应中返回。显式渠道绑定你的选择——绝不会自动切换。
+          description: API key 凭证（`session_required`）、弱于组织下限的渠道（`channel_locked_by_org`），最近绑定且未验证的手机号且无替代因素（`phone_binding_cooldown`），或账户被封禁/关闭（`account_blocked`）。未指定显式渠道且手机号处于冷却期时，质询会自动改用身份验证器应用（若已注册）或已验证的登录邮箱；实际使用的渠道会在质询响应中返回。显式渠道绑定你的选择——绝不会自动切换。
           content:
             application/json:
               schema:
@@ -18805,6 +18805,9 @@ paths:
                 channel_locked_by_org:
                   summary: 请求的渠道弱于该操作对应的组织下限
                   value: { error: channel_locked_by_org, message: your organization requires a stronger channel for this action }
+                account_blocked:
+                  summary: 账户被封禁或已关闭
+                  value: { error: account_blocked, message: 'account is not active' }
         '409':
           description: 该账户没有手机号(`phone_required`)。
           content:
