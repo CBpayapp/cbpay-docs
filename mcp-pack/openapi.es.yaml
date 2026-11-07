@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.232"
+  version: "2.233"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -9613,6 +9613,61 @@ paths:
           description: Las cuentas persona no tienen verificaciones de terceros.
         '404':
           description: Caso inexistente o de otra cuenta.
+  /v1/me/verifications/{kind}/third-party/{submissionID}/resend-link:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: resendMyThirdPartyLink
+      summary: Reenviar un link de caso a mi email empresa
+      description: >-
+        Reenvía el MISMO link de verificación de un caso de terceros propio
+        (changes_requested o vencido-subsanable) al email de la cuenta empresa
+        llamante. Nunca forja un link nuevo ni devuelve la URL o credencial en
+        la respuesta. Entrega honesta: el 200 siempre trae sent más
+        reminded_to (el email de la cuenta), expires_at cuando se conoce y
+        email_error cuando el correo no pudo enviarse. Limitado a un reenvío
+        por caso al día (429); auditado.
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        description: Tipo de verificación.
+        schema:
+          type: string
+          enum: [kyc, kyb]
+      - name: submissionID
+        in: path
+        required: true
+        description: Id del submission del listado.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Resultado del reenvío (sin credenciales).
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@ownit.example
+                expires_at: '2026-11-30T12:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Las cuentas persona no tienen verificaciones de terceros.
+        '404':
+          description: Caso inexistente o de otra cuenta.
+        '409':
+          description: El caso ya fue decidido; no hay link vivo que reenviar.
+        '410':
+          description: El link del caso venció y el caso no es subsanable.
+        '422':
+          description: La cuenta no tiene un email usable o el caso no admite reenvío.
+        '429':
+          description: Este caso ya recibió un reenvío en las últimas 24 horas.
+        '502':
+          description: El backend de verificación respondió algo inutilizable.
+        '503':
+          description: La organización no está completamente configurada o falló el backend de verificación.
   /v1/screenings/addresses:
     post:
       tags:

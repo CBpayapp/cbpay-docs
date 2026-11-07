@@ -5,21 +5,21 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.232 · 5 versions - November 6, 2026
-### v2.232
+## v2.233 · 6 versions - November 6, 2026
+### v2.233
 **Added**
 
 - Company accounts can list invited UBOs and directors while KYB is in
   progress, including submission and declaration state.
 - Added a tenant-scoped action to resend the same child invite link by email
   without creating a duplicate link or verification.
-### v2.231
+### v2.232
 **Added**
 - Company accounts can manage human members with `owner`, `operator` and
   `viewer` roles from the portal or Account API. Owners can add members,
   change roles, block or unblock logins, and reset another member's password.
   These actions require the `member_add` OTP; viewers remain read-only.
-### v2.230
+### v2.231
 **Added**
 - Companies can read their own third-party KYC/KYB cases before approval through
   account-scoped, read-only list and detail endpoints, including remediation
@@ -27,7 +27,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 **Changed**
 - Remediation requests preserve a structured document checklist. Identical
   decision content is deduplicated; new requested content can notify again.
-### v2.229
+### v2.230
 **Added**
 - Public registration now exposes `POST /v1/auth/pow-challenge` for a
   short-lived Hashcash challenge. When attack mode is active, include the
@@ -43,6 +43,11 @@ source_url: https://docs.cbpayapp.com/en/changelog
 **Errors**
 - Attack-mode registration without a valid proof of work returns
   `400 pow_required`.
+### v2.229
+**Added**
+- Companies can resend the same remediation link for their own third-party
+  cases to the company account email, once per case per day, without a Bearer
+  token.
 ### v2.228
 **Added**
 - `GET /v1/me/txn-reviews` accepts `?kind=` (payout, payin,

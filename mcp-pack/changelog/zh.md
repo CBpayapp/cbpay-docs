@@ -5,26 +5,26 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.232 · 5 个版本 - 2026年11月6日
-### v2.232
+## v2.233 · 6 个版本 - 2026年11月6日
+### v2.233
 **新增**
 
 - 企业账户可以在 KYB 进行期间查看受邀 UBO 和董事，以及提交件和声明状态。
 - 新增按租户隔离的操作，可通过电子邮件重新发送同一个子邀请链接，不会
   创建重复链接或验证。
-### v2.231
+### v2.232
 **新增**
 - 公司账户现在可以通过门户或 Account API 管理 `owner`、`operator` 和
   `viewer` 人类成员。Owner 可以添加成员、修改角色、禁用或启用登录，
   以及重置其他成员的密码。这些操作需要 `member_add` OTP；Viewer
   仍然只有只读权限。
-### v2.230
+### v2.231
 **新增**
 - 公司账户在批准前也可以通过账户范围的只读接口读取自己的第三方
   KYC/KYB 案件。
 **变更**
 - 补正请求保留结构化文件 checklist；只有请求内容变化时才会再次通知。
-### v2.229
+### v2.230
 **新增**
 - 公共注册现在提供 `POST /v1/auth/pow-challenge`，用于短时 Hashcash
   挑战。攻击模式启用时，注册和邮箱确认请求必须携带已解决的
@@ -38,6 +38,10 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 **错误**
 - 攻击模式下缺少有效工作量证明的注册请求返回
   `400 pow_required`。
+### v2.229
+**新增**
+- 公司可以将自己第三方案件的同一个补正链接重发到公司账户邮箱，每个案件
+  每天一次，且无需 Bearer。
 ### v2.228
 **新增**
 - `GET /v1/me/txn-reviews` 支持 `?kind=`（payout、payin、

@@ -75,6 +75,45 @@ flowchart LR
 #### Does resubmission create a new review?
     No. The existing submission is updated and returns to review after the
     requested evidence is complete.
+## Resend the case link
+
+If the company needs the same hosted link again, resend it to the email
+already attached to the company account:
+
+```bash
+curl -X POST \
+  "https://api.qbank.cl/platform/v1/me/verifications/kyb/third-party/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f/resend-link"
+```
+
+This action does not use a Bearer token. It never creates a new case, changes
+the link, or returns the URL. It is limited to one resend per case every 24
+hours.
+
+```json
+{
+  "sent": true,
+  "reminded_to": "owner@ownit.example",
+  "expires_at": "2026-11-30T12:00:00Z"
+}
+```
+
+The `reminded_to` value identifies the company account email selected for
+delivery. A known `expires_at` is included; if delivery fails, the response
+also includes `email_error`.
+
+| HTTP | Meaning |
+|---:|---|
+| 409 | The case is already decided and has no live link to resend. |
+| 410 | The link expired and the case is not remediable. |
+| 422 | The account has no usable email, or the case cannot be resent. |
+| 429 | This case was already emailed a resend in the last 24 hours. |
+
+#### Will the link arrive at my email?
+    Yes. It is sent to the email attached to the authenticated company
+    account, and the response confirms that address in `reminded_to`.
+#### Can I resend it to another email address?
+    No. The destination is pinned to the company account email. Update the
+    account through its supported process before requesting a resend.
 See the [error catalog](https://docs.cbpayapp.com/en/errors) for actionable error codes.
 
 ## Company's own third-party cases
