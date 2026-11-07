@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.235"
+  version: "2.237"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -28246,6 +28246,32 @@ webhooks:
               broadcast_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
               subject: 计划维护
               body: 部分服务将在 2026-09-20 02:00 UTC 起进入只读模式。
+      responses:
+        '200':
+          description: 返回任意 2xx 以确认投递。
+  warroom_outreach:
+    post:
+      summary: 平台团队的安全通知
+      description: '命名的平台 god 从战情室向该账户发送了纯文本安全通知。该事件仅限本账户范围，绝不会广播给其他账户。'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, body]
+              properties:
+                subject:
+                  type: string
+                  description: 纯文本主题。
+                body:
+                  type: string
+                  description: 纯文本正文。绝不发送 HTML。
+            example:
+              subject: 异常登录尝试
+              body: 我们阻止了针对你账户的多次登录尝试。请检查你的会话并启用 2FA。
+              from: platform security team
+              at: '2026-11-07T20:00:00Z'
       responses:
         '200':
           description: 返回任意 2xx 以确认投递。
