@@ -57,6 +57,7 @@ Detalle y flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/secur
 | 403 | `otp_required` | La acción exige OTP: verifica un desafío y reintenta con `X-OTP-Token` |
 | 403 | `otp_invalid` | Token OTP inválido, expirado o ya usado |
 | 403 | `session_required` | Los desafíos OTP requieren sesión de usuario, no API key |
+| 403 | `account_blocked` | La cuenta está bloqueada o cerrada; no se envía código |
 | 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 4 h sin verificación y sin factor alternativo (app autenticadora o email verificado). Libéralo antes con `POST /v1/me/phone/unlock-cooldown` (token email/totp) o pide a tu operador (`POST /v1/accounts/{id}/phone/clear-cooldown`) |
 | 409 | `phone_verification_required` | Verifica tu teléfono (desafío OTP) antes de activar el 2FA de login por SMS/WhatsApp |
 | 401 | `invalid_code` | El código no coincide |

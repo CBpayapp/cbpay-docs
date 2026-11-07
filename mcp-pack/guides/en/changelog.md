@@ -5,7 +5,32 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.233 · 6 versions - November 6, 2026
+## v2.235 · 1 version - November 7, 2026
+### v2.235
+**Fixed**
+- `POST /v1/otp/challenges` on a blocked or closed account now answers
+  `403 account_blocked` without sending any code (previously a live
+  session could keep requesting SMS inside its TTL window). The 403 gate
+  (`gateOTPChallenge`) keeps answering its bare 403 as before.
+- Registration rejects four more observed farm domains: `gmail10p.com`,
+  `inboxes.com`, `rommiui.com` and `voewo.com` (`400 email_domain_blocked`).
+## v2.234 · 7 versions - November 6, 2026
+### v2.234
+**Added**
+- Polygon USDT, USDC and `USDC.e` (bridged USDC) are available as separate
+  `polygon:usdt`, `polygon:usdc` and `polygon:usdce` assets for wallets,
+  deposits, withdrawals, transfers, segregated balances, history and balance
+  views. All use six decimals; the USDT/USDC.e contracts and native USDC
+  contract are documented in the crypto guide.
+- Polygon deposits credit after 128 confirmations (~4–5 minutes) and
+  withdrawals reconcile asynchronously by `tx_id`; Polygon gas uses POL.
+- Settlement, limits, Travel Rule, KYT and analytics value USDC.e at 1:1.
+**Changed**
+- Automatic conversions into USDC.e that cannot complete remain
+  `pending_retry`.
+**Not available in v1**
+- Swaps, cards, checkout/QR PoS and OTC do not support `polygon:usdce`
+  (USDC.e) in v1.
 ### v2.233
 **Added**
 

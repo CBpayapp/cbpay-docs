@@ -192,6 +192,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 | 403 | `otp_required` | 该操作需要 OTP，但未发送 `X-OTP-Token` | 创建并验证一个质询，携带该请求头重试 |
 | 403 | `otp_invalid` | 令牌无效、已过期或已被使用 | 验证一个新的质询 |
 | 403 | `session_required` | 使用 API 密钥请求了质询 | 质询仅适用于用户会话 |
+| 403 | `account_blocked` | 账户被封禁或已关闭 | 请让运营方恢复账户 |
 | 403 | `channel_locked_by_org` | 显式渠道弱于该操作的有效最低强度（先看账户策略，再看组织默认值） | 省略 `channel` 或选择更强的因素 |
 | 403 | `phone_binding_cooldown` | 手机号绑定未满 4 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱） | 注册身份验证器应用或验证邮箱；使用 `POST /v1/me/phone/unlock-cooldown` 提前解除，或请您的运营方清除冷却 |
 | 401 | `invalid_code` | 验证码不匹配 | 核对 SMS/WhatsApp 中的验证码并重试（5 次机会） |

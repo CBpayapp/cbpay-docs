@@ -297,6 +297,7 @@ not request a second code.
 | 403 | `otp_required` | The action requires OTP and no `X-OTP-Token` was sent | Create and verify a challenge, retry with the header |
 | 403 | `otp_invalid` | Token invalid, expired or already used | Verify a new challenge |
 | 403 | `session_required` | You requested a challenge with an API key | Challenges are for user sessions only |
+| 403 | `account_blocked` | The account is blocked or closed | Ask your operator to restore the account |
 | 403 | `channel_locked_by_org` | Your explicit channel is weaker than the effective minimum for this action (your account's policy first, then the org default) | Leave `channel` out or pick a stronger factor |
 | 403 | `phone_binding_cooldown` | Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email) | Enroll the authenticator app or verify your email; lift early with `POST /v1/me/phone/unlock-cooldown`, or ask your operator to clear the cooldown |
 | 401 | `invalid_code` | The code does not match | Check the SMS/WhatsApp and retry (5 attempts) |
