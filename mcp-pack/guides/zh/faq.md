@@ -34,7 +34,7 @@ URL 和密钥。完整指南见[环境与测试](https://docs.cbpayapp.com/zh/en
 ## 资金与汇率
 
 #### 我的余额是什么货币？
-您的账户持有**十一个相互独立的余额**：USD（主资产，2 位小数）、USDT、USDC、BTC、GOLD、
+您的账户持有**十二个相互独立的余额**：USD（主资产，2 位小数）、USDT、USDC、USDCE、BTC、GOLD、
 SILVER、PLATINUM、BOB、MXN、ARS 和 CLP（零位小数）。CLP 在本地保留，
 CLP 同币种 payout 使用身份结算；它不是 FX 转换路径。`default_payin_asset: CLP`、
 swap、checkout/POS 和卡片在没有 FX 定价时保持阻断。参见[资金模型](https://docs.cbpayapp.com/zh/concepts/money-model)。

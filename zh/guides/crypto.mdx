@@ -15,10 +15,15 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 | `tron` | `usdt` | USDT |
 | `eth` | `usdt` | USDT |
 | `eth` | `usdc` | USDC |
+| `polygon` | `usdt` | USDT |
+| `polygon` | `usdc` | USDC |
+| `polygon` | `usdce` | **USDC.e**（桥接 USDC） |
 | `btc` | `btc` | BTC |
 
 每笔充值都会计入**其对应资产的余额**（USDC 钱包的充值计入您的
-USDC 余额；Bitcoin 钱包计入您的 BTC 余额）。`GOLD` 是唯一没有链上
+USDC 余额；Polygon USDT 或 USDC 钱包的充值计入对应余额；Polygon
+USDC.e 钱包的充值计入您的 **USDC.e** 余额；
+Bitcoin 钱包计入您的 BTC 余额）。`GOLD` 是唯一没有链上
 通道的余额：它只能通过内部转账和运营方入账进行变动。
 
 ```mermaid
@@ -27,7 +32,7 @@ flowchart LR
         wallet["您的 CBPay 钱包<br/>（固定地址）"] --> confirmed["链上<br/>确认"]
         confirmed --> credit["自动入账<br/>− 入金费用"]
     end
-    credit --> balance(("资产余额<br/>（USDT、USDC 或 BTC）"))
+    credit --> balance(("资产余额<br/>（USDT、USDC、USDC.e 或 BTC）"))
     subgraph withdrawFlow [提现]
         balance --> withdrawal["POST /v1/crypto/withdrawals<br/>扣除金额 + 费用"]
         withdrawal --> onchain{"链上<br/>结果"}
@@ -39,8 +44,9 @@ flowchart LR
 ## 您的账户创建时即自带钱包
 
 每个账户——个人和企业——在创建时都会自动获得**每种支持组合各一个
-充值钱包**（`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc` 和
-`btc`/`btc`），**完全免费**：注册完成后，您的四个地址即可接收资金。
+充值钱包**（`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、
+`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce` 和 `btc`/`btc`），
+**完全免费**：注册完成后，您的七个地址即可接收资金。
 
 ```bash
 # 账户创建后，您的地址即已存在：
@@ -85,8 +91,36 @@ curl https://api.qbank.cl/platform/v1/crypto/wallets \
 
 不可以。每个账户——个人和企业——每个网络+资产组合都恰好持有
 **一个充值钱包**，且全部随账户创建自动生成。
-`POST /v1/crypto/wallets` 仅用于补齐缺失的组合（例外情况）：四个
+`POST /v1/crypto/wallets` 仅用于补齐缺失的组合（例外情况）：七个
 钱包均已就位时会返回 `422 wallet_limit_reached`。
+
+### Polygon USDT、USDC 与 USDC.e
+
+Polygon 支持三个独立的六位小数余额。`polygon:usdt` 使用 USDT PoS
+合约 `0xc2132D05D31c914a87C6611C10748AEb04B58e8F`；`polygon:usdc`
+使用原生 USDC 合约 `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359`；
+`polygon:usdce` 使用下文的桥接 USDC 合约。不同代币不能混用地址和
+资产字段。
+
+充值会快速检测，但为了覆盖 Bor 重组，必须经过 **128 个 Polygon
+确认**（约 4–5 分钟）后才入账。提现使用正常的异步状态流，并通过
+`tx_id` 精确对账查询；Polygon gas 使用 POL 支付，不属于客户
+ledger 余额。
+
+响应会为每个 Polygon 组合返回一个只收款钱包。创建或恢复缺失钱包时，
+使用 `chain: "polygon"` 与 `asset: "usdt"`、`"usdc"` 或 `"usdce"`。
+Polygon 的 USDT、USDC、USDC.e 余额在余额、流水、历史和提现中始终分开。
+
+### Polygon USDC.e
+
+USDC.e 是 Polygon 上的桥接 USDC，与 Polygon USDC 是两个独立资产。
+其钱包、充值和提现使用 `chain: "polygon"` 与 `asset: "usdce"`。桥接
+合约为 `0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174`；金额使用六位
+小数，并记入 **USDC.e** 余额，不会静默记入 USDC。
+
+V1 支持 USDC.e 钱包、充值、提现、转账、隔离余额、历史记录和余额视图。
+V1 不支持 swaps、卡、checkout/QR PoS 或 OTC。无法完成的自动转换保持
+`pending_retry`，请读取现有操作，不要创建替代操作。
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/crypto/wallets \
@@ -188,8 +222,9 @@ Bitcoin 地址为**原生 bech32** 格式（`bc1q…`）：任何现代钱包或
 
 <Warning>
 **只能通过钱包所属网络发送该钱包的资产**（USDT 发到 USDT 钱包，
-USDC 发到 USDC 钱包，BTC 发到 Bitcoin 钱包）。地址归您所有且固定
-不变：每次充值都可以重复使用。
+USDC 发到 USDC 钱包，USDC.e 发到 USDC.e 钱包，BTC 发到 Bitcoin 钱包）。
+Polygon 上的 USDT 与 USDC 是不同的代币合约。地址归您所有且固定不变：
+每次充值都可以重复使用。
 </Warning>
 
 ### 确认时间
@@ -198,15 +233,15 @@ USDC 发到 USDC 钱包，BTC 发到 Bitcoin 钱包）。地址归您所有且�
 |---|---|---|
 | TRON | 近乎即时 | **约 1 分钟**（19 个确认） |
 | Ethereum | 近乎即时 | **数分钟**，视网络拥堵情况而定 |
+| Polygon | 近乎即时 | **约 4–5 分钟**（Bor 重组安全需要 128 个确认） |
 | Bitcoin | 第一个区块（约 10 分钟） | **约 30 分钟**（3 个确认） |
 
 入账时始终附带 webhook 和 `tx_id`，您可以在网络浏览器上进行核验。
 
 ## 转出（链上提现）
 
-从对应余额向任意外部地址发送 USDT、USDC 或 BTC（`asset` 为可选：
-`tron`/`eth` 网络默认 `USDT`，`btc` 网络默认 `BTC`；USDC 仅支持
-`eth` 网络）：
+从对应余额向任意外部地址发送 USDT、USDC、USDC.e 或 BTC（Polygon
+必须显式传入 `asset`）：
 
 <CodeGroup>
 
@@ -244,6 +279,19 @@ curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
     "to_address": "bc1qw50…",
     "amount": "0.00050000",
     "idempotency_key": "withdrawal-btc-2026-07-15-a"
+  }'
+```
+
+```bash USDC.e（Polygon 网络）
+curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "polygon",
+    "asset": "USDCE",
+    "to_address": "0x8f3B…",
+    "amount": "50.000000",
+    "idempotency_key": "withdrawal-usdce-polygon-2026-11-06-a"
   }'
 ```
 
@@ -455,15 +503,15 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
   -H "Authorization: Bearer <token>"
 ```
 
-每笔充值都计入**其钱包对应资产的余额**（USDT、USDC 或 BTC）；钱包是
+每笔充值都计入**其钱包对应资产的余额**（USDT、USDC、USDC.e 或 BTC）；钱包是
 入金入口，每种货币只有一个余额。
 
 ## 错误
 
 | HTTP | `error` | 原因 |
 |---|---|---|
-| 400 | `invalid_chain` | 不支持的网络（请使用 `tron`、`eth` 或 `btc`） |
-| 400 | `invalid_asset` | 该网络/资产组合没有链上通道（支持：`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`btc`/`btc` —— `GOLD` 不支持链上操作） |
+| 400 | `invalid_chain` | 不支持的网络（请使用 `tron`、`eth`、`polygon` 或 `btc`） |
+| 400 | `invalid_asset` | 该网络/资产组合没有链上通道（支持：`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`btc`/`btc` —— `GOLD` 不支持链上操作） |
 | 400 | `to_address_required` | 缺少提现目标地址 |
 | 402 | `insufficient_funds` | 该资产余额不足（不足以支付提现或创建费用） |
 | 422 | `wallet_limit_reached` | 该账户在此网络+资产组合下已持有充值钱包（个人和企业均适用） |
@@ -474,7 +522,8 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 <AccordionGroup>
 <Accordion title="我需要自己创建入金钱包吗？">
 不需要。每个账户出生时即免费拥有所有受支持交易对的入金钱包
-（`tron:usdt`、`eth:usdt`、`eth:usdc`、`btc:btc`）。创建端点只用于自愈
+（`tron:usdt`、`eth:usdt`、`eth:usdc`、`polygon:usdt`、`polygon:usdc`、
+`polygon:usdce`、`btc:btc`）。创建端点只用于自愈
 缺失的交易对 —— 同一交易对的第二个钱包会返回 `wallet_limit_reached`
 （422）。
 </Accordion>

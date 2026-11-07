@@ -7,7 +7,7 @@ source_url: https://docs.cbpayapp.com/es/introduction
 ---
 # Documentación de la API de CBPay
 
-Mueve dinero por Latinoamérica: payouts, payins, tarjetas, crypto y banking — una API, once saldos.
+Mueve dinero por Latinoamérica: payouts, payins, tarjetas, crypto y banking — una API, doce saldos.
 
 ## Empieza a integrar
 

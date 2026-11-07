@@ -17,14 +17,14 @@ CLP 在 Banking 中本地保留，并按工具展示派生余额。相同资产�
 
 ```mermaid
 flowchart LR
-  balances["GET /v1/balances"] --> ledger["11 ledger assets"]
+  balances["GET /v1/balances"] --> ledger["12 ledger assets"]
   history["GET /v1/balances/history"] --> ledger
   analytics["GET /v1/analytics/summary"] --> valuation["feed price or unpriced"]
 ```
 
 ## 法币资产出现在哪里
 
-- `GET /v1/balances`：始终返回十一种账本资产，包括余额为零的行。
+- `GET /v1/balances`：始终返回十二种账本资产（包括 USDCE），包括余额为零的行。
   BOB/MXN/ARS 使用两位小数；CLP 使用零位小数，例如 `"125.40"` 或 `"125"`。
 - `GET /v1/balances/history`：为每种法币提供每日序列。序列跟踪
   `available`，当前快照包含 held。

@@ -4,15 +4,16 @@ icon: "coins"
 description: "Saldos virtuales por moneda, conversión FX, holds y el ledger inmutable"
 ---
 
-## Once saldos virtuales independientes
+## Doce saldos virtuales independientes
 
-Cada cuenta mantiene **once saldos virtuales, uno por asset**:
+Cada cuenta mantiene **doce saldos virtuales, uno por asset**:
 
 | Asset | Qué es | Decimales | Cómo se fondea |
 |---|---|---|---|
 | `USD` | Dólares — **el saldo principal** | 2 | Payins fiat, swaps, transferencias, ajustes |
-| `USDT` | Stablecoin USD | 6 | Payins fiat, depósitos on-chain (TRON/Ethereum), transferencias |
-| `USDC` | Stablecoin USD | 6 | Depósitos on-chain (Ethereum), transferencias |
+| `USDT` | Stablecoin USD | 6 | Payins fiat, depósitos on-chain (TRON/Ethereum/Polygon), transferencias |
+| `USDC` | Stablecoin USD | 6 | Depósitos on-chain (Ethereum/Polygon), transferencias |
+| `USDCE` | Stablecoin bridged de USD en Polygon | 6 | Depósitos on-chain (Polygon), retiros, transferencias |
 | `BTC` | Bitcoin | 8 (satoshis) | Depósitos on-chain, abonos del operador y transferencias internas |
 | `GOLD` | Gramos de oro fino, respaldados por custodio | 6 | Abonos del operador y transferencias internas |
 | `SILVER` | Gramos de plata fina, respaldados por custodio | 6 | Abonos del operador y transferencias internas |
@@ -26,7 +27,7 @@ Son totalmente independientes entre sí: nunca se mezclan ni se convierten
 automáticamente. (`BANK_USD` y `BANK_EUR` son saldos espejo de banking
 separados — ver [Banking](/es/guides/banking).)
 
-`GET /v1/balances` devuelve siempre los once (con ceros si no has operado
+`GET /v1/balances` devuelve siempre los doce (con ceros si no has operado
 ese asset), como **strings decimales**:
 
 ```json
@@ -61,7 +62,7 @@ y comisiones usan USD salvo que la cuenta configure otra cosa. Un asset vacío s
 ## Elige desde qué saldo pagas
 
 Los **payouts** y las **comisiones de servicios** (KYC, creación de
-wallets, banking) pueden debitarse desde cualquiera de tus once saldos.
+wallets, banking) pueden debitarse desde cualquiera de tus doce saldos.
 El pipeline de pricing no cambia: la operación se cotiza en USDT como
 siempre, y al final el total se traduce al asset elegido con el **precio
 efectivo de settlement** del momento.

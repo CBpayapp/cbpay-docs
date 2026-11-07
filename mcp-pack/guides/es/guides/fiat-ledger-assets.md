@@ -20,14 +20,15 @@ identidad y con spreads cero. Todo decimal no nulo en CLP responde
 
 ```mermaid
 flowchart LR
-  balances["GET /v1/balances"] --> ledger["11 ledger assets"]
+  balances["GET /v1/balances"] --> ledger["12 ledger assets"]
   history["GET /v1/balances/history"] --> ledger
   analytics["GET /v1/analytics/summary"] --> valuation["feed price or unpriced"]
 ```
 
 ## Dónde aparecen
 
-- `GET /v1/balances`: siempre devuelve los once activos del ledger, incluso
+- `GET /v1/balances`: siempre devuelve los doce activos del ledger, incluido
+  USDCE, incluso
   filas en cero. BOB/MXN/ARS usan dos decimales; CLP usa cero decimales,
   por ejemplo `"125.40"` o `"125"`.
 - `GET /v1/balances/history`: incluye una serie diaria por cada activo fiat.

@@ -54,7 +54,7 @@ Ver [Idioma y locale](https://docs.cbpayapp.com/es/guides/locale).
 ## Dinero y tasas
 
 #### ¿En qué moneda está mi saldo?
-Tu cuenta mantiene **once saldos independientes**: USD (la moneda principal, 2 decimales), USDT, USDC, BTC, GOLD, SILVER, PLATINUM,
+Tu cuenta mantiene **doce saldos independientes**: USD (la moneda principal, 2 decimales), USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM,
 BOB, MXN, ARS y CLP (cero decimales). CLP se retiene localmente y el payout
 CLP same-currency usa settlement identidad; no es un camino de conversión FX.
 `default_payin_asset: CLP`, swaps, checkout/POS y tarjetas están bloqueados

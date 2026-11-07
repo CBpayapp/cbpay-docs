@@ -22,7 +22,7 @@ is also CLP: the debit is same-currency identity with zero settlement spreads.
 
 ```mermaid
 flowchart LR
-  balances["GET /v1/balances"] --> ledger["11 ledger assets"]
+  balances["GET /v1/balances"] --> ledger["12 ledger assets"]
   history["GET /v1/balances/history"] --> ledger
   analytics["GET /v1/analytics/summary"] --> valuation["feed price or unpriced"]
 ```
@@ -31,7 +31,7 @@ flowchart LR
 
 The following account endpoints include the four local-fiat assets:
 
-- `GET /v1/balances`: always returns all eleven ledger assets, including zero
+- `GET /v1/balances`: always returns all twelve ledger assets, including zero
   rows. BOB/MXN/ARS use two decimals; CLP uses zero decimals, for example
   `"125.40"` or `"125"`.
 - `GET /v1/balances/history`: includes a daily series for each fiat asset.

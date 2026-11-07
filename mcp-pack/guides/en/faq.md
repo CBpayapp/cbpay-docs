@@ -53,7 +53,7 @@ See [Locale and language](https://docs.cbpayapp.com/en/guides/locale).
 ## Money and rates
 
 #### What currency is my balance in?
-Your account holds **eleven independent balances**: USD (the principal currency, 2 decimals), USDT, USDC, BTC, GOLD, SILVER,
+Your account holds **twelve independent balances**: USD (the principal currency, 2 decimals), USDT, USDC, USDCE, BTC, GOLD, SILVER,
 PLATINUM, BOB, MXN, ARS, CLP (zero decimals). CLP is held locally and
 same-currency CLP payouts use identity settlement; it is not an FX conversion
 path.

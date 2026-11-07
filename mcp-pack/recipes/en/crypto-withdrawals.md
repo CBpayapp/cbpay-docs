@@ -15,10 +15,15 @@ combinations:
 | `tron` | `usdt` | USDT |
 | `eth` | `usdt` | USDT |
 | `eth` | `usdc` | USDC |
+| `polygon` | `usdt` | USDT |
+| `polygon` | `usdc` | USDC |
+| `polygon` | `usdce` | **USDC.e** (bridged USDC) |
 | `btc` | `btc` | BTC |
 
 Every deposit credits the **balance of its own asset** (a USDC wallet
-credits your USDC balance; the Bitcoin wallet credits your BTC balance).
+credits your USDC balance; a Polygon USDT or USDC wallet credits the
+corresponding balance; a Polygon USDC.e wallet credits your **USDC.e**
+balance; the Bitcoin wallet credits your BTC balance).
 `GOLD` is the only balance with no on-chain rail: it moves only via
 internal transfers and operator credits.
 
@@ -28,7 +33,7 @@ flowchart LR
         wallet["Your CBPay wallet<br/>(stable address)"] --> confirmed["On-chain<br/>confirmation"]
         confirmed --> credit["Automatic credit<br/>− funding fee"]
     end
-    credit --> balance(("Asset balance<br/>(USDT, USDC or BTC)"))
+    credit --> balance(("Asset balance<br/>(USDT, USDC, USDC.e or BTC)"))
     subgraph withdrawFlow [Withdraw]
         balance --> withdrawal["POST /v1/crypto/withdrawals<br/>debits amount + fee"]
         withdrawal --> onchain{"On-chain<br/>result"}
@@ -40,9 +45,10 @@ flowchart LR
 ## Your account is born with its wallets
 
 Every account — person and company — is created with **one deposit wallet
-per supported combination** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc` and
-`btc`/`btc`), **free of charge** and automatically: as soon as you
-register, your four addresses are ready to receive funds.
+per supported combination** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`,
+`polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce` and `btc`/`btc`),
+**free of charge** and automatically: as soon as you register, your seven
+addresses are ready to receive funds.
 
 ```bash
 # Right after creating the account, your addresses already exist:
@@ -87,8 +93,47 @@ can always tell them apart.
 No. Every account — person and company — holds exactly **one deposit
 wallet per network+asset pair**, and all of them are born with the account.
 `POST /v1/crypto/wallets` exists only to restore a missing pair (an
-exceptional case): with the four wallets already provisioned it responds
+exceptional case): with the seven wallets already provisioned it responds
 `422 wallet_limit_reached`.
+
+### Polygon USDT, USDC and USDC.e
+
+Polygon supports three separate six-decimal balances. `polygon:usdt` uses
+the USDT PoS contract
+`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`; `polygon:usdc` uses native
+USDC at `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359`; and `polygon:usdce`
+uses the bridged USDC contract documented below. Never send one token to
+another token's address flow.
+
+Deposits are detected quickly but credited after **128 Polygon
+confirmations** (approximately 4–5 minutes) to account for Bor reorgs.
+Withdrawals use the normal asynchronous status lifecycle and reconcile by
+`tx_id` (the reconciliation query is exact); Polygon gas is paid in POL and is not a customer
+ledger balance.
+
+```bash
+curl https://api.qbank.cl/platform/v1/crypto/wallets \
+  -H "Authorization: Bearer <token>"
+```
+
+The response includes one receive-only wallet for each Polygon pair. Use
+`chain: "polygon"` with `asset: "usdt"`, `"usdc"` or `"usdce"` when creating
+or restoring a missing wallet. Polygon USDT/USDC/USDC.e balances remain
+separate in balances, movements, history and withdrawals.
+
+### Polygon USDC.e
+
+USDC.e is the bridged USDC token on Polygon and is a separate asset from
+Polygon USDC. Use `chain: "polygon"` and `asset: "usdce"` for its wallet,
+deposit and withdrawal operations. The bridged contract is
+`0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174`; amounts use six decimals and
+are credited to the **USDC.e** balance, never to USDC.
+
+Polygon USDC.e is available for wallets, deposits, withdrawals, transfers,
+segregated balances, history and balance views. It is not available in swaps,
+cards, checkout/QR PoS or OTC in v1. Automatic conversions into USDC.e that
+cannot complete remain `pending_retry`; read the existing operation instead
+of creating a replacement.
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/crypto/wallets \
@@ -192,7 +237,8 @@ automatically (net of the `funding` fee if CBPay configured one) and the
 
 > **Important**
 Send **only the wallet's asset over its network** (USDT to a USDT wallet,
-USDC to a USDC wallet, BTC to the Bitcoin wallet). Addresses are yours and
+USDC to a USDC wallet, USDC.e to a USDC.e wallet, BTC to the Bitcoin wallet).
+Polygon USDT and USDC are separate token contracts. Addresses are yours and
 stable: you can reuse them for every deposit.
 ### Confirmation times
 
@@ -200,6 +246,7 @@ stable: you can reuse them for every deposit.
 |---|---|---|
 | TRON | Near-instant | **~1 minute** (19 confirmations) |
 | Ethereum | Near-instant | **A few minutes** depending on congestion |
+| Polygon | Near-instant | **~4–5 minutes** (128 confirmations for Bor reorg safety) |
 | Bitcoin | At the first block (~10 min) | **~30 minutes** (3 confirmations) |
 
 The credit always arrives with the webhook and the `tx_id` so you can
@@ -207,9 +254,9 @@ verify it on the network explorer.
 
 ## Transfer (on-chain withdrawals)
 
-Send USDT, USDC or BTC from its balance to any external address (`asset`
-is optional: default `USDT` on `tron`/`eth` and `BTC` on `btc`; USDC only
-over `eth`):
+Send USDT, USDC, USDC.e or BTC from its balance to any external address
+(`asset` is optional only where the pair has a default; for Polygon always
+send the explicit `asset`):
 
 ```bash USDT over TRON
 curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
@@ -233,6 +280,19 @@ curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
     "to_address": "0x8f3B…",
     "amount": "50.000000",
     "idempotency_key": "withdrawal-usdc-2026-07-09-a"
+  }'
+```
+
+```bash USDC over Polygon
+curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "polygon",
+    "asset": "usdc",
+    "to_address": "0x8f3B…",
+    "amount": "50.000000",
+    "idempotency_key": "withdrawal-polygon-usdc-2026-11-06-a"
   }'
 ```
 
@@ -455,15 +515,15 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
   -H "Authorization: Bearer <token>"
 ```
 
-Every deposit credits the **balance of its wallet's asset** (USDT, USDC or
-BTC); wallets are entry points, each currency has a single balance.
+Every deposit credits the **balance of its wallet's asset** (USDT, USDC,
+USDC.e or BTC); wallets are entry points, each asset has a single balance.
 
 ## Errors
 
 | HTTP | `error` | Cause |
 |---|---|---|
-| 400 | `invalid_chain` | Unsupported network (use `tron`, `eth` or `btc`) |
-| 400 | `invalid_asset` | Network/asset pair without an on-chain rail (supported: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `btc`/`btc` — `GOLD` does not operate on-chain) |
+| 400 | `invalid_chain` | Unsupported network (use `tron`, `eth`, `polygon` or `btc`) |
+| 400 | `invalid_asset` | Network/asset pair without an on-chain rail (supported: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc` — `GOLD` does not operate on-chain) |
 | 400 | `to_address_required` | Missing withdrawal destination address |
 | 402 | `insufficient_funds` | Not enough balance in that asset (for the withdrawal or the creation fee) |
 | 422 | `wallet_limit_reached` | The account already holds its deposit wallet for that network+asset pair (applies to persons and companies) |
@@ -473,7 +533,8 @@ BTC); wallets are entry points, each currency has a single balance.
 
 #### Do I need to create deposit wallets?
 No. Every account is born with its deposit wallets for all supported pairs
-(`tron:usdt`, `eth:usdt`, `eth:usdc`, `btc:btc`), free of charge. The
+(`tron:usdt`, `eth:usdt`, `eth:usdc`, `polygon:usdt`, `polygon:usdc`,
+`polygon:usdce`, `btc:btc`), free of charge. The
 create endpoint only self-heals a missing pair — a second wallet for the
 same pair answers `wallet_limit_reached` (422).
 #### When is a deposit credited to my balance?

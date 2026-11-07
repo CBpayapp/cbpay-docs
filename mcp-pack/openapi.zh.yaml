@@ -2,17 +2,17 @@ openapi: 3.1.0
 info:
   title: CBPay API
   version: "2.233"
-  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十一个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、BTC、
+  description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
-    payout 和服务费可从七个结算余额中的任意一个支付(用 `PUT /v1/settlement`
+    payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
 
     设置默认值,或在单笔 payout 中用 `settlement_asset` 覆盖);payin
 
     可自动兑换为你选择的资产(`default_payin_asset`)。
 
 
-    所有金额均为十进制字符串,遵循各货币的精度(USD/BOB/MXN/ARS 为 2 位小数,CLP 为 0 位,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。错误始终返回
+    所有金额均为十进制字符串,遵循各货币的精度(USD/BOB/MXN/ARS 为 2 位小数,CLP 为 0 位,USDT/USDC/USDCE/GOLD/SILVER/PLATINUM 为 6 位小数,BTC 为 8 位)。错误始终返回
 
     `{"error": "<code>", "message": "<detail>"}`。
 
@@ -3445,7 +3445,7 @@ paths:
       - 余额
       operationId: getBalances
       summary: 获取余额
-      description: 调用账户的十一个独立虚拟余额(USD(主资产)、USDT、USDC、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
+      description: 调用账户的十二个独立虚拟余额(USD(主资产)、USDT、USDC、USDCE、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS、CLP)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用
         Banking,其 BANK_USD/BANK_EUR 镜像余额也会列出,`custody` 标记为 `banking`(权威余额在银行;这些余额在平台内不可消费)。
       responses:
         '200':
@@ -3497,7 +3497,7 @@ paths:
         `spot_priced_dates` 中披露——绝不虚构数值。
 
 
-        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总覆盖十一个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)。
+        `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总覆盖十二个账本余额(USD、USDT、USDC、USDCE、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS、CLP)。
 
         '
       parameters:
@@ -3537,7 +3537,7 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 每个资产一条每日收盘余额序列。包含十一个账本余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
+                    description: 每个资产一条每日收盘余额序列。包含十二个账本余额(USD、USDT、USDC、USDCE、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS、CLP)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入
                       `total_usd`。
                     additionalProperties:
                       type: object
@@ -4354,7 +4354,7 @@ paths:
       description: '向本地银行账户派发法币。本地金额按**你账户的汇率**(与 `GET /v1/rates` 返回的相同)转换为 USDT;扣除 `usdt_amount` 加固定费用(如有配置)并冻结,直到派发完成。若失败,全额退款。
 
 
-        **从任意余额支付**:默认从你账户的默认结算资产扣款(`default_settlement_asset`——USD 为主资产;用 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM)
+        **从任意余额支付**:默认从你账户的默认结算资产扣款(`default_settlement_asset`——USD 为主资产;用 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USD、USDT、USDC、USDCE、BTC、GOLD、SILVER 或 PLATINUM)
         可让这笔操作从其他余额支付:总额按当时的有效结算价格转换为该资产(见 `GET /v1/rates` 的 `settlement` 块),扣款、冻结以及失败时的退款都在该资产中且金额完全一致。若
         BTC/GOLD/SILVER/PLATINUM 的执行价格不可用,请求返回 `503 pricing_unavailable`;波动性资产还有单笔限额(`422 settlement_limit_exceeded`)。
 
@@ -4496,6 +4496,7 @@ paths:
                   - USD
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
@@ -4504,7 +4505,7 @@ paths:
                   - MXN
                   - ARS
                   - CLP
-                  description: 此操作要扣款的虚拟余额。可接受的值:USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 与 ARS。法币执行目前返回 503 pricing_unavailable。省略则使用账户的默认结算资产(`default_settlement_asset`——USD 为主资产)。
+                  description: 此操作要扣款的虚拟余额。可接受的值:USDT、USDC、USDCE、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 与 ARS。法币执行目前返回 503 pricing_unavailable。省略则使用账户的默认结算资产(`default_settlement_asset`——USD 为主资产)。
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -7409,7 +7410,7 @@ paths:
       - 转账
       operationId: createTransfer
       summary: 创建内部转账
-      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持十一个虚拟余额(USD、USDT、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
+      description: '在两个 CBPay 账户之间划转余额,原子执行且始终免费——任意组合皆可:个人对个人、个人对企业、企业对个人或企业对企业。支持十二个虚拟余额(USD、USDT、USDC、USDCE、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS、CLP),且始终在**同一货币**的余额之间进行(不做兑换)。目标通过
         `to_account_id`、`to_email`、`to_phone`(仅 OTP 已验证的手机号)或 `to_contact_id` 解析。每笔转账都会自动把收款人保存为联系人(用
         `save_contact: false` 退出)。收款方的 webhook 订阅者会收到 `transfer_received`。'
       parameters:
@@ -7450,6 +7451,7 @@ paths:
                   - USD
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
@@ -7461,7 +7463,7 @@ paths:
                   description: 要划转的余额币种;接收方以同一币种入账。省略时使用付款方的结算资产(USD 为主资产)。
                 amount:
                   type: string
-                  description: 正数十进制字符串,不超过该货币的小数位数(USD/BOB/MXN/ARS 为 2 位,CLP 为 0 位,USDT/USDC/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
+                  description: 正数十进制字符串,不超过该货币的小数位数(USD/BOB/MXN/ARS 为 2 位,CLP 为 0 位,USDT/USDC/USDCE/GOLD/SILVER/PLATINUM 为 6 位,BTC 为 8 位)。
                   example: '10.500000'
                 description:
                   type: string
@@ -7643,7 +7645,7 @@ paths:
       - 加密货币
       operationId: createCryptoWithdrawal
       summary: 创建链上提现
-      description: 从其自身余额链上发送 USDT、USDC 或 BTC。支持的组合:`tron`/`USDT`、`eth`/`USDT`、`eth`/`USDC`、`btc`/`BTC`(GOLD 无链上通道)。`amount
+      description: 从其自身余额链上发送 USDT、USDC、USDC.e 或 BTC。支持的组合:`tron`/`USDT`、`eth`/`USDT`、`eth`/`USDC`、`polygon`/`USDT`、`polygon`/`USDC`、`polygon`/`USDC.e`、`btc`/`BTC`(GOLD 无链上通道)。`amount
         + 提现费` 原子扣除并冻结;最终状态通过 `crypto_withdrawal_status_changed` webhook 送达。`failed` 会全额退款。
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
@@ -7661,6 +7663,7 @@ paths:
                   enum:
                   - tron
                   - eth
+                  - polygon
                   - btc
                   default: tron
                 asset:
@@ -7668,9 +7671,10 @@ paths:
                   enum:
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   default: USDT
-                  description: 要发送的资产(USDC 仅支持 `eth`;在 `btc` 上资产默认为 `BTC`)。
+                  description: 要发送的资产(USDC 支持 `eth` 或 `polygon`; USDC.e (`USDCE`) 仅支持 `polygon`;在 `btc` 上资产默认为 `BTC`)。
                 to_address:
                   type: string
                 to_contact_id:
@@ -13190,7 +13194,7 @@ paths:
       - 加密货币
       operationId: createCryptoWallet
       summary: 补齐缺失的充值钱包
-      description: '每个账户——个人和企业——每个受支持组合都恰好持有**一个充值钱包**(`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`btc`/`btc`),注册时自动免费开通。充值钱包只用于**接收**加密货币并计入账户的虚拟余额:不能发送,也不能导出或导入(那是隔离钱包的功能)。本端点仅用于补齐缺失的组合(例外情况):组合已存在时对所有账户类型都返回
+      description: '每个账户——个人和企业——每个受支持组合都恰好持有**一个充值钱包**(`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`btc`/`btc`),注册时自动免费开通。充值钱包只用于**接收**加密货币并计入账户的虚拟余额:不能发送,也不能导出或导入(那是隔离钱包的功能)。本端点仅用于补齐缺失的组合(例外情况):组合已存在时对所有账户类型都返回
         `422 wallet_limit_reached`。
 
 
@@ -13209,15 +13213,17 @@ paths:
                   enum:
                   - tron
                   - eth
+                  - polygon
                   - btc
                 asset:
                   type: string
                   enum:
                   - usdt
                   - usdc
+                  - usdce
                   - btc
                   default: usdt
-                  description: 钱包资产(usdc 仅支持 `eth`;在 `btc` 上资产默认为 `btc`)。
+                  description: 钱包资产(USDC 支持 `eth` 或 `polygon`; USDT/USDC/USDC.e 支持 `polygon`;在 `btc` 上资产默认为 `btc`)。
                 label:
                   type: string
                   description: 可选的描述性标签。
@@ -13231,6 +13237,11 @@ paths:
                 value:
                   chain: eth
                   asset: usdc
+              usdce_wallet:
+                summary: 补齐 USDC.e 组合(仅 Polygon)
+                value:
+                  chain: polygon
+                  asset: usdce
               btc_wallet:
                 summary: 补齐 Bitcoin 组合
                 value:
@@ -13403,7 +13414,7 @@ paths:
       - 隔离钱包
       operationId: createSegregatedWallet
       summary: 创建隔离钱包
-      description: 创建一个由调用方账户拥有的链上新钱包。其余额存在于链上(从不进入账本),并豁免于资金归集(treasury sweep)。支持的组合:`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`btc`/`btc`。企业账户可创建不限数量的钱包;个人账户每个网络+资产组合限
+      description: 创建一个由调用方账户拥有的链上新钱包。其余额存在于链上(从不进入账本),并豁免于资金归集(treasury sweep)。支持的组合:`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`btc`/`btc`。企业账户可创建不限数量的钱包;个人账户每个网络+资产组合限
         **1 个**(创建第二个会返回 `422 wallet_limit_reached`)。可选的 `Idempotency-Key`(或请求体中的 `idempotency_key`)让重试安全:重复请求返回同一钱包,不会创建第二个。可能收取
         `wallet_creation` 费用(创建失败退款)。
       requestBody:
@@ -13420,12 +13431,14 @@ paths:
                   enum:
                   - tron
                   - eth
+                  - polygon
                   - btc
                 asset:
                   type: string
                   enum:
                   - usdt
                   - usdc
+                  - usdce
                   - btc
                   default: usdt
                 label:
@@ -13447,6 +13460,13 @@ paths:
                   asset: usdc
                   label: Project X
                   idempotency_key: wallet-project-x
+              polygon_usdce:
+                summary: Polygon USDC.e
+                value:
+                  chain: polygon
+                  asset: usdce
+                  label: Polygon USDC.e custody
+                  idempotency_key: wallet-polygon-usdce-001
               btc_btc:
                 summary: Bitcoin BTC
                 value:
@@ -13480,7 +13500,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: invalid_asset
-                message: 'unsupported chain/asset pair (supported: tron/usdt, eth/usdt, eth/usdc, btc/btc)'
+                message: 'unsupported chain/asset pair (supported: tron/usdt, eth/usdt, eth/usdc, polygon/usdt, polygon/usdc, polygon/usdce, btc/btc)'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -19029,6 +19049,7 @@ paths:
                   - USD
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
