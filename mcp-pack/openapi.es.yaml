@@ -6,11 +6,11 @@ info:
 
     en toda América Latina, transferencias internas, fondeo y retiros
 
-    on-chain, y screening KYC. Cada cuenta mantiene once saldos virtuales
+    on-chain, y screening KYC. Cada cuenta mantiene doce saldos virtuales
 
     independientes — USD (la moneda principal de las cuentas nuevas; las cuentas
 
-    existentes mantienen USDT salvo que cambien su configuración), USDT, USDC, BTC y GOLD (gramos de
+    existentes mantienen USDT salvo que cambien su configuración), USDT, USDC, USDCE, BTC y GOLD (gramos de
 
     oro fino), SILVER, PLATINUM (gramos) y BOB, MXN, ARS y CLP (libro mayor fiat; BOB/MXN/ARS usan 2 decimales y CLP 0) —
 
@@ -18,7 +18,7 @@ info:
 
     Los payouts y las comisiones de servicios pueden pagarse desde cualquiera
 
-    de los siete saldos de liquidación (`PUT /v1/settlement` u override por payout con
+    de los ocho saldos de liquidación (`PUT /v1/settlement` u override por payout con
 
     `settlement_asset`), y los payins directos en USD se acreditan en USD; el resto de payins puede auto-convertirse al asset que
 
@@ -27,7 +27,7 @@ info:
 
     Todos los montos son strings decimales en la precisión de cada moneda (2
 
-    decimales para USD/BOB/MXN/ARS, 0 para CLP, 6 decimales para USDT/USDC/GOLD/SILVER/PLATINUM y 8 para BTC). Los errores siempre devuelven
+    decimales para USD/BOB/MXN/ARS, 0 para CLP, 6 decimales para USDT/USDC/USDCE/GOLD/SILVER/PLATINUM y 8 para BTC). Los errores siempre devuelven
 
     `{"error": "<code>", "message": "<detail>"}`.
 
@@ -3599,9 +3599,9 @@ paths:
       - Saldos
       operationId: getBalances
       summary: Obtener saldos
-      description: Los once saldos virtuales independientes de la cuenta que llama (USD — la moneda
-        principal —, USDT, USDC, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos
-        y los saldos fiat BOB, MXN y ARS de 2 decimales). Todos los activos soportados vienen siempre,
+      description: Los doce saldos virtuales independientes de la cuenta que llama (USD — la moneda
+        principal —, USDT, USDC, USDCE, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos
+        y los saldos fiat BOB, MXN, ARS de 2 decimales y CLP sin decimales). Todos los activos soportados vienen siempre,
         con ceros si la cuenta no ha usado esa moneda. Si la cuenta usa Banking, sus saldos espejo BANK_USD/BANK_EUR
         también se listan con el marcador `custody` en `banking` (el saldo autoritativo vive en el banco;
         estos saldos no son gastables dentro de la plataforma).
@@ -3662,7 +3662,7 @@ paths:
 
         El mapa `assets` incluye también los espejos de las cuentas banking (`BANK_USD`, `BANK_EUR`) como
         serie propia en su propia moneda (2 decimales). **No** forman parte del agregado `total_usd`,
-        que cubre los once saldos del libro mayor (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP).
+        que cubre los doce saldos del libro mayor (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP).
 
         '
       parameters:
@@ -3702,8 +3702,8 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 'Una serie de saldo de cierre diario por asset. Incluye los once saldos
-                      del ledger (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) y los
+                    description: 'Una serie de saldo de cierre diario por asset. Incluye los doce saldos
+                      del ledger (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) y los
                       espejos de las cuentas banking (BANK_USD, BANK_EUR)
                       en su propia moneda; las series banking quedan fuera de `total_usd`.
 
@@ -4548,7 +4548,7 @@ paths:
 
         **Paga desde cualquier saldo**: por defecto el débito sale del asset de settlement predeterminado
         de tu cuenta (`default_settlement_asset` — USD es el saldo principal; cámbialo con `PUT /v1/settlement`). Envía `settlement_asset` (USD, USDT,
-        USDC, BTC, GOLD, SILVER o PLATINUM) para pagar esta operación puntual desde otro saldo: el total se convierte
+        USDC, USDCE, BTC, GOLD, SILVER o PLATINUM) para pagar esta operación puntual desde otro saldo: el total se convierte
         a ese asset al precio efectivo de settlement del momento (ver el bloque `settlement` de `GET /v1/rates`)
         y el débito, la retención y — si falla — el reembolso viven en ese asset por el monto exacto.
         Si el precio de ejecución de BTC/GOLD/SILVER/PLATINUM no está disponible, el request devuelve `503 pricing_unavailable`;
@@ -4717,6 +4717,7 @@ paths:
                   - USD
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
@@ -7725,7 +7726,7 @@ paths:
       summary: Crear una transferencia interna
       description: 'Mueve saldo entre dos cuentas CBPay, de forma atómica y siempre gratuita — funciona
         cualquier combinación: persona a persona, persona a empresa, empresa a persona o empresa a empresa.
-        Funciona con los once saldos virtuales (USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) y siempre entre
+        Funciona con los doce saldos virtuales (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) y siempre entre
         saldos de la **misma moneda** (sin conversión). El destino se resuelve por `to_account_id`, `to_email`,
         `to_phone` (solo teléfonos verificados por OTP) o `to_contact_id`. Cada transferencia guarda al
         destinatario como contacto automáticamente (desactívalo con `save_contact: false`). Los suscriptores
@@ -7776,6 +7777,7 @@ paths:
                   - USD
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
@@ -7787,7 +7789,7 @@ paths:
                   description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD es el saldo principal).
                 amount:
                   type: string
-                  description: String decimal positivo, hasta los decimales de la moneda (2 para USD/BOB/MXN/ARS, 0 para CLP, 6 para USDT/USDC/GOLD/SILVER/PLATINUM,
+                  description: String decimal positivo, hasta los decimales de la moneda (2 para USD/BOB/MXN/ARS, 0 para CLP, 6 para USDT/USDC/USDCE/GOLD/SILVER/PLATINUM,
                     8 para BTC).
                   example: '10.500000'
                 description:
@@ -7972,8 +7974,8 @@ paths:
       - Crypto
       operationId: createCryptoWithdrawal
       summary: Crear un retiro on-chain
-      description: 'Envía USDT, USDC o BTC on-chain desde su propio saldo. Pares soportados: `tron`/`USDT`,
-        `eth`/`USDT`, `eth`/`USDC`, `btc`/`BTC` (GOLD no tiene riel on-chain). `amount + comisión de retiro`
+      description: 'Envía USDT, USDC, USDC.e o BTC on-chain desde su propio saldo. Pares soportados: `tron`/`USDT`,
+        `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD no tiene riel on-chain). `amount + comisión de retiro`
         se debita atómicamente y queda retenido; el estado final llega vía el webhook `crypto_withdrawal_status_changed`.
         `failed` reembolsa el débito completo.'
       parameters:
@@ -7992,6 +7994,7 @@ paths:
                   enum:
                   - tron
                   - eth
+                  - polygon
                   - btc
                   default: tron
                 asset:
@@ -7999,9 +8002,10 @@ paths:
                   enum:
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   default: USDT
-                  description: Activo a enviar (USDC solo por `eth`; en `btc` el activo por defecto
+                  description: Activo a enviar (USDC por `eth` o `polygon`; USDC.e (`USDCE`) solo por `polygon`; en `btc` el activo por defecto
                     es `BTC`).
                 to_address:
                   type: string
@@ -13636,7 +13640,7 @@ paths:
       operationId: createCryptoWallet
       summary: Reponer una wallet de depósito faltante
       description: 'Toda cuenta — persona y empresa — tiene exactamente **una wallet de depósito por par
-        soportado** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `btc`/`btc`), aprovisionadas automáticamente y gratis
+        soportado** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`), aprovisionadas automáticamente y gratis
         al registrarse. Las wallets de depósito solo **reciben** crypto que se abona al saldo virtual
         de la cuenta: no envían, y no se exportan ni importan (para eso están las wallets segregadas).
         Este endpoint existe solo para reponer un par faltante (caso excepcional): con el par ya aprovisionado
@@ -13660,16 +13664,18 @@ paths:
                   enum:
                   - tron
                   - eth
+                  - polygon
                   - btc
                 asset:
                   type: string
                   enum:
                   - usdt
                   - usdc
+                  - usdce
                   - btc
                   default: usdt
-                  description: Activo de la wallet (usdc solo por `eth`; en `btc` el activo por defecto
-                    es `btc`).
+                  description: Activo de la wallet (USDC por `eth` o `polygon`; USDT/USDC/USDC.e por
+                    `polygon`; en `btc` el activo por defecto es `btc`).
                 label:
                   type: string
                   description: Etiqueta descriptiva opcional.
@@ -13683,6 +13689,11 @@ paths:
                 value:
                   chain: eth
                   asset: usdc
+              usdce_wallet:
+                summary: Reponer el par USDC.e (solo Polygon)
+                value:
+                  chain: polygon
+                  asset: usdce
               btc_wallet:
                 summary: Reponer el par Bitcoin
                 value:
@@ -13857,7 +13868,7 @@ paths:
       summary: Crear una wallet segregada
       description: 'Crea una wallet on-chain nueva de la cuenta que llama. Su saldo vive on-chain (nunca
         en el ledger) y queda exenta del barrido de tesorería. Pares soportados: `tron`/`usdt`, `eth`/`usdt`,
-        `eth`/`usdc`, `btc`/`btc`. Las cuentas empresa pueden crear wallets ilimitadas; las cuentas persona tienen
+        `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`. Las cuentas empresa pueden crear wallets ilimitadas; las cuentas persona tienen
         **1 por combinación red+activo** (la segunda responde `422 wallet_limit_reached`). Un `Idempotency-Key`
         opcional (o `idempotency_key` en el body) hace el reintento seguro: una repetición devuelve la
         misma wallet sin crear otra. Puede cobrar el fee `wallet_creation` (reembolsado si la creación
@@ -13876,12 +13887,14 @@ paths:
                   enum:
                   - tron
                   - eth
+                  - polygon
                   - btc
                 asset:
                   type: string
                   enum:
                   - usdt
                   - usdc
+                  - usdce
                   - btc
                   default: usdt
                 label:
@@ -13903,6 +13916,13 @@ paths:
                   asset: usdc
                   label: Project X
                   idempotency_key: wallet-project-x
+              polygon_usdce:
+                summary: USDC.e de Polygon
+                value:
+                  chain: polygon
+                  asset: usdce
+                  label: Custodia USDC.e
+                  idempotency_key: wallet-polygon-usdce-001
               btc_btc:
                 summary: Bitcoin BTC
                 value:
@@ -13936,7 +13956,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: invalid_asset
-                message: 'unsupported chain/asset pair (supported: tron/usdt, eth/usdt, eth/usdc, btc/btc)'
+                message: 'unsupported chain/asset pair (supported: tron/usdt, eth/usdt, eth/usdc, polygon/usdt, polygon/usdc, polygon/usdce, btc/btc)'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -19600,6 +19620,7 @@ paths:
                   - USD
                   - USDT
                   - USDC
+                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER

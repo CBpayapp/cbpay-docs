@@ -7,7 +7,7 @@ source_url: https://docs.cbpayapp.com/en/introduction
 ---
 # CBPay API documentation
 
-Move money across Latin America: payouts, payins, cards, crypto and banking — one API, eleven balances.
+Move money across Latin America: payouts, payins, cards, crypto and banking — one API, twelve balances.
 
 ## Start integrating
 

@@ -4,15 +4,16 @@ icon: "coins"
 description: "Per-currency virtual balances, FX conversion, holds and the immutable ledger"
 ---
 
-## Eleven independent virtual balances
+## Twelve independent virtual balances
 
-Every account holds **eleven virtual balances, one per asset**:
+Every account holds **twelve virtual balances, one per asset**:
 
 | Asset | What it is | Decimals | How it is funded |
 |---|---|---|---|
 | `USD` | US dollars — **the principal balance** | 2 | Fiat payins, swaps, transfers, adjustments |
-| `USDT` | USD stablecoin | 6 | Fiat payins, on-chain deposits (TRON/Ethereum), transfers |
-| `USDC` | USD stablecoin | 6 | On-chain deposits (Ethereum), transfers |
+| `USDT` | USD stablecoin | 6 | Fiat payins, on-chain deposits (TRON/Ethereum/Polygon), transfers |
+| `USDC` | USD stablecoin | 6 | On-chain deposits (Ethereum/Polygon), transfers |
+| `USDCE` | Bridged USD stablecoin on Polygon | 6 | On-chain deposits (Polygon), withdrawals, transfers |
 | `BTC` | Bitcoin | 8 (satoshis) | On-chain deposits, operator credits and internal transfers |
 | `GOLD` | Grams of fine gold, custodian-backed | 6 | Operator credits and internal transfers |
 | `SILVER` | Grams of fine silver, custodian-backed | 6 | Operator credits and internal transfers |
@@ -26,7 +27,7 @@ They are fully independent: they never mix and are never converted
 automatically. (`BANK_USD` and `BANK_EUR` are separate banking mirror
 balances — see [Banking](/en/guides/banking).)
 
-`GET /v1/balances` always returns all eleven (zeros if you have not used that
+`GET /v1/balances` always returns all twelve (zeros if you have not used that
 asset yet), as **decimal strings**:
 
 ```json
@@ -62,7 +63,7 @@ empty asset setting normalizes to USD.
 ## Choose which balance pays
 
 **Payouts** and **service fees** (KYC, wallet creation, banking) can be
-debited from any of your eleven balances. The pricing pipeline does not
+debited from any of your twelve balances. The pricing pipeline does not
 change: the operation is quoted in USDT as always, and at the end the total
 translates to the chosen asset at the **effective settlement price** of the
 moment.

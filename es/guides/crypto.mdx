@@ -16,10 +16,15 @@ soportadas:
 | `tron` | `usdt` | USDT |
 | `eth` | `usdt` | USDT |
 | `eth` | `usdc` | USDC |
+| `polygon` | `usdt` | USDT |
+| `polygon` | `usdc` | USDC |
+| `polygon` | `usdce` | **USDC.e** (USDC bridged) |
 | `btc` | `btc` | BTC |
 
 Cada depósito acredita el **saldo de su propio activo** (una wallet USDC
-abona tu saldo USDC; la wallet Bitcoin abona tu saldo BTC). `GOLD` es el
+abona tu saldo USDC; una wallet Polygon USDT o USDC abona el saldo
+correspondiente; una wallet Polygon USDC.e abona tu saldo **USDC.e**;
+la wallet Bitcoin abona tu saldo BTC). `GOLD` es el
 único saldo sin riel on-chain: se mueve solo por transferencias internas y
 abonos del operador.
 
@@ -29,7 +34,7 @@ flowchart LR
         wallet["Tu wallet CBPay<br/>(dirección estable)"] --> confirmado["Confirmación<br/>on-chain"]
         confirmado --> abono["Abono automático<br/>− fee funding"]
     end
-    abono --> saldo(("Saldo del activo<br/>(USDT, USDC o BTC)"))
+    abono --> saldo(("Saldo del activo<br/>(USDT, USDC, USDC.e o BTC)"))
     subgraph salida [Retirar]
         saldo --> retiro["POST /v1/crypto/withdrawals<br/>debita amount + fee"]
         retiro --> onchain{"Resultado<br/>on-chain"}
@@ -41,9 +46,10 @@ flowchart LR
 ## Tu cuenta nace con sus wallets
 
 Toda cuenta — persona y empresa — se crea con **una wallet de depósito por
-cada combinación soportada** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc` y
-`btc`/`btc`), **sin costo** y de forma automática: apenas te registras ya
-tienes tus cuatro direcciones listas para recibir fondos.
+cada combinación soportada** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`,
+`polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce` y `btc`/`btc`),
+**sin costo** y de forma automática: apenas te registras ya tienes tus siete
+direcciones listas para recibir fondos.
 
 ```bash
 # Recién creada la cuenta, tus direcciones ya existen:
@@ -92,8 +98,42 @@ respuesta de wallet trae el discriminador `type` (`deposit` /
 No. Toda cuenta — persona y empresa — tiene exactamente **una wallet de
 depósito por combinación** red+activo, y nacen todas con la cuenta.
 `POST /v1/crypto/wallets` existe solo para reponer un par que falte (caso
-excepcional): con las cuatro wallets ya provisionadas responde
+excepcional): con las siete wallets ya provisionadas responde
 `422 wallet_limit_reached`.
+
+### Polygon USDT, USDC y USDC.e
+
+Polygon soporta tres saldos separados de seis decimales. `polygon:usdt` usa
+el contrato USDT PoS
+`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`; `polygon:usdc` usa USDC
+nativo en `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359`; y `polygon:usdce`
+usa el contrato USDC bridged documentado abajo. No envíes un token al flujo
+de dirección de otro token.
+
+Los depósitos se detectan rápido, pero se acreditan después de **128
+confirmaciones de Polygon** (aproximadamente 4–5 minutos) para cubrir
+reorgs de Bor. Los retiros usan el ciclo asíncrono normal y reconcilian por
+`tx_id` (la consulta de reconciliación es exacta); el gas de Polygon se paga en POL y no es un saldo
+del ledger del cliente.
+
+La respuesta incluye una wallet de recepción por cada par Polygon. Usa
+`chain: "polygon"` con `asset: "usdt"`, `"usdc"` o `"usdce"` al crear o
+restaurar una wallet faltante. Los saldos Polygon permanecen separados en
+balances, movimientos, historial y retiros.
+
+### Polygon USDC.e
+
+USDC.e es el token USDC bridged de Polygon y es un activo separado del USDC
+de Polygon. Usa `chain: "polygon"` y `asset: "usdce"` para sus wallets,
+depósitos y retiros. El contrato bridged es
+`0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174`; los montos usan seis
+decimales y se abonan al saldo **USDC.e**, nunca a USDC.
+
+En v1, USDC.e está disponible para wallets, depósitos, retiros,
+transferencias, saldos segregados, historial y vistas de saldo. No está
+disponible en swaps, tarjetas, checkout/QR PoS ni OTC. Las conversiones
+automáticas hacia USDC.e que no terminan quedan en `pending_retry`; consulta
+la operación existente y no crees un reemplazo.
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/crypto/wallets \
@@ -199,7 +239,8 @@ se emite el webhook `crypto_deposit_credited`:
 
 <Warning>
 Envía **solo el activo de la wallet y por su red** (USDT a una wallet
-USDT, USDC a una wallet USDC, BTC a la wallet Bitcoin). Las direcciones
+USDT, USDC a una wallet USDC, USDC.e a una wallet USDC.e, BTC a la wallet
+Bitcoin). USDT y USDC de Polygon son contratos separados. Las direcciones
 son tuyas y estables: puedes reutilizarlas para todos tus depósitos.
 </Warning>
 
@@ -209,6 +250,7 @@ son tuyas y estables: puedes reutilizarlas para todos tus depósitos.
 |---|---|---|
 | TRON | Casi inmediata | **~1 minuto** (19 confirmaciones) |
 | Ethereum | Casi inmediata | **Algunos minutos** según congestión |
+| Polygon | Casi inmediata | **~4–5 minutos** (128 confirmaciones por seguridad ante reorgs de Bor) |
 | Bitcoin | Al primer bloque (~10 min) | **~30 minutos** (3 confirmaciones) |
 
 El abono siempre llega con el webhook y el `tx_id` para verificarlo en el
@@ -216,9 +258,8 @@ explorador de la red.
 
 ## Transferir (retiros on-chain)
 
-Envía USDT, USDC o BTC desde su saldo a cualquier dirección externa
-(`asset` opcional: default `USDT` en `tron`/`eth` y `BTC` en `btc`; USDC
-solo por `eth`):
+Envía USDT, USDC, USDC.e o BTC desde su saldo a cualquier dirección externa
+(`asset` siempre debe ser explícito para Polygon).
 
 <CodeGroup>
 
@@ -256,6 +297,19 @@ curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
     "to_address": "bc1qw50…",
     "amount": "0.00050000",
     "idempotency_key": "retiro-btc-2026-07-15-a"
+  }'
+```
+
+```bash USDC.e por Polygon
+curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "polygon",
+    "asset": "USDCE",
+    "to_address": "0x8f3B…",
+    "amount": "50.000000",
+    "idempotency_key": "retiro-usdce-polygon-2026-11-06-a"
   }'
 ```
 
@@ -486,8 +540,8 @@ BTC); las wallets son puertas de entrada, el saldo por moneda es uno solo.
 
 | HTTP | `error` | Causa |
 |---|---|---|
-| 400 | `invalid_chain` | Red no soportada (usa `tron`, `eth` o `btc`) |
-| 400 | `invalid_asset` | Combinación red/activo sin riel on-chain (soportadas: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `btc`/`btc` — `GOLD` no opera on-chain) |
+| 400 | `invalid_chain` | Red no soportada (usa `tron`, `eth`, `polygon` o `btc`) |
+| 400 | `invalid_asset` | Combinación red/activo sin riel on-chain (soportadas: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc` — `GOLD` no opera on-chain) |
 | 400 | `to_address_required` | Falta la dirección destino del retiro |
 | 402 | `insufficient_funds` | Saldo insuficiente en ese activo (para el retiro o la comisión de creación) |
 | 422 | `wallet_limit_reached` | La cuenta ya tiene su wallet de depósito de esa combinación red+activo (aplica a personas y empresas) |
@@ -498,7 +552,7 @@ BTC); las wallets son puertas de entrada, el saldo por moneda es uno solo.
 <AccordionGroup>
 <Accordion title="¿Tengo que crear las wallets de depósito?">
 No. Toda cuenta nace con sus wallets de depósito para todos los pares
-soportados (`tron:usdt`, `eth:usdt`, `eth:usdc`, `btc:btc`), sin costo. El
+soportados (`tron:usdt`, `eth:usdt`, `eth:usdc`, `polygon:usdt`, `polygon:usdc`, `polygon:usdce`, `btc:btc`), sin costo. El
 endpoint de creación solo auto-repara un par faltante — una segunda wallet
 del mismo par responde `wallet_limit_reached` (422).
 </Accordion>
