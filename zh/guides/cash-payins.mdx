@@ -67,7 +67,7 @@ org-admin maker 调用 `POST /v1/payins/{payinID}/confirm-received`，提交 `ba
 
 ### 到期与确认请求生命周期
 
-现金申报是普通 `push` payin：保持 `pending` 24 小时后，过期扫描会改为 `expired` 并发送 `payin_expired`。现场收据晚到不会入账到该申报，运营应为其开立新的申报（现金不会自动产生 `unassigned` 行——没有可暂存的 provider 事件）。maker 请求**没有系统 TTL**，超时是运营规则；它随 payin 一起失效。申报到期后 checker 收到 `409 invalid_state`，待审批列表隐藏已到期 payin，因为只列 pending。
+现金申报是普通 `push` payin：保持 `pending` 72 小时后，过期扫描会改为 `expired` 并发送 `payin_expired`。现场收据晚到不会入账到该申报，运营应为其开立新的申报（现金不会自动产生 `unassigned` 行——没有可暂存的 provider 事件）。maker 请求**没有系统 TTL**，超时是运营规则；它随 payin 一起失效。申报到期后 checker 收到 `409 invalid_state`，待审批列表隐藏已到期 payin，因为只列 pending。
 
 ### 查询与历史
 
@@ -85,7 +85,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-24&stat
 | `pending` | 申报或确认等待操作 | 交付现金或完成 maker-checker。 |
 | `credited` | 批准后按实时汇率、fee 和 ledger 入账 | 对账余额和 webhook。 |
 | `unassigned` | 现金不会出现（没有可暂存的 provider 事件） | 若已收现金，请开立新申报。 |
-| `expired` | push 申报 24 小时后过期 | 不要批准，单独对账收据。 |
+| `expired` | push 申报 72 小时后过期 | 不要批准，单独对账收据。 |
 | `failed` | 操作无法完成 | 阅读 failure，避免重复。 |
 
 ### `payin_credited` webhook
@@ -103,6 +103,6 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-24&stat
 不会，只有 checker 单独批准才入账。
 </Accordion>
 <Accordion title="现金申报何时到期？">
-pending 24 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。
+pending 72 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。
 </Accordion>
 </AccordionGroup>
