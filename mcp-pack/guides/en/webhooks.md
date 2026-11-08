@@ -138,6 +138,7 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `account_status_changed` | The account's administrative status changed (`active` / `blocked` / `closed`) |
 | `member_security_event` | A security event of one of the account's users (sign-in, credential change, new factor, revoked session) |
 | `admin_announcement` | A named organization administrator approved a localized plain-text announcement for this account |
+| `warroom_outreach` | A named platform god sent a plain-text security notice to this account |
 ### Payload of each event
 ```json payin_credited
 {
@@ -808,3 +809,16 @@ The following events are delivered to both account and organization audiences. P
   "subject": "Payout is delayed"
 }
 ```
+
+## `warroom_outreach` payload
+This account-scoped event is a plain-text security notice sent by a named platform god. It contains the subject, the body after the fixed anti-phishing warning, the sender label and the UTC emission time:
+
+```json
+{
+  "subject": "Security notice",
+  "body": "Security notice from your platform team. We will never ask for passwords, codes or transfers in a message.\n\nPlease review the sign-in activity.",
+  "from": "platform security team",
+  "at": "2026-11-07T16:11:54Z"
+}
+```
+The body is text-only; HTML is rejected before delivery. Verify the webhook signature and deduplicate by `X-Webhook-Event-ID`.

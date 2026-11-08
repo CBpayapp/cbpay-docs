@@ -147,6 +147,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `account_status_changed` | 账户的管理状态发生变化（`active` / `blocked` / `closed`） |
 | `member_security_event` | 账户成员的安全事件（登录、凭据更改、新增验证因素、会话被撤销） |
 | `admin_announcement` | 命名的组织管理员批准了面向该账户的本地化纯文本公告 |
+| `warroom_outreach` | 命名的平台 god 向该账户发送了纯文本安全通知 |
 
 ### 各事件的载荷
 
@@ -876,3 +877,9 @@ The following events are delivered to both account and organization audiences. P
   "subject": "Payout is delayed"
 }
 ```
+## `warroom_outreach` 载荷
+这是命名 god 发送给账户的纯文本安全通知，包含主题、反钓鱼正文、发送方和 UTC 时间：
+```json
+{"subject":"安全通知","body":"Security notice from your platform team. We will never ask for passwords, codes or transfers in a message.\n\n请检查登录活动。","from":"platform security team","at":"2026-11-07T16:11:54Z"}
+```
+HTML 会在发送前被拒绝；请验证签名并用 `X-Webhook-Event-ID` 去重。

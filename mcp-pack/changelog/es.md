@@ -5,8 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.235 · 1 versión - 7 de noviembre de 2026
-### v2.235
+## v2.238 · 4 versiones - 7 de noviembre de 2026
+### v2.238
+**Agregado**
+- Se agregó el payload del webhook `warroom_outreach` con `subject`, `body` de texto plano, `from` y `at` en UTC.
+### v2.237
+**Agregado**
+- Los avisos de subsanación siempre llegan: un barrido en segundo plano
+  notifica los casos `changes_requested` que perdieron su notificación
+  (decisiones masivas y automáticas incluidas), por el mismo canal auditado.
+- El email de reenvío de link ahora sigue el idioma de la cuenta (EN/ES/ZH)
+  y cita la guía de compliance cuando el caso la tiene.
+### v2.236
 **Corregido**
 - `POST /v1/otp/challenges` en una cuenta bloqueada o cerrada ahora
   responde `403 account_blocked` sin enviar ningún código (antes una
@@ -14,6 +24,17 @@ source_url: https://docs.cbpayapp.com/es/changelog
   gate 403 (`gateOTPChallenge`) mantiene su 403 pelado de siempre.
 - El registro rechaza cuatro dominios farm observados más: `gmail10p.com`,
   `inboxes.com`, `rommiui.com` y `voewo.com` (`400 email_domain_blocked`).
+### v2.235
+**Cambiado**
+
+- La validación de payouts de los corredores regionales PY/PYG, CO/COP,
+  EC/USD y BR/BRL para `bank_transfer`/payouts locales ahora devuelve errores
+  tipados en vez de la respuesta opaca `400 invalid_payload`.
+  `invalid_beneficiary` identifica el campo exacto que debes corregir,
+  `invalid_amount` cubre montos mal formados, `amount_below_minimum` devuelve
+  HTTP `422`, `invalid_currency` identifica una moneda no soportada por el
+  corredor e `invalid_options` identifica opciones de riel inválidas. Las
+  decisiones de aceptación y rechazo no cambian.
 ## v2.234 · 7 versiones - 6 de noviembre de 2026
 ### v2.234
 **Agregado**
