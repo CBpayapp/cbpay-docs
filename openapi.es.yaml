@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  $12.238"
+  version: "2.240"
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -29090,6 +29090,32 @@ webhooks:
               broadcast_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
               subject: Mantenimiento programado
               body: Algunos servicios serán de solo lectura el 2026-09-20 desde las 02:00 UTC.
+      responses:
+        '200':
+          description: Devuelve cualquier 2xx para confirmar la entrega.
+  warroom_outreach:
+    post:
+      summary: Aviso de seguridad del equipo de plataforma
+      description: 'Un god nombrado de plataforma envió un aviso de seguridad de texto plano a esta cuenta desde la sala de guerra. El evento tiene scope de cuenta y jamás se difunde a otra cuenta.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, body]
+              properties:
+                subject:
+                  type: string
+                  description: Asunto de texto plano.
+                body:
+                  type: string
+                  description: Cuerpo de texto plano. Nunca se envía HTML.
+            example:
+              subject: Intentos de inicio de sesión inusuales
+              body: Bloqueamos varios intentos de inicio de sesión en tu cuenta. Revisa tus sesiones y activa 2FA.
+              from: platform security team
+              at: '2026-11-07T20:00:00Z'
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.

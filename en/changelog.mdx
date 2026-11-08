@@ -4,17 +4,31 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 7, 2026" description="v2.238 · 4 versions">
-### v2.238
+<Update label="November 7, 2026" description="v2.240 · 6 versions">
+### v2.240
 **Added**
 - Added the `warroom_outreach` webhook payload with `subject`, plain-text `body`, `from` and UTC `at`.
-### v2.237
+### v2.239
+**Fixed**
+- Support tickets with hostile markup, exfiltration links or farm signatures
+  are now born `quarantined`: the thread stays hidden until an audited
+  reveal (`POST /v1/org/support/tickets/{id}/reveal`, `409 not_quarantined`
+  outside quarantine), and outbound notifications carry redacted content.
+- Account `phone` must be valid E.164 and `tax_id` a closed charset on
+  register, profile and admin writes (`400 invalid_phone` / `invalid_tax_id`).
+  Support subjects/bodies with executable markup are rejected (`400
+  invalid_characters`); sending quotas apply per account (10 tickets/day,
+  30 messages/hour/ticket, `429 too_many_attempts`).
+### v2.238
 **Added**
 - Remediation decision emails always arrive: a background sweep notifies
   `changes_requested` cases that missed their notification (bulk and
   automated decisions included), via the same audited channel.
 - The case-link resend email now follows the account locale (EN/ES/ZH)
   and quotes the compliance guidance when the case has one.
+### v2.237
+**Fixed**
+- Email one-time codes are no longer subject to the hourly send quota, so sign-in and recovery emails are not blocked by SMS volume. SMS and WhatsApp keep their strict limits.
 ### v2.236
 **Fixed**
 - `POST /v1/otp/challenges` on a blocked or closed account now answers
