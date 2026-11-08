@@ -721,7 +721,14 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 404 | `not_found` | Confirm account ownership of the ticket or transaction. |
 | 409 | `ticket_already_open` | Continue the existing ticket returned in the response. |
 | 409 | `ticket_closed` / `already_rated` | Open a new ticket or keep the existing rating. |
+| 409 | `not_quarantined` | The reveal endpoint only works on quarantined tickets; read the thread normally. |
 | 503 | `storage_unavailable` | Wait and upload once; do not duplicate the ticket. |
+
+## Verification approvals
+
+| HTTP | `error` | Solution |
+|---:|---|---|
+| 409 | `liveness_required` | The profile cannot be approved with pending liveness; complete the liveness step first (god override with an audited reason only). |
 
 ## Pay-slip errors
 
