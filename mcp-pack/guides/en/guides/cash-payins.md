@@ -70,7 +70,7 @@ See the complete [error reference](https://docs.cbpayapp.com/en/errors) for all 
 
 ### Expiry and confirmation request lifetime
 
-The cash announcement is a normal `push` payin: if it remains pending for 24 hours, the expiry sweep changes it to `expired` and emits `payin_expired`. A late physical receipt is not credited to that expired announcement; operations must open a **new** announcement for it (cash never produces automatic `unassigned` rows — there is no provider event to park). The maker confirmation request has **no system TTL**: its timeout is operational. It dies with the payin, so after announcement expiry the checker receives `409 invalid_state` and the expired payin is hidden from the pending approvals list.
+The cash announcement is a normal `push` payin: if it remains pending for 72 hours, the expiry sweep changes it to `expired` and emits `payin_expired`. A late physical receipt is not credited to that expired announcement; operations must open a **new** announcement for it (cash never produces automatic `unassigned` rows — there is no provider event to park). The maker confirmation request has **no system TTL**: its timeout is operational. It dies with the payin, so after announcement expiry the checker receives `409 invalid_state` and the expired payin is hidden from the pending approvals list.
 
 ### Query and history
 
@@ -88,7 +88,7 @@ Use the detail endpoint for `confirm_request` (org-admin and platform roles only
 | `pending` | Announcement or confirmation is awaiting action | Deliver cash, or complete maker-checker. |
 | `credited` | Checker approval applied live pricing, fee and ledger credit | Reconcile the balance and webhook. |
 | `unassigned` | Does not occur for cash (no provider events to park) | If cash was received, open a new announcement instead. |
-| `expired` | The 24-hour push announcement ended without credit | Do not approve it; reconcile any late receipt separately. |
+| `expired` | The 72-hour push announcement ended without credit | Do not approve it; reconcile any late receipt separately. |
 | `failed` | The operation could not complete | Read the failure code and follow operations; do not blindly create a duplicate. |
 
 ### `payin_credited` webhook
@@ -102,4 +102,4 @@ No. Delivery is physical, so the response has no `deposit_instructions`.
 #### Does confirm-received credit the balance?
 No. Only the separate checker approval credits the account.
 #### When does a cash announcement expire?
-After 24 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.
+After 72 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.

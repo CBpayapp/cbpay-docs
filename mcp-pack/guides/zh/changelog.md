@@ -5,11 +5,24 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.240 · 6 个版本 - 2026年11月7日
-### v2.240
+## v2.243 · 1 个版本 - 2026年11月8日
+### v2.243
+**新增**
+- 新增卡片审核镜像文档：核心的 `review` 信号会变成可见且可对账的
+  `in_review` payin，并提供 24 小时分流 SLA 以及基于 charge-link 的入账保护。
+## v2.242 · 8 个版本 - 2026年11月7日
+### v2.242
 **Added**
 - 增加 `warroom_outreach` webhook 载荷，包含 `subject`、纯文本 `body`、`from` 和 UTC `at`。
-### v2.239
+### v2.241
+**已更改**
+
+- 审核列表现在支持 `status=dispatch_failed`，用于已批准但激活派发失败的
+  banking 和卡片申请。账户响应包含 `dispatch_failed` 和 `dispatch_error`；
+  应幂等地重试原始 approve，不要重新创建申请。
+- 定向审核上传现在允许每个原始请求类别上传多个文件，包括证件正面和背面。
+- 个人账户发卡的一张卡限制以原子方式执行；并发失败请求返回 `409` 并退还申请费用。
+### v2.240
 **修复**
 - 含恶意标记、渗出链接或农场特征的支持工单现以 `quarantined` 创建：
   对话保持隐藏，直到经审计的揭示（`POST
@@ -20,11 +33,16 @@ source_url: https://docs.cbpayapp.com/zh/changelog
   含可执行标记的主题/正文将被拒绝（`400
   invalid_characters`）；按账户限流（每天 10 工单，每工单每小时 30
   条消息，`429 too_many_attempts`）。
-### v2.238
+### v2.239
 **新增**
 - 补正通知必达：后台扫描会通知错过通知的 `changes_requested`
   案件（包括批量与自动裁决），走同一可审计通道。
 - 案件链接重发邮件现遵循账户语言（EN/ES/ZH），案件有合规指引时一并引用。
+### v2.238
+**已更改**
+
+- `bank_transfer` 和现金 payin 的 push 申报现在会保持 pending 72 小时，
+  然后由现有到期流程发送 `payin_expired`。
 ### v2.237
 **Fixed**
 - 电子邮件一次性验证码不再受每小时发送配额限制，因此登录和找回邮件不会因 SMS 流量被阻止。SMS 和 WhatsApp 保持严格限制。

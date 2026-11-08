@@ -118,6 +118,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `error` | Meaning |
 |---|---|
 | `invalid_json` | Body is not valid JSON or has unknown fields |
+| `invalid_event_ids` | Provide 1-100 event_ids as UUIDs |
 | `invalid_lang` | `lang` must be `es`, `en` or `zh` |
 | `invalid_settings` | Organization settings are not a valid JSON object or could not be normalized; correct the settings payload and retry |
 | `invalid_type` | `type` must be `person` or `company` |
