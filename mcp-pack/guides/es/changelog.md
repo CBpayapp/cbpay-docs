@@ -5,21 +5,10 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.241 · 7 versiones - 7 de noviembre de 2026
-### v2.241
+## v2.240 · 6 versiones - 7 de noviembre de 2026
+### v2.240
 **Agregado**
 - Se agregó el payload del webhook `warroom_outreach` con `subject`, `body` de texto plano, `from` y `at` en UTC.
-### v2.240
-**Cambiado**
-
-- Las listas de revisiones aceptan `status=dispatch_failed` para solicitudes
-  banking y de tarjetas aprobadas cuyo despacho de activación falló. Las
-  respuestas de cuenta incluyen `dispatch_failed` y `dispatch_error`; reintenta
-  el approve original de forma idempotente en vez de crear otra solicitud.
-- Los uploads dirigidos aceptan varios archivos por cada categoría pedida
-  originalmente, incluyendo imágenes de frente y dorso.
-- La emisión de tarjetas para personas aplica atómicamente el límite de una
-  tarjeta; una solicitud concurrente perdedora responde `409` y reembolsa el fee.
 ### v2.239
 **Corregido**
 - Los tickets con markup hostil, links de exfiltración o firma farm ahora

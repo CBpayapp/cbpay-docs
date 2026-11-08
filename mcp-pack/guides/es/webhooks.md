@@ -132,7 +132,6 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `wallet_signature_created` | Se creó una prueba de firma con una wallet segregada (firma de mensajes EIP-191 / TIP-191) |
 | `wallet_linked` | Se vinculó una wallet externa (`custody=client`) a la cuenta mediante un desafío nonce firmado |
 | `txn_review_status_changed` | Una operación retenida por el [firewall transaccional](https://docs.cbpayapp.com/es/guides/transaction-reviews) cambió de estado de revisión (`in_review` / `info_requested` / `released` / `rejected`) — payload neutro, sin motivos internos; un rechazo también puede venir del barrido automático por plazo (auto-rechazo) |
-| `review_dispatch_failed` | Una solicitud de tarjeta o banking fue aprobada, pero falló el despacho de activación; el payload incluye `event`, `review_id`, `kind`, `title` y `path`. Reintenta idempotentemente el approve original; no crees otra solicitud |
 | `corridor_status_changed` | Un corredor de pago cambió su disponibilidad (`operational` / `degraded` / `down`) — broadcast, ver la [guía de estado del servicio](https://docs.cbpayapp.com/es/service-status) |
 | `balance_adjusted` | Un administrador aplicó un abono o cargo manual sobre un saldo |
 | `account_status_changed` | El estado administrativo de la cuenta cambió (`active` / `blocked` / `closed`) |
