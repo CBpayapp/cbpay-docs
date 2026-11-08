@@ -5,11 +5,29 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.240 · 6 versiones - 7 de noviembre de 2026
-### v2.240
+## v2.243 · 1 versión - 8 de noviembre de 2026
+### v2.243
+**Agregado**
+- Se agregó documentación para los espejos de revisión de tarjetas: las
+  señales `review` del core se convierten en payins `in_review` visibles y
+  conciliables, con SLA de triage de 24 horas y resguardos de abono por
+  charge-link.
+## v2.242 · 8 versiones - 7 de noviembre de 2026
+### v2.242
 **Agregado**
 - Se agregó el payload del webhook `warroom_outreach` con `subject`, `body` de texto plano, `from` y `at` en UTC.
-### v2.239
+### v2.241
+**Cambiado**
+
+- Las listas de revisiones aceptan `status=dispatch_failed` para solicitudes
+  banking y de tarjetas aprobadas cuyo despacho de activación falló. Las
+  respuestas de cuenta incluyen `dispatch_failed` y `dispatch_error`; reintenta
+  el approve original de forma idempotente en vez de crear otra solicitud.
+- Los uploads dirigidos aceptan varios archivos por cada categoría pedida
+  originalmente, incluyendo imágenes de frente y dorso.
+- La emisión de tarjetas para personas aplica atómicamente el límite de una
+  tarjeta; una solicitud concurrente perdedora responde `409` y reembolsa el fee.
+### v2.240
 **Corregido**
 - Los tickets con markup hostil, links de exfiltración o firma farm ahora
   nacen en `quarantined`: el hilo queda oculto hasta un reveal auditado
@@ -20,13 +38,19 @@ source_url: https://docs.cbpayapp.com/es/changelog
   `invalid_tax_id`). Asuntos/cuerpos con markup ejecutable se rechazan
   (`400 invalid_characters`); cuotas de envío por cuenta (10 tickets/día,
   30 mensajes/hora/ticket, `429 too_many_attempts`).
-### v2.238
+### v2.239
 **Agregado**
 - Los avisos de subsanación siempre llegan: un barrido en segundo plano
   notifica los casos `changes_requested` que perdieron su notificación
   (decisiones masivas y automáticas incluidas), por el mismo canal auditado.
 - El email de reenvío de link ahora sigue el idioma de la cuenta (EN/ES/ZH)
   y cita la guía de compliance cuando el caso la tiene.
+### v2.238
+**Cambiado**
+
+- Los anuncios push de payins `bank_transfer` y cash ahora permanecen
+  pendientes durante 72 horas antes de que el flujo existente de expiración
+  emita `payin_expired`.
 ### v2.237
 **Corregido**
 - Los códigos de un solo uso por email ya no están sujetos a la cuota horaria de envíos, así los correos de inicio de sesión y recuperación no se bloquean por volumen de SMS. SMS y WhatsApp mantienen sus límites estrictos.

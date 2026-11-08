@@ -67,7 +67,7 @@ Consulta la [referencia completa de errores](https://docs.cbpayapp.com/es/errors
 
 ### Vencimiento y vida de la solicitud
 
-El anuncio cash es un payin `push` normal: si queda `pending` 24 horas, el sweep lo cambia a `expired` y emite `payin_expired`. Un recibo físico tardío no se abona a ese anuncio; operaciones debe abrir un anuncio **nuevo** para él (el cash nunca produce filas `unassigned` automáticas — no hay evento de proveedor que parquear). La solicitud maker **no tiene TTL de sistema**: su timeout es operativo. Muere junto con el payin; tras vencer el anuncio, el checker recibe `409 invalid_state` y la bandeja oculta el payin vencido porque solo lista pendientes.
+El anuncio cash es un payin `push` normal: si queda `pending` 72 horas, el sweep lo cambia a `expired` y emite `payin_expired`. Un recibo físico tardío no se abona a ese anuncio; operaciones debe abrir un anuncio **nuevo** para él (el cash nunca produce filas `unassigned` automáticas — no hay evento de proveedor que parquear). La solicitud maker **no tiene TTL de sistema**: su timeout es operativo. Muere junto con el payin; tras vencer el anuncio, el checker recibe `409 invalid_state` y la bandeja oculta el payin vencido porque solo lista pendientes.
 
 ### Consulta e historial
 
@@ -85,7 +85,7 @@ Usa el detalle para `confirm_request` (solo roles org-admin y plataforma — a n
 | `pending` | Anuncio o confirmación esperando acción | Entrega efectivo o completa maker-checker. |
 | `credited` | Aprobación aplicó tasa viva, fee y ledger | Reconcilia saldo y webhook. |
 | `unassigned` | No ocurre en cash (sin eventos de proveedor que parquear) | Si se recibió efectivo, abre un anuncio nuevo. |
-| `expired` | Anuncio push vencido a las 24 horas | No lo apruebes; reconcilia el recibo aparte. |
+| `expired` | Anuncio push vencido a las 72 horas | No lo apruebes; reconcilia el recibo aparte. |
 | `failed` | La operación no pudo completarse | Lee `failure` y evita duplicar. |
 
 ### Webhook `payin_credited`
@@ -99,4 +99,4 @@ No. Es entrega física y no hay `deposit_instructions`.
 #### ¿confirm-received abona?
 No. Solo la aprobación separada del checker abona.
 #### ¿Cuándo vence un anuncio cash?
-Después de 24 horas en pending. La solicitud maker no tiene TTL de sistema y no puede aprobarse cuando vence su payin.
+Después de 72 horas en pending. La solicitud maker no tiene TTL de sistema y no puede aprobarse cuando vence su payin.

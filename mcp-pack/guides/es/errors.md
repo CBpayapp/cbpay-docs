@@ -101,6 +101,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `error` | Significado |
 |---|---|
 | `invalid_json` | Body no es JSON válido o tiene campos desconocidos |
+| `invalid_event_ids` | Provee de 1 a 100 event_ids como UUIDs |
 | `invalid_lang` | `lang` debe ser `es`, `en` o `zh` |
 | `invalid_settings` | Los settings de la organización no son un objeto JSON válido o no pudieron normalizarse; corrige el payload y reintenta |
 | `invalid_type` | `type` debe ser `person` o `company` |

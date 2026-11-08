@@ -101,6 +101,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `error` | 含义 |
 |---|---|
 | `invalid_json` | 请求体不是有效的 JSON 或包含未知字段 |
+| `invalid_event_ids` | 提供 1 到 100 个 UUID 格式的 event_ids |
 | `invalid_lang` | `lang` 必须为 `es`、`en` 或 `zh` |
 | `invalid_settings` | 组织设置不是有效的 JSON 对象或无法规范化；请修正设置请求体后重试 |
 | `invalid_type` | `type` 必须为 `person` 或 `company` |

@@ -1,5 +1,5 @@
 {
-  "count": 421,
+  "count": 422,
   "errors": [
     {
       "category": {
@@ -755,6 +755,20 @@
         "en": "Body is not valid JSON or has unknown fields",
         "es": "Body no es JSON válido o tiene campos desconocidos",
         "zh": "请求体不是有效的 JSON 或包含未知字段"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "invalid_event_ids",
+      "http": 400,
+      "meaning": {
+        "en": "Provide 1-100 event_ids as UUIDs",
+        "es": "Provee de 1 a 100 event_ids como UUIDs",
+        "zh": "提供 1 到 100 个 UUID 格式的 event_ids"
       }
     },
     {
