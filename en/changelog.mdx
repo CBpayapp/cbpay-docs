@@ -4,20 +4,18 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 8, 2026" description="v2.241 · 1 version">
-### v2.241
+<Update label="November 8, 2026" description="v2.243 · 1 version">
+### v2.243
 **Added**
 - Added documentation for card-review mirrors: core `review` signals become
   visible, reconcilable `in_review` payins, with a 24-hour triage SLA and
   charge-linked settlement safeguards.
 </Update>
-<Update label="November 7, 2026" description="v2.240 · 6 versions">
-### v2.240
-<Update label="November 7, 2026" description="v2.241 · 7 versions">
-### v2.241
+<Update label="November 7, 2026" description="v2.242 · 8 versions">
+### v2.242
 **Added**
 - Added the `warroom_outreach` webhook payload with `subject`, plain-text `body`, `from` and UTC `at`.
-### v2.240
+### v2.241
 **Changed**
 
 - Transaction review lists now support `status=dispatch_failed` for approved
@@ -28,7 +26,7 @@ description: "History of API and documentation changes"
   document category, including front and back images.
 - Person card issuance enforces its one-card limit atomically; a losing
   concurrent request returns `409` and its application fee is refunded.
-### v2.239
+### v2.240
 **Fixed**
 - Support tickets with hostile markup, exfiltration links or farm signatures
   are now born `quarantined`: the thread stays hidden until an audited
@@ -39,13 +37,18 @@ description: "History of API and documentation changes"
   Support subjects/bodies with executable markup are rejected (`400
   invalid_characters`); sending quotas apply per account (10 tickets/day,
   30 messages/hour/ticket, `429 too_many_attempts`).
-### v2.238
+### v2.239
 **Added**
 - Remediation decision emails always arrive: a background sweep notifies
   `changes_requested` cases that missed their notification (bulk and
   automated decisions included), via the same audited channel.
 - The case-link resend email now follows the account locale (EN/ES/ZH)
   and quotes the compliance guidance when the case has one.
+### v2.238
+**Changed**
+
+- Push announcements for `bank_transfer` and cash payins now remain pending
+  for 72 hours before the existing expiry flow emits `payin_expired`.
 ### v2.237
 **Fixed**
 - Email one-time codes are no longer subject to the hourly send quota, so sign-in and recovery emails are not blocked by SMS volume. SMS and WhatsApp keep their strict limits.
