@@ -5,10 +5,21 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.240 · 6 versions - November 7, 2026
-### v2.240
+## v2.241 · 7 versions - November 7, 2026
+### v2.241
 **Added**
 - Added the `warroom_outreach` webhook payload with `subject`, plain-text `body`, `from` and UTC `at`.
+### v2.240
+**Changed**
+
+- Transaction review lists now support `status=dispatch_failed` for approved
+  banking and card applications whose activation dispatch failed. Account
+  responses include `dispatch_failed` and `dispatch_error`; retry the original
+  approval idempotently instead of creating a new application.
+- Directed review uploads accept multiple files for each originally requested
+  document category, including front and back images.
+- Person card issuance enforces its one-card limit atomically; a losing
+  concurrent request returns `409` and its application fee is refunded.
 ### v2.239
 **Fixed**
 - Support tickets with hostile markup, exfiltration links or farm signatures

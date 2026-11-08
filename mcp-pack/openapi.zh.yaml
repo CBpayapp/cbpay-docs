@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: "2.240"
+  version: "2.241"
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、
     GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
@@ -18205,7 +18205,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: card_limit_reached
-                message: person accounts can hold at most 1 live card and 1 open application (resolve the existing application first)
+                message: person accounts can hold at most 1 live card and 1 open application; a concurrent losing application returns 409 and its application fee is refunded automatically
         '422':
           description: verification_required / verification_not_approved /
             verification_kind_mismatch / cardholder_name_too_long(指定人员需要
@@ -21211,7 +21211,7 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`).'
+        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`).'
         schema:
           type: string
           enum:
@@ -21219,6 +21219,7 @@ paths:
           - info_requested
           - released
           - rejected
+          - dispatch_failed
           - all
       - name: kind
         in: query
@@ -21274,6 +21275,8 @@ paths:
                     requested_at: '2026-08-06T15:20:00Z'
                   created_at: '2026-08-06T14:32:00Z'
                   updated_at: '2026-08-06T15:20:00Z'
+                  dispatch_failed: false
+                  dispatch_error: null
                 page: 1
                 page_size: 50
                 total: 1
@@ -21286,7 +21289,7 @@ paths:
                   summary: Unknown status
                   value:
                     error: invalid_status
-                    message: status must be one of in_review, info_requested, released, rejected, all
+                    message: status must be one of in_review, info_requested, released, rejected, dispatch_failed, all
                 invalid_kind:
                   summary: Unknown kind
                   value:
@@ -21343,6 +21346,8 @@ paths:
                     created_at: '2026-08-06T15:40:00Z'
                   created_at: '2026-08-06T14:32:00Z'
                   updated_at: '2026-08-06T15:40:00Z'
+                  dispatch_failed: false
+                  dispatch_error: null
         '404':
           description: The review does not belong to the account.
           content:

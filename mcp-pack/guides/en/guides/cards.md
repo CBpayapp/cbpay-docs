@@ -252,7 +252,7 @@ Use these stable errors to keep the wizard actionable:
 | 409 | `card_limit_reached` | Resolve or cancel the open application; a person account cannot create a second live card. |
 | 422 | `verification_required` / `verification_not_approved` / `verification_kind_mismatch` | Select an approved KYC verification for the designated person. |
 | 422 | `issuer_data_incomplete` | Show the missing keys and collect only those fields. |
-| 422 | `cardholder_name_too_long` | Shorten the printed name to 22 UTF-8 bytes or fewer. |
+| 422 | `cardholder_name_too_long` | Shorten the combined first and last name to 22 characters or fewer. |
 | 402 | `insufficient_funds` | Fund the account; do not resubmit with a new idempotency key. |
 
 ### Issuance holds and tracking
@@ -267,7 +267,7 @@ This flow is auditable as `card_application`.
 #### Person account
 
 A person account issues cards **for itself** (at most 1 live card total; new physical issuance is temporarily unavailable).
-
+The one-card limit is enforced atomically. If two requests race, the losing request returns `409 card_limit_reached` and its newly charged application fee is refunded automatically; retrying the same request with the same idempotency key returns the existing `202` review instead of charging again.
 **Your first card** creates and verifies your holder at the issuer. Since
 your account already approved its
 [identity verification](https://docs.cbpayapp.com/en/guides/kyc), your data and documents
