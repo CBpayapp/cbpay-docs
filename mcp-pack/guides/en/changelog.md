@@ -5,8 +5,18 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.235 · 1 version - November 7, 2026
-### v2.235
+## v2.238 · 4 versions - November 7, 2026
+### v2.238
+**Added**
+- Added the `warroom_outreach` webhook payload with `subject`, plain-text `body`, `from` and UTC `at`.
+### v2.237
+**Added**
+- Remediation decision emails always arrive: a background sweep notifies
+  `changes_requested` cases that missed their notification (bulk and
+  automated decisions included), via the same audited channel.
+- The case-link resend email now follows the account locale (EN/ES/ZH)
+  and quotes the compliance guidance when the case has one.
+### v2.236
 **Fixed**
 - `POST /v1/otp/challenges` on a blocked or closed account now answers
   `403 account_blocked` without sending any code (previously a live
@@ -14,6 +24,16 @@ source_url: https://docs.cbpayapp.com/en/changelog
   (`gateOTPChallenge`) keeps answering its bare 403 as before.
 - Registration rejects four more observed farm domains: `gmail10p.com`,
   `inboxes.com`, `rommiui.com` and `voewo.com` (`400 email_domain_blocked`).
+### v2.235
+**Changed**
+
+- Payout validation for the PY/PYG, CO/COP, EC/USD and BR/BRL regional
+  `bank_transfer`/local payout corridors now returns typed validation errors
+  instead of the opaque `400 invalid_payload` response. `invalid_beneficiary`
+  identifies the exact field to correct, `invalid_amount` covers malformed
+  amounts, `amount_below_minimum` returns HTTP `422`, `invalid_currency`
+  identifies an unsupported corridor currency, and `invalid_options` identifies
+  invalid rail options. Acceptance and rejection decisions are unchanged.
 ## v2.234 · 7 versions - November 6, 2026
 ### v2.234
 **Added**

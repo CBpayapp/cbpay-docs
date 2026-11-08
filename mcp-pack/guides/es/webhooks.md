@@ -137,6 +137,7 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `account_status_changed` | El estado administrativo de la cuenta cambió (`active` / `blocked` / `closed`) |
 | `member_security_event` | Hecho de seguridad de un usuario de la cuenta (inicio de sesión, cambio de credenciales, factor nuevo, sesión revocada) |
 | `admin_announcement` | Un administrador nombrado de la organización aprobó un anuncio localizado de texto plano para esta cuenta |
+| `warroom_outreach` | Un god nombrado de plataforma envió un aviso de seguridad de texto plano a esta cuenta |
 ### Payload de cada evento
 ```json payin_credited
 {
@@ -812,3 +813,16 @@ The following events are delivered to both account and organization audiences. P
   "subject": "Payout is delayed"
 }
 ```
+
+## Payload de `warroom_outreach`
+Este evento con alcance de cuenta es un aviso de seguridad de texto plano enviado por un god nombrado de plataforma. Contiene el asunto, el cuerpo después del aviso anti-phishing fijo, la etiqueta del remitente y la hora UTC de emisión:
+
+```json
+{
+  "subject": "Aviso de seguridad",
+  "body": "Security notice from your platform team. We will never ask for passwords, codes or transfers in a message.\n\nRevisa la actividad de inicio de sesión.",
+  "from": "platform security team",
+  "at": "2026-11-07T16:11:54Z"
+}
+```
+El cuerpo es solo texto; el HTML se rechaza antes de entregar. Verifica la firma del webhook y deduplica por `X-Webhook-Event-ID`.

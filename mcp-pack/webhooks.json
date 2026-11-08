@@ -1,5 +1,5 @@
 {
-  "count": 53,
+  "count": 54,
   "events": [
     {
       "description": {
@@ -1243,6 +1243,25 @@
         "en": "Wallet signature proof created",
         "es": "Prueba de firma de wallet creada",
         "zh": "钱包签名证明已创建"
+      }
+    },
+    {
+      "description": {
+        "en": "A named platform god administrator sent a plain-text security notice to this account from the war room. The event is account-scoped and never broadcast to another account.",
+        "es": "Un god nombrado de plataforma envió un aviso de seguridad de texto plano a esta cuenta desde la sala de guerra. El evento tiene scope de cuenta y jamás se difunde a otra cuenta.",
+        "zh": "命名的平台 god 从战情室向该账户发送了纯文本安全通知。该事件仅限本账户范围，绝不会广播给其他账户。"
+      },
+      "event": "warroom_outreach",
+      "payload_example": {
+        "at": "2026-11-07T20:00:00Z",
+        "body": "We blocked several sign-in attempts on your account. Review your sessions and enable 2FA.",
+        "from": "platform security team",
+        "subject": "Unusual sign-in attempts"
+      },
+      "summary": {
+        "en": "Security notice from the platform team",
+        "es": "Aviso de seguridad del equipo de plataforma",
+        "zh": "平台团队的安全通知"
       }
     }
   ]

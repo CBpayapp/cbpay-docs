@@ -5,14 +5,31 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.235 · 1 个版本 - 2026年11月7日
-### v2.235
+## v2.238 · 4 个版本 - 2026年11月7日
+### v2.238
+**Added**
+- 增加 `warroom_outreach` webhook 载荷，包含 `subject`、纯文本 `body`、`from` 和 UTC `at`。
+### v2.237
+**新增**
+- 补正通知必达：后台扫描会通知错过通知的 `changes_requested`
+  案件（包括批量与自动裁决），走同一可审计通道。
+- 案件链接重发邮件现遵循账户语言（EN/ES/ZH），案件有合规指引时一并引用。
+### v2.236
 **修复**
 - 被封禁或已关闭账户调用 `POST /v1/otp/challenges` 现返回 `403
   account_blocked`，且不会发送任何验证码（此前有效会话可在 TTL
   窗口内继续请求短信）。403 门禁（`gateOTPChallenge`）仍返回原来的空 403。
 - 注册新增拒绝四个已观测到的农场域名：`gmail10p.com`、`inboxes.com`、
   `rommiui.com` 和 `voewo.com`（`400 email_domain_blocked`）。
+### v2.235
+**已更改**
+
+- PY/PYG、CO/COP、EC/USD 和 BR/BRL 区域
+  `bank_transfer`/本地出金通道的 payout 校验现在返回明确的类型化错误，
+  不再返回不透明的 `400 invalid_payload`。`invalid_beneficiary` 会指出需要
+  修正的确切字段，`invalid_amount` 表示金额格式错误，
+  `amount_below_minimum` 返回 HTTP `422`，`invalid_currency` 表示通道不支持
+  的币种，`invalid_options` 表示通道选项无效。接受和拒绝的业务决定不变。
 ## v2.234 · 7 个版本 - 2026年11月6日
 ### v2.234
 **新增**
