@@ -4,15 +4,29 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月7日" description="v2.238 · 4 个版本">
-### v2.238
+<Update label="2026年11月7日" description="v2.240 · 6 个版本">
+### v2.240
 **Added**
 - 增加 `warroom_outreach` webhook 载荷，包含 `subject`、纯文本 `body`、`from` 和 UTC `at`。
-### v2.237
+### v2.239
+**修复**
+- 含恶意标记、渗出链接或农场特征的支持工单现以 `quarantined` 创建：
+  对话保持隐藏，直到经审计的揭示（`POST
+  /v1/org/support/tickets/{id}/reveal`，非隔离返回 `409
+  not_quarantined`），对外通知为脱敏内容。
+- 账户 `phone` 必须为有效 E.164，`tax_id` 须符合封闭字符集（注册、
+  资料及管理写入：`400 invalid_phone` / `invalid_tax_id`）。
+  含可执行标记的主题/正文将被拒绝（`400
+  invalid_characters`）；按账户限流（每天 10 工单，每工单每小时 30
+  条消息，`429 too_many_attempts`）。
+### v2.238
 **新增**
 - 补正通知必达：后台扫描会通知错过通知的 `changes_requested`
   案件（包括批量与自动裁决），走同一可审计通道。
 - 案件链接重发邮件现遵循账户语言（EN/ES/ZH），案件有合规指引时一并引用。
+### v2.237
+**Fixed**
+- 电子邮件一次性验证码不再受每小时发送配额限制，因此登录和找回邮件不会因 SMS 流量被阻止。SMS 和 WhatsApp 保持严格限制。
 ### v2.236
 **修复**
 - 被封禁或已关闭账户调用 `POST /v1/otp/challenges` 现返回 `403
