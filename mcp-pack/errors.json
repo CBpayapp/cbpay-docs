@@ -1,5 +1,5 @@
 {
-  "count": 419,
+  "count": 421,
   "errors": [
     {
       "category": {
@@ -5431,6 +5431,34 @@
         "en": "Open a new ticket or keep the existing rating.",
         "es": "Abre otro ticket o conserva la calificación.",
         "zh": "创建新工单或保留原评价。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "not_quarantined",
+      "http": 409,
+      "meaning": {
+        "en": "The reveal endpoint only works on quarantined tickets; read the thread normally.",
+        "es": "El reveal solo funciona en tickets en cuarentena; lee el hilo normal.",
+        "zh": "揭示接口仅适用于隔离中的工单；正常读取对话即可。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "liveness_required",
+      "http": 409,
+      "meaning": {
+        "en": "The profile cannot be approved with pending liveness; complete the liveness step first (god override with an audited reason only).",
+        "es": "El perfil no se puede aprobar con liveness pendiente; complétala primero (override solo god con motivo auditado).",
+        "zh": "活体待完成时无法批准；请先完成活体（仅具名 god 可凭审计理由覆盖）。"
       }
     },
     {

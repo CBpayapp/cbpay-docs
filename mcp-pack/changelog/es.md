@@ -5,17 +5,31 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.238 · 4 versiones - 7 de noviembre de 2026
-### v2.238
+## v2.240 · 6 versiones - 7 de noviembre de 2026
+### v2.240
 **Agregado**
 - Se agregó el payload del webhook `warroom_outreach` con `subject`, `body` de texto plano, `from` y `at` en UTC.
-### v2.237
+### v2.239
+**Corregido**
+- Los tickets con markup hostil, links de exfiltración o firma farm ahora
+  nacen en `quarantined`: el hilo queda oculto hasta un reveal auditado
+  (`POST /v1/org/support/tickets/{id}/reveal`, `409 not_quarantined` fuera
+  de cuarentena) y las notificaciones salen redactadas.
+- El `phone` de cuenta debe ser E.164 válido y el `tax_id` un charset
+  cerrado en registro, perfil y writes admin (`400 invalid_phone` /
+  `invalid_tax_id`). Asuntos/cuerpos con markup ejecutable se rechazan
+  (`400 invalid_characters`); cuotas de envío por cuenta (10 tickets/día,
+  30 mensajes/hora/ticket, `429 too_many_attempts`).
+### v2.238
 **Agregado**
 - Los avisos de subsanación siempre llegan: un barrido en segundo plano
   notifica los casos `changes_requested` que perdieron su notificación
   (decisiones masivas y automáticas incluidas), por el mismo canal auditado.
 - El email de reenvío de link ahora sigue el idioma de la cuenta (EN/ES/ZH)
   y cita la guía de compliance cuando el caso la tiene.
+### v2.237
+**Corregido**
+- Los códigos de un solo uso por email ya no están sujetos a la cuota horaria de envíos, así los correos de inicio de sesión y recuperación no se bloquean por volumen de SMS. SMS y WhatsApp mantienen sus límites estrictos.
 ### v2.236
 **Corregido**
 - `POST /v1/otp/challenges` en una cuenta bloqueada o cerrada ahora

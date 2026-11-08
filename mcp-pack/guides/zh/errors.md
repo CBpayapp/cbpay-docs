@@ -692,7 +692,14 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 404 | `not_found` | 确认工单或交易属于当前账户。 |
 | 409 | `ticket_already_open` | 继续响应中返回的现有工单。 |
 | 409 | `ticket_closed` / `already_rated` | 创建新工单或保留原评价。 |
+| 409 | `not_quarantined` | 揭示接口仅适用于隔离中的工单；正常读取对话即可。 |
 | 503 | `storage_unavailable` | 等待后上传一次，不创建重复工单。 |
+
+## 验证审批
+
+| HTTP | `error` | 解决方案 |
+|---:|---|---|
+| 409 | `liveness_required` | 活体待完成时无法批准；请先完成活体（仅具名 god 可凭审计理由覆盖）。 |
 
 ## 工资单错误
 
