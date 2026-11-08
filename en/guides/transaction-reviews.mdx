@@ -62,7 +62,7 @@ Response:
 
 ### Filters
 
-- `?status=` — `in_review`, `info_requested`, `released`, `rejected` or `all` (empty = open: `in_review` + `info_requested`). Any other value ⇒ `400 invalid_status`.
+- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`). `dispatch_failed` lists released applications whose post-approval dispatch failed. For account-scoped requests without `kind`, it applies only to `banking_application` and `card_application`. Any other value ⇒ `400 invalid_status`.
 - `?from=` / `?to=` — date range (`YYYY-MM-DD`, organization timezone, both inclusive). Invalid date ⇒ `400 invalid_range`.
 - `?page=` / `?page_size=` — pagination (default 50, max 200).
 
@@ -122,6 +122,7 @@ A review belonging to another account answers `404 not_found` (never `403`, so e
 | `info_requested` | You were asked for additional information | Upload the requested documents as soon as possible |
 | `released` | The review approved the operation | The operation already executed (or is on its way) — for an application, the banking profile or card was created |
 | `rejected` | The review rejected the operation | The operation was cancelled; any held funds were returned to your balance — and a rejected application refunds its fee |
+| `dispatch_failed` | An application was approved, but its activation dispatch failed | Do not submit a new application. Inspect `dispatch_error`, then retry the same approve operation with the original idempotency key |
 
 <Note>
 **Automatic rejection by deadline.** If your organization configured a review deadline, a review nobody decides within that window (counted from its last status change — uploading evidence resets the clock) is **automatically rejected** by an hourly sweep: the operation is cancelled, held funds return to your balance, and you receive the same email and `txn_review_status_changed` webhook as with a manual rejection. On the detail, the `decision_note` carries the standard deadline notice. **Application reviews are never auto-rejected**: a held banking or card application always waits for a human decision, with no deadline.
@@ -279,6 +280,9 @@ Not directly. If you need to cancel it, contact your organization's compliance t
 
 <Accordion title="Why can't I see the hold reason?">
 For security and to avoid compromising compliance investigations, the internal reason is never exposed to the end user. You will only see the information request message when documents are asked of you.
+</Accordion>
+<Accordion title="What does `dispatch_failed` mean after card approval?">
+The application was approved, but activation failed after approval. The card or banking profile is not ready yet. Do not submit a new application: inspect `dispatch_error` and retry the original approve operation with the same idempotency key.
 </Accordion>
 <Accordion title="I created a banking profile or a card and got a 202 — what happened?">
 Your organization enabled application review: the request was held before processing. Nothing is created yet — when compliance approves the review, the profile or card is created automatically and you receive the webhook `txn_review_status_changed` with `status: released`. The application fee was charged at hold time; if the review is rejected, the fee is refunded to your balance automatically.

@@ -141,6 +141,7 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `wallet_signature_created` | 使用独立钱包创建了签名证明(EIP-191 / TIP-191 消息签名) |
 | `wallet_linked` | 通过签名的 nonce 挑战将外部钱包(`custody=client`)链接到账户 |
 | `txn_review_status_changed` | 被[交易防火墙](/zh/guides/transaction-reviews)挂起的操作审核状态发生变化（`in_review` / `info_requested` / `released` / `rejected`）——负载保持中性，绝不携带内部原因；拒绝也可能来自按期限自动拒绝的定时扫描（auto-rejection） |
+| `review_dispatch_failed` | 银行或卡片申请已批准，但激活派发失败；负载包含 `event`、`review_id`、`kind`、`title` 和 `path`。幂等地重试原始 approve，不要重新创建申请 |
 | `corridor_status_changed` | 某条支付通道的可用性发生变化（`operational` / `degraded` / `down`）——广播事件，见[服务状态指南](/zh/service-status) |
 | `balance_adjusted` | 管理员对某个余额执行了手动入账或扣款 |
 | `account_status_changed` | 账户的管理状态发生变化（`active` / `blocked` / `closed`） |
