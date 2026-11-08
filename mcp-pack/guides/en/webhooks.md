@@ -133,7 +133,6 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `wallet_signature_created` | A signature proof was created with a segregated wallet (EIP-191 / TIP-191 message signing) |
 | `wallet_linked` | An external wallet (`custody=client`) was linked to the account by a signed nonce challenge |
 | `txn_review_status_changed` | An operation held by the [transactional firewall](https://docs.cbpayapp.com/en/guides/transaction-reviews) changed review state (`in_review` / `info_requested` / `released` / `rejected`) — neutral payload, internal reasons never travel; a rejection can also come from the automatic deadline sweep (auto-rejection) |
-| `review_dispatch_failed` | A card or banking application was approved but activation dispatch failed; the payload includes `event`, `review_id`, `kind`, `title` and `path`. Retry the original approve operation idempotently; do not create a new application |
 | `corridor_status_changed` | A payment corridor changed availability (`operational` / `degraded` / `down`) — broadcast, see the [service status guide](https://docs.cbpayapp.com/en/service-status) |
 | `balance_adjusted` | An administrator applied a manual credit or debit to a balance |
 | `account_status_changed` | The account's administrative status changed (`active` / `blocked` / `closed`) |

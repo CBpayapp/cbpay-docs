@@ -245,7 +245,7 @@ Usa estos errores estables para mantener el wizard accionable:
 | 409 | `card_limit_reached` | Resuelve o cancela la solicitud abierta; persona no puede crear otra tarjeta viva. |
 | 422 | `verification_required` / `verification_not_approved` / `verification_kind_mismatch` | Selecciona una verificación KYC aprobada para la persona designada. |
 | 422 | `issuer_data_incomplete` | Muestra las claves faltantes y pide solo esos campos. |
-| 422 | `cardholder_name_too_long` | Acorta el nombre y apellido combinados a 22 caracteres o menos. |
+| 422 | `cardholder_name_too_long` | Acorta el nombre impreso a 22 bytes UTF-8 o menos. |
 | 402 | `insufficient_funds` | Fondea la cuenta; no reenvíes con una clave nueva. |
 
 ### Holds y seguimiento de la emisión
@@ -259,7 +259,7 @@ como `card_application`.
 #### Cuenta persona
 
 Una cuenta persona emite tarjetas **para sí misma** (máximo 1 tarjeta viva total; la emisión física nueva está temporalmente no disponible).
-El límite de una tarjeta se aplica de forma atómica. Si dos solicitudes compiten, la perdedora responde `409 card_limit_reached` y el fee recién cobrado se reembolsa automáticamente; repetir la misma solicitud con la misma idempotency key devuelve la review `202` existente sin volver a cobrar.
+
 **Tu primera tarjeta** crea y verifica tu titular en el emisor. Como tu
 cuenta ya aprobó su [verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc), tus datos y
 documentos se **completan solos desde tu verificación** — solo agregas los
