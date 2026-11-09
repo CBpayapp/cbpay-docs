@@ -49,14 +49,20 @@ CBPay 使用可选的 Hashcash 风格工作量证明来减缓自动化注册洪�
 强制要求。注册和邮箱确认分别使用此 gate；请使用相匹配的 `purpose`
 请求挑战，并提交完全相同的小写邮箱。
 
-挑战有效期为 600 秒，难度为 `20`，并绑定邮箱和 purpose。请在客户端中
-计算，最好在用户填写个人或企业表单时使用后台 worker：
+挑战有效期为 600 秒，难度为 `20`，并绑定邮箱和 purpose。对于特定租户的
+流程，可选填组织 slug `org`；这样挑战也会绑定到该组织。请求注册挑战时
+请使用相同的 `org`。请在客户端中计算，最好在用户填写个人或企业表单时
+使用后台 worker：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@example.com"}'
+  -d '{"purpose":"register","email":"ana@example.com","org":"cbpay"}'
 ```
+
+`org` 为可选字段，以保持向后兼容。省略时会创建不绑定组织的 legacy
+挑战。挑战签发与注册共用 IP 预算，因此突发请求可能收到
+`429 too_many_attempts`；请等待后请求新挑战，不要反复提交相同请求。
 
 ```json
 {
@@ -91,7 +97,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@example.com"}'
+  -d '{"purpose":"confirm","email":"ana@example.com","org":"cbpay"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \

@@ -57,14 +57,23 @@ con el `purpose` correspondiente y usa exactamente el email en minúsculas que
 enviarás.
 
 El desafío dura 600 segundos, tiene dificultad `20` y queda ligado al email y al
-propósito. Resuélvelo en tu cliente, idealmente en un worker en segundo plano
-mientras la persona o empresa completa el formulario:
+propósito. Para un flujo específico de un tenant, incluye el `org` opcional con
+el slug de la organización; así el desafío también queda ligado a esa
+organización. Usa el mismo `org` al pedir el desafío para el registro. Resuélvelo
+en tu cliente, idealmente en un worker en segundo plano mientras la persona o
+empresa completa el formulario:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@ejemplo.com"}'
+  -d '{"purpose":"register","email":"ana@ejemplo.com","org":"cbpay"}'
 ```
+
+`org` es opcional para mantener compatibilidad hacia atrás. Si lo omites, se
+crea el desafío legacy sin organización. La emisión del desafío comparte el
+presupuesto de IP del registro, por lo que una ráfaga puede recibir
+`429 too_many_attempts`; espera y pide un desafío nuevo en vez de reenviar
+repetidamente la misma solicitud.
 
 ```json
 {
@@ -101,7 +110,7 @@ con `"purpose":"confirm"` y envíalo al confirmar:
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@ejemplo.com"}'
+  -d '{"purpose":"confirm","email":"ana@ejemplo.com","org":"cbpay"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
