@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.246'
+  version: '2.248'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -10871,6 +10871,50 @@ paths:
                   value:
                     error: invalid_signature_image
                     message: signature image must be PNG
+  /v1/me/device-integrity:
+    post:
+      tags:
+      - Cuenta
+      operationId: reportDeviceIntegrity
+      summary: Reportar un token de integridad Android
+      description: Reporta un token Play Integrity desde la app Android para decodificación server-side (modo monitor, jamás bloquea). El veredicto se audita como evento de seguridad device_integrity. Sin credenciales Google igual responde 200 con checked=false. Limitado a 12/hora por miembro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - integrity_token
+              properties:
+                integrity_token:
+                  type: string
+                  description: Token Play Integrity estándar (1-16384 caracteres).
+            example:
+              integrity_token: integrity-token-from-play-api
+      responses:
+        '200':
+          description: Veredicto registrado (checked puede ser false sin credenciales).
+          content:
+            application/json:
+              example:
+                checked: true
+                verdict: ok
+                device_ok: true
+        '400':
+          description: Token inválido (invalid_token).
+          content:
+            application/json:
+              example:
+                error: invalid_token
+                message: integrity token must be 1-16384 chars without whitespace
+        '429':
+          description: Demasiados reportes (rate_limited).
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many integrity reports, retry later
   /v1/me/email/change:
     post:
       tags:

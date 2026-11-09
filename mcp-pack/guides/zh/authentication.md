@@ -18,6 +18,17 @@ Authorization: Bearer <token>
 
 注册采用先验证模式：绝不直接创建会话。公共端点对新邮箱和重复邮箱均返回 `201 pending_verification`，因此调用方无法利用它枚举账户。邮箱所有者会收到验证码；请使用 `POST /v1/auth/register/confirm` 完成流程。
 
+邮箱身份匹配可防止同一邮箱创建多个账户。对于 `gmail.com` 和
+`googlemail.com`，系统会忽略点号和 `+` 后的内容，并将
+`googlemail.com` 视为 `gmail.com`。对于支持的 Outlook、Hotmail、Live、
+MSN、iCloud、Me、Mac、Yahoo、Ymail、Rocketmail 和 Proton 域名，也会
+折叠 `+` 后缀；其他域名只进行精确匹配。
+
+注册等价变体会返回相同的 `201 pending_verification` 结构，不会创建新账户。
+OAuth、管理员创建账户、邀请和邮箱变更遇到同一邮箱时返回
+`409 duplicate` 或 `409 email_in_use`。此行为按组织隔离。如果组织策略
+阻止了该邮箱，请处理阻止原因，不要尝试同一邮箱的其他变体。
+
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -49,20 +60,14 @@ CBPay 使用可选的 Hashcash 风格工作量证明来减缓自动化注册洪�
 强制要求。注册和邮箱确认分别使用此 gate；请使用相匹配的 `purpose`
 请求挑战，并提交完全相同的小写邮箱。
 
-挑战有效期为 600 秒，难度为 `20`，并绑定邮箱和 purpose。对于特定租户的
-流程，可选填组织 slug `org`；这样挑战也会绑定到该组织。请求注册挑战时
-请使用相同的 `org`。请在客户端中计算，最好在用户填写个人或企业表单时
-使用后台 worker：
+挑战有效期为 600 秒，难度为 `20`，并绑定邮箱和 purpose。请在客户端中
+计算，最好在用户填写个人或企业表单时使用后台 worker：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@example.com","org":"cbpay"}'
+  -d '{"purpose":"register","email":"ana@example.com"}'
 ```
-
-`org` 为可选字段，以保持向后兼容。省略时会创建不绑定组织的 legacy
-挑战。挑战签发与注册共用 IP 预算，因此突发请求可能收到
-`429 too_many_attempts`；请等待后请求新挑战，不要反复提交相同请求。
 
 ```json
 {
@@ -97,7 +102,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@example.com","org":"cbpay"}'
+  -d '{"purpose":"confirm","email":"ana@example.com"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
@@ -107,7 +112,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
 正常情况下，省略 `pow` 的客户端仍可注册和确认。攻击模式启用后，两个
 端点都会返回 `400 pow_required`，直到解决匹配的挑战。请参阅
 [认证错误](https://docs.cbpayapp.com/zh/errors#认证与注册错误)页面了解处理方式。挑战是无状态的，
-10 分钟后过期；过期时请请求新挑战，不要重复提交旧解。
+10 分钟后过期；过期时请请求新挑战，不要重复提交旧解。挑战端点使用
+独立配额：每个 IP 每小时 200 次，且不会消耗注册配额。
 
 #### 现有客户端需要发布新版本吗？
 正常流量下不需要：省略 `pow` 仍然有效。攻击模式启用后，客户端必须实现

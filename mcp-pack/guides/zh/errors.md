@@ -70,6 +70,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 429 | `too_many_attempts` | 达到发送/验证次数限制；请等待几分钟 |
 | 503 | `otp_unavailable` | 验证服务不可用（操作保持锁定；OTP 绝不会被跳过） |
 | 409 | `otp_disabled_for_org` | 您的组织未启用按操作的双因素认证；请联系您的运营方 |
+| 422 | `sms_country_blocked` | 该电话号码所属国家不可接收短信验证码（组织白名单限制）；请改用验证器 App 或邮箱 |
 | 409 | `totp_not_started` | 尚未开始 TOTP 注册；请先调用 `POST /v1/me/totp/enroll` |
 
 ### 社交登录（OAuth）
@@ -95,6 +96,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 503 | `core_admin_credential_missing` | 平台管理员目录需要配置核心凭证；请联系平台管理员 |
 | 400 | `invalid_value` | 组织设置的值类型有误（例如 `global_treasury_read` 必须是布尔值，而不是字符串） |
 | 409 | `approval_in_progress` | 另一位管理员正在处理此 adjustment；请等待当前操作完成后再重试 |
+| 400 | `prefixes_required` | 更新短信国家白名单需要 `prefixes`（传 `[]` 可恢复平台默认值） |
 
 ### 校验（400）
 
