@@ -1,0 +1,221 @@
+---
+title: "QR 出金"
+description: "扫描收款二维码（玻利维亚、巴西 PIX），两步完成支付：扫描免费，确认时计费"
+slug: zh/guides/qr-payout
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/guides/qr-payout
+---
+> **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
+
+在玻利维亚（本地互操作 QR 标准）和巴西（**PIX 二维码**，包括
+"copia e cola" 代码），您还可以分两步**支付收款二维码**：扫码与确认。
+扫码**免费**；只在确认时收费，与普通出金完全相同（您的汇率 + 固定
+费用）。如未提供 `country`/`currency`，默认按玻利维亚（BOB）处理；
+巴西请发送 `country: "BR"` 和 `currency: "BRL"`。
+
+```mermaid
+flowchart LR
+    scan["1. POST qr/scan<br/>（免费）"] --> data["收款方信息<br/>+ provider_reference"]
+    data --> userConfirms{"用户是否<br/>确认？"}
+    userConfirms -->|"是"| confirm["2. POST qr/confirm<br/>（收费：您的汇率 + 固定费用）"]
+    userConfirms -->|"否"| done["未产生任何费用"]
+    confirm --> result{"同步<br/>结果"}
+    result -->|"completed"| paid["已支付 — 扣款被消耗"]
+    result -->|"failed"| refund["自动<br/>全额退款"]
+```
+
+## 1. 扫描二维码（免费）
+
+#### 玻利维亚
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/scan \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "qr_payload": "<QR content>",
+    "currency": "BOB"
+  }'
+```
+
+返回收款方的信息，以便用户确认付款对象：
+
+```json
+{
+  "scan_id": "…",
+  "provider_reference": "…",
+  "beneficiary_name": "Juan Quispe",
+  "destination_account": "…",
+  "amount": "700.00",
+  "currency": "BOB",
+  "glosa": "",
+  "status": "…"
+}
+```
+
+#### 巴西（PIX 二维码）
+
+`qr_payload` 接受 PIX 二维码的原始内容（EMV BR Code）**或
+"copia e cola" 代码** —— 二者是同一个字符串：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/scan \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "qr_payload": "00020126360014br.gov.bcb.pix0114+5511998765432520400005303986540575.005802BR5913LOJA DA MARIA6009SAO PAULO62110507PED423163040BF9"
+  }'
+```
+
+扫描会在本地解码 BR Code（校验其校验和），返回目标 PIX 密钥、商户
+名称，以及二维码携带固定金额时的金额：
+
+```json
+{
+  "scan_id": "PIXSCAN-…",
+  "provider_reference": "<同一个 EMV payload>",
+  "beneficiary_name": "LOJA DA MARIA",
+  "destination_account": "+5511998765432",
+  "amount": "75.00",
+  "currency": "BRL",
+  "glosa": "",
+  "status": "scanned"
+}
+```
+
+- `amount` 为空表示**开放金额**二维码：由您在确认步骤决定支付多少。
+  固定金额时，确认必须发送完全一致的金额。
+- 支持**静态** PIX 二维码（印刷/可重复使用、密钥内嵌的那种）。
+  **动态**二维码（payload 携带 PSP 的 URL 而非密钥）会返回 `400`
+  和 `dynamic pix qr codes are not supported yet` —— 请向收款方索取其
+  PIX 密钥并使用 [`pix`](https://docs.cbpayapp.com/zh/guides/payouts#各国示例) 方法。
+- 被篡改或截断的 payload 会返回 `400`（CRC 校验和无效）。
+
+## 2. 确认支付（此步收费）
+
+#### 玻利维亚
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider_reference": "<from the scan>",
+    "amount": "700.00",
+    "currency": "BOB",
+    "description": "QR lunch payment",
+    "idempotency_key": "qr-2026-07-07-a"
+  }'
+```
+
+#### 巴西（PIX 二维码）
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "provider_reference": "<from the scan>",
+    "amount": "75.00",
+    "description": "Order 4231",
+    "idempotency_key": "qr-br-2026-07-16-a"
+  }'
+```
+
+- `amount` 始终必填：固定金额二维码必须完全一致 —— 否则返回 `422`，
+  出金处于 `status: failed`（`status_message: "amount mismatch: the qr
+  requires exactly 75.00 BRL"`），且**退款已自动完成**；修正金额后用
+  新的键重试。开放金额二维码则按您发送的金额支付。
+- **静态 PIX 二维码天生可复用**（商户打印的二维码会被支付多次）：
+  可以用不同的 `idempotency_key` 再次支付。失败的尝试**不会作废该
+  二维码**。
+- 付款走与 `pix` 方法相同的 PIX 通道（24/7）；二维码中的 `txid`
+  会随付款传递，便于商户自动对账。
+
+- 按**您的汇率**扣除 `usdt_amount + 固定费用`，与 `bank_transfer`
+  完全一致。
+- 结果为**同步**返回：响应中已包含最终状态（`completed`，或 `failed`
+  并自动退款）—— 无需等待。
+- 使用相同 `idempotency_key` 重试会返回原始出金。玻利维亚的扫码引用
+  为一次性（已扫描的二维码只能支付一次）；巴西的静态 PIX 二维码可
+  复用，每笔支付携带自己的键。
+confirm 请求还接受 `settlement_asset`（`USDT`、`USDC`、`BTC`、`GOLD`、
+`SILVER` 或 `PLATINUM`），用于选择要扣款的虚拟余额。省略时使用账户
+默认结算资产。支付的内部标识由服务端生成：集成方只发送 `scan` 返回
+的 reference，以及保留两位小数的金额。
+
+### 状态对账
+
+如果同步响应还不能证明终态，payout 会保持 `processing`。读取已有资源：
+
+```http
+GET /v1/payouts/{payoutID}
+```
+
+不要创建另一个 payout，也不要使用新的 key。持续读取直到状态变为
+`completed` 或 `failed`；confirm 返回 `failed` 表示扣款已经退款。客户
+使用相同 key 重复 confirm 时，会收到原始 payout 以及
+`idempotency_hit: true`。
+
+## 需要补充证件的巴西 PIX 密钥
+
+对于巴西 PIX QR，`POST /v1/payouts/qr/scan` 会返回 `key_type`，值为
+`tax_id`、`email`、`phone` 或 `evp`，并返回 `requires_document`。
+`tax_id` 密钥本身就是 CPF/CNPJ，可直接确认，无需额外证件。对于
+email、手机号或 EVP 密钥，确认时同时发送 `document_type`（`CPF` 或
+`CNPJ`）和 `document_id`：
+
+```json
+{
+  "country": "BR",
+  "currency": "BRL",
+  "provider_reference": "<scan 返回的 provider_reference>",
+  "amount": "75.00",
+  "document_type": "CPF",
+  "document_id": "52998224725",
+  "idempotency_key": "qr-br-doc-001"
+}
+```
+
+对于 `tax_id`，两个证件字段均为可选；对于其他密钥类型，两个字段
+必须同时提供。非 `tax_id` QR 未提供证件时，API 返回 `422
+core_rejected`，并提示使用收款人证件重新确认。与 `tax_id` 密钥不匹配
+的证件会被拒绝。相同幂等键搭配不同证件会返回
+`409 idempotency_conflict`；处理不明确响应时，保留原始幂等键和 payload。
+
+## 错误
+
+| HTTP | 代码 | 处理方式 |
+|---|---|---|
+| 400 | `invalid_qr_payload` | QR 无法读取、已损坏或为动态 QR（暂不支持）—— 未创建任何内容，你的 key 也未被消耗；请向付款人索取静态 QR |
+| 400 | `idempotency_key_required` | 可复用的静态 QR 在 confirm 时必须显式提供 `idempotency_key` |
+| 402 | `insufficient_funds` | 充值余额后用相同的 key 重试 |
+| 403 | `compliance_hold` | payout 被保留审核且未被处理：没有资金移动，`idempotency_key` 也未被消耗。门户会显示一行可复制的参考信息，包含 UTC 时间、错误代码和短请求 ID；不会披露具体的合规原因 |
+| 422 | payout `failed` + 退款 | 金额与固定金额 QR 不符，或通道拒绝了付款 —— 扣款自动退回 |
+| 503 | `channel_unavailable` | 通道暂时不可用；稍后用相同的 key 重试 |
+
+完整错误目录见[错误](https://docs.cbpayapp.com/zh/errors)。
+
+## 常见问题
+
+#### 扫描 QR 需要费用吗？
+不需要 —— 扫描是免费的本地读取。只有 confirm 创建 payout 时才收费。
+#### 同一个 QR 可以支付两次吗？
+一次性 QR（固定参考号）只允许一次支付。可复用的静态 QR 可以合法地被
+支付多次 —— 因此 confirm 要求每次支付提供显式的 `idempotency_key`。
+#### 支持动态 QR 吗？
+暂不支持 —— 动态 QR 返回 `invalid_qr_payload`（400）并附带指引。请向
+付款人索取目标账户的静态 QR。
+#### 适用哪个汇率？
+与普通 payout 相同：confirm 时报价的汇率，对该笔操作冻结，你的点差已
+包含在内。
+#### 扫描出的金额与我想支付的不一致怎么办？
+固定金额 QR 必须精确支付；不匹配会使 payout 失败并自动退款。开放金额
+QR 接受你在 confirm 时传入的金额。
+#### confirm 失败后如何安全重试？
+用**相同**的 `idempotency_key` 重试 —— QR 绝不会因验证错误而"作废"：
+在 payload 验证通过之前不会创建任何内容。

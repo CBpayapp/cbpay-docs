@@ -1,0 +1,886 @@
+---
+title: "Webhooks"
+description: "实时接收带签名的事件"
+slug: zh/webhooks
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/webhooks
+---
+Webhook 会将您账户的事件推送到您自己的 HTTPS 回调地址，并附带加密签名。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant CB as CBPay
+    participant App as 您的 HTTPS 端点
+    CB->>App: 带签名的 POST（X-Webhook-Signature、X-Webhook-Event-ID）
+    alt 您在超时前返回 2xx
+        App-->>CB: 200 OK
+        Note over CB: 投递完成
+    else 超时或错误
+        App-->>CB: 5xx / 超时
+        CB->>App: 按退避策略重试（最多 5 次）
+        Note over App: 同一事件可能送达两次 —<br/>请按 X-Webhook-Event-ID 去重
+    end
+```
+
+## 创建订阅
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_type": "payout_status_changed",
+    "callback_url": "https://api.myapp.com/webhooks/cbpay",
+    "secret": "a-secret-of-at-least-16-chars"
+  }'
+```
+
+- `event_type`：下表中的事件之一，或使用 `*` 订阅全部事件。
+- `callback_url`：**必须为 HTTPS**；localhost 和私有 IP 会被拒绝——本地开发请使用
+  [HTTPS 隧道](https://docs.cbpayapp.com/zh/environment-testing#testing-webhooks-in-local-development)。
+- `secret`：至少 16 个字符；用于对每次投递签名。加密存储，无法再次获取。
+
+订阅接收的是**您账户**的事件。您可以随时列出当前有效的订阅：
+
+```bash
+curl https://api.qbank.cl/platform/v1/webhooks/subscriptions \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "subscriptions": [
+    {
+      "id": "5f3a…",
+      "event_type": "payout_status_changed",
+      "callback_url": "https://api.myapp.com/webhooks/cbpay",
+      "status": "active",
+      "created_at": "2026-07-01T12:00:00Z"
+    }
+  ]
+}
+```
+
+## 停用和重新启用订阅
+
+当某个回调不再使用时，请将其停用而不是删除（订阅**永远不会被删除**：
+会保持 `disabled` 状态，您可以随时重新启用）：
+
+```bash
+curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "status": "disabled" }'
+```
+
+```json
+{
+  "id": "5f3a…",
+  "event_type": "payout_status_changed",
+  "callback_url": "https://api.myapp.com/webhooks/cbpay",
+  "status": "disabled",
+  "created_at": "2026-07-01T12:00:00Z"
+}
+```
+
+如需重新启用，使用 `{ "status": "active" }` 发起同样的调用。
+
+- 该开关只影响**未来**的事件：`disabled` 状态的订阅停止接收新事件，
+  但**已排队**的投递仍会发出。
+- **幂等**：重复当前状态会返回 `200`，不会有任何变化。
+- 您只能操作**自己账户**的订阅：其他账户的订阅会返回 `404`（与不存在的
+  订阅无法区分）。
+
+| HTTP | `error` | 解决方法 |
+|---|---|---|
+| 400 | `invalid_status` | 状态必须为 `active` 或 `disabled` |
+| 404 | `not_found` | 订阅不存在或属于其他账户 |
+
+## 事件
+
+| 事件 | 触发时机 |
+|---|---|
+| `payin_credited` | 收到一笔法币代收并已入账 |
+| `payin_expired` | 一笔待支付的代收（二维码 / checkout）已过期或失败，未收到付款 |
+| `payin_refunded` | 银行卡收款的[退款](https://docs.cbpayapp.com/zh/guides/refunds)已到达最终状态（包含发卡行发起的拒付） |
+| `payin_settlement_scheduled` | 一笔银行卡收款已确认（`credited`，已发出 `payin_credited`），其余额被安排到未来的 `settle_at`（机构配置的结算延迟）。在付款确认时仅发出一次；余额在到期时可用 |
+| `payout_status_changed` | 一笔付款（payout）状态发生变化 |
+| `transfer_received` | 账户收到一笔内部转账 |
+| `payroll_credited` | 组织向该账户余额发放了一笔工资（财务直接入账）|
+| `org_expense_credited` | 组织向该账户余额支付了一笔运营费用（财务直接入账）|
+| `referral_credited` | 组织向 payout 账户余额支付了一笔推荐人结算（该期间的推荐人佣金）|
+| `crypto_deposit_credited` | 一笔链上充值已确认并入账 |
+| `crypto_deposit_held` | 一笔入账充值因发送方风险被暂扣（[筛查](https://docs.cbpayapp.com/zh/guides/screenings)） |
+| `crypto_deposit_alert` | 一笔充值已入账，但发送方显示高风险（仅提示） |
+| `crypto_withdrawal_status_changed` | 一笔链上提现状态发生变化 |
+| `banking_customer_status_changed` | 银行账户资料验证状态发生变化（自己的或已注册第三方的 — 由 `customer_kind` 区分） |
+| `banking_operation_status_changed` | 一笔银行付款状态发生变化 |
+| `card_transaction` | 一笔卡片消费被授权、撤销或调整 |
+| `card_status_changed` | 卡片状态发生变化（包括自动冻结） |
+| `card_stored` | 付款人的卡片已在获得同意后完成令牌化并保存（[已保存的卡片](https://docs.cbpayapp.com/zh/guides/payins#stored-cards)） |
+| `stored_card_revoked` | 一张已保存卡片的凭证被吊销（商户发起的扣款将停止工作） |
+| `subscription_status_changed` | 基于已保存卡片的订阅状态发生变化（`active` / `paused` / `past_due` / `canceled`） |
+| `kyc_verification_status_changed` / `kyb_verification_status_changed` | 一项身份验证状态发生变化（包括您自身的入驻验证，带 `self_onboarding: true`） |
+| `kyc_link_completed` / `kyb_link_completed` | 一个托管验证链接已完成 |
+| `kyc_document_validated` / `kyb_document_validated` | 通过 API 上传的文档已完成 OCR |
+| `kyc_liveness_completed` | 通过活体检测链接完成了一次活体检测 |
+| `aml_screening_updated` | AML/CFT 筛查更新（结果、案件、风险、已复核交易） |
+| `risk_report_ready` | [Qscore](https://docs.cbpayapp.com/zh/guides/qscore) 信用报告已生成完毕(携带评分和等级) |
+| `risk_score_changed` | 受监控主体的评分发生变化(信用局新数据后的重新评估) |
+| `risk_monitoring_alert` | 受监控的 [Qscore](https://docs.cbpayapp.com/zh/guides/qscore) 主体触发了警报:评分跌破你设定的阈值、信用局出现新记录或记录被移除 |
+| `risk_batch_completed` | 一个 Qscore 报告[批次](https://docs.cbpayapp.com/zh/guides/qscore-batch)处理完成(每个批次恰好一个 webhook,携带条目计数 — 绝不按主体逐个发送) |
+| `risk_consent_granted` | 持有人授权了一个[授权链接](https://docs.cbpayapp.com/zh/guides/qscore-consents) — 正面的银行事实数据流入该主体的信用档案 |
+| `risk_consent_revoked` | 持有人拒绝了某个[授权链接](https://docs.cbpayapp.com/zh/guides/qscore-consents),或你的账户撤销了它 |
+| `wallet_deposit_received` | 一笔链上充值到达[独立钱包](https://docs.cbpayapp.com/zh/guides/segregated-wallets)（不触及账本） |
+| `wallet_send_status_changed` | 独立钱包发起的一笔转出状态发生变化 |
+| `wallet_key_exported` | 独立钱包的私钥被导出（安全警报） |
+| `wallet_external_movement` | 独立钱包发生了未经平台的链上资金变动（`client` 托管模式下属正常情况） |
+| `wallet_key_compromise_suspected` | **严重警报**：`cbpay` 托管钱包出现外部转出——私钥可能已泄露 |
+| `wallet_signature_created` | 使用独立钱包创建了签名证明(EIP-191 / TIP-191 消息签名) |
+| `wallet_linked` | 通过签名的 nonce 挑战将外部钱包(`custody=client`)链接到账户 |
+| `txn_review_status_changed` | 被[交易防火墙](https://docs.cbpayapp.com/zh/guides/transaction-reviews)挂起的操作审核状态发生变化（`in_review` / `info_requested` / `released` / `rejected`）——负载保持中性，绝不携带内部原因；拒绝也可能来自按期限自动拒绝的定时扫描（auto-rejection） |
+| `review_dispatch_failed` | 银行或卡片申请已批准，但激活派发失败；负载包含 `event`、`review_id`、`kind`、`title` 和 `path`。幂等地重试原始 approve，不要重新创建申请 |
+| `corridor_status_changed` | 某条支付通道的可用性发生变化（`operational` / `degraded` / `down`）——广播事件，见[服务状态指南](https://docs.cbpayapp.com/zh/service-status) |
+| `balance_adjusted` | 管理员对某个余额执行了手动入账或扣款 |
+| `account_status_changed` | 账户的管理状态发生变化（`active` / `blocked` / `closed`） |
+| `member_security_event` | 账户成员的安全事件（登录、凭据更改、新增验证因素、会话被撤销） |
+| `admin_announcement` | 命名的组织管理员批准了面向该账户的本地化纯文本公告 |
+| `warroom_outreach` | 命名的平台 god 向该账户发送了纯文本安全通知 |
+
+### 各事件的载荷
+
+```json payin_credited
+{
+  "payin_id": "9c2a…",
+  "account_id": "ae8c…",
+  "country": "BO",
+  "currency": "BOB",
+  "local_amount": "700.00",
+  "fx_rate": "6.91",
+  "usdt_credited": "100.302460",
+  "fee": "1.000000",
+  "idempotency_key": "order-10042"
+}
+```
+
+```json payin_expired
+{
+  "payin_id": "567d…",
+  "account_id": "ae8c…",
+  "status": "expired",
+  "country": "BO",
+  "currency": "BOB",
+  "local_amount": "60.99",
+  "reference": "CBK7Q2M4XZ9P",
+  "idempotency_key": "order-10042"
+}
+```
+
+```json payin_refunded
+{
+  "refund_id": "3a7d…",
+  "payin_id": "9f1c…",
+  "account_id": "c57f…",
+  "kind": "refund",
+  "status": "completed",
+  "currency": "USD",
+  "local_amount": "40.00",
+  "usdt_debited": "40.000000",
+  "idempotency_key": "refund-order-8842",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payin-refunds/3a7d…/receipt"
+}
+```
+
+```json payin_settlement_scheduled
+{
+  "payin_id": "8b3e…",
+  "account_id": "ae8c…",
+  "country": "US",
+  "currency": "USD",
+  "local_amount": "498.75",
+  "fx_rate": "1.010202",
+  "usdt_gross": "493.811881",
+  "fee": "27.159654",
+  "usdt_net": "466.652227",
+  "status": "credited",
+  "settle_at": "2026-08-12T14:08:33Z",
+  "idempotency_key": "order-10042",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payins/8b3e…/receipt"
+}
+```
+
+> **注**
+配置结算延迟后，两个 webhook 都在**付款确认时**发出：先是
+`payin_settlement_scheduled`（余额已排期至 `settle_at`），然后是
+`payin_credited`（收款已确认，`status: credited`）。等到
+`settle_at` 的只有余额的可用性 —— 收款响应在待结算期间携带
+`settlement_pending: true`，余额到账后携带 `settled_at`。
+`usdt_net` 是到期时将入账的金额（总额 − 手续费）。
+对于没有总额/手续费的历史记录，金额字段可能为空（`""`）。
+到达 `settle_at` 时，结算 worker 入账余额并发出 `payin_credited`（原有流程不变）。
+
+```json payout_status_changed
+{
+  "payout_id": "0d4f…",
+  "account_id": "ae8c…",
+  "country": "MX",
+  "currency": "MXN",
+  "local_amount": "1500.00",
+  "usdt_amount": "85.714286",
+  "total_debit": "86.014286",
+  "status": "completed",
+  "status_code": "",
+  "status_message": "",
+  "bank_reference": "00761123456",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
+  "funds_debited": true,
+  "compliance_pending": false,
+  "predebit_failure": false,
+  "idempotency_key": "payroll-2026-07-001"
+}
+```
+
+在收款人技术筛查等待期间，`payout_status_changed` 负载可能携带
+`status: "pending"`、`status_code: "compliance_pending"`、
+`compliance_pending: true` 和 `funds_debited: false`。此时不会包含
+`receipt_url`，因为尚未扣款且尚无回单。
+
+筛查返回 `process` 后，同一个 payout 仍可能在 `pending` 状态下发送
+持久化的转换事件：
+
+- `status_code: "compliance_dispatch_pending"`：筛查已通过，扣款/hold
+  已存在，因此 `funds_debited: true`，但 core 派发尚未完成。
+- `status_code: "compliance_dispatching"`：派发声明正在执行。
+- `status_code: "core_unreachable"`：派发或本地结算结果不明确，等待协调；
+  不要创建第二笔 payout。
+
+使用 `X-Webhook-Event-ID` 对每个投递去重，但不要假设一个 payout 只有
+一个事件：平台会持久化这些状态修订，随后发送终态 `completed` 或
+`failed` 事件。终态事件携带正常回单字段；失败的 payout 会退回精确扣款。
+
+```json txn_review_status_changed
+{
+  "account_id": "ae8c…",
+  "review_id": "7a3f…",
+  "kind": "payout",
+  "resource_id": "0d4f…",
+  "status": "info_requested",
+  "previous_status": "in_review",
+  "amount": "1500.00",
+  "asset": "USD"
+}
+```
+
+```json transfer_received
+{
+  "transfer_id": "77b1…",
+  "from_account_id": "389d…",
+  "to_account_id": "ae8c…",
+  "asset": "USDT",
+  "amount": "25.000000",
+  "description": "Expense split",
+  "created_at": "2026-07-06T20:10:00Z"
+}
+```
+
+```json crypto_deposit_credited
+{
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "b1946ac9…",
+  "amount": "499.000000",
+  "fee": "1.000000"
+}
+```
+
+```json crypto_deposit_held
+{
+  "account_id": "ae8c…",
+  "hold_id": "c1d2e3f4…",
+  "chain": "tron",
+  "asset": "usdt",
+  "tx_id": "8a5b3c…",
+  "risk": "Severe",
+  "status": "held"
+}
+```
+
+```json crypto_deposit_alert
+{
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "usdt",
+  "tx_id": "9c6d4e…",
+  "risk": "High",
+  "status": "credited"
+}
+```
+
+```json crypto_withdrawal_status_changed
+{
+  "withdrawal_id": "5e8c…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "7d3f01aa…",
+  "status": "completed",
+  "amount": "100.000000",
+  "idempotency_key": "wd-2026-09-0042"
+}
+```
+
+```json banking_customer_status_changed
+{
+  "account_id": "ae8c…",
+  "customer_id": "9f2b…",
+  "customer_kind": "third_party",
+  "third_party_id": "77aa…",
+  "kyc_status": "approved"
+}
+```
+
+在 `banking_customer_status_changed` 中，`customer_kind` 区分自己的档案
+（`self`）和你注册的第三方（`third_party`，附 `third_party_id` — 与
+`GET /v1/banking/third-parties/{id}` 的 id 相同）。
+
+```json banking_operation_status_changed
+{
+  "account_id": "ae8c…",
+  "operation_id": "7e8a…",
+  "status": "completed",
+  "direction": "in",
+  "amount": "80.00",
+  "currency": "EUR",
+  "payment_rail": "SEPA_INSTANT",
+  "purpose": "banking_eur",
+  "reference": "CJ-DEP-001"
+}
+```
+
+```json card_transaction
+{
+  "account_id": "ae8c…",
+  "card_id": "3c2b…",
+  "transaction_id": "5e4d…",
+  "status": "authorized",
+  "amount_usdt": "16.170000",
+  "merchant": "AMZN Mktp"
+}
+```
+
+```json card_status_changed
+{
+  "account_id": "ae8c…",
+  "card_id": "3c2b…",
+  "status": "frozen",
+  "reason": "monthly_fee_unpaid"
+}
+```
+
+```json card_stored
+{
+  "stored_card_id": "a9b8…",
+  "account_id": "ae8c…",
+  "payer_reference": "payer@email.com",
+  "brand": "VISA",
+  "last4": "1234",
+  "country": "BO",
+  "currency": "BOB",
+  "seed_payin_id": "9c2a…"
+}
+```
+
+```json stored_card_revoked
+{
+  "stored_card_id": "a9b8…",
+  "account_id": "ae8c…",
+  "payer_reference": "payer@email.com",
+  "brand": "VISA",
+  "last4": "1234"
+}
+```
+
+```json subscription_status_changed
+{
+  "subscription_id": "4f1e…",
+  "account_id": "ae8c…",
+  "stored_card_id": "a9b8…",
+  "status": "past_due",
+  "period": 3,
+  "next_charge_at": "2026-08-01T12:00:00Z",
+  "payer_reference": "payer@email.com",
+  "reason": "dunning_exhausted",
+  "failed_attempts": 3
+}
+```
+
+```json kyc_verification_status_changed
+{
+  "account_id": "ae8c…",
+  "kind": "kyc",
+  "event": "approved",
+  "submission_id": "c3d4…",
+  "external_customer_id": "cust_789",
+  "status": "approved",
+  "risk_band": "low",
+  "decision": "approved",
+  "decision_source": "auto"
+}
+```
+
+当事件携带最终判定（`approved`、`rejected` 或 `changes_requested`）时，载荷会包含 `decision_source`：`"auto"` 表示由自动判定引擎决定（完全干净的申请会在数秒内无需人工干预即获批准），`"admin"` 表示由合规专员在审核控制台人工判定。对于没有引擎数据的旧提交件，该字段会被省略。
+
+```json kyb_link_completed
+{
+  "account_id": "ae8c…",
+  "kind": "kyb",
+  "event": "link_completed",
+  "link_id": "b2c3…",
+  "submission_id": "d4e5…",
+  "external_customer_id": "cust_456",
+  "status": "completed"
+}
+```
+
+```json kyc_document_validated
+{
+  "account_id": "ae8c…",
+  "kind": "kyc",
+  "submission_id": "c3d4…",
+  "external_customer_id": "cust_789",
+  "category": "identity",
+  "outcome": "MATCH",
+  "score": 0.97,
+  "summary": "Document matches the submitted identity"
+}
+```
+
+```json kyc_liveness_completed
+{
+  "account_id": "ae8c…",
+  "kind": "kyc",
+  "submission_id": "c3d4…",
+  "external_customer_id": "cust_789",
+  "outcome": "PASS",
+  "passed": true
+}
+```
+
+```json aml_screening_updated
+{
+  "account_id": "ae8c…",
+  "screening_event": "compliance_risk_changed",
+  "customer_id": "cus_8f2e…",
+  "data": { "risk_level": "high" }
+}
+```
+
+```json wallet_deposit_received
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "b1946ac9…",
+  "amount_raw": "125000000",
+  "from_address": "TDonor…"
+}
+```
+
+```json wallet_send_status_changed
+{
+  "send_id": "9c8b…",
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "b1946ac9…",
+  "status": "completed",
+  "amount_raw": "25500000",
+  "idempotency_key": "send-0042"
+}
+```
+
+```json wallet_key_exported
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "address": "TRmSZRaMAqLEevAdGwo3R43bRBXamWR5bd"
+}
+```
+
+```json wallet_external_movement
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "direction": "out",
+  "tx_id": "9a3c1e5f…",
+  "amount_raw": "25000000",
+  "custody": "client"
+}
+```
+
+```json wallet_key_compromise_suspected
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "direction": "out",
+  "tx_id": "9a3c1e5f…",
+  "amount_raw": "25000000",
+  "custody": "cbpay"
+}
+```
+
+```json wallet_signature_created
+{
+  "proof_id": "c41d…",
+  "account_id": "ae8c…",
+  "wallet_id": "b7e3…",
+  "chain": "eth",
+  "address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+  "purpose": "wallet_ownership",
+  "proof_code": "G9f2c…",
+  "verify_url": "https://api.qbank.cl/platform/v1/public/signature-proofs/G9f2c…"
+}
+```
+
+```json wallet_linked
+{
+  "link_id": "d52e…",
+  "account_id": "ae8c…",
+  "chain": "eth",
+  "address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+  "proof_id": "c41d…"
+}
+```
+
+```json risk_report_ready
+{
+  "report_id": "9f1c…",
+  "subject_id": "6aa2…",
+  "doc_id": "76.123.456-7",
+  "country": "CL",
+  "subject_type": "person",
+  "score": 712,
+  "band": "B",
+  "verify_code": "Q9f1c2e7a5b6d4c8e9a0f1d2b3c4d5e6f0123456789ab"
+}
+```
+
+```json risk_score_changed
+{
+  "subject_id": "6aa2…",
+  "report_id": "9f1c…",
+  "old_score": 688,
+  "new_score": 712,
+  "old_band": "C",
+  "new_band": "B"
+}
+```
+
+```json risk_monitoring_alert
+{
+  "monitoring_id": "7c9e2f14-5b6a-4c8d-9e1f-3a7b5c2d8e91",
+  "subject_id": "8f5fb0d2-1d45-4a0e-9d5c-2d39f2b7a112",
+  "doc_id": "12.345.678-5",
+  "country": "CL",
+  "subject_type": "person",
+  "triggers": ["score_drop_below", "new_records"],
+  "score": 487,
+  "previous_score": 512,
+  "band": "D",
+  "record_count": 3,
+  "detected_at": "2026-08-08T18:41:12Z",
+  "new_records": [
+    {
+      "source": "res_chile",
+      "record_type": "debt_collection",
+      "reported_at": "2026-08-05T00:00:00Z",
+      "amount": "450000",
+      "currency": "CLP",
+      "status": "open"
+    }
+  ]
+}
+```
+
+```json risk_batch_completed
+{
+  "batch_id": "b7f2c1a4-3e5d-4f8a-9c2b-1d0e6a8f4c5d",
+  "status": "completed_with_errors",
+  "total_items": 4,
+  "succeeded_items": 3,
+  "failed_items": 1,
+  "country": "CL",
+  "purpose": "credit_evaluation"
+}
+```
+
+```json risk_consent_granted
+{
+  "consent_id": "c3a1e9b2-7f4d-4c8a-9e1b-2a5c6d7e8f9a",
+  "subject_id": "s8b2c4d6-1e3f-4a5b-9c7d-8e9f0a1b2c3d",
+  "country": "CL",
+  "doc_id": "76123456-8",
+  "subject_type": "person",
+  "purpose": "credit_evaluation",
+  "status": "granted",
+  "previous_status": "pending",
+  "holder_name": "Maria Jose Contreras Soto",
+  "openfinance_link_id": "9f1a2b3c-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
+  "granted_at": "2026-08-09T15:42:10Z"
+}
+```
+
+```json risk_consent_revoked
+{
+  "consent_id": "c3a1e9b2-7f4d-4c8a-9e1b-2a5c6d7e8f9a",
+  "subject_id": "s8b2c4d6-1e3f-4a5b-9c7d-8e9f0a1b2c3d",
+  "country": "CL",
+  "doc_id": "76123456-8",
+  "subject_type": "person",
+  "purpose": "credit_evaluation",
+  "status": "revoked",
+  "previous_status": "granted",
+  "revoked_at": "2026-08-11T09:05:33Z"
+}
+```
+
+```json corridor_status_changed
+{
+  "flow": "payout",
+  "country": "VE",
+  "currency": "VES",
+  "method": "bank_transfer",
+  "status": "down",
+  "previous_status": "operational",
+  "since": "2026-07-24T22:10:00Z",
+  "reason": "consecutive infrastructure failures"
+}
+```
+
+```json balance_adjusted
+{
+  "account_id": "ae8c…",
+  "asset": "USDT",
+  "amount": "25.000000",
+  "direction": "credit",
+  "reason": "goodwill credit",
+  "available": "1025.000000",
+  "held": "0.000000"
+}
+```
+
+```json account_status_changed
+{
+  "account_id": "ae8c…",
+  "status": "blocked",
+  "previous_status": "active"
+}
+```
+
+```json member_security_event
+{
+  "account_id": "ae8c…",
+  "member_id": "3f7b…",
+  "event_type": "password_changed"
+}
+```
+
+对于账户范围的订阅，`ip` 和 `user_agent` 会被有意隐藏。组织范围的安全
+视图会保留取证用的 `user_agent` 以及解析后的操作者 IP 字段
+（`actor_ip`、`actor_ip_source`）用于管理员审计；这些字段仅属于 Admin
+合约，不属于公开 webhook 合约。
+
+在 `payout_status_changed` 中，技术筛查更新在任何扣款前可以为 `pending`。
+最终更新为 `completed` 或 `failed`（若为 `failed`，在您收到该事件时扣款已完成退还）。
+`crypto_withdrawal_status_changed` 使用 `completed` 或 `failed`。
+
+对于 `payout_status_changed`，`status_code` 和 `status_message` 是核心报告的规范化结果。
+当通道没有提供更多细节时，`status_message` 可以为空；平台会在投递前清理它，
+其中不会包含上游服务商身份。
+
+### 扣款前的终态失败
+
+如果筛查在扣款路径前失败，事件可以以终态
+`status: "failed"` 发送，并带有 `predebit_failure: true` 和
+`funds_debited: false`；不包含 `receipt_url`。扣款后的失败不同：准确的
+扣款金额会在终态事件前退回。平台也可能持久化非终态的转换修订，因此同一
+payout 可能产生多次 `payout_status_changed` 投递；请按
+`X-Webhook-Event-ID` 去重，不要创建第二笔 payout。
+## 投递格式
+
+每次投递都是一个 JSON `POST`，带有以下请求头：
+
+| 请求头 | 内容 |
+|---|---|
+| `X-Webhook-Event` | 事件类型 |
+| `X-Webhook-Event-ID` | 事件的唯一 ID |
+| `X-Webhook-Delivery-ID` | 本次投递的 ID（重试时会变化） |
+| `X-Webhook-Timestamp` | Unix 时间戳（秒，UTC） |
+| `X-Webhook-Signature` | 传统 V1 HMAC 签名（见下文） |
+| `X-Webhook-Signature-V2` | V2 HMAC 签名（见下文） |
+
+## 验证签名
+
+CBPay 会在每次平台 webhook 投递中同时发送两个签名 header。V1 仍然有效
+并会继续发送，因此采用 V2 不会造成兼容性破坏。新的集成应优先验证 V2，
+并在迁移现有接收端时保留 V1 fallback。
+
+| Header | 签名输入 |
+|---|---|
+| `X-Webhook-Signature`（V1） | `timestamp + "." + raw_body` |
+| `X-Webhook-Signature-V2` | `timestamp + "." + event_type + "." + event_id + "." + raw_body` |
+
+两种输入在适用时都使用同一请求中的 `X-Webhook-Timestamp`、
+`X-Webhook-Event` 和 `X-Webhook-Event-ID`。结果是使用订阅密钥计算的
+小写十六进制 HMAC-SHA256。V2 将事件类型和事件 ID 绑定到签名中，因此
+不要从重新序列化的 JSON payload 中读取这些值。`X-Webhook-Delivery-ID`
+用于投递追踪；请使用 `X-Webhook-Event-ID` 去重。
+
+```javascript Node.js
+const crypto = require("crypto");
+
+function timingSafeHexEqual(provided, expected) {
+  const a = Buffer.from(provided, "hex");
+  const b = Buffer.from(expected, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function verifyWebhook(req, secret) {
+  const ts = req.headers["x-webhook-timestamp"];
+  const signatureV2 = req.headers["x-webhook-signature-v2"];
+  const signatureV1 = req.headers["x-webhook-signature"];
+  const useV2 = Boolean(signatureV2);
+  const provided = useV2 ? signatureV2 : signatureV1;
+  if (!ts || !provided || !req.rawBody) return false;
+
+  const prefix = useV2
+    ? `${ts}.${req.headers["x-webhook-event"]}.${req.headers["x-webhook-event-id"]}.`
+    : `${ts}.`;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(Buffer.concat([Buffer.from(prefix), req.rawBody]))
+    .digest("hex");
+  return timingSafeHexEqual(provided, expected);
+}
+```
+
+```python Python
+import hashlib, hmac
+
+def verify_webhook(headers, raw_body: bytes, secret: str) -> bool:
+    ts = headers["X-Webhook-Timestamp"]
+    sig_v2 = headers.get("X-Webhook-Signature-V2", "").strip()
+    if sig_v2:
+        event_type = headers["X-Webhook-Event"]
+        event_id = headers["X-Webhook-Event-ID"]
+        signed = b".".join(
+            (ts.encode(), event_type.encode(), event_id.encode(), raw_body)
+        )
+        signature = sig_v2
+    else:
+        signed = ts.encode() + b"." + raw_body
+        signature = headers.get("X-Webhook-Signature", "").strip()
+
+    expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
+    return bool(signature) and hmac.compare_digest(signature.lower(), expected)
+```
+
+> **重要**
+HMAC 必须基于**原始请求体**（收到的字节原样）计算，而不是重新序列化后的 JSON。请拒绝过旧的时间戳（超过 5 分钟），以防止重放攻击。
+## 重试与幂等性
+
+- 您的端点必须在超时前返回 **2xx**；否则将触发重试。
+- 最多 **5 次尝试**，采用递增退避：
+
+| 尝试 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| 约等待时间 | 立即 | ~5s | ~20s | ~45s | ~80s |
+
+- 使用 `X-Webhook-Event-ID` 去重：同一事件可能送达多次（至少一次投递语义）。
+- 如果 5 次尝试全部失败，该事件不会再次发送——请通过资源的 `GET` 接口恢复状态（这也是任何流程都不应只依赖 webhook 的原因）。
+
+### 您的幂等键会随负载返回
+
+当事件来自您使用 `idempotency_key` 创建的操作（payout、银行卡 payin、加密提现、隔离钱包发送、退款……）时，负载会以 `idempotency_key` 字段将其带回——无需额外 GET 即可将通知与您自己的参考号对账。
+
+- 该字段为**可选**：仅当原始请求携带非空键时才出现，否则省略。由平台自身创建的操作永远不会暴露内部键。
+- 覆盖事件：`payout_status_changed`、`payin_credited`、`payin_settlement_scheduled`、`payin_expired`、`payin_refunded`、`crypto_withdrawal_status_changed` 和 `wallet_send_status_changed`。`transfer_received` 不携带该字段。
+- payin 资源在 `GET /v1/payins/{id}` 中也会返回该字段。
+
+## 最佳实践
+
+- 立即返回 `200`，在后台异步处理。
+- 记录 `X-Webhook-Delivery-ID` 以便追溯。
+- 关键状态不要只依赖 webhook：您随时可以通过 API 查询对象（`GET /v1/payouts/{id}` 等）。
+
+## `banking_virtual_iban_inbound`
+
+This event reports an inbound EUR transfer received by an owned virtual IBAN.
+The event is normalized before delivery; consumers should deduplicate by the
+event ID and fetch the banking operation or virtual account when they need the
+latest state. The event does not expose an upstream provider identity.
+
+## `admin_announcement`
+
+当组织管理员批准的 broadcast 到达账户通知渠道时，会发出此账户范围事件。
+载荷是本地化纯文本，绝不是 HTML：
+
+```json
+{
+  "broadcast_id": "4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
+  "subject": "计划维护",
+  "body": "部分服务将在 2026-09-20 02:00 UTC 起进入只读模式。"
+}
+```
+
+事件只发送给 campaign 选中的账户。它可以通过账户 webhook 订阅和账户
+event stream 接收；请使用 `X-Webhook-Event-ID` 对投递去重。
+
+## `dispute_status_changed`
+签名 payload 和状态变化见[争议指南](https://docs.cbpayapp.com/zh/guides/disputes)。
+
+## 收款资产字段
+
+`payin_credited` 始终包含 `credit_asset`，本地法币增加 `fiat_credited`；`payin_refunded` 增加 `debited_asset`/`debited_amount`。不新增事件。
+
+## 支持工单事件
+
+The following events are delivered to both account and organization audiences. Payloads contain identifiers and state only; message bodies, internal notes and attachment bytes never travel in an event. Verify the signature and deduplicate by event ID.
+
+| Event | Payload additions |
+|---|---|
+| `support_ticket_created` | `ticket_id`, `number`, `status`, `account_id`, `category`, `priority`, `kind`, `resource_id`, `subject` |
+| `support_ticket_message` | The ticket identifiers plus `from: account` or `from: admin` |
+| `support_ticket_updated` | The ticket identifiers plus `change: status`, `priority`, `assigned` or `attachment`, plus `assigned_admin_id` |
+
+```json
+{
+  "ticket_id": "11111111-1111-4111-8111-111111111111",
+  "number": "SUP-2026-000123",
+  "status": "open",
+  "account_id": "22222222-2222-4222-8222-222222222222",
+  "category": "delay",
+  "priority": "high",
+  "kind": "payout",
+  "resource_id": "33333333-3333-4333-8333-333333333333",
+  "subject": "Payout is delayed"
+}
+```
+## `warroom_outreach` 载荷
+这是命名 god 发送给账户的纯文本安全通知，包含主题、反钓鱼正文、发送方和 UTC 时间：
+```json
+{"subject":"安全通知","body":"Security notice from your platform team. We will never ask for passwords, codes or transfers in a message.\n\n请检查登录活动。","from":"platform security team","at":"2026-11-07T16:11:54Z"}
+```
+HTML 会在发送前被拒绝；请验证签名并用 `X-Webhook-Event-ID` 去重。

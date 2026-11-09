@@ -1,0 +1,1213 @@
+---
+recipe: payins
+title: "入金（Payins）"
+slug: zh/guides/payins
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/guides/payins
+---
+> **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
+
+> **重要**
+**账户身份获批后才能通过认证账户收款。** 个人账户需要已批准的 KYC，企业账户需要
+已批准的 KYB，之后才能创建 payin。此规则适用于 `POST /v1/payins`（QR、`card`、
+`checkout`、`bank_transfer` 和 `fintoc`）、`POST /v1/payins/collect/otp`、
+`POST /v1/payins/collect`、`POST /v1/payins/deposit-accounts`，以及已保存卡扣款和
+`POST /v1/subscriptions`。获批前这些请求返回 HTTP `403 verification_required`。
+> **注**
+该关卡仅适用于认证账户创建。已经创建的公开支付链接仍可支付，已经收到的被动入账
+仍可处理，org-admin 的运营分配仍可用，系统创建的入金工具不受阻止。
+在收款中，客户以当地货币付款。账户直接以 USD 入账，精度为 2 位小数；若配置其他资产，则净额按
+`payin_rate`（`GET /v1/rates`）和固定手续费执行入账后的转换。详见 [QR payin — 分享付款链接](https://docs.cbpayapp.com/zh/guides/payins-qr#分享付款链接)。
+无论采用哪种模式，每条路径的终点都相同 —— 自动入账 + webhook：
+
+```mermaid
+flowchart LR
+    qr["收款二维码<br/>（BO、BR·PIX）"] --> pay["您的客户以<br/>当地货币付款"]
+    hosted["托管支付页面<br/>（CL：fintoc）"] --> pay
+    card["3-D Secure 银行卡支付<br/>（BO：card）"] --> pay
+    announced["预告转账<br/>（CL、PE、MX、PY、US）"] --> pay
+    clabe["专属收款账户<br/>（BO、MX、AR）"] --> pay
+    pay --> conv["按您的 payin_rate 进行<br/>外汇折算 − 固定费用"]
+    conv --> credit(("USD 入账至主资产"))
+    credit --> wh["Webhook payin_credited"]
+```
+
+## 1. 查询可用通道
+
+可用的国家、货币和收款模式由 CBPay 定义。请始终查询目录：
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/methods \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "items": [
+    { "country": "BO", "currency": "BOB", "method": "qr", "delivery": "push" },
+    { "country": "CL", "currency": "CLP", "method": "fintoc", "delivery": "push" },
+    { "country": "MX", "currency": "MXN", "method": "bank_transfer", "delivery": "push" }
+  ],
+  "meta": { "retrieved": 3 }
+}
+```
+
+`delivery` 描述付款在 CBPay 一侧的确认方式（银行通知、轮询或两者兼有）
+—— 它不会改变您的任何集成方式：您始终会收到 `payin_credited` webhook。
+
+收款通道和模式：
+
+| 国家 | 货币 | 模式 |
+|---|---|---|
+| 智利 | CLP | 托管支付页面（`fintoc`）、托管银行卡支付页面（`card`）、预告银行转账、现场现金申报 |
+| 秘鲁 | PEN | 预告银行转账、现场现金申报 |
+| 墨西哥 | MXN | 专属 CLABE 账户、预告银行转账、现场现金申报、现场现金申报 |
+| 玻利维亚 | BOB / USD | 收款二维码、银行卡支付页面（`card`）、现场现金申报 |
+| 巴拉圭 | PYG | 预告银行转账、现场现金申报 |
+| 巴西 | BRL 或 BOB (`qr`)、BRL (`pix`) | 动态 PIX 二维码（BRL 转换为 BOB）；Hosted PIX redirect；现场现金申报 |
+| 阿根廷 | ARS | 专属 CVU 账户、现场现金申报 |
+| 委内瑞拉 | VES | 主动收款（`c2p`）、现场现金申报 |
+| 美国 | USD | 国际银行卡支付页面（`card`）、预告银行转账（两条轨道：境内电汇 + 国际 SWIFT）、现场现金申报 |
+| 厄瓜多尔 | USD | 预告银行转账、现场现金申报，由授权运营人员手动确认 |
+
+> **注**
+**委内瑞拉（VES）**：现在可通过 `c2p` 进行主动收款。付款人先在其银行
+应用中生成 `claveDinamica`，再将其交给您的集成；集成在 collect 请求的
+`otp` 字段中发送该值。C2P 没有之前的 `/collect/otp` 请求步骤。
+`debito_inmediato` 不是当前可用的通道。向委内瑞拉的对外付款
+（`pago_movil`、`bank_transfer`）不受影响：参见
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
+可用性可能变化；目录（`GET /v1/payins/methods`）始终是唯一可信来源。
+在所有情况下入账方式相同：按已报价的 `payin_rate` 折算为 USDT，并在
+扣除固定入金费用后净额入账。入账时会按 FIFO 消费 payin 批次；若启用的
+库存不足，原报价仍然有效，缺口记录为 spot fallback 并发送运维告警。
+如果您希望将收款保留在其他余额（USDC、BTC
+或 GOLD），请配置 `default_payin_asset` — 参见
+[资金模型](https://docs.cbpayapp.com/zh/concepts/money-model)。
+
+- **现金 payin** - 现场现金申报与 maker-checker 确认。
+
+## 2. 选择模式并创建收款
+
+每个国家都有自己的收款模式。各模式的真实请求与响应如下：
+
+#### 智利
+
+**托管支付页面（`fintoc`）** —— 推荐：您会获得一个 `payment_url`；
+付款人打开它后可从**任意智利银行或钱包**（Banco Estado、Santander、
+Mach、Tenpo、Mercado Pago……）转账。付款会被自动检测并校验 ——
+无需手动填写参考号。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "fintoc",
+    "amount": "150000",
+    "description": "Top-up order 8841",
+    "idempotency_key": "topup-8841"
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "payin_id": "7a2b…",
+  "status": "pending",
+  "reference": "7a2b…",
+  "payment_url": "https://pay.fintoc.com/plink_K2zwNNSxPyx8w3GZ",
+  "expires_at": "2026-07-08T18:48:25Z",
+  "note": "share the payment_url with the payer; the deposit is credited automatically once the transfer is detected"
+}
+```
+
+将 `payment_url` 分享给付款人（链接、重定向或 WebView）。付款确认后，
+您的账户即以 USDT 入账，并收到 `payin_credited` webhook。CLP 金额必须为
+整数（智利比索没有小数位），支付会话默认在 24 小时后过期。使用相同的
+`idempotency_key` 重试会返回同一笔入金和同一个 URL —— 绝不会开启第二个
+支付会话。
+
+**预告银行转账**（手动的替代方案）：预先申报即将到来的存款，并把
+参考号分享给汇款人。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "bank_transfer",
+    "amount": "500000"
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically"
+}
+```
+
+转账到达后，系统会根据转账附言中的参考号进行匹配，您的账户即自动入账。
+若参考号未随转账传递，付款人证件号可作为后备依据 — 参见
+[预告转账的匹配规则](#预告转账的匹配规则)。
+
+#### 秘鲁
+
+**预告银行转账**，与智利相同，但使用索尔：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "PE",
+    "currency": "PEN",
+    "method": "bank_transfer",
+    "amount": "1800.00"
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "payin_id": "6d20…",
+  "status": "pending",
+  "reference": "CBK7M2Q9X4T3",
+  "note": "include the reference in the transfer description so the deposit is credited automatically"
+}
+```
+
+`reference` 是一个**12 位字母数字短代码**（可放入任何银行的附言字段），
+必须随转账附言一起传递以便自动匹配。建议同时传 `payer_document` 作为后备 —
+参见[预告转账的匹配规则](#预告转账的匹配规则)。
+
+#### 墨西哥
+
+**专属 CLABE 账户**（推荐）：创建一个与您的账户绑定的固定 CLABE ——
+到达该账户的每一笔 SPEI 都会自动入账，无需任何参考号：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "country": "MX", "currency": "MXN" }'
+```
+
+响应 `201`：
+
+```json
+{
+  "instrument_id": "a1d4…",
+  "account_id": "…",
+  "country": "MX",
+  "currency": "MXN",
+  "method": "bank_transfer",
+  "instrument": "734180000151000006",
+  "details": {
+    "alias": "CBPay Example MXN Account",
+    "bank_name": "Example Receiving Bank"
+  },
+  "status": "active"
+}
+```
+
+`instrument` 就是您分享给付款人的 CLABE。创建免费；每笔存款按常规入金
+费用计费。可选字段 `details.alias`、`details.bank_name` 和
+`details.merchant_nit` 会在收款通道提供时返回（`merchant_nit` 用于
+BO/BOB 账户）。使用 `GET /v1/payins/deposit-accounts` 列出您的账户。
+**企业账户与多个充值目的地。** 企业账户只能在已启用的额外走廊中
+创建多个不可变充值账户。目前支持的额外走廊是 `MX`/`MXN`/`bank_transfer`（CLABE）、`BO`/`BOB`/`bank_transfer`（BOB 收款账户）和 `AR`/`ARS`/`bank_transfer`（CVU）。每个目的地仍绑定到同一个
+CBPay 账户；入账会根据目的地 instrument 归属。个人账户仍然遵循每个
+走廊一个充值账户的规则，其他通道和既有通道也一样。
+
+充值账户只有在账户自身验证通过后才会 provisioning：个人需要 KYC，企业
+需要 KYB。注册本身不会创建充值账户。对于 AR/ARS 银行转账，平台要求调用方显式提供用户选择的 `bank_alias`；它不同于内部账户标签和根据已验证姓名派生的个人资料别名。其他收款账户展示字段是可选的，不会被推断。
+
+创建企业 CLABE 时，请在 body 或 header 中发送幂等键：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-clabe-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer","idempotency_key":"company-clabe-001"}'
+```
+
+新 key 返回 `201` 并为所选走廊创建新的目的地。使用相同 key 重试会返回
+`200`、原始充值账户以及 `idempotency_hit: true`；如果原请求仍在
+处理中，并发重试可能返回 `409 idempotency_conflict`。创建免费；
+后续 payin 继续按正常入金费用计费。BOB 目的地仅用于收款，采用
+push 优先、轮询后备的方式对账；它不会创建或选择 payout 路由来源账户。使用
+`GET /v1/payins/deposit-accounts?page=1&page_size=50` 分页查询目的地。
+### 充值与 Banking 目的
+
+每个充值目的地都有明确的 `purpose`：
+
+- `fondeo` 是默认值：入账的法币会转换为您账户的主资产(USD 为主资产)。
+- `banking` 保留本地法币余额，用于法币付款；目前仅支持
+  `BO/BOB/bank_transfer`、`MX/MXN/bank_transfer` 和
+  `AR/ARS/bank_transfer`。
+
+创建响应和 `GET /v1/payins/deposit-accounts` 都会返回 `purpose`。槽位按
+账户、走廊和目的确定；使用相同 key 重试会返回原始资源并带有
+`idempotency_hit: true`。`fiat_hold_local` 只是没有绑定 instrument 时的
+默认 fallback，不会替代目的字段。
+
+您也可以使用一次性的**预告银行转账**
+（`POST /v1/payins`，`method: "bank_transfer"`、`country: "MX"`）。
+
+### 恢复存在歧义的充值账户 claim
+
+如果充值账户请求在核心服务开始配置后超时，请不要盲目创建新的 key。
+使用相同的账户范围凭证，通过以下核心路由查询持久化 claim：
+
+```http
+GET /v1/payins/deposit-accounts/idempotency?idempotency_key=<key>
+```
+
+响应为 `200`，状态可以是 `pending` 或 `not_found`，也可以返回已完成的
+claim。已完成 claim 的目的地带有 `status: active` 和
+`idempotency_status: completed`；`pending` 表示原操作仍未解决。
+缺少查询 key 时返回 `400 invalid_payload`。平台 reconciliation 会重放
+原始 key，绝不会再次创建外部目的地：
+
+```http
+POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
+```
+
+该操作需要带有 `ops:write` 的组织管理员凭证。如果 claim 不是
+MX/MXN/bank_transfer 工具，恢复会返回 `422 deposit_account_not_recoverable`。
+并发恢复会返回 `409 idempotency_conflict`。平台管理员 adoption 是独立的
+最后恢复路径，不是幂等 replay：如果 instrument 已不再处于可恢复的
+pending 状态，会返回相同的 `422`；需要重放已核验的原始 fence 时，请使用
+`reconcile`。
+
+#### 玻利维亚
+
+**专属 BOB 收款账户**：固定账户流程请参阅
+[资金账户指南](https://docs.cbpayapp.com/zh/guides/funding)。个人账户每个走廊
+获得一个稳定的 `instrument`；企业账户可以使用不同的幂等 key 创建额外
+BOB instrument。付款人向所选号码转入 BOB，系统 push 优先确认到账，
+账单轮询作为后备。此流程
+不需要公告或付款人参考号。
+
+**收款二维码**（本地互操作标准）：您生成二维码，客户用其银行 App
+扫码支付。请参阅专门的 [QR payin 指南](https://docs.cbpayapp.com/zh/guides/payins-qr)，其中包含
+请求、响应、重试和错误契约。
+
+QR payin 的请求、响应、幂等重试和错误契约请参阅
+[QR payin 指南](https://docs.cbpayapp.com/zh/guides/payins-qr)。
+
+**银行卡支付页面（`card`）**：您会收到一个托管 3-D Secure 收银台的
+`payment_url` —— 付款人在带有您组织品牌的安全页面上输入银行卡信息，
+如其发卡行要求，还会在同一页面完成认证挑战。银行卡数据绝不会经过
+您的系统或您的集成。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BO",
+    "currency": "BOB",
+    "method": "card",
+    "amount": "700.00",
+    "description": "App top-up",
+    "customer": { "email": "payer@example.com", "first_name": "Ana", "last_name": "Rojas" },
+    "success_url": "https://your-app.com/payment/ok",
+    "failure_url": "https://your-app.com/payment/error",
+    "payer_reference": "customer-7719",
+    "idempotency_key": "topup-7719"
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "payin_id": "b41c…",
+  "status": "pending",
+  "reference": "b41c…",
+  "payment_url": "https://api.qbank.cl/pay/cards/9f3XkT…",
+  "expires_at": "2026-07-16T18:30:00Z",
+  "note": "share the payment_url with the payer; the balance is credited automatically once the card payment is approved"
+}
+```
+
+分享 `payment_url`（链接、重定向或 WebView）。对于
+`method: "card"`，`idempotency_key` **必填**：在 JSON body 中发送，
+或使用 `Idempotency-Key` 请求头。平台会在调用 core 前持久化该操作；
+如果响应不明确，请使用**相同**的键重试，让平台核对原始收款。该重试
+不会在 core 创建第二笔收款；不要为了恢复同一笔付款生成新键。
+
+流程细节：
+
+- `customer` 是账单信息的**可选**预填（`email`、`first_name`、`last_name`、`phone_number`、`address1`、`locality`、
+  `administrative_area`、`postal_code`、`country`，以及可选的 `document` ——
+  纯文本，MDD 11 最多 50 个字符，其他字段最多 120 个字符）；付款人可在
+  页面上补充或更正。`administrative_area` 是账单州/地区：ISO 3166-2 代码
+  （`US-CA`）或其后缀（`CA`）。`service_type` 是 MDD 90 的可选顶层纯文本
+  覆盖值，最多 120 个字符。
+
+**账单地址 —— 按国家要求填写州/地区**：托管页面会收集**完整的账单
+地址**（姓名、邮箱、街道、国家、城市、州/地区和邮政编码）。当账单
+国家在 ISO 3166-2 中有行政区划时（例如美国、加拿大、墨西哥、巴西
+或智利），**州/地区**字段为**必填**：付款人从由地址目录提供的下拉
+列表中选择，未选择时页面不会提交付款。如果该国家在目录中没有行政
+区划，则隐藏该字段。该值以 `administrative_area`（ISO 3166-2）传输。
+账单地址会在发送扣款授权**之前**进行校验：如果地址不完整，或在要求
+州/地区的国家缺失该字段，付款将被拒绝并返回 `invalid_payload`，且
+**不会在卡上创建任何授权**。
+
+> **注**
+使用不完整账单地址创建的卡授权，可能随后在捕获时被发卡行拒绝。请
+始终收集完整的账单地址 —— 当国家有行政区划时包括州/地区 —— 以便
+付款能够被捕获。
+- `success_url` / `failure_url`（可选，公共 https）在完成后重定向付款
+  人；不提供时页面会显示最终结果。
+- `expires_at`（可选，RFC3339，至少提前 5 分钟）设置会话有效期；
+  默认为 **60 分钟**，最长 **48 小时**。API 会在创建会话前校验该值，
+  并在成功的银行卡响应中返回生效的 RFC3339 过期时间。到期未付款时，
+  该 payin 转为 `expired`，您会收到 `payin_expired` webhook。
+- 付款人的尝试次数有限；发卡行拒绝后，可在同一会话内换卡重试。
+
+> **注**
+**稳定的银行卡失败分类。** 托管银行卡页面在支付尝试失败时接收
+`failure_code`，并将其翻译为英文、西班牙文或中文的付款人提示。稳定值为
+`declined`、`authentication_failed`、`provider_unavailable`、`invalid_data`、
+`card_unavailable`、`expired`、`needs_review` 和 `unknown`。页面仍保留历史
+文本 `failure_reason` 以保持兼容；集成方应使用稳定代码，绝不要依赖自由文本。
+`needs_review` 表示结果不明确：对账完成前不要创建新付款或新的幂等键。
+- 授权是在线完成的：收款获批后，您的账户按您的 `payin_rate` 以 USDT
+  入账，并收到 `payin_credited` —— 与其他所有模式相同。
+- 使用相同 `idempotency_key` 重试会返回同一个 payin 和同一个
+  `payment_url`；绝不会开启第二个支付会话。
+- **银行卡会话复用**：未发送 `stored_card_id` 时，新的
+  `method: "card"` 请求会按同一账户、国家、币种、金额和规范化后的
+  `payer_reference` 复用仍处于 `pending` 或 `challenge` 的开放会话。
+  如果没有 `payer_reference`，会使用 `customer.email` 作为后备身份。
+  响应为 `200`，并带有 `session_reused: true`、原有的 `payment_url`
+  以及其 `expires_at`；不会创建第二个 charge 或托管会话。没有可靠的
+  reference 或 email 时，会创建新会话。
+- 每个账户最多有 **10,000 个开放银行卡会话**。达到上限时，只会驱逐没有
+  尝试过的 `pending` 会话。如果无法释放名额，API 返回
+  `429 too_many_open_card_sessions`；这是账户上限，不是应该重试处理方的
+  信号。
+- 托管页面会在付款人聚焦或点击卡号字段时才延迟请求处理方的 capture
+  context，而不是在页面初次加载时请求。放弃页面不会因此消耗处理方
+  context。
+- 如果付款人已在您这里保存过卡片，页面会主动提供：付款人输入邮箱
+  （第一个字段），用验证码完成验证后即可选择已保存的卡片支付，无需
+  重新输入卡号 —— 勾选"记住此设备"后 30 天内无需再次验证。详见
+  [已保存卡片](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions#付款人在支付页面上发现自己的卡片)。
+- 同样支持 USD（`currency: "USD"`）。
+- **结算延迟**：当 `payin_card` 费用配置了大于零的 `settlement_hours`
+  时，扣款获批后收款会立即确认为 `credited` —— `payin_credited`
+  webhook 随即发出，收银台链接关闭为已支付 —— 但**余额**要到
+  `settle_at`（RFC 3339，create/GET/列表响应中均携带，同时带有
+  `settlement_pending: true`）才可用，或由机构管理员在面板中手动提前
+  释放；  释放后收款携带 `settled_at`。`payin_settlement_scheduled`
+  webhook 在付款确认时仅发出一次，携带 `status: "credited"` 和计划的
+  入账金额。以卡支付[收银台链接](https://docs.cbpayapp.com/zh/guides/checkout)或
+  [POS 收款](https://docs.cbpayapp.com/zh/guides/qr-pos)时适用相同的延迟。详见
+  [费用——银行卡收款结算延迟](https://docs.cbpayapp.com/zh/concepts/fees#银行卡收款结算延迟)。
+
+#### 巴拉圭
+
+以瓜拉尼进行的**预告银行转账**：您预先申报存款，付款人转账（跨行
+SIPAP 或在收款银行内部转账）并在转账附言中带上参考号，入账即被自动
+检测。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "PY",
+    "currency": "PYG",
+    "method": "bank_transfer",
+    "amount": "596000"
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "payin_id": "8f41…",
+  "status": "pending",
+  "reference": "CBW4N8R2T6P9",
+  "note": "include the reference in the transfer description so the deposit is credited automatically"
+}
+```
+
+> **注**
+瓜拉尼没有小数位：请申报付款人将转账的**精确整数金额**（例如
+`"596000"`）。`reference` 是一个 12 位字母数字短代码 —— 专为 SIPAP
+附言字段设计，该字段**最多接受 20 个字符且不允许特殊字符** ——
+将其填入附言可确保自动匹配。建议同时传 `payer_document` 作为后备 —
+参见[预告转账的匹配规则](#预告转账的匹配规则)。
+#### 巴西
+
+**动态 PIX 二维码**：在巴西，`qr` 接受 `BRL`（推荐）或 `BOB`。
+使用 BRL 时，平台按当前 mid 汇率将付款人金额转换为 BOB，不在报价中加入
+spread，并为 replay 保存原始报价。BOB 是高级直接输入模式。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "qr",
+    "amount": "120.00",
+    "description": "Order 7719",
+    "payer_document": "52998224725",
+    "payer_phone": "+5511999990000",
+    "payer_email": "payer@example.test",
+    "expires_in": 1800
+  }'
+```
+
+响应包含 `charge.qr_image`（base64 PNG）、`charge.qr_image_url`、付款人
+看到的 BRL 转换、`bob_charged` 和可审计的 `platform_quote`。不提供可复制
+粘贴的 EMV payload：
+
+```json
+{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
+```
+
+付款按实际收到的 BOB 在认证确认和对账后进入 `credited`。转换后低于
+`0.01 BOB` 返回 `422 amount_too_small`；无汇率返回 `503 rates_unavailable`。
+
+> **注**
+`qr` 方法生成一个金额精确内嵌、一次支付使用的动态二维码。
+**Hosted PIX redirect**：创建 `pix` payin，并将付款人重定向到返回的
+`payment_url`。付款人姓名和证件必填，最低金额为 1 BRL。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "pix",
+    "amount": "120.00",
+    "payer_name": "Ana Torres",
+    "payer_document": "52998224725",
+    "idempotency_key": "br-pix-20261013-001"
+  }'
+```
+
+响应包含 `payment_url`，初始状态为 `pending`。将付款人重定向到 hosted
+页面；签名确认后账户自动入账。重试时使用相同 key 获取原 charge。
+
+> **注**
+巴西同时支持 `qr`（动态 PIX 二维码）和 `pix`（hosted redirect）。
+`pix` 金额使用 BRL，最多两位小数，最低金额为 1 BRL。
+#### 阿根廷
+
+**专属 CVU 账户、现场现金申报**：创建绑定到你账户的固定 CVU。
+对于 `AR/ARS/bank_transfer`，平台要求你提供希望在阿根廷银行系统中使用的
+可寻址 `bank_alias`：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "country": "AR", "currency": "ARS", "method": "bank_transfer", "bank_alias": "julieta.fernandez" }'
+```
+
+别名必须为 6–20 个 `[A-Za-z0-9.-]` 字符，并至少包含一个字母。银行决定
+是否可用；`422 alias_taken` 是可操作的错误，请选择其他别名。响应包含
+CVU；银行接受时还会返回 `details.bank_alias`，而
+`details.alias_error` 说明请求的别名为何没有保存。
+
+为已有 AR/ARS 存款账户设置或重命名别名：
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/bank-alias \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "bank_alias": "julieta.fernandez" }'
+```
+
+响应返回 `instrument_id`、`account_number`、`bank_alias` 和 `updated`。重复
+相同值会返回 `updated: false`。格式无效返回 `400 invalid_alias`；不支持
+该能力的通道返回 `422 alias_unsupported`；仍在创建中的账户返回
+`409 deposit_account_not_recoverable`。
+
+#### 厄瓜多尔
+
+对于 `EC/USD/bank_transfer`，请参阅专门的手动操作指南：
+
+- **厄瓜多尔 USD 手动操作** - 预告或确认 USD 银行转账，或确认授权运营人员已手动支付的 payout。
+#### 美国
+
+**国际银行卡支付页面（`card`）**：以美元收款，支持在任意国家发行的
+Visa、Mastercard、American Express、Discover 与 Diners 卡。您会收到一个
+带 3-D Secure 且使用您机构品牌的托管 checkout 的 `payment_url`；卡片
+数据在嵌入该页面的处理方安全字段中录入，**绝不经过您的系统或您的
+集成**。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "card",
+    "amount": "49.90",
+    "description": "Pro 套餐",
+    "customer": { "email": "payer@example.com", "first_name": "Ana", "last_name": "Rojas" },
+    "success_url": "https://your-app.com/payment/ok",
+    "failure_url": "https://your-app.com/payment/error",
+    "save_card": true,
+    "payer_reference": "customer-7719",
+    "idempotency_key": "pro-plan-7719"
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "payin_id": "3ab7…",
+  "status": "pending",
+  "reference": "3ab7…",
+  "payment_url": "https://api.qbank.cl/pay/cards/Kt9XmQ…",
+  "expires_at": "2026-07-26T18:30:00Z",
+  "note": "share the payment_url with the payer; the balance is credited automatically once the card payment is approved"
+}
+```
+
+契约与玻利维亚的银行卡页面**完全相同**（`customer` 可选、
+`success_url`/`failure_url`、`expires_at`、尝试次数受限、按
+`payer_reference` 或 `customer.email` 复用开放会话、lazy 加载 capture
+context，幂等重试返回同一个 `payment_url`）。国际通道特有之处：
+
+- 3-D Secure 在页面内完成：如果发卡行要求挑战验证，付款人可在
+  checkout 内直接完成，无需离开页面。
+- 大多数交易在线获批；如果发卡行将交易置于审核状态，一旦通道确认即
+  自动入账 —— 您仍会收到 `payin_credited`，只是延迟数分钟。
+- `save_card: true` 配合 `payer_reference` 会在获得付款人同意后保存卡片
+  以便后续收款（参见
+  [已保存卡片与订阅](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)）。
+- 如果付款人已有已保存的卡片，页面会在其用验证码验证邮箱后提供这些
+  卡片（勾选"记住此设备"后每个设备只需验证一次，30 天有效）—— 付款人
+  通过 3-D Secure 完成支付，无需重新输入卡片。
+
+> **注**
+国际银行卡通道按账户开通。请查询 `GET /v1/payins/methods` —— 它是您账户
+当前可收款方式的唯一可信来源。
+**预告银行转账（`bank_transfer`）—— 两条轨道：境内电汇与国际 SWIFT**：可从任意美国银行
+账户收款，契约与其他国家的预告转账完全相同。US/USD 走廊有意发布
+**两份入金说明**——境内轨道（ABA 路由号码）面向在美国境内开户的
+汇款方，国际轨道（经由代理行的 SWIFT/BIC）面向从境外汇款的发送方。
+您只需发起一次预告，响应即同时携带两个区块——`deposit_instructions`
+（境内）与 `deposit_instructions_swift`（国际）——各自带有可复制
+的 QR，付款人可任选其银行支持的轨道：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "bank_transfer",
+    "amount": "1250.00",
+    "payer_name": "Acme Holdings LLC",
+    "idempotency_key": "invoice-1042"
+  }'
+```
+
+响应 `201`：
+
+#### 境内电汇（ABA）
+
+```json
+{
+  "payin_id": "8f4e…",
+  "status": "pending",
+  "reference": "CBM4X8Q2T7K9",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_name": "Acme Holdings LLC",
+  "deposit_instructions": {
+    "bank_name": "Partner Bank, N.A.",
+    "account_number": "000123456789",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "routing_number": "021000021",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank, N.A.\nAccount type: checking\nAccount number: 000123456789\nRouting number (ABA): 021000021\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567\nAmount: 1250.00 USD\nReference: CBM4X8Q2T7K9",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+适用于在**美国境内**开户的汇款方：使用 `routing_number`（ABA）发起
+境内电汇（或 ACH）。该轨道没有 SWIFT 代码——美国境内转账不需要。
+
+#### 国际 SWIFT（BIC）
+
+```json
+{
+  "payin_id": "8f4e…",
+  "status": "pending",
+  "reference": "CBM4X8Q2T7K9",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_name": "Acme Holdings LLC",
+  "deposit_instructions_swift": {
+    "bank_name": "Partner Bank International",
+    "account_number": "9870001234",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "swift": "PRTBPRI3",
+    "bank_address": "200 Example Blvd, San Juan, PR 00901, PR",
+    "intermediary_bank_name": "Intermediary Bank N.A.",
+    "intermediary_bank_swift": "INTRUS33",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "notes": "Select Puerto Rico as the final beneficiary bank country",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank International\nAccount type: checking\nAccount number: 9870001234\nSWIFT: PRTBPRI3\nBank address: 200 Example Blvd, San Juan, PR 00901, PR\nIntermediary bank: Intermediary Bank N.A.\nIntermediary SWIFT: INTRUS33\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567\nAmount: 1250.00 USD\nReference: CBM4X8Q2T7K9\nNote: Select Puerto Rico as the final beneficiary bank country",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+适用于**从美国境外**汇款的发送方：使用 `swift`（BIC）与代理行
+（`intermediary_bank_name` / `intermediary_bank_swift`）发起国际
+SWIFT 电汇。`notes` 字段携带汇款银行正确填写表单所需的操作提示
+（此处：最终收款银行应选择哪个国家/地区）——请原样展示给付款人。
+
+付款人将 `reference`（`CB…`）填写到所选调转账的 **memo / remittance
+（附言）**栏位：它是把入金匹配到您预告的关键信号（参见
+[预告转账的匹配规则](#预告转账的匹配规则)）。`holder_address` 是账户持有人的
+邮政地址——美国银行的电汇表单会要求填写，每条轨道的 QR 在其有值时
+都会包含一行 "Holder address"（`notes` 同理，为一行 "Note"）。
+`intermediary_bank_name` / `intermediary_bank_swift` 仅在经由代理行
+接收电汇的轨道上出现——请原样展示给付款人；需要中间行却未填写的
+电汇可能被退回或短额到账。
+
+美国走廊的入金说明是**强制要求**的：如果您的组织尚未配置，发起预告会
+返回 `422 deposit_instructions_unavailable`，且不会创建任何记录（参见
+[常见错误](#常见错误)）。您也可以在未预告的情况下预览两个收款账户：
+`GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`。
+
+## 主动扣款（pull）
+
+部分通道支持由付款人授权的 pull 扣款。账户必须先完成身份审核并获批，
+才能调用该请求。
+
+### 委内瑞拉 C2P
+
+对于 `VE/VES/c2p`，付款人先在银行应用中生成 `claveDinamica`。集成将该值
+作为 `otp` 发送；它不是 CBPay 返回的 OTP，也不存在先申请 OTP 的步骤：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: collect-2026-09-17-c2p-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "VE",
+    "currency": "VES",
+    "method": "c2p",
+    "amount": "200.00",
+    "payer_document": "V18184460",
+    "payer_phone": "4244445566",
+    "payer_bank": "0138",
+    "otp": "123457",
+    "idempotency_key": "collect-2026-09-17-c2p-001"
+  }'
+```
+
+该 request 使用现有 collect 合同。`payer_document`、`payer_phone`、
+`payer_bank` 和 `otp` 是 C2P 所需的付款人数据；`otp` 携带银行生成的
+动态密钥。响应 shape 不变；同步成功时包含 `paid: true`、
+`provider_reference` 和已入账 payin 的标识。之后读取或列出该 payin 时，如果持久化的 collect snapshot 中包含银行代码，此 collect 流程（以及通过 pull 完成的 checkout charge）会在顶层返回 `payer_bank`。否则省略；请使用 `GET /v1/payouts/banks` 将代码解析为显示名称。
+
+### 基于 OTP 的 pull 方式
+
+```bash
+`POST /v1/payins/collect/otp` 只用于确实会在扣款前签发 OTP 的
+pull 方式，不属于 C2P 流程。对 C2P 调用时，公共 API 返回
+`422 provider_rejected`；不要把它理解为 C2P 扣款失败，也不要改用
+`debito_inmediato`。
+```
+
+平台会在调用 core 前筛查付款人。命中 hold 时返回 `202 in_review`，不会扣款；
+批准后使用相同 request 重试。如果账户尚未获批，collect 会在执行通道前
+返回 `403 verification_required`。timeout 或 5xx 不授权创建新操作：
+保留相同的幂等上下文并跟踪操作状态。请始终检查
+`GET /v1/payins/methods`，因为通道可用性会变化。
+
+## 通用收款链接（`checkout`）
+
+通用收款链接现已拥有独立指南，涵盖报价引擎、所有支付轨道与公开端点：
+
+- **Checkout 收款链接** - 一个链接，付款人自行选择支付方式 — 所有已开通国家的法币、加密货币、银行卡或 CBPay 应用 — 结算到你选择的余额。
+
+## 已保存卡片与循环扣款（card）
+
+已保存凭证（COF）与计划性订阅已移至独立指南：
+
+- **已保存卡片与订阅** - 在持卡人同意下保存卡片，一键或在持卡人不在场时扣款，并安排循环订阅。
+
+## 退款（card）
+
+已入账的银行卡收款可以全额或部分退款，资金从你的余额扣除，并生成对应的
+分录、凭证与 Webhook：
+
+- **退款** - 全额或部分退回银行卡收款、撤销当日授权，并了解拒付如何自动入账。
+
+## 预告转账的匹配规则
+
+预告转账（`method: "bank_transfer"`）没有支付会话：付款人从自己的银行转出，
+因此存款在到账时才被识别。匹配按以下顺序执行，命中即停止：
+
+1. **`reference`** —— 转账附言中的 12 位代码。
+2. **付款人证件号** —— 预告中的 `payer_document` 与银行报送的付款人比对
+   （点、连字符与校验位均忽略）。
+3. **唯一候选** —— 该金额与货币下恰好只有一笔待处理预告。
+
+> **重要**
+若三者都无法唯一对应到**一笔**预告 —— 同一金额有两笔待处理预告、没有参考号、
+也没有付款人证件号 —— 系统**不会**靠猜入账：该存款以 `unassigned` 落地，由你的
+CBPay 运营人员路由。钱不会丢失，它已经在收款账户中。
+### 标识付款人（可选，推荐）
+
+`method: "bank_transfer"` 接受付款人数据。所有字段均为可选且向后兼容 ——
+现有集成无需改动即可继续工作：
+
+| 字段 | 比对对象 |
+|---|---|
+| `payer_document` | 银行报送的税号／身份证件号（点、连字符与校验位忽略） |
+| `payer_name` | 付款人姓名，按词元比对（`JUAN PEREZ` 可匹配 `PEREZ JUAN SOTO`） |
+| `payer_account` | 付款人账号，按其数字比对 |
+
+```bash Request
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "bank_transfer",
+    "amount": "500000",
+    "payer_document": "17438319-7"
+  }'
+```
+
+```json Response 201
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_document": "17438319-7"
+}
+```
+响应中始终包含 `payer_source`，便于你的结账页决定该向付款人索取什么：
+
+| 值 | 含义 |
+|---|---|
+| `declared` | 你传了付款人数据 —— 证件号可为参考号兜底 |
+| `account_identity` | 未传付款人：使用该账户已验证的税号（持有人自存） |
+| `none` | 无可用身份 —— **务必坚持使用参考号**，这是仅剩的强信号 |
+
+> **注**
+少于 5 个字符或不含数字的证件号会被丢弃为弱信号（无法与金额或银行代码区分）。
+预告仍会创建，且 `payer_source` 会如实反映覆盖情况。
+### 预告银行转账的可行最低金额
+
+对于 `method: "bank_transfer"`，CBPay 会根据账户配置的固定手续费和当前
+payin 汇率，为每个账户计算本地最低金额。低于该金额的预告会在创建前快速失败，
+返回 HTTP `422` 和复用的 `amount_below_minimum` 错误码（例如：
+`amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller
+deposits)`）。这不是新错误码；payout 和 transfer 也使用同一个代码。如果当前
+没有可用汇率，则跳过此预检查，仍由 ledger guard 负责最终保护。
+
+如果收到的转账已匹配到账户或预告且低于可行最低金额，payin 会以 `failed` 终止，
+并带有可见的 `failure.code: "amount_below_minimum"`，运营团队会收到告警。
+未匹配的入账则保持 `unassigned`，交由人工路由。两种结果都具备幂等性，不会
+进行无意义的重试，v1 也不会为此发出新的 webhook 事件。
+
+### 重试与幂等
+
+预告接受 `idempotency_key`（请求体）或 `Idempotency-Key` 请求头。使用相同
+键值重试会返回**原始**预告 —— 相同的 `reference` —— 并带上
+`idempotency_hit: true` 与 HTTP `200`，而不会创建第二笔预告。
+
+```bash Request（重试）
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: topup-9912" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "bank_transfer",
+    "amount": "500000",
+    "payer_document": "17438319-7"
+  }'
+```
+
+```json Response 200
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_document": "17438319-7",
+  "idempotency_hit": true
+}
+```
+> **重要**
+两笔完全相同的存活预告（同一账户、货币、金额与付款人）正是匹配拒绝解析的场景：
+真实存款与两者都匹配，最终以 `unassigned` 落地。因此**未带**键值的 POST 会复用
+已存在的相同存活预告，而不是再创建一笔（同样返回 `200` 与
+`idempotency_hit: true`）。
+
+若要向同一付款人收取**两笔真实付款**且金额相同，请为每一笔传入不同的
+`idempotency_key` —— 每个键值都会创建各自的预告与 `reference`。
+> **注**
+幂等键在**账户内按逻辑操作唯一**：若你复用一个已用于**其他**收款方式
+（QR、checkout、卡支付）的 `idempotency_key`，API 会返回
+`409 idempotency_conflict`，而不是返回与请求不符的对象。
+### 入金说明：应该转到哪里
+
+在你的组织已为转账通知类收款登记了收款账户的走廊（目前是智利、巴拉圭与美国），
+通报的响应中会包含一个 `deposit_instructions` 区块——付款人需要转账的确切
+银行账户，金额和 `reference` 已经内置在一段可直接复制的二维码文本中：
+
+```json 响应 201（含入金说明）
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_document": "17438319-7",
+  "deposit_instructions": {
+    "bank_name": "Banco Ejemplo",
+    "account_number": "001122334455",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations SpA",
+    "holder_tax_id": "77123456-7",
+    "reference_required": true,
+    "qr_payload": "Bank: Banco Ejemplo\nAccount type: checking\nAccount number: 001122334455\nHolder: CBPay Operations SpA\nTax ID: 77123456-7\nAmount: 500000 CLP\nReference: CBJ6T3W9M2K5",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+你也可以在创建 payin **之前**预览收款账户——便于在付款人确认之前，先告诉
+他们应该把钱转到哪里：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/payins/deposit-instructions?country=CL&currency=CLP&method=bank_transfer" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json 响应 200
+{
+  "deposit_instructions": {
+    "bank_name": "Banco Ejemplo",
+    "account_number": "001122334455",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations SpA",
+    "holder_tax_id": "77123456-7",
+    "reference_required": true,
+    "qr_payload": "Bank: Banco Ejemplo\nAccount type: checking\nAccount number: 001122334455\nHolder: CBPay Operations SpA\nTax ID: 77123456-7",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+在 **US/USD** 走廊中，预览会返回**两个区块**：`deposit_instructions`
+下的境内轨道，以及（当您的组织配置了国际变体时）
+`deposit_instructions_swift` 下的 SWIFT 轨道（结构相同，带有自己的
+QR）。轨道字段在不使用它们的走廊上直接缺省（而非空值）：
+
+| 字段 | 含义 |
+|---|---|
+| `routing_number` | 收款银行的 ABA 路由号码——境内轨道（`deposit_instructions`） |
+| `swift` | 收款银行的 SWIFT/BIC——国际轨道（`deposit_instructions_swift`） |
+| `bank_address` | 收款银行的注册地址 |
+| `intermediary_bank_name` | 中间（代理）银行，当电汇经由其到账时 |
+| `intermediary_bank_swift` | 中间银行的 SWIFT/BIC |
+| `holder_address` | 账户持有人的邮政地址（美国电汇表单会要求填写） |
+| `notes` | 给汇款银行的自由操作提示（例如最终收款银行应选择哪个国家/地区） |
+
+```bash
+curl "https://api.qbank.cl/platform/v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json 响应 200（美国）
+{
+  "deposit_instructions": {
+    "bank_name": "Partner Bank, N.A.",
+    "account_number": "000123456789",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "routing_number": "021000021",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank, N.A.\nAccount type: checking\nAccount number: 000123456789\nRouting number (ABA): 021000021\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  },
+  "deposit_instructions_swift": {
+    "bank_name": "Partner Bank International",
+    "account_number": "9870001234",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "swift": "PRTBPRI3",
+    "bank_address": "200 Example Blvd, San Juan, PR 00901, PR",
+    "intermediary_bank_name": "Intermediary Bank N.A.",
+    "intermediary_bank_swift": "INTRUS33",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "notes": "Select Puerto Rico as the final beneficiary bank country",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank International\nAccount type: checking\nAccount number: 9870001234\nSWIFT: PRTBPRI3\nBank address: 200 Example Blvd, San Juan, PR 00901, PR\nIntermediary bank: Intermediary Bank N.A.\nIntermediary SWIFT: INTRUS33\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567\nNote: Select Puerto Rico as the final beneficiary bank country",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+> **注**
+预览端点的 `qr_payload` 没有 `Amount`/`Reference` 这两行（此时还没有实际
+的 payin）；而实际通报中内置的那段文本始终包含这两行，这样付款人无需手动
+输入任何内容即可完成支付。通报中的这两个区块是一份**冻结的快照**：如果你的
+CBPay 运营方之后更新了登记的账户，已经存在的通报仍会指向创建时使用的账户
+——只有新的通报才会采用变更后的账户。
+> **注**
+如果该走廊尚未登记任何收款账户，此端点会返回 `404 not_found`——处理方式
+与下方的 `422 deposit_instructions_unavailable` 相同：此时还不能向付款人
+展示任何账户。
+`GET /v1/payins/{id}` 与列表接口（`GET /v1/payins`）会原样返回同样的
+`deposit_instructions`（以及存在时的 `deposit_instructions_swift`）区块，
+因此你的前端无需从创建响应中缓存它。在未登记
+收款账户的走廊上，该字段直接缺省——此时展示 `reference`，并请付款人使用
+你组织常规的银行信息即可。
+
+## 专用账户元数据与付款人身份
+
+入账到专用收款账户的 push 会返回 `instrument_id`、`instrument` 区块和银行
+上报的 `payer` 区块——完整结构见 [资金账户指南](https://docs.cbpayapp.com/zh/guides/funding)。
+可使用 `?instrument_id=<uuid>` 筛选历史。
+
+## 3. 接收入账
+
+当付款到达（无论通过哪种模式），您的账户会自动入账，并触发
+`payin_credited` webhook：
+
+```json
+{
+  "payin_id": "9c2a…",
+  "account_id": "…",
+  "country": "BO",
+  "currency": "BOB",
+  "local_amount": "700.00",
+  "fx_rate": "6.91",
+  "rate_source": "lot",
+  "usdt_credited": "100.302460",
+  "fee": "1.000000"
+}
+```
+
+`fx_rate` 是入账时刻您的 `payin_rate` —— 折算严格按该汇率进行：
+`usdt_gross = 700.00 / 6.91`。出现 `rate_source` 时，它表示报价来源
+（`lot` 或 `spot`）；没有加载报价的历史 payin 会省略该字段。
+
+入金对象保留完整的明细：
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/9c2a… \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "payin_id": "9c2a…",
+  "kind": "qr",
+  "status": "credited",
+  "payer_source": "bank_event",
+  "match_method": "charge_link",
+  "payer": {
+    "name": "JUAN PEREZ",
+    "document": "1234567",
+    "account": "1000001"
+  },
+  "local_amount": "700.00",
+  "fx_rate": "6.91",
+  "rate_source": "lot",
+  "usdt_gross": "101.302460",
+  "fee": "1.000000",
+  "usdt_credited": "100.302460"
+}
+```
+
+## 状态
+
+| 状态 | 含义 |
+|---|---|
+| `pending` | 收款已创建，等待付款 |
+| `credited` | 以 USD 入账 |
+| `unassigned` | 收到的存款未能自动匹配（由管理员路由分配） |
+| `expired` | 收款过期且未支付 |
+| `failed` | 收款失败 |
+
+若因手续费最低值失败，`GET /v1/payins/{id}` 还会返回 `failure` 对象，其中
+包含 `code: "amount_below_minimum"` 以及可展示给付款人的原因。
+
+> **注**
+无法唯一对应到某一笔预告的存款会保持 `unassigned` 状态，直到 CBPay 团队将其
+路由到某个账户（参见[预告转账的匹配规则](#预告转账的匹配规则)）。分配后，
+按目标账户的汇率和费用入账，并同时关闭其所属的那笔预告。
+> **注**
+当一笔待支付的代收（二维码或 checkout）在未收到付款的情况下终止时，payin
+会自动从 `pending` 变为 `expired`（或 `failed`），并且您会收到
+[`payin_expired`](https://docs.cbpayapp.com/zh/webhooks) webhook。不产生任何资金变动：如需重新
+收款，请创建新的 payin。
+## 查询与历史记录
+
+```bash
+# One payin
+curl https://api.qbank.cl/platform/v1/payins/9c2a… \
+  -H "Authorization: Bearer <token>"
+
+# History with filters: dates, status, country, method, kind, refund status, search
+curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&method=qr&kind=qr&refund_status=none&search=9c2a&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+`from`/`to` 使用 `YYYY-MM-DD`（组织时区）；日期无效时返回
+`400 invalid_range`。`method` 与 `kind` 用于缩小通道和 payin 类型，
+`refund_status` 接受 `none`、`partial` 或 `full`，`search` 会对 payin ID、
+参考号或幂等键进行不区分大小写的部分匹配。
+
+## 常见错误
+
+| HTTP | `error` | 应对方式 |
+|---|---|---|
+| 400 | `invalid_request` | 检查 `method`（qr、bank_transfer、fintoc、pix、card；collect 有自己的端点） |
+| 400 | `idempotency_key_required` | Collect 需要幂等键（对付款人的真实扣款） |
+| 403 | `service_disabled` | 您的账户未启用入金服务 —— 参见[服务](https://docs.cbpayapp.com/zh/concepts/services) |
+| 429 | `too_many_open_card_sessions` | 账户已有 10,000 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |
+| 503 | `card_reuse_unavailable` | 平台无法核对现有的开放银行卡收款 —— 请使用相同幂等键重试原始请求；不要创建第二笔收款 |
+| 503 | `checkout_recovery_pending` | checkout 支付选项正在核对 —— 请重试相同的物化请求，不要创建第二个选项 |
+| 422 | `core_rejected` | 处理方拒绝了该收款；请检查消息 |
+| 422 | `deposit_instructions_unavailable` | `bank_transfer` 走廊要求登记收款账户（目前为 CL、PY、US），而您的组织尚未配置——请联系您的 CBPay 运营方 |
+| 502 | `core_unavailable` | 收款无法创建；请重试创建（未产生任何扣款） |
+## 常见问题
+
+#### 如何知道一笔 payin 已入账？
+订阅 `payin_credited`：它携带所应用的汇率、手续费和精确的
+`usdt_credited`。你也可以轮询 `GET /v1/payins/{id}`。
+#### 我的 payin 适用哪个汇率？
+使用 `GET /v1/rates` 返回并在入账时生效的已报价 `payin_rate`。检查
+`payin_rate_source`：`lot` 表示启用的 USDT payin 库存支持了报价，
+`spot` 表示使用 spot 路径。您约定的点差已包含在汇率中 —— 绝不会单独列示。
+#### payin 可以落在 USDT 以外的余额吗？
+可以 —— 用 `PUT /v1/settlement` 设置 `default_payin_asset`。账户直接以 USD 分入账；其他已配置目标使用入账后转换流程，
+`conversion_status` 报告 `done` 或 `pending_retry`。
+#### 收款（QR、checkout）过期未支付会怎样？
+你会收到 `payin_expired`，该 payin 关闭且不发生任何资金变动。创建一个新
+的收款即可 —— 没有任何扣款或入账。
+#### 付款人转账金额与通报的不一致怎么办？
+参考号仍会匹配到该笔预告，但入账金额以实际到账金额为准。若一笔转账无法对应
+到任何预告，则保持 `unassigned` 状态等待对账；你的 CBPay 团队可以手动将其
+分配到正确的 payin。
+#### 如果银行转账金额太小，无法覆盖手续费怎么办？
+低于账户当前手续费最低值的预告会在创建前返回
+`422 amount_below_minimum`，消息中包含本地最低金额。如果没有预告而直接收到
+低于该最低值且已匹配的转账，payin 会以 `failed` 结束，并在 `failure` 中返回
+相同代码；未匹配的入账保持 `unassigned` 并交由人工路由。不会进行无意义重试，
+也不会发出新的 webhook 事件。
+#### 两个客户预告了相同金额且都没填参考号，钱归谁？
+不会靠猜。如果付款人证件号也无法区分二者，两笔预告都保持 `pending`，存款以
+`unassigned` 落地交由运营人员路由。在预告中传 `payer_document`，正是把这种
+情形变成自动入账的关键。
+#### 现在必须传 payer_document 吗？
+不必 —— 它是可选的，不传也不会有任何中断。省略时会使用该账户已验证的税号
+（`payer_source: account_identity`），覆盖持有人自存的场景。当由第三方为你的
+客户付款时再传它，并始终向付款人展示 `reference`。
+#### 我重试了预告的 POST，是否创建了两笔预告？
+不会。带上 `idempotency_key`（请求体或 `Idempotency-Key` 请求头）时，重试会
+返回原始预告并带 `idempotency_hit: true`。即使未带键值，与某笔存活预告完全相同
+的 POST（同一账户、货币、金额与付款人）也会复用它 —— 复制会因歧义而让真实存款
+落到 `unassigned`。只有确实要收两笔款时，才为每笔传入不同的键值。
+#### 我的美国客户如何付款 —— 境内电汇还是国际 SWIFT？
+走廊会同时发布**两条轨道**，付款人可任选其一：境内轨道
+（`deposit_instructions`）使用 `routing_number`（ABA），适用于在美国境内
+开户的汇款方（wire 或 ACH）；国际轨道（`deposit_instructions_swift`）使用
+`swift`（BIC）以及经由代理行的 `intermediary_bank_name` /
+`intermediary_bank_swift`，适用于从美国境外汇款的发送方。两条轨道都汇入
+您组织的同一收款安排，并共享同一个 `reference`（`CB…`）——付款人将其填入
+所选转账的 memo / 附言栏位，这就是自动入账的匹配依据。电汇通常在同一
+个工作日内到账并被上报；ACH 视汇款银行可能需要一到三个工作日 —— 只要银行
+上报入金，入账与 `payin_credited` webhook 立即发生。
+#### 为什么银行 QR 只是一段供复制的文本，而不是我的银行 App 能扫描识别的内容？
+银行之间并没有针对任意收款账户的统一二维码标准（不同于结账时商户的收款
+二维码）——每家银行对转账信息的编码方式都不同，而且大多数银行 App 根本
+无法从第三方二维码自动填充转账信息。`qr_png_base64` 把账户信息渲染成
+二维码，仅仅是**移动端的复制捷径**：付款人扫码后得到一段多行文本
+（银行、账户、持有人、金额、备注），再把它粘贴到自己银行的转账表单中——
+转账本身仍由付款人自己确认。不要围绕它构建"扫码即付"的流程；应把它和
+纯文本字段放在一起展示，让付款人始终可以手动输入。
+## 卡支付入账时间
+
+对于卡支付，`settlement_hours` 决定付款确认后余额何时可用。该字段只能是 `0` 或 `24` 的倍数：`0` 表示余额立即可用，`24` 表示一个美国工作日，`48` 表示两个美国工作日。工作日按组织时区计算，为周一至周五，并排除已调整日期的美国联邦假日。例如，周五 15:00 加 `48` 小时会在没有假日时于周二 15:00 入账；周六加 `48` 小时也会在周二入账。`27` 等值会返回 HTTP `400 invalid_settlement_hours`。付款会立即确认并变为 `credited`，只有余额等待 `settle_at`。已经计算出的 `settle_at` 和旧的非 24倍数配置继续按日历小时处理。
+
+## 保留本地法币
+
+使用 `PATCH /v1/accounts/{accountID}` 设置 `fiat_hold_local: true`，未来 BOB、MXN、ARS 收款保留为本地余额，历史入账不变。`credit_asset` 始终返回，`fiat_credited` 仅用于本地法币，`usdt_credited` 仍是等值 USDT。银行卡使用 USD 入账，自动转换、checkout swap 和 OTC 报价跳过保留收款。
+
+> **重要**
+`refunded_amount` 使用 `credit_asset` 的单位（USDT 使用微型 USDT，BOB/MXN/ARS
+使用法币最小单位）。`usdt_credited` 始终使用微型 USDT。请按
+`credit_asset` 分支；当 credit 为法币时，绝不要计算
+`usdt_credited - refunded_amount`。
+## USD 作为主账本资产
+
+账户的 `settlement_asset` 与 `payin_settlement_asset` 默认值为 `USD`，可随时用
+`PUT /v1/settlement` 更改；进行中的操作不会重新报价。
+
+USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
+资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
+的 swap 按 1:1 计价，不使用 FX 预言机。BOB、MXN、ARS 仍是独立的法币
+账本资产；同币种 payout 直接从这些余额扣账（见
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+
+USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
+表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
+跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
+`disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。
+
+请查看[现金 payin 完整指南](https://docs.cbpayapp.com/zh/guides/cash-payins)，了解 13 个走廊、申报响应、maker-checker 确认、webhook 和错误处理。

@@ -1,0 +1,152 @@
+---
+title: "Tickets de soporte"
+description: "Abre un ticket autenticado, vincula una transacción opcional, sigue el SLA de respuesta y califica la resolución."
+slug: es/guides/support-tickets
+lang: es
+source_url: https://docs.cbpayapp.com/es/guides/support-tickets
+---
+Para pruebas usa `https://cryptobank.qbank.cl/platform`.
+
+Un ticket mantiene una conversación auditable con la organización. Puedes abrirlo desde una transacción o por un tema de cuenta; soporte puede vincular, cambiar o desvincular la transacción después. El snapshot es evidencia de solo lectura y nunca modifica el ledger.
+
+```mermaid
+sequenceDiagram
+  participant A as Cuenta
+  participant C as CBPay
+  participant O as Equipo de soporte
+  A->>C: Elige transacción o abre ticket general
+  C-->>A: Ticket + prioridad automática + seguimiento en 3 pasos
+  C-->>O: Evento (solo IDs y estado)
+  O->>C: Responde, enruta, pausa o resuelve
+  C-->>A: Primera respuesta + cambios de estado
+  A->>C: Cierra y califica después de resolver
+```
+
+## 1. Elegir el flujo
+
+Hay dos formas de abrirlo: desde el detalle de una transacción o desde Soporte sin transacción (`kind: general`). En el segundo caso usa `category: other`; el alias antiguo `general` se normaliza temporalmente.
+
+Las 11 categorías son cerradas: con transacción `error`, `question`, `delay`, `amount_mismatch`, `unrecognized_operation`, `refund_request`; de cuenta u otro tema `account_verification`, `access_security`, `fraud`, `fees_limits`, `other`. `money_stuck` es una señal separada y acepta `yes`, `no` o `unknown`.
+
+## 2. Abrir un ticket
+
+`kind` debe ser `payout`, `payin`, `payin_refund`, `transfer`, `crypto_withdrawal`, `crypto_deposit`, `swap`, `card_purchase`, `banking_operation`, `wallet_send` o `wallet_deposit`. Envía `resource_id`; los tickets `general` deben usar categoría `other` y omitirlo.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/support/tickets \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: support-payout-2026-0001" \
+  -d '{"kind":"payout","resource_id":"payout-123","subject":"El payout está demorado","category":"delay","money_stuck":"yes","message":"Revisen este payout.","idempotency_key":"support-payout-2026-0001"}'
+```
+
+La respuesta `201` incluye número `SUP-YYYY-NNNNNN`, snapshot, `money_stuck`, prioridad calculada y SLA de primera respuesta. Los internos de prioridad, el equipo y la resolución objetivo quedan en el servidor. El cliente no elige prioridad: first-match aplica fraude/no reconocida → urgent; dinero retenido → urgent; error/demora/monto sobre el piso USD → high; seguridad → high; catch-all → normal. El piso por defecto es USD 1.000.
+
+La clave se exige en body o header y es por organización+cuenta. Repetirla devuelve `idempotency_hit: true`; otro ticket abierto para la misma transacción devuelve `409 ticket_already_open`. Ante timeout, consulta usando la misma clave: no generes otra.
+
+## 3. Seguimiento en 3 pasos
+
+`open` significa investigación; la primera respuesta cambia a `pending_customer`; `resolved` permite CSAT y `closed` es terminal. Una respuesta de la cuenta reabre `pending_customer`, `on_hold` o `resolved`. La cuenta no ve notas internas ni Actividad.
+
+## 4. Buscar y vincular transacciones
+
+`GET /v1/support/transactions?q=125&from=2026-10-01&to=2026-10-31&page=1&page_size=50` devuelve los 11 tipos vinculables y `has_open_ticket`. Si es `true`, continúa el ticket existente. Soporte puede vincular, reemplazar o desvincular la transacción con ownership verificado.
+
+## Leer y continuar el hilo
+
+Usa `GET /v1/support/tickets?from=2026-10-01&to=2026-10-31&page=1&page_size=50` para listar. También puedes filtrar por `status`, `category`, `priority` y `kind`; `page_size` llega hasta 200. El detalle contiene `snapshot`, mensajes públicos y metadata de adjuntos. Las notas internas nunca llegan a la cuenta.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN" -H "Content-Type: application/json" \
+  -d '{"body":"Aquí hay contexto adicional."}'
+```
+
+Un mensaje de la cuenta reabre tickets `pending_customer`, `on_hold` o `resolved` como `open`. `closed` es terminal; abre uno nuevo.
+
+## Adjuntos y deduplicación
+
+Sube un `PDF`, `PNG` o `JPG` como `file`, hasta 10 MiB. Se verifica la firma real y se deduplica por SHA-256 dentro del ticket. Las descargas son binarias y autenticadas; no expongas `download_url`.
+
+## Cerrar y calificar
+
+`POST /v1/support/tickets/{id}/close` es convergente: un ticket ya cerrado devuelve su detalle actual. Tras la resolución, califica una sola vez con `rating` de 1 a 5 y comentario opcional de hasta 1.000 caracteres. La segunda calificación devuelve `409 already_rated`.
+
+## Actualizaciones automáticas de soporte
+
+Cuando la organización activa las automatizaciones, la cuenta puede recibir
+estos mensajes escritos por el sistema en el hilo:
+
+| Cuándo | Qué recibes |
+|---|---|
+| Al crear el ticket | Acuse con el compromiso de primera respuesta y, cuando existe información verificada, un detalle de cuenta, comisiones, operación, banca, depósito, devolución o acceso |
+| 30 minutos sin primera respuesta | Aviso de avance |
+| A las 24 y 48 horas mientras se espera tu respuesta | Recordatorios; el de 48 horas informa la fecha prevista de cierre a las 72 horas |
+| Al resolver | Invitación única a la encuesta |
+| Al reasignar | El nombre de pila del nuevo agente |
+
+Los mensajes automáticos aparecen identificados como **Automatic message**.
+No mueven dinero, bloquean cuentas, exponen nombres de proveedores ni
+comparten notas internas. Los datos se leen en modo solo lectura y se omiten
+si el servidor no puede verificar suficiente información propia de la cuenta;
+el ticket sigue con un agente.
+
+Un agente de la organización puede desactivar la automatización de un ticket.
+Esto detiene los mensajes automáticos futuros sin borrar la conversación ni
+cambiar su estado. Una respuesta de la cuenta reabre `pending_customer`,
+`on_hold` o `resolved` como `open`; `closed` sigue siendo terminal. Si el
+ticket se cierra automáticamente después de 72 horas sin respuesta, usa el
+flujo normal de Soporte para abrir uno nuevo o responde antes de la fecha de
+cierre.
+
+## Responder por correo y notificaciones
+
+Los correos de soporte incluyen el badge con el número, el asunto, la
+respuesta citada y un botón que abre el ticket en el portal. La dirección
+`Reply-To` está vinculada al ticket (`support+<token>@...`) y vence a los
+90 días. Responderla agrega el mensaje a ese hilo; un token inválido o
+vencido se rechaza y nunca crea un ticket nuevo.
+
+Cuando la cuenta responde por correo, se notifica al administrador primario y
+a los administradores extra. Las notificaciones del portal son clicables y
+abren directamente el ticket. Las imágenes compatibles muestran thumbnail
+inline; la descarga original sigue autenticada y privada.
+
+## Búsqueda y visibilidad de asignación
+
+Usa `q` en el listado de tickets de la cuenta para buscar
+por número, título o cuerpo del mensaje. `q` admite hasta 128 caracteres;
+un valor inválido devuelve `400 invalid_query`. Mantén `from`, `to` y la
+paginación junto con los demás filtros documentados.
+
+La organización puede asignar un administrador primario y hasta diez extras.
+Las notificaciones de asignación se envían a todos los asignados elegibles.
+El detalle de cuenta nunca expone tokens de respuesta ni Actividad interna, y
+los candidatos de tipo bank-partner quedan fuera de la asignación.
+
+## Estados, SLA y errores
+
+| Estado | Significado | Acción |
+|---|---|---|
+| `open` | Espera trabajo de soporte | Agrega contexto si hace falta |
+| `pending_customer` | Soporte respondió y espera a la cuenta | Responde o cierra |
+| `on_hold` | Soporte pausó el trabajo | Espera o agrega contexto |
+| `resolved` | Soporte resolvió la solicitud | Califica o reabre con un mensaje |
+| `closed` | Estado terminal | Abre otro ticket |
+
+El SLA predeterminado de primera respuesta es 4 h, 2 h, 1 h y 30 min; resolución 48 h, 24 h, 8 h y 4 h. La organización puede configurar agenda hábil y pausa mientras espera al cliente; `sla_breached` lo calcula el servidor. El cliente ve el compromiso de primera respuesta, no la actividad interna.
+
+| HTTP | Código | Solución |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Envía la clave en el body o header `Idempotency-Key`. |
+| 400 | `invalid_kind`, `invalid_category`, `invalid_subject`, `invalid_message`, `invalid_money_stuck`, `invalid_rating`, `invalid_comment`, `invalid_payload` | Usa el vocabulario cerrado y sus límites; la prioridad es automática. Los fallos de adjunto (tipo, tamaño, firma) también son `invalid_payload`. |
+| 401 | `unauthorized` | Envía una API key de cuenta válida. |
+| 403 | `account_required` | Usa una credencial de cuenta (no org/admin) con ownership del ticket. |
+| 404 | `not_found` | Confirma ownership de la transacción o ticket. |
+| 409 | `ticket_already_open`, `ticket_closed`, `already_rated` | Continúa el existente, abre uno nuevo o conserva la calificación. Re-subir bytes idénticos devuelve el adjunto existente con `duplicates_omitted` (HTTP 200, no es error). |
+| 503 | `storage_unavailable` | Lee el ticket con la misma clave de idempotencia; no crees otro ticket ni uses una clave nueva. |
+
+Revisa el [catálogo de errores](https://docs.cbpayapp.com/es/errors) y los [eventos webhook](https://docs.cbpayapp.com/es/webhooks#eventos-de-tickets-de-soporte).
+
+## Preguntas frecuentes
+
+#### ¿Puedo abrir un ticket sin transacción?Sí. Usa `kind: general`, omite `resource_id` y define `category: other`; el alias `general` se normaliza temporalmente.#### ¿Puedo elegir urgent?No. El motor de prioridad aplica reglas first-match; el campo `priority` antiguo se ignora.#### ¿Cómo evito duplicados?Busca la transacción y reutiliza la misma clave de idempotencia ante reintentos. El servidor también impide dos tickets abiertos para una transacción.#### ¿La cuenta ve notas internas o Actividad?No. Son superficies solo para administradores y los webhooks no incluyen cuerpos de notas.#### ¿Cuándo envío CSAT?Después de `resolved` o `closed`, una sola vez, con nota opcional de hasta 1.000 caracteres.

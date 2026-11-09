@@ -1,0 +1,1320 @@
+---
+recipe: payins
+title: "Payins"
+slug: en/guides/payins
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/payins
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+> **Important**
+**Approved identity is required before account-authenticated collection.** A
+person account needs approved KYC and a company account needs approved KYB
+before it can create a payin. This applies to `POST /v1/payins` (QR, `card`,
+`checkout`, `bank_transfer` and `fintoc`), `POST /v1/payins/collect/otp`,
+`POST /v1/payins/collect`, and `POST /v1/payins/deposit-accounts`, as well as
+stored-card charges and `POST /v1/subscriptions`. Until approval, these
+requests return HTTP `403 verification_required`.
+> **Note**
+This gate applies to authenticated account creation. Public payment pages for
+links that already exist remain payable, passive deposits already received
+remain processable, org-admin assignment remains operational, and
+system-created deposit instruments are not blocked.
+A payin is a fiat collection: your customer pays in local currency and your account is credited directly in USD cents. When another asset is configured, the net follows
+the post-credit conversion flow at **your payin rate** (`payin_rate` in
+`GET /v1/rates`) minus the fixed payin fee. In USDT v1, `payin_rate_source` tells you whether
+that rate is backed by enabled payin FIFO inventory (`lot`) or spot (`spot`).
+The rate is fixed before the asynchronous payment is credited. See [QR payins — Share a payment link](https://docs.cbpayapp.com/en/guides/payins-qr#share-a-payment-link).
+Whatever the mode, every path ends the same way — automatic credit +
+webhook:
+
+```mermaid
+flowchart LR
+    qr["Collection QR<br/>(BO, BR·PIX)"] --> pay["Your customer pays<br/>in local currency"]
+    hosted["Hosted payment page<br/>(CL: fintoc)"] --> pay
+    card["3-D Secure card payment<br/>(BO: card)"] --> pay
+    announced["Announced transfer<br/>(CL, PE, MX, PY, US)"] --> pay
+    clabe["Dedicated receiving account<br/>(BO, MX, AR)"] --> pay
+    pay --> conv["FX conversion at your<br/>payin_rate − fixed fee"]
+    conv --> credit(("USD credit to the principal balance"))
+    credit --> wh["Webhook payin_credited"]
+```
+
+## 1. Discover the available corridors
+The available countries, currencies and collection modes are defined by
+CBPay. Always check the catalog:
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/methods \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "items": [
+    { "country": "BO", "currency": "BOB", "method": "qr", "delivery": "push" },
+    { "country": "CL", "currency": "CLP", "method": "fintoc", "delivery": "push" },
+    { "country": "MX", "currency": "MXN", "method": "bank_transfer", "delivery": "push" }
+  ],
+  "meta": { "retrieved": 3 }
+}
+```
+
+`delivery` describes how the payment is confirmed on CBPay's side (bank
+notification, polling or both) — it changes nothing in your integration:
+you always receive the `payin_credited` webhook.
+
+Collection corridors and modes:
+
+| Country | Currency | Modes |
+|---|---|---|
+| Chile | CLP | Hosted payment page (`fintoc`), hosted card payment page (`card`), announced bank transfer, announced-only cash |
+| Peru | PEN | Announced bank transfer, announced-only cash |
+| Mexico | MXN | Dedicated CLABE account, announced bank transfer, announced-only cash |
+| Bolivia | BOB / USD | Dedicated BOB account (`bank_transfer`), collection QR, card payment page (`card`), announced-only cash |
+| Paraguay | PYG | Announced bank transfer, announced-only cash |
+| Brazil | BRL or BOB (`qr`), BRL (`pix`) | Dynamic PIX QR (BRL input converts to BOB); hosted PIX redirect; announced-only cash |
+| Argentina | ARS | Dedicated CVU account, announced-only cash |
+| Venezuela | VES | Active collection (`c2p`), announced-only cash |
+| United States | USD | International card payment page (`card`), announced bank transfer (two rails: domestic wire + international SWIFT), announced-only cash |
+| Ecuador | USD | Announced bank transfer, announced-only cash |
+
+> **Note**
+**Venezuela (VES)**: active collection is available through `c2p`. The payer
+generates a `claveDinamica` in their bank app and gives it to your
+integration; send that value in the `otp` field of the collect request. There
+is no preceding `/collect/otp` request for C2P. `debito_inmediato` is not a
+live corridor. Outgoing payments to Venezuela (`pago_movil`,
+`bank_transfer`) are unchanged: see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
+Availability may vary; the catalog (`GET /v1/payins/methods`) is always the
+source of truth. For a USD-principal account, the net credit is written directly in USD cents. Configured non-USD targets use
+the documented post-credit conversion. The quoted `payin_rate` and fixed fee still
+apply.
+Payin lots are consumed FIFO when the credit is applied. If enabled inventory
+does not cover the credit, the existing quote remains authoritative and the
+uncovered portion is recorded as spot fallback with an operator alert.
+If you'd rather keep your collections in another balance (USDC, BTC or
+GOLD), configure `default_payin_asset` — see
+[the money model](https://docs.cbpayapp.com/en/concepts/money-model#choose-which-balance-receives-your-payins).
+
+- **Cash payins** - Announced-only physical cash delivery with maker-checker confirmation.
+
+## 2. Pick the mode and create the charge
+Each country has its own collection mode. The real request and response of
+each one:
+
+#### Chile
+
+**Hosted payment page (`fintoc`)** — recommended: you get a `payment_url`;
+the payer opens it and transfers from **any Chilean bank or wallet** (Banco
+Estado, Santander, Mach, Tenpo, Mercado Pago…). The payment is
+detected and validated automatically — no manual references.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "fintoc",
+    "amount": "150000",
+    "description": "Top-up order 8841",
+    "idempotency_key": "topup-8841"
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "payin_id": "7a2b…",
+  "status": "pending",
+  "reference": "7a2b…",
+  "payment_url": "https://pay.fintoc.com/plink_K2zwNNSxPyx8w3GZ",
+  "expires_at": "2026-07-08T18:48:25Z",
+  "note": "share the payment_url with the payer; the deposit is credited automatically once the transfer is detected"
+}
+```
+
+Share the `payment_url` with the payer (link, redirect or WebView). Once
+the payment is confirmed your account is credited in USD and you receive
+the `payin_credited` webhook. The CLP amount must be an integer (the
+Chilean peso has no decimals) and the payment session expires after 24
+hours by default. A retry with the same `idempotency_key` returns the same
+payin and the same URL — it never opens a second payment session.
+
+For `method: "card"`, `idempotency_key` is **required**. Send it either in
+the JSON body or as the `Idempotency-Key` header. The platform records the
+operation before contacting the core: if the response is ambiguous, retry
+with the **same** key so the original charge can be reconciled. The platform
+never creates a second core charge for that retry; do not generate a new key
+to recover the same payment.
+
+**Announced bank transfer** (manual alternative): announce the incoming
+deposit and share the reference with the sender.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "bank_transfer",
+    "amount": "500000"
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically"
+}
+```
+
+When the transfer arrives it is matched by the reference in the transfer
+description and your account is credited automatically. If the reference
+does not travel, the payer's document backs it up — see
+[matching an announced transfer](#matching-an-announced-transfer).
+
+#### Peru
+
+**Announced bank transfer**, same as Chile but in soles:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "PE",
+    "currency": "PEN",
+    "method": "bank_transfer",
+    "amount": "1800.00"
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "payin_id": "6d20…",
+  "status": "pending",
+  "reference": "CBK7M2Q9X4T3",
+  "note": "include the reference in the transfer description so the deposit is credited automatically"
+}
+```
+
+The `reference` is a **short 12-character alphanumeric code** (it fits any
+bank concept field) and must travel in the transfer description for the
+automatic match. Send `payer_document` as a backup —
+[how matching works](#matching-an-announced-transfer).
+
+#### Mexico
+
+**Dedicated CLABE account** (recommended): create a fixed CLABE bound to
+your account — every SPEI arriving to it is credited automatically, no
+references needed:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "country": "MX", "currency": "MXN" }'
+```
+
+Response `201`:
+
+```json
+{
+  "instrument_id": "a1d4…",
+  "account_id": "…",
+  "country": "MX",
+  "currency": "MXN",
+  "method": "bank_transfer",
+  "instrument": "734180000151000006",
+  "details": {
+    "alias": "CBPay Example MXN Account",
+    "bank_name": "Example Receiving Bank"
+  },
+  "status": "active"
+}
+```
+
+`instrument` is the CLABE you share with your payers. Creation is free;
+each deposit pays the regular payin fee. The optional `details.alias`,
+`details.bank_name` and `details.merchant_nit` fields are returned when the
+receiving rail provides them (`merchant_nit` is used by BO/BOB accounts).
+List your accounts with `GET /v1/payins/deposit-accounts`.
+### Funding versus Banking destinations
+
+Deposit destinations have an explicit `purpose`:
+
+- `fondeo` is the default: incoming fiat is converted to your account's
+  principal asset (USD is the principal balance) and
+  credited to the CBPay balance.
+- `banking` keeps the incoming amount in its local fiat balance so it can be
+  used for fiat payouts. It is currently available only for
+  `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, and
+  `AR/ARS/bank_transfer`.
+
+Create a Banking destination by sending the purpose explicitly:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: banking-bo-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"BO","currency":"BOB","method":"bank_transfer","purpose":"banking","idempotency_key":"banking-bo-001"}'
+```
+
+The response and `GET /v1/payins/deposit-accounts` include `purpose`.
+The slot is deterministic per account, corridor, and purpose: replaying the
+same idempotency key returns the original resource with
+`idempotency_hit: true`; it never creates a second destination.
+
+`fiat_hold_local` is a default fallback for deposits that arrive without a
+bound instrument. It does not replace the explicit purpose on a destination.
+**Company accounts and multiple deposit destinations.** A company account can
+create multiple immutable deposit accounts in enabled additional corridors.
+The current additional corridors are `MX`/`MXN`/`bank_transfer` (CLABE), `BO`/`BOB`/`bank_transfer` (BOB receiving account), and `AR`/`ARS`/`bank_transfer` (CVU). Every destination remains
+bound to the same CBPay account; incoming transfers are credited by the
+destination instrument. Person accounts keep one deposit account per
+corridor, and the same one-per-corridor rule applies to other or existing
+corridors.
+
+Funding-account provisioning starts only after the account's own verification
+is approved: KYC for a person or KYB for a company. Registration does not
+create a deposit account. For AR/ARS bank transfers, the platform requires the caller-chosen `bank_alias`; it is separate from the internal account label and the verified-name-derived profile alias.
+
+For a company CLABE, send an idempotency key in the body or header:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: company-clabe-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer","idempotency_key":"company-clabe-001"}'
+```
+
+A new key returns `201` and a new destination for the selected corridor.
+Replaying the same key returns
+`200` with the original instrument and `idempotency_hit: true`; a
+concurrent in-flight replay can return `409 idempotency_conflict`.
+Creation is free; subsequent payins keep the normal payin fee. The BOB
+destination is receive-only and is reconciled push-first with a polling
+backstop; it does not create or select a payout routing source account. List
+destinations with `GET /v1/payins/deposit-accounts?page=1&page_size=50`.
+
+You can also use a one-off **announced bank transfer**
+(`POST /v1/payins` with `method: "bank_transfer"`, `country: "MX"`).
+
+### Recovering an ambiguous deposit-account claim
+
+If a deposit-account request timed out after the core had started provisioning,
+do not create a new key blindly. Query the durable claim with the core route
+below using the same account-scoped credential:
+
+```http
+GET /v1/payins/deposit-accounts/idempotency?idempotency_key=<key>
+```
+
+The response is `200` with `status: pending`, `not_found`, or a completed
+claim whose recovered destination has `status: active` and
+`idempotency_status: completed`. `pending` means the original operation is
+still unresolved. A missing query key returns `400 invalid_payload`. The
+platform reconciliation action replays the original key and never originates
+a second external destination:
+
+```http
+POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile
+```
+
+It requires an org-admin credential with `ops:write`. If the claim is not an
+MX/MXN/bank-transfer instrument, recovery is rejected with
+`422 deposit_account_not_recoverable`. A concurrent recovery returns
+`409 idempotency_conflict`. The platform-admin adoption endpoint is a
+separate last-resort path, not an idempotent replay: if the local instrument
+is no longer pending and recoverable it returns the same `422`; use
+`reconcile` for a verified replay of the original fence.
+
+#### Bolivia
+
+**Dedicated BOB receiving account**: for the fixed-account flow, use the
+[Funding guide](https://docs.cbpayapp.com/en/guides/funding). A person
+account receives one stable `instrument` for the corridor; a company can
+create additional BOB instruments with distinct idempotency keys. The payer
+transfers BOB to the selected number and the credit is confirmed push-first,
+with statement polling as the backstop. No announcement or payer reference is required.
+
+**Collection QR** (the local interoperable standard): you generate the QR
+and your customer scans it with their banking app. See the dedicated
+[QR payins guide](https://docs.cbpayapp.com/en/guides/payins-qr) for the request, response, retry and
+error contract.
+
+**Card payment page (`card`)**: you receive a `payment_url` for a hosted
+3-D Secure checkout — the payer enters their card on a secure page branded
+with your organization's identity and, when their bank requires it,
+completes the authentication challenge right there. Card data never touches
+your system or your integration.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BO",
+    "currency": "BOB",
+    "method": "card",
+    "amount": "700.00",
+    "description": "App top-up",
+    "customer": { "email": "payer@example.com", "first_name": "Ana", "last_name": "Rojas" },
+    "success_url": "https://your-app.com/payment/ok",
+    "failure_url": "https://your-app.com/payment/error",
+    "payer_reference": "customer-7719",
+    "idempotency_key": "topup-7719"
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "payin_id": "b41c…",
+  "status": "pending",
+  "reference": "b41c…",
+  "payment_url": "https://api.qbank.cl/pay/cards/9f3XkT…",
+  "expires_at": "2026-07-16T18:30:00Z",
+  "note": "share the payment_url with the payer; the balance is credited automatically once the card payment is approved"
+}
+```
+
+Share the `payment_url` (link, redirect or WebView). Flow details:
+
+- `customer` is an **optional** prefill of the billing details (`email`,
+  `first_name`, `last_name`, `phone_number`, `address1`, `locality`,
+  `administrative_area`, `postal_code`, `country`, and optional `document` (plain
+  text, max 50 chars for MDD 11) — max 120 chars for other fields); the
+  payer can complete/correct them on the page. `administrative_area` is
+  the billing state/region: an ISO 3166-2 code (`US-CA`) or its suffix
+  (`CA`). `service_type` is an optional top-level plain-text override for MDD 90,
+  up to 120 characters.
+
+**Billing address — state/region required by country**: the hosted page
+collects the **full billing address** (name, email, street, country, city,
+state/region and postal code). The **state/region** field is **mandatory
+whenever the billing country has ISO 3166-2 subdivisions** (for example
+the United States, Canada, Mexico, Brazil or Chile): the payer picks it
+from a dropdown fed by the address catalog, and the page does not submit
+the payment without it. If the country has no subdivisions in the
+catalog, the field is hidden. The value travels as `administrative_area`
+(ISO 3166-2). The billing address is validated **before** the charge is
+sent for authorization: if it is incomplete, or the state/region is
+missing for a country that requires it, the payment is rejected with
+`invalid_payload` and **no authorization is created on the card**.
+
+> **Note**
+A card authorization created with an incomplete billing address can be
+declined later at capture by the issuer. Always collect the full billing
+address — including the state/region when the country has subdivisions —
+so the payment can be captured.
+- `success_url` / `failure_url` (optional, public https) redirect the payer
+  when done; without them the page shows the final result.
+- `expires_at` (optional, RFC3339, at least 5 minutes ahead) sets the
+  session lifetime; the default is **60 minutes** and the maximum is
+  **48 hours**. The API validates this value before creating the session
+  and includes the effective RFC3339 expiry in successful card responses.
+  If it expires unpaid, the payin moves to `expired` and you receive the
+  `payin_expired` webhook.
+- The payer has a limited number of attempts; an issuer decline lets them
+  retry with another card within the same session.
+
+> **Note**
+**Stable card failure classification.** The hosted card page receives a
+machine-readable `failure_code` when a payment attempt fails and translates it
+to a payer message in English, Spanish or Chinese. The stable values are
+`declined`, `authentication_failed`, `provider_unavailable`, `invalid_data`,
+`card_unavailable`, `expired`, `needs_review` and `unknown`. The historical
+`failure_reason` text remains available to the hosted page for compatibility;
+integrations should branch on the stable code, never on free text. A
+`needs_review` result is ambiguous: do not submit a new payment or create a
+new idempotency key while reconciliation is pending.
+- Approval is online: once the charge is approved your account is credited
+  in USDT at your `payin_rate` and you receive `payin_credited` — same as
+  every other mode.
+- A retry with the same `idempotency_key` returns the same payin and the
+  same `payment_url`; it never opens a second payment session.
+- **Open card-session reuse**: when `stored_card_id` is absent, a new
+  `method: "card"` request reuses an open `pending` or `challenge` session
+  for the same account, country, currency, amount and normalized
+  `payer_reference`. If `payer_reference` is absent, `customer.email` is the
+  fallback identity. The response is `200` with `session_reused: true`, the
+  existing `payment_url` and its `expires_at`; no second charge or hosted
+  session is created. Without a reliable payer reference or email, the
+  request creates a new session.
+- An account may have at most **10,000 open card sessions**. At the cap, only
+  unused `pending` sessions with zero attempts are eligible for eviction. If
+  the cap cannot be relieved, the API returns `429
+  too_many_open_card_sessions`; this is an account limit, not a provider
+  retry signal.
+- The hosted page requests the provider capture context lazily when the payer
+  focuses or clicks the card-number field, not when the page first loads. A
+  payer who abandons the page therefore does not consume a provider context.
+- If the payer already saved cards with you, the page offers them on its
+  own: they type their email (first field), verify it with a code and pay
+  with one of them without re-typing it — with "Remember this device" they
+  skip the code for 30 days. Details in
+  [stored cards](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions#the-payer-discovers-their-cards-on-the-payment-page).
+- It also works in USD (`currency: "USD"`).
+- **Settlement delay**: when your `payin_card` fee is configured with
+  `settlement_hours` above zero, an approved charge confirms the payin as
+  `credited` immediately — the `payin_credited` webhook fires and the
+  checkout closes as paid — but the **balance** only becomes available at
+  `settle_at` (RFC 3339, in the create/GET/list responses together with
+  `settlement_pending: true`), or earlier if your org admin releases it
+  manually; once released, the payin carries `settled_at`. The
+  `payin_settlement_scheduled` webhook fires exactly once at confirmation
+  with `status: "credited"` and the scheduled amounts. The same delay
+  applies when a [checkout link](https://docs.cbpayapp.com/en/guides/checkout) or a
+  [POS charge](https://docs.cbpayapp.com/en/guides/qr-pos) is paid by card. Details in
+  [fees — card payin settlement delay](https://docs.cbpayapp.com/en/concepts/fees#card-payin-settlement-delay).
+
+#### Paraguay
+
+**Announced bank transfer** in guaraníes: you announce the deposit, your
+payer transfers (interbank SIPAP or an internal transfer at the receiving
+bank) with the reference in the transfer concept, and the credit is
+detected automatically.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "PY",
+    "currency": "PYG",
+    "method": "bank_transfer",
+    "amount": "596000"
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "payin_id": "8f41…",
+  "status": "pending",
+  "reference": "CBW4N8R2T6P9",
+  "note": "include the reference in the transfer description so the deposit is credited automatically"
+}
+```
+
+> **Note**
+Guaraníes use no decimals: announce the **exact integer amount** your
+payer will transfer (e.g. `"596000"`). The `reference` is a short
+12-character alphanumeric code — designed for the SIPAP concept field,
+which accepts **at most 20 characters and no special characters** — and
+putting it in the concept ensures the automatic match. Send
+`payer_document` as a backup — see
+[matching an announced transfer](#matching-an-announced-transfer).
+#### Brazil
+**Dynamic PIX QR**: for Brazil, `qr` accepts `BRL` (recommended) or `BOB`.
+With BRL, the platform converts the payer amount to a BOB charge at the
+current mid rate, without spread in the quote, and snapshots the quote for
+replays. BOB is the direct advanced input.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "qr",
+    "amount": "120.00",
+    "description": "Order 7719",
+    "payer_document": "52998224725",
+    "payer_phone": "+5511999990000",
+    "payer_email": "payer@example.test",
+    "expires_in": 1800
+  }'
+```
+The response contains `charge.qr_image` (base64 PNG),
+`charge.qr_image_url`, the payer-facing BRL conversion, `bob_charged`, and the
+auditable `platform_quote`. There is no EMV copy-and-paste payload:
+
+```json
+{"charge":{"our_reference":"77849505","qr_image":"<base64 PNG>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
+```
+The payment reaches `credited` from the BOB amount received after authenticated
+confirmation and reconciliation. A BRL amount that converts below `0.01 BOB`
+returns `422 amount_too_small`; missing FX returns `503 rates_unavailable`.
+> **Note**
+The `qr` method is one payment per dynamic QR with the exact amount embedded.
+**Hosted PIX redirect**: create a `pix` payin and redirect the payer to the
+returned `payment_url`. The payer name and document are required, and the
+minimum amount is 1 BRL.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: br-pix-20261013-001" \
+  -d '{
+    "country": "BR",
+    "currency": "BRL",
+    "method": "pix",
+    "amount": "120.00",
+    "payer_name": "Ana Torres",
+    "payer_document": "52998224725",
+    "idempotency_key": "br-pix-20261013-001"
+  }'
+```
+
+The response contains `payment_url` and starts as `pending`. Redirect the
+payer to the hosted page; the account is credited after signed confirmation.
+Use the same idempotency key to recover the original charge.
+
+> **Note**
+Brazil supports both `qr` (dynamic PIX QR) and `pix` (hosted redirect).
+The hosted `pix` amount is BRL with up to two decimal places and the minimum
+is 1 BRL.
+#### Argentina
+
+**Dedicated CVU account, announced-only cash**: create a fixed CVU bound to your account.
+For `AR/ARS/bank_transfer`, the platform requires the bank-addressable
+`bank_alias` you want the Argentine banking system to use:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "country": "AR", "currency": "ARS", "method": "bank_transfer", "bank_alias": "julieta.fernandez" }'
+```
+
+The alias must be 6–20 characters from `[A-Za-z0-9.-]` and contain at least
+one letter. The bank decides whether it is available; `422 alias_taken` is
+actionable, so choose another alias. The response includes the CVU and, when
+accepted, `details.bank_alias`; `details.alias_error` explains why a requested
+alias was not stored.
+
+To set or rename the alias on an existing AR/ARS deposit account:
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/bank-alias \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "bank_alias": "julieta.fernandez" }'
+```
+
+The response returns `instrument_id`, `account_number`, `bank_alias` and
+`updated`. A repeated value returns `updated: false`. `invalid_alias` is
+`400`; an unsupported rail is `422 alias_unsupported`; a provisioning slot
+still in flight is `409 deposit_account_not_recoverable`.
+
+#### United States
+
+**International card payment page (`card`)**: charge in US dollars with
+Visa, Mastercard, American Express, Discover and Diners cards issued
+anywhere. You get a `payment_url` for a hosted checkout with 3-D Secure
+branded with your organization; card data is typed into the processor's
+secure fields embedded in that page and **never touches your system or your
+integration**.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "card",
+    "amount": "49.90",
+    "description": "Pro plan",
+    "customer": { "email": "payer@example.com", "first_name": "Ana", "last_name": "Rojas" },
+    "success_url": "https://your-app.com/payment/ok",
+    "failure_url": "https://your-app.com/payment/error",
+    "save_card": true,
+    "payer_reference": "customer-7719",
+    "idempotency_key": "pro-plan-7719"
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "payin_id": "3ab7…",
+  "status": "pending",
+  "reference": "3ab7…",
+  "payment_url": "https://api.qbank.cl/pay/cards/Kt9XmQ…",
+  "expires_at": "2026-07-26T18:30:00Z",
+  "note": "share the payment_url with the payer; the balance is credited automatically once the card payment is approved"
+}
+```
+
+The contract is the **same** as the Bolivian card page (optional `customer`,
+`success_url`/`failure_url`, `expires_at`, limited attempts, open-session
+reuse by `payer_reference` or `customer.email`, lazy capture-context loading,
+and an idempotent retry returns the same `payment_url`). What is specific to the international
+corridor:
+
+- 3-D Secure runs inside the page: if the issuer asks for a challenge, the
+  payer completes it right there without leaving the checkout.
+- Most charges are approved online; if the issuer leaves the charge under
+  verification, the credit lands as soon as the rail confirms it — you still
+  get `payin_credited`, just a few minutes later.
+- `save_card: true` plus `payer_reference` store the card with the payer's
+  consent for later charges (see
+  [stored cards and subscriptions](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions)).
+- If the payer already has saved cards, the page offers them after they
+  verify their email with a code (once per device when they check
+  "Remember this device", valid for 30 days) — they pay with 3-D Secure
+  without re-typing the card.
+
+> **Note**
+The international card corridor is enabled per account. Check
+`GET /v1/payins/methods` — it is the source of truth for what your account
+can collect today.
+**Announced bank transfer (`bank_transfer`) — two rails: domestic wire and international SWIFT**: collect dollars
+from any US bank account, with the same announced-transfer contract as the
+other countries. The US/USD corridor publishes **two deposit instructions**
+on purpose — a domestic rail (ABA routing number) for senders banking inside
+the US, and an international rail (SWIFT/BIC through a correspondent bank)
+for senders wiring from abroad. Announce the deposit once and the response
+carries both blocks — `deposit_instructions` (domestic) and
+`deposit_instructions_swift` (international) — each with its own copy-paste
+QR, so your payer picks the rail their bank supports:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "bank_transfer",
+    "amount": "1250.00",
+    "payer_name": "Acme Holdings LLC",
+    "idempotency_key": "invoice-1042"
+  }'
+```
+
+Response `201`:
+
+#### Domestic wire (ABA)
+
+```json
+{
+  "payin_id": "8f4e…",
+  "status": "pending",
+  "reference": "CBM4X8Q2T7K9",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_name": "Acme Holdings LLC",
+  "deposit_instructions": {
+    "bank_name": "Partner Bank, N.A.",
+    "account_number": "000123456789",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "routing_number": "021000021",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank, N.A.\nAccount type: checking\nAccount number: 000123456789\nRouting number (ABA): 021000021\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567\nAmount: 1250.00 USD\nReference: CBM4X8Q2T7K9",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+For payers banking **inside the US**: a domestic wire (or ACH) with the
+`routing_number` (ABA). This rail has no SWIFT code — domestic US transfers
+do not need one.
+
+#### International SWIFT (BIC)
+
+```json
+{
+  "payin_id": "8f4e…",
+  "status": "pending",
+  "reference": "CBM4X8Q2T7K9",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_name": "Acme Holdings LLC",
+  "deposit_instructions_swift": {
+    "bank_name": "Partner Bank International",
+    "account_number": "9870001234",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "swift": "PRTBPRI3",
+    "bank_address": "200 Example Blvd, San Juan, PR 00901, PR",
+    "intermediary_bank_name": "Intermediary Bank N.A.",
+    "intermediary_bank_swift": "INTRUS33",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "notes": "Select Puerto Rico as the final beneficiary bank country",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank International\nAccount type: checking\nAccount number: 9870001234\nSWIFT: PRTBPRI3\nBank address: 200 Example Blvd, San Juan, PR 00901, PR\nIntermediary bank: Intermediary Bank N.A.\nIntermediary SWIFT: INTRUS33\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567\nAmount: 1250.00 USD\nReference: CBM4X8Q2T7K9\nNote: Select Puerto Rico as the final beneficiary bank country",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+For payers wiring **from outside the US**: an international SWIFT transfer
+with the `swift` (BIC) and the correspondent bank
+(`intermediary_bank_name` / `intermediary_bank_swift`). The `notes` field
+carries the operational hints the sending bank needs to fill its form
+correctly (here: which country to select for the final beneficiary bank) —
+show it to the payer verbatim.
+
+The payer copies the `reference` (`CB…`) into the transfer **memo /
+remittance** field of whichever rail they use: it is the signal that matches
+the deposit to your announcement (see
+[matching an announced transfer](#matching-an-announced-transfer)).
+`holder_address` is the postal address of the account holder — US banks ask
+for it in their wire form, and the QR of each rail includes it as a
+"Holder address" line whenever it has a value (same for `notes` as a "Note"
+line). `intermediary_bank_name` / `intermediary_bank_swift` appear only on
+the rail that receives wires through a correspondent bank — show them to the
+payer exactly as they come; a wire that needs them and travels without them
+can bounce or arrive short.
+
+US deposit instructions are **mandatory** on this corridor: if your
+organization has not configured them yet, the announcement responds
+`422 deposit_instructions_unavailable` and nothing is created (see
+[common errors](#common-errors)). You can preview both destination accounts
+without announcing with
+`GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`.
+
+## Manual Ecuador USD operations
+
+The `EC/USD/bank_transfer` corridor supports announced payins and
+provider-agnostic manual payouts. Follow the dedicated guide for the bank
+confirmation endpoints, evidence requirements, states, and idempotent retries:
+
+- **Manual Ecuador USD operations** - Announce or confirm a USD bank transfer, or confirm a payout paid manually by an authorized operator.
+
+## Active collection (pull)
+
+Some corridors expose a pull charge where the payer authorizes a debit. The
+account must be identity-approved before the request.
+
+### Venezuela C2P
+
+For `VE/VES/c2p`, the payer first generates a `claveDinamica` in their bank
+app. Your integration sends that value as `otp`; it is not an OTP returned by
+CBPay and there is no request-OTP step:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/collect \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: collect-2026-09-17-c2p-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "VE",
+    "currency": "VES",
+    "method": "c2p",
+    "amount": "200.00",
+    "payer_document": "V18184460",
+    "payer_phone": "4244445566",
+    "payer_bank": "0138",
+    "otp": "123457",
+    "idempotency_key": "collect-2026-09-17-c2p-001"
+  }'
+```
+
+The request uses the existing collect contract. `payer_document`,
+`payer_phone`, `payer_bank` and `otp` are the payer data needed by the C2P
+rail; `otp` carries the bank-generated dynamic key. The response keeps the
+existing payin shape and, on synchronous success, includes `paid: true`,
+`provider_reference` and the credited payin identifiers. When you later read the payin or list, the top-level `payer_bank` field is returned for this collect flow (and for checkout charges completed through a pull method) when the persisted collect snapshot contains a bank code. It is omitted otherwise; resolve the code to the display name with `GET /v1/payouts/banks`.
+
+### OTP-based pull methods
+
+```bash
+`POST /v1/payins/collect/otp` is only for a live pull method that explicitly
+issues an OTP before the charge. It is not part of the `c2p` flow. Calling it
+for C2P returns the public `422 provider_rejected` response; do not interpret
+that response as a failed C2P charge, and do not replace the C2P request with
+`debito_inmediato`.
+```
+
+The platform screens the payer before calling the core. A hold returns
+`202 in_review` without charging; retry the same request after approval. If
+the account is not approved, the collect request returns
+`403 verification_required` before the corridor is executed. A timeout or 5xx
+does not authorize a new operation: keep the same idempotency context and
+follow the resource/reconciliation state. Always check
+`GET /v1/payins/methods` because corridor availability can change.
+
+## Universal checkout link (`checkout`)
+
+The universal payment link now lives in its own guide, covering the quote
+engine, every rail and the public endpoints:
+
+- **Checkout** - One link where the payer chooses how to pay - fiat in every live country, crypto, card or the CBPay app - settled in the balance you choose.
+
+## Saved cards and recurring charges (card)
+
+Stored credentials (COF) and scheduled subscriptions moved to their own
+guide:
+
+- **Stored cards & subscriptions** - Save cards with the payer's consent, charge them one-click or without the payer present, and schedule recurring subscriptions.
+
+## Refunds (card)
+
+A credited card payin can be refunded in full or in part from your balance,
+with its own ledger entry, receipt and webhook:
+
+- **Payin refunds** - Refund a card payin fully or partially, void a same-day charge, and understand how a chargeback is applied.
+
+## Matching an announced transfer
+
+An announced transfer (`method: "bank_transfer"`) has no payment session:
+the payer moves the money from their own bank, so the deposit is recognized
+when it lands. Matching runs in this order and stops at the first hit:
+
+1. **`reference`** — the 12-character code in the transfer description.
+2. **Payer document** — the announcement's `payer_document` against the
+   payer the bank reports (dots, dashes and check digit are ignored).
+3. **Single candidate** — exactly one pending announcement for that amount
+   and currency.
+
+> **Important**
+If none of the three resolves to **one** announcement — two pending
+announcements for the same amount, no reference, no payer document — the
+deposit is **not** credited on a guess: it lands as `unassigned` and your
+CBPay operator routes it. No money is lost; it is already in the collection
+account.
+### Identify the payer (optional, recommended)
+
+`method: "bank_transfer"` accepts the payer's data. Every field is optional
+and additive — existing integrations keep working unchanged:
+
+| Field | Matched against |
+|---|---|
+| `payer_document` | Tax ID / national ID reported by the bank (dots, dashes and check digit ignored) |
+| `payer_name` | Payer name, by tokens (`JUAN PEREZ` matches `PEREZ JUAN SOTO`) |
+| `payer_account` | Payer account number, by its digits |
+
+```bash Request
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "bank_transfer",
+    "amount": "500000",
+    "payer_document": "17438319-7"
+  }'
+```
+
+```json Response 201
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_document": "17438319-7"
+}
+```
+`payer_source` always comes back so your checkout knows what to ask the
+payer for:
+
+| Value | Meaning |
+|---|---|
+| `declared` | You sent payer data — the document backs up the reference |
+| `account_identity` | No payer sent: the verified tax ID of your account is used (the holder deposits to themselves) |
+| `none` | No identity available — **insist on the reference**, it is the only strong signal left |
+
+> **Note**
+A document shorter than 5 characters or with no digits is dropped as a
+signal (it cannot be told apart from an amount or a bank code). The
+announcement is still created and `payer_source` reports the real coverage.
+### Minimum viable amount for announced bank transfers — CBPay calculates an account-specific local minimum from its fixed fee and current payin rate. Below it, `POST /v1/payins` returns `422 amount_below_minimum` with the minimum in the message (for example, `amount must be at least 13.76 BOB for this corridor (fixed fee exceeds smaller deposits)`). This reused code also applies to payouts and transfers. If no rate is available, the pre-check is skipped and the ledger guard remains authoritative. A matched inbound deposit below the viable minimum becomes `failed` with visible `failure.code: "amount_below_minimum"` and an operations alert; an unmatched deposit remains `unassigned` for manual routing. Both outcomes are idempotent, with no futile retry or new v1 webhook event.
+
+### Retries and idempotency
+The announcement accepts `idempotency_key` (body) or the `Idempotency-Key`
+header. A retry with the same key returns the **original** announcement —
+same `reference` — with `idempotency_hit: true` and HTTP `200` instead of
+creating a second one.
+
+```bash Request (retry)
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: topup-9912" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "bank_transfer",
+    "amount": "500000",
+    "payer_document": "17438319-7"
+  }'
+```
+```json Response 200
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_document": "17438319-7",
+  "idempotency_hit": true
+}
+```
+> **Important**
+Two live announcements that look identical (same account, currency, amount
+and payer) are exactly the case matching refuses to resolve: the real
+deposit matches both and lands `unassigned`. That is why a POST **without**
+a key reuses a live identical announcement instead of duplicating it (also
+`200` with `idempotency_hit: true`).
+To collect **two real payments** of the same amount from the same payer,
+send a different `idempotency_key` for each one — each key creates its own
+announcement with its own `reference`.
+> **Note**
+Keys are **unique per account and per logical operation**: if you reuse an
+`idempotency_key` that was already used with ANOTHER payin method (QR,
+checkout, card), the API replies `409 idempotency_conflict` instead of
+returning an object that does not match your request.
+### Deposit instructions: where to send the money
+
+On corridors where your organization registered a destination account for
+announced transfers (today Chile, Paraguay and the United States), the
+announcement response includes a `deposit_instructions` block — the exact
+bank account the payer must transfer to, with the amount and `reference`
+already baked into a copy-paste QR:
+
+```json Response 201 (with deposit instructions)
+{
+  "payin_id": "4f81…",
+  "status": "pending",
+  "reference": "CBJ6T3W9M2K5",
+  "note": "include the reference in the transfer description so the deposit is credited automatically",
+  "payer_source": "declared",
+  "payer_document": "17438319-7",
+  "deposit_instructions": {
+    "bank_name": "Banco Ejemplo",
+    "account_number": "001122334455",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations SpA",
+    "holder_tax_id": "77123456-7",
+    "reference_required": true,
+    "qr_payload": "Bank: Banco Ejemplo\nAccount type: checking\nAccount number: 001122334455\nHolder: CBPay Operations SpA\nTax ID: 77123456-7\nAmount: 500000 CLP\nReference: CBJ6T3W9M2K5",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+You can also preview the destination account **before** creating a payin —
+useful to show the payer where they will need to send money once they
+confirm:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/payins/deposit-instructions?country=CL&currency=CLP&method=bank_transfer" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response 200
+{
+  "deposit_instructions": {
+    "bank_name": "Banco Ejemplo",
+    "account_number": "001122334455",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations SpA",
+    "holder_tax_id": "77123456-7",
+    "reference_required": true,
+    "qr_payload": "Bank: Banco Ejemplo\nAccount type: checking\nAccount number: 001122334455\nHolder: CBPay Operations SpA\nTax ID: 77123456-7",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+On the **US/USD** corridor the preview returns **two blocks**: the domestic
+rail under `deposit_instructions` and, when your organization has the
+international variant configured, the SWIFT rail under
+`deposit_instructions_swift` (same shape, its own QR). The rail fields are
+absent (not empty) on corridors that do not use them:
+
+| Field | What it is |
+|---|---|
+| `routing_number` | ABA routing number of the destination bank — domestic rail (`deposit_instructions`) |
+| `swift` | SWIFT/BIC of the destination bank — international rail (`deposit_instructions_swift`) |
+| `bank_address` | Registered address of the destination bank |
+| `intermediary_bank_name` | Correspondent bank, when wires arrive through one |
+| `intermediary_bank_swift` | SWIFT/BIC of the correspondent bank |
+| `holder_address` | Postal address of the account holder (US wire forms ask for it) |
+| `notes` | Free operational note for the sending bank (e.g. which country to select for the final beneficiary bank) |
+
+```bash
+curl "https://api.qbank.cl/platform/v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response 200 (US)
+{
+  "deposit_instructions": {
+    "bank_name": "Partner Bank, N.A.",
+    "account_number": "000123456789",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "routing_number": "021000021",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank, N.A.\nAccount type: checking\nAccount number: 000123456789\nRouting number (ABA): 021000021\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  },
+  "deposit_instructions_swift": {
+    "bank_name": "Partner Bank International",
+    "account_number": "9870001234",
+    "account_type": "checking",
+    "holder_name": "CBPay Operations LLC",
+    "holder_tax_id": "88-1234567",
+    "swift": "PRTBPRI3",
+    "bank_address": "200 Example Blvd, San Juan, PR 00901, PR",
+    "intermediary_bank_name": "Intermediary Bank N.A.",
+    "intermediary_bank_swift": "INTRUS33",
+    "holder_address": "25 SW 9th Street, Suite 406, Miami, FL 33130, US",
+    "notes": "Select Puerto Rico as the final beneficiary bank country",
+    "reference_required": true,
+    "qr_payload": "Bank: Partner Bank International\nAccount type: checking\nAccount number: 9870001234\nSWIFT: PRTBPRI3\nBank address: 200 Example Blvd, San Juan, PR 00901, PR\nIntermediary bank: Intermediary Bank N.A.\nIntermediary SWIFT: INTRUS33\nHolder: CBPay Operations LLC\nHolder address: 25 SW 9th Street, Suite 406, Miami, FL 33130, US\nTax ID: 88-1234567\nNote: Select Puerto Rico as the final beneficiary bank country",
+    "qr_png_base64": "iVBORw0KGgoAAAANSUhEUgAA…"
+  }
+}
+```
+
+> **Note**
+The preview endpoint's `qr_payload` has no `Amount`/`Reference` lines (there
+is no payin yet); the one embedded in an actual announcement always has
+both, so the payer can pay without typing anything by hand. Both blocks on
+the announcement are a **frozen snapshot**: if your CBPay operator later
+updates a registered account, live announcements keep pointing at the
+account they were created with — only new ones pick up the change.
+The exact same `deposit_instructions` (and `deposit_instructions_swift`,
+when present) blocks are echoed back on
+`GET /v1/payins/{id}` and on the list (`GET /v1/payins`), so your front end
+does not need to cache it from the creation response. On corridors without a
+registered destination account, the field is simply absent — fall back to
+showing the `reference` and asking the payer to use their usual bank details
+for your organization.
+
+## Dedicated-account metadata and payer identity
+
+Pushes credited to a dedicated deposit account expose `instrument_id`, an `instrument` block and the bank-reported `payer` block — full shape in the [Funding guide](https://docs.cbpayapp.com/en/guides/funding#instrument-and-payer-fields-on-credited-pushes). Filter the history with `?instrument_id=<uuid>`.
+
+## 3. Receiving the credit
+
+When the payment arrives (through any of the modes), your account is
+credited automatically and the `payin_credited` webhook fires:
+
+```json
+{
+  "payin_id": "9c2a…",
+  "account_id": "…",
+  "country": "BO",
+  "currency": "BOB",
+  "local_amount": "700.00",
+  "fx_rate": "6.91",
+  "rate_source": "lot",
+  "usdt_credited": "100.302460",
+  "fee": "1.000000"
+}
+```
+
+`fx_rate` is your `payin_rate` at credit time — the conversion happens at
+exactly that rate: `usdt_gross = 700.00 / 6.91`. When present,
+`rate_source` is the quote provenance (`lot` or `spot`); historical payins
+without a loaded quote omit it.
+
+The payin object keeps the full detail:
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/9c2a… \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "payin_id": "9c2a…",
+  "kind": "qr",
+  "status": "credited",
+  "payer_source": "bank_event",
+  "match_method": "charge_link",
+  "payer": {
+    "name": "JUAN PEREZ",
+    "document": "1234567",
+    "account": "1000001"
+  },
+  "local_amount": "700.00",
+  "fx_rate": "6.91",
+  "rate_source": "lot",
+  "usdt_gross": "101.302460",
+  "fee": "1.000000",
+  "usdt_credited": "100.302460"
+}
+```
+
+## Statuses
+
+| Status | Meaning |
+|---|---|
+| `pending` | Charge created, waiting for the payment |
+| `credited` | Payment received and credited in USD |
+| `unassigned` | Deposit received without an automatic match (routed by the administrator) |
+| `expired` | The charge expired unpaid |
+| `failed` | The collection failed |
+
+> **Note**
+A deposit that cannot be resolved to a single announcement stays
+`unassigned` until the CBPay team routes it to an account (see
+[matching an announced transfer](#matching-an-announced-transfer)). Once
+assigned, it is credited with the destination account's rate and fees, and
+the announcement it belonged to is closed.
+> **Note**
+When an active charge (QR or checkout) dies unpaid, the payin moves from
+`pending` to `expired` (or `failed`) automatically and you receive the
+[`payin_expired`](https://docs.cbpayapp.com/en/webhooks) webhook. No funds move: to retry the
+collection, create a new payin.
+## Reads and history
+
+```bash
+# One payin
+curl https://api.qbank.cl/platform/v1/payins/9c2a… \
+  -H "Authorization: Bearer <token>"
+
+# History with filters: dates, status, country, method, kind, refund status, search
+curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&status=credited&country=BO&method=qr&kind=qr&refund_status=none&search=9c2a&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+`from`/`to` use `YYYY-MM-DD` (organization timezone); an invalid date responds
+`400 invalid_range`. `method` and `kind` narrow the rail and payin shape,
+`refund_status` accepts `none`, `partial` or `full`, and `search` performs a
+case-insensitive partial match on the payin ID, reference or idempotency key.
+
+## Common errors
+
+| HTTP | `error` | What to do |
+|---|---|---|
+| 400 | `invalid_request` | Check `method` (qr, bank_transfer, fintoc, pix, card, cash; collect has its own endpoint) |
+| 400 | `idempotency_key_required` | Collect requires an idempotency key (real debit against the payer) |
+| 403 | `service_disabled` | Payins is not enabled for your account — see [services](https://docs.cbpayapp.com/en/concepts/services) |
+| 429 | `too_many_open_card_sessions` | The account has 10,000 open card sessions and no unused, zero-attempt pending session can be evicted — complete or let an existing session expire before creating another |
+| 503 | `card_reuse_unavailable` | The platform could not verify an existing open card payment — retry the same card request with the same idempotency key; do not create a second charge |
+| 503 | `checkout_recovery_pending` | The checkout payment option is being reconciled — retry the same materialization request and do not create another option |
+| 422 | `core_rejected` | The processor rejected the charge; check the message |
+| 422 | `deposit_instructions_unavailable` | `bank_transfer` on a corridor that requires a registered destination account (today CL, PY, US) and your organization has not configured one yet — contact your CBPay operator |
+| 502 | `core_unavailable` | The charge could not be created; retry the creation (nothing was charged) |
+
+> **Note**
+`GET /v1/payins/deposit-instructions` responds `404 not_found` when the
+corridor has no active destination account configured — treat it the same
+way as the `422` above: the payer cannot be shown an account yet.
+## FAQ
+
+#### How do I know a payin was credited?
+Subscribe to `payin_credited`: it carries the FX rate applied, the fee and
+the exact `usdt_credited`. You can also poll `GET /v1/payins/{id}`.
+#### Which FX rate applies to my payin?
+The quoted `payin_rate` returned by `GET /v1/rates` and carried by the payin
+at credit time. Check `payin_rate_source`: `lot` means enabled USDT payin
+inventory backed the quote, while `spot` means the spot path was used. Your
+agreed spread is already inside the rate — it is never itemized.
+#### Can payins land in a balance other than USDT?
+Yes — set `default_payin_asset` with `PUT /v1/settlement`. Accounts credit directly in USD cents; another configured target uses the post-credit conversion flow and
+`conversion_status` reports `done` or `pending_retry`.
+#### What happens when a charge (QR, checkout) expires unpaid?
+You receive `payin_expired` and the payin closes without moving money.
+Create a new charge — nothing was debited or credited.
+#### The payer transferred a different amount than announced — what now?
+The reference still matches the announcement, but the amount that arrived is
+what gets credited. A transfer that resolves to no announcement stays
+`unassigned` for reconciliation; your CBPay team can assign it to the right
+payin manually. An announced transfer below the account minimum returns `422 amount_below_minimum`; a matched inbound one ends `failed` with the same code in `failure`, while an unmatched deposit remains `unassigned` for manual routing. No futile retry or new webhook event is generated.
+#### Two clients announced the same amount and neither sent the reference — who gets the money?
+Nobody by chance. If the payer document does not tell them apart, both
+announcements stay `pending` and the deposit lands as `unassigned` for the
+operator to route. Sending `payer_document` in the announcement is what
+turns this case into an automatic credit.
+#### Do I have to send payer_document now?
+No — it is optional and nothing breaks without it. When you omit it, the
+verified tax ID of the account is used (`payer_source: account_identity`),
+which covers self-deposits. Send it whenever a third party pays for your
+client, and always show the `reference` to the payer.
+#### I retried the announcement POST — did I create two announcements?
+No. With `idempotency_key` (body or `Idempotency-Key` header) the retry
+returns the original announcement with `idempotency_hit: true`. Even without
+a key, a POST that is identical to a live announcement (same account,
+currency, amount and payer) reuses it — duplicating it would leave the real
+deposit `unassigned` for ambiguity. Send different keys only when you really
+want to collect twice.
+#### How does my US client pay — domestic wire or international SWIFT?
+The corridor publishes two destination accounts on purpose, and your payer
+picks the rail their bank supports: senders banking **inside the US** use
+the domestic rail (`deposit_instructions`) with the `routing_number` (ABA) —
+a Fedwire or ACH; senders **outside the US** use the international rail
+(`deposit_instructions_swift`) with the `swift` (BIC), the correspondent
+bank (`intermediary_bank_name` / `intermediary_bank_swift`) and the `notes`
+hints for the wire form. Whatever the rail, the `reference` (`CB…`) in the
+memo / remittance field is what credits the deposit automatically. A wire is
+usually reported the same business day; an ACH can take one to three
+business days depending on the sending bank — the credit and the
+`payin_credited` webhook happen the moment the bank reports the deposit.
+#### Why is the bank QR just text to copy, not something my banking app scans?
+Banks don't share a common QR standard for arbitrary destination accounts
+(unlike a merchant QR at checkout) — every bank encodes account transfers
+differently, and most banking apps can't auto-fill a transfer from a
+third-party QR at all. `qr_png_base64` renders the account details as a QR
+purely as a **copy shortcut on mobile**: the payer scans it, gets the
+multi-line text (bank, account, holder, amount, reference), and pastes it
+into their own bank's transfer form — they still confirm the transfer
+themselves. Don't build a scan-and-pay flow around it; show it next to the
+plain-text fields so the payer can always type them manually.
+## Card payin settlement timing
+
+For card payins, the `settlement_hours` setting controls when the balance becomes available after the payment is confirmed. It accepts `0` or a multiple of `24`: `0` makes the balance available immediately, while `24` is one US business day and `48` is two US business days. Business days are Monday through Friday excluding observed US federal holidays, evaluated in your organization's timezone. For example, Friday at 15:00 plus `48` hours settles Tuesday at 15:00 when no holiday intervenes; Saturday plus `48` hours also settles Tuesday. A value such as `27` is rejected with HTTP `400 invalid_settlement_hours`. The payment is confirmed as `credited` immediately; only balance availability waits for `settle_at`. Existing `settle_at` timestamps and earlier non-multiple configurations retain calendar-hour semantics.
+
+## Local-fiat payin hold
+
+Set `fiat_hold_local: true` with `PATCH /v1/accounts/{accountID}` to retain
+future BOB, MXN or ARS credits in their local balance instead of converting
+them to USDT. Existing credited payins are never rewritten.
+
+```json
+{"credit_asset":"BOB","fiat_credited":"700.00","usdt_credited":"100.302460"}
+```
+
+`credit_asset` is always present; `fiat_credited` is present only for local
+fiat. Cards always settle in USD. Auto-conversions, checkout swaps and OTC
+offers skip locally held payins.
+
+> **Important**
+`refunded_amount` uses the units of `credit_asset` (micro-USDT for USDT,
+minor fiat units for BOB/MXN/ARS). `usdt_credited` is always micro-USDT.
+Branch on `credit_asset`; never calculate `usdt_credited - refunded_amount`
+when the credit is fiat.
+## USD as the principal ledger asset
+
+Accounts use `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`; change it any time with `PUT /v1/settlement`.
+In-flight operations are never re-quoted.
+
+USD ledger amounts use cents (two decimal places). Direct credits and debits,
+fees, and supported payout, checkout, POS, and card paths use USD only where
+their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
+do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
+assets; same-currency payouts debit those balances directly (see
+[payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+
+A payin credited directly to a USD-principal account exposes
+`credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
+remains the USD-equivalent reporting field. A controversy hold follows the
+credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
+`disputed_usdt` and `held_usdt` are normalized equivalents. See the complete [cash payin guide](https://docs.cbpayapp.com/en/guides/cash-payins) for the 13 corridors, announcement response, maker-checker confirmation, webhooks and error handling.

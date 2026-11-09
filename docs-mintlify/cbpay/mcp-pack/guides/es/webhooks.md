@@ -1,0 +1,829 @@
+---
+title: "Webhooks"
+description: "Recibe eventos firmados en tiempo real"
+slug: es/webhooks
+lang: es
+source_url: https://docs.cbpayapp.com/es/webhooks
+---
+Los webhooks te notifican los eventos de tu cuenta en un callback HTTPS
+propio, firmados criptográficamente.
+```mermaid
+sequenceDiagram
+    autonumber
+    participant CB as CBPay
+    participant App as Tu endpoint HTTPS
+    CB->>App: POST firmado (X-Webhook-Signature, X-Webhook-Event-ID)
+    alt Respondes 2xx a tiempo
+        App-->>CB: 200 OK
+        Note over CB: Entrega completa
+    else Timeout o error
+        App-->>CB: 5xx / timeout
+        CB->>App: Reintento con backoff (hasta 5 intentos)
+        Note over App: El mismo evento puede llegar 2 veces —<br/>deduplica por X-Webhook-Event-ID
+    end
+```
+## Crear una suscripción
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/webhooks/subscriptions \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_type": "payout_status_changed",
+    "callback_url": "https://api.miapp.com/webhooks/cbpay",
+    "secret": "un-secreto-de-al-menos-16-chars"
+  }'
+```
+- `event_type`: uno de los eventos de la tabla siguiente, o `*` para todos.
+- `callback_url`: **HTTPS obligatorio**; se rechazan localhost e IPs
+  privadas — para desarrollo local usa un
+  [túnel HTTPS](https://docs.cbpayapp.com/es/environment-testing#probar-webhooks-en-desarrollo-local).
+- `secret`: mínimo 16 caracteres; se usa para firmar cada entrega. Se
+  almacena cifrado y no puede recuperarse.
+La suscripción recibe los eventos de **tu cuenta**. Puedes listar las
+suscripciones activas en cualquier momento:
+```bash
+curl https://api.qbank.cl/platform/v1/webhooks/subscriptions \
+  -H "Authorization: Bearer <token>"
+```
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "subscriptions": [
+    {
+      "id": "5f3a…",
+      "event_type": "payout_status_changed",
+      "callback_url": "https://api.miapp.com/webhooks/cbpay",
+      "status": "active",
+      "created_at": "2026-07-01T12:00:00Z"
+    }
+  ]
+}
+```
+## Desactivar y reactivar una suscripción
+Cuando un callback deja de usarse, desactívalo en vez de borrarlo (las
+suscripciones **nunca se borran**: quedan `disabled` y puedes reactivarlas
+cuando quieras):
+```bash
+curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "status": "disabled" }'
+```
+```json
+{
+  "id": "5f3a…",
+  "event_type": "payout_status_changed",
+  "callback_url": "https://api.miapp.com/webhooks/cbpay",
+  "status": "disabled",
+  "created_at": "2026-07-01T12:00:00Z"
+}
+```
+Para reactivarla, el mismo llamado con `{ "status": "active" }`.
+- El toggle rige lo **futuro**: una suscripción `disabled` deja de recibir
+  eventos nuevos, pero las entregas **ya encoladas** siguen saliendo.
+- Es **idempotente**: repetir el estado vigente responde `200` sin cambiar
+  nada.
+- Solo puedes tocar las suscripciones de **tu cuenta**: una suscripción de
+  otra cuenta responde `404` (es indistinguible de una inexistente).
+| HTTP | `error` | Solución |
+|---|---|---|
+| 400 | `invalid_status` | El estado debe ser `active` o `disabled` |
+| 404 | `not_found` | La suscripción no existe o pertenece a otra cuenta |
+## Eventos
+| Evento | Cuándo se emite |
+|---|---|
+| `payin_credited` | Un cobro fiat fue recibido y abonado |
+| `payin_expired` | Un cobro activo (QR / checkout) venció o falló sin recibir el pago |
+| `payin_refunded` | Una [devolución](https://docs.cbpayapp.com/es/guides/refunds) de un cobro con tarjeta llegó a estado final (incluye el contracargo impuesto por el emisor) |
+| `payin_settlement_scheduled` | Un cobro con tarjeta quedó confirmado (`credited`, se emitió `payin_credited`) y su saldo se programó para un `settle_at` futuro (espera de settlement configurada por la org). Se emite exactamente una vez al confirmarse el pago; el saldo queda disponible al vencimiento |
+| `payout_status_changed` | Un payout cambió de estado |
+| `transfer_received` | La cuenta recibió una transferencia interna |
+| `payroll_credited` | La organización acreditó un sueldo al saldo de la cuenta (crédito directo de tesorería) |
+| `org_expense_credited` | La organización pagó un gasto operativo al saldo de la cuenta (crédito directo de tesorería) |
+| `referral_credited` | La organización pagó un cierre de referidor al saldo de la cuenta payout (comisión del período) |
+| `crypto_deposit_credited` | Un depósito on-chain fue confirmado y abonado |
+| `crypto_deposit_held` | Un depósito entrante quedó retenido por riesgo del remitente ([screening](https://docs.cbpayapp.com/es/guides/screenings)) |
+| `crypto_deposit_alert` | Un depósito se acreditó pero el remitente presenta riesgo alto (informativo) |
+| `crypto_withdrawal_status_changed` | Un retiro on-chain cambió de estado |
+| `banking_customer_status_changed` | Cambió la verificación de un perfil bancario (propio o de un tercero registrado — `customer_kind` lo distingue) |
+| `banking_operation_status_changed` | Un pago bancario cambió de estado |
+| `card_transaction` | Una compra con tarjeta fue autorizada, anulada o ajustada |
+| `card_status_changed` | Una tarjeta cambió de estado (incluye congelamiento automático) |
+| `card_stored` | La tarjeta de un pagador fue tokenizada y guardada con consentimiento ([tarjetas guardadas](https://docs.cbpayapp.com/es/guides/payins#tarjetas-guardadas)) |
+| `stored_card_revoked` | Una credencial de tarjeta guardada fue revocada (los cobros iniciados por el comercio dejan de funcionar) |
+| `subscription_status_changed` | Una suscripción sobre una tarjeta guardada cambió de estado (`active` / `paused` / `past_due` / `canceled`) |
+| `kyc_verification_status_changed` / `kyb_verification_status_changed` | Una verificación de identidad cambió de estado (incluye tu propio onboarding, con `self_onboarding: true`) |
+| `kyc_link_completed` / `kyb_link_completed` | Un link de verificación hosteado fue completado |
+| `kyc_document_validated` / `kyb_document_validated` | Terminó el OCR de un documento subido por API |
+| `kyc_liveness_completed` | Una prueba de vida fue completada desde un liveness link |
+| `aml_screening_updated` | Novedades del screening AML/CFT (resultado, casos, riesgo, transacción revisada) |
+| `risk_report_ready` | Un informe crediticio [Qscore](https://docs.cbpayapp.com/es/guides/qscore) terminó de generarse (lleva el score y la banda) |
+| `risk_score_changed` | El score de un sujeto monitoreado se movió (re-evaluación tras nuevos datos del buró) |
+| `risk_monitoring_alert` | Un sujeto monitoreado de [Qscore](https://docs.cbpayapp.com/es/guides/qscore) gatilló una alerta: el score cayó bajo tu umbral, aparecieron registros nuevos en el buró o se eliminaron registros |
+| `risk_batch_completed` | Un [lote](https://docs.cbpayapp.com/es/guides/qscore-batch) de informes Qscore terminó de procesarse (exactamente un webhook por lote, con conteos — nunca uno por sujeto) |
+| `risk_consent_granted` | El titular autorizó un [link de autorización](https://docs.cbpayapp.com/es/guides/qscore-consents) — los hechos bancarios positivos fluyen a la ficha crediticia del sujeto |
+| `risk_consent_revoked` | El titular rechazó un [link de autorización](https://docs.cbpayapp.com/es/guides/qscore-consents) o tu cuenta lo revocó |
+| `wallet_deposit_received` | Llegó un depósito on-chain a una [wallet segregada](https://docs.cbpayapp.com/es/guides/segregated-wallets) (no toca el ledger) |
+| `wallet_send_status_changed` | Un envío desde una wallet segregada cambió de estado |
+| `wallet_key_exported` | Se exportó la llave privada de una wallet segregada (alerta de seguridad) |
+| `wallet_external_movement` | Movimiento on-chain de una wallet segregada que no pasó por la plataforma (esperable en custodia `client`) |
+| `wallet_key_compromise_suspected` | **Alarma crítica**: salida externa desde una wallet con custodia `cbpay` — posible llave comprometida |
+| `wallet_signature_created` | Se creó una prueba de firma con una wallet segregada (firma de mensajes EIP-191 / TIP-191) |
+| `wallet_linked` | Se vinculó una wallet externa (`custody=client`) a la cuenta mediante un desafío nonce firmado |
+| `txn_review_status_changed` | Una operación retenida por el [firewall transaccional](https://docs.cbpayapp.com/es/guides/transaction-reviews) cambió de estado de revisión (`in_review` / `info_requested` / `released` / `rejected`) — payload neutro, sin motivos internos; un rechazo también puede venir del barrido automático por plazo (auto-rechazo) |
+| `review_dispatch_failed` | Una solicitud de tarjeta o banking fue aprobada, pero falló el despacho de activación; el payload incluye `event`, `review_id`, `kind`, `title` y `path`. Reintenta idempotentemente el approve original; no crees otra solicitud |
+| `corridor_status_changed` | Un corredor de pago cambió su disponibilidad (`operational` / `degraded` / `down`) — broadcast, ver la [guía de estado del servicio](https://docs.cbpayapp.com/es/service-status) |
+| `balance_adjusted` | Un administrador aplicó un abono o cargo manual sobre un saldo |
+| `account_status_changed` | El estado administrativo de la cuenta cambió (`active` / `blocked` / `closed`) |
+| `member_security_event` | Hecho de seguridad de un usuario de la cuenta (inicio de sesión, cambio de credenciales, factor nuevo, sesión revocada) |
+| `admin_announcement` | Un administrador nombrado de la organización aprobó un anuncio localizado de texto plano para esta cuenta |
+| `warroom_outreach` | Un god nombrado de plataforma envió un aviso de seguridad de texto plano a esta cuenta |
+### Payload de cada evento
+```json payin_credited
+{
+  "payin_id": "9c2a…",
+  "account_id": "ae8c…",
+  "country": "BO",
+  "currency": "BOB",
+  "local_amount": "700.00",
+  "fx_rate": "6.91",
+  "usdt_credited": "100.302460",
+  "fee": "1.000000",
+  "idempotency_key": "order-10042"
+}
+```
+```json payin_expired
+{
+  "payin_id": "567d…",
+  "account_id": "ae8c…",
+  "status": "expired",
+  "country": "BO",
+  "currency": "BOB",
+  "local_amount": "60.99",
+  "reference": "CBK7Q2M4XZ9P",
+  "idempotency_key": "order-10042"
+}
+```
+```json payin_refunded
+{
+  "refund_id": "3a7d…",
+  "payin_id": "9f1c…",
+  "account_id": "c57f…",
+  "kind": "refund",
+  "status": "completed",
+  "currency": "USD",
+  "local_amount": "40.00",
+  "usdt_debited": "40.000000",
+  "idempotency_key": "refund-order-8842",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payin-refunds/3a7d…/receipt"
+}
+```
+```json payin_settlement_scheduled
+{
+  "payin_id": "8b3e…",
+  "account_id": "ae8c…",
+  "country": "US",
+  "currency": "USD",
+  "local_amount": "498.75",
+  "fx_rate": "1.010202",
+  "usdt_gross": "493.811881",
+  "fee": "27.159654",
+  "usdt_net": "466.652227",
+  "status": "credited",
+  "settle_at": "2026-08-12T14:08:33Z",
+  "idempotency_key": "order-10042",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payins/8b3e…/receipt"
+}
+```
+> **Nota**
+Con una demora de settlement configurada, ambos webhooks se emiten **al
+confirmarse el pago**: primero `payin_settlement_scheduled` (el saldo
+quedó programado para `settle_at`) y después `payin_credited` (el payin
+quedó confirmado, `status: credited`). Lo único que espera al `settle_at`
+es la disponibilidad del saldo — la respuesta del payin lleva
+`settlement_pending: true` mientras está pendiente y `settled_at` cuando
+cae en el ledger.
+`usdt_net` es el monto que se acreditará al vencimiento (bruto − comisión).
+Los montos pueden venir vacíos (`""`) en filas históricas sin bruto/comisión.
+Al llegar el `settle_at`, el worker de settlement acredita el saldo y emite
+`payin_credited` (el flujo de siempre, sin cambios).
+```json payout_status_changed
+{
+  "payout_id": "0d4f…",
+  "account_id": "ae8c…",
+  "country": "MX",
+  "currency": "MXN",
+  "local_amount": "1500.00",
+  "usdt_amount": "85.714286",
+  "total_debit": "86.014286",
+  "status": "completed",
+  "status_code": "",
+  "status_message": "",
+  "bank_reference": "00761123456",
+  "receipt_url": "https://api.qbank.cl/platform/v1/payouts/0d4f…/receipt",
+  "funds_debited": true,
+  "compliance_pending": false,
+  "predebit_failure": false,
+  "idempotency_key": "payroll-2026-07-001"
+}
+```
+Mientras espera el screening técnico del beneficiario, un payload de
+`payout_status_changed` puede llevar `status: "pending"`,
+`status_code: "compliance_pending"`, `compliance_pending: true` y
+`funds_debited: false`. No incluye `receipt_url` porque todavía no existe
+débito ni comprobante.
+Después de que el screening devuelve `process`, el mismo payout puede emitir
+eventos de transición durables mientras sigue en `pending`:
+- `status_code: "compliance_dispatch_pending"` significa que existe el
+  débito/hold y `funds_debited: true`, pero el despacho al core no terminó.
+- `status_code: "compliance_dispatching"` significa que el claim de despacho
+  está activo.
+- `status_code: "core_unreachable"` significa que el despacho o la liquidación
+  local es ambigua y espera conciliación; no crees un segundo payout.
+Usa `X-Webhook-Event-ID` para deduplicar cada delivery, pero no asumas un solo
+evento por payout: la plataforma persiste estas revisiones de estado y después
+emite el evento terminal `completed` o `failed`. Los eventos terminales llevan
+los campos normales del comprobante; un payout fallido devuelve el débito exacto.
+```json txn_review_status_changed
+{
+  "account_id": "ae8c…",
+  "review_id": "7a3f…",
+  "kind": "payout",
+  "resource_id": "0d4f…",
+  "status": "info_requested",
+  "previous_status": "in_review",
+  "amount": "1500.00",
+  "asset": "USD"
+}
+```
+```json transfer_received
+{
+  "transfer_id": "77b1…",
+  "from_account_id": "389d…",
+  "to_account_id": "ae8c…",
+  "asset": "USDT",
+  "amount": "25.000000",
+  "description": "Split de gastos",
+  "created_at": "2026-07-06T20:10:00Z"
+}
+```
+```json crypto_deposit_credited
+{
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "b1946ac9…",
+  "amount": "499.000000",
+  "fee": "1.000000"
+}
+```
+```json crypto_deposit_held
+{
+  "account_id": "ae8c…",
+  "hold_id": "c1d2e3f4…",
+  "chain": "tron",
+  "asset": "usdt",
+  "tx_id": "8a5b3c…",
+  "risk": "Severe",
+  "status": "held"
+}
+```
+```json crypto_deposit_alert
+{
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "usdt",
+  "tx_id": "9c6d4e…",
+  "risk": "High",
+  "status": "credited"
+}
+```
+```json crypto_withdrawal_status_changed
+{
+  "withdrawal_id": "5e8c…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "7d3f01aa…",
+  "status": "completed",
+  "amount": "100.000000",
+  "idempotency_key": "wd-2026-09-0042"
+}
+```
+```json banking_customer_status_changed
+{
+  "account_id": "ae8c…",
+  "customer_id": "9f2b…",
+  "customer_kind": "third_party",
+  "third_party_id": "77aa…",
+  "kyc_status": "approved"
+}
+```
+En `banking_customer_status_changed`, `customer_kind` distingue tu perfil
+propio (`self`) de un tercero que registraste (`third_party`, con su
+`third_party_id` — el mismo id de `GET /v1/banking/third-parties/{id}`).
+```json banking_operation_status_changed
+{
+  "account_id": "ae8c…",
+  "operation_id": "7e8a…",
+  "status": "completed",
+  "direction": "in",
+  "amount": "80.00",
+  "currency": "EUR",
+  "payment_rail": "SEPA_INSTANT",
+  "purpose": "banking_eur",
+  "reference": "CJ-DEP-001"
+}
+```
+```json card_transaction
+{
+  "account_id": "ae8c…",
+  "card_id": "3c2b…",
+  "transaction_id": "5e4d…",
+  "status": "authorized",
+  "amount_usdt": "16.170000",
+  "merchant": "AMZN Mktp"
+}
+```
+```json card_status_changed
+{
+  "account_id": "ae8c…",
+  "card_id": "3c2b…",
+  "status": "frozen",
+  "reason": "monthly_fee_unpaid"
+}
+```
+```json card_stored
+{
+  "stored_card_id": "a9b8…",
+  "account_id": "ae8c…",
+  "payer_reference": "pagador@email.com",
+  "brand": "VISA",
+  "last4": "1234",
+  "country": "BO",
+  "currency": "BOB",
+  "seed_payin_id": "9c2a…"
+}
+```
+```json stored_card_revoked
+{
+  "stored_card_id": "a9b8…",
+  "account_id": "ae8c…",
+  "payer_reference": "pagador@email.com",
+  "brand": "VISA",
+  "last4": "1234"
+}
+```
+```json subscription_status_changed
+{
+  "subscription_id": "4f1e…",
+  "account_id": "ae8c…",
+  "stored_card_id": "a9b8…",
+  "status": "past_due",
+  "period": 3,
+  "next_charge_at": "2026-08-01T12:00:00Z",
+  "payer_reference": "pagador@email.com",
+  "reason": "dunning_exhausted",
+  "failed_attempts": 3
+}
+```
+```json kyc_verification_status_changed
+{
+  "account_id": "ae8c…",
+  "kind": "kyc",
+  "event": "approved",
+  "submission_id": "c3d4…",
+  "external_customer_id": "cust_789",
+  "status": "approved",
+  "risk_band": "low",
+  "decision": "approved",
+  "decision_source": "auto"
+}
+```
+Cuando el evento lleva una decisión final (`approved`, `rejected` o
+`changes_requested`), el payload incluye `decision_source`: `"auto"` si la
+resolvió el motor de decisión automática (los expedientes limpios se aprueban
+en segundos sin intervención humana), `"admin"` si la decidió un oficial de
+cumplimiento desde la consola de revisión. El campo se omite en submissions
+antiguas sin datos del motor.
+```json kyb_link_completed
+{
+  "account_id": "ae8c…",
+  "kind": "kyb",
+  "event": "link_completed",
+  "link_id": "b2c3…",
+  "submission_id": "d4e5…",
+  "external_customer_id": "cust_456",
+  "status": "completed"
+}
+```
+```json kyc_document_validated
+{
+  "account_id": "ae8c…",
+  "kind": "kyc",
+  "submission_id": "c3d4…",
+  "external_customer_id": "cust_789",
+  "category": "identity",
+  "outcome": "MATCH",
+  "score": 0.97,
+  "summary": "Document matches the submitted identity"
+}
+```
+```json kyc_liveness_completed
+{
+  "account_id": "ae8c…",
+  "kind": "kyc",
+  "submission_id": "c3d4…",
+  "external_customer_id": "cust_789",
+  "outcome": "PASS",
+  "passed": true
+}
+```
+```json aml_screening_updated
+{
+  "account_id": "ae8c…",
+  "screening_event": "compliance_risk_changed",
+  "customer_id": "cus_8f2e…",
+  "data": { "risk_level": "high" }
+}
+```
+```json wallet_deposit_received
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "b1946ac9…",
+  "amount_raw": "125000000",
+  "from_address": "TDonor…"
+}
+```
+```json wallet_send_status_changed
+{
+  "send_id": "9c8b…",
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "tx_id": "b1946ac9…",
+  "status": "completed",
+  "amount_raw": "25500000",
+  "idempotency_key": "send-0042"
+}
+```
+```json wallet_key_exported
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "address": "TRmSZRaMAqLEevAdGwo3R43bRBXamWR5bd"
+}
+```
+```json wallet_external_movement
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "direction": "out",
+  "tx_id": "9a3c1e5f…",
+  "amount_raw": "25000000",
+  "custody": "client"
+}
+```
+```json wallet_key_compromise_suspected
+{
+  "wallet_id": "b7e3…",
+  "account_id": "ae8c…",
+  "chain": "tron",
+  "asset": "USDT",
+  "direction": "out",
+  "tx_id": "9a3c1e5f…",
+  "amount_raw": "25000000",
+  "custody": "cbpay"
+}
+```
+```json wallet_signature_created
+{
+  "proof_id": "c41d…",
+  "account_id": "ae8c…",
+  "wallet_id": "b7e3…",
+  "chain": "eth",
+  "address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+  "purpose": "wallet_ownership",
+  "proof_code": "G9f2c…",
+  "verify_url": "https://api.qbank.cl/platform/v1/public/signature-proofs/G9f2c…"
+}
+```
+```json wallet_linked
+{
+  "link_id": "d52e…",
+  "account_id": "ae8c…",
+  "chain": "eth",
+  "address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+  "proof_id": "c41d…"
+}
+```
+```json risk_report_ready
+{
+  "report_id": "9f1c…",
+  "subject_id": "6aa2…",
+  "doc_id": "76.123.456-7",
+  "country": "CL",
+  "subject_type": "person",
+  "score": 712,
+  "band": "B",
+  "verify_code": "Q9f1c2e7a5b6d4c8e9a0f1d2b3c4d5e6f0123456789ab"
+}
+```
+```json risk_score_changed
+{
+  "subject_id": "6aa2…",
+  "report_id": "9f1c…",
+  "old_score": 688,
+  "new_score": 712,
+  "old_band": "C",
+  "new_band": "B"
+}
+```
+```json risk_monitoring_alert
+{
+  "monitoring_id": "7c9e2f14-5b6a-4c8d-9e1f-3a7b5c2d8e91",
+  "subject_id": "8f5fb0d2-1d45-4a0e-9d5c-2d39f2b7a112",
+  "doc_id": "12.345.678-5",
+  "country": "CL",
+  "subject_type": "person",
+  "triggers": ["score_drop_below", "new_records"],
+  "score": 487,
+  "previous_score": 512,
+  "band": "D",
+  "record_count": 3,
+  "detected_at": "2026-08-08T18:41:12Z",
+  "new_records": [
+    {
+      "source": "res_chile",
+      "record_type": "debt_collection",
+      "reported_at": "2026-08-05T00:00:00Z",
+      "amount": "450000",
+      "currency": "CLP",
+      "status": "open"
+    }
+  ]
+}
+```
+```json risk_batch_completed
+{
+  "batch_id": "b7f2c1a4-3e5d-4f8a-9c2b-1d0e6a8f4c5d",
+  "status": "completed_with_errors",
+  "total_items": 4,
+  "succeeded_items": 3,
+  "failed_items": 1,
+  "country": "CL",
+  "purpose": "credit_evaluation"
+}
+```
+```json risk_consent_granted
+{
+  "consent_id": "c3a1e9b2-7f4d-4c8a-9e1b-2a5c6d7e8f9a",
+  "subject_id": "s8b2c4d6-1e3f-4a5b-9c7d-8e9f0a1b2c3d",
+  "country": "CL",
+  "doc_id": "76123456-8",
+  "subject_type": "person",
+  "purpose": "credit_evaluation",
+  "status": "granted",
+  "previous_status": "pending",
+  "holder_name": "Maria Jose Contreras Soto",
+  "openfinance_link_id": "9f1a2b3c-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
+  "granted_at": "2026-08-09T15:42:10Z"
+}
+```
+```json risk_consent_revoked
+{
+  "consent_id": "c3a1e9b2-7f4d-4c8a-9e1b-2a5c6d7e8f9a",
+  "subject_id": "s8b2c4d6-1e3f-4a5b-9c7d-8e9f0a1b2c3d",
+  "country": "CL",
+  "doc_id": "76123456-8",
+  "subject_type": "person",
+  "purpose": "credit_evaluation",
+  "status": "revoked",
+  "previous_status": "granted",
+  "revoked_at": "2026-08-11T09:05:33Z"
+}
+```
+```json corridor_status_changed
+{
+  "flow": "payout",
+  "country": "VE",
+  "currency": "VES",
+  "method": "bank_transfer",
+  "status": "down",
+  "previous_status": "operational",
+  "since": "2026-07-24T22:10:00Z",
+  "reason": "consecutive infrastructure failures"
+}
+```
+```json balance_adjusted
+{
+  "account_id": "ae8c…",
+  "asset": "USDT",
+  "amount": "25.000000",
+  "direction": "credit",
+  "reason": "goodwill credit",
+  "available": "1025.000000",
+  "held": "0.000000"
+}
+```
+```json account_status_changed
+{
+  "account_id": "ae8c…",
+  "status": "blocked",
+  "previous_status": "active"
+}
+```
+```json member_security_event
+{
+  "account_id": "ae8c…",
+  "member_id": "3f7b…",
+  "event_type": "password_changed"
+}
+```
+En suscripciones con alcance de cuenta, `ip` y `user_agent` se redactan
+intencionalmente. Las vistas de seguridad de alcance organizacional conservan
+el `user_agent` forense y los campos de IP del actor (`actor_ip`,
+`actor_ip_source`) para auditoría administrativa; esos campos son exclusivos
+del contrato admin y no forman parte del webhook público.
+En `payout_status_changed`, una actualización de screening técnico puede ser
+`pending` antes de cualquier débito. Las actualizaciones finales son
+`completed` o `failed` (con `failed` el débito ya fue reembolsado cuando
+recibes el evento). `crypto_withdrawal_status_changed` usa `completed` o
+`failed`.
+En `payout_status_changed`, `status_code` y `status_message` son el resultado
+normalizado que reporta el core. `status_message` puede venir vacío cuando el
+riel no entrega detalle adicional; se depura antes de la entrega y nunca
+contiene la identidad de un proveedor upstream.
+### Fallos terminales antes del débito
+Si el screening falla antes del camino de débito, el evento puede ser terminal
+con `status: "failed"`, `predebit_failure: true` y
+`funds_debited: false`; se omite `receipt_url`. Un fallo posterior al débito
+es distinto: el débito exacto se reembolsa antes del evento terminal. La
+plataforma también puede persistir revisiones de transición no terminales,
+por lo que un payout puede producir más de una entrega
+`payout_status_changed`; deduplica por `X-Webhook-Event-ID` y no crees otro
+payout.
+## Formato de entrega
+Cada entrega es un `POST` JSON con estos headers:
+| Header | Contenido |
+|---|---|
+| `X-Webhook-Event` | Tipo de evento |
+| `X-Webhook-Event-ID` | ID único del evento |
+| `X-Webhook-Delivery-ID` | ID de esta entrega (cambia entre reintentos) |
+| `X-Webhook-Timestamp` | Unix timestamp (segundos, UTC) |
+| `X-Webhook-Signature` | Firma HMAC V1 heredada (ver abajo) |
+| `X-Webhook-Signature-V2` | Firma HMAC V2 (ver abajo) |
+## Verificar las firmas
+CBPay envía ambos headers de firma en cada entrega de webhook de plataforma.
+V1 sigue siendo válida y se continúa enviando, por lo que adoptar V2 no rompe
+la compatibilidad. Las integraciones nuevas deben verificar V2 primero y
+mantener el fallback a V1 mientras migran los receptores existentes.
+| Header | Entrada firmada |
+|---|---|
+| `X-Webhook-Signature` (V1) | `timestamp + "." + raw_body` |
+| `X-Webhook-Signature-V2` | `timestamp + "." + event_type + "." + event_id + "." + raw_body` |
+Ambas entradas usan los valores de `X-Webhook-Timestamp`, `X-Webhook-Event`
+y `X-Webhook-Event-ID` de la misma solicitud cuando corresponde. El resultado
+es un HMAC-SHA256 hexadecimal en minúsculas usando el secreto de la
+suscripción. V2 vincula el tipo y el ID del evento a la firma: no tomes esos
+valores desde un payload JSON re-serializado. `X-Webhook-Delivery-ID` sirve
+para trazabilidad de la entrega; deduplica por `X-Webhook-Event-ID`.
+```javascript Node.js
+const crypto = require("crypto");
+function timingSafeHexEqual(provided, expected) {
+  const a = Buffer.from(provided, "hex");
+  const b = Buffer.from(expected, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+function verifyWebhook(req, secret) {
+  const ts = req.headers["x-webhook-timestamp"];
+  const signatureV2 = req.headers["x-webhook-signature-v2"];
+  const signatureV1 = req.headers["x-webhook-signature"];
+  const useV2 = Boolean(signatureV2);
+  const provided = useV2 ? signatureV2 : signatureV1;
+  if (!ts || !provided || !req.rawBody) return false;
+  const prefix = useV2
+    ? `${ts}.${req.headers["x-webhook-event"]}.${req.headers["x-webhook-event-id"]}.`
+    : `${ts}.`;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(Buffer.concat([Buffer.from(prefix), req.rawBody]))
+    .digest("hex");
+  return timingSafeHexEqual(provided, expected);
+}
+```
+```python Python
+import hashlib, hmac
+def verify_webhook(headers, raw_body: bytes, secret: str) -> bool:
+    ts = headers["X-Webhook-Timestamp"]
+    sig_v2 = headers.get("X-Webhook-Signature-V2", "").strip()
+    if sig_v2:
+        event_type = headers["X-Webhook-Event"]
+        event_id = headers["X-Webhook-Event-ID"]
+        signed = b".".join(
+            (ts.encode(), event_type.encode(), event_id.encode(), raw_body)
+        )
+        signature = sig_v2
+    else:
+        signed = ts.encode() + b"." + raw_body
+        signature = headers.get("X-Webhook-Signature", "").strip()
+    expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
+    return bool(signature) and hmac.compare_digest(signature.lower(), expected)
+```
+> **Importante**
+Calcula el HMAC sobre el **body crudo** (bytes tal como llegan), no sobre el
+JSON re-serializado. Rechaza timestamps muy antiguos (> 5 minutos) para
+prevenir replay.
+## Reintentos e idempotencia
+- Tu endpoint debe responder **2xx** dentro del timeout; cualquier otra
+  respuesta se reintenta.
+- Hasta **5 intentos** con backoff incremental:
+| Intento | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Espera aprox. | inmediato | ~5s | ~20s | ~45s | ~80s |
+- Usa `X-Webhook-Event-ID` para deduplicar: el mismo evento puede llegar más
+  de una vez (entregas at-least-once).
+- Si los 5 intentos fallan, el evento no se reenvía — recupera el estado
+  con el `GET` del recurso (por eso ningún flujo debe depender SOLO del
+  webhook).
+### Tu idempotency key vuelve en el payload
+Cuando el evento viene de una operación que creaste con una
+`idempotency_key` (un payout, un payin con tarjeta, un retiro crypto, un
+envío desde wallet segregada, un refund…), el payload la trae de vuelta
+como `idempotency_key` — concilia la notificación contra tu propia
+referencia sin un GET extra.
+- Es **opcional**: presente solo cuando el request original traía una key
+  no vacía, y omitida en caso contrario. Las operaciones creadas por la
+  propia plataforma jamás exponen una key interna.
+- Eventos cubiertos: `payout_status_changed`, `payin_credited`,
+  `payin_settlement_scheduled`, `payin_expired`, `payin_refunded`,
+  `crypto_withdrawal_status_changed` y `wallet_send_status_changed`.
+  `transfer_received` no la lleva.
+- El recurso payin también la devuelve en `GET /v1/payins/{id}`.
+## Buenas prácticas
+- Responde `200` de inmediato y procesa en background.
+- Registra el `X-Webhook-Delivery-ID` para trazabilidad.
+- No dependas solo de webhooks para estados críticos: puedes consultar el
+  objeto por API en cualquier momento (`GET /v1/payouts/{id}`, etc.).
+## `banking_virtual_iban_inbound`
+This event reports an inbound EUR transfer received by an owned virtual IBAN.
+The event is normalized before delivery; consumers should deduplicate by the
+event ID and fetch the banking operation or virtual account when they need the
+latest state. The event does not expose an upstream provider identity.
+## `admin_announcement`
+Este evento account-scoped se emite cuando el broadcast aprobado por un
+administrador de la organización llega al canal de notificaciones de la
+cuenta. Es texto plano localizado, nunca HTML:
+```json
+{
+  "broadcast_id": "4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
+  "subject": "Mantenimiento programado",
+  "body": "Algunos servicios serán de solo lectura el 2026-09-20 desde las 02:00 UTC."
+}
+```
+El evento solo se entrega a la cuenta seleccionada por la campaña. Puede
+recibirse mediante una suscripción webhook de cuenta o el event stream;
+deduplica las entregas por `X-Webhook-Event-ID`.
+`dispute_status_changed`: consulta la [guía de disputas](https://docs.cbpayapp.com/es/guides/disputes) para payload y transiciones firmadas.  Payins fiat locales: `payin_credited` lleva `credit_asset`/`fiat_credited`; `payin_refunded` lleva `debited_asset`/`debited_amount`.
+## Eventos de tickets de soporte
+The following events are delivered to both account and organization audiences. Payloads contain identifiers and state only; message bodies, internal notes and attachment bytes never travel in an event. Verify the signature and deduplicate by event ID.
+| Event | Payload additions |
+|---|---|
+| `support_ticket_created` | `ticket_id`, `number`, `status`, `account_id`, `category`, `priority`, `kind`, `resource_id`, `subject` |
+| `support_ticket_message` | The ticket identifiers plus `from: account` or `from: admin` |
+| `support_ticket_updated` | The ticket identifiers plus `change: status`, `priority`, `assigned` or `attachment`, plus `assigned_admin_id` |
+```json
+{
+  "ticket_id": "11111111-1111-4111-8111-111111111111",
+  "number": "SUP-2026-000123",
+  "status": "open",
+  "account_id": "22222222-2222-4222-8222-222222222222",
+  "category": "delay",
+  "priority": "high",
+  "kind": "payout",
+  "resource_id": "33333333-3333-4333-8333-333333333333",
+  "subject": "Payout is delayed"
+}
+```
+
+## Payload de `warroom_outreach`
+Este evento con alcance de cuenta es un aviso de seguridad de texto plano enviado por un god nombrado de plataforma. Contiene el asunto, el cuerpo después del aviso anti-phishing fijo, la etiqueta del remitente y la hora UTC de emisión:
+
+```json
+{
+  "subject": "Aviso de seguridad",
+  "body": "Security notice from your platform team. We will never ask for passwords, codes or transfers in a message.\n\nRevisa la actividad de inicio de sesión.",
+  "from": "platform security team",
+  "at": "2026-11-07T16:11:54Z"
+}
+```
+El cuerpo es solo texto; el HTML se rechaza antes de entregar. Verifica la firma del webhook y deduplica por `X-Webhook-Event-ID`.

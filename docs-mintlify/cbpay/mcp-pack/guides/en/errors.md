@@ -1,0 +1,788 @@
+---
+title: "Errors"
+description: "Error format and complete code catalog"
+slug: en/errors
+lang: en
+source_url: https://docs.cbpayapp.com/en/errors
+---
+All errors share the same shape:
+
+```json
+{
+  "error": "insufficient_funds",
+  "message": "account balance is not enough for this operation"
+}
+```
+
+- `error`: stable `snake_case` code — use it in your logic.
+- `message`: human-readable explanation — may change, don't parse it.
+
+> **Note**
+**Sanitized error messages.** An error `message` will never expose provider names, infrastructure details, URLs, raw upstream bodies (JSON/HTML), or internal configuration — not in API responses, webhooks, or stored status fields. Business rejections from the payment processor keep their actionable reason (for example, why a document or account was rejected); infrastructure failures are replaced by the fixed generic message `"the payment provider could not process the request"` — retry those operations with the same `idempotency_key`.
+| `payin_corridor_unsupported` | The requested country/currency/method has no active payin provider — re-read `GET /v1/payins/methods` |
+| 502 | `deposit_account_failed` | The dedicated receiving account could not be provisioned; read the account list before retrying |
+
+## Codes by category
+
+### Authentication and permissions
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 401 | `unauthorized` | Missing or invalid credential |
+| 401 | `invalid_credentials` | Wrong email or password (login) |
+| 401 | `invalid_refresh_token` | Refresh token invalid, expired, already used or revoked — send the user back to login |
+| 403 | `account_required` | Endpoint requires an account credential |
+| 403 | `org_admin_required` | Endpoint requires an admin credential |
+| 403 | `forbidden` | Credential level not allowed |
+| 403 | `account_blocked` | The account is not active; this also blocks `POST /v1/me/verification/link` — ask an administrator to restore it |
+| 403 | `verification_rejected_requires_admin` | Compliance rejected the account's KYC/KYB; self-service onboarding is disabled — contact your administrator to reopen verification |
+| 403 | `service_disabled` | The service is not enabled for your account (check `GET /v1/services`) |
+| 403 | `org_suspended` | Service suspended; contact the CBPay team |
+| 403 | `company_only` | Feature only for company accounts |
+| 403 | `company_required` | Feature only for company accounts (e.g. [third-party banking](https://docs.cbpayapp.com/en/guides/banking)) |
+| 403 | `human_session_required` | The operation handles a private key (segregated wallet import/export) and requires a signed-in user session with 2FA — API keys are not allowed |
+| 403 | `member_disabled` | The mirror user is disabled in the test environment; contact support |
+| 403 | `passkey_rejected` | The passkey could not be verified; retry or sign in with another method |
+| 403 | `owner_required` | Only the account owner can perform this action (2FA preferences, members, API keys, webhooks, account identity) |
+| 403 | `read_only_role` | The viewer role is read-only — sign in as owner or operator to mutate |
+| 404 | `member_not_found` | This credential has no member profile (API keys have no member) |
+| 409 | `self_action_forbidden` | You cannot change your own login status or reset your own password here — ask another owner (change your own password with `POST /v1/me/password`) |
+
+### Registration 2FA enrollment
+
+| HTTP | `error` | Meaning and solution |
+|---|---|---|
+| 401 | `invalid_pending_token` | The enrollment token is invalid or expired; start login or registration again. |
+| 400 | `invalid_credential` | WebAuthn payload is malformed; send the credential returned by the browser ceremony. |
+| 403 | `otp_invalid` | The six-digit authenticator code is invalid or expired; wait for the next code and try again. |
+| 403 | `passkey_rejected` | WebAuthn verification failed; retry on the same device or choose TOTP. |
+| 409 | `totp_not_started` | Call `totp/begin` before `totp/confirm`. |
+| 409 | `enrollment_complete` | Another request already completed enrollment; sign in with the new factor. |
+| 409 | `challenge_not_pending` | The passkey ceremony expired or was consumed; begin it again. |
+| 409 | `passkey_exists` | This device credential is already registered; use the existing passkey. |
+| 503 | `passkeys_unavailable` | The organization has no WebAuthn configuration; use TOTP. |
+| 403 | `enrollment_required` | An environment handoff cannot issue a session before enrollment; complete the wizard first. |
+
+`pending_2fa_enrollment` is a response status, not an error.
+
+### OTP / 2FA
+
+Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/security-2fa).
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 403 | `otp_required` | The action requires OTP: verify a challenge and retry with `X-OTP-Token` |
+| 403 | `otp_invalid` | OTP token invalid, expired or already used |
+| 403 | `session_required` | OTP challenges require a user session, not an API key |
+| 403 | `account_blocked` | The account is blocked or closed; no code is sent |
+| 403 | `phone_binding_cooldown` | Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email). Lift early with `POST /v1/me/phone/unlock-cooldown` (email/totp token) or ask your operator (`POST /v1/accounts/{id}/phone/clear-cooldown`) |
+| 409 | `phone_verification_required` | Verify your phone (OTP challenge) before enabling login 2FA over SMS/WhatsApp |
+| 401 | `invalid_code` | The code does not match |
+| 401 | `invalid_pending_token` | The intermediate login token expired; log in again |
+| 400 | `invalid_action` / `invalid_channel` | Action or channel outside the catalog (challenge `channel` must be `sms`, `whatsapp`, `email` or `totp`) |
+| 409 | `phone_required` | The account has no phone (`PATCH /v1/me`) |
+| 409 | `otp_phone_missing` | Login requires OTP and the account has no phone; contact your operator |
+| 409 | `challenge_not_pending` | The challenge expired or was already used; create a new one |
+| 403 | `independent_factor_required` | The phone cooldown can only be unlocked with the authenticator app or the verified email, never with a code sent to the new number |
+| 429 | `too_many_attempts` | Send/verification limits reached; wait a few minutes |
+| 409 | `otp_disabled_for_org` | Two-factor authentication is not enabled for your organization; contact support |
+| 409 | `totp_not_started` | Confirm requires starting enrollment first (`POST /v1/me/totp/enroll`) |
+| 503 | `otp_unavailable` | Verification service unavailable (the action stays blocked; OTP is never skipped) |
+
+### Social login (OAuth)
+
+Full flow and details in [social login](https://docs.cbpayapp.com/en/guides/social-login).
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 400 | `invalid_provider` | Provider outside `google/apple/microsoft/facebook` |
+| 400 | `provider_not_configured` | Your organization has not enabled that provider |
+| 401 | `invalid_credential` | The provider credential is invalid, expired or from another app |
+| 409 | `email_conflict` | An account with that email already exists; sign in and link the provider |
+| 409 | `identity_taken` | That provider is already linked to another account |
+| 409 | `last_login_method` | You cannot unlink your only sign-in method |
+
+### Organization admin panel
+
+These codes come from **organization administration surfaces** (the [CBPay Admin](https://cbpayapp.com) panel), not from the account-level API documented above — they never appear on `/v1/*` account endpoints.
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 403 | `global_treasury_access_disabled` | The organization has not enabled global treasury visibility for its admin panel; ask a platform administrator to enable `global_treasury_read` in the organization settings |
+| 503 | `core_admin_credential_missing` | A platform administrator catalog requires a configured core credential; contact the platform administrator |
+| 400 | `invalid_value` | An organization setting was sent with the wrong type (e.g. `global_treasury_read` must be a boolean, not a string) |
+| 409 | `approval_in_progress` | Another admin is currently applying this adjustment; wait for that action to finish before trying again |
+
+### Validation (400)
+
+| `error` | Meaning |
+|---|---|
+| `invalid_json` | Body is not valid JSON or has unknown fields |
+| `invalid_event_ids` | Provide 1-100 event_ids as UUIDs |
+| `invalid_lang` | `lang` must be `es`, `en` or `zh` |
+| `invalid_settings` | Organization settings are not a valid JSON object or could not be normalized; correct the settings payload and retry |
+| `invalid_type` | `type` must be `person` or `company` |
+| `invalid_email` / `invalid_display_name` | Invalid required field |
+| `invalid_characters` | A name or label (`display_name`, contact `alias`, destination `label`, API key `label`) contains HTML or executable script and was rejected; send plain text |
+| `weak_password` | Password shorter than 8 characters |
+| `invalid_role` | Invalid member role |
+| `unknown_org` | Wrong organization slug (use `cbpay`) |
+| `invalid_request` | Missing `country`/`currency` |
+| `invalid_purpose` | `purpose` must be `fondeo` or `banking` when creating a deposit destination; use a supported Banking corridor |
+| `idempotency_key_required` | Missing idempotency key |
+| `reserved_idempotency_key` | The key uses a system-reserved prefix (`payin-convert:` or `checkout-swap:`, owned by auto-conversions) — pick another key |
+| `beneficiary_required` | Missing payout beneficiary |
+| `invalid_cuit` | Argentina (`AR`) payouts require `beneficiary.tax_id` to be an 11-digit CUIT or CUIL — send the beneficiary's 11-digit identifier; see [payouts](https://docs.cbpayapp.com/en/guides/payouts) |
+| `invalid_cbu` | Argentina (`AR`) payouts require `beneficiary.account_number` to be a 22-digit CBU or CVU; USD payouts accept only CBU — send a valid 22-digit CBU/CVU (CBU for USD); see [payouts](https://docs.cbpayapp.com/en/guides/payouts) |
+| `invalid_amount` | Amount is not a valid positive decimal |
+| `recipient_required` / `self_transfer` | Invalid transfer destination |
+| `invalid_chain` / `invalid_asset` | Unsupported network or asset |
+| `to_address_required` | Missing withdrawal destination address |
+| `invalid_payload` | Missing a required field (e.g. `enabled` on AML/CFT monitoring, `external_customer_id` on verifications) |
+| `invalid_iban` | The SEPA payout IBAN is invalid, unsupported for the `EU` route, or belongs to GB in SEPA Instant V1; correct it and retry with a new payout idempotency key |
+| `invalid_qr_payload` | The payout QR is unreadable or unsupported (corrupt BR Code, bad checksum, or a dynamic PIX QR); the `message` explains the exact reason |
+| `liveness_already_completed` | That verification's liveness check already passed |
+| `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Invalid webhook subscription |
+| `invalid_phone` | Phone not normalizable to E.164 (contacts and `to_phone`) |
+| `invalid_language` | The PDF report `lang` is not `en`, `es` or `zh` (AML/CFT report and verification report) |
+| `invalid_locale` | `PATCH /v1/me` (or register) sent a non-empty locale outside `en` / `es` / `zh`. Empty string stores English. Distinct from `invalid_language` (PDF report `lang`) and from org-admin `invalid_value` on `default_locale` |
+| `invalid_format` | The verification report `format` is not `pdf` or `json` |
+| `batch_too_large` | Contact import with more than 1,000 entries (paginate the upload) |
+| `invalid_body` | The request body could not be read (binary uploads, webhooks) |
+| `invalid_image` | The avatar body is empty or not a supported image (PNG/JPEG/WebP, max 512 KB) |
+| `invalid_interval` | Subscription `interval` must be `daily`, `weekly`, `monthly` or `yearly` |
+| `query_required` | `GET /v1/resolve` needs `alias=` or `qr=` |
+| `same_email` | The new login email is the current one; use `POST /v1/me/email/verify` to verify it instead |
+| `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | Administration validations |
+| `invalid_settlement_hours` | `settlement_hours` is only accepted on the `payin_card` fee service and must be a non-negative integer (`0` = immediate credit) — see [fees](https://docs.cbpayapp.com/en/concepts/fees) |
+| `invalid_country` | Malformed or missing country code — ISO 3166-1 alpha-2 (e.g. `GET /v1/aml/catalogs/cities?country=`); also a valid but unsupported country filter (e.g. a non-`US` `country` on the bank directory lookup) |
+
+### QR payin idempotency
+
+For `POST /v1/payins` with `method: "qr"`, `idempotency_key` is optional. You may
+send it in the JSON body or as `Idempotency-Key`; when both are present, the
+body value wins. A key can be up to 256 characters and cannot contain CR/LF.
+The platform scopes the key to the account server-side; the integrator sends
+the key unchanged.
+
+- `400 invalid_idempotency_key`: the key is longer than 256 characters or
+  contains CR/LF. Shorten it or remove those characters, then retry with the
+  same corrected request.
+- `409 idempotency_conflict`: the same key was used with a different country,
+  currency, method or numeric amount. Keep the original payload for a replay,
+  or choose a new key for a new charge.
+
+With the same key and payload, the API returns the original charge with
+`idempotency_hit: true` and does not create another charge. Numeric amounts are
+compared by value (`100` equals `100.00`); `glosa` is display-only and is not
+part of the replay identity. Read the live status with
+`GET /v1/payins/{payinID}`.
+
+### Money and state (402 / 404 / 409 / 422 / 429)
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 402 | `insufficient_funds` | Not enough available balance — on outbound banking transfers the check includes the rail fee (`balance >= amount + fee`); the operation is not created when it does not hold |
+| 404 | `not_found` | Resource does not exist (or belongs to another account) |
+| 404 | `not_available` | The document does not exist in the requested language |
+| 404 | `country_not_found` | Unknown ISO 3166-1 alpha-2 country code (cities catalog) |
+| 404 | `bank_not_found` | The routing number or SWIFT/BIC is not in the embedded bank directory — keep the payout/counterparty form manual |
+| 404 | `postal_code_not_found` | Unknown postal code, or a country without a dataset (postal code lookup) — keep the address fields manual |
+| 404 | `recipient_not_found` | Transfer destination does not exist |
+| 404 | `verification_not_found` | The account has no submitted verification yet (`GET /v1/me/verification/report` before onboarding) |
+| 409 | `duplicate` | The resource already exists |
+| 409 | `receipt_not_available` | A payout receipt is not available while technical screening is pending or after a pre-debit screening failure; wait for a final financial state |
+| 403 | `verification_requires_2fa` | A new self-service KYC/KYB link requires a confirmed TOTP or a registered passkey; an existing open link is re-served before this gate. **Solution:** enroll one factor and retry `POST /v1/me/verification/link` |
+| 403 | `verification_required` | Your account has not approved its identity verification yet (person=KYC, company=KYB); creating authenticated payins, collect operations, dedicated deposit accounts, stored-card charges and subscriptions is blocked until approval — request your link at `POST /v1/me/verification/link`; passive deposits and reads remain available |
+| 422 | `verification_required` | The operation requires the `verification_id` of an approved third-party verification (third-party banking registration, designated card) |
+| 422 | `verification_not_approved` | The referenced verification is not approved yet |
+| 422 | `verification_kind_mismatch` | The verification kind does not match the product (KYC ⇒ person/INDIVIDUAL, KYB ⇒ company/COMPANY) |
+| 422 | `verification_invalid` | You referenced an own-onboarding verification where a third-party one is required |
+| 403 | `company_account_required` | Third-party verification (KYC/KYB links/submissions) is for company accounts only |
+| 400 | `invalid_child` | The child invite id is missing — pass the `child_link_id` from `GET /v1/me/verification/children` |
+| 409 | `already_verified` | Onboarding link requested with an already-verified account |
+| 409 | `superseded` | The verification ID is a frozen migrated tombstone; its data is served from the live case | Do not decide, upload evidence, create liveness links, presign/confirm documents, or patch banking intent on the tombstone. Read the response's `migrated_to` ID and operate that live case instead |
+| 409 | `identity_locked` | With the verification approved, `display_name`, `tax_id` and `country` come from the verified identity and cannot be changed via `PATCH /v1/me`; contact support |
+| 409 | `verification_in_progress` | `PATCH /v1/me` cannot change country while the account's own verification submission is open; finish or close that case first |
+| 409 | `no_screening` | AML/CFT rescreen/monitoring without a prior screening |
+| 409 | `no_banking_customer` | Classic Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
+| 400 | `banking_eur_requires_viban` | EUR Banking accounts are opened as virtual IBANs. Request `purpose: "banking_eur"` from Operar EUR instead of creating a generic banking customer |
+| 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
+| 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
+| 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
+| 409 | `bank_ref_conflict` | The bank reference is already claimed by another operation (the response names it with `claimed_by`/`claimed_kind` when it belongs to your tenant) — fix the evidence instead of retrying with a different reference |
+| 503 | `bank_ref_recovery_pending` | A previous confirmation left the bank reference in an ambiguous state and the platform is reconciling the durable claim — retry the same confirmation (same reference and idempotency key); the retry resumes instead of duplicating |
+| 400 | `unsupported_document_type` | The banking document type is not supported. Use one of the document types in the banking document allowlist. |
+| 400 | `invalid_document_file` | The banking document file is empty, unreadable, corrupt, or not a PDF, JPEG, or PNG. Upload a valid file. |
+| 422 | `currency_not_supported` | No FX rate for that currency |
+| 422 | `core_rejected` | The processor rejected the operation — when the message reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save it again with `save_card: true` ; the processor can also reject an Argentina alias payout before debit when the alias cannot be resolved or a USD alias resolves to a CVU; correct the beneficiary and retry with a new idempotency key. |
+| 400 | `invalid_payload` | For `method: "card"`, `expires_at` must be RFC3339, at least 5 minutes ahead and no more than 48 hours ahead |
+| 422 | `checkout_expiring_soon` | The checkout link expires in less than 5 minutes. Ask the merchant for a new link before paying by card |
+| 429 | `too_many_open_card_sessions` | The account has 50 open card sessions and no unused, zero-attempt pending session can be evicted — complete or wait for an existing session to expire before creating another |
+| 503 | `card_recovery_pending` | The platform is reconciling an ambiguous card request. Retry with the **same** idempotency key; do not create a new key or a second charge |
+| 409 | `core_charge_terminal` | The underlying card charge already has a final status, so the platform will not credit it again — read the current payin/charge state and do not create a second charge |
+| 503 | `card_reuse_unavailable` | The platform could not verify an existing open card payment. Retry the original request with the **same** idempotency key; do not create a second charge |
+| 503 | `core_reuse_unavailable` | The core did not return a complete recoverable card session. Retry the original request with the **same** idempotency key |
+| 422 | `recipient_unavailable` | The destination account cannot receive |
+| 422 | `recipient_ambiguous` | More than one account shares the `to_phone` number (use `to_account_id` or `to_email`) |
+| 422 | `contact_not_linked` | The contact has no linked CBPay account to transfer to |
+| 422 | `no_saved_destination` | The contact has no saved destination for that corridor/chain |
+| 422 | `wallet_limit_reached` | The account already holds its wallet for that network+asset pair (deposit: every account; [segregated](https://docs.cbpayapp.com/en/guides/segregated-wallets): persons) |
+| 422 | `insufficient_gas` | The [segregated wallet](https://docs.cbpayapp.com/en/guides/segregated-wallets) has no native gas (TRX/ETH) for the network fee; fund the address and retry |
+| 409 | `idempotency_conflict` | Another wallet creation/send with the same key is still in flight; retry with the same key |
+| 400 | `physical_temporarily_unavailable` | New physical card issuance is temporarily paused; request a digital card. Existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open card application; resolve the existing application before requesting another |
+| 409 | `card_cancelled` | The card is already cancelled and cannot be updated |
+| 409 | `card_not_pending` | Only cards in `pending_activation` can be activated |
+| 409 | `cardholder_kyc_pending` | The designated cardholder requires identity documents |
+| 400 | `invalid_occupation` | `occupation` is not a catalog code (`GET /v1/cards/catalog/occupations`) |
+| 400 | `invalid_kind_of_business` | `kind_of_business` is not a catalog code (`GET /v1/cards/catalog/business-activities`) |
+| 422 | `issuer_data_incomplete` | Cardholder issuer fields are missing or invalid after request data, verification autofill and KYB-derived values are assembled; fix the keys listed in `message` and retry |
+| 422 | `screening_required` | The account has no AML/CFT verification screening from which to derive the account holder's PEP value; complete screening and retry the same card request |
+| 422 | `cardholder_name_too_long` | The person's `first_name` and `last_name` exceed the issuer's 22-character combined card-printing limit; shorten the printed name and retry |
+| 400 | `invalid_settlement_asset` | `settlement_asset` is not USDT, USDC, BTC or GOLD |
+| 400 | `settlement_asset_disabled` | Your organization disabled that asset as settlement source |
+| 422 | `settlement_limit_exceeded` | The operation exceeds the per-operation limit for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or split the operation |
+| 422 | `settlement_daily_limit_exceeded` | The account exceeded its 24h volume for volatile assets (BTC/GOLD/SILVER/PLATINUM); use USDT/USDC or retry later |
+| 422 | `guard_diverged` | The BTC price reference diverged beyond the pre-trade guard; wait for convergence or split the operation, then retry with the same idempotency key |
+| 400 | `invalid_pair` | Swap with the same source and destination currency |
+| 400 | `amount_too_small` | The swap amount does not reach the destination currency's minimum unit |
+| 400 | `swap_asset_disabled` | One of the swap currencies is disabled for your organization |
+| 409 | `already_paid` | The [universal checkout link](https://docs.cbpayapp.com/en/guides/checkout) was already paid through another method |
+| 410 | `checkout_expired` | The universal checkout link expired unpaid |
+| 422 | `method_unavailable` | The method chosen on the checkout link is not available for that link or country |
+| 400 | `country_required` | Fiat materialization on the checkout link is missing `?country=XX` |
+| 400 | `currency_required` | The country offers the checkout link method in several currencies; `?currency=YYY` is missing |
+| 422 | `country_unavailable` | That country has no payment methods available on the checkout link |
+| 422 | `collect_otp_failed` | The rail rejected the OTP delivery for the link's pull collection |
+| 422 | `collect_rejected` | The rail rejected the link's pull charge (invalid OTP or wrong data); the link stays pending |
+| 422 | `provider_rejected` | For `VE/VES/c2p`, do not call `/collect/otp`; the payer supplies the bank-generated `claveDinamica` in the collect request's `otp` field. The internal adapter signal is `collect_otp_unsupported`. |
+| 422 | `settlement_asset_disabled` | The checkout link's `settlement_asset` is disabled for your organization |
+| 422 | `checkout_amount_mismatch` | The CBPay transfer does not cover the checkout link's current due; the message carries the updated amount |
+| 503 | `checkout_recovery_pending` | The selected checkout payment option is being reconciled. Retry the same materialization request; do not create a second payment option |
+| 422 | `stored_card_revoked` | The [saved card](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) is revoked; it no longer accepts charges |
+| 422 | `verification_required` | [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos): register the merchant with the `verification_id` of their approved third-party KYC/KYB |
+| 422 | `merchant_disabled` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) merchant is disabled; re-enable it before charging |
+| 422 | `nothing_received` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) charge has not received any on-chain payment: there is nothing to refund |
+| 422 | `refund_exceeds_received` | The refund exceeds what the [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) charge received minus prior refunds |
+| 503 | `refund_recovery_pending` | The refund linkage is temporarily unavailable; retry with the same idempotency key and do not originate a second withdrawal |
+| 400 | `to_address_required` | The [QR Crypto POS](https://docs.cbpayapp.com/en/guides/qr-pos) refund (and crypto withdrawals) require an explicit destination address |
+| 422 | `deposit_account_limit_reached` | Person accounts and unsupported or existing corridors keep one deposit account per corridor; company banking accounts support up to 50 per enabled corridor |
+| 400 | `invalid_label` | The local deposit-account nickname is longer than 60 characters; shorten it and retry |
+| 409 | `alias_pending` | The company AR/ARS banking CVU has no chosen bank alias; set it with the bank-alias PUT before reading balance or movements |
+| 422 | `purpose_not_supported` | Balance and movements are available only for `purpose: "banking"` instruments |
+| 422 | `ambiguous_source_instrument` | Several active BO/BOB banking sources exist; send the selected UUID in `source_instrument_id` |
+| 422 | `invalid_source_instrument` | The selected source is not an active BO/BOB banking instrument; choose an active banking destination |
+| 409 | `intent_abandoned` | The third-party verification was rejected; create a new verification link before requesting banking |
+| 409 | `deposit_account_conflict` | The core returned a deposit destination already assigned to another organization — reconcile before retrying |
+
+| 422 | `deposit_account_not_recoverable` | The pending destination is not an MX/MXN/bank_transfer instrument that can be recovered |
+| 422 | `export_rejected` | The processor rejected the segregated wallet key export |
+| 422 | `stored_card_corridor_mismatch` | The [saved card](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) belongs to a different country/currency corridor than the charge |
+| 409 | `subscription_state` | The [subscription](https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions) is not in a state that allows that action (e.g. pausing a canceled plan) |
+| 409 | `email_required` | The login has no real email address; set one with `POST /v1/me/email/change` |
+| 422 | `payin_not_refundable` | The payin is not credited or has no processor credential; it cannot be [refunded](https://docs.cbpayapp.com/en/guides/refunds) |
+| 422 | `refund_not_supported` | That rail does not support [refunds](https://docs.cbpayapp.com/en/guides/refunds) (QR, announced transfer, dedicated account, collect). POS charges are refunded through the crypto rail |
+| 422 | `refund_exceeds_payin` | The [refund](https://docs.cbpayapp.com/en/guides/refunds) exceeds what is left to refund on the payin; your balance was not touched |
+| 422 | `settlement_pending` | The payin's balance is still scheduled for [settlement](https://docs.cbpayapp.com/en/concepts/fees#card-payin-settlement-delay) and cannot be [refunded](https://docs.cbpayapp.com/en/guides/refunds) until it is released (at `settle_at` or by an org-admin release) |
+| 400 | `invalid_amount` | The [refund](https://docs.cbpayapp.com/en/guides/refunds) `amount` must be a positive decimal in the payin currency |
+| 503 | `refund_event_pending` | The refund result is stored, but its final event is still being persisted. Retry with the **same** idempotency key; do not send a new refund |
+| 422 | `preauth_not_supported` | Captures and voids only apply to card-acquired payins (other rails have no holds to close) |
+| 422 | `payin_not_capturable` | The payin is not a pending manual pre-authorization (automatic capture, already settled, or no processor charge reference) |
+| 202 | `action_pending` | The capture or void is being reconciled with the processor; retry with the **same** `idempotency_key` (a new key opens a conflicting action) |
+| 503 | `payin_event_pending` | The payin is credited, but its final event is still being reconciled. Retry with the **same** idempotency key; do not create a new payin |
+
+### Compliance (403 / 503)
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 403 | `compliance_hold` | The operation was held for review and was not processed; no funds were moved. The API message is `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. The portal shows a copyable reference line with UTC time, error code and short request ID; include it when contacting support. |
+| 403 | `geo_restricted` | The service or the operation is not available for the origin or counterparty jurisdiction |
+| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in the technical screening queue; retry with the **same** idempotency key. When that queue is available, `POST /v1/payouts` returns `202` with `status: pending` instead. Other validation and security errors keep their own codes |
+| 422 | `travel_rule_required` | On-chain withdrawal above the Travel Rule threshold without beneficiary data — add `travel_address` or `wallet_type: "self_hosted"` + `beneficiary_name` ([crypto guide](https://docs.cbpayapp.com/en/guides/crypto)) |
+| 422 | `travel_rule_beneficiary_required` | `beneficiary_name` is missing on a withdrawal subject to the Travel Rule |
+| 422 | `travel_rule_address_mismatch` | Your `to_address` does not match the payment address approved by the receiving institution — omit it or use the one from the exchange |
+| 422 | `travel_rule_rejected` | The receiving institution rejected the transfer; verify the beneficiary data |
+| 422 | `travel_rule_pending` | The receiving institution has not resolved the exchange yet; retry with the **same** idempotency key |
+| 422 | `travel_rule_incomplete_approval` | The receiving institution approved without providing a payment address; contact support |
+| 503 | `travel_rule_unavailable` | Travel Rule exchange temporarily unavailable; retry with the **same** idempotency key |
+
+### Qscore
+
+Errors from the credit bureau endpoints ([guide](https://docs.cbpayapp.com/en/guides/qscore)).
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 400 | `purpose_required` | Missing `purpose` when creating a report — data protection law requires declaring it (`credit_evaluation`, `tenant_screening`, `hiring`, `supplier_onboarding` or `other`) |
+| 400 | `invalid_purpose` | The `purpose` is not one of the allowed values (`credit_evaluation`, `tenant_screening`, `hiring`, `supplier_onboarding`, `other`) — fix the value. `self_access` is rejected here: your own report only goes through `POST /v1/qscore/my-report` |
+| 400 | `invalid_doc_id` | The `doc_id` is not valid for the given `country` (e.g. bad RUT check digit in Chile) — fix the document format |
+| 400 | `invalid_subject_type` | `subject_type` is not `person`/`company` and could not be inferred from the document — send it explicitly |
+| 400 | `invalid_tax_id` | The verified `tax_id` of the account is not valid for its country (self report) — contact support to fix your verified data |
+| 403 | `kyc_required` | Pulling your own report requires an approved KYC/KYB — complete the identity verification first |
+| 403 | `report_required` | Enabling monitoring requires a purchased report for that subject — buy one first ([guide](https://docs.cbpayapp.com/en/guides/qscore)); for privacy, a subject that does not exist gets this same response |
+| 404 | `no_score` | The subject has no computed score yet — buy a report first |
+| 404 | `pdf_not_ready` | The report PDF is not available yet — poll the detail until `status=ready` (the `risk_report_ready` webhook tells you) |
+| 409 | `no_tax_id` | The verified account has no `tax_id` on file, so the self report cannot resolve its subject — complete your verified data first |
+| 409 | `identity_mismatch` | The account `tax_id` does not match the verified identity document (self report) — contact support; your verified data must be consistent |
+| 422 | `unsupported_country` | This Qscore fraud/identity flow is not available for the selected country — use a supported country or contact support |
+| 503 | `recovery_pending` | The fraud report is still being finalized — poll the report with the same credentials and retry the PDF after it reaches `ready` |
+| 400 | `no_valid_items` | Every row of the batch was rejected (`invalid_doc_id` / `duplicate_in_batch`) and no batch was created — validate the file locally (each `doc_id` must pass the country check digit and be unique) and resubmit with a **new** idempotency key |
+| 400 | `too_many_items` | A batch accepts at most 5,000 subjects — split the portfolio into multiple batches, each with its own idempotency key |
+| 409 | `already_decided` | The consent link was already decided (`granted`, `revoked` or `expired`) and cannot transition again — create a new link if you need a fresh authorization |
+| 409 | `link_inactive` | The banking connection behind the consent is not `active` (the widget session expired or the link was revoked) — the holder must reconnect from the same consent link |
+| 409 | `holder_mismatch` | The document verified by the bank does not match the subject `doc_id` — an account owned by a different document can never grant the consent; check that you created the link for the right document |
+| 409 | `seal_companies_only` | The public Qscore seal is only available for **company** accounts — person accounts have no seal ([guide](https://docs.cbpayapp.com/en/guides/qscore-seal)) |
+| 409 | `seal_not_eligible` | The account's Qscore does not currently qualify for a public seal (band A or B with an evaluation no older than 90 days) — buy a fresh report ([guide](https://docs.cbpayapp.com/en/guides/qscore)) and, if the band stays below B, the seal stays unavailable until the score improves |
+| 404 | `no_active_seal` | The account has no active seal to revoke — activate one first with `POST /v1/qscore/my-seal`; a revoked seal stays revoked permanently (create a new one instead) |
+
+### Transactional firewall
+
+Errors from the review of operations held by the transactional firewall ([guide](https://docs.cbpayapp.com/en/guides/transaction-reviews)). The hold itself is **not an error**: the create call answers `202 Accepted` with `status: in_review` and a `review_id`.
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 400 | `invalid_status` | Invalid `status` filter — use `in_review`, `info_requested`, `released`, `rejected` or `all` |
+| 400 | `invalid_search` | The `search` filter needs at least 2 characters |
+| 400 | `invalid_range` | Invalid `from`/`to` dates — `YYYY-MM-DD` format (organization timezone) |
+| 400 | `invalid_name` | Missing filename in the `name` query param (max 200 chars, no path separators) |
+| 400 | `empty_file` | The file body arrived empty |
+| 404 | `not_found` | The review or file does not belong to your account — by design the API never answers 403 |
+| 409 | `not_awaiting_info` | The review is not waiting for information (it already moved back to `in_review` or has a final decision) — check its current state |
+| 413 | `file_too_large` | The file exceeds the 50 MB limit — compress it or split it |
+| 415 | `unsupported_file_type` | Unsupported type — use PDF, PNG, JPEG, WEBP, TXT, CSV, DOC(X) or XLS(X) with the correct `Content-Type` header |
+| 422 | `file_limit_reached` | The review already has 20 files |
+| 503 | `firewall_unavailable` | The policy could not be evaluated or the review could not be persisted — retry with the **same** idempotency key |
+| 503 | `storage_unavailable` | File storage is unavailable — retry in a few seconds |
+
+### Real-time events (SSE)
+
+Codes from [`GET /v1/events`](https://docs.cbpayapp.com/en/realtime-events) and its history.
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 400 | `invalid_event_type` | A value in `?types=` is not in the catalog — `message` lists the valid ones |
+| 429 | `too_many_streams` | Concurrent stream limit reached (per account or per organization) — close one before opening another |
+| 429 | `rate_limited` | Too many stream openings from this IP (600 per hour) — the quota counts *attempts*, not live connections: stop the reconnect loop and back off |
+| 500 | `streaming_unsupported` | The connection does not support streaming (an intermediate proxy is buffering) — remove the buffering or fall back to webhooks |
+| 503 | `stream_unavailable` | The stream could not be opened; retry with backoff and keep your `Last-Event-ID` |
+
+### Message signing & wallet linking
+
+Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): server-side signing with segregated wallets (`POST /v1/segregated-wallets/{id}/signatures`, which issues a publicly verifiable signature proof) and external wallet linking via challenge (`POST /v1/wallet-links/challenges` → sign the challenge with your wallet → `POST /v1/wallet-links/verify`).
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 400 | `unsupported_chain` | The `chain` must be `tron` or `eth` |
+| 400 | `invalid_statement` | The `statement` exceeds 280 characters — shorten it (note: the signed envelope itself accepts at most 140) |
+| 409 | `proof_not_signable` | The proof is no longer in a signable state (already signed, expired or canceled) — request a new one |
+| 409 | `custody_transferred` | The wallet's custody was transferred to the client, so server-side signing is no longer possible — sign with your own key |
+| 409 | `challenge_consumed` | This challenge was already used or is no longer valid — request a new one |
+| 410 | `challenge_expired` | This challenge expired — request a new one and sign it within its validity window |
+| 422 | `signature_mismatch` | The signature does not match the challenge address — sign the exact challenge message with the wallet you are linking |
+| 422 | `sign_rejected` | The signer rejected the request — the `message` carries the scrubbed reason. A `statement` of 141–280 characters also lands here (the envelope accepts at most 140) |
+
+### Service (5xx)
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 500 | `internal_error` | Unexpected error; retry with the same idempotency key |
+| 500 | `fee_config_invalid` | The account's fee configuration is invalid; contact support (the operation did not run) |
+| 502 | `rates_unavailable` | FX rates temporarily unavailable |
+| 502 | `core_unavailable` | Processor temporarily unavailable |
+| 502 | `core_invalid_response` | The processor returned an unexpected response; retry with the **same** idempotency key |
+| 502 | `compliance_unavailable` | AML/CFT screening temporarily unavailable |
+| 503 | `verifications_unavailable` | Identity verification temporarily unavailable |
+| 503 | `org_credential_missing` | Service being configured; contact CBPay support |
+| 503 | `withdrawals_unavailable` | On-chain withdrawals not enabled for the corridor |
+| 503 | `pricing_unavailable` | BTC/GOLD/SILVER/PLATINUM execution price unavailable or stale; retry later or settle in USDT/USDC |
+| 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the **same** idempotency key |
+| 503 | `webhook_processing_pending` | An inbound webhook event is already being processed; retry the same delivery after a short backoff and do not create a new operation |
+| 503 | `export_unavailable` | Segregated wallet private key export is not enabled on this environment |
+
+## How to handle them
+
+- **Validation 4xx**: fix the request. Don't retry as-is.
+- **402**: fund the account and retry (new idempotency key only if the
+  operation was never created).
+- **5xx / timeouts**: retry with **the same** idempotency key; the operation
+  will never duplicate.
+
+## Qscore fraud and Index
+
+| HTTP | `code` | Meaning and solution |
+|---:|---|---|
+| 400 | `invalid_period` | The Index period is not `YYYY-Q1` through `YYYY-Q4` — use a closed-quarter value |
+| 429 | `too_many_attempts` | Public fraud verification is rate-limited — retry after a short delay |
+| 502 | `generation_failed` | Fraud report generation failed after the charge path — the fee is refunded; retry with a new idempotency key |
+
+## Corridor lifecycle
+
+| HTTP | Code | Meaning and fix |
+|---|---|---|
+| 409 | `corridor_disabled` | The selected corridor is administratively disabled. Use another enabled method or contact the organization operator. |
+| 409 | `banking_corridor_disabled` | The selected banking country or rail is administratively disabled. Use another enabled rail or contact the organization operator. |
+| 409 | `crypto_disabled` | The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator. |
+| 400 | `invalid_crypto_control` | The crypto network toggle is invalid (unknown chain/asset, scope, or missing reason). Fix the request. |
+| 409 | `rail_not_registered` | The selected rail is not configured in this environment. Pick a registered rail (see the admin corridors screen). |
+
+## Banking creation recovery errors
+
+| Code | HTTP | Meaning and action |
+|---|---:|---|
+| `idempotency_key_mismatch` | 400 | Header/body keys differ or the same key is reused with a different request hash. Correct the request or use a new key. |
+| `idempotency_conflict` | 409 | The same key is already claimed with a conflicting payload. Do not resend with a new payload. |
+| `idempotency_failed` | 409 | The claim is terminally failed. Start a new operation with a new key after reviewing the failure. |
+| `claim_not_pending` | 409 | The requested human recovery is no longer pending. Read the claim and use the terminal result. |
+| `claim_customer_owned_elsewhere` | 409 | The provider customer is already linked to another account. Stop and investigate ownership. |
+| `banking_customer_creation_in_progress` | 409 | A lock is held by another banking operation. Retry the read/recovery flow later. |
+| `banking_recovery_pending` | 503 | The result or refund remains ambiguous. Do not originate a second provider request; use the recovery endpoint. |
+| `banking_invalid_response` | 422 | Provider account ownership did not match the claimed customer's `ProviderID`. |
+
+## Banking creation recovery errors
+
+| Code | HTTP | Meaning and action |
+|---|---:|---|
+| `claim_identity_mismatch` | 422 | The provider customer identity does not match the original banking request. Stop recovery and review the claim. |
+| `claim_not_pending` | 409 | The claim is no longer pending. Read the terminal result instead of retrying recovery. |
+| `claim_customer_owned_elsewhere` | 409 | The provider customer is already owned by another account. Stop and investigate ownership. |
+| `banking_recovery_pending` | 503 | The provider result remains ambiguous. Use the admin recovery route; do not originate a second create request. |
+
+## EUR banking and virtual IBAN errors
+
+| Code | Meaning and action |
+|---|---|
+| `banking_customer_incomplete` | The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key. |
+| `registrant_incomplete` | 422 | Virtual IBAN request / company-wallet reservation or approval | The verified KYC/KYB profile is missing required registrant fields. For migrated profiles with an empty address, provide `address_street`, `address_city`, `address_country` or `address_zip` (snake_case or camelCase); explicit values override the profile. Invalid or missing values preserve the same `individual.address.*` or `holder.corporate.address.*` path in `message`. Retry the same durable request. |
+| `provider_rejected` | The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state. |
+| `customer_id_required` | A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource. |
+| `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
+| `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
+| `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## Account broadcast error codes
+
+These codes are returned by the organization administration broadcast
+endpoints. They are listed here so shared SDKs can keep one error catalog.
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_channels` | No supported delivery channel was selected | Send `email`, `notification`, or both |
+| 400 | `invalid_content` | Subject/body is empty or too long | Use subject 1–160 runes and body 1–4000 runes |
+| 400 | `invalid_audience` | Audience mode, filters or IDs are invalid | Use `filters` or 1–5000 organization-owned account IDs |
+| 400 | `invalid_reason` | Rejection reason is missing or too long | Send a 1–500 rune audited reason |
+| 403 | `named_admin_required` | The actor is not a named administrator | Use a named `god` or `super_admin` administrator |
+| 403 | `partner_forbidden` | A bank partner tried to use an organization broadcast | Use an allowed organization administrator |
+| 409 | `empty_audience` | No account matched at submit/approval time | Correct the audience and resubmit |
+| 409 | `audience_too_large` | The filters match more than 20000 accounts | Narrow the filters and resubmit |
+| 409 | `second_approver_required` | The creator tried to approve their own campaign | Have a different named God approve it |
+
+## Banking EUR and company-wallet errors
+
+| HTTP | Code | What to do |
+|---:|---|---|
+| 409 | `virtual_iban_limit_reached` | A person already has a virtual IBAN for this purpose. Reuse it; companies are not subject to this per-purpose cap. |
+| 409 | `no_fee_charged` | No fee was charged for this virtual IBAN (the first funding IBAN is free). Nothing to refund. |
+| 409 | `wallet_not_ready` | The company wallet is still pending/provisioning. Poll the detail and wait for `active`. |
+| 422 | `virtual_iban_limit_reached` | The person-per-purpose limit was reached while reserving the request. Do not create a second key. |
+| 422 | `registrant_incomplete` | Complete the missing verified KYC/KYB, incorporation or address fields named in `message` (including `address_street`, `address_city`, `address_country` or `address_zip`), then retry the same durable request. |
+| 502 | `wallet_reservation_failed` | The reservation response had no usable order reference. Reconcile before any retry. |
+| 502 | `wallet_reservation_status_failed` | The status read failed. Keep the same `order_reference` or `client_order`. |
+| 502 | `wallet_read_failed` | The live wallet response or EUR amount was unreadable. Retry the read after checking the wallet state. |
+| 502 | `wallet_statement_failed` | The statement response was unreadable. Use a valid completed-day window and retry the read. |
+
+## Account integration policy
+
+| HTTP | `error` | Meaning and solution |
+|---:|---|---|
+| 400 | `email_domain_blocked` | The email domain is blocked for registration or email change; use a permitted domain. |
+| 400 | `invalid_secret` | The webhook secret must contain 16 to 256 characters. |
+| 403 | `session_required` | Account API-key and webhook creation requires a human JWT session, not an API key. |
+| 403 | `integration_company_only` | A person needs an effective administrator grant; a company needs approved KYB. |
+| 403 | `integration_kyb_required` | Approve the account's KYC/KYB before creating or reactivating the integration. |
+| 403 | `account_blocked` | The account is not active; ask the administrator to restore it. |
+| 403 | `otp_required` | Complete the `api_key_create` or `webhook_manage` OTP challenge and retry. |
+| 403 | `integration_forbidden` | The account cannot use integrations; read `GET /v1/integration-status` and resolve the returned eligibility reason. |
+
+## Disputes and fraud
+
+| HTTP | Code | Resolution |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Send the key in the JSON body or `Idempotency-Key` header for a money-changing dispute action. |
+| 400 | `invalid_payload` | Correct the amount, date, UUID, multipart file or required field. |
+| 404 | `not_found` | The case, import, row, evidence or account is outside the caller scope. |
+| 409 | `case_already_open` | Review the existing open case for the payin; do not create a new key. |
+| 409 | `payin_not_credited` | The payin is not `credited`, so there is nothing to hold; wait for credit before opening a case or binding an import row. |
+| 409 | `second_approver_required` | A different named admin must close the case. |
+| 409 | `invalid_state` | The requested note, submit, evidence or close transition is not valid now. |
+| 409 | `bind_failed` | The import row is no longer unmatched or the selected payin cannot be bound. |
+| 409 | `import_in_progress` | An import with this key is still processing; wait and replay with the same key. |
+| 503 | `pack_unavailable` | Retry after private storage or PDF rendering recovers. |
+| 503 | `storage_unavailable` | Restore private storage and retry the evidence operation. |
+
+## SEPA funding-source errors
+
+These errors are returned before a customer payout or EUR Banking operation
+is debited or dispatched:
+
+| HTTP | `error` | Meaning and solution |
+|---:|---|---|
+| 400 | `invalid_request` | `source_virtual_iban_id` must be a valid UUID. |
+| 404 | `not_found` | The explicit virtual IBAN does not belong to the account. |
+| 422 | `funding_account_required` | No allocated, active virtual IBAN exists for the required product purpose. Use an active source for this flow. |
+| 422 | `ambiguous_source_viban` | More than one active EUR funding account exists. Send the selected `source_virtual_iban_id`. |
+| 503 | `funding_account_unavailable` | The source-account check is temporarily unavailable. Retry with the same idempotency key; no debit or dispatch was performed. |
+
+### Money-out limit errors
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 422 | `amount_below_minimum` | The operation amount is below the effective minimum; read `GET /v1/org/txn-firewall/limits/effective`. |
+| 422 | `amount_above_maximum` | The operation amount is above the effective maximum; read the effective policy before retrying. |
+| 422 | `velocity_limit_exceeded` | An internal transfer exceeded a rolling amount or operation-count cap. Payouts and crypto withdrawals enter review with `reason=velocity_limit` instead. |
+| 503 | `limits_unavailable` | The limits could not be evaluated before debit; retry with the same idempotency key after storage recovers. |
+## `dispute_fiat_unsupported`
+
+A dispute cannot be opened for a payin credited in locally held BOB, MXN or ARS. The funds remain in the local balance; use a supported USD or USDT credit or wait for the product to support local-fiat disputes.
+
+## Argentine bank-alias resolution
+
+These errors are returned by
+`GET /v1/payouts/ar-alias/resolve?alias=...`:
+
+| HTTP | `error` | Meaning and resolution |
+|---:|---|---|
+| 400 | `query_required` | Send the `alias` query parameter. |
+| 400 | `invalid_alias` | The alias format is invalid; send the bank alias accepted by the AR rail. |
+| 403 | `verification_required` | Complete the required account verification before resolving an alias. |
+| 404 | `alias_unresolvable` | The alias does not exist or cannot be resolved; do not create a payout from this result. |
+| 429 | `too_many_attempts` | The account exceeded the 10-per-minute lookup limit; wait before querying again. |
+| 502 | `beneficiary_lookup_unavailable` | The bank lookup is temporarily unavailable; retry the read according to your backoff policy. |
+
+The core may also return `user_scope_required` (403) when the request lacks
+tenant scope and `payout_corridor_unsupported` when AR bank payouts are not
+enabled. Provider identity is never exposed.
+
+## Argentine bank aliases and profile aliases
+
+| HTTP | `error` | Meaning / action |
+|---|---|---|
+| 400 | `missing_alias` | An AR/ARS platform deposit-account creation must include the caller-chosen `bank_alias` |
+| 400 | `invalid_alias` | `bank_alias` must be 6–20 ASCII characters from `[A-Za-z0-9.-]` and contain at least one letter |
+| 400 | `invalid_account` | The core could not resolve the supplied deposit-account number |
+| 400 | `invalid_request` | A profile alias body value did not match a candidate derived from the verified name, or `bank_alias` was sent to an unsupported corridor |
+| 409 | `alias_already_set` | The profile alias is permanent and has already been set |
+| 409 | `alias_taken` | **Profile alias:** every candidate derived from the verified name is occupied; contact support. This is not actionable by inventing a value |
+| 422 | `alias_taken` | **Bank alias:** the Argentine banking system already uses this value; choose another |
+| 422 | `alias_unsupported` | The selected deposit-account rail does not support bank aliases |
+
+## Grupo CB contract ceremony
+
+These errors apply to `POST /v1/me/contracts/envelopes/{envelopeID}/sign` and
+the account contract resources. Messages may be generalized for privacy; the
+code is the stable integration contract.
+
+| HTTP | Code | Cause and solution |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Organization issuance requires a body key or `Idempotency-Key`; retry with a stable key. |
+| 400 | `invalid_idempotency_key` | The key is invalid or too long; use a shorter stable key. |
+| 400 | `invalid_reason` | Void requires a non-empty reason; send the reason in the void body. |
+| 400 | `invalid_content_type` | Signature-library upload must use `image/png`, `image/jpeg` or `image/jpg`. |
+| 400 | `empty_file` | The signature upload has no bytes; send the original image bytes. |
+| 400 | `invalid_image` | The file is not a valid PNG/JPG image; export it again in a supported format. |
+| 403 | `contract_counsel_required` | English issuance requires counsel approval; approve it or issue Spanish. |
+| 403 | `human_session_required` | Signing requires a human member session; API keys cannot sign. |
+| 403 | `account_blocked` | The account is not active; ask an administrator to restore it. |
+| 401 | `invalid_otp` | The one-time OTP is invalid, expired or already used; send a fresh token in `X-OTP-Token`. |
+| 409 | `contract_invalid_state` | The envelope is already completed or voided; do not repeat the operation. |
+| 422 | `contract_template_superseded` | The envelope was issued on an older template version; ask for reissue before signing. |
+| 413 | `file_too_large` | The raw upload is over 5 MiB, or the normalized signature image is over 8 MiB. |
+| 422 | `invalid_lang` | Use only `es` or `en`; invalid values are rejected. |
+| 422 | `contract_account_ineligible` | The target must be an active company account with approved KYB. |
+| 422 | `contract_unfillable` | Inspect the response `missing` array: it may list identity data, counsel approval, or `pricing:<flag>` when an enabled service has no effective price row. |
+| 422 | `invalid_consent` | The signing body must contain the JSON boolean `"consent": true`. |
+| 422 | `invalid_signer` | Signer name/title are empty or exceed the permitted length; use a human owner/operator. |
+| 422 | `invalid_signature_image` | `signature_png` is not a valid, non-blank PNG, exceeds the encoded or decoded size limit, or is below the minimum dimensions; send a valid signature image and retry with a fresh OTP. |
+| 422 | `invalid_signature_mode` | `signature_mode` must be `drawn` (pad) or `typed` (full name rendered to PNG). |
+| 422 | `typed_name_mismatch` | With `signature_mode: typed`, `typed_name` must match `signer_name`. |
+| 502 | `storage_failed` | Private storage failed while creating the final artifact; reconcile the envelope before retrying. |
+| 502 | `email_failed` | Completion email delivery failed after signing; the completed envelope remains authoritative. |
+| 503 | `storage_unavailable` | Private storage is unavailable; retry after the service recovers. |
+
+## Environment handoff
+
+| HTTP | `error` | Meaning and fix |
+|---|---|---|
+| 401 | `invalid_handoff` | The handoff token is missing, expired, already consumed, or was issued for the other environment. Mint a fresh handoff and exchange it in the same environment. |
+| 401 | `handoff_replayed` | This handoff token was already consumed (single use). Mint a fresh handoff. |
+
+## 2FA and passkeys
+
+| HTTP | `error` | Meaning and fix |
+|---|---|---|
+| 403 | `channel_locked_by_org` | The organization policy enables TOTP only and blocks passkey registration for this account; it also rejects challenges whose explicit `channel` is weaker than the org floor. Contact an org admin to change the policy. |
+| 409 | `passkey_exists` | The credential ID is already registered on this account. Sign in with the existing passkey. |
+| 409 | `totp_already_enrolled` | TOTP is already active on this account. Authenticate with the existing secret. |
+
+## Checkout and payout documents
+
+| HTTP | `error` | Meaning and fix |
+|---|---|---|
+| 409 | `materializing` | Another materialization for this checkout link is in flight. Retry after it finishes. |
+| 400 | `invalid_file_name` | The file name is empty, too long, or contains path characters (`/`, `\`, `..`). Send a plain file name. |
+| 415 | `unsupported_media_type` | The Content-Type is not an accepted document type. Send PDF, JPEG or PNG. |
+
+## `destination_recently_rejected`
+
+| HTTP | Code | Meaning | What to do |
+|---:|---|---|---|
+| 422 | `destination_recently_rejected` | The bank recently rejected the same normalized destination for this account. No payout is created, no balance is debited, and the idempotency key is not consumed. | Replay the original request with the same key first. If you intentionally retry, use a new idempotency key and set `options.destination_retry_ack` to the most recent rejected payout ID. |
+
+The acknowledgement is valid only for the most recent rejection of that
+destination. A retry with the same key but different `options` is an
+`idempotency_conflict` (`409`). Other payout methods and destinations without
+a recent rejection continue through their normal validation and dispatch path.
+
+## Authentication attack-hardening errors
+
+| HTTP | `error` | Meaning and action |
+|---:|---|---|
+| 400 | `invalid_code` | The registration or reset code is not 4–10 digits. Send the code in the expected shape. |
+| 401 | `invalid_code` | Registration confirmation or password-reset identity/code is invalid or expired. Use the latest code; the response is intentionally uniform. |
+| 401 | `invalid_credentials` | Login failed, the account is pending verification, or the account is temporarily blocked after 8 failures in 15 minutes. Wait for the window or confirm registration. |
+| 400 | `pow_required` | Proof of work is required in attack mode. Request a challenge with `POST /v1/auth/pow-challenge`, solve it, and retry with the `pow` field. |
+| 502 | `otp_check_failed` | The verification service could not be checked. Keep the same flow and retry later; do not create a second account or reset request. |
+
+`POST /v1/auth/password/forgot` always returns `200` to prevent enumeration. It silently stops real sends after 5 per account per hour; `POST /v1/auth/password/reset` allows 8 code attempts per account per 15 minutes.
+
+## US/USD payout validation
+
+These errors are returned before debit for `ach`, `wire` and `swift` payouts:
+
+| HTTP | `error` | Meaning and solution |
+|---:|---|---|
+| 400 | `invalid_beneficiary` | A required beneficiary field is missing or malformed; read `message` for the exact field, such as `beneficiary.account_type`. |
+| 400 | `invalid_amount` | The amount is not a valid positive decimal; correct the amount and submit a new request. |
+| 422 | `amount_below_minimum` | A `wire` or `swift` amount is below USD 25; increase it to at least `25.00`. |
+| 422 | `prohibited_country` | The beneficiary or receiving bank country is in Annex B (`CU`, `IR`, `KP`, `SY`); use an allowed destination. |
+| 400 | `purpose_required` | `options.purpose` is required for every US/USD bank-rail payout; choose a catalog value. |
+| 400 | `invalid_options` | An option is unknown, or `purpose_detail` was sent with a purpose other than `Other`; correct the options object. |
+| 400 | `supporting_document_required` | Upload and pass the invoice or receipt document before creating the USD bank-rail payout. |
+
+## Member recovery links
+
+| HTTP | `error` | Cause and action |
+|---:|---|---|
+| 400 | `invalid_token` | The `token` is not the 43-character base64url value from the recovery email. Copy the value after `?token=` without altering it. |
+| 400 | `weak_password` | The new password fails the server policy. Choose a stronger password and submit the same link while it remains valid. |
+| 401 | `invalid_token` | The link is invalid, expired, already used, or does not match the organization/member. Request a new link from the organization admin. The response is intentionally uniform. |
+| 502 | `recovery_send_failed` | The admin-triggered recovery email could not be delivered. Ask the organization admin to verify the email configuration and trigger a new link. |
+| 429 | `too_many_attempts` | The source IP exceeded the verification throttle. Wait briefly and retry; do not automate repeated submissions. |
+
+## Resource identifier validation
+
+| HTTP | `error` | Meaning |
+|---|---|---|
+| 400 | `invalid_id` | The resource identifier is empty or has an invalid format; send the identifier returned by the API. |
+
+### Trust Center & NDA
+
+| HTTP | `error` | Meaning and solution |
+|---|---|---|
+| 422 | `invalid_company_name` | `company_name` must be 2–200 characters; send a valid company name. |
+| 422 | `invalid_contact_name` | `contact_name` must be 2–120 characters; send a valid contact name. |
+| 422 | `invalid_signer_name` | `signer_name` must be 2–120 characters; send the authorized signer's name. |
+| 503 | `counsel_pending` | The NDA template is awaiting legal approval; wait until the Trust Center is enabled. |
+| 422 | `invalid_contact_email` | The request email is invalid; send a valid mailbox address. |
+| 401 | `invalid_token` | The signing or download token is invalid; use the link from the latest email. |
+| 410 | `entitlement_revoked` | Compliance revoked access; request access again if appropriate. |
+| 410 | `entitlement_expired` | The signing or five-year download entitlement expired; submit a new request. |
+| 404 | `unknown_document` / `unknown_link` | The document or signing link is unknown; use the metadata list or request a new link. |
+| 409 | `already_decided` | The signing link was already used or closed; do not resubmit it. |
+| 409 | `review_pending` | The envelope is signed and awaiting the org compliance decision; downloads open after approval. Poll the status read or wait for the release email. |
+| 422 | `accept_required` | The signer must explicitly accept the agreement. |
+| 503 | `email_unavailable` | Email delivery is not configured; retry later. |
+| 422 | `invalid_document_ids` | One or more requested document IDs are unknown, or the list is explicitly empty; use IDs from the metadata list, or omit the field for all documents. |
+| 410 | `not_signed` | The envelope is not signed yet; sign it before downloading the signed copy. |
+| 403 | `kyc_not_approved` | The account must complete identity verification (KYC/KYB) before requesting Trust Center access. |
+| 403 | `member_required` | Requesting or signing requires a logged-in member session; API keys cannot sign. |
+| 422 | `account_identity_mismatch` | An echoed identity field differs from the verified account; send the verified values. |
+
+## Client Journey discard
+
+| HTTP | `error` | Cause and action |
+|---:|---|---|
+| 409 | `discard_pending` | A discard maker request is still awaiting approval; cancel it before restoring the account. |
+
+## Support tickets
+
+| HTTP | `error` | Solution |
+|---:|---|---|
+| 400 | `idempotency_key_required` | Send the key in the request body or `Idempotency-Key`. |
+| 400 | `invalid_kind`, `invalid_category`, `invalid_priority`, `invalid_subject`, `invalid_message`, `invalid_rating`, `invalid_comment`, `invalid_money_stuck` | Use the documented closed vocabulary and limits. |
+| 404 | `not_found` | Confirm account ownership of the ticket or transaction. |
+| 409 | `ticket_already_open` | Continue the existing ticket returned in the response. |
+| 409 | `ticket_closed` / `already_rated` | Open a new ticket or keep the existing rating. |
+| 409 | `not_quarantined` | The reveal endpoint only works on quarantined tickets; read the thread normally. |
+| 503 | `storage_unavailable` | Wait and upload once; do not duplicate the ticket. |
+
+## Verification approvals
+
+| HTTP | `error` | Solution |
+|---:|---|---|
+| 409 | `liveness_required` | The profile cannot be approved with pending liveness; complete the liveness step first (god override with an audited reason only). |
+
+## Pay-slip errors
+
+These codes are used by the authenticated employee pay-slip portal.
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_period` | Payroll period is not YYYY-MM | Send a calendar month such as 2026-10. |
+| 500 | `receipt_render_failed` | The pay-slip PDF could not be rendered | Retry the read; if it persists, provide the request id to support. |
+
+## Payroll and recurring-expense errors
+
+These codes are used by organization payroll and recurring-expense series operations.
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_country` | Country is not ISO-3166 alpha-2 | Send a two-letter ISO-3166 country code. |
+| 400 | `invalid_doc_id` | Identity document is invalid for the selected country | Correct the document and submit it again. |
+| 400 | `invalid_account` | Linked or funding account is not active in this organization | Use an active non-internal organization account. |
+| 400 | `invalid_method` | Payment method is outside the supported catalog | Use one of the documented payment methods. |
+| 409 | `duplicate_employee` | Another employee uses the same email or linked account | Read the existing employee or use different data. |
+| 400 | `invalid_doc_type` | Document type is outside the catalog | Use a value from the document-types endpoint. |
+| 400 | `invalid_expires_at` | File expiration is not RFC3339 | Send an RFC3339 timestamp or omit it. |
+| 422 | `file_limit_reached` | The employee already has the maximum of 20 files | Manage the existing files before adding another. |
+| 400 | `invalid_period` | Payroll period is not YYYY-MM | Send a calendar month such as 2026-10. |
+| 409 | `duplicate_run` | A live run already exists for this organization and period | Read and use the existing run. |
+| 422 | `empty_run` | The run has no live items | Build at least one live item before approval. |
+| 400 | `invalid_earnings` | Earnings lines are missing or invalid | Send at least one positive labeled earning line. |
+| 400 | `invalid_deductions` | A deduction line is invalid | Send positive labeled deduction lines. |
+| 422 | `invalid_net` | Net amount is not positive | Keep earnings greater than deductions. |
+| 400 | `invalid_currency` | Currency is empty | Send the settlement currency. |
+| 400 | `invalid_destination` | Destination is incomplete for the selected method | Provide the required destination fields. |
+| 422 | `invalid_item_amount` | Payroll item amount is invalid | Correct the positive amount and precision. |
+| 422 | `invalid_item_destination` | Payroll item destination is invalid | Correct the destination or cancel the item. |
+| 422 | `invalid_item_method` | Payroll item method is invalid | Use a supported payment method. |
+| 422 | `not_a_series` | The expense is not a monthly recurring parent | Use the parent expense that owns the series. |
+| 400 | `invalid_payee` | Payment destination is incomplete | Provide the required fields for the selected method. |
+| 400 | `invalid_asset` | Crypto asset is unsupported | Use USDT or USDC. |
+| 422 | `hot_wallet_required` | No hot wallet is configured for the selected chain and asset | Configure the organization wallet first. |
+| 400 | `invalid_recurring_day` | Recurring day is outside 1–31 | Send a day from 1 through 31. |
+| 503 | `core_unavailable` | The payment rail is unavailable | Check the operation state and retry later. |
+| 503 | `core_bad_response` | The payment rail returned an unreadable response | Read the operation state before retrying. |
+| 500 | `treasury_credit_error` | Direct treasury credit failed | Read the resource state and retry the same idempotent operation; do not create a second payment. |
+| 409 | `payment_in_flight` | A payroll payment is currently being dispatched | Wait for reconciliation; do not duplicate it. |
+| 409 | `invalid_state` | The resource does not accept this operation in its current state | Read the current state and follow the allowed transition. |
+| 400 | `reason_required` | A reason is required | Send a meaningful reason in the request body. |
+| 500 | `receipt_render_failed` | The pay-slip PDF could not be rendered | Retry the read and provide the request id if it persists. |
+| 503 | `valuation_unavailable` | The amount could not be valued in USD | Retry later; approval remains fail-closed. |
+| 500 | `store_error` | The platform could not read or persist the record | Retry after confirming the resource state. |
+
+## Expense platform errors
+
+| 400 | `duplicate_category` | The organization already has the custom expense category key | Choose another `c_` key |
+| 400 | `invalid_batch` | A bulk expense operation has fewer than 1 or more than 100 IDs | Send 1–100 expense UUIDs |
+| 400 | `invalid_horizon` | The forecast horizon is not 3, 6 or 12 months | Use `horizon=3`, `6` or `12` |
+| 400 | `invalid_icon` | A custom expense icon exceeds the allowed format or length | Use up to 40 letters, digits, `_` or `-` |

@@ -1,0 +1,856 @@
+---
+title: "银行服务"
+description: "为您的账户开立真实银行账户：通过国际银行通道接收、持有和发送资金"
+slug: zh/guides/banking
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/guides/banking
+---
+> **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
+
+银行服务为您提供以您已验证档案名义开立的**真实银行账户**：您可以通过国际通道（视货币而定，SEPA、SWIFT、ACH）接收资金、持有法币余额，并向第三方发送付款。它是独立于您 CBPay 余额的产品：**银行资金存放在您的银行账户中**，而不在您的 USDT 或 USD 余额里。
+
+对于本地法币走廊，请创建带有 `purpose: "banking"` 的充值目的地。
+该目的会保留本地法币，用于法币付款。默认的 `fondeo` 目的会把入账
+法币转换为您账户的主资产(USD 为主资产)。Banking 目前仅支持
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和
+`CL/CLP/fintoc`。
+
+## 两类本地法币目的地
+
+对于本地法币走廊（`BO/BOB`、`MX/MXN`、`AR/ARS`、`CL/CLP/fintoc`），每个 payin 目的地都带有
+`purpose`，决定入账资金的去向：
+
+| Purpose | 含义 |
+|---|---|
+| `fondeo`（默认） | **入金账户。** 所有到账资金自动转换为您账户的主资产——USD 为主资产。 |
+| `banking` | **Banking 账户。** 入账法币以其本地货币保留，用于付款，各币种有独立余额。 |
+
+请创建第二个 `purpose: "banking"` 的目的地来持有本地法币用于付款；未指定
+目的地的目的地保留历史 `fondeo` 行为。Banking 目的仅支持
+`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和
+`CL/CLP/fintoc`。在 CL/CLP/fintoc 中，Banking 接收、保留并展示派生的
+CLP 余额和流水，但不发起 payout：CL payout 始终从 root 账户发送，不存在
+需要豁免的物理 sweep。
+
+| 概念 | 存放位置 | 查询方式 |
+|---|---|---|
+| CBPay 余额 | CBPay 账本 | `GET /v1/balances` |
+| 银行余额 | 您的银行账户 | `GET /v1/banking/accounts/{id}/balance` |
+
+## 按货币划分的 Banking
+
+### 🇺🇸 USD — 美元
+
+按本指南的档案 → 账户 → 操作流程开立经典 Banking 客户账户（ACH、Fedwire
+和 SWIFT 通道，见下文「开立银行账户」一节）。通过 Banking 收到的 USD 保留
+用于付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）；发送到您 CBPay 余额的 USD 落入
+您的主资产（USD 为主资产）。
+
+对于美国通道，账户操作和 `WITHDRAW` 付款可按以下时间估算：**ACH 约需
+24–48 个工作小时；Fedwire（wire）通常为同一工作日（最长 24 小时）；
+SWIFT 约需 24–48 个工作小时，且可能因收款银行而延长。**这些只是估算，
+不是保证；银行截止时间、节假日和收款银行处理时间都可能延长最终结算。
+
+### 🇪🇺 EUR — 欧元
+
+所有欧元业务都通过虚拟 IBAN：申请 `funding_usdt` 地址将入账欧元转换为您的
+主资产，或申请 `banking_eur` 地址持有 `BANK_EUR` 用于 SEPA 付款（见下文
+「欧元：入金地址与欧元银行，集中在一处」一节）。向第三方发送欧元见
+[SEPA 即时付款](https://docs.cbpayapp.com/zh/guides/sepa-instant-payouts)。
+
+### 🇧🇴 BOB — 玻利维亚诺
+
+通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收玻利维亚诺：
+`fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
+保留 BOB 用于本地付款。入金流程见[资金账户](https://docs.cbpayapp.com/zh/guides/funding)。
+
+### 🇲🇽 MXN — 墨西哥比索
+
+通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收比索：
+`fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
+保留 MXN 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+
+### 🇦🇷 ARS — 阿根廷比索
+
+通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收比索：
+`fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
+保留 ARS 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+
+## 企业多银行：运营账户
+
+企业账户可以在启用的本地通道中创建多个 `purpose: "banking"` 充值
+账户：`BO/BOB`、`MX/MXN`、`AR/ARS`（`method` 为 `bank_transfer`）以及
+`CL/CLP/fintoc`。每个目的地使用不同的 `Idempotency-Key`；重复使用会
+返回原账户，不会再次开户。每个企业账户和通道最多保留 **50 个 banking
+工具**（超过时返回 `422 deposit_account_limit_reached`）。个人账户仍
+然每个通道只有一个 banking 工具，并可在 `CL/CLP/fintoc` 创建第二个
+Banking 虚拟槽位。
+
+在 `CL/CLP/fintoc` 中，Banking 目的地接收、保留并展示派生的 CLP 余额
+和流水，但不发起 payout：CL payout 始终从 root 账户发送，不存在需要豁免
+的物理 sweep。
+
+```mermaid
+sequenceDiagram
+  participant App
+  participant CBPay
+  participant Bank
+  App->>CBPay: POST /v1/payins/deposit-accounts\npurpose=banking
+  CBPay->>Bank: 创建收款目的地
+  Bank-->>CBPay: 账号 / CVU / CLABE
+  CBPay-->>App: 201 DepositInstrument
+  App->>CBPay: 查询余额或流水
+```
+
+`label` 是可选的本地昵称，最多 60 个字符，可通过
+`PUT /v1/payins/deposit-accounts/{instrumentID}/label` 修改或清除。
+对于 AR/ARS，企业可以先创建没有 `bank_alias` 的 CVU；此时状态为
+`alias_pending`，余额和流水会返回 `409 alias_pending`，直到调用
+`PUT /v1/payins/deposit-accounts/{instrumentID}/bank-alias`。个人账户
+创建时仍保留 `400 missing_alias` 规则。
+
+运营查询：
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/balance \
+  -H "Authorization: Bearer <token>"
+curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/movements?page=1&page_size=50&from=2026-10-01&to=2026-10-17" \
+  -H "Authorization: Bearer <token>"
+```
+
+余额返回 `currency`、`funds_model`（BO 为 `retained`，MX/AR 为
+`centralized`），以及精确的 minor 字符串：`credited_in`、`paid_out`、
+`refunded_in`、`refunded_out`、`other_net`、`derived_available` 和
+`display_available`。流水是 payin 与 payout 的分页联合结果；`from` 和
+`to` 是可选的、包含边界的 `YYYY-MM-DD` 日期。两者都省略时会列出所有
+可用流水，但仍按页返回。需要限定报表期间时，建议使用上面的日期示例。
+
+BO/BOB payout 可在 `POST /v1/payouts` 或
+`POST /v1/payouts/qr/confirm` 发送 UUID 字段 `source_instrument_id`。
+在其他通道发送会返回 `400`；不属于账户返回 `404 not_found`；非活跃
+或非 banking 工具返回 `422 invalid_source_instrument`。省略 UUID 时，
+多个活跃来源返回 `422 ambiguous_source_instrument`。MX/AR 继续从母账户
+或 centralizer 付款。
+
+> **注**
+银行服务费用有两种形式。**独立固定费用**（`banking_customer`、`banking_account`、`banking_operation`）在每笔操作执行时从您的**默认结算资产余额**(USD 为主资产)扣除，若操作失败则**自动退款**。**按通道的交易费用**（`banking_deposit`、`banking_transfer_ach`、`banking_transfer_swift`、`banking_transfer_wire`、`banking_transfer_sepa`）为百分比加固定金额，**以操作货币**（您的 `BANK_USD` / `BANK_EUR` 余额）计收——参见下文「通道费用（存款与转账）」一节。费用为 0（默认值）时服务免费。每个响应中的 `banking_fee` 和 `banking_fee_asset` 字段显示实际扣费金额及币种。
+## 完整流程
+
+```mermaid
+flowchart LR
+    profile["1. 创建档案<br/>POST customer"] --> docs["2. 证件<br/>+ 提交"]
+    docs --> review{"验证"}
+    review -->|"批准"| accounts["3. 按货币<br/>开立账户"]
+    review -->|"拒绝"| fix["修正数据<br/>并重新提交"]
+    fix --> docs
+    accounts --> receive["接收资金<br/>(IBAN / 账号)"]
+    accounts --> benef["4. 登记<br/>收款人"]
+    benef --> payments["5. 发送付款<br/>prepare → operations"]
+    payments --> whOp["Webhook<br/>operation_status_changed"]
+```
+
+1. **创建您的银行客户档案**（`POST /v1/banking/customer`）——仅一次。
+2. **上传验证证件**并**提交审核**。
+3. 状态变为 `approved` 后，按货币**开立账户**。
+4. **登记收款人**（交易对手）用于第三方付款。
+5. **发送付款**：用 `prepare` 询价，用 `operations` 执行。
+
+状态变更通过 `banking_customer_status_changed` 和 `banking_operation_status_changed` webhook 送达（[webhooks](https://docs.cbpayapp.com/zh/webhooks)）。
+
+## 1. 创建您的银行客户档案
+
+每个账户仅一次。若省略 `type`、`name` 或 `email`，会从您的 CBPay 账户自动填充：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "address": { "countryIso": "CL", "city": "Santiago" }
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "customer_id": "9f2b…",
+  "provider_id": "…",
+  "status": "draft",
+  "data": { "item": { "…": "…" } },
+  "created_at": "2026-07-07T12:00:00Z",
+  "banking_fee": "5.000000"
+}
+```
+
+如果您的账户已有银行客户档案——`409 banking_customer_exists`。
+
+> **注**
+**持久幂等性。** 平台会为该账户/档案在核心生成确定性的 claim。首次成功
+请求返回 `201`。重复相同请求返回 `201` 并带有 `idempotency_hit: true`，
+不会创建第二个档案，也不会重复收取档案费用。相同账户使用不同 payload
+会返回 `409 idempotency_conflict`。如果上游/核心结果不明确，API 返回
+`503 banking_recovery_pending`；不要使用新密钥重试。运营人员必须先核对
+持久 claim。
+> **注**
+**申请审核。** 如果您的组织启用了银行申请审核，此请求可能返回 **`202 Accepted`**（`{"status":"in_review","kind":"banking_application","review_id":"…"}`）而不是 `201`——只有在合规团队批准审核后才会创建银行资料。银行资料费用在申请挂起时收取，**如果被拒绝则自动退还**。通过 webhook `txn_review_status_changed` 或[交易审核](https://docs.cbpayapp.com/zh/guides/transaction-reviews)跟踪结果。
+可随时查询状态：
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/customer \
+  -H "Authorization: Bearer <token>"
+```
+> **注**
+**EUR 使用直接虚拟 IBAN 流程。** 通用的
+`POST /v1/banking/customer` onboarding 仅支持 USD。不要为 EUR 创建通用
+banking profile；请在 Operar EUR 中使用
+`POST /v1/banking/virtual-ibans`，发送 `{"purpose":"banking_eur"}`。
+账户无需先有 banking customer 即可申请该 vIBAN；平台会在批准期间创建所需
+的本地关联。向通用 customer 接口发送 `currency: "EUR"` 会返回
+`400 banking_eur_requires_viban`。
+## 2. 证件与验证
+
+以 base64 格式上传每份证件（免费）：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer/documents \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "PASSPORT",
+    "filename": "passport.pdf",
+    "attach": "<base64 content>"
+  }'
+```
+
+然后将档案提交审核（免费）：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer/submit \
+  -H "Authorization: Bearer <token>"
+```
+
+档案状态：`draft` → `submitted` → `under_review` → **`approved`** 或 `rejected`。每次变更都会由 `banking_customer_status_changed` webhook 通知 — 包括自己的档案（`customer_kind: self`）和你注册的第三方（`customer_kind: third_party`，附其 `third_party_id`）：
+
+```json
+{
+  "account_id": "…",
+  "customer_id": "9f2b…",
+  "customer_kind": "self",
+  "kyc_status": "approved"
+}
+```
+
+## 3. 开立银行账户
+
+档案变为 `approved` 后，在通用 Banking onboarding 中只开立 **USD** 账户（ACH/Fedwire/SWIFT 通道）。EUR 不在此处开立；请直接使用 [EUR 虚拟 IBAN 流程](#eur-虚拟-iban) 请求 `banking_eur`。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "currency": "USD", "name": "Operating USD" }'
+```
+
+响应 `201`——`data` 中包含用于**接收**资金的信息（账号/IBAN、路由号、银行）：
+
+```json
+{
+  "account_id": "c4d1…",
+  "provider_id": "…",
+  "status": "active",
+  "data": { "…": "…" },
+  "banking_fee": "1.000000"
+}
+```
+
+列出您的账户、查询单个账户的详情及余额：
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/accounts \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/accounts/c4d1… \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/accounts/c4d1…/balance \
+  -H "Authorization: Bearer <token>"
+```
+
+详情端点（`GET /v1/banking/accounts/{id}`）返回账户的实时数据 —
+名称、币种、状态，以及 `data` 下的**接收资金所需要件**（电汇与本地
+轨道：银行、账号/IBAN、routing）。用于展示特定账户的入金指引，无需
+遍历列表：
+
+```json
+{
+  "account_id": "c4d1…",
+  "provider_id": "…",
+  "source": "live",
+  "data": {
+    "name": "Operating USD",
+    "currencyCode": "USD",
+    "status": "ACCEPT",
+    "requisites": [
+      { "type": "SWIFT", "…": "…" },
+      { "type": "LOCAL", "…": "…" }
+    ]
+  }
+}
+```
+
+`source` 表示详情的来源：`live`（银行实时返回）或 `mirror`（银行当时
+无法返回该账户，返回最近一次已知快照——入金要件仍然可用）。
+
+> **注**
+列表仅暴露根据通道配置**为您的业务启用**的账户。未启用的账户不会出现
+在列表中，其按 id 的查询返回 `404 not_found`。
+> **注**
+**个人账户限制**：个人账户**最多持有 1 个银行账户**。尝试开立第二个会返回 `409 banking_account_limit`。企业账户没有限制。
+## 第三方用户（仅限企业）
+
+如果您的账户是**企业**，除了您自己的账户外，还可以登记**第三方银行用户**——您的终端客户（个人或企业）——每个用户拥有自己的身份和验证，以及**以其名义开立的银行账户**。第三方数量及每个第三方的账户数量均无限制。
+
+```mermaid
+flowchart LR
+    verif["1. 第三方 KYC/KYB<br/>验证（已批准）"] --> reg["2. POST third-parties<br/>(verification_id)"]
+    reg --> docs["数据 + 证件<br/>自动填充"]
+    docs --> accts["3. POST /accounts<br/>(以其名义开立的账户)"]
+```
+
+### 登记第三方
+
+登记需要该第三方一条[**已批准**的 KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)的 `verification_id`——这是其在 CBPay 内的唯一身份。类型由验证种类决定（KYC ⇒ `INDIVIDUAL`，KYB ⇒ `COMPANY`），数据（姓名、邮箱、地址）会从已验证的档案自动填充（您显式提供的内容优先），并且**已校验的证件会自动重新递交**给银行服务提供方。此时计收银行客户档案费用（登记失败则退款）：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"
+  }'
+```
+
+响应 `201`：
+
+```json
+{
+  "third_party_id": "7f2a…",
+  "customer_id": "…",
+  "kind": "third_party",
+  "status": "pending",
+  "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "documents_synced": 2,
+  "registered_at": "2026-07-10T15:00:00Z",
+  "banking_fee": "1.000000"
+}
+```
+
+> **注**
+`documents_synced` 表示自动加载到该第三方银行档案中的验证证件数量。如果某份证件未能同步（或银行要求额外类别），请通过下方的手动证件流程上传，然后执行 `submit`。
+> **注**
+**申请审核。** 启用银行申请审核后，注册第三方也可能返回 **`202 Accepted`**（`kind: banking_application`）：只有在审核通过后才会注册第三方，注册费用在被拒绝时自动退还。通过 `txn_review_status_changed` 或[交易审核](https://docs.cbpayapp.com/zh/guides/transaction-reviews)跟踪结果。
+请保存 `third_party_id`：所有第三方路由都使用它。列出与查询（GET 中包含实时的验证状态）：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/third-parties?page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a… \
+  -H "Authorization: Bearer <token>"
+```
+
+### 第三方验证（免费）
+
+与您自己的档案相同，只是作用于该第三方：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/documents \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "type": "PASSPORT", "file_base64": "…" }'
+
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/submit \
+  -H "Authorization: Bearer <token>"
+```
+
+### 第三方账户
+
+第三方获批后，为其开立账户（同样计收 `banking_account` 费用），操作方式与您自己的账户完全一致：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "currency": "USD", "name": "Carlos account" }'
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts/{bankAccountID}/balance \
+  -H "Authorization: Bearer <token>"
+```
+
+- 每个第三方只属于您：其他 CBPay 账户永远无法查看或操作它（会得到 `404`）。
+- **个人**账户尝试创建第三方会收到 `403 company_required`。
+- 未提供 `verification_id`（或验证未获批准）时，登记会返回 `422 verification_required` / `422 verification_not_approved`。如果发送的 `type` 与验证种类不匹配，则返回 `422 verification_kind_mismatch`。在此规则之前创建的第三方继续正常运作。
+- 已登记的第三方会计入您[账户摘要](https://docs.cbpayapp.com/zh/guides/analytics)中的"新用户"指标。
+
+## 4. 登记收款人
+
+要向第三方付款，需先用其银行信息登记收款人（免费；需经审核通过后方可使用）：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/counterparties \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "ACME supplier",
+    "profile": {
+      "name": "ACME LLC",
+      "address": { "addressLine1": "1 Main St", "city": "New York", "stateIso": "NY", "countryIso": "US", "postalCode": "10001" },
+      "additionalInfo": { "type": "CORPORATION" }
+    },
+    "accounts": [
+      {
+        "currencyCode": "USD",
+        "bank": { "name": "Test Bank", "number": "011000138" },
+        "fiat": {
+          "number": "0532013000",
+          "routingNumber": "011000138",
+          "additionalInformation": { "type": "TYPE_FIAT_US", "accountType": "CHECKING", "supportedRails": ["ACH"] }
+        }
+      }
+    ]
+  }'
+```
+
+用 `GET /v1/banking/counterparties` 列出您的收款人，用 `POST /v1/banking/counterparties/{id}/accounts` 为已有收款人追加更多账户。
+
+## 欧元：入金地址与欧元银行，集中在一处
+
+所有欧元内容都在这里。欧元虚拟 IBAN（vIBAN）是带两种用途之一的寻址与路由工具，不是供应商的独立余额。下文记录两个用途已经实现的入金和 returns/recalls；provider customer onboarding 与生产启用信息不属于公开的 provider-agnostic 合同。
+
+| 用途 | 默认 | 含义 |
+|---|---|---|
+| `funding_usdt` | 是 | 与入金产品关联的 EUR 地址。到账资金经 payin credit 链记入您的主资产。 |
+| `banking_eur` | 否 | Banking EUR 地址；账户还必须启用 Banking 产品。到账资金在账户的 `BANK_EUR` 余额中对账。 |
+
+### 申请 vIBAN
+
+平台可以为已验证且处于 active 状态的账户申请虚拟 IBAN。使用幂等键申请默认入金地址：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-funding-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"funding_usdt"}'
+```
+
+`funding_usdt` 是默认用途。平台会从已批准的 KYC/KYB profile 构建 registrant。如果 verified profile 缺少证件签发国家或证件到期日，账户申请可以发送以下顶层可选 override（接受 snake_case 和 camelCase aliases）：
+
+```json
+{
+  "purpose": "funding_usdt",
+  "document_issued_country": "IT",
+  "document_expiration_date": "2035-06-01"
+}
+```
+
+公司账户的等价字段为 `incorporation_country` / `incorporationCountry` 与 `incorporation_date` / `incorporationDate`。这些值只用于补全已验证 registrant，不会绕过 KYC/KYB。
+
+`POST /v1/banking/virtual-ibans` 和
+`POST /v1/banking/company-wallets` 也接受可选地址 override：
+`address_street`、`address_city`、`address_country` 以及已有的
+`address_zip`（接受 camelCase aliases）。显式值优先，已批准 profile
+作为第二来源；因此迁移后地址为空的已批准 KYC/KYB profile 可以在不重新
+验证的情况下补全。缺失或无效值会返回 `422 registrant_incomplete`，
+`message` 保留相同的 `individual.address.*` 或
+`corporate.address.*` vIBAN 路径；企业钱包预留使用
+`holder.corporate.address.*`。
+
+对于 corporate registrant，`business_activity` 的来源顺序为：显式
+override、已验证 profile、已验证行业标签，最后是账户的
+`account.industry_label`。
+
+申请会进入人工审批队列：
+
+```json
+{
+  "virtual_iban": {
+    "id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "owner_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "manager_account_id": "",
+    "purpose": "funding_usdt",
+    "currency": "EUR",
+    "iban": "",
+    "iban_country": "",
+    "status": "pending_approval",
+    "client_order": "platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001",
+    "order_reference": "",
+    "created_at": "2026-09-10T12:00:00Z",
+    "updated_at": "2026-09-10T12:00:00Z"
+  },
+  "status": "pending_approval"
+}
+```
+
+显式申请 `banking_eur`：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-eur-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"banking_eur"}'
+```
+
+使用必填日期窗口查询账户的申请：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50&from=2026-09-01&to=2026-09-11&purpose=funding_usdt" \
+  -H "Authorization: Bearer <token>"
+```
+
+列表形状为 `{page, page_size, virtual_ibans}`。支持的状态是 `pending_approval`、`pending`、`active`、`rejected`、`failed`、`disabled` 和 `closed`。账户读取在已有 IBAN 时显示完整值；组织管理员读取会将其掩码。
+
+> **重要**
+银行通道可能要求运营审批和已验证 customer，之后 EUR 虚拟 IBAN 才会 active。生产主机、证书/mTLS、限额、商业费用和启用信息属于配置，不是本 provider-agnostic 合同的一部分。不要从示例推断这些信息。
+### 按地址读取、关闭与查询操作
+
+按 ID 读取单个申请：
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001 \
+  -H "Authorization: Bearer <token>"
+```
+
+申请可以关闭（状态 `closed`）；关闭幂等，后续读取反映终态。
+
+使用 `GET /v1/banking/virtual-ibans/{id}/operations` 列出单个地址的 Banking 操作（分页与日期窗口与全局操作列表相同）。
+
+### 第三方虚拟 IBAN
+
+企业账户可以为已接受邀请并完成已批准 KYC/KYB 的自有第三方申请 `banking_eur` vIBAN。第三方是余额 owner，企业管理关系：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-0000-4000-8000-000000000001/virtual-ibans   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: third-party-viban-2026-001"   -H "Content-Type: application/json"   -d '{}'
+```
+
+申请用途固定为 `banking_eur`，并遵循账户申请相同的人工审批和状态周期。
+
+### BANK_EUR 余额
+
+对于 `banking_eur` 申请，显式查询已对账余额：
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
+```
+
+响应包含 `asset: "BANK_EUR"`、`available`、`held`、`purpose` 和 `source`。对 `funding_usdt` 会返回 `409 balance_not_available`，因为该用途经 payin credit 链记入您的主资产，而不会持有 `BANK_EUR`。
+
+### 发送欧元：payout 与 Banking 操作
+
+发送欧元有两种入口，两者读取同一个地址。请按入口区分，而不是按地址区分：
+
+| 入口 | 端点 | 付款人 | 何时使用 |
+|---|---|---|---|
+| Payout | `POST /v1/payouts`（`country` 为 EU，`currency` 为 EUR，`method` 为 SEPA） | 账户的 active `funding_usdt` 地址；仅在需要强制指定时才传 `source_virtual_iban_id`。 | 从入金业务向外部受益人付款。 |
+| Banking 操作 | `POST /v1/banking/operations`（`currency` 为 EUR，`type` 为 WITHDRAW，`paymentType` 为 SEPA_CT） | 账户的 active `banking_eur` 地址（或显式 `source_virtual_iban_id`）。 | 动用自己的 EUR Banking 资金。 |
+
+两个入口的共同机制：
+
+- 来源在请求顶层用 `source_virtual_iban_id` 选择。如果账户只有一个与入口对应用途的 active vIBAN，可以省略该字段。没有 active 来源返回 `422 funding_account_required`；有多个 active 来源但没有明确 UUID 返回 `422 ambiguous_source_viban`。
+- 平台会删除调用方提交的付款人身份字段，并从所选 vIBAN 的 `registrant` 由服务端写入 `payer`；如果存在更具体的服务端企业 wallet payer，则优先使用它。
+- 对于没有可用 registrant 的 active 原有行，平台会从当前已验证 profile 推导付款人姓名。若 profile 暂时无法读取，返回 `503 funding_account_unavailable`；若最终身份不完整，返回 `422 registrant_incomplete`。
+- `source_virtual_iban_id` 是 EUR Banking 操作意图的一部分。使用同一幂等键会返回原操作；并发进行中的请求返回 `409 operation_in_progress`，请使用同一键重试。
+- 此流程没有按 vIBAN 设置的金额上限。EUR Banking 从账户的 `BANK_EUR` 余额扣款。
+- 这道来源门控上线前创建的 Banking operation hold 属于 grandfathered 记录：继续使用原有 dispatch 与 reconciliation 流程。
+
+### 接收欧元：已验证的入金处理
+
+当银行 provider 发送终态入金事件时，core 将其规范化为 `banking_virtual_iban_inbound`。平台解析 owner vIBAN 并使用其用途：
+
+- `funding_usdt` 创建 EUR 的 `banking_funding` payin，应用 EUR→USDT 标记汇率和配置的 fee/spread，然后进入 payin firewall 与 credit 链。
+- `banking_eur` 创建 `BANK_EUR` 的 Banking 入账镜像，使用 Banking ledger 路径，发送 KYT/operation status，并排队发送 Banking receipt email。
+
+只有 `completed`、`success`、`settled`、`credited` 或 `succeeded` 等终态才会产生资金效果。pending/unknown 状态保持可对账，不会增加余额。
+
+`failed` 和 `rejected` 是负面的终态，不会创建 credit；尚未 credited 的 funding payin 会标记为 failed，且不会进入重复 refund loop。
+
+> **注**
+Returns/recalls 作为终态 `returned`、`recalled` 或 `reversed` 处理。credit 前发生 return 时，后续 completion replay 不会入账；已 credited 的 `funding_usdt` payin 会进入确定性的 chargeback/refund 路径；已 ledger 化的 `banking_eur` operation 会追加 reverse entry。后续 completion 事件不能复活已经 returned 的 operation。
+EUR 虚拟 IBAN 入金会在 banking 镜像、对账单和 analytics 中保留通道与产品用途。operation detail 在银行通道提供时可包含 `payment_rail: "SEPA_INSTANT"`、`purpose`（`funding_usdt` 或 `banking_eur`）和虚拟 IBAN reference。
+
+### EUR 错误
+
+| HTTP | 代码 | 处理 |
+|---:|---|---|
+| 400 | `invalid_json` | 发送 JSON 对象。 |
+| 400 | `invalid_purpose` | 使用 `funding_usdt` 或 `banking_eur`。 |
+| 400 | `idempotency_key_required` | 发送 `Idempotency-Key` 或 `idempotency_key`。 |
+| 400 | `invalid_request` | 检查指定字段的格式（例如格式错误的 vIBAN UUID）。 |
+| 403 | `verification_required` | 完成验证并启用所需产品。 |
+| 404 | `not_found` | vIBAN 不存在或不属于该账户。 |
+| 409 | `virtual_iban_conflict` | 复用原申请，不要创建第二个分配。 |
+| 409 | `balance_not_available` | 只有 `banking_eur` 地址才有 `BANK_EUR` 余额。 |
+| 409 | `operation_in_progress` | 有并发请求在途；使用同一键重试。 |
+| 422 | `registrant_incomplete` | 已验证的 KYC/KYB profile 缺少 registrant 必填字段。根据消息补充证件或公司注册 override，并使用相同幂等键重试。 |
+| 422 | `funding_account_required` | EUR 操作需要对应用途的 active vIBAN；请先申请并等待激活。 |
+| 422 | `ambiguous_source_viban` | 有多个 active vIBAN；在 `source_virtual_iban_id` 中传入确切 UUID。 |
+| 503 | `banking_recovery_pending` | 先对持久化申请做 reconcile，再重试。 |
+| 503 | `funding_account_unavailable` | 来源查询暂时不可用；使用相同键重试。 |
+
+### EUR 常见问题
+
+#### 申请虚拟 IBAN 会创建 BANK_EUR 余额吗？
+不会。用途会记录在申请中，但虚拟 IBAN 不是供应商的独立余额。只有 `banking_eur` 地址才暴露已对账的 `BANK_EUR` 余额；`funding_usdt` 经 payin 链记入您的主资产。
+#### 超时后可以重试吗？
+使用相同幂等键重试。新的键会创建新的申请，不能用来猜测一次不明确的供应商请求结果。
+#### 为什么状态是 pending_approval？
+每个分配都需要组织运营人员在调用银行通道前进行人工审批。
+#### 同一个地址能用于 payout 和 Banking 操作吗？
+每个入口读取自己对应的用途：SEPA payout 从入金地址付款，Banking 操作从 Banking 地址付款。显式 `source_virtual_iban_id` 始终优先于自动选择。
+## 已验证第三方的 Banking
+
+企业账户可以为已批准的第三方 KYC 或 KYB submission 请求 banking
+目的地。请求按 submission 和通道自然幂等；验证批准后会自动创建目的地。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer"}'
+curl https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>"
+```
+
+响应包含 `intent_id`、`kind`、`verification_id`、`country`、`currency`、
+`method`、`status` 和 `fulfilled_instrument_id`。状态为 `pending`、
+`fulfilled` 或 `abandoned`；验证被拒绝后再次请求返回
+`409 intent_abandoned`。引用账户自身的 onboarding verification 返回
+`422 verification_invalid`。
+
+## 5. 发送付款
+
+两种操作类型：
+
+| `type` | 作用 | `paymentType` |
+|---|---|---|
+| `TRANSFER` | 在您自己的银行账户之间 | `EMPTY` |
+| `WITHDRAW` | 发往已登记的收款人 | 按通道（例如 `SEPA_CT`） |
+
+先询价（免费，不移动资金）：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations/prepare \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "beneficiar": "<beneficiary account>" },
+    "amount": { "currencyCode": "USD", "units": "250", "nanos": 0 }
+  }'
+```
+
+带幂等键执行（在此计收通道费用——若该通道无配置则计收旧的 `banking_operation` 费用）：
+
+对于 USD `WITHDRAW` 操作，ACH 的估算时间为 **24–48 个工作小时**，
+Fedwire 为**同一工作日（最长 24 小时）**，SWIFT 为**24–48 个工作小时**。
+SWIFT 可能因收款银行而延长。
+
+```bash WITHDRAW (to a beneficiary)
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: acme-payment-0071" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "beneficiar": "<beneficiary account>" },
+    "amount": { "currencyCode": "USD", "units": "250", "nanos": 0 },
+    "comment": "Invoice 8841"
+  }'
+```
+
+```bash TRANSFER (between your accounts)
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: internal-move-0012" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "TRANSFER",
+    "paymentType": "EMPTY",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "account": "<another account of yours>" },
+    "amount": { "currencyCode": "USD", "units": "100", "nanos": 0 }
+  }'
+```
+
+响应 `202`：
+
+```json
+{
+  "operation_id": "7e8a…",
+  "provider_id": "…",
+  "status": "pending",
+  "idempotency_key": "platform:…:acme-payment-0071",
+  "data": { "…": "…" },
+  "banking_fee": "2.000000",
+  "banking_fee_asset": "BANK_USD"
+}
+```
+
+`banking_fee` 和 `banking_fee_asset` 仅在收取费用时出现。按通道计费时，币种为操作货币（`BANK_USD` / `BANK_EUR`）；使用旧版回退时为您的默认结算资产。
+
+- 最终状态通过 `banking_operation_status_changed` webhook 送达（`completed` / `failed`）；您也可以轮询 `GET /v1/banking/operations/{id}`。操作达到最终状态后，webhook 中会包含其 `receipt_url`，并可通过 `GET /v1/banking/operations/{id}/receipt` 下载 PDF 凭证（[凭证](https://docs.cbpayapp.com/zh/guides/receipts)）。
+- 使用相同 `Idempotency-Key` 的重试会返回原始操作（`idempotency_hit: true`），**不会再次收取费用**。
+
+> **注**
+**完整可追溯性。** 每笔银行操作都会记录在您的账户上：它出现在[对账单](https://docs.cbpayapp.com/zh/guides/statement)的 `banking_operations` 部分，其资金在 `BANK_USD`/`BANK_EUR` 镜像余额（`assets` 部分）中对账，其交易量计入[分析](https://docs.cbpayapp.com/zh/guides/analytics)中的 `gross_volume`。权威余额仍以银行为准：镜像余额会定期对账。
+带筛选条件的完整历史：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=2026-07-08&status=completed&type=WITHDRAW&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "items": [
+    {
+      "id": "7e8a…",
+      "type": "withdraw",
+      "status": "completed"
+    }
+  ],
+  "meta": { "page": 1, "page_size": 50, "retrieved": 1 }
+}
+```
+
+> **注**
+每笔银行操作——包括自动从银行发现的入账存款和银行费用——在银行报告这些字段时都会暴露其
+`direction`（`in` / `out`）、净额 `amount`、`currency`、`counterparty` 和
+`reference`。这些字段为可选，出现在
+`GET /v1/banking/operations` 和
+`GET /v1/banking/operations/{id}` 中。
+`banking_operation_status_changed` Webhook 在设计上保持轻量：
+它只携带标识符和新状态，不包含增强字段。收到该事件后，
+请查询操作详情以读取方向、金额、对手方和参考号。参见
+[webhooks](https://docs.cbpayapp.com/zh/webhooks)。
+
+## 通道费用（存款与转账）
+
+除了独立固定费用外，banking 还支持**按通道的交易费用**——百分比加固定金额，始终**以操作货币**（`BANK_USD` / `BANK_EUR`）计收，绝不使用 USDT：
+
+| 服务 | 适用于 | 计收时机 |
+|---|---|---|
+| `banking_deposit` | 入账存款（USD/EUR） | 存款入账时——**以存款金额为上限**（`fee = min(fee, amount)`），小额存款永远不会变成负数 |
+| `banking_transfer_ach` | 转出 ACH 转账 | 发起时，带 fail-closed 余额校验 |
+| `banking_transfer_swift` | 转出 SWIFT 转账 | 发起时，带 fail-closed 余额校验 |
+| `banking_transfer_wire` | 转出 wire 转账（FEDWIRE） | 发起时，带 fail-closed 余额校验 |
+| `banking_transfer_sepa` | 转出 SEPA 转账 | 发起时，带 fail-closed 余额校验 |
+
+对于**转账**，可用余额必须覆盖 `金额 + 费用`——否则 API 返回
+`402 insufficient_funds`，且操作**不会被创建**。如果操作在发起后被
+明确同步拒绝，费用将**自动退还**（与旧版费用相同的纪律）。
+
+**回退规则：** 如果通道没有专属配置（账户级和平台级都没有），则适用旧的
+`banking_operation` 费用（固定金额，从您的默认结算资产扣除）。通道配置为 0% + 0 固定费用表示
+**明确免费**——*不会*回退到旧版费用。
+
+## 操作状态
+
+| 状态 | 含义 |
+|---|---|
+| `pending` | 已接受，等待处理 |
+| `processing` | 正在银行通道上执行 |
+| `completed` | 资金已到账——最终态 |
+| `failed` | 失败；操作费用（如有）已退款 |
+| `cancelled` | 执行前已取消 |
+
+## 错误
+
+| HTTP | `error` | 处理方式 |
+|---|---|---|
+| 400 | `idempotency_key_required` | 在请求体或请求头中发送该 key |
+| 402 | `insufficient_funds` | 余额不足：按通道计费时校验为 `余额 ≥ 金额 + 费用`，以**操作货币**（`BANK_USD`/`BANK_EUR`）计；使用旧版回退时为您的默认结算资产余额 |
+| 403 | `account_blocked` | 账户未处于活跃状态；请联系 CBPay 团队 |
+| 409 | `banking_customer_exists` | 您的账户已有银行客户档案（`GET /v1/banking/customer`） |
+| 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
+| 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
+| 409 | `no_banking_customer` | 请先创建您的档案（`POST /v1/banking/customer`） |
+| 409 | `banking_account_limit` | 个人账户最多持有 1 个银行账户 |
+| 403 | `company_required` | 第三方用户仅对企业账户开放 |
+| 422 | `verification_required` | 登记第三方需要一条已批准验证的 `verification_id`（[先完成验证](https://docs.cbpayapp.com/zh/guides/kyc)） |
+| 422 | `verification_not_approved` | 所引用的验证尚未批准；请等待批准 |
+| 422 | `verification_kind_mismatch` | 发送的 `type` 与验证种类不匹配（KYC ⇒ INDIVIDUAL，KYB ⇒ COMPANY） |
+| 422 | `verification_invalid` | 您引用了自己的入驻验证；第三方需要其自己的验证 |
+| 404 | `not_found` | 第三方（或验证）不存在或不属于您的账户 |
+| 502 | `banking_request_failed` | 银行通道错误；费用已退款——请重试 |
+
+## 常见问题
+
+#### Banking 资金会显示在我的 USD 余额里吗？
+不会。Banking 资金存放在你的银行账户中，通过
+`GET /v1/banking/accounts/{id}/balance` 查询。权威余额始终以银行为准；你的
+[对账单](https://docs.cbpayapp.com/zh/guides/statement) 会在 `BANK_USD`/`BANK_EUR` 镜像余额中对其
+进行核对。**按通道的费用**以操作货币计收（您的 `BANK_USD`/`BANK_EUR` 余额）；
+只有旧的 `banking_operation` 回退费用才从您的默认结算资产余额中扣除。
+#### 操作失败时手续费会怎样？
+自动退款 —— 档案、账户和操作的手续费一视同仁，包括按通道的费用
+（在明确同步拒绝时退还）。使用相同的
+`Idempotency-Key` 重试会返回原始操作（`idempotency_hit: true`），绝不会
+重复收费。
+#### 我可以开多少个银行账户？
+每种货币一个（USD、EUR）。此外，**个人**账户总共最多持有 1 个银行账户
+（`409 banking_account_limit`）；企业账户没有限制。
+#### 为什么我的某个账户不在列表里？
+列表只展示按通道配置**为你的业务启用**的账户。未启用的账户不会出现，
+其按 id 的查询会返回 `404 not_found` —— 如需启用请联系你的 CBPay 团队。
+#### 个人账户可以登记第三方用户吗？
+不可以 —— 第三方是企业能力（`403 company_required`）。登记还需要该第三方
+一次**已通过**的 KYC/KYB 验证的 `verification_id`。
+#### 如何知道一笔付款到达最终状态？
+订阅 `banking_operation_status_changed`：它在 `completed` / `failed` 时触发，
+最终状态时附带 `receipt_url`。你也可以轮询
+`GET /v1/banking/operations/{id}`。
+#### 美国 ACH、Fedwire 或 SWIFT 提现需要多长时间？
+ACH 的估算时间为 24–48 个工作小时，Fedwire 为同一工作日（最长 24 小时），
+SWIFT 为 24–48 个工作小时。SWIFT 可能因收款银行而延长；银行截止时间和
+节假日也可能延长结算。
+## Banking creation claims and recovery
+
+Creation claims are durable records, not permission to send a second provider
+request. The platform stores `banking_creation_claims` with `kind`,
+`idempotency_key`, `request_hash`, status, attempts and refund state. Migration
+105 creates this table and its single-flight lock; migration 106 stores
+transaction-firewall fee-refund recovery. Migration 074 persists the resolved
+core provider on customer idempotency claims.
+
+### Recovery rules
+
+- A completed account recovery compares the provider account ownership with
+  the claimed customer's `ProviderID`.
+- A terminal provider authentication response (`401` or `403`) does not by
+  itself prove that the creation failed; the claim remains recoverable.
+- Reusing the same idempotency key with a different request hash is rejected.
+- A completed claim can be replayed with HTTP `200` and `idempotency_hit: true`;
+  recovery does not call the provider again.
+- `POST /v1/org/banking/creation-claims/refund` retries a pending fee refund
+  for `kind=customer` or `kind=account`.
+- `POST /v1/org/txn-firewall/fee-refunds/{resourceID}/retry` retries the
+  durable firewall-fee refund. A completed refund replays as HTTP `200`.
+
+The core admin route
+`POST /v1/ops/banking/account-creations/reconcile` verifies the provider
+account and finalizes the local mirror. The org-admin routes list claims,
+reconcile customer claims, and retry refunds. These operations are locked so
+concurrent reconciliation cannot originate duplicate money movement.

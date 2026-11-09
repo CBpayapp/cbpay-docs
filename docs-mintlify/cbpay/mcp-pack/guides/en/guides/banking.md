@@ -1,0 +1,1055 @@
+---
+title: "Banking"
+description: "Real bank accounts for your account: receive, hold and send money over international banking rails"
+slug: en/guides/banking
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/banking
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+Banking gives you **real bank accounts** in the name of your verified
+profile: you receive funds over international rails (SEPA, SWIFT, ACH
+depending on the currency), hold fiat balances and send payments to third
+parties. It is a separate product from your CBPay balances: **banking money
+lives in your bank accounts**, not in your USDT or USD balance.
+
+For local fiat corridors, create a destination with `purpose: "banking"` to retain local fiat for payouts; default `fondeo` converts incoming fiat to your account's principal asset (USD is the principal balance). Banking supports `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer`, and `CL/CLP/fintoc`.
+
+## Two kinds of local-fiat destinations
+
+For local fiat corridors (`BO/BOB`, `MX/MXN`, `AR/ARS`, `CL/CLP/fintoc`), every payin
+destination carries a `purpose` that decides where inbound money lands:
+
+| Purpose | Meaning |
+|---|---|
+| `fondeo` (default) | **Funding account.** Everything received converts automatically to your account's principal asset — USD is the principal balance. |
+| `banking` | **Banking account.** Inbound fiat is retained in its local currency for payouts, with individual balances per currency. |
+
+Create a second destination with `purpose: "banking"` to hold local fiat for
+payouts; destinations created without a purpose keep the historical `fondeo`
+behavior. Banking purpose is supported in `BO/BOB/bank_transfer`,
+`MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` and `CL/CLP/fintoc`. For
+CL/CLP/fintoc, Banking receives, retains and exposes derived CLP balance and
+movements; it does not originate payouts. CL payouts always send from the root
+account, and no physical sweep-exempt flag applies.
+
+| Concept | Where it lives | Queried with |
+|---|---|---|
+| CBPay balances | CBPay ledger | `GET /v1/balances` |
+| Bank balances | Your bank accounts | `GET /v1/banking/accounts/{id}/balance` |
+
+## Banking by currency
+
+### 🇺🇸 USD — US dollar
+
+Open a classic Banking customer account (ACH, Fedwire and SWIFT rails) with
+the profile → accounts → operations flow in this guide
+([open bank accounts](#3-open-bank-accounts)). USD received through Banking
+is held for payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)); USD sent to your CBPay
+balances lands in your principal asset (USD is the principal balance).
+
+For the US rails, use these planning estimates for account operations and
+`WITHDRAW` payments: **ACH: approximately 24–48 business hours; Fedwire
+(wire): approximately the same business day (up to 24 hours); SWIFT:
+approximately 24–48 business hours, and it may take longer depending on the
+receiving bank.** These are estimates, not a guarantee; bank cutoffs,
+holidays and receiving-bank processing can extend the final settlement time.
+
+### 🇪🇺 EUR — euro
+
+Everything euro goes through a virtual IBAN: request a `funding_usdt`
+address to convert inbound euros to your principal asset, or a `banking_eur`
+address to hold `BANK_EUR` for SEPA payouts
+([funding direction and EUR banking](#euros-funding-direction-and-eur-banking-in-one-place)).
+Sending euros to third parties is covered in
+[SEPA Instant payouts](https://docs.cbpayapp.com/en/guides/sepa-instant-payouts).
+
+### 🇧🇴 BOB — Bolivian boliviano
+
+Receive bolivianos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
+`purpose`: `fondeo` (default) auto-converts the credit to your principal
+asset (USD is the principal balance); `banking` retains BOB for local
+payouts. See [Funding](https://docs.cbpayapp.com/en/guides/funding) for the funding flow.
+
+### 🇲🇽 MXN — Mexican peso
+
+Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
+`purpose`: `fondeo` (default) auto-converts the credit to your principal
+asset (USD is the principal balance); `banking` retains MXN for local
+payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+
+### 🇦🇷 ARS — Argentine peso
+
+Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
+`purpose`: `fondeo` (default) auto-converts the credit to your principal
+asset (USD is the principal balance); `banking` retains ARS for local
+payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+
+### 🇨🇱 CLP — Chilean peso
+
+Receive CLP through the dedicated `CL/CLP/fintoc` deposit account. With `purpose: "banking"`, it retains inbound CLP and exposes derived balance/movements; it only receives and holds, while CL payouts originate from root.
+## Company multi-banking: operating accounts
+
+Company accounts can create multiple `purpose: "banking"` destinations in `BO/BOB`, `MX/MXN`, `AR/ARS` (`bank_transfer`) and `CL/CLP/fintoc`; use a distinct `Idempotency-Key` per destination. Replay returns the same instrument. The soft limit is **50 per company and corridor** (`422 deposit_account_limit_reached`); persons retain one per corridor and can create the second virtual Banking slot in `CL/CLP/fintoc`.
+
+```mermaid
+sequenceDiagram
+  participant App
+  participant CBPay
+  participant Bank
+  App->>CBPay: POST /v1/payins/deposit-accounts\npurpose=banking
+  CBPay->>Bank: Provision receiving destination
+  Bank-->>CBPay: Account number / CVU / CLABE
+  CBPay-->>App: 201 DepositInstrument
+  App->>CBPay: GET balance or movements
+```
+
+### Create and label an operating destination
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins/deposit-accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: bo-banking-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"BO","currency":"BOB","method":"bank_transfer","purpose":"banking","label":"La Paz collections"}'
+```
+
+Response `201`:
+
+```json
+{
+  "instrument_id": "a1d4b7c0-1234-5678-9abc-def012345678",
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "country": "BO",
+  "currency": "BOB",
+  "method": "bank_transfer",
+  "purpose": "banking",
+  "instrument": "1002003004",
+  "label": "La Paz collections",
+  "status": "active"
+}
+```
+
+`label` is a local nickname only and is optional; it is limited to 60
+characters. Change or clear it with:
+
+```bash
+curl -X PUT https://api.qbank.cl/platform/v1/payins/deposit-accounts/a1d4b7c0-1234-5678-9abc-def012345678/label \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"label":"Collections BO"}'
+```
+
+### AR alias lifecycle
+
+For a company AR/ARS destination, the CVU can be created without
+`bank_alias`. It is then operationally `alias_pending`: creation succeeds,
+but balance and movements return `409 alias_pending` until the company sets
+the alias. Complete it with
+`PUT /v1/payins/deposit-accounts/{instrumentID}/bank-alias`. Person accounts
+keep the existing `400 missing_alias` creation rule.
+
+### Balance and movements
+
+Only `purpose: "banking"` instruments expose these operating views:
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/balance \
+  -H "Authorization: Bearer <token>"
+curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/movements?page=1&page_size=50&from=2026-10-01&to=2026-10-17" \
+  -H "Authorization: Bearer <token>"
+```
+
+`from` and `to` are optional inclusive `YYYY-MM-DD` bounds. Omit both to list
+all available movements; the response remains paginated. The dated example
+above is recommended when you only need a bounded reporting window.
+
+The balance response uses exact minor-unit strings:
+
+```json
+{
+  "instrument_id": "a1d4b7c0-1234-5678-9abc-def012345678",
+  "currency": "BOB",
+  "funds_model": "retained",
+  "credited_in": "125000",
+  "paid_out": "40000",
+  "refunded_in": "0",
+  "refunded_out": "0",
+  "other_net": "0",
+  "derived_available": "85000",
+  "display_available": "850.00"
+}
+```
+
+`funds_model` is `retained` for BO and `centralized` for MX/AR. Movements
+are a paginated union of payins and payouts, with `kind`, `id`, `asset`,
+`amount_minor`, `direction`, `status`, optional `local_amount`, and
+`created_at`.
+
+> **Note**
+Banking fees come in two shapes. **Standalone fixed fees**
+(`banking_customer`, `banking_account`, `banking_operation`) are debited
+from your **default settlement asset balance** — USD is the principal balance — when each operation executes and **refunded
+automatically** if it fails. **Transactional rail fees**
+(`banking_deposit`, `banking_transfer_ach`, `banking_transfer_swift`,
+`banking_transfer_wire`, `banking_transfer_sepa`) are a percentage plus a
+fixed amount charged **in the operation currency** (your `BANK_USD` /
+`BANK_EUR` balance) — see [rail fees](#rail-fees-deposits-and-transfers).
+With a fee of 0 (the default) the service is free. The `banking_fee` and
+`banking_fee_asset` fields on each response show what was charged and in
+which currency.
+## The full flow
+
+```mermaid
+flowchart LR
+    profile["1. Create profile<br/>POST customer"] --> docs["2. Documents<br/>+ submit"]
+    docs --> review{"Verification"}
+    review -->|"approved"| accounts["3. Open accounts<br/>per currency"]
+    review -->|"rejected"| fix["Fix the data<br/>and resubmit"]
+    fix --> docs
+    accounts --> receive["Receive funds<br/>(IBAN / account)"]
+    accounts --> benef["4. Register<br/>beneficiaries"]
+    benef --> payments["5. Send payments<br/>prepare → operations"]
+    payments --> whOp["Webhook<br/>operation_status_changed"]
+```
+
+1. **Create your banking profile** (`POST /v1/banking/customer`) — once.
+2. **Upload verification documents** and **submit for review**.
+3. Once `approved`, **open accounts** per currency.
+4. **Register beneficiaries** (counterparties) for third-party payments.
+5. **Send payments**: quote with `prepare`, execute with `operations`.
+
+State changes arrive through the `banking_customer_status_changed` and
+`banking_operation_status_changed` webhooks ([webhooks](https://docs.cbpayapp.com/en/webhooks)).
+
+## 1. Create your banking profile
+
+Once per account. If you omit `type`, `name` or `email`, they are filled
+from your CBPay account:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "address": { "countryIso": "CL", "city": "Santiago" }
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "customer_id": "9f2b…",
+  "provider_id": "…",
+  "status": "draft",
+  "data": { "item": { "…": "…" } },
+  "created_at": "2026-07-07T12:00:00Z",
+  "banking_fee": "5.000000"
+}
+```
+
+If your account already has a banking profile —
+`409 banking_customer_exists`.
+
+> **Note**
+**Durable idempotency.** The platform derives a deterministic core claim for
+this account/profile. The first successful request returns `201`. Repeating
+the same request returns `201` with `idempotency_hit: true` and never creates
+a second profile or charges the profile fee twice. A different payload for
+the same account returns `409 idempotency_conflict`. If the upstream/core
+outcome is ambiguous, the API returns `503 banking_recovery_pending`; do not
+retry with a new key. Operations must reconcile the durable claim first.
+> **Note**
+**Application review.** If your organization enabled banking application review, this request can answer **`202 Accepted`** with `{"status":"in_review","kind":"banking_application","review_id":"…"}` instead of `201` — the profile is created only when compliance approves the review. The banking profile fee is charged when the application is held and **refunded automatically if it is rejected**. Track the result with the webhook `txn_review_status_changed` or in [Transaction reviews](https://docs.cbpayapp.com/en/guides/transaction-reviews).
+Check the state at any time:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/customer \
+  -H "Authorization: Bearer <token>"
+```
+> **Note**
+**EUR uses direct vIBAN; generic onboarding is USD-only.** Request `{"purpose":"banking_eur"}` from Operar EUR without a prior customer; approval creates the local linkage. Generic EUR returns `400 banking_eur_requires_viban`.
+## 2. Documents and verification
+
+Upload each document as base64 (free):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer/documents \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "PASSPORT",
+    "filename": "passport.pdf",
+    "attach": "<base64 content>"
+  }'
+```
+
+Then submit the profile for review (free):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer/submit \
+  -H "Authorization: Bearer <token>"
+```
+
+Profile states: `draft` → `submitted` → `under_review` → **`approved`** or
+`rejected`. The `banking_customer_status_changed` webhook notifies each
+change — for your own profile (`customer_kind: self`) and for the third
+parties you register (`customer_kind: third_party`, with their
+`third_party_id`):
+
+```json
+{
+  "account_id": "…",
+  "customer_id": "9f2b…",
+  "customer_kind": "self",
+  "kyc_status": "approved"
+}
+```
+
+## 3. Open bank accounts
+
+With the profile `approved`, create the classic Banking customer account for **USD** only (ACH/Fedwire/SWIFT rails). EUR is not opened here; request a `banking_eur` virtual IBAN directly in the [EUR virtual IBAN flow](#eur-virtual-ibans).
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "currency": "USD", "name": "Operating USD" }'
+```
+
+Response `201` — `data` carries the details to **receive** funds (account
+number/IBAN, routing, bank):
+
+```json
+{
+  "account_id": "c4d1…",
+  "provider_id": "…",
+  "status": "active",
+  "data": { "…": "…" },
+  "banking_fee": "1.000000"
+}
+```
+
+List your accounts, fetch the detail of a specific account, and check
+balances:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/accounts \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/accounts/c4d1… \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/accounts/c4d1…/balance \
+  -H "Authorization: Bearer <token>"
+```
+
+The detail endpoint (`GET /v1/banking/accounts/{id}`) returns the account
+LIVE — name, currency, status, and under `data` the **requirements to
+receive funds** (wire and local rails: bank, account number/IBAN,
+routing). Use it to show the deposit instructions of a specific account
+without walking the list:
+
+```json
+{
+  "account_id": "c4d1…",
+  "provider_id": "…",
+  "source": "live",
+  "data": {
+    "name": "Operating USD",
+    "currencyCode": "USD",
+    "status": "ACCEPT",
+    "requisites": [
+      { "type": "SWIFT", "…": "…" },
+      { "type": "LOCAL", "…": "…" }
+    ]
+  }
+}
+```
+
+`source` tells you where the detail came from: `live` (the bank answered
+in real time) or `mirror` (the bank could not serve the account at that
+moment and the last known snapshot is returned — deposit requirements
+remain available).
+
+> **Note**
+The list exposes only the accounts **enabled for your operation**
+according to the corridor configuration. A non-enabled account does not
+appear in the list and its by-id queries respond `404 not_found`.
+> **Note**
+**Limit for person accounts**: a person account can hold **at most 1 bank
+account**. Attempting a second one returns `409 banking_account_limit`.
+Company accounts have no limit.
+## Third-party users (companies only)
+
+If your account is a **company**, besides your own accounts you can
+register **third-party banking users** — your end clients (persons or
+companies) — each with their own identity and verification and **bank
+accounts in their name**. No limit on third parties or accounts per third
+party.
+
+```mermaid
+flowchart LR
+    verif["1. Third party KYC/KYB<br/>verification (approved)"] --> reg["2. POST third-parties<br/>(verification_id)"]
+    reg --> docs["Data + documents<br/>auto-fill"]
+    docs --> accts["3. POST /accounts<br/>(accounts in their name)"]
+```
+
+### Registering the third party
+
+Registration requires the `verification_id` of an [**approved** KYC/KYB
+verification](https://docs.cbpayapp.com/en/guides/kyc) of the third party — their single identity
+inside CBPay. The type comes from the verification kind (KYC ⇒
+`INDIVIDUAL`, KYB ⇒ `COMPANY`), the data (name, email, address) auto-fills
+from the verified profile (whatever you send explicitly wins), and the
+**already-validated documents are re-delivered automatically** to the
+banking provider. The banking profile fee is charged (refunded if the
+registration fails):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"
+  }'
+```
+
+Response `201`:
+
+```json
+{
+  "third_party_id": "7f2a…",
+  "customer_id": "…",
+  "kind": "third_party",
+  "status": "pending",
+  "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "documents_synced": 2,
+  "registered_at": "2026-07-10T15:00:00Z",
+  "banking_fee": "1.000000"
+}
+```
+
+> **Note**
+`documents_synced` counts the verification documents that were loaded
+automatically into the third party's banking profile. If one could not be
+synced (or the bank requests additional categories), upload it through the
+manual document flow below and then `submit`.
+> **Note**
+**Application review.** With banking application review enabled, registering a third party can also answer **`202 Accepted`** (`kind: banking_application`): the third party is registered only when the review is approved, and the registration fee is refunded automatically on rejection. Track it via `txn_review_status_changed` or [Transaction reviews](https://docs.cbpayapp.com/en/guides/transaction-reviews).
+Save the `third_party_id`: every third-party route uses it. List and fetch
+(the GET carries the live verification status):
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/third-parties?page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a… \
+  -H "Authorization: Bearer <token>"
+```
+
+### Third-party verification (free)
+
+Same as your own profile, but on the third party:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/documents \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "type": "PASSPORT", "file_base64": "…" }'
+
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/submit \
+  -H "Authorization: Bearer <token>"
+```
+
+### Third-party accounts
+
+Once the third party is approved, open accounts for them (same
+`banking_account` fee) and operate just like your own:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "currency": "USD", "name": "Carlos account" }'
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts/{bankAccountID}/balance \
+  -H "Authorization: Bearer <token>"
+```
+
+- Each third party belongs to you and only you: another CBPay account can
+  never see or operate it (it gets `404`).
+- A **person** account attempting to create third parties receives
+  `403 company_required`.
+- Without `verification_id` (or with a non-approved verification) the
+  registration answers `422 verification_required` /
+  `422 verification_not_approved`. If you send a `type` that does not match
+  the verification kind, `422 verification_kind_mismatch`. Third parties
+  created before this rule keep operating normally.
+- Registered third parties feed the "new users" metric of your
+  [account summary](https://docs.cbpayapp.com/en/guides/analytics).
+
+## 4. Register beneficiaries
+
+To pay third parties, first register the beneficiary with their banking
+details (free; it goes through moderation before it can be used):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/counterparties \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "ACME supplier",
+    "profile": {
+      "name": "ACME LLC",
+      "address": { "addressLine1": "1 Main St", "city": "New York", "stateIso": "NY", "countryIso": "US", "postalCode": "10001" },
+      "additionalInfo": { "type": "CORPORATION" }
+    },
+    "accounts": [
+      {
+        "currencyCode": "USD",
+        "bank": { "name": "Test Bank", "number": "011000138" },
+        "fiat": {
+          "number": "0532013000",
+          "routingNumber": "011000138",
+          "additionalInformation": { "type": "TYPE_FIAT_US", "accountType": "CHECKING", "supportedRails": ["ACH"] }
+        }
+      }
+    ]
+  }'
+```
+
+List yours with `GET /v1/banking/counterparties` and attach more accounts
+to an existing beneficiary with
+`POST /v1/banking/counterparties/{id}/accounts`.
+
+## 5. Send payments
+
+Two operation types:
+
+| `type` | What it does | `paymentType` |
+|---|---|---|
+| `TRANSFER` | Between your own bank accounts | `EMPTY` |
+| `WITHDRAW` | To a registered beneficiary | Per rail (e.g. `SEPA_CT`) |
+
+Quote first (free, moves no money):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations/prepare \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "beneficiar": "<beneficiary account>" },
+    "amount": { "currencyCode": "USD", "units": "250", "nanos": 0 }
+  }'
+```
+
+Execute with an idempotency key (the rail fee — or the default
+`banking_operation` fee when the rail has no configuration — is charged
+here):
+
+For USD `WITHDRAW` operations, plan for approximately **24–48 business hours
+on ACH**, **the same business day (up to 24 hours) on Fedwire**, or
+**24–48 business hours on SWIFT**. SWIFT can take longer depending on the
+receiving bank.
+
+```bash WITHDRAW (to a beneficiary)
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: acme-payment-0071" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "beneficiar": "<beneficiary account>" },
+    "amount": { "currencyCode": "USD", "units": "250", "nanos": 0 },
+    "comment": "Invoice 8841"
+  }'
+```
+
+```bash TRANSFER (between your accounts)
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: internal-move-0012" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "TRANSFER",
+    "paymentType": "EMPTY",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "account": "<another account of yours>" },
+    "amount": { "currencyCode": "USD", "units": "100", "nanos": 0 }
+  }'
+```
+
+Response `202`:
+
+```json
+{
+  "operation_id": "7e8a…",
+  "provider_id": "…",
+  "status": "pending",
+  "idempotency_key": "platform:…:acme-payment-0071",
+  "data": { "…": "…" },
+  "banking_fee": "2.000000",
+  "banking_fee_asset": "BANK_USD"
+}
+```
+
+`banking_fee` and `banking_fee_asset` only appear when a fee was charged.
+With a per-rail fee the asset is the operation currency (`BANK_USD` /
+`BANK_EUR`); with the default fallback it is your default settlement asset.
+
+- The final state arrives through the `banking_operation_status_changed`
+  webhook (`completed` / `failed`); you can also poll
+  `GET /v1/banking/operations/{id}`. Once the operation reaches a final
+  state, the webhook includes its `receipt_url` and you can download the
+  PDF receipt with `GET /v1/banking/operations/{id}/receipt`
+  ([receipts](https://docs.cbpayapp.com/en/guides/receipts)).
+- Retries with the same `Idempotency-Key` return the original operation
+  (`idempotency_hit: true`) **without charging the fee again**.
+
+> **Note**
+**Complete traceability.** Every banking operation is recorded on your
+account: it shows up in the `banking_operations` section of the
+[statement](https://docs.cbpayapp.com/en/guides/statement), its money reconciles in the
+`BANK_USD`/`BANK_EUR` mirror balances (`assets` section), and its volume
+adds to the `gross_volume` in [analytics](https://docs.cbpayapp.com/en/guides/analytics). The
+authoritative balance remains the bank's: the mirror is reconciled
+periodically.
+The full history, with filters:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=2026-07-08&status=completed&type=WITHDRAW&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "items": [
+    {
+      "id": "7e8a…",
+      "type": "withdraw",
+      "status": "completed"
+    }
+  ],
+  "meta": { "page": 1, "page_size": 50, "retrieved": 1 }
+}
+```
+
+> **Note**
+Every banking operation — including inbound deposits and bank fees
+discovered automatically from the bank — exposes its `direction` (`in` /
+`out`), net `amount`, `currency`, `counterparty` and `reference` whenever
+the bank reports them. These fields are optional and appear in
+`GET /v1/banking/operations` and `GET /v1/banking/operations/{id}`.
+## Banking destinations for verified third parties
+
+Company accounts can request a banking destination for an approved third-party
+KYC or KYB submission. The request is naturally idempotent per submission and
+corridor; approval triggers the destination automatically.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer"}'
+curl https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>"
+```
+
+The create response is `201` for a new intent and `200` for a replay:
+
+```json
+{
+  "intent_id": "7f2a0000-0000-4000-8000-000000000001",
+  "kind": "kyb",
+  "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "country": "MX",
+  "currency": "MXN",
+  "method": "bank_transfer",
+  "status": "pending",
+  "fulfilled_instrument_id": ""
+}
+```
+
+Statuses are `pending`, `fulfilled`, and `abandoned`. Approval creates the
+instrument and changes the intent to `fulfilled`; a rejected verification
+changes it to `abandoned`. A new request for an abandoned intent returns
+`409 intent_abandoned`; an own-onboarding verification returns
+`422 verification_invalid`.
+
+The `banking_operation_status_changed` webhook stays lightweight by design:
+it carries the identifiers and the new status only, never the enriched
+fields. When it fires, fetch the operation detail to read the direction,
+amount, counterparty and reference. See [webhooks](https://docs.cbpayapp.com/en/webhooks).
+
+## Euros: funding direction and EUR banking in one place
+
+Everything euro lives in this section. A virtual IBAN is an addressing and
+routing instrument, not a separate provider balance, and comes in two purposes:
+
+| Purpose | Default | Meaning |
+|---|---:|---|
+| `funding_usdt` | Yes | EUR funding address. Customer `sepa` payouts resolve their source here; inbound converts to your principal asset through the payin credit chain. |
+| `banking_eur` | No | EUR banking address (requires the Banking product). EUR Banking operations debit `BANK_EUR`; inbound lands in the Banking ledger. |
+
+### Request a virtual IBAN
+The platform builds the provider registrant from the approved KYC/KYB
+profile. Request the default funding address with an idempotency key:
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-funding-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"funding_usdt"}'
+```
+If a verified profile lacks a document issuing country or a document
+expiration date, an account request may send these optional top-level
+overrides (snake_case or camelCase aliases are accepted):
+
+```json
+{
+  "purpose": "funding_usdt",
+  "document_issued_country": "IT",
+  "document_expiration_date": "2035-06-01"
+}
+```
+For company accounts the equivalent optional fields are
+`incorporation_country` / `incorporationCountry` and
+`incorporation_date` / `incorporationDate`. These values are used only to
+complete the verified registrant; they do not bypass KYC/KYB.
+Both `POST /v1/banking/virtual-ibans` and `POST /v1/banking/company-wallets` accept optional `address_street`, `address_city`, `address_country` and `address_zip` overrides (camelCase accepted); explicit values win over the profile, rescuing migrated profiles with an empty address without re-verifying.
+Invalid/missing values use `corporate.address.*` (vIBAN companies),
+`individual.address.*` (persons) or `holder.corporate.address.*` (wallets) in
+`registrant_incomplete`. `business_activity` falls back to profile, verified
+industry label, then account `industry_label`.
+The request is accepted into the manual approval queue — every allocation is
+manually approved by organization operations before the core calls the
+banking rail:
+
+```json
+{
+  "virtual_iban": {
+    "id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "owner_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "manager_account_id": "",
+    "purpose": "funding_usdt",
+    "currency": "EUR",
+    "iban": "",
+    "iban_country": "",
+    "status": "pending_approval",
+    "client_order": "platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001",
+    "order_reference": "",
+    "created_at": "2026-09-10T12:00:00Z",
+    "updated_at": "2026-09-10T12:00:00Z"
+  },
+  "status": "pending_approval"
+}
+```
+
+`banking_eur` is requested explicitly with the same call and
+`{"purpose":"banking_eur"}` as the body (same idempotency contract).
+
+List the account's requests with the mandatory date window:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50&from=2026-09-01&to=2026-09-11&purpose=funding_usdt" \
+  -H "Authorization: Bearer <token>"
+```
+
+The list shape is `{page, page_size, virtual_ibans}`. Supported statuses are
+`pending_approval`, `pending`, `active`, `rejected`, `failed`, `disabled` and
+`closed`. Account-level responses show the full IBAN when one has been
+assigned; the organization-admin read surface masks it.
+
+> **Important**
+The banking corridor may require operations approval and a verified customer
+profile before a virtual IBAN can become active. Production host,
+certificate/mTLS, limits, commercial fees and activation details are
+configuration concerns and are not part of this provider-agnostic contract.
+Never infer them from examples.
+### Read, close and per-address operations
+
+Read one request, close it, or list the operations attributed to it
+(`from`/`to` are required on the operations listing):
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001 \
+  -H "Authorization: Bearer <token>"
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/close \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-close-2026-001"
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/operations?from=2026-09-01&to=2026-09-11" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Virtual IBANs for third parties
+
+Company accounts can request a `banking_eur` vIBAN for an owned third party
+after the third party has accepted the invitation and completed approved
+KYC/KYB. The third party is the balance owner; the company remains the
+relationship manager:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-0000-4000-8000-000000000001/virtual-ibans   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: third-party-viban-2026-001"   -H "Content-Type: application/json"   -d '{}'
+```
+
+The resulting request is `banking_eur` and follows the same manual approval
+and status lifecycle as an account-owned request.
+
+### BANK_EUR balance
+
+For a `banking_eur` request, query the reconciled balance explicitly:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "virtual_iban_id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+  "currency": "EUR",
+  "asset": "BANK_EUR",
+  "available": "80.00",
+  "held": "0.00",
+  "purpose": "banking_eur",
+  "source": "platform_ledger_reconciled_to_banking_provider"
+}
+```
+
+The route returns `409 balance_not_available` for `funding_usdt`, because that
+purpose converts to your principal asset through the payin credit chain instead of holding `BANK_EUR`.
+
+### Sending euros out
+
+Both outbound paths resolve an allocated, active virtual IBAN as their
+source, each with its own purpose:
+
+| Outbound path | Source purpose | Debit |
+|---|---|---|
+| Customer payout (`POST /v1/payouts`, `EU`/`EUR`/`sepa`) — full method contract in [SEPA Instant payouts](https://docs.cbpayapp.com/en/guides/sepa-instant-payouts) | `funding_usdt` | The account's normal settlement balance (`BANK_EUR` is never touched). |
+| Banking operation (`POST /v1/banking/operations`, EUR `WITHDRAW` with `paymentType: "SEPA_CT"`) | `banking_eur` | The account's `BANK_EUR` balance. |
+
+Select the source with `source_virtual_iban_id` at the top level:
+
+```json
+{
+  "currency": "EUR",
+  "type": "WITHDRAW",
+  "paymentType": "SEPA_CT",
+  "source_virtual_iban_id": "<ACTIVE_BANKING_EUR_VIBAN_UUID>"
+}
+```
+
+If the account has exactly one active virtual IBAN of the required purpose,
+the field may be omitted. No active source returns
+`422 funding_account_required`; multiple active sources without an explicit
+UUID return `422 ambiguous_source_viban`. A malformed
+`source_virtual_iban_id` returns `400 invalid_request`; a valid UUID that is
+not found or does not belong to the account returns `404 not_found`. A
+temporary source lookup failure returns `503 funding_account_unavailable`.
+The source check runs before any debit or provider dispatch.
+
+The platform strips caller-supplied ordering-party fields and stamps `payer`
+server-side from the selected vIBAN's `registrant` (unless a more-specific
+server-side company-wallet payer is present). Individual registrants provide
+first and last name; corporate registrants provide the registered company
+name and registration data. For active earlier rows without a usable
+registrant, the platform derives the ordering names from the current
+verified profile. If that profile cannot be read, the request returns
+`503 funding_account_unavailable`; if the resulting identity is incomplete,
+it returns `422 registrant_incomplete`.
+
+There is no per-vIBAN amount cap. `source_virtual_iban_id` is part of the
+operation intent: if the active source set changes between sequential
+retries, the same idempotency key returns the original operation. A
+concurrent in-flight request returns `409 operation_in_progress`; retry with
+the same key. The key is the identity of the original operation — the core
+Banking replay does not compare payloads, so do not reuse a key for a
+materially different payload.
+
+> **Note**
+Operation holds created before this source gate are grandfathered: they
+continue through their existing dispatch and reconciliation path.
+### Receiving euros (inbound)
+
+When the banking provider sends a terminal inbound event, the core
+normalizes it into `banking_virtual_iban_inbound`. The platform resolves
+the owning vIBAN and applies its purpose:
+
+- `funding_usdt` creates a `banking_funding` payin in EUR, applies the
+  marked EUR→USDT rate and the configured funding fee/spread, then follows
+  the normal payin firewall and credit chain.
+- `banking_eur` creates an inbound Banking mirror in `BANK_EUR`, uses the
+  Banking ledger path, emits KYT/operation status and queues the banking
+  receipt email.
+
+Only terminal statuses (`completed`, `success`, `settled`, `credited` or
+`succeeded`) apply the financial effect. Pending or unknown statuses remain
+reconcilable and do not credit a balance; `failed` and `rejected` are
+terminal negative outcomes that never create a credit (an uncredited funding
+payin is marked failed without a refund loop).
+
+The account operation detail can expose `payment_rail: "SEPA_INSTANT"`,
+`purpose` (`funding_usdt` or `banking_eur`) and the associated virtual IBAN
+reference when reported by the banking rail, preserving the product purpose
+through the mirror, statement and analytics.
+
+> **Note**
+Returns and recalls are handled as terminal `returned`, `recalled` or
+`reversed` events. A return before credit prevents a later completion replay
+from crediting. A credited `funding_usdt` payin creates the deterministic
+chargeback/refund path; a ledgered `banking_eur` operation receives an
+append-only reverse entry. A later completion event cannot resurrect a
+returned operation.
+### EUR errors
+
+| HTTP | Code | Action |
+|---:|---|---|
+| 400 | `invalid_json` | Send a JSON object. |
+| 400 | `invalid_purpose` | Use `funding_usdt` or `banking_eur`. |
+| 400 | `idempotency_key_required` | Send `Idempotency-Key` or `idempotency_key`. |
+| 400 | `invalid_request` | The `source_virtual_iban_id` is malformed. |
+| 404 | `not_found` | The vIBAN UUID is not found or belongs to another account. |
+| 409 | `virtual_iban_conflict` | Reuse the original request; do not create a second allocation. |
+| 409 | `balance_not_available` | Balance is only served for `banking_eur` requests. |
+| 409 | `operation_in_progress` | A concurrent request is in flight; retry with the same key. |
+| 422 | `registrant_incomplete` | The verified KYC/KYB profile is missing required registrant fields. Supply the optional document or incorporation overrides named in the message, then retry with the same idempotency key. |
+| 422 | `funding_account_required` / `ambiguous_source_viban` | No usable source of the required purpose, or several — send the selected source UUID explicitly. |
+| 403 | `verification_required` / service-gate error | Complete account verification and enable the required product. |
+| 503 | `banking_recovery_pending` / `funding_account_unavailable` | Durable request could not be checked, or temporary source lookup failure — reconcile, then retry with the same key. |
+
+### EUR FAQ
+
+#### Does requesting a virtual IBAN create a BANK_EUR balance?
+No. The purpose is recorded on the request, but a virtual IBAN is not an
+independent provider balance. Only `banking_eur` flows touch `BANK_EUR`;
+`funding_usdt` converts to your principal asset through the payin credit chain.
+## Rail fees (deposits and transfers)
+
+On top of the standalone fixed fees, banking supports **transactional fees
+per rail** — a percentage plus a fixed amount, always charged **in the
+operation currency** (`BANK_USD` / `BANK_EUR`), never in USDT:
+
+| Service | Applies to | When it is charged |
+|---|---|---|
+| `banking_deposit` | Incoming deposits (USD/EUR) | When the deposit is credited — **capped at the deposit amount** (`fee = min(fee, amount)`), so a small deposit never goes negative |
+| `banking_transfer_ach` | Outgoing ACH transfers | At dispatch, with a fail-closed balance check |
+| `banking_transfer_swift` | Outgoing SWIFT transfers | At dispatch, with a fail-closed balance check |
+| `banking_transfer_wire` | Outgoing wire transfers (FEDWIRE) | At dispatch, with a fail-closed balance check |
+| `banking_transfer_sepa` | Outgoing SEPA transfers | At dispatch, with a fail-closed balance check |
+
+For **transfers** the available balance must cover `amount + fee` — if it
+does not, the API answers `402 insufficient_funds` and the operation is
+**not created**. If the operation is definitively rejected right after
+dispatch, the fee is **refunded automatically** (same discipline as the
+default fee).
+
+**Fallback:** if the rail has no specific configuration (neither at account
+nor at platform level), the default `banking_operation` fee (fixed, debited from your default settlement asset)
+applies. A rail configured with 0% + 0 fixed is **explicitly free** — it
+does *not* fall back to the default fee.
+
+## Operation statuses
+
+| Status | Meaning |
+|---|---|
+| `pending` | Accepted, awaiting processing |
+| `processing` | Executing on the banking rail |
+| `completed` | The money arrived — final |
+| `failed` | Failed; the operation fee (if any) was refunded |
+| `cancelled` | Cancelled before execution |
+
+## Errors
+
+| HTTP | `error` | What to do |
+|---|---|---|
+| 400 | `idempotency_key_required` | Send the key in body or header |
+| 402 | `insufficient_funds` | Not enough balance: with a per-rail fee the check is `balance ≥ amount + fee` in the **operation currency** (`BANK_USD`/`BANK_EUR`); with the default fallback it is your default settlement asset balance |
+| 403 | `account_blocked` | The account is not active; contact the CBPay team |
+| 409 | `banking_customer_exists` | Your account already has a banking profile (`GET /v1/banking/customer`) |
+| 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and do not create a second profile |
+| 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
+| 409 | `no_banking_customer` | Create your profile first (`POST /v1/banking/customer`) |
+| 409 | `banking_account_limit` | Person accounts can hold at most 1 bank account |
+| 403 | `company_required` | Third-party users are available for company accounts only |
+| 422 | `verification_required` | Third-party registration requires the `verification_id` of an approved verification ([verify first](https://docs.cbpayapp.com/en/guides/kyc)) |
+| 422 | `verification_not_approved` | The referenced verification is not approved yet; wait for approval |
+| 422 | `verification_kind_mismatch` | The `type` sent does not match the verification kind (KYC ⇒ INDIVIDUAL, KYB ⇒ COMPANY) |
+| 422 | `verification_invalid` | You referenced your onboarding verification; the third party needs their own |
+| 404 | `not_found` | The third party (or the verification) does not exist or does not belong to your account |
+| 502 | `banking_request_failed` | Banking corridor error; the fee was refunded — retry |
+
+The general error catalog lives in [Errors](https://docs.cbpayapp.com/en/errors).
+
+## FAQ
+
+#### Does banking money show up in my USD balance?
+A `funding_usdt` inbound converts to your principal asset through the funding payin chain (USD is the principal balance). A `banking_eur` inbound is credited to the Banking EUR mirror after the terminal event and ledger processing. The provider remains authoritative for the bank balance. **Per-rail fees** are charged in the
+operation currency (your `BANK_USD`/`BANK_EUR` balance); only the default
+`banking_operation` fallback fee is debited from your default settlement asset balance.
+#### What happens to the fee if an operation fails?
+It is refunded automatically — profile, account and operation fees alike,
+including per-rail fees (refunded on the definitive synchronous rejection).
+A retry with the same `Idempotency-Key` returns the original operation
+(`idempotency_hit: true`) and never charges twice.
+#### How many bank accounts can I open?
+One per currency (USD, EUR). Additionally, **person** accounts can hold at
+most 1 bank account in total (`409 banking_account_limit`); company
+accounts have no limit.
+#### Why doesn't one of my accounts appear in the list?
+The list only exposes accounts **enabled for your operation** per the
+corridor configuration. A non-enabled account does not appear and its
+by-id queries answer `404 not_found` — contact your CBPay team if you need
+it enabled.
+#### Can a person account register third-party users?
+No — third parties are a company feature (`403 company_required`).
+Registration also requires the `verification_id` of an **approved** KYC/KYB
+verification of the third party.
+#### How do I know when a payment reached its final state?
+Subscribe to `banking_operation_status_changed`: it fires on `completed` /
+`failed` and includes the `receipt_url` once final. You can also poll
+`GET /v1/banking/operations/{id}`.
+#### How long does a US ACH, Fedwire or SWIFT withdrawal take?
+The planning estimate is 24–48 business hours for ACH, the same business day
+(up to 24 hours) for Fedwire, and 24–48 business hours for SWIFT. SWIFT may
+take longer depending on the receiving bank; cutoffs and holidays can also
+extend settlement.
+## Banking creation claims and recovery
+
+Creation claims are durable records, not permission to send a second provider
+request. The platform stores `banking_creation_claims` with `kind`,
+`idempotency_key`, `request_hash`, status, attempts and refund state. Migration
+105 creates this table and its single-flight lock; migration 106 stores
+transaction-firewall fee-refund recovery. Migration 074 persists the resolved
+core provider on customer idempotency claims.
+
+### Recovery rules
+
+- A completed account recovery compares the provider account ownership with
+  the claimed customer's `ProviderID`.
+- A terminal provider authentication response (`401` or `403`) does not by
+  itself prove that the creation failed; the claim remains recoverable.
+- Reusing the same idempotency key with a different request hash is rejected.
+- A completed claim can be replayed with HTTP `200` and `idempotency_hit: true`;
+  recovery does not call the provider again.
+- `POST /v1/org/banking/creation-claims/refund` retries a pending fee refund
+  for `kind=customer` or `kind=account`.
+- `POST /v1/org/txn-firewall/fee-refunds/{resourceID}/retry` retries the
+  durable firewall-fee refund. A completed refund replays as HTTP `200`.
+
+The core admin route
+`POST /v1/ops/banking/account-creations/reconcile` verifies the provider
+account and finalizes the local mirror. The org-admin routes list claims,
+reconcile customer claims, and retry refunds. These operations are locked so
+concurrent reconciliation cannot originate duplicate money movement.

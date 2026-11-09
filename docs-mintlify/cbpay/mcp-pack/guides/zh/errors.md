@@ -1,0 +1,759 @@
+---
+title: "错误"
+description: "错误格式与完整的错误码目录"
+slug: zh/errors
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/errors
+---
+所有错误都采用相同的结构：
+
+```json
+{
+  "error": "insufficient_funds",
+  "message": "account balance is not enough for this operation"
+}
+```
+
+- `error`：稳定的 `snake_case` 错误码——请在您的业务逻辑中使用它。
+- `message`：面向人类的说明——可能变化，不要解析它。
+
+> **注**
+**已脱敏的错误信息。** 错误的 `message` 绝不会暴露供应商名称、基础设施细节、URL、上游原始响应体（JSON/HTML）或内部配置——无论是 API 响应、webhook 还是持久化的状态字段都不会。来自支付处理方的业务性拒绝会保留可操作的失败原因（例如某份文件或账户为何被拒绝）；基础设施故障会被替换为固定的通用信息 `"the payment provider could not process the request"`——请使用相同的 `idempotency_key` 重试这些操作。
+| `payin_corridor_unsupported` | 请求的国家/币种/方式没有可用的 payin provider — 重新读取 `GET /v1/payins/methods` |
+| 502 | `deposit_account_failed` | 无法配置专属收款账户；重试前先读取账户列表 |
+
+## 按类别划分的错误码
+
+### 身份认证与权限
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 401 | `unauthorized` | 凭证缺失或无效 |
+| 401 | `invalid_credentials` | 邮箱或密码错误（登录） |
+| 401 | `invalid_refresh_token` | 刷新令牌无效、已过期、已被使用或已被吊销 —— 请引导用户重新登录 |
+| 403 | `account_required` | 该端点需要账户级凭证 |
+| 403 | `org_admin_required` | 该端点需要管理员凭证 |
+| 403 | `forbidden` | 凭证级别不允许 |
+| 403 | `account_blocked` | 账户不是 active；这也会阻止 `POST /v1/me/verification/link` —— 请联系管理员恢复账户 |
+| 403 | `verification_rejected_requires_admin` | 合规团队已拒绝该账户的 KYC/KYB；已禁用自助入驻 —— 请联系管理员重新开放验证 |
+| 403 | `member_disabled` | 该用户已被禁止登录；请联系您组织的管理员 |
+| 403 | `passkey_rejected` | 通行密钥（passkey）验证失败；请重试或使用密码登录 |
+| 403 | `owner_required` | 只有账户的 owner 成员才能执行该操作 |
+| 403 | `read_only_role` | 查看者（viewer）角色为只读 —— 请以 owner 或 operator 身份登录后再操作 |
+| 404 | `member_not_found` | 此凭证没有成员资料（API key 没有成员档案） |
+| 409 | `self_action_forbidden` | 您不能在此更改自己的登录状态或重置自己的密码 —— 请联系另一位 owner（更改自己的密码请使用 `POST /v1/me/password`） |
+| 403 | `service_disabled` | 该服务未对您的账户启用（查看 `GET /v1/services`） |
+| 403 | `org_suspended` | 服务已暂停；请联系 CBPay 团队 |
+| 403 | `company_only` | 仅企业账户可用的功能 |
+| 403 | `company_required` | 仅企业账户可用的功能（例如[第三方银行服务](https://docs.cbpayapp.com/zh/guides/banking)） |
+| 403 | `human_session_required` | 该操作涉及私钥（独立钱包导入/导出），需要带 2FA 的已登录用户会话——不允许使用 API 密钥 |
+
+### OTP / 双因素认证
+
+完整流程和详情见[安全与双因素认证](https://docs.cbpayapp.com/zh/security-2fa)。
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 403 | `otp_required` | 该操作需要 OTP：验证一个质询后携带 `X-OTP-Token` 重试 |
+| 403 | `otp_invalid` | OTP 令牌无效、已过期或已被使用 |
+| 403 | `session_required` | OTP 质询需要用户会话，不能使用 API 密钥 |
+| 403 | `account_blocked` | 账户被封禁或已关闭；不会发送验证码 |
+| 403 | `phone_binding_cooldown` | 手机号绑定未满 4 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱）。可用 `POST /v1/me/phone/unlock-cooldown`（邮箱/totp 令牌）提前解除，或请运营方执行（`POST /v1/accounts/{id}/phone/clear-cooldown`） |
+| 409 | `phone_verification_required` | 通过 SMS/WhatsApp 启用登录 2FA 前需先验证手机号（OTP 挑战） |
+| 401 | `invalid_code` | 验证码不匹配 |
+| 401 | `invalid_pending_token` | 登录中间令牌已过期；请重新登录 |
+| 400 | `invalid_action` / `invalid_channel` | 操作或渠道不在目录中（质询 `channel` 须为 `sms`、`whatsapp`、`email` 或 `totp` 之一） |
+| 409 | `phone_required` | 账户未绑定手机号（`PATCH /v1/me`） |
+| 409 | `otp_phone_missing` | 登录需要 OTP 但账户没有手机号；请联系您的运营方 |
+| 409 | `challenge_not_pending` | 质询已过期或已被使用；请创建一个新的 |
+| 403 | `independent_factor_required` | 手机号冷却只能通过身份验证器应用或已验证邮箱解锁，绝不能使用发送到新号码的验证码 |
+| 429 | `too_many_attempts` | 达到发送/验证次数限制；请等待几分钟 |
+| 503 | `otp_unavailable` | 验证服务不可用（操作保持锁定；OTP 绝不会被跳过） |
+| 409 | `otp_disabled_for_org` | 您的组织未启用按操作的双因素认证；请联系您的运营方 |
+| 409 | `totp_not_started` | 尚未开始 TOTP 注册；请先调用 `POST /v1/me/totp/enroll` |
+
+### 社交登录（OAuth）
+
+完整流程和详情见[社交登录](https://docs.cbpayapp.com/zh/guides/social-login)。
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 400 | `invalid_provider` | 提供方不在 `google/apple/microsoft/facebook` 范围内 |
+| 400 | `provider_not_configured` | 您的组织尚未启用该提供方 |
+| 401 | `invalid_credential` | 提供方凭证无效、已过期或来自其他应用 |
+| 409 | `email_conflict` | 已存在使用该邮箱的账户；请先登录再绑定该提供方 |
+| 409 | `identity_taken` | 该提供方身份已绑定到其他账户 |
+| 409 | `last_login_method` | 无法解绑您唯一的登录方式 |
+
+### 组织管理面板
+
+以下错误码来自**组织管理界面**（[CBPay Admin](https://cbpayapp.com) 面板），并非上文所述的账户级 API —— 它们不会出现在账户级 `/v1/*` 端点中。
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 403 | `global_treasury_access_disabled` | 该组织尚未在其管理面板启用全局资金总览；请联系平台管理员在组织设置中启用 `global_treasury_read` |
+| 503 | `core_admin_credential_missing` | 平台管理员目录需要配置核心凭证；请联系平台管理员 |
+| 400 | `invalid_value` | 组织设置的值类型有误（例如 `global_treasury_read` 必须是布尔值，而不是字符串） |
+| 409 | `approval_in_progress` | 另一位管理员正在处理此 adjustment；请等待当前操作完成后再重试 |
+
+### 校验（400）
+
+| `error` | 含义 |
+|---|---|
+| `invalid_json` | 请求体不是有效的 JSON 或包含未知字段 |
+| `invalid_event_ids` | 提供 1 到 100 个 UUID 格式的 event_ids |
+| `invalid_lang` | `lang` 必须为 `es`、`en` 或 `zh` |
+| `invalid_settings` | 组织设置不是有效的 JSON 对象或无法规范化；请修正设置请求体后重试 |
+| `invalid_type` | `type` 必须为 `person` 或 `company` |
+| `invalid_email` / `invalid_display_name` | 必填字段无效 |
+| `invalid_characters` | 名称或标签（`display_name`、联系人 `alias`、目的地或 API 密钥 `label`）包含 HTML 或可执行脚本，已被拒绝；请发送纯文本 |
+| `weak_password` | 密码少于 8 个字符 |
+| `invalid_role` | 成员角色无效 |
+| `unknown_org` | 组织 slug 错误（应使用 `cbpay`） |
+| `invalid_request` | 缺少 `country`/`currency` |
+| `invalid_purpose` | `purpose` 必须是 `fondeo` 或 `banking`；请选择受支持的 Banking 走廊 |
+| `idempotency_key_required` | 缺少幂等键 |
+| `unsupported_document_type` | 不支持的文档类型；请使用受支持的文档类型 |
+| `invalid_document_file` | 文档文件无效；请上传有效的 PDF、JPEG 或 PNG 文件 |
+| `reserved_idempotency_key` | 幂等键使用了系统保留前缀（`payin-convert:` 或 `checkout-swap:`，属于自动转换）——请改用其他键 |
+| `beneficiary_required` | 缺少付款收款人信息 |
+| `invalid_cuit` | 阿根廷（`AR`）payout 要求 `beneficiary.tax_id` 为 11 位 CUIT 或 CUIL — 请发送收款人的 11 位标识；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts) |
+| `invalid_cbu` | 阿根廷（`AR`）payout 要求 `beneficiary.account_number` 为 22 位 CBU 或 CVU；USD payout 仅接受 CBU — 请发送有效的 22 位 CBU/CVU（USD 使用 CBU）；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts) |
+| `invalid_amount` | 金额不是有效的正十进制数 |
+| `recipient_required` / `self_transfer` | 转账目标无效 |
+| `invalid_chain` / `invalid_asset` | 不支持的网络或资产 |
+| `to_address_required` | 缺少提现目标地址 |
+| `invalid_payload` | 缺少必填字段（例如 AML/CFT 监控的 `enabled`、身份验证的 `external_customer_id`） |
+| `invalid_iban` | SEPA payout 的 IBAN 无效、不支持 `EU` 路由，或在 SEPA Instant V1 中属于 GB；请修正后使用新的幂等键重试 |
+| `invalid_qr_payload` | 出金二维码不可读或不受支持（BR Code 损坏、校验和无效或动态 PIX 二维码）；`message` 说明具体原因 |
+| `liveness_already_completed` | 该验证的活体检测已经通过 |
+| `invalid_event_type` / `weak_secret` / `invalid_callback_url` | Webhook 订阅无效 |
+| `invalid_phone` | 手机号无法规范化为 E.164 格式（联系人和 `to_phone`） |
+| `invalid_language` | PDF 报告的 `lang` 不是 `en`、`es` 或 `zh`（AML/CFT 报告与验证报告） |
+| `invalid_locale` | `PATCH /v1/me`（或注册）发送了非空且不属于 `en` / `es` / `zh` 的 locale。空字符串会存为英语。不同于 `invalid_language`（PDF 报告的 `lang`），也不同于组织管理员在 `default_locale` 上的 `invalid_value` |
+| `invalid_format` | 验证报告的 `format` 不是 `pdf` 或 `json` |
+| `batch_too_large` | 联系人导入超过 1,000 条（请分批上传） |
+| `invalid_body` | 无法读取请求体（二进制上传、webhook） |
+| `invalid_image` | 头像请求体为空或不是支持的图片格式（PNG/JPEG/WebP，最大 512 KB） |
+| `invalid_interval` | 订阅的 `interval` 必须是 `daily`、`weekly`、`monthly` 或 `yearly` |
+| `query_required` | `GET /v1/resolve` 需要 `alias=` 或 `qr=` 参数 |
+| `same_email` | 新登录邮箱与当前邮箱相同；请改用 `POST /v1/me/email/verify` 进行验证 |
+| `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | 管理端校验 |
+| `invalid_settlement_hours` | `settlement_hours` 仅支持 `payin_card` 费用服务，且必须是非负整数（`0` = 立即入账）— 参见[费用](https://docs.cbpayapp.com/zh/concepts/fees) |
+| `invalid_country` | 国家/地区代码格式错误或缺失——ISO 3166-1 alpha-2（例如 `GET /v1/aml/catalogs/cities?country=`）；也用于有效但不支持的国家/地区过滤条件（例如在银行目录查询中传入非 `US` 的 `country`） |
+
+### QR payin 幂等性
+
+对于 `method: "qr"` 的 `POST /v1/payins`，`idempotency_key` 是可选的。
+可以在 JSON body 或 `Idempotency-Key` 请求头中发送；两者同时存在时以
+body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台会在服务
+端按账户对 key 做命名空间隔离；集成方发送的 key 不会被改写。
+
+- `400 invalid_idempotency_key`：key 超过 256 个字符或包含 CR/LF。修正
+  key 后，用修正后的请求重试。
+- `409 idempotency_conflict`：相同 key 被用于不同国家、币种、方式或数值
+  金额。要 replay，请保留原始 payload；要创建新收款，请使用新的 key。
+
+相同 key 与相同 payload 会返回原始收款，并带有
+`idempotency_hit: true`，不会创建第二笔收款。金额按数值比较
+（`100` 与 `100.00` 相同）；`glosa` 只是展示文本，不参与 replay 身份。
+使用 `GET /v1/payins/{payinID}` 查询实时状态。
+
+### 资金与状态（402 / 404 / 409 / 422 / 429）
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 402 | `insufficient_funds` | 可用余额不足——对于银行转出，校验包含通道费用（`余额 ≥ 金额 + 费用`）；不满足时不会创建该操作 |
+| 404 | `not_found` | 资源不存在（或属于其他账户） |
+| 404 | `not_available` | 所请求语言下不存在该文档 |
+| 404 | `country_not_found` | 未知的 ISO 3166-1 alpha-2 国家/地区代码（城市目录） |
+| 404 | `bank_not_found` | 该 routing number 或 SWIFT/BIC 不在嵌入式银行目录中——payout/交易对手表单保持手动填写 |
+| 404 | `postal_code_not_found` | 未知邮政编码，或该国家/地区没有数据集（邮政编码查询）——地址字段保持手动填写 |
+| 404 | `recipient_not_found` | 转账目标不存在 |
+| 404 | `verification_not_found` | 账户尚未提交任何验证（在完成入驻前调用 `GET /v1/me/verification/report`） |
+| 409 | `duplicate` | 资源已存在 |
+| 409 | `receipt_not_available` | 技术筛查等待期间或扣款前筛查失败后，payout 暂无回执；请等待最终财务状态 |
+| 403 | `verification_requires_2fa` | 新的自助 KYC/KYB 链接申请需要已确认的 TOTP 或已注册的通行密钥；已有开放链接会在此 gate 之前重新返回。**解决方法：** 注册一个因子后重试 `POST /v1/me/verification/link` |
+| 403 | `verification_required` | 您的账户尚未通过身份验证（个人=KYC，企业=KYB）；获批前不能创建认证 payin、collect、专属入金账户、已保存卡扣款或订阅——请通过 `POST /v1/me/verification/link` 申请审核链接；被动入账和读取仍可用 |
+| 422 | `verification_required` | 该操作需要一项已通过的第三方验证的 `verification_id`（第三方银行账户登记、指定持卡人卡片） |
+| 422 | `verification_not_approved` | 所引用的验证尚未通过 |
+| 422 | `verification_kind_mismatch` | 验证类型与产品不匹配（KYC ⇒ person/INDIVIDUAL，KYB ⇒ company/COMPANY） |
+| 422 | `verification_invalid` | 在需要第三方验证的场景引用了自身入驻的验证 |
+| 403 | `company_account_required` | 第三方验证（KYC/KYB 链接/提交）仅限企业账户 |
+| 400 | `invalid_child` | 缺少子邀请 ID — 请传入 `GET /v1/me/verification/children` 返回的 `child_link_id` |
+| 409 | `already_verified` | 使用已通过验证的账户请求了入驻链接 |
+| 409 | `superseded` | 验证 ID 是冻结的迁移墓碑；读取内容来自活跃案件 | 不要在墓碑上作出决定、上传证据、创建活体链接、预签名/确认文档或 PATCH banking intent。读取 `migrated_to` 并操作活跃案件 |
+| 409 | `identity_locked` | 验证获批后，`display_name`、`tax_id` 和 `country` 来自已验证的身份，无法通过 `PATCH /v1/me` 修改；请联系支持 |
+| 409 | `verification_in_progress` | 自有验证案件仍在进行时，`PATCH /v1/me` 不能修改国家；请先完成或关闭该案件 |
+| 409 | `no_screening` | 在没有先行筛查的情况下发起 AML/CFT 重新筛查/监控 |
+| 409 | `no_banking_customer` | 传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程 |
+| 400 | `banking_eur_requires_viban` | EUR Banking 账户通过虚拟 IBAN 开立。请在 Operar EUR 中请求 `purpose: "banking_eur"`，不要创建通用 banking customer |
+| 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
+| 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
+| 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
+| 409 | `bank_ref_conflict` | 该银行参考号已被另一笔操作认领（属于你租户时，响应会用 `claimed_by`/`claimed_kind` 指明）——请修正证据，不要换参考号重试 |
+| 503 | `bank_ref_recovery_pending` | 上一次确认使该银行参考号处于不明确状态，平台正在核对持久 claim——请用相同的确认（相同的参考号和 idempotency key）重试；重试会恢复而不会重复 |
+| 422 | `currency_not_supported` | 该货币没有汇率 |
+| 422 | `core_rejected` | 处理方拒绝了该操作 —— 当消息报告**账单地址不完整**（或缺少州/省）时，已保存的卡没有可用的账单地址：请让付款人通过 `save_card: true` 重新保存 ；处理方也可能在扣款前拒绝阿根廷 alias payout：alias 无法解析，或 USD alias 解析为 CVU；修正受益人后使用新的幂等键重试。 |
+| 400 | `invalid_payload` | 对于 `method: "card"`，`expires_at` 必须是 RFC3339，至少提前 5 分钟且不超过 48 小时 |
+| 422 | `checkout_expiring_soon` | checkout 链接将在不到 5 分钟后过期。使用银行卡付款前，请向商户索取新的链接 |
+| 429 | `too_many_open_card_sessions` | 账户已有 50 个开放银行卡会话，且没有可驱逐的零尝试 `pending` 会话 —— 请完成或等待现有会话过期后再创建 |
+| 503 | `card_recovery_pending` | 平台正在核对一笔结果不明确的银行卡收款。请使用**相同**幂等键重试；不要生成新键或第二笔收款 |
+| 409 | `core_charge_terminal` | 底层银行卡扣款已经处于最终状态，因此平台不会再次入账 —— 读取当前 payin/扣款状态，切勿创建第二笔扣款 |
+| 503 | `card_reuse_unavailable` | 平台无法核对现有的开放银行卡收款。请使用**相同**幂等键重试原始请求；不要创建第二笔收款 |
+| 503 | `core_reuse_unavailable` | core 未返回完整且可恢复的银行卡会话。请使用**相同**幂等键重试原始请求 |
+| 422 | `recipient_unavailable` | 目标账户无法接收 |
+| 422 | `recipient_ambiguous` | 多个账户共用该 `to_phone` 号码（请使用 `to_account_id` 或 `to_email`） |
+| 422 | `contact_not_linked` | 该联系人没有可转账的已关联 CBPay 账户 |
+| 422 | `no_saved_destination` | 该联系人在该通道/链上没有已保存的目标 |
+| 422 | `wallet_limit_reached` | 该账户在此网络+资产组合下已持有对应钱包（充值钱包：所有账户；[隔离钱包](https://docs.cbpayapp.com/zh/guides/segregated-wallets)：个人账户） |
+| 422 | `insufficient_gas` | [独立钱包](https://docs.cbpayapp.com/zh/guides/segregated-wallets)没有支付网络费所需的原生 gas（TRX/ETH）；请为该地址充值后重试 |
+| 409 | `idempotency_conflict` | 使用相同幂等键的另一次钱包创建/转出仍在进行中；请使用同一个键重试 |
+| 400 | `physical_temporarily_unavailable` | 新实体卡发行暂时暂停；请申请虚拟卡。已经发行的实体卡继续正常使用。 |
+| 409 | `card_limit_reached` | 个人账户已有一张有效卡或一条开放申请；请先处理现有申请再申请新卡 |
+| 409 | `card_cancelled` | 卡片已注销，无法更新 |
+| 409 | `card_not_pending` | 只有处于 `pending_activation` 状态的卡片才能激活 |
+| 409 | `cardholder_kyc_pending` | 指定持卡人需要提交身份证明文件 |
+| 400 | `invalid_occupation` | `occupation` 不是目录中的代码（`GET /v1/cards/catalog/occupations`） |
+| 400 | `invalid_kind_of_business` | `kind_of_business` 不是目录中的代码（`GET /v1/cards/catalog/business-activities`） |
+| 422 | `issuer_data_incomplete` | request、验证自动填充和 KYB 派生数据组装后仍缺少或存在无效的发卡方字段；请根据 `message` 中列出的键修正并重试 |
+| 422 | `screening_required` | 账户没有可用于派生持卡人 PEP 的 AML/CFT 身份验证 screening；请完成 screening 后使用同一个卡片 request 重试 |
+| 422 | `cardholder_name_too_long` | 个人的 `first_name` 与 `last_name` 合计超过发卡方 22 个字符的卡面打印限制；请缩短姓名后重试 |
+| 400 | `invalid_settlement_asset` | `settlement_asset` 不是 USDT、USDC、BTC 或 GOLD |
+| 400 | `settlement_asset_disabled` | 您的组织已禁用该资产作为结算来源 |
+| 422 | `settlement_limit_exceeded` | 该操作超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的单笔操作限额；请使用 USDT/USDC 或拆分操作 |
+| 422 | `settlement_daily_limit_exceeded` | 该账户已超出波动性资产（BTC/GOLD/SILVER/PLATINUM）的 24 小时交易量限额；请使用 USDT/USDC 或稍后重试 |
+| 422 | `guard_diverged` | BTC 价格参考值超出交易前价格保护的偏差上限；等待价格收敛或拆分操作，并使用相同幂等键重试 |
+| 400 | `invalid_pair` | 兑换（swap）的源货币与目标货币相同 |
+| 400 | `amount_too_small` | 兑换金额不足目标货币的最小单位 |
+| 400 | `swap_asset_disabled` | 兑换涉及的某一货币已被您的组织禁用 |
+| 409 | `already_paid` | [通用收款链接](https://docs.cbpayapp.com/zh/guides/checkout)已通过其他方式支付 |
+| 410 | `checkout_expired` | 通用收款链接到期未支付 |
+| 422 | `method_unavailable` | 收款链接上所选方式对该链接或国家不可用 |
+| 400 | `country_required` | 收款链接的法币物化缺少 `?country=XX` |
+| 400 | `currency_required` | 该国家以多种币种提供收款链接的方式；缺少 `?currency=YYY` |
+| 422 | `country_unavailable` | 该国家在收款链接上没有可用的支付方式 |
+| 422 | `collect_otp_failed` | 通道拒绝发送链接拉取式收款的 OTP |
+| 422 | `collect_rejected` | 通道拒绝了链接的拉取式扣款（OTP 无效或数据错误）；链接保持待支付 |
+| 422 | `provider_rejected` | 对于 `VE/VES/c2p`，不要调用 `/collect/otp`；付款人会把银行生成的 `claveDinamica` 放在 collect 请求的 `otp` 字段中。Adapter 内部信号为 `collect_otp_unsupported`。 |
+| 422 | `settlement_asset_disabled` | 收款链接的 `settlement_asset` 已被您的组织禁用 |
+| 422 | `checkout_amount_mismatch` | CBPay 转账不足以覆盖收款链接的当前应付额；错误消息附带最新金额 |
+| 503 | `checkout_recovery_pending` | 所选 checkout 支付选项正在核对。请重试相同的物化请求；不要创建第二个支付选项 |
+| 422 | `stored_card_revoked` | [已保存的卡片](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)已被撤销；不再接受扣款 |
+| 422 | `verification_required` | [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos)：用商户已批准的第三方 KYC/KYB 的 `verification_id` 注册商户 |
+| 422 | `merchant_disabled` | [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 商户已停用；先重新启用再生成收款 |
+| 422 | `nothing_received` | [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 收款未收到任何链上支付：无可退款 |
+| 422 | `refund_exceeds_received` | 退款超过 [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 收款已收金额减去已退金额 |
+| 503 | `refund_recovery_pending` | 退款关联暂时不可用；请使用相同的幂等键重试，不要发起第二笔提现 |
+| 400 | `to_address_required` | [QR Crypto POS](https://docs.cbpayapp.com/zh/guides/qr-pos) 退款（及加密货币提现）必须显式提供目标地址 |
+| 422 | `deposit_account_limit_reached` | 个人账户和未支持或既有通道每个通道只有一个账户；企业 banking 每个启用通道最多 50 个账户 |
+| 400 | `invalid_label` | 本地充值账户昵称超过 60 个字符；缩短后重试 |
+| 409 | `alias_pending` | AR/ARS 企业 banking CVU 尚未设置银行 alias；先调用 bank-alias PUT，再读取余额或流水 |
+| 422 | `purpose_not_supported` | 余额和流水仅适用于 `purpose: "banking"` 工具 |
+| 422 | `ambiguous_source_instrument` | 存在多个活跃 BO/BOB banking 来源；在 `source_instrument_id` 中发送所选 UUID |
+| 422 | `invalid_source_instrument` | 所选来源不是活跃的 BO/BOB banking 工具；请选择有效目的地 |
+| 409 | `intent_abandoned` | 第三方验证被拒绝；请求 banking 前先创建新的验证链接 |
+| 409 | `deposit_account_conflict` | core 返回的充值目的地已分配给其他组织——先完成对账再重试 |
+
+| 422 | `deposit_account_not_recoverable` | 待处理目的地不是可恢复的 MX/MXN/bank_transfer 工具 |
+| 422 | `export_rejected` | 处理方拒绝了该独立钱包的私钥导出 |
+| 422 | `stored_card_corridor_mismatch` | 该[已保存卡片](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)属于与本次收款不同的国家/货币走廊 |
+| 409 | `subscription_state` | 该[订阅](https://docs.cbpayapp.com/zh/guides/stored-cards-subscriptions)当前状态不允许该操作（例如暂停已取消的计划） |
+| 409 | `email_required` | 该登录没有真实邮箱；请通过 `POST /v1/me/email/change` 设置 |
+| 422 | `payin_not_refundable` | 该收款未入账或没有处理机构凭证，无法[退款](https://docs.cbpayapp.com/zh/guides/refunds) |
+| 422 | `refund_not_supported` | 该通道不支持[退款](https://docs.cbpayapp.com/zh/guides/refunds)（QR、报备转账、专属账户、代扣）。POS 收款通过加密通道退款 |
+| 422 | `refund_exceeds_payin` | [退款](https://docs.cbpayapp.com/zh/guides/refunds)超过该收款的剩余可退金额；余额未变动 |
+| 422 | `settlement_pending` | 该收款的余额仍在[结算](https://docs.cbpayapp.com/zh/concepts/fees#银行卡收款结算延迟)排期中，释放（到达 `settle_at` 或由组织管理员释放）前无法[退款](https://docs.cbpayapp.com/zh/guides/refunds) |
+| 400 | `invalid_amount` | [退款](https://docs.cbpayapp.com/zh/guides/refunds)的 `amount` 必须是以收款币种表示的正十进制数 |
+| 503 | `refund_event_pending` | 退款结果已保存，但最终事件仍在持久化。请使用**相同**幂等键重试；不要发送第二笔退款 |
+| 422 | `preauth_not_supported` | 捕获与作废仅适用于银行卡收款（其他通道没有可关闭的 hold） |
+| 422 | `payin_not_capturable` | 该收款不是待处理的手动预授权（自动捕获、已结算或没有处理方 charge 引用） |
+| 202 | `action_pending` | 捕获或作废正在与处理方核对；请使用**相同** `idempotency_key` 重试（新 key 会开启一个冲突动作） |
+| 503 | `payin_event_pending` | 收款已入账，但最终事件仍在核对中。请使用**相同**幂等键重试；不要创建新的收款 |
+
+### 合规（403 / 503）
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 403 | `compliance_hold` | 该操作已被保留审核且未被处理；没有资金移动。API 消息为 `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`。门户会显示可复制的引用行，其中包含 UTC 时间、错误代码和短请求 ID；联系支持团队时请一并提供。 |
+| 403 | `geo_restricted` | 该服务或操作不适用于发起方或交易对手所在的司法辖区 |
+| 503 | `compliance_check_unavailable` | 合规校验无法完成，且 payout 无法写入技术筛查队列；请使用**相同**幂等键重试。队列可用时，`POST /v1/payouts` 会返回 `202` 且资源为 `status: pending`。其他校验和安全错误仍使用各自代码 |
+| 422 | `travel_rule_required` | 超过 Travel Rule 阈值的链上提现缺少受益人数据 — 补充 `travel_address` 或 `wallet_type: "self_hosted"` + `beneficiary_name`（[加密货币指南](https://docs.cbpayapp.com/zh/guides/crypto)） |
+| 422 | `travel_rule_beneficiary_required` | 适用 Travel Rule 的提现缺少 `beneficiary_name` |
+| 422 | `travel_rule_address_mismatch` | 您的 `to_address` 与收款机构批准的付款地址不一致 — 省略它或使用交换返回的地址 |
+| 422 | `travel_rule_rejected` | 收款机构拒绝了该转账；请核对受益人数据 |
+| 422 | `travel_rule_pending` | 收款机构尚未处理该交换；请使用**相同的**幂等键重试 |
+| 422 | `travel_rule_incomplete_approval` | 收款机构批准时未提供付款地址；请联系支持团队 |
+| 503 | `travel_rule_unavailable` | Travel Rule 数据交换暂时不可用；请使用**相同的**幂等键重试 |
+
+### Qscore
+
+信用局端点的错误([指南](https://docs.cbpayapp.com/zh/guides/qscore))。
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 400 | `purpose_required` | 创建报告时缺少 `purpose` — 数据保护法要求声明用途(`credit_evaluation`、`tenant_screening`、`hiring`、`supplier_onboarding` 或 `other`) |
+| 400 | `invalid_purpose` | `purpose` 不是允许的值之一(`credit_evaluation`、`tenant_screening`、`hiring`、`supplier_onboarding`、`other`)— 请修正该值。`self_access` 在此被拒绝:您自己的报告只能通过 `POST /v1/qscore/my-report` 获取 |
+| 400 | `invalid_doc_id` | `doc_id` 在给定的 `country` 无效(例如智利 RUT 校验位错误)— 修正证件格式 |
+| 400 | `invalid_subject_type` | `subject_type` 不是 `person`/`company` 且无法从证件推断 — 请显式发送 |
+| 400 | `invalid_tax_id` | 账户已验证的 `tax_id` 在其国家/地区无效(自助报告)— 请联系客服修正您的已验证信息 |
+| 403 | `kyc_required` | 生成您自己的报告需要已批准的 KYC/KYB — 请先完成身份验证 |
+| 403 | `report_required` | 启用监控需要先购买该主体的报告 — 请先购买([指南](https://docs.cbpayapp.com/zh/guides/qscore));出于隐私保护,主体不存在时也会返回相同的响应 |
+| 404 | `no_score` | 该主体尚无已计算的评分 — 请先购买报告 |
+| 404 | `pdf_not_ready` | 报告 PDF 尚不可用 — 轮询详情直到 `status=ready`(`risk_report_ready` webhook 会通知你) |
+| 409 | `no_tax_id` | 已验证账户没有 `tax_id` 记录,自助报告无法解析其主体 — 请先完善您的已验证信息 |
+| 409 | `identity_mismatch` | 账户的 `tax_id` 与已验证的身份文件不符(自助报告)— 请联系支持;您的已验证数据必须一致 |
+| 400 | `no_valid_items` | 批次中的所有行均被拒绝(`invalid_doc_id` / `duplicate_in_batch`),且未创建任何批次 — 请在本地校验文件(每个 `doc_id` 必须通过该国校验位且保持唯一),然后使用**新的**幂等键重新提交 |
+| 400 | `too_many_items` | 单个批次最多接受 5,000 个主体 — 请将投资组合拆分为多个批次,每个批次使用各自的幂等键 |
+| 409 | `already_decided` | 授权链接已被处理(`granted`、`revoked` 或 `expired`),无法再次变更状态 — 如需重新授权,请创建新的链接 |
+| 409 | `link_inactive` | 授权背后的银行连接未处于 `active` 状态(widget 会话已过期或链接已被撤销)— 持有人需通过同一授权链接重新连接 |
+| 409 | `holder_mismatch` | 银行验证的证件与主体的 `doc_id` 不一致 — 属于其他证件的账户永远无法授予授权;请确认为正确的证件创建了链接 |
+| 409 | `seal_companies_only` | Qscore 公开印章仅适用于**企业**账户 — 个人账户没有印章([指南](https://docs.cbpayapp.com/zh/guides/qscore-seal)) |
+| 409 | `seal_not_eligible` | 该账户的 Qscore 当前不符合公开印章资格(等级 A 或 B,且评估不超过 90 天)— 请先购买最新报告([指南](https://docs.cbpayapp.com/zh/guides/qscore));若等级仍低于 B,印章在分数提升前不可用 |
+| 404 | `no_active_seal` | 该账户没有可撤销的有效印章 — 请先通过 `POST /v1/qscore/my-seal` 激活;已撤销的印章将永久失效(可创建新印章) |
+
+### 交易防火墙
+
+被交易防火墙挂起的操作在审核时返回的错误（见[指南](https://docs.cbpayapp.com/zh/guides/transaction-reviews)）。挂起本身**不是错误**：创建请求返回 `202 Accepted` 并携带 `status: in_review` 和 `review_id`。
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 400 | `invalid_status` | `status` 过滤条件无效——请使用 `in_review`、`info_requested`、`released`、`rejected` 或 `all` |
+| 400 | `invalid_search` | `search` 过滤条件至少需要 2 个字符 |
+| 400 | `invalid_range` | `from`/`to` 日期无效——格式为 `YYYY-MM-DD`（组织时区） |
+| 400 | `invalid_name` | 缺少查询参数 `name` 中的文件名（最多 200 个字符，不含路径分隔符） |
+| 400 | `empty_file` | 文件请求体为空 |
+| 404 | `not_found` | 该审核或文件不属于您的账户——设计上绝不返回 403 |
+| 409 | `not_awaiting_info` | 该审核不在等待信息（已回到 `in_review` 或已有最终决定）——请查询其当前状态 |
+| 413 | `file_too_large` | 文件超过 50 MB 上限——请压缩或拆分 |
+| 415 | `unsupported_file_type` | 不支持的类型——请使用 PDF、PNG、JPEG、WEBP、TXT、CSV、DOC(X) 或 XLS(X)，并携带正确的 `Content-Type` 请求头 |
+| 422 | `file_limit_reached` | 该审核已有 20 个文件 |
+| 503 | `firewall_unavailable` | 无法评估策略或无法保存审核——请使用**相同的**幂等键重试 |
+| 503 | `storage_unavailable` | 文件存储暂不可用——请稍后重试 |
+
+### 实时事件（SSE）
+
+来自 [`GET /v1/events`](https://docs.cbpayapp.com/zh/realtime-events) 及其历史查询的错误码。
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 400 | `invalid_event_type` | `?types=` 中的某个值不在目录内 — `message` 会列出有效值 |
+| 429 | `too_many_streams` | 已达到并发流上限（按账户或按组织）— 请先关闭一个再打开新的 |
+| 429 | `rate_limited` | 该 IP 打开事件流过于频繁（每小时 600 次）— 该配额统计*尝试次数*而非活动连接：请停止重连循环并采用退避策略 |
+| 500 | `streaming_unsupported` | 该连接不支持流式传输（中间代理在缓冲）— 关闭缓冲或改用 Webhook |
+| 503 | `stream_unavailable` | 无法打开事件流；请携带 `Last-Event-ID` 退避重试 |
+
+### 消息签名与钱包绑定
+
+来自钱包消息签名的错误码（EVM 上的 EIP-191、TRON 上的 TIP-191）：使用隔离钱包的服务端签名（`POST /v1/segregated-wallets/{id}/signatures`，会生成可公开验证的签名证明），以及通过挑战绑定外部钱包（`POST /v1/wallet-links/challenges` → 用你的钱包签名挑战 → `POST /v1/wallet-links/verify`）。
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 400 | `unsupported_chain` | `chain` 必须是 `tron` 或 `eth` |
+| 400 | `invalid_statement` | `statement` 超过 280 个字符 — 请缩短（注意：签名信封本身最多接受 140 个字符） |
+| 409 | `proof_not_signable` | 该证明已不再处于可签名状态（已签名、已过期或已取消）— 请重新申请 |
+| 409 | `custody_transferred` | 钱包托管权已转移给客户，无法再使用服务端签名 — 请用您自己的私钥签名 |
+| 409 | `challenge_consumed` | 该挑战已被使用或已失效 — 请重新申请 |
+| 410 | `challenge_expired` | 该挑战已过期 — 请重新申请并在有效期内完成签名 |
+| 422 | `signature_mismatch` | 签名与挑战地址不匹配 — 请用要绑定的钱包对挑战原文进行签名 |
+| 422 | `sign_rejected` | 签名方拒绝了该请求 — `message` 中包含已脱敏的原因。141–280 个字符的 `statement` 也会在此处被拒绝（信封最多接受 140 个字符） |
+
+### 服务端（5xx）
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 500 | `internal_error` | 意外错误；请使用相同的幂等键重试 |
+| 500 | `fee_config_invalid` | 账户的费用配置无效；请联系支持（该操作未执行） |
+| 502 | `rates_unavailable` | 汇率暂时不可用 |
+| 502 | `core_unavailable` | 处理方暂时不可用 |
+| 502 | `core_invalid_response` | 处理方返回了意外响应；请使用**相同的**幂等键重试 |
+| 502 | `compliance_unavailable` | AML/CFT 筛查暂时不可用 |
+| 503 | `verifications_unavailable` | 身份验证暂时不可用 |
+| 503 | `org_credential_missing` | 服务正在配置中；请联系 CBPay 支持 |
+| 503 | `withdrawals_unavailable` | 该通道未启用链上提现 |
+| 503 | `pricing_unavailable` | BTC/GOLD/SILVER/PLATINUM 执行价格不可用或已过时；请稍后重试或以 USDT/USDC 结算 |
+| 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的**幂等键重试 |
+| 503 | `webhook_processing_pending` | 入站 webhook 事件正在处理中；短暂退避后重试同一条投递，不要创建新的操作 |
+| 503 | `export_unavailable` | 当前环境未启用独立钱包私钥导出 |
+
+## 如何处理
+
+- **校验类 4xx**：修正请求。不要原样重试。
+- **402**：为账户充值后重试（仅当操作从未被创建时才使用新的幂等键）。
+- **5xx / 超时**：使用**相同的**幂等键重试；操作绝不会重复。
+
+## Qscore 欺诈与 Index
+
+| HTTP | `code` | 含义与处理 |
+|---:|---|---|
+| 400 | `invalid_period` | Index 时期不是 `YYYY-Q1` 到 `YYYY-Q4`；请使用已关闭季度 |
+| 422 | `unsupported_country` | 所选国家暂不支持 Qscore 欺诈/身份流程；请选择支持的国家或联系支持 |
+| 503 | `recovery_pending` | 欺诈报告仍在完成中；使用相同凭证轮询报告，状态变为 `ready` 后再重试 PDF |
+| 429 | `too_many_attempts` | 公开欺诈验证被限流；稍后重试 |
+| 502 | `generation_failed` | 费用路径之后生成失败；费用已退回，使用新的幂等键重试 |
+
+## 走廊生命周期
+
+| HTTP | 代码 | 含义与处理 |
+|---|---|---|
+| 409 | `corridor_disabled` | 所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。 |
+| 409 | `banking_corridor_disabled` | 所选 banking 国家或通道被管理员禁用。请选择其他启用的通道或联系组织运营人员。 |
+| 409 | `crypto_disabled` | 所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。 |
+| 400 | `invalid_crypto_control` | crypto 网络开关无效（未知的链/资产、scope 或缺少原因）。请修正请求。 |
+| 409 | `rail_not_registered` | 所选通道在此环境中未配置。请选择已注册的通道（见管理后台走廊页面）。 |
+
+## Banking 创建恢复错误
+
+| 代码 | HTTP | 含义与处理 |
+|---|---:|---|
+| `claim_identity_mismatch` | 422 | 提供商客户身份与原始 banking 请求不匹配。停止恢复并检查 claim。 |
+| `idempotency_failed` | 409 | claim 已彻底失败。检查失败原因后，使用新 key 发起新操作。 |
+| `claim_not_pending` | 409 | claim 已不再处于待处理状态。读取最终结果，不要重复恢复。 |
+| `claim_customer_owned_elsewhere` | 409 | 提供商客户已归属于其他账户。停止并检查所有权。 |
+| `banking_recovery_pending` | 503 | 提供商结果仍不明确。使用管理员恢复路由，不要再次发起创建请求。 |
+
+## EUR Banking 与虚拟 IBAN 错误
+
+| Code | Meaning and action |
+|---|---|
+| `banking_customer_incomplete` | The banking customer lacks the provider identity required for the operation. Complete the customer/KYC/KYB data, then retry with the same idempotency key. |
+| `registrant_incomplete` | 422 | 虚拟 IBAN 申请或企业钱包预留 | 已验证的 KYC/KYB profile 缺少 registrant 必填字段。对于地址为空的迁移 profile，可发送 `address_street`、`address_city`、`address_country` 或 `address_zip`（snake_case 或 camelCase）；显式值覆盖 profile。缺失或无效值会在 `message` 中保留相同的 `individual.address.*` 或 `holder.corporate.address.*` 路径。请重试相同的持久化请求。 |
+| `provider_rejected` | The upstream banking operation was rejected. Do not create a new money operation automatically; inspect the resource and follow its retry/reconciliation state. |
+| `customer_id_required` | A banking operation requires an explicit customer identifier. Provide the customer ID from the account-owned resource. |
+| `iban_required` | The operation requires the IBAN associated with the owned virtual account. |
+| `operation_in_progress` | The same banking operation is still being reconciled. Poll the resource and retry with the original idempotency key. |
+| `ownership_required` | The resource belongs to another organization or account. Use only an owned resource; never guess or substitute an ID. |
+
+## 账户批量消息错误代码
+
+以下代码来自组织管理 broadcast 端点，便于共享 SDK 使用统一的错误目录。
+
+| HTTP | `error` | 原因 | 解决方法 |
+|---:|---|---|---|
+| 400 | `invalid_channels` | 未选择有效的发送渠道 | 发送 `email`、`notification` 或二者 |
+| 400 | `invalid_content` | subject/body 为空或过长 | subject 使用 1–160 个 rune，body 使用 1–4000 个 rune |
+| 400 | `invalid_audience` | 受众模式、筛选器或 ID 无效 | 使用 `filters` 或 1–5000 个组织内账户 ID |
+| 400 | `invalid_reason` | 缺少拒绝原因或原因过长 | 发送 1–500 个 rune 的审计原因 |
+| 403 | `named_admin_required` | actor 不是命名管理员 | 使用命名的 `god` 或 `super_admin` 管理员 |
+| 403 | `partner_forbidden` | bank partner 尝试使用组织 broadcast | 使用允许的组织管理员 |
+| 409 | `empty_audience` | 提交/审批时没有账户匹配 | 修正受众后重新提交 |
+| 409 | `audience_too_large` | 筛选器匹配超过 20000 个账户 | 缩小筛选范围后重新提交 |
+| 409 | `second_approver_required` | 创建者尝试审批自己的 campaign | 让另一名命名 God 审批 |
+
+## Banking EUR 与企业钱包错误
+
+| HTTP | 代码 | 处理 |
+|---:|---|---|
+| 409 | `virtual_iban_limit_reached` | 个人账户该 purpose 已有虚拟 IBAN；请复用它，企业不受同样的 purpose 上限。 |
+| 409 | `no_fee_charged` | 该虚拟 IBAN 未收费（首个注资免费），无需退款。 |
+| 409 | `wallet_not_ready` | 钱包仍为 `pending`/`provisioning`；读取详情直到变为 `active`。 |
+| 422 | `virtual_iban_limit_reached` | 预留时达到个人账户的 purpose 上限；不要创建第二个 key。 |
+| 422 | `registrant_incomplete` | 按 `message` 补充 KYC/KYB、公司注册或地址字段（包括 `address_street`、`address_city`、`address_country` 或 `address_zip`），并重试同一持久化请求。 |
+| 502 | `wallet_reservation_failed` | 预留没有返回可用 reference；先协调再重试。 |
+| 502 | `wallet_reservation_status_failed` | 状态读取失败；保留 `order_reference` 或 `client_order`。 |
+| 502 | `wallet_read_failed` | live wallet 响应或 EUR 金额不可读；检查状态后重试读取。 |
+| 502 | `wallet_statement_failed` | statement 不可读；使用完整日期窗口后重试读取。 |
+
+## 账户集成策略
+
+| HTTP | `error` | 含义与处理 |
+|---:|---|---|
+| 400 | `email_domain_blocked` | 邮箱域名被阻止；使用允许的域名。 |
+| 400 | `invalid_secret` | Webhook secret 必须为 16 到 256 个字符。 |
+| 403 | `session_required` | 创建账户 API key/Webhook 需要人工 JWT，而不是 API key。 |
+| 403 | `integration_company_only` | 个人账户需要有效管理员授权；企业账户需要 KYB 批准。 |
+| 403 | `integration_kyb_required` | 先批准 KYC/KYB，再创建或重新启用集成。 |
+| 403 | `account_blocked` | 账户不是 active；请让管理员恢复账户。 |
+| 403 | `otp_required` | 完成 `api_key_create` 或 `webhook_manage` OTP 后重试。 |
+| 403 | `integration_forbidden` | 账户不能使用集成；查询 `GET /v1/integration-status` 并处理返回的资格原因。 |
+
+## 争议与欺诈
+
+| HTTP | 代码 | 处理 |
+|---:|---|---|
+| 400 | `idempotency_key_required` | 金融操作在 body 或 header 中发送幂等键。 |
+| 400 | `invalid_payload` | 修正金额、日期、UUID、multipart 文件或必填字段。 |
+| 404 | `not_found` | 案件、导入、行、证据或账户超出调用者 scope。 |
+| 409 | `case_already_open` | 查看 payin 的开放案件，不要创建新键。 |
+| 409 | `payin_not_credited` | payin 尚未处于 `credited` 状态，因此没有可冻结的余额；等待入账后再打开案件或绑定导入行。 |
+| 409 | `second_approver_required` | 必须由另一名具名管理员关闭。 |
+| 409 | `invalid_state` | 当前状态不允许该转换。 |
+| 409 | `bind_failed` | 导入行不再是 unmatched 或 payin 无法关联。 |
+| 409 | `import_in_progress` | 相同 key 的导入仍在处理中；等待后用相同 key 重试。 |
+| 503 | `pack_unavailable` | storage 或 PDF 渲染恢复后重试。 |
+| 503 | `storage_unavailable` | 恢复私有 storage 后重试证据操作。 |
+
+## SEPA 资金来源错误
+
+这些错误会在客户 payout 或 EUR Banking 操作扣款、dispatch 之前返回：
+
+| HTTP | `error` | 含义与解决方法 |
+|---:|---|---|
+| 400 | `invalid_request` | `source_virtual_iban_id` 必须是有效 UUID。 |
+| 404 | `not_found` | 明确指定的虚拟 IBAN 不属于该账户。 |
+| 422 | `funding_account_required` | 该产品用途没有已分配且 active 的虚拟 IBAN。请先使用该用途的 active 来源。 |
+| 422 | `ambiguous_source_viban` | 存在多个 active EUR 资金账户。请发送选定的 `source_virtual_iban_id`。 |
+| 503 | `funding_account_unavailable` | 来源账户检查暂时不可用。请使用相同幂等键重试；不会发生扣款或 dispatch。 |
+
+### 出金限额错误
+
+| HTTP | `error` | 含义 |
+|---|---|---|
+| 422 | `amount_below_minimum` | 金额低于有效最小值；读取 `GET /v1/org/txn-firewall/limits/effective`。 |
+| 422 | `amount_above_maximum` | 金额高于有效最大值；重试前先检查有效策略。 |
+| 422 | `velocity_limit_exceeded` | 内部转账超过滚动金额或次数上限。Payout 和 crypto withdrawal 会以 `reason=velocity_limit` 进入 review。 |
+| 503 | `limits_unavailable` | 扣款前无法评估限额；恢复后使用同一幂等键重试。 |
+## `dispute_fiat_unsupported`
+
+本地保留 BOB、MXN 或 ARS 的 payin 暂不支持争议。请使用受支持的 USD 或 USDT 入账，或等待本地法币争议功能。
+
+## 阿根廷银行别名解析
+
+以下错误由
+`GET /v1/payouts/ar-alias/resolve?alias=...` 返回：
+
+| HTTP | `error` | 含义与处理方式 |
+|---:|---|---|
+| 400 | `query_required` | 发送 `alias` 查询参数。 |
+| 400 | `invalid_alias` | 别名格式无效；请发送 AR 通道接受的银行别名。 |
+| 403 | `verification_required` | 解析别名前完成账户所需的验证。 |
+| 404 | `alias_unresolvable` | 别名不存在或无法解析；不要使用此结果创建 payout。 |
+| 429 | `too_many_attempts` | 账户超过每分钟 10 次查询限制；等待后再查询。 |
+| 502 | `beneficiary_lookup_unavailable` | 银行查询暂时不可用；按退避策略重试只读查询。 |
+
+当缺少租户范围时，core 也可能返回 `user_scope_required`（403）；当
+阿根廷 payout 通道未启用时返回 `payout_corridor_unsupported`。系统不会
+暴露提供商身份。
+
+## 阿根廷银行别名与个人资料别名
+
+| HTTP | `error` | 含义 / 处理方式 |
+|---|---|---|
+| 400 | `missing_alias` | 平台创建 AR/ARS 存款账户时必须提供调用方选择的 `bank_alias` |
+| 400 | `invalid_alias` | `bank_alias` 必须为 6–20 个 `[A-Za-z0-9.-]` ASCII 字符，并至少包含一个字母 |
+| 400 | `invalid_account` | core 无法解析提供的存款账户号码 |
+| 400 | `invalid_request` | 个人资料别名 body 不匹配已验证姓名派生的候选值，或在不支持的通道发送了 `bank_alias` |
+| 409 | `alias_already_set` | 个人资料别名永久有效，已经设置 |
+| 409 | `alias_taken` | **个人资料别名：**已验证姓名派生的所有候选值都被占用；请联系支持，不能自行编造值 |
+| 422 | `alias_taken` | **银行别名：**阿根廷银行系统已占用该值；请选择其他值 |
+| 422 | `alias_unsupported` | 选择的存款账户通道不支持银行别名 |
+
+## Grupo CB 主协议签署仪式
+
+以下错误适用于 `POST /v1/me/contracts/envelopes/{envelopeID}/sign` 和
+合同信封资源。为保护隐私，message 可能是固定的泛化文本；code 是稳定
+的集成契约。
+
+| HTTP | Code | 原因与解决方法 |
+|---:|---|---|
+| 400 | `idempotency_key_required` | 组织管理员签发缺少 body key 或 `Idempotency-Key`；使用稳定 key 重试。 |
+| 400 | `invalid_idempotency_key` | key 无效或过长；缩短后重试。 |
+| 400 | `invalid_reason` | void 必须提供非空原因；把原因放入 body。 |
+| 400 | `invalid_content_type` | 签名图库只接受 `image/png`、`image/jpeg` 或 `image/jpg`。 |
+| 400 | `empty_file` | 上传没有字节；发送原始图片文件。 |
+| 400 | `invalid_image` | 文件不是有效 PNG/JPG；重新导出支持的格式。 |
+| 403 | `contract_counsel_required` | 英文签发需要 counsel 批准；批准或使用西班牙语。 |
+| 403 | `human_session_required` | 签署需要人工 session；API key 不能签署。 |
+| 403 | `account_blocked` | 账户不是 active；请管理员恢复。 |
+| 401 | `invalid_otp` | OTP 无效、过期或已使用；在 `X-OTP-Token` 中发送新的 token。 |
+| 409 | `contract_invalid_state` | 信封已经 completed 或 voided；不要重复操作。 |
+| 422 | `contract_template_superseded` | 信封使用旧版模板签发；签署前请先重新签发。 |
+| 413 | `file_too_large` | raw 上传超过 5 MiB，或规范化图片超过 8 MiB。 |
+| 422 | `invalid_lang` | 只能使用 `es` 或 `en`。 |
+| 422 | `contract_account_ineligible` | 目标必须是 KYB 已批准的 active 企业账户。 |
+| 422 | `contract_unfillable` | 请检查响应中的 `missing` 数组：其中可能列出身份资料、法律顾问批准，或表示已启用服务缺少有效价格行的 `pricing:<flag>`。 |
+| 422 | `invalid_consent` | body 必须包含 JSON 布尔值 `"consent": true`。 |
+| 422 | `invalid_signer` | 姓名/职务为空或过长；使用 owner/operator 人工签署人。 |
+| 422 | `invalid_signature_image` | `signature_png` 不是有效或有墨迹的 PNG，超过编码/解码大小限制，或未达到最小尺寸；发送有效签名图片并使用新 OTP 重试。 |
+| 422 | `invalid_signature_mode` | `signature_mode` 必须为 `drawn`（手写板）或 `typed`（全名渲染为 PNG）。 |
+| 422 | `typed_name_mismatch` | 使用 `signature_mode: typed` 时，`typed_name` 必须与 `signer_name` 一致。 |
+| 502 | `storage_failed` | 私有 storage 失败；重试前先协调信封状态。 |
+| 502 | `email_failed` | 签署后邮件失败；已完成信封仍然有效。 |
+| 503 | `storage_unavailable` | 私有 storage 不可用；恢复后重试。 |
+
+## 环境切换
+
+| HTTP | `error` | 含义与处理 |
+|---|---|---|
+| 401 | `invalid_handoff` | 缺少 handoff token、已过期、已消费，或签发给另一个环境。请签发新的 handoff 并在同一环境兑换。 |
+| 401 | `handoff_replayed` | 该 token 已被消费（一次性）。请签发新的 handoff。 |
+
+## 双因素与 passkey
+
+| HTTP | `error` | 含义与处理 |
+|---|---|---|
+| 403 | `channel_locked_by_org` | 组织策略仅允许 TOTP，禁止该账户注册 passkey；也会拒绝显式 `channel` 弱于组织底线的质询。请联系 org 管理员修改策略。 |
+| 409 | `passkey_exists` | 该 credential ID 已注册在此账户。请用现有 passkey 登录。 |
+| 409 | `totp_already_enrolled` | 该账户已激活 TOTP。请用现有 secret 认证。 |
+
+## Checkout 与 payout 文档
+
+| HTTP | `error` | 含义与处理 |
+|---|---|---|
+| 409 | `materializing` | 该 checkout 链接的另一笔实例化正在进行中。请等待完成后重试。 |
+| 400 | `invalid_file_name` | 文件名为空、过长，或含路径字符（`/`、`\`、`..`）。请发送纯文件名。 |
+| 415 | `unsupported_media_type` | Content-Type 不是可接受的文档类型。请发送 PDF、JPEG 或 PNG。 |
+
+## `destination_recently_rejected`
+
+| HTTP | 代码 | 含义 | 处理方式 |
+|---:|---|---|---|
+| 422 | `destination_recently_rejected` | 银行最近拒绝了此账户的同一规范化收款目的地。系统不会创建 payout、不会扣除余额，也不会消耗幂等键。 | 先使用相同的幂等键重放原始请求。如需明确重试，请使用新的幂等键，并将 `options.destination_retry_ack` 设置为最近一次被拒 payout 的 ID。 |
+
+确认值只对该目的地最近一次拒绝有效。使用相同幂等键但修改
+`options` 会返回 `idempotency_conflict`（`409`）。其他 payout 方式以及没有
+近期拒绝记录的目的地继续走正常的校验和发送流程。
+
+## 身份验证抗攻击加固错误
+
+| HTTP | `error` | 含义与处理 |
+|---:|---|---|
+| 400 | `invalid_code` | 注册或重置验证码不是 4–10 位数字。请按预期格式发送验证码。 |
+| 401 | `invalid_code` | 注册确认或密码重置的身份/验证码无效或已过期。请使用最新验证码；该响应为有意统一的。 |
+| 401 | `invalid_credentials` | 登录失败、账户待验证，或账户在 15 分钟内失败 8 次后被暂时锁定。请等待窗口结束或完成注册确认。 |
+| 400 | `pow_required` | 攻击模式下需要工作量证明。请通过 `POST /v1/auth/pow-challenge` 请求挑战，完成计算后在 `pow` 字段中重试。 |
+| 502 | `otp_check_failed` | 无法查询验证服务。请保持同一流程稍后重试；不要创建第二个账户或重置请求。 |
+
+`POST /v1/auth/password/forgot` 为防止枚举始终返回 `200`。每个账户每小时静默停止实际发送（上限 5 次）；`POST /v1/auth/password/reset` 允许每个账户每 15 分钟尝试 8 次验证码。
+
+## 成员恢复链接
+
+| HTTP | `error` | 原因与处理 |
+|---:|---|---|
+| 400 | `invalid_token` | `token` 不是恢复邮件中 43 个字符的 base64url 值。请原样复制 `?token=` 后的值。 |
+| 400 | `weak_password` | 新密码不符合服务器策略。请选择更强的密码，并在链接仍有效时重新提交。 |
+| 401 | `invalid_token` | 链接无效、已过期、已使用，或与组织/成员不匹配。请向组织管理员申请新链接；该响应有意保持统一。 |
+| 502 | `recovery_send_failed` | 管理员发起的恢复邮件无法送达。请组织管理员检查邮件配置并重新触发链接。 |
+| 429 | `too_many_attempts` | 来源 IP 超过验证 throttle。请稍等后重试，不要自动重复提交。 |
+
+## US/USD 出金校验
+
+以下错误会在 `ach`、`wire` 和 `swift` 出金扣款前返回：
+
+| HTTP | `error` | 含义与解决方案 |
+|---:|---|---|
+| 400 | `invalid_beneficiary` | 收款人必填字段缺失或格式错误；按 `message` 修正，例如 `beneficiary.account_type`。 |
+| 400 | `invalid_amount` | 金额不是有效的正小数；修正金额并创建新请求。 |
+| 422 | `amount_below_minimum` | `wire` 或 `swift` 低于 USD 25；使用至少 `25.00`。 |
+| 422 | `prohibited_country` | 收款人或银行位于附录 B（`CU`、`IR`、`KP`、`SY`）；改用允许的目的地。 |
+| 400 | `purpose_required` | 每笔 US/USD 银行通道出金都必须填写 `options.purpose`；请选择目录值。 |
+| 400 | `invalid_options` | 选项未知，或非 `Other` 用途提供了 `purpose_detail`；修正 `options`。 |
+| 400 | `supporting_document_required` | 创建 USD 银行通道出金前上传并传递发票或收据。 |
+
+### Trust Center 与 NDA
+
+| HTTP | `error` | 含义和解决办法 |
+|---|---|---|
+| 422 | `invalid_company_name` | `company_name` 必须为 2–200 个字符；请发送有效的公司名称。 |
+| 422 | `invalid_contact_name` | `contact_name` 必须为 2–120 个字符；请发送有效的联系人姓名。 |
+| 422 | `invalid_signer_name` | `signer_name` 必须为 2–120 个字符；请发送授权签署人的姓名。 |
+| 503 | `counsel_pending` | NDA 模板正在等待法律批准；请等待 Trust Center 启用。 |
+| 422 | `invalid_contact_email` | 请求邮箱无效；请发送有效邮箱地址。 |
+| 401 | `invalid_token` | 签署或下载令牌无效；请使用最新邮件中的链接。 |
+| 410 | `entitlement_revoked` | 合规团队已撤销访问；如有需要请重新申请。 |
+| 410 | `entitlement_expired` | 签署或五年下载授权已过期；请提交新请求。 |
+| 404 | `unknown_document` / `unknown_link` | 文档或签署链接未知；使用元数据列表或申请新链接。 |
+| 409 | `already_decided` | 签署链接已使用或关闭；请勿重复提交。 |
+| 409 | `review_pending` | 信封已签署，正在等待合规裁决；批准后下载开放。请轮询状态或等待释放邮件。 |
+| 422 | `accept_required` | 签署人必须明确接受协议。 |
+| 503 | `email_unavailable` | 邮件投递未配置；请稍后重试。 |
+| 422 | `invalid_document_ids` | 请求的一个或多个文件 ID 未知，或列表显式为空；请使用元数据列表中的 ID，或省略该字段以获取全部。 |
+| 410 | `not_signed` | 信封尚未签署；请先签署再下载已签署副本。 |
+| 403 | `kyc_not_approved` | 账户须先完成身份验证（KYC/KYB）方可申请 Trust Center 准入。 |
+| 403 | `member_required` | 申请或签署须使用已登录成员会话；API 密钥不能签署。 |
+| 422 | `account_identity_mismatch` | 回显的身份字段与已验证账户不符；请发送已验证值。 |
+
+### 注册 2FA 错误
+
+| HTTP | `error` | 解决办法 |
+|---|---|---|
+| 401 | `invalid_pending_token` | token 无效或过期；重新开始。 |
+| 400 | `invalid_credential` | 发送浏览器返回的 WebAuthn credential。 |
+| 403 | `otp_invalid` | 等待下一次六位代码。 |
+| 403 | `passkey_rejected` | 重试或选择 TOTP。 |
+| 409 | `totp_not_started` | 先调用 `totp/begin`。 |
+| 409 | `enrollment_complete` | 已由其他请求完成；登录。 |
+| 409 | `challenge_not_pending` | 重新开始仪式。 |
+| 409 | `passkey_exists` | 使用现有通行密钥。 |
+| 503 | `passkeys_unavailable` | 组织未配置 WebAuthn，使用 TOTP。 |
+| 403 | `enrollment_required` | handoff 前先完成注册。 |
+
+## Client Journey 丢弃
+
+| HTTP | `error` | 原因与处理 |
+|---:|---|---|
+| 409 | `discard_pending` | 丢弃 maker 请求仍在等待审批；恢复账户前请先取消请求。 |
+
+## 支持工单
+
+| HTTP | `error` | 解决方案 |
+|---:|---|---|
+| 400 | `idempotency_key_required` | 在 body 或 `Idempotency-Key` 中发送密钥。 |
+| 400 | 工单 `invalid_*` 错误 | 使用规定的枚举和值限制。 |
+| 404 | `not_found` | 确认工单或交易属于当前账户。 |
+| 409 | `ticket_already_open` | 继续响应中返回的现有工单。 |
+| 409 | `ticket_closed` / `already_rated` | 创建新工单或保留原评价。 |
+| 409 | `not_quarantined` | 揭示接口仅适用于隔离中的工单；正常读取对话即可。 |
+| 503 | `storage_unavailable` | 等待后上传一次，不创建重复工单。 |
+
+## 验证审批
+
+| HTTP | `error` | 解决方案 |
+|---:|---|---|
+| 409 | `liveness_required` | 活体待完成时无法批准；请先完成活体（仅具名 god 可凭审计理由覆盖）。 |
+
+## 工资单错误
+
+以下代码用于经过身份验证的工资单门户。
+
+| HTTP | `error` | Cause | Solution |
+|---:|---|---|---|
+| 400 | `invalid_period` | 工资期间不是 YYYY-MM 格式 | 发送月份，例如 2026-10。 |
+| 500 | `receipt_render_failed` | 无法生成工资单 PDF | 重试读取；如果仍然失败，请向支持团队提供请求 ID。 |
+
+## 工资发放和周期性支出错误
+
+以下代码用于组织面板中的工资发放和周期性支出系列操作。
+
+| HTTP | `error` | 原因 | 解决方案 |
+|---:|---|---|---|
+| 400 | `invalid_country` | 国家/地区不是 ISO-3166 alpha-2 格式 | 发送两位 ISO-3166 国家/地区代码。 |
+| 400 | `invalid_doc_id` | 证件与所选国家/地区不匹配 | 更正证件后重新提交。 |
+| 400 | `invalid_account` | 关联账户或资金账户不是该组织的活跃账户 | 使用该组织的活跃非内部账户。 |
+| 400 | `invalid_method` | 付款方式不在支持的目录中 | 使用文档列出的付款方式。 |
+| 409 | `duplicate_employee` | 其他员工已使用相同的电子邮箱或关联账户 | 读取现有员工或使用不同数据。 |
+| 400 | `invalid_doc_type` | 文档类型不在目录中 | 使用文档类型接口中的值。 |
+| 400 | `invalid_expires_at` | 文件到期时间不是 RFC3339 格式 | 发送 RFC3339 时间戳或省略该字段。 |
+| 422 | `file_limit_reached` | 员工已达到 20 个文件的上限 | 管理现有文件后再添加。 |
+| 400 | `invalid_period` | 工资期间不是 YYYY-MM 格式 | 发送一个日历月份，例如 2026-10。 |
+| 409 | `duplicate_run` | 该组织和期间已有活动批次 | 读取并使用现有批次。 |
+| 422 | `empty_run` | 批次没有有效项目 | 批准前至少创建一个有效项目。 |
+| 400 | `invalid_earnings` | 应发项缺失或无效 | 至少发送一条带标签的正数应发项。 |
+| 400 | `invalid_deductions` | 扣除项无效 | 发送带标签的正数扣除项。 |
+| 422 | `invalid_net` | 净额不是正数 | 保持应发项大于扣除项。 |
+| 400 | `invalid_currency` | 货币为空 | 发送结算货币。 |
+| 400 | `invalid_destination` | 所选方式的目的地信息不完整 | 提供目的地所需字段。 |
+| 422 | `invalid_item_amount` | 工资项目金额无效 | 更正正数金额及其精度。 |
+| 422 | `invalid_item_destination` | 工资项目目的地无效 | 更正目的地或取消项目。 |
+| 422 | `invalid_item_method` | 工资项目付款方式无效 | 使用支持的付款方式。 |
+| 422 | `not_a_series` | 该支出不是月度周期性父支出 | 使用拥有该系列的父支出。 |
+| 400 | `invalid_payee` | 付款目的地信息不完整 | 提供所选方式所需字段。 |
+| 400 | `invalid_asset` | 不支持该加密资产 | 使用 USDT 或 USDC。 |
+| 422 | `hot_wallet_required` | 未为所选链和资产配置热钱包 | 先配置组织钱包。 |
+| 400 | `invalid_recurring_day` | 周期日不在 1–31 范围内 | 发送 1 到 31 之间的日期。 |
+| 503 | `core_unavailable` | 付款通道不可用 | 检查操作状态并稍后重试。 |
+| 503 | `core_bad_response` | 付款通道返回无法读取的响应 | 重试前先读取操作状态。 |
+| 500 | `treasury_credit_error` | 资金库直接入账失败 | 读取资源状态并重试同一笔幂等操作；不要创建第二笔付款。 |
+| 409 | `payment_in_flight` | 工资付款正在发放中 | 等待对账；不要重复操作。 |
+| 409 | `invalid_state` | 资源当前状态不接受此操作 | 读取当前状态并遵循允许的状态转换。 |
+| 400 | `reason_required` | 需要填写原因 | 在请求正文中发送明确原因。 |
+| 500 | `receipt_render_failed` | 无法生成工资单 PDF | 重试读取；若仍失败，请提供请求 ID。 |
+| 503 | `valuation_unavailable` | 无法将金额估值为美元 | 稍后重试；批准过程保持失败关闭。 |
+| 500 | `store_error` | 平台无法读取或保存记录 | 确认资源状态后重试。 |
+
+## Expense platform errors
+
+| 400 | `duplicate_category` | 组织已存在该自定义费用类别 key | 选择其他 `c_` key |
+| 400 | `invalid_batch` | 批量操作的 ID 少于 1 个或超过 100 个 | 发送 1–100 个费用 UUID |
+| 400 | `invalid_horizon` | horizon 不是 3、6 或 12 个月 | 使用 `horizon=3`、`6` 或 `12` |
+| 400 | `invalid_icon` | 自定义图标格式或长度超出限制 | 使用不超过 40 个字母、数字、`_` 或 `-` |

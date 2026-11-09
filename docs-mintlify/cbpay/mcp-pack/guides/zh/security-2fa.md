@@ -1,0 +1,276 @@
+---
+title: "安全与双因素认证（OTP）"
+description: "通过 SMS 或 WhatsApp 发送的一次性验证码，保护登录、付款、提现等操作"
+slug: zh/security-2fa
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/security-2fa
+---
+CBPay 可以在敏感操作之前要求提供**一次性验证码（OTP）**：登录、创建付款（payout）、提取加密资产、查看卡片信息、签发 API 密钥……验证码通过 **SMS 或 WhatsApp** 发送到账户绑定的手机号，由您的运营方决定**哪些操作需要验证码以及通过哪个渠道发送**——可按账户或整个组织配置。
+
+> **注**
+OTP **仅适用于用户会话**（JWT 登录）。**`pk_` API 密钥豁免**：它们是服务器到服务器的集成，另一端没有持有手机的真人。如果您的整个业务都通过 API 密钥运行，本页内容不会对您的集成产生任何影响。
+> **注**
+本页涵盖您的集成需要处理的**按操作 OTP 流程**（`otp_required` → challenge →
+verify）。终端用户对自身因子的所有管理——启用 2FA、渠道（短信/WhatsApp/邮箱）、
+验证器应用（TOTP）、恢复代码和通行密钥——位于
+[个人资料与安全](https://docs.cbpayapp.com/zh/guides/profile)。
+## 工作原理
+
+```mermaid
+sequenceDiagram
+    participant U as 用户（JWT 会话）
+    participant API as CBPay API
+    U->>API: POST /v1/payouts（未带 OTP）
+    API-->>U: 403 otp_required {action, channel}
+    U->>API: POST /v1/otp/challenges {action: "payout"}
+    Note over U: 验证码通过 SMS/WhatsApp 送达
+    API-->>U: 201 {challenge_id, expires_at}
+    U->>API: POST /v1/otp/challenges/{id}/verify {code}
+    API-->>U: 200 {otp_token}
+    U->>API: POST /v1/payouts + X-OTP-Token 请求头
+    API-->>U: 201 付款已创建
+```
+
+`otp_token` 为**一次性使用**，绑定到您的用户及其签发时对应的操作，并随质询（challenge）一同过期（验证码发送后 10 分钟）。
+
+> **注**
+快捷方式：`403` 可能已携带 `challenge_id`、`phone`（掩码后的目标）和 `expires_at`——网关会复用有效的质询或为您创建一个。若存在，请直接验证验证码后携带 `X-OTP-Token` 重试，可跳过下文显式的 `POST /v1/otp/challenges`（仍可作为备选）。
+## 1. 查询您的策略
+
+`GET /v1/otp/settings` 会告诉您 OTP 是否已启用，以及哪些操作需要验证码：
+
+```bash
+curl https://api.qbank.cl/platform/v1/otp/settings \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "enabled": true,
+  "phone": "********5678",
+  "phone_verified": true,
+  "actions": [
+    { "action": "login", "required": true, "channel": "sms" },
+    { "action": "payout", "required": true, "channel": "whatsapp" },
+    { "action": "crypto_withdrawal", "required": true, "channel": "sms" },
+    { "action": "transfer", "required": false, "channel": "sms" },
+    { "action": "banking_operation", "required": false, "channel": "sms" },
+    { "action": "card_reveal", "required": true, "channel": "sms" },
+    { "action": "api_key_create", "required": true, "channel": "sms" },
+    { "action": "member_add", "required": false, "channel": "sms" },
+    { "action": "phone_change", "required": true, "channel": "sms" }
+  ]
+}
+```
+
+## 2. 请求验证码
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "action": "payout" }'
+```
+
+响应 `201` —— 验证码已在发往账户手机号的途中：
+
+```json
+{
+  "challenge_id": "6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69",
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "action": "payout",
+  "channel": "whatsapp",
+  "phone": "********5678",
+  "status": "pending",
+  "created_at": "2026-07-08T21:00:00Z",
+  "expires_at": "2026-07-08T21:10:00Z"
+}
+```
+
+每次质询均可自选投递渠道：`sms`、`whatsapp`、`email` 或 `totp`：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "action": "payout", "channel": "whatsapp" }'
+```
+
+省略 `channel` 时由服务器解析：先用 member 设置，再用组织默认值，若都没有则回退到 SMS。响应始终告知实际使用的渠道及其掩码目的地（`phone`——掩码号码、掩码邮箱，或 TOTP 的字面值 `authenticator_app`）。校验使用有效底线——先用账户自身的策略，再用组织默认值：弱于底线的显式渠道将返回 `403 channel_locked_by_org`，而不会被静默升级。
+
+如果账户未绑定手机号：返回 `409 phone_required`（可通过 `PATCH /v1/me` 设置）。发送受每小时限额约束——超出限额将返回 `429 too_many_attempts`。
+
+## 3. 验证验证码
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges/6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69/verify \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "code": "482913" }'
+```
+
+```json
+{
+  "challenge_id": "6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69",
+  "action": "payout",
+  "otp_token": "otp_Zk9uY2XIr1EYE0lq8xqlM3VayVZYX4aa11bb22cc33",
+  "expires_at": "2026-07-08T21:10:00Z",
+  "note": "single use: send it in the X-OTP-Token header of the protected action"
+}
+```
+
+验证码错误 → `401 invalid_code`（每个质询最多可尝试 5 次）。
+
+## 4. 携带令牌执行操作
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts \
+  -H "Authorization: Bearer <token>" \
+  -H "X-OTP-Token: otp_Zk9uY2XIr1EYE0lq8xqlM3VayVZYX4aa11bb22cc33" \
+  -H "Content-Type: application/json" \
+  -d '{ "country": "CL", "currency": "CLP", "method": "bank_transfer", "amount": "50000", "beneficiary": { "...": "..." }, "idempotency_key": "pay-991" }'
+```
+
+令牌在使用时即被消耗，即使操作随后失败（例如余额不足）也是如此：重试需要重新验证一个新的质询。您的 `idempotency_key` 仍然是防重复的保障——OTP 并不能替代它。
+
+## 两步登录
+
+如果您的策略要求在 `login` 时使用 OTP，`POST /v1/auth/login` 将不再直接返回会话：
+
+```json
+{
+  "otp_required": true,
+  "pending_token": "eyJhbGciOi…",
+  "challenge_id": "8a2b…",
+  "channel": "sms",
+  "phone": "********5678",
+  "expires_at": "2026-07-08T21:10:00Z",
+  "note": "verify the code with POST /v1/auth/login/otp to receive the session token"
+}
+```
+
+`pending_token` **无法调用 API**：它只能与验证码一起，换取真正的会话令牌：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
+  -H "Content-Type: application/json" \
+  -d '{ "pending_token": "eyJhbGciOi…", "code": "482913" }'
+```
+
+```json
+{
+  "access_token": "eyJhbGciOi…",
+  "expires_at": "2026-07-09T21:00:00Z",
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "role": "owner"
+}
+```
+> **注**
+**已注册的 TOTP 或有效的短信因素在登录时始终会被要求。** 两者同时存在时
+优先使用 TOTP。通行密钥登录仍然可用，且不会再要求第二个验证码。
+## 账户的手机号
+
+- **E.164** 格式（`+56912345678`），可在注册时、通过 `PATCH /v1/me` 或由您的运营方设置。
+- `phone_verified` 会在您首次成功验证质询时变为 `true`：这证明持有人手中确实握有该手机。
+- **更换手机号**（操作 `phone_change`）时，验证码将发送到**原有**号码进行校验——任何人在未持有您当前手机的情况下都无法劫持您的验证码。
+- 如果手机号是首次绑定（或未经验证即被更改），SMS/WhatsApp 质询将锁定 **4 小时**：这是防会话劫持的窗口期。冷却期内，若您已注册身份验证器应用或已验证邮箱，质询会自动改用该更强的因素发出（质询响应中会返回实际使用的渠道）；仅当没有任何替代因素时才会收到 `403 phone_binding_cooldown`。由运营方设置的手机号没有冷却期。您也可以使用 `POST /v1/me/phone/unlock-cooldown`（邮箱/totp 令牌）提前解除，或请运营方从您的资料清除冷却。指定显式渠道会关闭自动回退：冷却期内的 `channel: sms` 即使已注册身份验证器应用，也会返回 `403 phone_binding_cooldown`。
+- **两步登录**遵循同样的规则：登录 2FA 为 SMS/WhatsApp 且手机号处于冷却期时，登录验证码会改由身份验证器应用或您的登录邮箱发出（登录响应中返回实际的 `channel`）——绝不会发送到最近绑定且未验证的号码。没有替代因素时，登录返回 `403 phone_binding_cooldown`，直到冷却期结束。
+
+## 错误
+
+| HTTP | `error` | 含义 | 处理方式 |
+|---|---|---|---|
+| 400 | `invalid_channel` | 未知的 `channel` 取值 | 使用 `sms`、`whatsapp`、`email` 或 `totp` |
+| 403 | `otp_required` | 该操作需要 OTP，但未发送 `X-OTP-Token` | 创建并验证一个质询，携带该请求头重试 |
+| 403 | `otp_invalid` | 令牌无效、已过期或已被使用 | 验证一个新的质询 |
+| 403 | `session_required` | 使用 API 密钥请求了质询 | 质询仅适用于用户会话 |
+| 403 | `account_blocked` | 账户被封禁或已关闭 | 请让运营方恢复账户 |
+| 403 | `channel_locked_by_org` | 显式渠道弱于该操作的有效最低强度（先看账户策略，再看组织默认值） | 省略 `channel` 或选择更强的因素 |
+| 403 | `phone_binding_cooldown` | 手机号绑定未满 4 小时且未经验证，且没有替代因素（身份验证器应用或已验证邮箱） | 注册身份验证器应用或验证邮箱；使用 `POST /v1/me/phone/unlock-cooldown` 提前解除，或请您的运营方清除冷却 |
+| 401 | `invalid_code` | 验证码不匹配 | 核对 SMS/WhatsApp 中的验证码并重试（5 次机会） |
+| 401 | `invalid_pending_token` | 登录中间令牌已过期 | 重新登录 |
+| 409 | `phone_required` | 账户未绑定手机号 | 通过 `PATCH /v1/me` 设置 E.164 格式的 `phone` |
+| 409 | `otp_phone_missing` | 登录需要 OTP 但没有手机号 | 联系您的运营方 |
+| 409 | `challenge_not_pending` | 质询已过期或已被使用 | 创建一个新的质询 |
+| 429 | `too_many_attempts` | 达到发送/验证次数限制 | 等待几分钟 |
+| 503 | `otp_unavailable` | 验证服务不可用 | 重试；操作仍保持锁定（OTP 绝不会被跳过） |
+
+## 常见问题
+
+#### OTP 会影响我的服务器到服务器集成吗？
+    不会。`pk_` API 密钥在设计上即被豁免：自动化流程永远不经过 OTP。请妥善保管您的密钥——签发新密钥本身可能需要 OTP（操作 `api_key_create`）。
+#### 我可以选择 SMS 还是 WhatsApp 吗？
+    可以——创建质询时传入 `channel`（`sms`、`whatsapp`、`email` 或 `totp`）。省略时沿用运营方按操作配置的渠道（可按账户或整个组织配置——在 `GET /v1/otp/settings` 中查看）。校验使用有效底线——先用账户策略，再用组织默认值：更弱的显式选择将返回 `403 channel_locked_by_org`，而不会被静默升级。
+#### 使用 WhatsApp 注册后，登录会通过哪个渠道发送？
+    WhatsApp 仅用于注册时发送验证码。手机号验证后，后续登录会通过 SMS
+    请求验证码；无论注册时使用哪个渠道，确认端点都相同。
+#### 验证码有效期多长？我有多少次尝试机会？
+    验证码与质询的有效期为 10 分钟。每个质询最多可验证 5 次，另有每小时发送限额。产生的 `otp_token` 为一次性使用。
+#### 我可以申请一个令牌并用于多个操作吗？
+    不可以：令牌与创建质询时指定的确切操作绑定（`payout` 令牌不能用于 `transfer`），且在首次使用时即被消耗。
+#### 令牌被消耗后操作失败了——我会被扣两次款吗？
+    不会。令牌被消耗只意味着您需要重新验证一个新的质询；操作的 `idempotency_key` 仍然保证不会产生重复。
+## 注册认证与登录恢复
+
+注册强制 2FA 独立于操作 OTP。邮箱确认后保留有效 30 分钟的
+`pending_token`，选择验证器应用（TOTP）或通过 SMS/WhatsApp 发送到手机。
+`register/confirm` 返回
+`201 pending_2fa_enrollment`、`factors: ["totp", "sms"]` 和
+`passkeys_available: false`。密码登录、OAuth 登录和受邀成员首次登录在
+`must_enroll_2fa` 时使用相同的待注册流程。
+
+```mermaid
+sequenceDiagram
+  participant A as 应用
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin 或 sms/begin
+  API-->>A: 200 设置数据或掩码手机号
+  A->>API: POST /v1/auth/register/2fa/totp/confirm 或 sms/confirm
+  API-->>A: 201 首个会话
+```
+
+SMS 或 WhatsApp 注册示例：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
+```
+
+成功的 `200` 响应包含 `phone_masked`、生效的 `channel`、10 分钟验证窗口的
+`steps` 和 `note`。`channel` 默认为 `sms`；指定 `whatsapp` 会通过
+WhatsApp 发送验证码。不会返回验证码。
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
+
+确认请求：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","code":"482913"}'
+```
+
+`201` 响应签发首个会话，`steps` 说明今后登录需要短信验证码，且不包含
+恢复代码。无论使用哪个渠道发送，确认端点都相同；验证器应用流程仍返回
+一次性的 10 个恢复代码。
+
+`channel` 只接受 `sms` 或 `whatsapp`；其他值返回 `400 invalid_channel`。
+注册通行密钥端点现在返回 `410 passkey_not_offered`；通行密钥登录和
+`/v1/me/passkeys` 仍然可用。常见错误包括 `400 invalid_phone`（消息为
+`phone must be E.164 format: plus sign, country code and number (example +56912345678)`）、
+`409 phone_required`/`sms_not_started`、`403 otp_invalid`、`429
+too_many_attempts`、`502 otp_send_failed`/`otp_check_failed` 和
+`401 invalid_pending_token`。
