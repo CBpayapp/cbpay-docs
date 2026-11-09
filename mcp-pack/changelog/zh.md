@@ -5,6 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.246 · 1 个版本 - 2026年11月9日
+### v2.246
+**变更**
+- Platform 管理员凭证变更现在采用双 God maker-checker。批准后的 TOTP 重置会清除 secret 且不发送 email；邮箱变更会通知两个邮箱，并在类型化 `409 duplicate` 时保持请求 pending。组织 scope 管理仍为直接流程。
 ## v2.245 · 3 个版本 - 2026年11月8日
 ### v2.245
 **新增**
