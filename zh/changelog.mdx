@@ -4,12 +4,19 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月9日" description="v2.250 · 5 个版本">
-### v2.250
+<Update label="2026年11月9日" description="v2.251 · 6 个版本">
+### v2.251
 #### 新增
 
 - 新增受控卡片交易 replay 和 c11-first 结算 matching 的操作说明，包括
   `chain: "0"` 表示没有 chain 数据的规则。
+### v2.250
+**新增**
+- 为 Android 应用增加了可选的 Google Play Integrity 流程：获取一次性 nonce、请求令牌，并使用 `POST /v1/me/device-integrity` 上报。
+
+**变更**
+- 有 bound 认证历史的成员会话现在需要新鲜的成功 verdict 才能执行受保护的 payout。收到 `integrity_required` 后重新认证，并使用相同的幂等键重试；API key 和没有 bound 历史的会话仍然豁免。
+- 增加每日 quota 监控，在 70% 和 90% 时通知 war room；告警不会阻止请求。
 ### v2.249
 **变更**
 - 人工确认现在支持 `pending` 和 `expired` push payin。claim 会以原子方式将过期 payin 重新打开为 `pending`；`payin_expired` 可能先于 `payin_credited` 到达。

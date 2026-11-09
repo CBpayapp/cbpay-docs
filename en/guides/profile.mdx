@@ -173,6 +173,113 @@ front end — use it directly in an `<img>`); in that case
 ```
 
 
+## Device integrity for Android apps
+
+Android apps can use **Google Play Integrity** to prove that an integrity
+report belongs to the expected organization and member. The nonce is
+single-use and bound to `org|email`; it expires after five minutes.
+
+```mermaid
+sequenceDiagram
+    participant App as Android app
+    participant API as CBPay API
+    participant Google as Google Play Integrity
+    App->>API: POST /v1/auth/integrity-nonce {org,email}
+    API-->>App: nonce + expires_in: 300
+    App->>Google: Request an integrity token with nonce
+    Google-->>App: integrity_token
+    App->>API: POST /v1/me/device-integrity {token, nonce}
+    API-->>App: verdict + bound
+```
+
+<Steps>
+<Step title="Fetch a nonce">
+Call `POST /v1/auth/integrity-nonce` before asking Google for the token. This
+endpoint does not require a session:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/integrity-nonce \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@example.com"}'
+```
+
+```json
+{
+  "nonce": "dGhpcyBpcyBhIGZha2Utbm9uY2UtZXhhbXBsZQ",
+  "expires_in": 300
+}
+```
+
+The endpoint returns `400 invalid_request` when `org` or `email` is missing,
+uniform `401 invalid_credentials` for an unknown organization, and
+`429 rate_limited` after 60 requests per hour from one IP.
+</Step>
+<Step title="Ask Google for the token">
+Send the nonce in the Google Play Integrity request from the Android app.
+Keep the returned token and nonce together; the nonce is single-use.
+</Step>
+<Step title="Report the result">
+With the user session, call `POST /v1/me/device-integrity`:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/me/device-integrity \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"integrity_token":"integrity-token-from-play-api","integrity_nonce":"nonce-from-integrity-nonce-endpoint"}'
+```
+
+```json
+{
+  "checked": true,
+  "verdict": "ok",
+  "device_ok": true,
+  "bound": true
+}
+```
+
+Reports are limited to 12 per hour per member. `bound` is `true` only when the
+nonce was validated. Without a nonce, the report is still audited but cannot
+pass an enforcement gate.
+</Step>
+</Steps>
+
+### Verdicts
+
+| Verdict | Meaning | What to do |
+|---|---|---|
+| `ok` | The token passed the integrity checks | Continue; enforcement also requires `bound: true` and freshness |
+| `device_basic` | The device only meets the basic integrity level | Re-attest with a supported app/device before a protected payout |
+| `app_unknown` | The app could not be recognized | Use the expected Android app and attest again |
+| `mismatch` | The token does not match the expected app or request | Restart the flow with a fresh nonce and token |
+| `error` | The token could not be evaluated | Request a fresh nonce and try the attestation flow again |
+| `unchecked` | The report was not checked | Treat it as not verified; obtain a checked report |
+| `nonce_invalid` | The nonce was missing, expired, already used, or did not match | Fetch a new nonce and submit it with a new token |
+
+### Protected payouts
+
+Member sessions with a previous bound attestation must have a fresh
+`verdict: ok` from the last 15 minutes. API keys and sessions from iOS, web,
+or older apps without bound-attestation history are exempt.
+
+If a payout returns:
+
+```json
+{
+  "error": "integrity_required",
+  "message": "fresh device attestation required: attest and retry"
+}
+```
+
+Do not create a new payout or a new idempotency key. Run the
+`/v1/me/device-integrity` flow again and retry the same payout with the **same
+idempotency key**.
+
+<Note>
+The Google quota has a default limit of 10,000 checks per day. Alerts are
+raised at 70% and 90% for the operations war room; reaching the alert levels
+does not block requests.
+</Note>
+
 ### Registration is where the first factor is enrolled
 
 The profile page still manages factors after sign-in, but new registrations no
