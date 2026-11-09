@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.247'
+  version: '2.250'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2734,7 +2734,7 @@ paths:
       security: []
       operationId: createPoWChallenge
       summary: Crear un desafío de prueba de trabajo
-      description: Crea un desafío de prueba de trabajo de corta duración para el registro público, la confirmación del registro o el registro social. El desafío queda vinculado al propósito y al email enviados en el request.
+      description: Crea un desafío de prueba de trabajo de corta duración para el registro público, la confirmación del registro o el registro social. El desafío queda vinculado al propósito, al email y (si se envía) a la org del request. La emisión tiene tope por IP, compartido con registro.
       requestBody:
         required: true
         content:
@@ -2755,6 +2755,9 @@ paths:
                   type: string
                   format: email
                   description: Con purpose oauth, la llave de identidad provider:subject@oauth.local (ver POST /v1/auth/oauth).
+                org:
+                  type: string
+                  description: Slug de la org que liga el desafío a una sola org (recomendado; sin él se emite el challenge legacy sin org).
             example:
               purpose: register
               email: ana@ejemplo.com
@@ -10868,6 +10871,50 @@ paths:
                   value:
                     error: invalid_signature_image
                     message: signature image must be PNG
+  /v1/me/device-integrity:
+    post:
+      tags:
+      - Cuenta
+      operationId: reportDeviceIntegrity
+      summary: Reportar un token de integridad Android
+      description: Reporta un token Play Integrity desde la app Android para decodificación server-side (modo monitor, jamás bloquea). El veredicto se audita como evento de seguridad device_integrity. Sin credenciales Google igual responde 200 con checked=false. Limitado a 12/hora por miembro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - integrity_token
+              properties:
+                integrity_token:
+                  type: string
+                  description: Token Play Integrity estándar (1-16384 caracteres).
+            example:
+              integrity_token: integrity-token-from-play-api
+      responses:
+        '200':
+          description: Veredicto registrado (checked puede ser false sin credenciales).
+          content:
+            application/json:
+              example:
+                checked: true
+                verdict: ok
+                device_ok: true
+        '400':
+          description: Token inválido (invalid_token).
+          content:
+            application/json:
+              example:
+                error: invalid_token
+                message: integrity token must be 1-16384 chars without whitespace
+        '429':
+          description: Demasiados reportes (rate_limited).
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many integrity reports, retry later
   /v1/me/email/change:
     post:
       tags:
@@ -16337,7 +16384,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (solo los payins pending se confirman aquí; sin cuenta declarada hay que asignar primero) o confirm_request_conflict (ya hay una solicitud con otra evidencia) o deposit_settled_treasury_trade (el movimiento ya liquidó una compra de tesorería)
+          description: invalid_state (solo los payins pending o expired se confirman aquí; sin cuenta declarada hay que asignar primero) o confirm_request_conflict (ya hay una solicitud con otra evidencia) o deposit_settled_treasury_trade (el movimiento ya liquidó una compra de tesorería)
         '422':
           description: invalid_payload — solo se pueden confirmar payins anunciados EC/USD push bank_transfer o payins push cash de un corredor cash activo
         '503':

@@ -5,13 +5,22 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.247 · 2 个版本 - 2026年11月9日
-### v2.247
+## v2.249 · 4 个版本 - 2026年11月9日
+### v2.249
+#### 新增
+
+- 新增受控卡片交易 replay 和 c11-first 结算 matching 的操作说明，包括
+  `chain: "0"` 表示没有 chain 数据的规则。
+### v2.248
 **变更**
-- 注册保护现在只有在请求通过工作量证明 gate（或其他等效的已验证凭证）后才会持续攻击模式，因此未通过 PoW 的流量无法继续保持 latch。
-- 共享 throttle 暂时降级时，fallback 信号仍可根据软阈值启动攻击模式。
-- `POST /v1/auth/pow-challenge` 现在与注册共用 IP 预算，并可能返回 `429 too_many_attempts`。
-- 新增可选字段 `org`，将新挑战绑定到单个组织。新的组织绑定挑战使用组织 MAC；为保持兼容性，legacy v1 挑战暂时仍会被接受。
+- 工作量证明挑战端点现在使用独立配额：每个 IP 每小时 200 次，因此
+  challenge 流量不会消耗注册配额。
+- 重复的 OTP 挑战请求会直接返回当前有效挑战并返回 `200`，不会再次发送验证码。
+- 一次性邮箱 feed 现在使用兼容 UTS46 的 IDNA 处理规范化域名，与邮箱规范化保持一致。
+- 反滥用监控降级时，攻击模式通知会说明是备用信号触发了 latch。
+### v2.247
+**安全**
+- 加强注册防邮箱变体滥用：Gmail 的点号/`+`（及主流邮箱的 `+` 子地址）现归一到同一邮箱用于重复检测，一个邮箱无法再开通多个账户。响应不变（`201 pending_verification`）。
 ### v2.246
 **变更**
 - Platform 管理员凭证变更现在采用双 God maker-checker。批准后的 TOTP 重置会清除 secret 且不发送 email；邮箱变更会通知两个邮箱，并在类型化 `409 duplicate` 时保持请求 pending。组织 scope 管理仍为直接流程。

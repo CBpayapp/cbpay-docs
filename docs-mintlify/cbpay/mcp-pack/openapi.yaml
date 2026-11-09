@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.246'
+  version: '2.249'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -10860,6 +10860,50 @@ paths:
                   value:
                     error: invalid_signature_image
                     message: signature image must be PNG
+  /v1/me/device-integrity:
+    post:
+      tags:
+      - Account
+      operationId: reportDeviceIntegrity
+      summary: Report an Android integrity token
+      description: Reports a Play Integrity token from the Android app for server-side decoding (monitor mode, never blocks). The verdict is audited as a device_integrity security event. Without Google credentials the endpoint still answers 200 with checked=false. Throttled to 12/hour per member.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - integrity_token
+              properties:
+                integrity_token:
+                  type: string
+                  description: Standard Play Integrity token (1-16384 chars).
+            example:
+              integrity_token: integrity-token-from-play-api
+      responses:
+        '200':
+          description: Verdict recorded (checked may be false without credentials).
+          content:
+            application/json:
+              example:
+                checked: true
+                verdict: ok
+                device_ok: true
+        '400':
+          description: Invalid token (invalid_token).
+          content:
+            application/json:
+              example:
+                error: invalid_token
+                message: integrity token must be 1-16384 chars without whitespace
+        '429':
+          description: Too many reports (rate_limited).
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many integrity reports, retry later
   /v1/me/email/change:
     post:
       tags:

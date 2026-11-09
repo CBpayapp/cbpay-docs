@@ -4,8 +4,17 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="9 de noviembre de 2026" description="v2.247 · 2 versiones">
-### v2.247
+<Update label="9 de noviembre de 2026" description="v2.250 · 5 versiones">
+### v2.250
+#### Agregado
+
+- Se agregó orientación operativa para el replay controlado de transacciones
+  de tarjetas y el matching c11-first de liquidaciones, incluida la regla de
+  que `chain: "0"` significa que no hay dato de chain.
+### v2.249
+**Cambiado**
+- La confirmación manual ahora acepta payins push `pending` y `expired`. El claim reabre atómicamente un payin vencido a `pending`; `payin_expired` puede llegar antes que `payin_credited`.
+### v2.248
 **Cambiado**
 - El endpoint de desafíos de prueba de trabajo ahora tiene un límite propio de
   200 solicitudes por hora por IP, por lo que el tráfico de challenges no
@@ -16,6 +25,9 @@ description: "Historial de cambios de la API y de esta documentación"
   procesamiento compatible con UTS46, en línea con la normalización del email.
 - Cuando el monitoreo antiabuso está degradado, el aviso de modo de ataque
   explica que la señal de respaldo activó el latch.
+### v2.247
+**Seguridad**
+- Se endureció el registro contra abuso de variantes del buzón: los puntos/`+` de Gmail (y sub-direcciones `+` en proveedores grandes) ahora resuelven al mismo buzón para detectar duplicados, así un buzón ya no puede abrir varias cuentas. Las respuestas no cambian (`201 pending_verification`).
 ### v2.246
 **Cambiado**
 - Los cambios de credenciales de administradores platform ahora usan maker-checker de dos god. Los resets TOTP limpian el secreto sin despacho de email después de aprobar; los cambios de email avisan a ambas casillas y mantienen pendiente el request ante `409 duplicate`. La administración de scope organización sigue siendo directa.

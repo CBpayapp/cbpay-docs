@@ -5,13 +5,27 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.247 · 2 versiones - 9 de noviembre de 2026
-### v2.247
+## v2.249 · 4 versiones - 9 de noviembre de 2026
+### v2.249
+#### Agregado
+
+- Se agregó orientación operativa para el replay controlado de transacciones
+  de tarjetas y el matching c11-first de liquidaciones, incluida la regla de
+  que `chain: "0"` significa que no hay dato de chain.
+### v2.248
 **Cambiado**
-- La protección del registro ahora mantiene el modo de ataque solo después de que la solicitud supera el gate de prueba de trabajo (o una credencial equivalente ya verificada), por lo que el tráfico que falla PoW no puede mantener activo el latch.
-- Si el throttle compartido está temporalmente degradado, la señal de fallback todavía puede activar el modo de ataque desde el umbral blando.
-- `POST /v1/auth/pow-challenge` ahora comparte el presupuesto de IP del registro y puede responder `429 too_many_attempts`.
-- Agrega el campo opcional `org` para ligar un challenge nuevo a una sola organización. Los challenges nuevos ligados a una organización usan un MAC por organización; los challenges v1 legacy siguen aceptándose temporalmente por compatibilidad.
+- El endpoint de desafíos de prueba de trabajo ahora tiene un límite propio de
+  200 solicitudes por hora por IP, por lo que el tráfico de challenges no
+  consume el presupuesto de registro.
+- Las solicitudes OTP repetidas devuelven de inmediato el desafío activo con
+  `200` y no envían otro código.
+- Los feeds de emails desechables ahora normalizan los dominios IDNA con
+  procesamiento compatible con UTS46, en línea con la normalización del email.
+- Cuando el monitoreo antiabuso está degradado, el aviso de modo de ataque
+  explica que la señal de respaldo activó el latch.
+### v2.247
+**Seguridad**
+- Se endureció el registro contra abuso de variantes del buzón: los puntos/`+` de Gmail (y sub-direcciones `+` en proveedores grandes) ahora resuelven al mismo buzón para detectar duplicados, así un buzón ya no puede abrir varias cuentas. Las respuestas no cambian (`201 pending_verification`).
 ### v2.246
 **Cambiado**
 - Los cambios de credenciales de administradores platform ahora usan maker-checker de dos god. Los resets TOTP limpian el secreto sin despacho de email después de aprobar; los cambios de email avisan a ambas casillas y mantienen pendiente el request ante `409 duplicate`. La administración de scope organización sigue siendo directa.

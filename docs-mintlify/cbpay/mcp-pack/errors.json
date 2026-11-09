@@ -1,5 +1,5 @@
 {
-  "count": 422,
+  "count": 424,
   "errors": [
     {
       "category": {
@@ -595,6 +595,20 @@
         "es": "OTP / 2FA",
         "zh": "OTP / 双因素认证"
       },
+      "code": "sms_country_blocked",
+      "http": 422,
+      "meaning": {
+        "en": "SMS codes are not available for this phone country (organization allowlist); verify with your authenticator app or email instead",
+        "es": "Los códigos SMS no están disponibles para este país (allowlist de la organización); verifica con tu app autenticadora o email",
+        "zh": "该电话号码所属国家不可接收短信验证码（组织白名单限制）；请改用验证器 App 或邮箱"
+      }
+    },
+    {
+      "category": {
+        "en": "OTP / 2FA",
+        "es": "OTP / 2FA",
+        "zh": "OTP / 双因素认证"
+      },
       "code": "otp_unavailable",
       "http": 503,
       "meaning": {
@@ -727,6 +741,20 @@
         "en": "Another admin is currently applying this adjustment; wait for that action to finish before trying again",
         "es": "Otro administrador está aplicando este ajuste; espera a que termine antes de intentarlo de nuevo",
         "zh": "另一位管理员正在处理此 adjustment；请等待当前操作完成后再重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Organization admin panel",
+        "es": "Panel de administración de organización",
+        "zh": "组织管理面板"
+      },
+      "code": "prefixes_required",
+      "http": 400,
+      "meaning": {
+        "en": "The SMS country allowlist update needs `prefixes` (send `[]` to reset to the platform default)",
+        "es": "La actualización de la allowlist SMS necesita `prefixes` (manda `[]` para volver al default de plataforma)",
+        "zh": "更新短信国家白名单需要 `prefixes`（传 `[]` 可恢复平台默认值）"
       }
     },
     {

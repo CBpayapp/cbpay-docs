@@ -5,13 +5,27 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.247 · 2 versions - November 9, 2026
-### v2.247
+## v2.249 · 4 versions - November 9, 2026
+### v2.249
+#### Added
+
+- Added operator guidance for controlled card transaction replay and
+  c11-first settlement matching, including the rule that `chain: "0"` means
+  no chain data.
+### v2.248
 **Changed**
-- Registration protection now sustains attack mode only after a request passes the proof-of-work gate (or another equivalent verified credential), so rejected PoW traffic cannot keep the latch active.
-- If the shared throttle is temporarily degraded, the fallback signal can still latch attack mode from the soft threshold.
-- `POST /v1/auth/pow-challenge` now shares the registration IP budget and can return `429 too_many_attempts`.
-- Add the optional `org` field to bind a new challenge to one organization. New organization-bound challenges use an organization MAC; legacy v1 challenges remain temporarily accepted for compatibility.
+- The proof-of-work challenge endpoint now has its own limit of 200 requests
+  per hour per IP, so challenge traffic does not consume the registration
+  budget.
+- Repeated OTP challenge requests short-circuit to the active challenge with
+  `200` and do not send another code.
+- Disposable-email feeds now normalize IDNA domains with UTS46-compatible
+  processing, matching email normalization.
+- Degraded anti-abuse monitoring now makes the attack-mode notice explain that
+  its fallback signal triggered the latch.
+### v2.247
+**Security**
+- Hardened sign-up against mailbox-variant abuse: Gmail dots/plus (and `+` sub-addresses on major providers) now resolve to the same mailbox for duplicate detection, so one inbox can no longer open several accounts. Responses are unchanged (`201 pending_verification`).
 ### v2.246
 **Changed**
 - Platform administrator credential changes now use double-god maker-checker. TOTP resets clear the secret without email dispatch after approval; email changes notify both mailboxes and retain a pending request on typed `409 duplicate`. Organization-scope administration remains direct.

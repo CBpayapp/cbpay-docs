@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.247'
+  version: '2.250'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -2708,7 +2708,7 @@ paths:
       security: []
       operationId: createPoWChallenge
       summary: Create a proof-of-work challenge
-      description: Creates a short-lived proof-of-work challenge for public registration, registration confirmation or social registration. The challenge is bound to the purpose and email supplied in the request.
+      description: Creates a short-lived proof-of-work challenge for public registration, registration confirmation or social registration. The challenge is bound to the purpose, email and (when supplied) org in the request. Challenge issuance is IP rate-limited, sharing the registration budget.
       requestBody:
         required: true
         content:
@@ -2729,6 +2729,9 @@ paths:
                   type: string
                   format: email
                   description: For purpose oauth, the provider identity key provider:subject@oauth.local (see POST /v1/auth/oauth).
+                org:
+                  type: string
+                  description: Organization slug binding the challenge to one org (recommended; without it the legacy org-less challenge is issued).
             example:
               purpose: register
               email: ana@example.com
@@ -10857,6 +10860,50 @@ paths:
                   value:
                     error: invalid_signature_image
                     message: signature image must be PNG
+  /v1/me/device-integrity:
+    post:
+      tags:
+      - Account
+      operationId: reportDeviceIntegrity
+      summary: Report an Android integrity token
+      description: Reports a Play Integrity token from the Android app for server-side decoding (monitor mode, never blocks). The verdict is audited as a device_integrity security event. Without Google credentials the endpoint still answers 200 with checked=false. Throttled to 12/hour per member.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - integrity_token
+              properties:
+                integrity_token:
+                  type: string
+                  description: Standard Play Integrity token (1-16384 chars).
+            example:
+              integrity_token: integrity-token-from-play-api
+      responses:
+        '200':
+          description: Verdict recorded (checked may be false without credentials).
+          content:
+            application/json:
+              example:
+                checked: true
+                verdict: ok
+                device_ok: true
+        '400':
+          description: Invalid token (invalid_token).
+          content:
+            application/json:
+              example:
+                error: invalid_token
+                message: integrity token must be 1-16384 chars without whitespace
+        '429':
+          description: Too many reports (rate_limited).
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many integrity reports, retry later
   /v1/me/email/change:
     post:
       tags:
@@ -16194,7 +16241,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (no pending confirm request for this payin; a credited payin with different evidence is reported through its request), second_approver_required (the checker must be a different god than the maker), confirm_account_mismatch (the payin account changed since the request; re-request), or bank_ref_conflict (the bank reference is already claimed by another operation)
+          description: invalid_state (no pending confirm request on this payin; a credited payin with different evidence is reported through its request), second_approver_required (the checker must be a different god than the maker), confirm_account_mismatch (the payin account changed since the request; re-request), or bank_ref_conflict (the bank reference is already claimed by another operation)
         '500':
           description: credit_failed (the claim is released; replay the approve)
         '503':
@@ -16236,7 +16283,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (the payin is already credited, or no pending confirm request to cancel)
+          description: invalid_state (the payin is already credited, or no pending confirm request on this payin to cancel)
   /v1/payins/{payinID}/confirm-received:
     post:
       tags:
@@ -16308,7 +16355,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (only pending payins can be confirmed here; without a declared account the payin must be assigned first) or confirm_request_conflict (a request with different evidence is already pending) or deposit_settled_treasury_trade (the bank movement already settled a treasury purchase)
+          description: invalid_state (only pending or expired payins can be confirmed here; without a declared account the payin must be assigned first) or confirm_request_conflict (a request with different evidence is already pending) or deposit_settled_treasury_trade (the bank movement already settled a treasury purchase)
         '422':
           description: invalid_payload — only announced EC/USD push bank_transfer payins or push cash payins from a live cash corridor can be confirmed here
         '503':
