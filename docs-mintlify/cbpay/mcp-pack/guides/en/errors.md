@@ -86,6 +86,7 @@ Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/securit
 | 403 | `independent_factor_required` | The phone cooldown can only be unlocked with the authenticator app or the verified email, never with a code sent to the new number |
 | 429 | `too_many_attempts` | Send/verification limits reached; wait a few minutes |
 | 409 | `otp_disabled_for_org` | Two-factor authentication is not enabled for your organization; contact support |
+| 422 | `sms_country_blocked` | SMS codes are not available for this phone country (organization allowlist); verify with your authenticator app or email instead |
 | 409 | `totp_not_started` | Confirm requires starting enrollment first (`POST /v1/me/totp/enroll`) |
 | 503 | `otp_unavailable` | Verification service unavailable (the action stays blocked; OTP is never skipped) |
 
@@ -112,6 +113,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | 503 | `core_admin_credential_missing` | A platform administrator catalog requires a configured core credential; contact the platform administrator |
 | 400 | `invalid_value` | An organization setting was sent with the wrong type (e.g. `global_treasury_read` must be a boolean, not a string) |
 | 409 | `approval_in_progress` | Another admin is currently applying this adjustment; wait for that action to finish before trying again |
+| 400 | `prefixes_required` | The SMS country allowlist update needs `prefixes` (send `[]` to reset to the platform default) |
 
 ### Validation (400)
 

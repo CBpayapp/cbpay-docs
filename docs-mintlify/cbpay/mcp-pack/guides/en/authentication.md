@@ -21,6 +21,19 @@ Registration is verify-first: it never creates a session. The public endpoint re
 cannot use it to enumerate accounts. The email owner receives a verification code;
 complete the flow with `POST /v1/auth/register/confirm`.
 
+Email identity matching prevents multiple accounts for the same mailbox. For
+`gmail.com` and `googlemail.com`, dots and everything after `+` are ignored and
+`googlemail.com` is treated as `gmail.com`. Plus addressing is also collapsed
+for the supported Outlook, Hotmail, Live, MSN, iCloud, Me, Mac, Yahoo, Ymail,
+Rocketmail and Proton domains; other domains are matched exactly.
+
+Registering an equivalent variant returns the same `201 pending_verification`
+shape without creating another account. The same mailbox is rejected with
+`409 duplicate` or `409 email_in_use` for OAuth, administrator-created
+accounts, invitations and email changes. This behavior is organization-scoped.
+If an email is blocked by an organization policy, resolve the block rather than
+trying another variant of the same mailbox.
+
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -52,22 +65,14 @@ to registration and email confirmation, so request a challenge with the matching
 `purpose` and the exact lowercase email that you will submit.
 
 The challenge is short-lived (600 seconds), has difficulty `20`, and is bound to
-the email and purpose. For a tenant-specific flow, include the optional `org`
-organization slug; the challenge is then bound to that organization as well.
-Use the same `org` when requesting the challenge for the registration flow. Solve
-it in your client, preferably in a background worker while the person or company
-form is open:
+the email and purpose. Solve it in your client, preferably in a background worker
+while the person or company form is open:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@example.com","org":"cbpay"}'
+  -d '{"purpose":"register","email":"ana@example.com"}'
 ```
-
-`org` is optional for backward compatibility. Omitting it creates the legacy
-org-less challenge. Challenge issuance shares the registration IP budget, so
-bursts can receive `429 too_many_attempts`; wait and request a new challenge
-instead of repeatedly submitting the same request.
 
 ```json
 {
@@ -104,7 +109,7 @@ new challenge with `"purpose":"confirm"` and submit it with confirmation:
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@example.com","org":"cbpay"}'
+  -d '{"purpose":"confirm","email":"ana@example.com"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
@@ -116,7 +121,9 @@ that omit `pow`. During attack mode, either endpoint returns `400 pow_required`
 until the matching challenge is solved. See the central
 [authentication errors](https://docs.cbpayapp.com/en/errors#authentication-and-registration-errors) page
 for the required action. The challenge is stateless and expires after 10 minutes;
-request a fresh one when it expires rather than retrying a stale solution.
+request a fresh one when it expires rather than retrying a stale solution. The
+challenge endpoint has its own limit of 200 requests per hour per IP and does
+not consume the registration budget.
 
 #### Do existing clients need a release?
 Not during normal traffic: omitting `pow` remains accepted. If attack mode is

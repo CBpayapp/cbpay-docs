@@ -70,6 +70,7 @@ Detalle y flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/secur
 | 429 | `too_many_attempts` | Límite de envíos o verificaciones; espera unos minutos |
 | 503 | `otp_unavailable` | Servicio de verificación no disponible (la acción queda bloqueada, nunca se salta el OTP) |
 | 409 | `otp_disabled_for_org` | Tu organización no tiene habilitado el 2FA por acción; contacta a tu operador |
+| 422 | `sms_country_blocked` | Los códigos SMS no están disponibles para este país (allowlist de la organización); verifica con tu app autenticadora o email |
 | 409 | `totp_not_started` | No hay enrolamiento TOTP en curso; parte con `POST /v1/me/totp/enroll` |
 
 ### Login social (OAuth)
@@ -95,6 +96,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 503 | `core_admin_credential_missing` | Un catálogo de administrador de plataforma requiere una credencial del core configurada; contacta al administrador de plataforma |
 | 400 | `invalid_value` | Un setting de la organización se envió con el tipo incorrecto (ej. `global_treasury_read` debe ser booleano, no un string) |
 | 409 | `approval_in_progress` | Otro administrador está aplicando este ajuste; espera a que termine antes de intentarlo de nuevo |
+| 400 | `prefixes_required` | La actualización de la allowlist SMS necesita `prefixes` (manda `[]` para volver al default de plataforma) |
 
 ### Validación (400)
 

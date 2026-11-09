@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.247'
+  version: '2.250'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -2714,7 +2714,7 @@ paths:
       security: []
       operationId: createPoWChallenge
       summary: 创建工作量证明挑战
-      description: 为公开注册、注册确认或社交注册创建短期工作量证明挑战。挑战会绑定到请求中提供的用途和邮箱。
+      description: 为公开注册、注册确认或社交注册创建短期工作量证明挑战。挑战会绑定到请求中提供的用途、邮箱(如提供还有组织)。签发有按 IP 限流,与注册共享额度。
       requestBody:
         required: true
         content:
@@ -2735,6 +2735,9 @@ paths:
                   type: string
                   format: email
                   description: purpose 为 oauth 时,使用身份标识 provider:subject@oauth.local(见 POST /v1/auth/oauth)。
+                org:
+                  type: string
+                  description: 将挑战绑定到单个组织的组织 slug(推荐;不提供则签发无组织的旧版 challenge)。
             example:
               purpose: register
               email: ana@example.com
@@ -10846,6 +10849,50 @@ paths:
                   value:
                     error: invalid_signature_image
                     message: signature image must be PNG
+  /v1/me/device-integrity:
+    post:
+      tags:
+      - 账户
+      operationId: reportDeviceIntegrity
+      summary: 上报 Android 完整性令牌
+      description: 上报 Android 应用的 Play Integrity 令牌以便服务端解码（监控模式，永不阻止）。 verdict 将作为 device_integrity 安全事件审计。无 Google 凭证时仍返回 200 且 checked=false。每成员每小时限 12 次。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - integrity_token
+              properties:
+                integrity_token:
+                  type: string
+                  description: 标准 Play Integrity 令牌（1-16384 个字符）。
+            example:
+              integrity_token: integrity-token-from-play-api
+      responses:
+        '200':
+          description: 已记录 verdict（无凭证时 checked 可能为 false）。
+          content:
+            application/json:
+              example:
+                checked: true
+                verdict: ok
+                device_ok: true
+        '400':
+          description: 令牌无效（invalid_token）。
+          content:
+            application/json:
+              example:
+                error: invalid_token
+                message: integrity token must be 1-16384 chars without whitespace
+        '429':
+          description: 上报过于频繁（rate_limited）。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many integrity reports, retry later
   /v1/me/email/change:
     post:
       tags:
@@ -16309,7 +16356,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state（只有 pending payin 才能确认；未声明账户需先分配）、confirm_request_conflict（已存在其他证据的待处理请求）或 deposit_settled_treasury_trade（该笔银行流水已结算一笔国库采购）
+          description: invalid_state（只有 pending 或 expired payin 才能确认；未声明账户需先分配）、confirm_request_conflict（已存在其他证据的待处理请求）或 deposit_settled_treasury_trade（该笔银行流水已结算一笔国库采购）
         '422':
           description: invalid_payload — 这里只能确认已公告的 EC/USD push bank_transfer 或活跃现金走廊的 push cash payin
         '503':
