@@ -2734,7 +2734,7 @@ paths:
       security: []
       operationId: createPoWChallenge
       summary: Crear un desafío de prueba de trabajo
-      description: Crea un desafío de prueba de trabajo de corta duración para el registro público, la confirmación del registro o el registro social. El desafío queda vinculado al propósito y al email enviados en el request.
+      description: Crea un desafío de prueba de trabajo de corta duración para el registro público, la confirmación del registro o el registro social. El desafío queda vinculado al propósito, al email y (si se envía) a la org del request. La emisión tiene tope por IP, compartido con registro.
       requestBody:
         required: true
         content:
@@ -2755,6 +2755,9 @@ paths:
                   type: string
                   format: email
                   description: Con purpose oauth, la llave de identidad provider:subject@oauth.local (ver POST /v1/auth/oauth).
+                org:
+                  type: string
+                  description: Slug de la org que liga el desafío a una sola org (recomendado; sin él se emite el challenge legacy sin org).
             example:
               purpose: register
               email: ana@ejemplo.com

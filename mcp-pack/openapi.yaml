@@ -2708,7 +2708,7 @@ paths:
       security: []
       operationId: createPoWChallenge
       summary: Create a proof-of-work challenge
-      description: Creates a short-lived proof-of-work challenge for public registration, registration confirmation or social registration. The challenge is bound to the purpose and email supplied in the request.
+      description: Creates a short-lived proof-of-work challenge for public registration, registration confirmation or social registration. The challenge is bound to the purpose, email and (when supplied) org in the request. Challenge issuance is IP rate-limited, sharing the registration budget.
       requestBody:
         required: true
         content:
@@ -2729,6 +2729,9 @@ paths:
                   type: string
                   format: email
                   description: For purpose oauth, the provider identity key provider:subject@oauth.local (see POST /v1/auth/oauth).
+                org:
+                  type: string
+                  description: Organization slug binding the challenge to one org (recommended; without it the legacy org-less challenge is issued).
             example:
               purpose: register
               email: ana@example.com

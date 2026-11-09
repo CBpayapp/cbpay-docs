@@ -52,14 +52,22 @@ to registration and email confirmation, so request a challenge with the matching
 `purpose` and the exact lowercase email that you will submit.
 
 The challenge is short-lived (600 seconds), has difficulty `20`, and is bound to
-the email and purpose. Solve it in your client, preferably in a background worker
-while the person or company form is open:
+the email and purpose. For a tenant-specific flow, include the optional `org`
+organization slug; the challenge is then bound to that organization as well.
+Use the same `org` when requesting the challenge for the registration flow. Solve
+it in your client, preferably in a background worker while the person or company
+form is open:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@example.com"}'
+  -d '{"purpose":"register","email":"ana@example.com","org":"cbpay"}'
 ```
+
+`org` is optional for backward compatibility. Omitting it creates the legacy
+org-less challenge. Challenge issuance shares the registration IP budget, so
+bursts can receive `429 too_many_attempts`; wait and request a new challenge
+instead of repeatedly submitting the same request.
 
 ```json
 {
@@ -96,7 +104,7 @@ new challenge with `"purpose":"confirm"` and submit it with confirmation:
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@example.com"}'
+  -d '{"purpose":"confirm","email":"ana@example.com","org":"cbpay"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
