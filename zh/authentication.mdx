@@ -107,7 +107,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
 正常情况下，省略 `pow` 的客户端仍可注册和确认。攻击模式启用后，两个
 端点都会返回 `400 pow_required`，直到解决匹配的挑战。请参阅
 [认证错误](/zh/errors#认证与注册错误)页面了解处理方式。挑战是无状态的，
-10 分钟后过期；过期时请请求新挑战，不要重复提交旧解。
+10 分钟后过期；过期时请请求新挑战，不要重复提交旧解。挑战端点使用
+独立配额：每个 IP 每小时 200 次，且不会消耗注册配额。
 
 <AccordionGroup>
 <Accordion title="现有客户端需要发布新版本吗？">

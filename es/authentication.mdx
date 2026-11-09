@@ -122,7 +122,9 @@ clientes que omiten `pow`. Durante el modo de ataque, cada endpoint responde
 `400 pow_required` hasta resolver el desafío correcto. Revisa la página central
 de [errores de autenticación](/es/errors#errores-de-autenticacion-y-registro)
 para la acción requerida. El desafío es stateless y vence en 10 minutos; pide
-uno nuevo cuando expire en vez de reintentar una solución antigua.
+uno nuevo cuando expire en vez de reintentar una solución antigua. El endpoint
+de challenges tiene su propio límite de 200 solicitudes por hora por IP y no
+consume el presupuesto de registro.
 
 <AccordionGroup>
 <Accordion title="¿Los clientes existentes necesitan una nueva versión?">
