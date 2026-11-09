@@ -5,7 +5,13 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.243 · 1 versión - 8 de noviembre de 2026
+## v2.245 · 3 versiones - 8 de noviembre de 2026
+### v2.245
+**Agregado**
+- Los links externos en los hilos de soporte del portal ahora muestran el aviso anti-phishing antes de abrirse (la misma protección del panel admin).
+### v2.244
+**Cambiado**
+- Los envíos OTP por email mantienen la exención a nivel de tenant y ganan un techo de 6/hora por destino (mismo estándar anti-buzón que card sessions): frena pumps a una dirección sin bloquear logins legítimos. Cuotas SMS/WhatsApp sin cambios (30/hora por tenant, 6/hora por destino).
 ### v2.243
 **Agregado**
 - Se agregó documentación para los espejos de revisión de tarjetas: las
