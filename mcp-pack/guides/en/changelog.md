@@ -5,6 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.246 · 1 version - November 9, 2026
+### v2.246
+**Changed**
+- Platform administrator credential changes now use double-god maker-checker. TOTP resets clear the secret without email dispatch after approval; email changes notify both mailboxes and retain a pending request on typed `409 duplicate`. Organization-scope administration remains direct.
 ## v2.245 · 3 versions - November 8, 2026
 ### v2.245
 **Added**

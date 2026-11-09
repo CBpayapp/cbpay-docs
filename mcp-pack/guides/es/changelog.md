@@ -5,6 +5,10 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.246 · 1 versión - 9 de noviembre de 2026
+### v2.246
+**Cambiado**
+- Los cambios de credenciales de administradores platform ahora usan maker-checker de dos god. Los resets TOTP limpian el secreto sin despacho de email después de aprobar; los cambios de email avisan a ambas casillas y mantienen pendiente el request ante `409 duplicate`. La administración de scope organización sigue siendo directa.
 ## v2.245 · 3 versiones - 8 de noviembre de 2026
 ### v2.245
 **Agregado**
