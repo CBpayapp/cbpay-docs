@@ -4,24 +4,13 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 9, 2026" description="v2.244 · 1 version">
+<Update label="November 8, 2026" description="v2.245 · 3 versions">
+### v2.245
+**Added**
+- External links in portal support threads now show the anti-phishing interstitial before opening (same protection as the admin panel).
 ### v2.244
 **Changed**
-- Registration now always returns `201 pending_verification`. If the email code
-  does not arrive, request a new one with `POST /v1/auth/password/forgot`;
-  registration no longer returns `502 otp_send_failed`.
-- Social registration accepts an optional `pow` solution only when attack mode
-  requires it for creating a new account. OAuth challenges use
-  `provider:subject@oauth.local` as their identity key.
-- `POST /v1/auth/pow-challenge` now accepts `purpose: "oauth"` for social
-  account creation.
-- Password-recovery requests are throttled by source IP and can raise an
-  operator alert for a burst; the public response remains the same generic
-  `200`.
-- Automated farm-cluster detection can quarantine coordinated accounts and
-  alert operators while preserving the public anti-enumeration responses.
-</Update>
-<Update label="November 8, 2026" description="v2.243 · 1 version">
+- Email OTP sends keep the tenant-level exemption and gain a per-destination cap of 6/hour (same anti-mailbox standard as card sessions): pumps to one address are cut without blocking legit logins. SMS/WhatsApp quotas unchanged (30/hour per tenant, 6/hour per destination).
 ### v2.243
 **Added**
 - Added documentation for card-review mirrors: core `review` signals become
