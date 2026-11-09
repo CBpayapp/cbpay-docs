@@ -116,7 +116,9 @@ that omit `pow`. During attack mode, either endpoint returns `400 pow_required`
 until the matching challenge is solved. See the central
 [authentication errors](/en/errors#authentication-and-registration-errors) page
 for the required action. The challenge is stateless and expires after 10 minutes;
-request a fresh one when it expires rather than retrying a stale solution.
+request a fresh one when it expires rather than retrying a stale solution. The
+challenge endpoint has its own limit of 200 requests per hour per IP and does
+not consume the registration budget.
 
 <AccordionGroup>
 <Accordion title="Do existing clients need a release?">
