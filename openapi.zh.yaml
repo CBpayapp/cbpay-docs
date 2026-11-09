@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.243'
+  version: '2.245'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -2360,6 +2360,15 @@ paths:
                   - person
                   - company
                   description: 创建新账户时的账户类型(默认 person;若账户已存在则忽略)。
+                pow:
+                  type: object
+                  description: 工作量证明解(攻击模式创建账户时必填;用 purpose oauth 向 POST /v1/auth/pow-challenge 获取 challenge)。
+                  properties:
+                    challenge:
+                      type: string
+                    suffix:
+                      type: integer
+                      format: int64
             example:
               org: cbpay
               provider: google
@@ -2402,7 +2411,7 @@ paths:
                 error: invalid_credential
                 message: the login credential is invalid or expired
         '400':
-          description: 未知组织、无效提供方,或该组织未启用此提供方。
+          description: 未知组织、无效提供方、该组织未启用此提供方,或攻击模式创建时缺少 pow(pow_required)。
           content:
             application/json:
               schema:
@@ -2705,7 +2714,7 @@ paths:
       security: []
       operationId: createPoWChallenge
       summary: 创建工作量证明挑战
-      description: 为公开注册或注册确认创建短期工作量证明挑战。挑战会绑定到请求中提供的用途和邮箱。
+      description: 为公开注册、注册确认或社交注册创建短期工作量证明挑战。挑战会绑定到请求中提供的用途和邮箱。
       requestBody:
         required: true
         content:
@@ -2721,9 +2730,11 @@ paths:
                   enum:
                   - register
                   - confirm
+                  - oauth
                 email:
                   type: string
                   format: email
+                  description: purpose 为 oauth 时,使用身份标识 provider:subject@oauth.local(见 POST /v1/auth/oauth)。
             example:
               purpose: register
               email: ana@example.com
@@ -2769,7 +2780,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: invalid_request
-                message: purpose must be register or confirm and email must be valid
+                message: purpose must be register, confirm or oauth and email must be valid
   /v1/auth/refresh:
     post:
       tags:
@@ -2928,13 +2939,11 @@ paths:
             application/json:
               example:
                 status: pending_verification
-                note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm
+                note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm. If no code arrives, request a new one with POST /v1/auth/password/forgot
         '400':
           description: invalid_type...invalid_email...invalid_display_name ... weak_password...或 pow_required...
         '403':
           description: org_suspended...
-        '502':
-          description: otp_send_failed...
   /v1/auth/register/2fa/passkey/begin:
     post:
       tags:
@@ -11062,6 +11071,60 @@ paths:
           $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/notifications:
+    get:
+      tags:
+      - 账户
+      operationId: listMyNotifications
+      summary: 我的通知
+      description: 账户的成员通知源(与事件历史相同的信封,账户视图)。需要 `from`/`to` 日期过滤。
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: event_type
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 通知。
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                total: 2
+                notifications:
+                - event_id: a1b2c3d4-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  type: payout_completed
+                  account_id: 1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  created_at: '2026-07-11T00:00:00Z'
+                  cursor: '42'
+                  data:
+                    payout_id: e5f6a7b8-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        '400':
+          $ref: '#/components/responses/InvalidRange'
   /v1/me/passkeys:
     get:
       tags:

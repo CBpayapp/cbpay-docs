@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.243'
+  version: '2.245'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2380,6 +2380,15 @@ paths:
                   - person
                   - company
                   description: Tipo de cuenta al crear una nueva (default person; se ignora si ya existe).
+                pow:
+                  type: object
+                  description: Solución proof-of-work (obligatoria en modo ataque al crear una cuenta; pide un challenge con purpose oauth en POST /v1/auth/pow-challenge).
+                  properties:
+                    challenge:
+                      type: string
+                    suffix:
+                      type: integer
+                      format: int64
             example:
               org: cbpay
               provider: google
@@ -2422,7 +2431,7 @@ paths:
                 error: invalid_credential
                 message: the login credential is invalid or expired
         '400':
-          description: Org desconocida, proveedor inválido o no habilitado para la org.
+          description: Org desconocida, proveedor inválido o no habilitado para la org, o pow_required en modo ataque al crear.
           content:
             application/json:
               schema:
@@ -2725,7 +2734,7 @@ paths:
       security: []
       operationId: createPoWChallenge
       summary: Crear un desafío de prueba de trabajo
-      description: Crea un desafío de prueba de trabajo de corta duración para el registro público o la confirmación del registro. El desafío queda vinculado al propósito y al email enviados en el request.
+      description: Crea un desafío de prueba de trabajo de corta duración para el registro público, la confirmación del registro o el registro social. El desafío queda vinculado al propósito y al email enviados en el request.
       requestBody:
         required: true
         content:
@@ -2741,9 +2750,11 @@ paths:
                   enum:
                   - register
                   - confirm
+                  - oauth
                 email:
                   type: string
                   format: email
+                  description: Con purpose oauth, la llave de identidad provider:subject@oauth.local (ver POST /v1/auth/oauth).
             example:
               purpose: register
               email: ana@ejemplo.com
@@ -2789,7 +2800,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: invalid_request
-                message: purpose must be register or confirm and email must be valid
+                message: purpose must be register, confirm or oauth and email must be valid
   /v1/auth/refresh:
     post:
       tags:
@@ -2948,13 +2959,11 @@ paths:
             application/json:
               example:
                 status: pending_verification
-                note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm
+                note: check your email for the verification code; complete registration with POST /v1/auth/register/confirm. If no code arrives, request a new one with POST /v1/auth/password/forgot
         '400':
           description: invalid_type, invalid_email, invalid_display_name, weak_password o pow_required.
         '403':
           description: org_suspended.
-        '502':
-          description: otp_send_failed.
   /v1/auth/register/2fa/passkey/begin:
     post:
       tags:
@@ -11084,6 +11093,60 @@ paths:
           $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/notifications:
+    get:
+      tags:
+      - Cuenta
+      operationId: listMyNotifications
+      summary: Mis notificaciones
+      description: Feed de notificaciones de la cuenta para el miembro (mismo envelope que el historial de eventos, vista cuenta). Exige filtros de fecha `from`/`to`.
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: event_type
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Notificaciones.
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                total: 2
+                notifications:
+                - event_id: a1b2c3d4-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  type: payout_completed
+                  account_id: 1c2d3e4f-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                  created_at: '2026-07-11T00:00:00Z'
+                  cursor: '42'
+                  data:
+                    payout_id: e5f6a7b8-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        '400':
+          $ref: '#/components/responses/InvalidRange'
   /v1/me/passkeys:
     get:
       tags:
