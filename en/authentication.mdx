@@ -28,8 +28,15 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register \
 ```
 
 ```json
-{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
+{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm. If no code arrives, request a new one with POST /v1/auth/password/forgot"}
 ```
+
+<Note>
+`POST /v1/auth/register` always returns `201 pending_verification`, including
+when the verification email cannot be sent. It does not return
+`502 otp_send_failed`; if the code does not arrive, use
+`POST /v1/auth/password/forgot` to request a new one.
+</Note>
 
 Confirm the code to verify the mailbox. The endpoint returns `201 pending_2fa_enrollment` with a 30-minute `pending_token`, `factors: ["totp", "sms"]`, `passkeys_available: false`, `next` and `account`; it does not create a session. The session is issued only after TOTP or SMS enrollment in [Mandatory 2FA enrollment after registration](#mandatory-2fa-enrollment-after-registration):
 
@@ -102,6 +109,13 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
   -d '{"org":"cbpay","email":"ana@example.com","code":"123456","pow":{"challenge":"<challenge>","suffix":1847293}}'
 ```
+
+For social registration, request the challenge with `purpose: "oauth"` and use
+the provider identity key as the email value:
+`provider:subject@oauth.local` (for example,
+`google:provider-subject@oauth.local`). Include the solved `pow` only when the
+OAuth request creates a new account during attack mode; an existing-user login
+does not need it.
 
 In normal conditions, registration and confirmation remain compatible with clients
 that omit `pow`. During attack mode, either endpoint returns `400 pow_required`
@@ -191,7 +205,9 @@ that uniform response and cannot log in with the signup password.
 
 Password recovery is deliberately anti-enumeration. `POST /v1/auth/password/forgot`
 returns the same `200` body even when its account send budget is exhausted; at most 5
-real code sends per account are allowed per hour. `POST /v1/auth/password/reset`
+real code sends per account are allowed per hour. Requests are also throttled per
+source IP; a burst can alert operators, but the response remains the same `200`.
+`POST /v1/auth/password/reset`
 allows at most 8 code attempts per account in 15 minutes. A successful email reset
 verifies the email and clears `register_pending`.
 Company members may also receive an administrator-initiated recovery link.

@@ -157,7 +157,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/oauth \
     "org": "cbpay",
     "provider": "google",
     "credential": "eyJhbGciOiJSUzI1Ni…",
-    "type": "person"
+    "type": "person",
+    "pow": {"challenge": "<challenge>", "suffix": 1847293}
   }'
 ```
 
@@ -177,6 +178,12 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/oauth \
 
 `type` 字段（`person` | `company`，默认 `person`）仅在
 创建账户时使用；如果账户已存在则被忽略。
+
+在攻击模式下，已有用户登录时可以省略 `pow`，但创建新账户时必须提供。
+请使用 `purpose: "oauth"` 调用 `POST /v1/auth/pow-challenge`，并将提供方身份
+标识作为 email 值：`provider:subject@oauth.local`（例如
+`google:provider-subject@oauth.local`）。挑战只绑定这个精确值，并且只用于
+创建账户的流程。
 
 ### 如何判定是创建还是登录
 
@@ -231,6 +238,7 @@ curl -X DELETE https://api.qbank.cl/platform/v1/me/identities/apple \
 | HTTP | `error` | 含义 |
 |---|---|---|
 | 400 | `invalid_provider` | 提供方不在 `google/apple/microsoft/facebook` 范围内 |
+| 400 | `pow_required` | 攻击模式下创建新账户需要有效的工作量证明；请用 `purpose: "oauth"` 请求挑战，然后重试相同的创建请求 |
 | 400 | `provider_not_configured` | 你的组织未启用该提供方 |
 | 401 | `invalid_credential` | 凭证无效、已过期或来自其他应用 |
 | 409 | `email_conflict` | 已存在使用该邮箱的账户；请用你现有的方式登录，然后在会话中关联该提供方 |

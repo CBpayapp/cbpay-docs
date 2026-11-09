@@ -4,6 +4,21 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年11月9日" description="v2.244 · 1 个版本">
+### v2.244
+**变更**
+- 注册现在始终返回 `201 pending_verification`。如果没有收到邮箱验证码，
+  请使用 `POST /v1/auth/password/forgot` 请求新的验证码；注册不再返回
+  `502 otp_send_failed`。
+- 社交注册仅在攻击模式要求创建新账户时接受 `pow`。OAuth challenge 使用
+  `provider:subject@oauth.local` 作为身份标识。
+- `POST /v1/auth/pow-challenge` 现在接受 `purpose: "oauth"`，用于创建
+  社交账户。
+- 密码找回请求现在按来源 IP 限制；出现洪峰时可以提醒运营人员，但公开
+  响应仍保持相同的通用 `200`。
+- 自动农场集群检测可以将协同账户置于隔离状态并提醒运营人员，同时保持
+  公开接口的反枚举响应。
+</Update>
 <Update label="2026年11月8日" description="v2.243 · 1 个版本">
 ### v2.243
 **新增**
