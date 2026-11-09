@@ -1,0 +1,224 @@
+---
+title: "Transaction tracking link"
+description: "Every receipt now has a shareable public tracking link — Wise-style status timeline, PDF download and three languages, no sign-in required"
+slug: en/guides/tracking
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/tracking
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+## What it is
+
+Every receipt the platform issues (payout, payin, refund, internal transfer, swap, crypto withdrawal or deposit, banking operation, card purchase) has a **public tracking link**, in the style of Wise:
+
+```
+https://business.cbpayapp.com/t/{code}
+```
+
+Anyone who has the link can open the page — **no sign-in, no API key** — and see the live status of that transaction with a step-by-step timeline, the full receipt detail and the option to download the PDF receipt.
+
+The `{code}` is the **same HMAC-signed code** that already backs receipt verification (`GET /verify/receipts/{code}` and the QR printed on every PDF). The link *is* the capability: it cannot be guessed or forged, and it only ever exposes that one transaction.
+
+## Where the link comes from
+
+You never build the URL yourself — the platform hands it to you:
+
+1. **`verify_url` in receipt payloads.** When a transaction reaches a final state, its receipt includes `verify_url`. With the tracker enabled, that URL now points to `https://business.cbpayapp.com/t/{code}`.
+2. **Receipt emails.** The branded receipt email your customer receives carries the same link ("Verify online" / tracking button).
+3. **The QR on every PDF receipt** encodes the same code — scanning it opens the tracker.
+
+Forward the link as-is to your customer, your support desk or your finance team. Everyone with the link sees the same page.
+
+## Get the link for an existing transaction (API)
+
+Receipts and emails always carry the link, but you don't need to download anything to get it: call `GET /v1/track-link` with the transaction's `kind` and `id` to power a **"Share link"** button in your own UI.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `kind` | string | Transaction family: `payout`, `payin`, `payin_refund`, `transfer`, `crypto_withdrawal`, `crypto_deposit`, `swap`, `card_purchase`, `banking_operation`, `wallet_send`, `wallet_deposit` |
+| `id` | string | Transaction identifier — the same `id` returned by the product endpoints and webhooks of that `kind` |
+
+```bash
+curl -G "https://api.qbank.cl/platform/v1/track-link" \
+  -H "Authorization: Bearer $CBPAY_TOKEN" \
+  --data-urlencode "kind=payout" \
+  --data-urlencode "id=9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+```
+
+Response `200 OK`:
+
+```json
+{
+  "track_url": "https://business.cbpayapp.com/t/P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f4a2c1e5b7",
+  "code": "P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f4a2c1e5b7"
+}
+```
+
+The `code` is the same HMAC-signed code printed as a QR on every receipt, so the link is **deterministic**: calling the endpoint twice for the same transaction always returns the same URL.
+
+**Who can call it.** The transaction's own account (API key or member session), org admins and platform admins — the same read scope as receipts. A transaction outside your scope (or an unknown `kind`) answers `404 not_found`, never `403`: existence is never leaked. A missing `kind` or `id` answers `400 invalid_payload`.
+
+## What the page shows
+
+- **Status badge** — a public, human-readable status (`completed`, `processing`, `failed`) with the operation detail (recipient, reference, amounts, exchange rate).
+- **Timeline** — a fixed step sequence per operation type (for example, a payout: *Initiated → Processing → In transit → Completed*). Only real timestamps are shown: the first step carries the creation time and the reached final step carries the last update; intermediate steps never display fabricated dates.
+- **PDF receipt** — the same branded, verifiable receipt, generated on the fly, downloadable directly from the page.
+- **Your branding** — your organization's name, logo, website and accent color (white-label by design).
+- **Blockchain explorer link** — for crypto transactions with an on-chain hash, a link to the public explorer.
+- **Support block** — "Problems with this transfer?" pointing to your organization's website.
+
+## Public JSON API (build your own tracker)
+
+The same data the hosted page renders is available as JSON — useful if you want to embed tracking inside your own portal instead of redirecting to ours:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/public/track/P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f4a2c1e5b7?lang=en"
+```
+
+No authentication. Response for a completed payout:
+
+```json
+{
+  "kind": "payout",
+  "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "status": "completed",
+  "status_class": "ok",
+  "subtitle": "Venezuela — Pago Móvil",
+  "fields": [
+    { "label": "TRANSACTION ID", "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d", "mono": true },
+    { "label": "DATE AND TIME", "value": "August 8, 2026 at 15:29 UTC" },
+    { "label": "BENEFICIARY", "value": "María Pérez" },
+    { "label": "BANK", "value": "Banco de Venezuela" },
+    { "label": "PHONE", "value": "0414-1234567" },
+    { "label": "MESSAGE", "value": "Invoice 1042" }
+  ],
+  "amounts": [
+    { "label": "AMOUNT RECEIVED", "value": "1250000.00 VES" },
+    { "label": "EXCHANGE RATE", "value": "950.00" },
+    { "label": "TOTAL DEBIT", "value": "1315.79 USDT" }
+  ],
+  "created_at": "2026-08-08T15:29:00Z",
+  "timeline": [
+    { "key": "initiated",   "state": "complete", "at": "2026-08-08T15:29:00Z" },
+    { "key": "processing",  "state": "complete", "at": null },
+    { "key": "in_transit",  "state": "complete", "at": null },
+    { "key": "completed",   "state": "complete", "at": "2026-08-08T15:31:12Z" }
+  ],
+  "branding": {
+    "name": "CBPay",
+    "logo_url": "https://cdn.cbpayapp.com/branding/cbpay/logo.svg",
+    "website": "https://www.cbpayapp.com",
+    "accent": "#FBC140"
+  },
+  "receipt_pdf_url": "https://api.qbank.cl/platform/v1/public/track/P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f4a2c1e5b7/receipt.pdf",
+  "whats_next": "payout.done",
+  "support": { "website": "https://www.cbpayapp.com" }
+}
+```
+
+| Field | Description |
+|---|---|
+| `kind` | `payout` · `payin` · `payin_refund` · `transfer` · `swap` · `crypto_withdrawal` · `crypto_deposit` · `wallet_send` · `wallet_deposit` · `banking_operation` · `card_purchase` |
+| `status` | **Public** status: the platform status lowercased — see the anti tipping-off table below. Review states are never exposed. |
+| `status_class` | `ok` (completed, credited, confirmed, settled, captured, approved) · `failed` (failed, declined, canceled, rejected, reversed, expired) · `pending` (everything else) — drives the badge color. |
+| `fields` / `amounts` | Label/value rows. **Labels arrive already translated** according to `?lang=`; your front end only translates the page chrome and the timeline steps. `mono: true` marks long values (IDs, hashes) to render in a smaller monospace font. |
+| `timeline[].key` | i18n key of the step (e.g. `initiated`, `in_transit`, `credited`). |
+| `timeline[].state` | `complete` · `in_progress` · `upcoming` · `failed`. |
+| `timeline[].at` | RFC3339 real timestamp or `null`. Only the first step (creation) and the reached terminal step carry a date — **timestamps are never fabricated**. |
+| `whats_next` | Contextual i18n key telling the recipient what happens next: `<kind>.done` (ok), `<kind>.failed` (failed) or `<kind>.<active step key>` while in progress (e.g. `payout.in_transit`, `crypto_withdrawal.confirming`). |
+| `explorer_url` | Public blockchain explorer URL — only present for crypto transactions with a real on-chain hash. |
+| `receipt_pdf_url` | Direct URL of the PDF receipt (same signed code). |
+
+### Public status (anti tipping-off)
+
+Sensitive internal states are generalized before they reach the public page — an operation under compliance review must not be distinguishable from one that is simply being processed:
+
+| Internal state | Status | Class |
+|---|---|---|
+| `in_review`, `held`, `review`, `on_hold`, `compliance_hold` | `processing` | `pending` |
+| `completed`, `credited`, `confirmed`, `settled`, `captured`, `approved` | (status lowercased) | `ok` |
+| `failed`, `declined`, `canceled`, `rejected`, `reversed`, `expired` | (status lowercased) | `failed` |
+| Any other transient state (`pending`, `matched`, `broadcasting`, …) | (status lowercased) | `pending` |
+
+### Timeline sequences
+
+The step sequence is **fixed per operation family** — the recipient always sees the same steps for the same product:
+
+| Family | Steps |
+|---|---|
+| Payout | `initiated` → `processing` → `in_transit` → `completed` |
+| Payin — announced transfer | `initiated` → `matched` → `processing` → `completed` |
+| Payin — QR / collect / card / dedicated account | `initiated` → `processing` → `completed` |
+| Payin refund | `initiated` → `processing` → `completed` |
+| Internal transfer · swap | `initiated` → `completed` |
+| Crypto withdrawal / wallet send | `initiated` → `broadcasting` → `confirming` → `completed` |
+| Crypto deposit / wallet deposit | `detected` → `confirming` → `credited` |
+| Banking operation | `initiated` → `processing` → `completed` |
+| Card purchase | `authorized` → `settled` |
+
+While the operation advances, steps before the current one are `complete`, the current one is `in_progress` and the rest are `upcoming`. When an operation **fails**, the step where it stopped is marked `failed`, the previous steps stay `complete` and the later ones stay `upcoming`. When it **completes**, every step is `complete`.
+
+## PDF receipt endpoint
+
+```bash
+curl -OJ "https://api.qbank.cl/platform/v1/public/track/P9b1deb4d.../receipt.pdf?lang=zh"
+```
+
+Returns the branded PDF receipt (`Content-Type: application/pdf`, `Content-Disposition: attachment`), generated on the fly with the same renderer as the authenticated endpoints — including full Chinese rendering (Noto Sans SC font). The PDF endpoint shares the same per-IP rate limit as the JSON one.
+
+## Privacy and security
+
+| Measure | Detail |
+|---|---|
+| **Link = capability** | The `code` is HMAC-signed (80 bits of entropy per transaction). It cannot be guessed or enumerated, and it unlocks exactly one transaction. |
+| **Anti-enumeration** | An invalid, malformed or nonexistent code always returns the same uniform `404` — an attacker cannot tell whether a code exists. |
+| **Rate limiting** | Both endpoints share a per-IP throttle; abuse answers `429`. |
+| **No indexing** | Every response carries `X-Robots-Tag: noindex` and `Cache-Control: no-store`; the page itself sets `noindex`/`nofollow` meta tags. Tracking pages never appear in search engines and are never cached. |
+| **Neutral link previews** | When the link is pasted into a chat, the preview card shows only your brand name — never amounts, counterparties or statuses. |
+| **Anti tipping-off** | Compliance-review states are never shown publicly (table above). |
+| **Provider-agnostic** | The page never reveals which rails or providers process the payment. |
+
+> **Important**
+The link is a capability: **whoever has the link can see the transaction**. Share it only with the intended recipient, the same way you would share the PDF receipt itself.
+## Languages
+
+The page and the PDF are fully trilingual — **English, Spanish and Simplified Chinese**:
+
+- Resolution (public chain): `?lang=` / `?locale=` (invalid values are ignored, never 400), then payer cookie `cbpay_pay_locale` (HttpOnly=false, Secure, SameSite=Lax, 30 days), then the merchant account, then the org `default_locale`, then Accept-Language, then English. The portal SSR cookie `cbpay_lang` is a separate front cookie — the API does not read it.
+- The JSON API translates `fields`/`amounts` labels server-side with the same parameter.
+- The PDF renders entirely in the requested language, Chinese included.
+
+## Original verification endpoint (unchanged)
+
+`GET /platform/v1/verify/receipts/{code}` **stays alive** — nothing to migrate:
+
+- A **browser** opening it (request with `Accept: text/html`) receives a `302` redirect to the tracker page.
+- An **API client** receives the same JSON payload as always.
+
+New receipts and receipt emails generate tracker URLs directly; receipts issued before this change keep working forever through the redirect.
+
+## Errors
+
+| HTTP | `error` | When | What to do |
+|---|---|---|---|
+| 404 | `not_found` | The code is invalid, malformed or does not exist (uniform by design) | Re-copy the full link from the receipt or email — a truncated code is the usual cause. |
+| 429 | `too_many_attempts` | Per-IP rate limit hit | Wait a moment and retry; don't poll the endpoint in a loop. |
+
+See the [errors reference](https://docs.cbpayapp.com/en/errors) for the global error shape.
+
+## FAQ
+
+#### Do I need an API key or sign-in to open a tracking link?
+    No. The signed code in the URL is the credential. That's what makes the link safe to share with your customer by email, chat or SMS.
+#### Can someone enumerate transactions by guessing codes?
+    No. Codes are HMAC-signed with 80 bits of entropy per transaction, invalid codes are indistinguishable from valid-but-nonexistent ones (uniform 404), and per-IP rate limiting blocks brute force.
+#### Why does a transaction show 'processing' for longer than usual?
+    `processing` covers every transient state, including internal compliance review. The public page intentionally does not distinguish review states — the operation will move to `completed` or `failed` when resolved.
+#### Does the timeline ever show estimated dates?
+    Never. Only real timestamps are rendered: when the transaction was created and when it reached its current terminal step. Intermediate steps show no date.
+#### Is the original /verify/receipts link I already integrated going to break?
+    No. It keeps returning JSON for API clients and now redirects browsers to the tracker page. Both behaviors are permanent.
+#### Can I hide the tracker and keep only the JSON verification?
+    The tracker is the public face of the same signed code and is enabled platform-wide. If you prefer not to expose the hosted page, simply don't share the URL — the JSON endpoint keeps working either way.
+- **Receipts** - How receipts are generated, their PDF layout and the verification QR.
+- **Errors** - Global error catalog and response shape.

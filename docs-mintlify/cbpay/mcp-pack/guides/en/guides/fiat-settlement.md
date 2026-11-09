@@ -1,0 +1,131 @@
+---
+title: "Fiat payout settlement"
+description: "Debit BOB, MXN or ARS payouts from the matching local-fiat balance"
+slug: en/guides/fiat-settlement
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/fiat-settlement
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+> **Note**
+This page covers same-currency settlement for BOB, MXN, ARS and CLP. It does not
+convert one fiat balance into another.
+Payouts can debit a local-fiat balance when the payout currency and
+`settlement_asset` are the same. The settlement rate is `"1"` and settlement
+spreads are zero. Fees configured in USDT are converted using the locked quote
+and rounded up to the smallest unit of the payout currency.
+
+CLP uses zero decimals: send whole pesos only. A CLP payout with
+`settlement_asset: "CLP"` debits the matching CLP identity balance; the CL
+payout still originates from the root account. Cross-currency CLP
+settlement fails closed with `503 pricing_unavailable`.
+
+```mermaid
+sequenceDiagram
+    participant App as Your app
+    participant CB as CBPay
+    App->>CB: POST payout with settlement_asset=BOB
+    CB->>CB: Validate currency and minor unit
+    CB-->>App: 202 processing with settlement fields
+```
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: payout-bob-001" \
+  -d '{
+    "country": "BO",
+    "currency": "BOB",
+    "method": "bank_transfer",
+    "local_amount": "100.00",
+    "settlement_asset": "BOB",
+    "beneficiary": {
+      "name": "Ana Pérez",
+      "country_code": "BO",
+      "bank_code": "0016",
+      "account_number": "1234567890",
+      "account_type": "checking"
+    },
+    "idempotency_key": "payout-bob-001"
+  }'
+```
+
+```json
+{
+  "payout_id": "7b2e…",
+  "country": "BO",
+  "currency": "BOB",
+  "local_amount": "100.00",
+  "settlement_asset": "BOB",
+  "settlement_amount": "100.01",
+  "settlement_rate": "1",
+  "settlement_spread": "0",
+  "platform_settlement_spread": "0",
+  "status": "processing",
+  "funds_debited": true
+}
+```
+
+The beneficiary receives `100.00 BOB`; the extra `0.01 BOB` is the configured
+fee converted and rounded up in local currency. The exact
+`settlement_amount` is held and is refunded unchanged if the payout fails.
+
+`GET /v1/rates` marks local-fiat assets with `same_currency_only: true`:
+
+```json
+{
+  "settlement": {
+    "default_asset": "USD",
+    "assets": [
+      {
+        "asset": "BOB",
+        "available": true,
+        "settlement_rate": "1",
+        "same_currency_only": true
+      }
+    ]
+  }
+}
+```
+
+Cross-fiat settlement is rejected. For example, a MXN payout cannot debit a
+BOB balance:
+
+```json
+{
+  "error": "pricing_unavailable",
+  "message": "fiat settlement is only available in the payout currency"
+}
+```
+
+For BOB, MXN and ARS, amounts with more than two decimal places are rejected:
+`"100.001"` returns `400 invalid_amount`. CLP rejects any non-zero fractional
+digit, such as `"100.50"`, with the same code. CBPay does not silently round
+the requested local amount.
+
+See [Errors](https://docs.cbpayapp.com/en/errors) for the public error contract.
+
+#### Can I debit BOB for an MXN payout?
+No. Cross-fiat settlement is not an FX conversion path in this release.
+Choose the payout currency or use a supported non-fiat settlement asset.
+#### Are settlement spreads applied to same-currency fiat?
+No. Same-currency fiat settlement uses an identity rate and zero settlement
+spreads. Configured fees are still charged and converted into fiat.
+## USD as the principal ledger asset
+
+Accounts use `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`; change it any time with `PUT /v1/settlement`.
+In-flight operations are never re-quoted.
+
+USD ledger amounts use cents (two decimal places). Direct credits and debits,
+fees, and supported payout, checkout, POS, and card paths use USD only where
+their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
+do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
+assets; v1 money-out pricing for those assets remains unavailable.
+
+A payin credited directly to a USD-principal account exposes
+`credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
+remains the USD-equivalent reporting field. A controversy hold follows the
+credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
+`disputed_usdt` and `held_usdt` are normalized equivalents.

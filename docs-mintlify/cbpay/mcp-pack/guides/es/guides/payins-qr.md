@@ -1,0 +1,361 @@
+---
+title: "Payins QR"
+description: "Crea payins QR y reintenta solicitudes sin generar cobros duplicados."
+slug: es/guides/payins-qr
+lang: es
+source_url: https://docs.cbpayapp.com/es/guides/payins-qr
+---
+> **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+Los payins QR permiten crear un cobro que el cliente completa con su app
+bancaria. Usa una clave de idempotencia cuando el cliente pueda reintentar
+después de un timeout o una respuesta de red ambigua.
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending
+    pending --> paid
+    pending --> expired
+    paid --> [*]
+    expired --> [*]
+```
+
+## Crear un payin QR
+
+Envía `method: "qr"` a `POST /v1/payins`. La clave es opcional y puede viajar
+en el body JSON o en el header `Idempotency-Key`.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BO",
+    "currency": "BOB",
+    "method": "qr",
+    "amount": "700.00",
+    "description": "Recarga app",
+    "idempotency_key": "qr-bo-700-20261002-001",
+    "expires_in": 3600
+  }'
+```
+
+### Límites de expiración QR
+
+`expires_in` es un número entero de segundos para los payins QR de la
+plataforma. El servidor selecciona el riel configurado; el integrador no
+puede elegirlo. El contrato QR legacy tiene un máximo efectivo de `86399`
+segundos (23:59:59). El riel QR de 7 días tiene un máximo efectivo de
+`604800` segundos, con `86400` segundos (24 horas) como default cuando el
+valor falta o no es positivo. Los valores sobre el máximo del riel
+seleccionado se recortan, no se rechazan. Para el riel de 7 días, usa al menos `120` segundos
+como mínimo operativo.
+La respuesta conserva el valor solicitado en `charge.requested_expires_in`.
+Si el riel devuelve una vida más corta, incluye `ttl_notice` con
+`requested_expires_in`, `actual_expires_in` y una nota. Usa
+`charge.expires_at` como fecha límite.
+
+Respuesta `201`:
+
+```json
+{
+  "payin_id": "9c2a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
+  "status": "pending",
+  "reference": "77849505",
+  "charge": {
+    "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
+    "our_reference": "77849505",
+    "qr_image": "<PNG en base64>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "qr_payload": "<contenido QR si este riel lo emite>",
+    "expires_at": "2026-10-29T19:00:00Z",
+    "requested_expires_in": 3600,
+    "status": "pending"
+  }
+}
+```
+
+Muestra `qr_image` o `qr_image_url`; usa `qr_payload` solo cuando esté presente.
+Brasil devuelve solo la imagen PNG, sin payload para copiar y pegar. La
+`reference` numérica es la referencia citable. Cuando el cliente paga, la
+cuenta se acredita automáticamente. Consulta el estado con
+`GET /v1/payins/{payinID}`.
+
+## Brasil: QR PIX en BRL o BOB
+
+Para `method: "qr"`, Brasil acepta `currency: "BRL"` (recomendado) o
+`currency: "BOB"` (modo directo avanzado). Con BRL, la plataforma cotiza el
+cobro en BOB usando la tasa mid vigente, sin spread en la cotización, y envía
+el monto convertido al core. El crédito y las comisiones usan el BOB recibido.
+La cotización queda guardada y se conserva en un replay idempotente.
+
+### Recomendado: ingresar el monto del pagador en BRL
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"country":"BR","currency":"BRL","method":"qr","amount":"120.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","expires_in":1800,"idempotency_key":"qr-brl-20261022-001"}'
+```
+
+La respuesta expone la imagen QR, el monto exacto en BRL que debe pagar el pagador, el BOB
+cobrado y la cotización auditable:
+
+```json
+{"reference":"77849505","charge":{"our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"120.00","currency":"BRL","rate":"0.50"},"expires_at":"2026-10-22T12:57:14.937Z","requested_expires_in":1800,"bob_charged":"240.00","platform_quote":{"quoted_currency":"BRL","quoted_amount":"120.00","charged_currency":"BOB","charged_amount":"240.00","rate_brl_per_usd":"5.0000000000","rate_bob_per_usd":"10.0000000000","rates_updated_at":"2026-10-22T20:00:00Z"},"status":"pending"}}
+```
+
+`conversion.amount` es la fuente de verdad y el monto exacto que debe mostrar el
+pagador. Puede diferir bastante del monto digitado porque el riel aplica su
+propia tasa: se pueden ingresar `5.41` BRL y el QR exigir `5.84` BRL. Nunca
+muestres el monto del request en lugar de `conversion.amount`.
+
+Si el riel devuelve una vida menor, la respuesta sigue siendo exitosa:
+
+```json
+{"reference":"77849505","ttl_notice":{"requested_expires_in":1800,"actual_expires_in":300,"note":"the rail returned a shorter lifetime than requested; the payer must pay within the actual window"},"charge":{"expires_at":"2026-10-29T18:05:00Z","requested_expires_in":1800}}
+```
+
+Para Brasil, pide `expires_in: 300` y muestra el aviso fijo de cinco minutos
+en tu portal.
+
+### Avanzado: ingresar directamente el cobro en BOB
+
+Para `country: "BR"`, `currency: "BOB"` y `method: "qr"`, el cobro está
+denominado en BOB. El pagador paga en BRL mediante la conversión del riel.
+El CPF es obligatorio; `payer_phone` y `payer_email` son opcionales:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"BR","currency":"BOB","method":"qr","amount":"1.00","description":"Order 7719","payer_document":"52998224725","payer_phone":"+5511999990000","payer_email":"payer@example.test","idempotency_key":"qr-br-bob-20261022-001"}'
+```
+
+La respuesta `201` queda en `pending` y contiene los campos de imagen QR, la
+conversión que verá el pagador y la expiración del riel. El contrato brasileño
+entrega una imagen PNG, no un payload EMV para copiar/pegar:
+
+```json
+{
+  "payin_id": "2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101",
+  "status": "pending",
+  "charge": {
+    "charge_id": "8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401",
+    "our_reference": "77849505",
+    "qr_image": "<PNG en base64>",
+    "qr_image_url": "https://cdn.example.test/qr/77849505.png",
+    "conversion": {
+      "amount": "0.48",
+      "currency": "BRL",
+      "rate": "0.48"
+    },
+    "expires_at": "2026-10-22T12:57:14.937Z",
+    "requested_expires_in": 300,
+    "status": "pending"
+  }
+}
+```
+
+El quote de un checkout link marca los corredores `BR`/`BOB` y `BR`/`BRL` con
+`payer_required: true`.
+La página server-driven solicita el CPF antes de materializar el cobro.
+Los checkout links cotizan ambos: `BRL` para pagadores (convertido a BOB al
+materializar con la misma tasa mid y snapshot `platform_quote` del payin
+directo) y `BOB` directo; con dos monedas el materialize envía
+`?currency=BRL` (o `BOB`).
+
+### Consultar un payin QR
+
+El detalle devuelve el charge sanitizado completo para volver a renderizar el
+QR después de recargar la página:
+
+```json
+{"payin_id":"2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101","kind":"qr","status":"pending","reference":"77849505","charge":{"charge_id":"8d4f1a90-0d7a-4fb1-8b51-8f3cc2b1e401","our_reference":"77849505","qr_image":"<PNG en base64>","qr_image_url":"https://cdn.example.test/qr/77849505.png","conversion":{"amount":"5.84","currency":"BRL","rate":"0.48"},"status":"pending","expires_at":"2026-10-29T18:05:00Z","requested_expires_in":300,"created_at":"2026-10-29T18:00:00Z","updated_at":"2026-10-29T18:00:01Z"},"ttl_notice":{"requested_expires_in":1800,"actual_expires_in":300,"note":"the rail returned a shorter lifetime than requested; the payer must pay within the actual window"}}
+```
+
+El listado (`GET /v1/payins`) incluye para QR solo `charge.conversion` y
+`charge.expires_at`, nunca la imagen. Usa filtros de fecha explícitos:
+`?from=2026-10-01&to=2026-10-31&kind=qr&page=1&page_size=50`.
+
+> **Nota**
+Cuando un QR interno de un checkout link vence pero conserva su imagen,
+checkout vuelve a materializar automáticamente un QR nuevo antes de servirlo.
+Nunca se presenta la imagen vencida como pagable.
+## Compartir un link de pago
+
+Usa el tracker público como página de pago para el pagador de un payin QR
+pendiente. El flujo es:
+
+```mermaid
+sequenceDiagram
+    participant I as Integrador
+    participant C as CBPay
+    participant P as Pagador
+    I->>C: GET /v1/track-link?kind=payin&id={payin_id}
+    C-->>I: {track_url, code}
+    I-->>P: "Paga aquí: {track_url}"
+    P->>C: Abre el link público
+    C-->>P: Imagen QR, monto, conversión y expiración
+    P->>C: Escanea y paga
+    C-->>I: webhook payin_credited
+```
+
+1. Emite el link con el ID del payin:
+
+```bash
+curl -G "https://api.qbank.cl/platform/v1/track-link" \
+  -H "Authorization: Bearer <token>" \
+  --data-urlencode "kind=payin" \
+  --data-urlencode "id=2f7b2a6e-6d1c-4c71-9d5e-4e0c2e7a1101"
+```
+
+```json
+{
+  "track_url": "https://business.cbpayapp.com/t/P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
+  "code": "P9b1deb4d3b7d4bad9bdd2b0d7b3dcb6d8f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6"
+}
+```
+
+2. Comparte exactamente `Paga aquí: {track_url}`. Si tu portal necesita un
+   fallback, usa primero `pay.qr_image_url` y luego `pay.qr_payload` como
+   texto. `pay.qr_image` es la opción PNG base64 inline.
+3. El pagador ve la página pública con el QR, `conversion.amount` y
+   `conversion.currency` cuando existan, la tasa opcional y `expires_at`.
+   Después del pago, la página refleja el estado y la timeline públicos.
+
+> **Nota**
+El link es una capability firmada sin login y deliberadamente no es listable.
+No pongas los códigos de seguimiento en índices de búsqueda ni los expongas en
+un directorio. Solo un payin QR pendiente incluye `pay`; las demás operaciones
+y los payins terminales lo omiten. El link no crea otro cobro.
+### Confirmación y conciliación
+
+El ciclo es webhook-first. Un evento entrante autenticado (el webhook del riel
+usa el header `x-api-key` configurado) puede cerrar el
+cobro `pending`; una lectura tardía de conciliación solo se permite después
+de la edad mínima configurada (15 minutos por defecto). Hasta verificar el
+estado de plataforma `credited`, el cobro sigue `pending` y no se acredita.
+
+Suscríbete a `payin_credited` y `payin_charge_status_changed`, y usa
+`GET /v1/payins/{payinID}` como fuente de verdad. Nunca reintentes con una
+clave nueva una solicitud cuyo resultado pueda ser ambiguo.
+
+## Errores de Brasil
+
+| HTTP | Código | Qué hacer |
+| --- | --- | --- |
+| 400 | `invalid_request` | Incluye `payer_document` y usa `BRL` o `BOB` en el payin QR BR. |
+| 422 | `amount_too_small` | Aumenta el monto BRL: tras conversión y redondeo debe producir al menos `0.01 BOB`. |
+| 422 | `provider_rejected` | El riel rechazó el cobro, incluido un CPF faltante en el adapter; corrige los datos según el `detail` y no reintentes a ciegas. |
+| 503 | `rates_unavailable` | Reintenta la misma solicitud con la misma clave de idempotencia cuando vuelvan las tasas. |
+
+## Reintentos idempotentes
+
+`idempotency_key` es opcional para payins QR. Envíala en el body JSON o en el
+header `Idempotency-Key`. Si envías ambas, se usa el valor del body. La
+plataforma aplica internamente un namespace por cuenta; el integrador manda la
+clave tal cual.
+
+La identidad de la solicitud incluye país, moneda, método y monto numérico.
+El canal QR no forma parte de la identidad del replay: la misma clave reproduce el mismo cobro independientemente del canal.
+Por ejemplo, `"100"` y `"100.00"` son equivalentes. `description` es texto de
+presentación y no forma parte de la identidad del replay.
+
+La primera solicitud crea un solo cobro. Un reintento con la misma clave y un
+payload equivalente devuelve el objeto original con `idempotency_hit: true`;
+no crea otro cobro:
+
+```json
+{
+  "payin_id": "9c2a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b",
+  "status": "pending",
+  "charge": {
+    "charge_id": "c9d8e7f6-a5b4-c3d2-e1f0-a9b8c7d6e5f4",
+    "status": "pending"
+  },
+  "idempotency_hit": true
+}
+```
+
+La forma con header es equivalente:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: qr-bo-700-20261002-001" \
+  -H "Content-Type: application/json" \
+  -d '{"country":"BO","currency":"BOB","method":"qr","amount":"700.00","description":"Recarga app"}'
+```
+
+Si reutilizas la misma clave con otro país, moneda, método o monto, la API
+responde `409 idempotency_conflict`:
+
+```json
+{
+  "error": "idempotency_conflict",
+  "message": "this idempotency key was used with a different payload"
+}
+```
+
+Un cobro expirado o pagado se reproduce tal cual. La respuesta conserva el
+objeto original; usa `GET /v1/payins/{payinID}` para consultar su estado vivo.
+
+El core y la plataforma responden `400 invalid_idempotency_key` cuando la clave
+del integrador supera 256 caracteres o contiene retornos de carro/saltos de
+línea. La plataforma también rechaza con el mismo código si su namespace de
+cuenta del lado servidor hace que la clave resultante supere 256 caracteres.
+Ese namespace es invisible para el integrador: envía la clave sin modificar.
+
+## Errores
+
+| HTTP | Código | Qué hacer |
+| --- | --- | --- |
+| 400 | `invalid_idempotency_key` | Reduce la clave a 256 caracteres o menos y elimina caracteres de control. |
+| 409 | `idempotency_conflict` | Repite el payload original o genera una clave nueva para un cobro nuevo. |
+
+## Preguntas frecuentes
+
+#### ¿Puedo cambiar la descripción al reintentar?
+Sí. La descripción es texto de presentación y no forma parte de la identidad
+del replay.
+#### ¿Qué hago si el cliente pagó mientras mi solicitud expiró?
+Reintenta con la misma clave y consulta el `payin_id` devuelto con
+`GET /v1/payins/{payinID}`. No crees una clave nueva para la misma operación.
+#### ¿El CPF es obligatorio para todos los payins QR?
+Solo para Brasil (`BR`/`BRL` o `BOB`/`qr`). El riel valida que el CPF exista;
+un CPF sintético o desconocido puede responder `CPF no encontrado`. Los demás
+corredores QR mantienen sus propios requisitos.
+#### ¿Por qué el monto pagado puede diferir por centavos?
+`conversion.amount` es el monto exacto devuelto por el riel. La tasa puede
+cambiarlo respecto del request: un incidente mostró `5.41` BRL digitados frente
+a `5.84` BRL en el QR. Muestra siempre `conversion.amount`.
+#### ¿Por qué el QR brasileño vence en cinco minutos?
+Algunos rieles QR de Brasil imponen una vida aproximada de cinco minutos e
+ignoran duraciones mayores. La API conserva `charge.requested_expires_in`,
+devuelve `charge.expires_at` y agrega `ttl_notice` cuando corresponde. Pide
+`expires_in: 300` y crea un QR nuevo al vencer.
+#### ¿Qué contiene el listado de QR?
+`GET /v1/payins` incluye un `charge` liviano con solo `conversion` y
+`expires_at`. Usa `GET /v1/payins/{id}` para la imagen y el charge completo.
+#### ¿Qué ocurre si no hay tasas FX?
+La API responde `503 rates_unavailable` antes de crear el cobro. Reintenta más
+tarde con la misma clave de idempotencia.
+#### ¿Cómo funciona el monto del QR brasileño?
+El cobro está denominado en BOB. El bloque `conversion` muestra el monto y la
+tasa en BRL que verá el pagador; por ejemplo, `1.00` BOB puede convertirse en
+`0.48` BRL con tasa `0.48`.
+#### ¿Cuándo puedo tratar el QR brasileño como pagado?
+Solo después de un estado `credited` verificado o de su webhook correspondiente.
+Generar o escanear el QR no prueba la liquidación.
+#### ¿Cuál es el máximo de expires_in para un payin QR BO/BOB en producción?
+En la API de plataforma, el máximo efectivo es `604800` segundos (7 días)
+cuando el servidor selecciona el riel QR de 7 días. El riel QR
+legacy tiene un máximo efectivo de `86399` segundos (23:59:59). Los valores
+sobre el máximo seleccionado se recortan, no se rechazan; el integrador no
+elige el riel. Para el riel de 7 días, usa al menos `120` segundos.
+#### ¿El link expira con el QR?
+El link público puede seguir accesible, pero el QR solo se puede pagar hasta
+`pay.expires_at`. Cuando vence, no reutilices ese QR: crea o sirve un nuevo
+intento de pago según el flujo de tu producto.
+#### ¿Qué ve el pagador?
+Ve la imagen QR o su payload de fallback, el `conversion.amount` y
+`conversion.currency` exactos cuando se devuelven, la tasa opcional, la
+expiración y la timeline pública de estado. No se exponen la identidad del
+proveedor ni PII del pagador.

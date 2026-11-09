@@ -1,0 +1,161 @@
+{
+  "docs_version": "v2.247",
+  "questions": [
+    {
+      "id": "g01-checkout-en",
+      "lang": "en",
+      "must_contain": [
+        "/v1/payins",
+        "checkout"
+      ],
+      "must_not_contain": [
+        "Monato",
+        "Delos",
+        "Cybersource",
+        "Redenlace"
+      ],
+      "question": "How do I create a checkout link?",
+      "source_slug": "en/guides/checkout"
+    },
+    {
+      "id": "g02-checkout-zh",
+      "lang": "zh",
+      "must_contain": [
+        "/v1/payins",
+        "checkout"
+      ],
+      "must_not_contain": [
+        "Monato",
+        "Delos"
+      ],
+      "question": "如何创建收款链接？",
+      "source_slug": "zh/guides/checkout"
+    },
+    {
+      "id": "g03-magic-payout-fail",
+      "lang": "en",
+      "must_contain": [
+        ".99"
+      ],
+      "must_not_contain": [],
+      "question": "In the test environment, which amount makes a payout fail on purpose?",
+      "source_slug": "en/environment-testing"
+    },
+    {
+      "id": "g04-test-base-url",
+      "lang": "en",
+      "must_contain": [
+        "cryptobank.qbank.cl",
+        "pk_test_"
+      ],
+      "must_not_contain": [],
+      "question": "What is the base URL and API key prefix for the test environment?",
+      "source_slug": "en/environment-testing"
+    },
+    {
+      "id": "g05-entorno-es",
+      "lang": "es",
+      "must_contain": [
+        "cryptobank.qbank.cl",
+        "pk_test_"
+      ],
+      "must_not_contain": [],
+      "question": "¿Cuál es la URL base del ambiente de pruebas y el prefijo de las API keys de test?",
+      "source_slug": "es/environment-testing"
+    },
+    {
+      "id": "g06-error-insufficient-funds",
+      "lang": "en",
+      "must_contain": [
+        "insufficient_funds",
+        "402"
+      ],
+      "must_not_contain": [],
+      "question": "What does the insufficient_funds error mean and what HTTP status does it use?",
+      "source_slug": "en/errors"
+    },
+    {
+      "id": "g07-error-idem-es",
+      "lang": "es",
+      "must_contain": [
+        "idempotency_key_required"
+      ],
+      "must_not_contain": [],
+      "question": "¿Qué significa el error idempotency_key_required?",
+      "source_slug": "es/errors"
+    },
+    {
+      "id": "g08-webhook-payin-credited",
+      "lang": "en",
+      "must_contain": [
+        "payin_credited"
+      ],
+      "must_not_contain": [],
+      "question": "Which webhook event fires when a payin is credited, and what does its payload look like?",
+      "source_slug": "en/webhooks"
+    },
+    {
+      "id": "g09-travel-rule",
+      "lang": "en",
+      "must_contain": [
+        "Travel Rule"
+      ],
+      "must_not_contain": [],
+      "question": "What extra fields does a crypto withdrawal need when it exceeds the Travel Rule threshold?",
+      "source_slug": "en/guides/crypto"
+    },
+    {
+      "id": "g10-idempotency",
+      "lang": "en",
+      "must_contain": [
+        "idempotency_key"
+      ],
+      "must_not_contain": [],
+      "question": "How do I retry a payout safely without duplicating it?",
+      "source_slug": "en/concepts/idempotency"
+    },
+    {
+      "id": "g11-otp-magic",
+      "lang": "en",
+      "must_contain": [
+        "000000"
+      ],
+      "must_not_contain": [],
+      "question": "Which OTP code always works in the test environment?",
+      "source_slug": "en/environment-testing"
+    },
+    {
+      "id": "g12-whats-new",
+      "lang": "en",
+      "must_contain": [
+        "v2.247"
+      ],
+      "must_not_contain": [],
+      "question": "What is the latest published docs version?",
+      "source_slug": "en/changelog"
+    },
+    {
+      "id": "g13-aml-sanction-magic",
+      "lang": "en",
+      "must_contain": [
+        "SANCTION"
+      ],
+      "must_not_contain": [],
+      "question": "How do I force an AML screening hit with prohibited risk in the sandbox?",
+      "source_slug": "en/environment-testing"
+    },
+    {
+      "id": "g14-stored-cards-es",
+      "lang": "es",
+      "must_contain": [
+        "/v1/subscriptions"
+      ],
+      "must_not_contain": [
+        "Cybersource",
+        "PayCaddy"
+      ],
+      "question": "¿Cómo cobro de forma recurrente con una tarjeta guardada?",
+      "source_slug": "es/guides/stored-cards-subscriptions"
+    }
+  ]
+}

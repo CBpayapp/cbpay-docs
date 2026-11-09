@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="9 de noviembre de 2026" description="v2.246 · 1 versión">
+<Update label="9 de noviembre de 2026" description="v2.247 · 2 versiones">
+### v2.247
+**Cambiado**
+- La protección del registro ahora mantiene el modo de ataque solo después de que la solicitud supera el gate de prueba de trabajo (o una credencial equivalente ya verificada), por lo que el tráfico que falla PoW no puede mantener activo el latch.
+- Si el throttle compartido está temporalmente degradado, la señal de fallback todavía puede activar el modo de ataque desde el umbral blando.
+- `POST /v1/auth/pow-challenge` ahora comparte el presupuesto de IP del registro y puede responder `429 too_many_attempts`.
+- Agrega el campo opcional `org` para ligar un challenge nuevo a una sola organización. Los challenges nuevos ligados a una organización usan un MAC por organización; los challenges v1 legacy siguen aceptándose temporalmente por compatibilidad.
 ### v2.246
 **Cambiado**
 - Los cambios de credenciales de administradores platform ahora usan maker-checker de dos god. Los resets TOTP limpian el secreto sin despacho de email después de aprobar; los cambios de email avisan a ambas casillas y mantienen pendiente el request ante `409 duplicate`. La administración de scope organización sigue siendo directa.

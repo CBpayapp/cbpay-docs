@@ -1,0 +1,1015 @@
+---
+title: "Banking"
+description: "Cuentas bancarias reales para tu cuenta: recibe, mantén y envía dinero por rieles bancarios internacionales"
+slug: es/guides/banking
+lang: es
+source_url: https://docs.cbpayapp.com/es/guides/banking
+---
+> **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+Banking te da **cuentas bancarias reales** a nombre de tu perfil verificado:
+recibes fondos por rieles internacionales (SEPA, SWIFT, ACH según la moneda),
+mantienes saldo en moneda fiat y envías pagos a terceros. Es un
+producto distinto de tus saldos CBPay: **el dinero de banking vive en tus cuentas
+bancarias**, no en tu saldo USDT ni en tu saldo USD.
+
+Para los corredores fiat locales, crea un destino con `purpose: "banking"` para conservar el fiat local en payouts; `fondeo` (por defecto) convierte el abono a tu asset principal (USD es el saldo principal). Banking admite `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` y `CL/CLP/fintoc`.
+
+## Dos clases de destinos fiat locales
+
+Para los corredores fiat locales (`BO/BOB`, `MX/MXN`, `AR/ARS`, `CL/CLP/fintoc`), cada
+destino de payin lleva un `purpose` que decide dónde aterriza el dinero
+entrante:
+
+| Purpose | Significado |
+|---|---|
+| `fondeo` (por defecto) | **Cuenta de fondeo.** Todo lo recibido se convierte automáticamente al asset principal de tu cuenta — USD es el saldo principal. |
+| `banking` | **Cuenta banking.** El fiat entrante se conserva en su moneda local para payouts, con saldos individuales por moneda. |
+
+Crea un segundo destino con `purpose: "banking"` para mantener fiat local
+para payouts; los destinos creados sin propósito conservan el comportamiento
+histórico `fondeo`. El propósito banking solo se admite en
+`BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` y
+`CL/CLP/fintoc`. En CL/CLP/fintoc, Banking recibe, retiene y exhibe el saldo
+CLP derivado y sus movimientos; no origina payouts. Los payouts CL siempre salen desde
+la cuenta root y no aplica sweep-exempt físico.
+
+| Concepto | Dónde vive | Se consulta con |
+|---|---|---|
+| Saldos CBPay | Ledger CBPay | `GET /v1/balances` |
+| Saldos bancarios | Tus cuentas bancarias | `GET /v1/banking/accounts/{id}/balance` |
+
+## Banking por moneda
+
+### 🇺🇸 USD — dólar estadounidense
+
+Abre una cuenta Banking clásica (rieles ACH, Fedwire y SWIFT) con el flujo
+perfil → cuentas → operaciones de esta guía
+([abrir cuentas bancarias](#3-abre-cuentas-bancarias)). Los USD recibidos por
+Banking se mantienen para payouts ([payouts](https://docs.cbpayapp.com/es/guides/payouts)); los USD
+enviados a tus saldos CBPay aterrizan en tu asset principal (USD es el saldo
+principal).
+
+Para los rieles de EE. UU., usa estas estimaciones para planificar las
+operaciones de cuenta y los pagos `WITHDRAW`: **ACH: demora aproximada de 24 a
+48 horas hábiles; Fedwire (wire): demora aproximada del mismo día hábil (hasta
+24 horas); SWIFT: demora aproximada de 24 a 48 horas hábiles, con posibles
+extensiones según el banco receptor.** Son estimaciones, no una garantía;
+los horarios de corte, feriados y el procesamiento del banco receptor pueden
+extender la liquidación final.
+
+### 🇪🇺 EUR — euro
+
+Todo lo euro pasa por un IBAN virtual: solicita una dirección `funding_usdt`
+para convertir los euros entrantes a tu asset principal, o una dirección
+`banking_eur` para mantener `BANK_EUR` para payouts SEPA
+([dirección de fondeo y banca EUR](#euros-direccion-de-fondeo-y-banca-eur-en-un-solo-lugar)).
+Enviar euros a terceros se cubre en
+[payouts SEPA Instant](https://docs.cbpayapp.com/es/guides/sepa-instant-payouts).
+
+### 🇧🇴 BOB — boliviano
+
+Recibe bolivianos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
+`purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
+(USD es el saldo principal); `banking` conserva BOB para payouts locales.
+Ver [Fondeo](https://docs.cbpayapp.com/es/guides/funding) para el flujo de fondeo.
+
+### 🇲🇽 MXN — peso mexicano
+
+Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
+`purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
+(USD es el saldo principal); `banking` conserva MXN para payouts locales
+([payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+
+## Multi-banking para empresas: cuentas operativas
+
+En `CL/CLP/fintoc`, una cuenta `purpose: "banking"` recibe, retiene y
+exhibe saldo CLP derivado y movimientos, pero no origina payouts: los payouts CL
+siempre salen desde la cuenta root y no existe sweep físico que eximir.
+
+Las cuentas empresa pueden crear múltiples cuentas de depósito con
+`purpose: "banking"` en cada corredor local habilitado:
+`BO/BOB`, `MX/MXN`, `AR/ARS` con `method: "bank_transfer"`, y
+`CL/CLP/fintoc`.
+Usa un `Idempotency-Key` distinto para cada destino; repetirlo devuelve el
+mismo instrumento. El tope operativo blando es de **50 instrumentos banking
+por cuenta empresa y corredor** (`422 deposit_account_limit_reached`).
+Las cuentas persona mantienen un instrumento banking por corredor y pueden
+crear la segunda virtual Banking en `CL/CLP/fintoc`.
+
+```mermaid
+sequenceDiagram
+  participant App
+  participant CBPay
+  participant Banco
+  App->>CBPay: POST /v1/payins/deposit-accounts\npurpose=banking
+  CBPay->>Banco: Provisionar destino receptor
+  Banco-->>CBPay: Número / CVU / CLABE
+  CBPay-->>App: 201 DepositInstrument
+  App->>CBPay: Consultar saldo o movimientos
+```
+
+El `label` es un apodo local opcional de hasta 60 caracteres y se puede
+cambiar o limpiar con `PUT /v1/payins/deposit-accounts/{instrumentID}/label`.
+En AR/ARS, una empresa puede crear la CVU sin `bank_alias`: queda en
+`alias_pending` y el saldo/movimientos responden `409 alias_pending` hasta
+completar `PUT /v1/payins/deposit-accounts/{instrumentID}/bank-alias`.
+La persona conserva `400 missing_alias` al crear.
+
+Las lecturas operativas son:
+
+```bash
+curl https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/balance \
+  -H "Authorization: Bearer <token>"
+curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/movements?page=1&page_size=50&from=2026-10-01&to=2026-10-17" \
+  -H "Authorization: Bearer <token>"
+```
+
+`from` y `to` son límites inclusivos opcionales en formato `YYYY-MM-DD`.
+Si omites ambos, lista todos los movimientos disponibles y mantiene la
+paginación. El ejemplo con fechas es la práctica recomendada cuando necesitas
+acotar el período.
+
+El saldo devuelve `currency`, `funds_model` (`retained` en BO,
+`centralized` en MX/AR), y los montos exactos en minor units:
+`credited_in`, `paid_out`, `refunded_in`, `refunded_out`, `other_net`,
+`derived_available` y `display_available`. Movimientos es una unión paginada
+de payins y payouts; `from` y `to` son obligatorios.
+
+Para payouts BO/BOB puedes enviar `source_instrument_id` (UUID) en
+`POST /v1/payouts` o `POST /v1/payouts/qr/confirm`. Fuera de BO/BOB responde
+`400`; un instrumento ajeno responde `404 not_found`; uno no bancario o
+inactivo responde `422 invalid_source_instrument`. Sin UUID, varias fuentes
+activas responden `422 ambiguous_source_instrument`. MX/AR siguen usando la
+madre/centralizador.
+
+### 🇦🇷 ARS — peso argentino
+
+Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
+`purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
+(USD es el saldo principal); `banking` conserva ARS para payouts locales
+([payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+
+> **Nota**
+Las comisiones de banking vienen en dos formas. Las **fijas standalone**
+(`banking_customer`, `banking_account`, `banking_operation`) se debitan de tu
+**asset de settlement por defecto** —USD es el saldo principal— al ejecutar cada operación y se **reembolsan automáticamente**
+si falla. Las **transaccionales por riel** (`banking_deposit`,
+`banking_transfer_ach`, `banking_transfer_swift`, `banking_transfer_wire`,
+`banking_transfer_sepa`) son un porcentaje más un monto fijo cobrado **en la
+moneda de la operación** (tu saldo `BANK_USD` / `BANK_EUR`) — ver
+[comisiones por riel](#comisiones-por-riel-depositos-y-transferencias). Con
+comisión 0 (el default) el servicio es gratis. Los campos `banking_fee` y
+`banking_fee_asset` de cada respuesta te muestran lo cobrado y en qué moneda.
+## El flujo completo
+
+```mermaid
+flowchart LR
+    perfil["1. Crear perfil<br/>POST customer"] --> docs["2. Documentos<br/>+ submit"]
+    docs --> revision{"Verificación"}
+    revision -->|"approved"| cuentas["3. Abrir cuentas<br/>por moneda"]
+    revision -->|"rejected"| corrige["Corregir datos<br/>y reenviar"]
+    corrige --> docs
+    cuentas --> recibir["Recibir fondos<br/>(IBAN / cuenta)"]
+    cuentas --> benef["4. Registrar<br/>beneficiarios"]
+    benef --> pagos["5. Enviar pagos<br/>prepare → operations"]
+    pagos --> whOp["Webhook<br/>operation_status_changed"]
+```
+
+1. **Crea tu perfil bancario** (`POST /v1/banking/customer`) — una sola vez.
+2. **Sube documentos** de verificación y **envíalo a revisión**.
+3. Cuando quede `approved`, **abre cuentas** por moneda.
+4. **Registra beneficiarios** (counterparties) para pagos a terceros.
+5. **Envía pagos**: cotiza con `prepare` y ejecuta con `operations`.
+
+Los cambios de estado te llegan por los webhooks
+`banking_customer_status_changed` y `banking_operation_status_changed`
+([webhooks](https://docs.cbpayapp.com/es/webhooks)).
+
+## 1. Crea tu perfil bancario
+
+Una vez por cuenta. Si no envías `type`, `name` o `email`, se completan con
+los datos de tu cuenta CBPay:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "address": { "countryIso": "CL", "city": "Santiago" }
+  }'
+```
+
+Respuesta `201`:
+
+```json
+{
+  "customer_id": "9f2b…",
+  "provider_id": "…",
+  "status": "draft",
+  "data": { "item": { "…": "…" } },
+  "created_at": "2026-07-07T12:00:00Z",
+  "banking_fee": "5.000000"
+}
+```
+
+Si tu cuenta ya tiene perfil bancario — `409 banking_customer_exists`.
+
+> **Nota**
+**Idempotencia durable.** La plataforma deriva un claim determinista en el
+core para esta cuenta/perfil. La primera solicitud exitosa responde `201`.
+Repetir la misma solicitud responde `201` con `idempotency_hit: true`, sin
+crear un segundo perfil ni cobrar dos veces el fee del perfil. Un payload
+distinto para la misma cuenta responde `409 idempotency_conflict`. Si el
+resultado upstream/core es ambiguo, la API responde
+`503 banking_recovery_pending`; no reintentes con una clave nueva.
+Operaciones debe reconciliar primero el claim durable.
+> **Nota**
+**Revisión de solicitudes.** Si tu organización activó la revisión de solicitudes banking, esta llamada puede responder **`202 Accepted`** con `{"status":"in_review","kind":"banking_application","review_id":"…"}` en vez de `201` — el perfil se crea solo cuando compliance aprueba la revisión. El fee del perfil banking se cobra al retener la solicitud y **se reembolsa automáticamente si se rechaza**. Sigue el resultado con el webhook `txn_review_status_changed` o en [Revisiones de operaciones](https://docs.cbpayapp.com/es/guides/transaction-reviews).
+Consulta el estado en cualquier momento:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/customer \
+  -H "Authorization: Bearer <token>"
+```
+> **Nota**
+**EUR usa el flujo directo de vIBAN; el onboarding genérico es solo para USD.**
+Solicita `{"purpose":"banking_eur"}` desde Operar EUR: no requiere un customer
+Banking previo y la aprobación crea el vínculo local. El endpoint genérico
+devuelve `400 banking_eur_requires_viban` para EUR.
+## 2. Documentos y verificación
+
+Sube cada documento en base64 (gratis):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer/documents \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "PASSPORT",
+    "filename": "pasaporte.pdf",
+    "attach": "<contenido en base64>"
+  }'
+```
+
+Y envía el perfil a revisión (gratis):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/customer/submit \
+  -H "Authorization: Bearer <token>"
+```
+
+Estados del perfil: `draft` → `submitted` → `under_review` →
+**`approved`** o `rejected`. El webhook
+`banking_customer_status_changed` te avisa cada cambio — del perfil propio
+(`customer_kind: self`) y de los terceros que registres
+(`customer_kind: third_party`, con su `third_party_id`):
+
+```json
+{
+  "account_id": "…",
+  "customer_id": "9f2b…",
+  "customer_kind": "self",
+  "kyc_status": "approved"
+}
+```
+
+## 3. Abre cuentas bancarias
+
+Con el perfil `approved`, crea la cuenta del Banking clásico solo para **USD** (rieles ACH/Fedwire/SWIFT). EUR no se abre aquí: solicita un vIBAN `banking_eur` directamente en el [flujo de vIBAN EUR](#viban-eur).
+
+```bash Cuenta USD
+curl -X POST https://api.qbank.cl/platform/v1/banking/accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "currency": "USD", "name": "Operativa USD" }'
+```
+
+Respuesta `201` — `data` incluye los datos para **recibir** (número de
+cuenta/IBAN, routing, banco):
+
+```json
+{
+  "account_id": "c4d1…",
+  "provider_id": "…",
+  "status": "active",
+  "data": { "…": "…" },
+  "banking_fee": "1.000000"
+}
+```
+
+Lista tus cuentas, consulta el detalle de una cuenta puntual y su saldo:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/accounts \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/accounts/c4d1… \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/accounts/c4d1…/balance \
+  -H "Authorization: Bearer <token>"
+```
+
+El detalle (`GET /v1/banking/accounts/{id}`) devuelve la cuenta EN VIVO —
+nombre, moneda, estado y bajo `data` los **requisitos para recibir
+fondos** (rieles wire y locales: banco, número de cuenta/IBAN, routing).
+Úsalo para mostrar las instrucciones de depósito de una cuenta específica
+sin recorrer el listado:
+
+```json
+{
+  "account_id": "c4d1…",
+  "provider_id": "…",
+  "source": "live",
+  "data": {
+    "name": "Operativa USD",
+    "currencyCode": "USD",
+    "status": "ACCEPT",
+    "requisites": [
+      { "type": "SWIFT", "…": "…" },
+      { "type": "LOCAL", "…": "…" }
+    ]
+  }
+}
+```
+
+`source` indica de dónde salió el detalle: `live` (el banco respondió en
+vivo) o `mirror` (el banco no pudo servir la cuenta en ese momento y se
+devuelve el último snapshot conocido — los requisitos de depósito siguen
+disponibles).
+
+> **Nota**
+El listado expone solo las cuentas **habilitadas para tu operación** según
+la configuración del corredor. Una cuenta no habilitada no aparece en el
+listado y sus consultas por id responden `404 not_found`.
+> **Nota**
+**Límite para cuentas persona**: una cuenta persona puede tener **máximo 1
+cuenta bancaria**. Al intentar la segunda recibirás `409
+banking_account_limit`. Las cuentas empresa no tienen límite.
+## Usuarios de terceros (solo empresas)
+
+Si tu cuenta es **empresa**, además de tus cuentas propias puedes dar de
+alta **usuarios banking de terceros** — tus clientes finales (personas o
+empresas) — cada uno con su identidad y verificación propias y **cuentas
+bancarias a su nombre**. Sin límite de terceros ni de cuentas por tercero.
+
+```mermaid
+flowchart LR
+    verif["1. Verificación KYC/KYB<br/>del tercero (approved)"] --> alta["2. POST third-parties<br/>(verification_id)"]
+    alta --> docs["Datos + documentos<br/>se completan solos"]
+    docs --> cuentas["3. POST /accounts<br/>(cuentas a su nombre)"]
+```
+
+### Alta del tercero
+
+El alta exige el `verification_id` de una [verificación KYC/KYB
+**aprobada**](https://docs.cbpayapp.com/es/guides/kyc) del tercero — su identidad única en CBPay. El
+tipo sale del kind de la verificación (KYC ⇒ `INDIVIDUAL`, KYB ⇒
+`COMPANY`), los datos (nombre, email, dirección) se completan solos desde
+el perfil verificado (lo que envíes explícito gana) y los **documentos ya
+validados se re-entregan automáticamente** al proveedor bancario. Se cobra
+el fee de perfil bancario (se reembolsa si el alta falla):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"
+  }'
+```
+
+Respuesta `201`:
+
+```json
+{
+  "third_party_id": "7f2a…",
+  "customer_id": "…",
+  "kind": "third_party",
+  "status": "pending",
+  "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "documents_synced": 2,
+  "registered_at": "2026-07-10T15:00:00Z",
+  "banking_fee": "1.000000"
+}
+```
+
+> **Nota**
+`documents_synced` cuenta los documentos de la verificación que quedaron
+cargados automáticamente en el perfil bancario del tercero. Si alguno no se
+pudo sincronizar (o el banco pide categorías adicionales), súbelo por el
+flujo manual de documentos de más abajo y luego haz `submit`.
+> **Nota**
+**Revisión de solicitudes.** Con la revisión de solicitudes banking activada, registrar un tercero también puede responder **`202 Accepted`** (`kind: banking_application`): el tercero se registra solo cuando la revisión se aprueba, y el fee de registro se reembolsa automáticamente si se rechaza. Síguelo vía `txn_review_status_changed` o en [Revisiones de operaciones](https://docs.cbpayapp.com/es/guides/transaction-reviews).
+Guarda el `third_party_id`: todas las rutas del tercero lo usan. Lista y
+consulta (el GET trae el estado de verificación en vivo):
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/third-parties?page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a… \
+  -H "Authorization: Bearer <token>"
+```
+
+### Verificación del tercero (gratis)
+
+Igual que tu propio perfil, pero sobre el tercero:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/documents \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "type": "PASSPORT", "file_base64": "…" }'
+
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/submit \
+  -H "Authorization: Bearer <token>"
+```
+
+### Cuentas del tercero
+
+Con el tercero aprobado, ábrele cuentas (mismo fee `banking_account`) y
+opera igual que con las tuyas:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "currency": "USD", "name": "Cuenta Carlos" }'
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts \
+  -H "Authorization: Bearer <token>"
+
+curl https://api.qbank.cl/platform/v1/banking/third-parties/7f2a…/accounts/{bankAccountID}/balance \
+  -H "Authorization: Bearer <token>"
+```
+
+- Cada tercero es tuyo y solo tuyo: otra cuenta CBPay jamás puede verlo ni
+  operarlo (responde `404`).
+- Una cuenta **persona** que intente crear terceros recibe
+  `403 company_required`.
+- Sin `verification_id` (o con una verificación no aprobada) el alta
+  responde `422 verification_required` / `422 verification_not_approved`.
+  Si envías un `type` que no calza con el kind de la verificación,
+  `422 verification_kind_mismatch`. Los terceros creados antes de esta
+  regla siguen operando con normalidad.
+- Los terceros dados de alta alimentan la métrica "usuarios nuevos" de tu
+  [resumen de cuenta](https://docs.cbpayapp.com/es/guides/analytics).
+
+## 4. Registra beneficiarios
+
+Para pagar a terceros, primero registra al beneficiario con sus datos
+bancarios (gratis; pasa por moderación antes de poder usarse):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/counterparties \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Proveedor ACME",
+    "profile": {
+      "name": "ACME LLC",
+      "address": { "addressLine1": "1 Main St", "city": "New York", "stateIso": "NY", "countryIso": "US", "postalCode": "10001" },
+      "additionalInfo": { "type": "CORPORATION" }
+    },
+    "accounts": [
+      {
+        "currencyCode": "USD",
+        "bank": { "name": "Test Bank", "number": "011000138" },
+        "fiat": {
+          "number": "0532013000",
+          "routingNumber": "011000138",
+          "additionalInformation": { "type": "TYPE_FIAT_US", "accountType": "CHECKING", "supportedRails": ["ACH"] }
+        }
+      }
+    ]
+  }'
+```
+
+Lista los tuyos con `GET /v1/banking/counterparties` y agrega más cuentas a
+un beneficiario existente con
+`POST /v1/banking/counterparties/{id}/accounts`.
+
+## Euros: dirección de fondeo y banca EUR en un solo lugar
+
+Todo lo de euros vive aquí. Un IBAN virtual (vIBAN) EUR es un instrumento de
+direccionamiento y ruteo con uno de dos propósitos; no es un saldo separado
+del proveedor. El procesamiento de ingresos y returns/recalls está
+implementado para ambos propósitos; el onboarding de customers del proveedor
+y la activación productiva quedan fuera del contrato público
+provider-agnostic.
+
+| Propósito | Por defecto | Significado |
+|---|---|---|
+| `funding_usdt` | Sí | Dirección EUR asociada al producto de fondeo. El dinero que llega se acredita a tu asset principal vía la cadena de crédito de payin. |
+| `banking_eur` | No | Dirección de Banking EUR. La cuenta debe tener habilitado Banking. El dinero que llega se concilia en el saldo `BANK_EUR` de la cuenta. |
+
+### Solicitar un vIBAN
+
+La plataforma puede solicitar un IBAN virtual para una cuenta activa y verificada. Solicita la dirección de fondeo con una clave idempotente:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-funding-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"funding_usdt"}'
+```
+
+`funding_usdt` es el propósito por defecto. La plataforma construye el
+registrant desde el perfil KYC/KYB aprobado. Si el perfil verificado no trae
+el país de emisión o el vencimiento del documento, la solicitud de cuenta
+puede enviar estos overrides opcionales de nivel superior (se aceptan
+aliases snake_case o camelCase):
+
+```json
+{
+  "purpose": "funding_usdt",
+  "document_issued_country": "IT",
+  "document_expiration_date": "2035-06-01"
+}
+```
+
+Para cuentas empresa, los campos equivalentes son
+`incorporation_country` / `incorporationCountry` y
+`incorporation_date` / `incorporationDate`. Se usan solo para completar el
+registrant verificado; no saltan KYC/KYB.
+
+También puedes enviar overrides opcionales de dirección en
+`POST /v1/banking/virtual-ibans` y `POST /v1/banking/company-wallets`:
+`address_street`, `address_city`, `address_country` y el existente
+`address_zip` (se aceptan aliases camelCase). El valor explícito gana y el
+perfil aprobado queda como segundo fallback. Esto permite completar un perfil
+KYC/KYB aprobado migrado cuya dirección está vacía, sin repetir la
+verificación. Un valor faltante o inválido falla con
+`422 registrant_incomplete` y conserva en `message` el mismo path
+`individual.address.*` o `corporate.address.*` para vIBAN; las reservas de
+company wallet usan `holder.corporate.address.*`.
+
+Para registrants corporativos, `business_activity` se resuelve en este orden:
+override explícito, perfil verificado, etiqueta de industria verificada y,
+como último fallback, `account.industry_label`.
+
+La solicitud entra a la cola de aprobación manual:
+
+```json
+{
+  "virtual_iban": {
+    "id": "2f8c1d4e-1111-4b22-8a33-000000000001",
+    "owner_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "manager_account_id": "",
+    "purpose": "funding_usdt",
+    "currency": "EUR",
+    "iban": "",
+    "iban_country": "",
+    "status": "pending_approval",
+    "client_order": "platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001",
+    "order_reference": "",
+    "created_at": "2026-09-10T12:00:00Z",
+    "updated_at": "2026-09-10T12:00:00Z"
+  },
+  "status": "pending_approval"
+}
+```
+
+`banking_eur` se solicita explícitamente:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/virtual-ibans \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: viban-eur-2026-001" \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"banking_eur"}'
+```
+
+Lista las solicitudes de la cuenta con ventana de fechas obligatoria:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50&from=2026-09-01&to=2026-09-11&purpose=funding_usdt" \
+  -H "Authorization: Bearer <token>"
+```
+
+La lista responde `{page, page_size, virtual_ibans}`. Los estados soportados son `pending_approval`, `pending`, `active`, `rejected`, `failed`,
+`disabled` y `closed`. La cuenta ve el IBAN completo cuando fue asignado; la
+lectura de organización lo muestra enmascarado.
+
+> **Importante**
+El corredor bancario puede requerir aprobación de operaciones y un customer
+verificado antes de activar un vIBAN EUR. Host productivo,
+certificados/mTLS, límites, fees comerciales y activación son configuración
+y no forman parte de este contrato provider-agnostic. Nunca los infieras
+desde ejemplos.
+### Leer, cerrar y operaciones por dirección
+
+Lee una solicitud por su ID:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001 \
+  -H "Authorization: Bearer <token>"
+```
+
+Una solicitud se puede cerrar (estado `closed`); el cierre es idempotente y
+la lectura posterior refleja el estado final.
+
+Lista las operaciones Banking de una sola dirección con
+`GET /v1/banking/virtual-ibans/{id}/operations` (misma paginación y ventana
+de fechas que el listado global de operaciones).
+
+### vIBAN para terceros
+
+Las cuentas empresa pueden solicitar un vIBAN `banking_eur` para un tercero
+propio después de que acepte la invitación y complete KYC/KYB aprobado. El
+tercero es el dueño del saldo; la empresa administra la relación:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties/7f2a0000-0000-4000-8000-000000000001/virtual-ibans   -H "Authorization: Bearer <token>"   -H "Idempotency-Key: third-party-viban-2026-001"   -H "Content-Type: application/json"   -d '{}'
+```
+
+La solicitud queda como `banking_eur` y sigue la misma aprobación manual y
+ciclo de estados de la solicitud de cuenta.
+
+### Saldo BANK_EUR
+
+Para una solicitud `banking_eur`, consulta el saldo conciliado:
+
+```bash
+curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8a33-000000000001/balance   -H "Authorization: Bearer <token>"
+```
+
+La respuesta lleva `asset: "BANK_EUR"`, `available`, `held`, `purpose` y
+`source`. Para `funding_usdt` responde `409 balance_not_available`, porque
+ese propósito entra a la cadena de crédito de payin hacia tu asset principal y no mantiene `BANK_EUR`.
+
+### Enviar euros: payouts y operaciones Banking
+
+Hay dos formas de enviar euros, y ambas leen la misma dirección. Distínguelas
+por la puerta, no por la dirección:
+
+| Puerta | Endpoint | Ordenante | Cuándo usarla |
+|---|---|---|---|
+| Payout | `POST /v1/payouts` (`country` EU, `currency` EUR, `method` SEPA) | El `funding_usdt` activo de la cuenta; usa `source_virtual_iban_id` explícito solo para forzar uno. | Pagar a un beneficiario externo desde tu actividad de fondeo. |
+| Operación Banking | `POST /v1/banking/operations` (`currency` EUR, `type` WITHDRAW, `paymentType` SEPA_CT) | El `banking_eur` activo de la cuenta (o `source_virtual_iban_id` explícito). | Mover tus propios fondos EUR de Banking. |
+
+Lo que comparten ambas puertas:
+
+- La fuente se selecciona en el nivel superior con
+  `source_virtual_iban_id`. Si la cuenta tiene exactamente un vIBAN con el
+  propósito que corresponde a la puerta, puedes omitir el campo. Sin una
+  fuente activa responde `422 funding_account_required`; con varias fuentes
+  activas sin UUID explícito responde `422 ambiguous_source_viban`.
+- La plataforma elimina los campos de identidad ordenante enviados por el
+  caller y estampa `payer` server-side desde el `registrant` del vIBAN
+  seleccionado, salvo que exista un payer de wallet corporativa más
+  específico y también server-side.
+- En filas activas anteriores sin registrant utilizable, la plataforma deriva
+  los nombres desde el perfil verificado vigente. Si el perfil es ilegible,
+  la operación falla con `503 funding_account_unavailable`; si la identidad
+  queda incompleta, falla con `422 registrant_incomplete`.
+- `source_virtual_iban_id` forma parte de la intención de la operación. Con
+  la misma clave de idempotencia recibes la operación original; una request
+  concurrente en vuelo devuelve `409 operation_in_progress` — reintenta con
+  la misma clave.
+- No existe un tope por vIBAN. EUR Banking descuenta del saldo `BANK_EUR`
+  de la cuenta.
+- Los holds de operaciones Banking creados antes de esta puerta quedan
+  grandfathered y continúan por su flujo existente de dispatch y
+  reconciliación.
+
+### Recibir euros: procesamiento de ingresos
+
+Cuando el proveedor bancario envía un ingreso terminal, el core lo normaliza
+como `banking_virtual_iban_inbound`. La plataforma resuelve el vIBAN dueño
+y aplica su propósito:
+
+- `funding_usdt` crea un payin `banking_funding` en EUR, aplica la tasa
+  marcada EUR→USDT y el fee/spread configurado, y sigue el firewall y la
+  cadena de crédito de payin.
+- `banking_eur` crea un espejo Banking en `BANK_EUR`, usa el camino del
+  ledger, emite KYT/estado de operación y encola el comprobante por email.
+
+Solo estados terminales (`completed`, `success`, `settled`, `credited` o
+`succeeded`) aplican el efecto financiero. Los estados pending/unknown
+quedan reconciliables y no acreditan saldo.
+
+`failed` y `rejected` son resultados terminales negativos. No crean un
+crédito; un payin de fondeo aún no acreditado queda failed sin un loop de
+refund.
+
+> **Nota**
+Returns/recalls se procesan como eventos terminales `returned`, `recalled`
+o `reversed`. Un return antes del crédito impide que un replay posterior
+acredite. Un payin `funding_usdt` ya acreditado crea el camino determinista
+de chargeback/refund; una operación `banking_eur` ledgerizada recibe un
+reverse append-only. Un evento de completion posterior no puede resucitar
+una operación devuelta.
+Los ingresos por vIBAN EUR conservan el riel y el propósito en el espejo
+banking, la cartola y analytics. El detalle puede exponer
+`payment_rail: "SEPA_INSTANT"`, `purpose` (`funding_usdt` o `banking_eur`)
+y la referencia del vIBAN cuando el riel la informa.
+
+### Errores EUR
+
+| HTTP | Código | Acción |
+|---:|---|---|
+| 400 | `invalid_json` | Envía un objeto JSON. |
+| 400 | `invalid_purpose` | Usa `funding_usdt` o `banking_eur`. |
+| 400 | `idempotency_key_required` | Envía `Idempotency-Key` o `idempotency_key`. |
+| 400 | `invalid_request` | Revisa el formato del campo indicado (p. ej. un UUID de vIBAN con formato inválido). |
+| 403 | `verification_required` | Completa la verificación y habilita el producto requerido. |
+| 404 | `not_found` | El vIBAN no existe o no pertenece a la cuenta. |
+| 409 | `virtual_iban_conflict` | Reutiliza la solicitud original; no crees otra asignación. |
+| 409 | `balance_not_available` | Solo las direcciones `banking_eur` tienen saldo `BANK_EUR`. |
+| 409 | `operation_in_progress` | Hay una request concurrente en vuelo; reintenta con la misma clave. |
+| 422 | `registrant_incomplete` | Al perfil KYC/KYB verificado le faltan campos obligatorios del registrant. Envía los overrides de documento o incorporación indicados en el mensaje y reintenta con la misma clave. |
+| 422 | `funding_account_required` | La operación EUR necesita un vIBAN activo con el propósito correspondiente; solicítalo y espera su activación. |
+| 422 | `ambiguous_source_viban` | Hay varios vIBAN activos; pasa el UUID exacto en `source_virtual_iban_id`. |
+| 503 | `banking_recovery_pending` | Reconcilia la solicitud durable antes de reintentar. |
+| 503 | `funding_account_unavailable` | Fallo temporal de lectura; reintenta con la misma clave. |
+
+### Preguntas frecuentes sobre euros
+
+#### ¿Solicitar un vIBAN crea un saldo BANK_EUR?
+No. El propósito queda guardado en la solicitud, pero el vIBAN no es un saldo independiente del proveedor. Solo las direcciones `banking_eur` exponen
+un saldo `BANK_EUR` conciliado; `funding_usdt` acredita a tu asset principal por la cadena de
+payin.
+#### ¿Puedo reintentar después de un timeout?
+Reintenta con la misma clave idempotente. Una clave nueva crea otra
+solicitud y no debe usarse para adivinar el resultado de una llamada ambigua.
+#### ¿Por qué el estado es pending_approval?
+Cada asignación requiere aprobación manual de operaciones de la organización antes de llamar al riel bancario.
+#### ¿La misma dirección sirve para payouts y operaciones Banking?
+Cada puerta lee el propósito que le corresponde: los payouts SEPA ordenan
+desde tu dirección de fondeo y las operaciones Banking desde tu dirección de
+Banking. Un UUID explícito en `source_virtual_iban_id` siempre gana sobre la
+selección automática.
+## Banking para terceros verificados
+
+Una cuenta empresa puede solicitar un destino banking para una submission KYC
+o KYB aprobada de un tercero. El intento es idempotente por submission y
+corredor; al aprobarse la verificación se crea automáticamente el destino.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"country":"MX","currency":"MXN","method":"bank_transfer"}'
+curl https://api.qbank.cl/platform/v1/kyb/submissions/<submissionID>/banking-intents \
+  -H "Authorization: Bearer <token>"
+```
+
+La respuesta contiene `intent_id`, `kind`, `verification_id`, `country`,
+`currency`, `method`, `status` y `fulfilled_instrument_id`. Los estados son
+`pending`, `fulfilled` y `abandoned`; una verificación rechazada deja el
+intento abandonado y una repetición responde `409 intent_abandoned`.
+Referenciar el onboarding propio responde `422 verification_invalid`.
+
+## 5. Envía pagos
+
+Dos tipos de operación:
+
+| `type` | Qué hace | `paymentType` |
+|---|---|---|
+| `TRANSFER` | Entre tus propias cuentas bancarias | `EMPTY` |
+| `WITHDRAW` | A un beneficiario registrado | Según el rail (ej. `SEPA_CT`) |
+
+Cotiza primero (gratis, no mueve dinero):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations/prepare \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "beneficiar": "<cuenta del beneficiario>" },
+    "amount": { "currencyCode": "USD", "units": "250", "nanos": 0 }
+  }'
+```
+
+Ejecuta con clave de idempotencia (aquí se cobra la comisión del riel — o la
+`banking_operation` predeterminada cuando el riel no tiene configuración):
+
+Para operaciones `WITHDRAW` en USD, planifica **24 a 48 horas hábiles en ACH**,
+**mismo día hábil (hasta 24 horas) en Fedwire** o **24 a 48 horas hábiles en
+SWIFT**. SWIFT puede extenderse según el banco receptor.
+
+```bash WITHDRAW (a un beneficiario)
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: pago-acme-0071" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "WITHDRAW",
+    "paymentType": "SEPA_CT",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "beneficiar": "<cuenta del beneficiario>" },
+    "amount": { "currencyCode": "USD", "units": "250", "nanos": 0 },
+    "comment": "Factura 8841"
+  }'
+```
+
+```bash TRANSFER (entre tus cuentas)
+curl -X POST https://api.qbank.cl/platform/v1/banking/operations \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: mov-interno-0012" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "type": "TRANSFER",
+    "paymentType": "EMPTY",
+    "sourceRequisit": { "account": "c4d1…" },
+    "destinationRequisit": { "account": "<otra cuenta tuya>" },
+    "amount": { "currencyCode": "USD", "units": "100", "nanos": 0 }
+  }'
+```
+
+Respuesta `202`:
+
+```json
+{
+  "operation_id": "7e8a…",
+  "provider_id": "…",
+  "status": "pending",
+  "idempotency_key": "platform:…:pago-acme-0071",
+  "data": { "…": "…" },
+  "banking_fee": "2.000000",
+  "banking_fee_asset": "BANK_USD"
+}
+```
+
+`banking_fee` y `banking_fee_asset` solo aparecen cuando se cobró una
+comisión. Con una comisión por riel el asset es la moneda de la operación
+(`BANK_USD` / `BANK_EUR`); con el fallback predeterminado es tu asset de settlement por defecto.
+
+- El estado final llega por el webhook `banking_operation_status_changed`
+  (`completed` / `failed`); también puedes consultar
+  `GET /v1/banking/operations/{id}`. Cuando la operación queda en estado
+  final, el webhook incluye su `receipt_url` y puedes descargar el
+  comprobante PDF con `GET /v1/banking/operations/{id}/receipt`
+  ([comprobantes](https://docs.cbpayapp.com/es/guides/receipts)).
+- Reintentos con la misma `Idempotency-Key` devuelven la operación original
+  (`idempotency_hit: true`) **sin volver a cobrar** la comisión.
+
+> **Nota**
+**Trazabilidad completa.** Cada operación bancaria queda registrada en tu
+cuenta: aparece en la sección `banking_operations` de la
+[cartola](https://docs.cbpayapp.com/es/guides/statement), su dinero cuadra en los saldos espejo
+`BANK_USD`/`BANK_EUR` (sección `assets`), y su volumen suma al
+`gross_volume` de [analytics](https://docs.cbpayapp.com/es/guides/analytics). El saldo autoritativo
+sigue siendo el del banco: el espejo se reconcilia periódicamente.
+El historial completo, con filtros:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=2026-07-08&status=completed&type=WITHDRAW&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "items": [
+    {
+      "id": "7e8a…",
+      "type": "withdraw",
+      "status": "completed"
+    }
+  ],
+  "meta": { "page": 1, "page_size": 50, "retrieved": 1 }
+}
+```
+
+> **Nota**
+Toda operación bancaria — incluidos los depósitos entrantes y las comisiones
+bancarias descubiertas automáticamente desde el banco — expone su
+`direction` (`in` / `out`), `amount` neto, `currency`, `counterparty` y
+`reference` cuando el banco los reporta. Estos campos son opcionales y
+aparecen en `GET /v1/banking/operations` y
+`GET /v1/banking/operations/{id}`.
+El webhook `banking_operation_status_changed` se mantiene liviano por
+diseño: lleva los identificadores y el nuevo estado, nunca los campos
+enriquecidos. Cuando llegue, consulta el detalle de la operación para leer
+la dirección, el monto, la contraparte y la referencia. Ver
+[webhooks](https://docs.cbpayapp.com/es/webhooks).
+
+## Comisiones por riel (depósitos y transferencias)
+
+Además de las comisiones fijas standalone, banking soporta **comisiones
+transaccionales por riel** — un porcentaje más un monto fijo, siempre
+cobradas **en la moneda de la operación** (`BANK_USD` / `BANK_EUR`), nunca
+en USDT:
+
+| Servicio | Aplica a | Cuándo se cobra |
+|---|---|---|
+| `banking_deposit` | Depósitos entrantes (USD/EUR) | Al acreditar el depósito — **con tope en el monto del depósito** (`fee = min(fee, monto)`), así un depósito chico nunca queda en negativo |
+| `banking_transfer_ach` | Transferencias salientes ACH | Al despachar, con chequeo de saldo fail-closed |
+| `banking_transfer_swift` | Transferencias salientes SWIFT | Al despachar, con chequeo de saldo fail-closed |
+| `banking_transfer_wire` | Transferencias salientes wire (FEDWIRE) | Al despachar, con chequeo de saldo fail-closed |
+| `banking_transfer_sepa` | Transferencias salientes SEPA | Al despachar, con chequeo de saldo fail-closed |
+
+En las **transferencias** el saldo disponible debe cubrir `monto + comisión`
+— si no alcanza, la API responde `402 insufficient_funds` y la operación
+**no se crea**. Si la operación es rechazada de forma definitiva justo
+después del despacho, la comisión se **reembolsa automáticamente** (la misma
+disciplina de la comisión predeterminada).
+
+**Fallback:** si el riel no tiene configuración específica (ni a nivel cuenta
+ni plataforma), se cobra la `banking_operation` predeterminada (fija, debitada de tu asset de settlement por defecto). Un
+riel configurado con 0% + 0 fijo queda **explícitamente gratis** — NO cae al
+fallback.
+
+## Estados de operación
+
+| Estado | Significado |
+|---|---|
+| `pending` | Aceptada, esperando procesamiento |
+| `processing` | En ejecución en el rail bancario |
+| `completed` | El dinero llegó — final |
+| `failed` | Falló; si hubo comisión de la operación, se reembolsó |
+| `cancelled` | Cancelada antes de ejecutarse |
+## Errores
+
+| HTTP | `error` | Qué hacer |
+|---|---|---|
+| 400 | `idempotency_key_required` | Envía la clave en body o header |
+| 402 | `insufficient_funds` | Saldo insuficiente: con comisión por riel el chequeo es `saldo ≥ monto + comisión` en la **moneda de la operación** (`BANK_USD`/`BANK_EUR`); con el fallback predeterminado es tu asset de settlement por defecto |
+| 403 | `account_blocked` | La cuenta no está activa; contacta al equipo de CBPay |
+| 409 | `banking_customer_exists` | Tu cuenta ya tiene perfil bancario (`GET /v1/banking/customer`) |
+| 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y no crees un segundo perfil |
+| 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
+| 409 | `no_banking_customer` | Crea primero tu perfil (`POST /v1/banking/customer`) |
+| 409 | `banking_account_limit` | Las cuentas persona tienen máximo 1 cuenta bancaria |
+| 403 | `company_required` | Los usuarios de terceros solo están disponibles para cuentas empresa |
+| 422 | `verification_required` | El alta de terceros exige `verification_id` de una verificación aprobada ([verifica primero](https://docs.cbpayapp.com/es/guides/kyc)) |
+| 422 | `verification_not_approved` | La verificación referenciada aún no está aprobada; espera la aprobación |
+| 422 | `verification_kind_mismatch` | El `type` enviado no calza con el kind de la verificación (KYC ⇒ INDIVIDUAL, KYB ⇒ COMPANY) |
+| 422 | `verification_invalid` | Referenciaste tu verificación de onboarding; el tercero necesita la suya propia |
+| 404 | `not_found` | El tercero (o la verificación) no existe o no pertenece a tu cuenta |
+| 502 | `banking_request_failed` | Error del corredor bancario; la comisión se reembolsó — reintenta |
+
+## FAQ
+
+#### ¿El dinero banking aparece en mi saldo USD?
+No. El dinero banking vive en tus cuentas bancarias y se consulta con
+`GET /v1/banking/accounts/{id}/balance`. El saldo autoritativo es el del
+banco; tu [cartola](https://docs.cbpayapp.com/es/guides/statement) lo concilia en los saldos espejo
+`BANK_USD`/`BANK_EUR`. Las **comisiones por riel** se cobran en la moneda de
+la operación (tu saldo `BANK_USD`/`BANK_EUR`); solo la comisión predeterminada
+`banking_operation` se debita de tu asset de settlement por defecto.
+#### ¿Qué pasa con la comisión si una operación falla?
+Se reembolsa automáticamente — comisiones de perfil, cuenta y operación por
+igual, incluidas las comisiones por riel (reembolsadas en el rechazo
+definitivo síncrono). Un reintento con la misma `Idempotency-Key` devuelve
+la operación original (`idempotency_hit: true`) y jamás cobra dos veces.
+#### ¿Cuántas cuentas bancarias puedo abrir?
+Una por moneda (USD, EUR). Además, las cuentas **persona** pueden tener
+como máximo 1 cuenta bancaria en total (`409 banking_account_limit`); las
+cuentas empresa no tienen límite.
+#### ¿Por qué una de mis cuentas no aparece en el listado?
+El listado solo expone las cuentas **habilitadas para tu operación** según
+la configuración del corredor. Una cuenta no habilitada no aparece y sus
+consultas por id responden `404 not_found` — contacta a tu equipo CBPay si
+necesitas habilitarla.
+#### ¿Una cuenta persona puede registrar usuarios terceros?
+No — los terceros son una capacidad de empresa (`403 company_required`). El
+registro además exige el `verification_id` de una verificación KYC/KYB
+**aprobada** del tercero.
+#### ¿Cómo sé cuándo un pago llegó a su estado final?
+Suscríbete a `banking_operation_status_changed`: se dispara en `completed`
+/ `failed` e incluye el `receipt_url` una vez final. También puedes
+consultar `GET /v1/banking/operations/{id}`.
+#### ¿Cuánto tarda un retiro US por ACH, Fedwire o SWIFT?
+La estimación es de 24 a 48 horas hábiles para ACH, mismo día hábil (hasta
+24 horas) para Fedwire y 24 a 48 horas hábiles para SWIFT. SWIFT puede
+extenderse según el banco receptor; los horarios de corte y feriados también
+pueden alargar la liquidación.
+## Banking creation claims and recovery
+
+Creation claims are durable records, not permission to send a second provider
+request. The platform stores `banking_creation_claims` with `kind`,
+`idempotency_key`, `request_hash`, status, attempts and refund state. Migration
+105 creates this table and its single-flight lock; migration 106 stores
+transaction-firewall fee-refund recovery. Migration 074 persists the resolved
+core provider on customer idempotency claims.
+
+### Recovery rules
+
+- A completed account recovery compares the provider account ownership with
+  the claimed customer's `ProviderID`.
+- A terminal provider authentication response (`401` or `403`) does not by
+  itself prove that the creation failed; the claim remains recoverable.
+- Reusing the same idempotency key with a different request hash is rejected.
+- A completed claim can be replayed with HTTP `200` and `idempotency_hit: true`;
+  recovery does not call the provider again.
+- `POST /v1/org/banking/creation-claims/refund` retries a pending fee refund
+  for `kind=customer` or `kind=account`.
+- `POST /v1/org/txn-firewall/fee-refunds/{resourceID}/retry` retries the
+  durable firewall-fee refund. A completed refund replays as HTTP `200`.
+
+The core admin route
+`POST /v1/ops/banking/account-creations/reconcile` verifies the provider
+account and finalizes the local mirror. The org-admin routes list claims,
+reconcile customer claims, and retry refunds. These operations are locked so
+concurrent reconciliation cannot originate duplicate money movement.

@@ -1,0 +1,97 @@
+---
+title: "常见问题"
+description: "提前解答集成中的典型问题"
+slug: zh/faq
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/faq
+---
+## 快速上手
+
+#### API 的基础 URL 是什么？
+每个环境各有一个：**live（生产）** 使用
+`https://api.qbank.cl/platform`，**test（测试）** 使用
+`https://cryptobank.qbank.cl/platform`。本文档中的所有端点都挂载在它们之下（例如
+`https://api.qbank.cl/platform/v1/balances`）。
+#### 有沙箱环境吗？
+有。CBPay 运营两个完全隔离的环境：**test**
+（`https://cryptobank.qbank.cl/platform`，`pk_test_...` 密钥，模拟资金）和
+**live**（`https://api.qbank.cl/platform`，`pk_...` 密钥，真实资金）。
+请先在 test 环境完成集成：所有通道都由确定性的模拟器提供服务，并支持用魔法值触发每一条失败路径；切换到 live 只需更换基础
+URL 和密钥。完整指南见[环境与测试](https://docs.cbpayapp.com/zh/environment-testing)。
+#### 如何为账户充值以便开始使用？
+两种方式：（1）**链上充值 USDT**——通过 `POST /v1/crypto/wallets` 创建钱包，并向该地址发送 USDT（TRON 或 Ethereum）；（2）通过[代收（payin）](https://docs.cbpayapp.com/zh/guides/payins)**收取法币**（QR 码、预告转账等）。无论哪种方式，余额都会自动入账并通过 webhook 通知您。
+#### 操作之前需要先通过 KYC/KYB 吗？
+是的：每个账户在向外转移资金之前，都必须先通过身份验证（个人 = KYC，企业 = KYB）。在此期间您可以**入金**（代收、加密充值、收到转账）和读取数据；其他操作会返回 `403 verification_required`。通过 `POST /v1/me/verification/link` 申请您的链接并完成向导——[完整指南](https://docs.cbpayapp.com/zh/guides/kyc)。如有任何操作返回 `403 account_blocked`，请联系 CBPay 团队。
+#### 为什么某个操作返回 403 service_disabled？
+该服务未对您的账户启用（服务按照您的商务协议逐账户开通）。查看 `GET /v1/services` 获取您可用功能的完整清单——它也便于您决定在 UI 中展示什么——如需开通某项服务，请联系 CBPay 团队。读取操作和已在途的资金绝不会被阻断。
+#### 我应该使用哪种凭证：JWT 会话还是 API 密钥？
+服务器到服务器的流程请始终使用 **API 密钥**（`pk_…`，永不过期）。JWT 会话（24 小时）用于有用户登录的前端。两者都放在 `Authorization: Bearer <token>` 中传递（或使用 `X-API-Key`）。
+#### 本次部署后我的账户会使用哪种语言？
+现有账户会预配置为 `locale=es`（部署时一次性迁移，不是接口）。
+新账户默认英语，除非注册请求体、`Accept-Language` 或组织 `default_locale` 另有指定。
+可用 `PATCH /v1/me` `{ "locale": "en" }` 更改。JSON API 响应始终为英语。
+见[语言与 locale](https://docs.cbpayapp.com/zh/guides/locale)。
+## 资金与汇率
+
+#### 我的余额是什么货币？
+您的账户持有**十二个相互独立的余额**：USD（主资产，2 位小数）、USDT、USDC、USDCE、BTC、GOLD、
+SILVER、PLATINUM、BOB、MXN、ARS 和 CLP（零位小数）。CLP 在本地保留，
+CLP 同币种 payout 使用身份结算；它不是 FX 转换路径。`default_payin_asset: CLP`、
+swap、checkout/POS 和卡片在没有 FX 定价时保持阻断。参见[资金模型](https://docs.cbpayapp.com/zh/concepts/money-model)。
+#### 创建付款之前如何知道它的成本？
+查询 `GET /v1/rates`（返回**您专属的**各国汇率）并计算：
+
+```
+usdt_amount ≈ local_amount / rate      (rounded up, 6 decimals)
+total_debit = usdt_amount + fixed fee  (your fees come in the same response)
+```
+
+付款对象会返回服务器计算的精确值（`fx_rate`、`usdt_amount`、`fee`、`total_debit`）。
+#### 我在 /v1/rates 看到的汇率有保证吗？
+它不是锁定报价：付款使用**创建时**生效的汇率，代收使用**入账时**生效的汇率，可能与您之前查询到的略有偏差。实际应用的汇率会记录在每笔操作的 `fx_rate` 字段中，便于审计。
+#### 有最小或最大金额限制吗？
+API 不设技术性最小值；金额极小时固定费用可能超过金额本身（您会收到 `invalid_amount` 或产生不划算的扣款）。最大值取决于您与 CBPay 的配置。
+#### 哪些费用适用于我？在哪里查看？
+由 CBPay 为您的账户定义：按服务（付款、代收、充值、提现、KYC、钱包创建）、按国家，包含百分比和/或固定组成部分。`GET /v1/rates` 在 `fees` 字段中返回您的有效费率表（FX 百分比已包含在报价汇率中）。详见[费用](https://docs.cbpayapp.com/zh/concepts/fees)。
+## 付款（Payouts）
+
+#### 一笔付款多久到账？
+取决于通道：有些是**同步或近乎即时的**（Yape、Pago Móvil、玻利维亚 QR），有些则通过当地银行轨道在几分钟内处理（SPEI、银行转账）。请围绕 `payout_status_changed` webhook 设计您的集成：不要假设固定时长，也不要轮询。
+#### 付款失败时到底会发生什么？
+**全额扣款**（金额 + 费用）会自动退还到您的 `available` 余额，webhook 会带着 `status: failed` 和说明原因的 `status_code` 到达。修正数据后使用**新的** `idempotency_key` 重试。
+#### 我可以重试而不冒重复付款的风险吗？
+可以——这正是 `idempotency_key` 的用途：重复使用同一个键会返回原始付款（`idempotency_hit: true`），不会创建或扣除任何新内容。只有在您确实想发起另一笔付款时才使用不同的键。参见[幂等性](https://docs.cbpayapp.com/zh/concepts/idempotency)。
+#### 如何知道每个国家需要哪些收款人字段？
+[按国家的示例](https://docs.cbpayapp.com/zh/guides/payouts#examples-by-country)提供了字段表和每个国家及支付方式的完整示例，`GET /v1/payouts/banks?country=XX` 会返回适用场景下的最新银行代码。
+#### 扫描过的 QR 码会被支付两次吗？
+不会：每个扫描的 `provider_reference` 只允许一次确认。使用相同 `idempotency_key` 的重试会返回原始付款。
+#### 我可以取消或修改处理中的付款吗？
+不可以。付款一旦进入 `processing`，银行轨道就已经接手；API 无法取消。请等待最终状态：如果轨道拒绝了它，全额退款是自动的。请在创建**之前**核实收款人数据（免费的 `qr/scan` 正是为了在支付 QR 之前确认收款人而存在）。
+#### 有最小、最大或每日限额吗？
+API 不设技术性最小值（金额极小时固定费用可能超过金额本身）。最大值和运营限额取决于您的商务协议和通道——如需提高限额，请联系您的 CBPay 管理员，并提供国家、预期交易量和平均客单价。
+## 代收与充值
+
+#### 一笔代收之后我的余额什么时候入账？
+当提供方确认付款时：QR 码和主动代收通常在几秒内入账；银行转账则在存款到达并完成匹配时入账。您始终会收到带有净入账金额的 `payin_credited` webhook。
+#### 我的客户转账时没有带参考号——钱丢了吗？
+没有。该笔存款会以 `unassigned` 状态落地，由 CBPay 团队手动路由到您的账户（分配后按您的正常汇率和费用入账）。在此期间它不会显示在您的余额中——如果您在等一笔迟迟未到的存款，请告知您的管理员金额、货币和大致时间，以加快分配。为避免这种情况，请在墨西哥使用**专属 CLABE 账户**、在智利使用**支付页面**，或确保参考号出现在转账备注中。
+#### 加密充值多久确认？
+检测近乎即时，入账则在网络确认后完成：**TRON 约 1 分钟**（19 次确认），**Ethereum 数分钟**，视拥堵情况而定。`crypto_deposit_credited` webhook 会带着 `tx_id` 结束整个周期，您可以在区块浏览器上核实。
+#### 如何为我的会计获取对账单？
+使用[对账单](https://docs.cbpayapp.com/zh/guides/statement)：一个端点即可汇总期间内的所有资金变动（付款、代收、加密、转账和费用），并提供精确的会计对账。请求 `format=pdf` 或 `format=xlsx` 可下载带 CBPay 品牌的文件，`json` 则可在您的网页中渲染。
+#### 银行余额和我的 USDT 余额是同一回事吗？
+不是。[银行服务（Banking）](https://docs.cbpayapp.com/zh/guides/banking)的资金存放在**您真实的银行账户**中（USD 或其他已启用的货币），通过 `GET /v1/banking/accounts/{id}/balance` 查询。您的 CBPay 余额是 USDT，只在收取固定的银行服务费时才会被动用（操作失败时退还）。
+#### 加密充值和代收（payin）是同一回事吗？
+不是：**payin** 是法币代收（当地货币 → USDT）；**加密充值**是链上 USDT 到达您的钱包（`funding`）。两者最终都进入同一个 USDT 余额，但 webhook 不同（`payin_credited` 与 `crypto_deposit_credited`）。
+## Webhooks 与错误
+
+#### Webhooks 是必须的吗？
+不是，但强烈建议使用：最终状态通过 webhook 送达，无需轮询。您仍然可以随时通过 API 获取任何对象（`GET /v1/payouts/{id}`、`GET /v1/payins/{id}`……）。
+#### 如何在本机（localhost）测试 webhooks？
+出于安全考虑，本地 URL 会被拒绝。请使用免费的 HTTPS 隧道（Cloudflare Tunnel 或 ngrok）并订阅那个公网 URL——分步教程见[环境与测试](https://docs.cbpayapp.com/zh/environment-testing)。
+#### GET /v1/movements 和对账单有什么区别？
+它们读取的是同一个账本：`movements` 是分页的编程视图（用于自动对账和您的 UI）；对账单是带有合计、明细分类和保证余额的期间快照（用于会计结账）。两者永远不会不一致。详见[资金变动与对账](https://docs.cbpayapp.com/zh/concepts/movements-reconciliation)。
+#### 为什么我收到了两次相同的 webhook？
+投递采用**至少一次**语义：超时会触发重试（最多 5 次）。请使用每个事件唯一的 `X-Webhook-Event-ID` 请求头去重。
+#### 遇到 5xx 或 core_unavailable 错误该怎么办？
+这是暂时性的：使用**相同的** `idempotency_key` 按退避策略重试（这样绝不会重复）。如果问题持续，请联系 CBPay 团队并提供 `payout_id`/`payin_id` 和发生时间。

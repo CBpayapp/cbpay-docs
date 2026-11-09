@@ -1,0 +1,153 @@
+---
+title: "Servidor MCP"
+description: "Conecta tu editor o asistente de IA a la documentación de CBPay con un click"
+slug: es/mcp
+lang: es
+source_url: https://docs.cbpayapp.com/es/mcp
+---
+CBPay publica un servidor [MCP (Model Context Protocol)](https://modelcontextprotocol.io) oficial en
+`https://mcp.cbpayapp.com`. Agrégalo a Cursor, VS Code, Claude o cualquier cliente
+compatible con MCP y tu asistente de IA podrá buscar en esta documentación, leer cada
+endpoint con sus ejemplos reales de request/response y consultar los códigos de error —
+sin salir de tu editor.
+
+Es **solo documentación y solo lectura**: nunca llama a la API en vivo, no necesita
+API key y **no requiere autenticación**. El transporte es HTTP streamable.
+
+## Instalación con un click
+
+<a href="cursor://anysphere.cursor-deeplink/mcp/install?name=cbpay-docs&config=eyJ1cmwiOiJodHRwczovL21jcC5jYnBheWFwcC5jb20ifQ%3D%3D">
+</a>
+
+<a href="vscode:mcp/install?%7B%22name%22%3A%22cbpay-docs%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.cbpayapp.com%22%7D">
+</a>
+
+<a href="vscode-insiders:mcp/install?%7B%22name%22%3A%22cbpay-docs%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.cbpayapp.com%22%7D">
+</a>
+
+## Configuración por cliente
+
+#### Cursor
+    Haz click en el botón **Add to Cursor** de arriba y confirma la instalación, o
+    agrega el servidor a mano en `~/.cursor/mcp.json` (global) o `.cursor/mcp.json`
+    de tu proyecto:
+
+    ```json mcp.json
+    {
+      "mcpServers": {
+        "cbpay-docs": {
+          "url": "https://mcp.cbpayapp.com"
+        }
+      }
+    }
+    ```
+
+    El servidor aparece en **Settings → MCP** con sus herramientas listas para usar.
+#### Claude Code
+    Un solo comando desde tu terminal:
+
+    ```bash
+    claude mcp add --transport http cbpay-docs https://mcp.cbpayapp.com
+    ```
+
+    Verifica con `claude mcp list` — `cbpay-docs` debe aparecer conectado.
+#### Claude (web y Desktop)
+    En [claude.ai](https://claude.ai) o en Claude Desktop:
+
+    1. Abre **Settings → Connectors**.
+    2. Haz click en **Add custom connector**.
+    3. Nómbralo `cbpay-docs` y pega la URL `https://mcp.cbpayapp.com`.
+    4. Guarda — no hay paso de autenticación.
+#### VS Code
+    Haz click en el botón **VS Code** de arriba, o agrega el servidor a mano en tu
+    `mcp.json` de usuario (**Command Palette → MCP: Open User Configuration**):
+
+    ```json mcp.json
+    {
+      "servers": {
+        "cbpay-docs": {
+          "type": "http",
+          "url": "https://mcp.cbpayapp.com"
+        }
+      }
+    }
+    ```
+
+    GitHub Copilot Chat (modo agente) toma las herramientas automáticamente.
+#### ChatGPT
+    En ChatGPT (planes de pago, con developer mode habilitado):
+
+    1. Abre **Settings → Connectors → Advanced → Developer mode**.
+    2. Haz click en **Create** y pega `https://mcp.cbpayapp.com` como URL del servidor MCP.
+    3. Deja la autenticación en **None** y guarda.
+#### Otros clientes
+    Funciona con cualquier cliente MCP que soporte servidores remotos por HTTP
+    streamable. La configuración genérica es:
+
+    ```json
+    {
+      "mcpServers": {
+        "cbpay-docs": {
+          "url": "https://mcp.cbpayapp.com"
+        }
+      }
+    }
+    ```
+
+    Sin API key, sin headers, sin OAuth — solo la URL.
+## Herramientas disponibles
+
+| Herramienta | Qué hace |
+|---|---|
+| `search_docs` | Busca en la documentación (secciones y endpoints) y devuelve resultados rankeados por relevancia |
+| `list_sections` | Lista la tabla de contenidos con el id y el grupo de cada sección |
+| `get_section` | Devuelve el markdown completo de una sección, incluidas sus subsecciones |
+| `list_endpoints` | Lista los endpoints documentados, filtrables por grupo y/o método HTTP |
+| `get_endpoint` | Devuelve la documentación de un endpoint con sus ejemplos de curl, request y response |
+| `list_groups` | Lista los productos/grupos (payouts, payins, banking, crypto, …) con la cantidad de endpoints de cada uno |
+| `get_errors_catalog` | Devuelve el catálogo de errores de la API (código HTTP, código `error`, significado y categoría), filtrable por texto |
+| `get_quickstart` | Devuelve la guía rápida de integración de punta a punta |
+| `list_recipes` | Lista las recetas de integración disponibles |
+| `get_recipe` | Devuelve una receta completa de integración |
+| `list_webhook_events` | Lista los tipos y resúmenes de eventos de webhook documentados |
+| `get_webhook_event` | Devuelve un evento de webhook con su descripción y ejemplo de payload |
+| `get_testing_guide` | Devuelve los ambientes test/live, prefijos de keys y valores mágicos del simulador |
+| `whats_new` | Devuelve los últimos cambios publicados de la documentación |
+
+## Prompts para probar
+
+Una vez conectado, pídele a tu asistente cosas como:
+
+- "Usando la documentación de CBPay, muéstrame cómo crear un payout a Chile con curl."
+- "¿Qué significa el error `idempotency_key_required` y cómo lo soluciono?"
+- "Lista todos los endpoints de payins y explícame el flujo de QR para Bolivia."
+- "¿Cómo verifico la firma de un webhook de CBPay?"
+
+## Preguntas frecuentes
+
+#### ¿Necesito una API key o una cuenta?
+    No. El servidor MCP es público y sirve solo documentación. Tu API key de CBPay
+    nunca participa — guárdala para el código de tu integración.
+#### ¿Puede ejecutar operaciones contra mi cuenta?
+    No. El servidor es estrictamente de lectura sobre contenido documental: no puede
+    crear payouts, mover saldos ni tocar la API en vivo de ninguna forma.
+#### ¿Qué transporte usa?
+    HTTP streamable en `https://mcp.cbpayapp.com`. Los clientes que solo soportan
+    servidores locales por stdio pueden puentearlo con un proxy como `mcp-remote`.
+#### ¿En qué se diferencia de Postman o del buscador del sitio?
+    Mismo contenido, distinto consumidor: la [colección Postman](https://docs.cbpayapp.com/es/postman) es para
+    humanos probando requests, el buscador es para humanos leyendo — el servidor MCP
+    es para tu asistente de IA, para que responda preguntas de integración con el
+    comportamiento documentado real en vez de adivinar.
+#### ¿El contenido está siempre al día?
+    Sí — se genera desde la misma documentación que estás leyendo, así que cada
+    versión listada en el [changelog](https://docs.cbpayapp.com/es/changelog) también se refleja en el
+    contenido del MCP.
+#### ¿Hay un servidor MCP para la docu de administración de la organización?
+    Sí — un servidor MCP dedicado a la documentación de **administración de la
+    organización** está disponible en [`mcp-admin.cbpayapp.com`](https://mcp-admin.cbpayapp.com).
+    Responde
+    preguntas sobre la API org-admin (cuentas, comisiones, tesorería,
+    compliance) y está pensado para administradores de la organización — este
+    servidor de aquí sigue cubriendo la API de nivel cuenta que integran tus
+    clientes.

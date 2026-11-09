@@ -1,0 +1,855 @@
+---
+title: "Cards: virtual and physical"
+description: "Issue cards that spend straight from any of the account's balances (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM), with per-card limits"
+slug: en/guides/cards
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/cards
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+CBPay cards spend **Just-In-Time from the account's central balance**: no
+prefunding, no moving balance around. Each card picks which balance it
+spends from (`spending_asset`: **USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM**, USD by default). USD, USDT and USDC are
+1:1 with the dollar; BTC and GOLD convert **at the price of the moment of each
+event**. Every purchase is authorized in real time against that asset's
+available balance and the card's own limits, and the debit shows up
+immediately in the movement history.
+
+```mermaid
+flowchart LR
+    purchase["Purchase at a merchant<br/>(POS / e-commerce / ATM)"] --> network["Card network"]
+    network --> jit{"Real-time JIT<br/>authorization"}
+    jit -->|"balance & limits OK"| debit["Debit on the chosen balance<br/>+ hold"]
+    jit -->|"insufficient / limit /<br/>frozen / no price"| declined["Purchase declined<br/>(audited reason)"]
+    debit --> clearing{"Settlement<br/>(1-2 days)"}
+    clearing -->|"confirmed"| settle["Hold consumed<br/>(BTC/GOLD/SILVER/PLATINUM: re-quoted at capture)"]
+    clearing -->|"annulled"| refund["Funds returned<br/>to the same balance"]
+```
+
+## How many cards you can hold
+
+| Account type | Virtual | Physical | For third parties? |
+|---|---|---|---|
+| Person | **1 live card total** | New physical issuance temporarily unavailable | No |
+| Company | **Unlimited** | New physical issuance temporarily unavailable | Yes: designated persons (e.g. employees) |
+
+Each card spends from the **account's central balance in its configured
+asset** (`spending_asset`, USD by default). Fine-grained control is
+per-card spending limits (per transaction, daily, monthly), always measured
+in **USD**, which you can change at any time.
+
+## Choosing the spending balance (USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM)
+
+Set `spending_asset` when creating the card or change it later with `PATCH`.
+It only affects future purchases: in-flight authorizations keep the asset
+they were debited in (and their reversal returns that same asset).
+
+```bash
+curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "spending_asset": "BTC" }'
+```
+
+**USDT and USDC** are both worth 1 USD, so the conversion is exact 1:1 with
+no exchange fee: a 25.00 USD purchase debits 25.000000 of the chosen asset.
+
+**BTC and GOLD** convert at the effective price of the moment of each event
+(the same settlement price you see in `GET /v1/rates`, `settlement` block):
+
+- **Authorization**: the purchase's equivalent in your asset is reserved
+  **plus a small cushion** (not a charge: it covers price drift until
+  clearing and is returned at capture). If the execution price is not
+  available at that moment, the purchase is **declined**
+  (`pricing_unavailable`) — your balance is never converted with an
+  untrustworthy price.
+- **Settlement (capture)**: the final amount is re-converted at the price
+  of the capture moment; the cushion's excess returns to your balance (or
+  the difference is debited if the price moved beyond the cushion).
+- **Reversal of an authorization**: the EXACT reserved amount is returned,
+  with no conversion.
+- **Refunds and adjustments after capture**: re-converted at the price of
+  the moment of the event. The price may move between the purchase and the
+  refund — you receive the equivalent in your asset at that moment's
+  price, not the original quantity.
+- BTC/GOLD/SILVER/PLATINUM purchases share your account's **volatile-asset limits** (per
+  operation and 24h volume, visible in `GET /v1/settlement`).
+
+| Error / decline | Where | Cause | Solution |
+|---|---|---|---|
+| `spending_asset_unavailable` | 400 on PATCH / purchase decline | The asset does not exist or is not enabled for purchases | Use `USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER` or `PLATINUM` |
+| `settlement_asset_disabled` | 400 on PATCH | Your operator disabled that asset | Check `GET /v1/settlement` (`enabled_assets`) |
+| `pricing_unavailable` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | Execution price unavailable at authorization | Retry the purchase; if it persists, switch to USDT/USDC |
+| `settlement_limit_exceeded` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | The purchase exceeds the per-operation limit for volatile assets | Smaller purchase, or spend from USDT/USDC |
+| `settlement_daily_limit_exceeded` | Purchase decline (BTC/GOLD/SILVER/PLATINUM) | The account reached its 24h volatile-asset volume | Wait, or spend from USDT/USDC |
+
+> **Note**
+If the chosen asset's balance is short, the purchase is declined with
+`insufficient_funds` — there is no automatic fallback to another balance.
+> **Important**
+With BTC/GOLD/SILVER/PLATINUM your balance is exposed to price moves between a purchase's
+events (authorization, capture, refund). Every conversion uses the
+effective price of its moment — CBPay never re-quotes amounts backwards nor
+deducts "just in case": the authorization cushion is always returned at
+settlement.
+## Costs (configured by your operator, can be 0)
+
+| Service | When it is billed |
+|---|---|
+| `card_creation_virtual` | When issuing a virtual card |
+| `card_creation_physical` | When issuing a physical card |
+| `card_purchase_virtual` | **Per purchase** with a virtual card (percent + fixed over the USD amount) |
+| `card_purchase_physical` | **Per purchase** with a physical card (percent + fixed over the USD amount) |
+| `card_monthly` | Monthly fee per active card (with no balance, the card is frozen — no debt) |
+| `card_cancellation` | When cancelling a card |
+
+Exact amounts come from `GET /v1/rates` (`fees` field). Every issuance charge is
+**automatically refunded** if issuance fails.
+
+### Per-purchase fee (lifecycle)
+
+The per-transaction fee follows the same lifecycle as the purchase:
+
+- **Authorization**: the estimated fee is reserved **inside the hold**
+  together with the purchase amount, in the card's `spending_asset` (the
+  percent applies over the purchase's USD amount; in BTC/GOLD/SILVER/PLATINUM it converts
+  with the same event price).
+- **Settlement**: the fee is **recalculated** with the configuration in
+  force at that moment and the definitive one is charged (`card_fee` in
+  your movements); the difference against the estimate is released or
+  charged together with the cushion adjustment.
+- **Reversals and downward adjustments**: the fee is **prorated back** to
+  the refunded fraction of the purchase (`card_fee_refund`).
+
+If your operator changes the percent between authorization and settlement,
+the settlement fee is charged — the same criterion as the BTC/GOLD/SILVER/PLATINUM price
+per event. Declined purchases **charge no fee**.
+
+## Create a card
+
+The flow depends on whether your account is a **person** or a **company** —
+pick your tab. The common rule: the **cardholder is verified ONCE per
+account**, on the first issuance; subsequent cards reuse it with no data.
+The `idempotency_key` is always required (a retry with the same key returns
+the original card and never double-charges).
+
+> **Important**
+New physical issuance is temporarily unavailable. A request with `physical: true` returns `400 physical_temporarily_unavailable`; this cutoff is checked after idempotency replay, so a replay of an existing physical request still returns its original card. Physical cards that were already issued continue operating.
+### Wizard decision tree
+
+The portal should call the summary before opening the issuance form. It uses
+`has_holder` to choose the shortest safe path; this is a boolean only and never
+exposes the internal holder identifier:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "total": 0,
+  "by_status": {},
+  "new_30d": 0,
+  "spend_24h_usdt": "0.000000",
+  "spend_30d_usdt": "0.000000",
+  "declined_24h": 0,
+  "has_holder": false
+}
+```
+
+1. **Person account:** if `has_holder` is `false`, show the approved KYC
+   data plus issuer fields (`occupation`, `place_of_work`, `salary_usd` and
+   email). If it is `true`, skip holder creation and ask only for card
+   settings. A person account can have one live digital card and one open
+   application; a second request returns `409 card_limit_reached`.
+2. **Company account:** let the user choose **company holder** or
+   **designated person**. The company path uses the account's KYB data. The
+   designated-person path must show a picker containing only approved KYC
+   verifications, then collect issuer fields and an explicit `pep` boolean.
+3. **Card settings:** show digital-only issuance (`physical: false`), choose
+   the spending asset, and optionally set USD limits. Recommend the account's
+   `settlement_asset`; expose the other enabled assets as advanced choices.
+4. **Submit once:** send the same `idempotency_key` in the body or
+   `Idempotency-Key` header. If the network result is ambiguous, query the
+   same request/status with that key; do not create a new key.
+
+The portal should not ask for an issuer holder ID. It is created or reused
+server-side. For a company designated person, the picker supplies the approved
+`verification_id`; never accept an arbitrary person ID.
+
+### Creation request and responses
+
+This is a complete digital request with limits and an explicit spending asset:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: card-portal-2026-0001" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-portal-2026-0001",
+    "spending_asset": "USDC",
+    "limits": {
+      "per_transaction": "500.00",
+      "daily": "1000.00",
+      "monthly": "5000.00"
+    },
+    "cardholder": {
+      "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "salary_usd": 1800,
+      "email": "ana@example.com",
+      "first_name": "Ana",
+      "last_name": "Rojas"
+    }
+  }'
+```
+
+Successful direct issuance returns `201`:
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "physical": false,
+  "cardholder_kind": "account",
+  "cardholder_name": "Ana Rojas",
+  "status": "active",
+  "spending_asset": "USDC",
+  "limits": {
+    "per_transaction": "500.000000",
+    "daily": "1000.000000",
+    "monthly": "5000.000000"
+  },
+  "creation_fee": "3.000000"
+}
+```
+
+If the organization requires a human application review, the same request
+returns `202` and no card exists yet:
+
+```json
+{
+  "status": "in_review",
+  "kind": "card_application",
+  "review_id": "7a1c2e94-3b5f-4c8a-9d2e-6f0a1b2c3d4e",
+  "message": "application received; it is pending review by our compliance team"
+}
+```
+
+Track that application through the `txn_review_status_changed` webhook or
+`GET /v1/me/txn-reviews`. The issuance fee is charged when the application is
+held and automatically refunded if compliance rejects it. A retry with the
+same idempotency key returns the same application and never charges twice.
+
+Use these stable errors to keep the wizard actionable:
+
+| HTTP | Error | Portal action |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | Keep digital issuance selected; new physical cards are paused. |
+| 400 | `spending_asset_unavailable` / `settlement_asset_disabled` | Refresh enabled assets and choose one that is available. |
+| 409 | `card_limit_reached` | Resolve or cancel the open application; a person account cannot create a second live card. |
+| 422 | `verification_required` / `verification_not_approved` / `verification_kind_mismatch` | Select an approved KYC verification for the designated person. |
+| 422 | `issuer_data_incomplete` | Show the missing keys and collect only those fields. |
+| 422 | `cardholder_name_too_long` | Shorten the combined first and last name to 22 characters or fewer. |
+| 402 | `insufficient_funds` | Fund the account; do not resubmit with a new idempotency key. |
+
+### Issuance holds and tracking
+
+An application hold is not a completed card. While it is `in_review`, show the
+`review_id`, keep the form read-only, and wait for the webhook or review
+endpoint. Do not create another application to poll progress. Once approved,
+the original idempotency key resolves to the created card; if rejected, the
+issuance fee is refunded and the response includes the final review status.
+This flow is auditable as `card_application`.
+
+#### Person account
+
+A person account issues cards **for itself** (at most 1 live card total; new physical issuance is temporarily unavailable).
+The one-card limit is enforced atomically. If two requests race, the losing request returns `409 card_limit_reached` and its newly charged application fee is refunded automatically; retrying the same request with the same idempotency key returns the existing `202` review instead of charging again.
+**Your first card** creates and verifies your holder at the issuer. Since
+your account already approved its
+[identity verification](https://docs.cbpayapp.com/en/guides/kyc), your data and documents
+**auto-fill from your verification** — you only add the issuer-specific
+fields (`occupation`, `salary_usd`); any field you send explicitly wins
+over the autofill:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-v-1",
+    "cardholder": {
+      "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "salary_usd": 1800
+    }
+  }'
+```
+
+`occupation` is a **catalog code**
+([see below](#occupation-and-business-activity-catalog-codes)) and
+`salary_usd` is whole US dollars. If your verification was done through
+the wizard without some data or document the issuer requires, add it
+explicitly to the `cardholder` (`first_name`, `email`, `address`,
+`id_front_url`…, same format as always).
+
+**A second issuance request** is not available for a person account once it
+already has one live card or one open application. It returns
+`409 card_limit_reached`:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "physical": false, "idempotency_key": "card-v-2" }'
+```
+
+A physical request returns `400 physical_temporarily_unavailable` even when
+the account has no card. Use a digital card request instead.
+
+#### Company account
+
+A company account issues **unlimited cards**, in two modes:
+
+**A. For the company itself** (corporate cards). The first issuance
+creates the company holder with corporate data; later ones need nothing:
+
+```bash First card (creates the company holder)
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-corp-1",
+    "cardholder": {
+      "kind_of_business": "J63",
+      "legal_representation": "Carlos Soto, General Manager",
+      "email": "finance@andina.cl",
+      "certificate_of_good_standing_url": "https://files.example.com/kyb/standing.pdf",
+      "business_license_url": "https://files.example.com/kyb/license.pdf",
+      "register_shareholder_url": "https://files.example.com/kyb/shareholders.pdf",
+      "id_shareholders_url": "https://files.example.com/kyb/shareholder-ids.pdf",
+      "address_verification_shareholders_url": "https://files.example.com/kyb/addresses.pdf",
+      "address": {
+        "line1": "Av. Apoquindo 4500",
+        "city": "Santiago",
+        "region": "RM",
+        "postal_code": "7550000",
+        "country": "CL"
+      }
+    }
+  }'
+```
+
+```bash Subsequent cards (no data, with limits)
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-f-ops-1",
+    "limits": { "per_transaction": "500.00", "monthly": "5000.00" }
+  }'
+```
+
+**B. For a designated person** (e.g. an employee): add
+`cardholder.kind: "person"` with the `verification_id` of THAT person's
+[**approved** KYC](https://docs.cbpayapp.com/en/guides/kyc) — their identity and documents come
+from the verification; you only add the issuer fields:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-emp-77",
+    "limits": { "monthly": "1500.00" },
+    "cardholder": {
+      "kind": "person",
+      "verification_id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "occupation": "52201",
+      "place_of_work": "Andina SpA",
+      "pep": false,
+      "salary_usd": 1800
+    }
+  }'
+```
+
+- Without `verification_id` (or with a non-approved verification):
+  `422 verification_required` / `422 verification_not_approved`. The
+  verification must be KYC (person); a KYB answers
+  `422 verification_kind_mismatch`.
+- Explicit `cardholder` fields win over the autofill (useful when the
+  issuer requires a document the verification does not have).
+- The response carries `cardholder_kind: "person"` plus the
+  `verification_id` used.
+
+## Printed name
+
+The card's printed name is optional in the request. Send
+`cardholder.first_name` and `cardholder.last_name` when the legal name from
+the approved profile is longer than the issuer's 22-byte printing limit or
+when you need a shorter display name. If you omit either field, the approved
+KYC/KYB profile supplies it during autofill. An explicit field always wins
+over the profile value.
+
+After trimming surrounding whitespace, the API counts the UTF-8 bytes of both
+fields together. A total above 22 is rejected with
+`422 cardholder_name_too_long` **before the issuance hold or fee**. This is a
+byte limit, not a Unicode-character limit.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "physical": false,
+    "idempotency_key": "card-print-name-1",
+    "cardholder": {
+      "first_name": "Ana",
+      "last_name": "Rojas"
+    }
+  }'
+```
+
+The response exposes the effective value as `cardholder_name`:
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "cardholder_kind": "account",
+  "cardholder_name": "Ana Rojas",
+  "status": "active"
+}
+```
+
+## Issuer fields and AML/CFT-derived PEP
+
+The first issuance creates the issuer-side cardholder. The platform validates
+the issuer fields **before charging the issuance fee or creating a hold**.
+When an existing account holder is reused, these fields are not requested
+again.
+
+| Holder | Required at create time | How the value is resolved |
+|---|---|---|
+| Person account holder | `occupation`, `place_of_work`, `salary_usd`, `email` | `occupation` must be a catalog code; `place_of_work` must be non-empty; `salary_usd` must be a non-negative whole number; `first_name`/`last_name` are filled from approved verification unless explicitly provided, and must be non-empty after assembly; `email` must contain `@` |
+| Company account holder | `kind_of_business`, `registered_name`, `email` | `kind_of_business` must be a catalog code; `registered_name` and `email` are filled from the request, account display name or legal KYB name, and account email fallback; `email` must contain `@` |
+| Designated person | `occupation`, `place_of_work`, `salary_usd`, `email`, `pep` | Catalog code plus names from approved KYC or explicit values (non-empty after assembly), `email` containing `@`, and explicit boolean `pep`; account-holder screening is not available for a designated person |
+
+For an account holder, the supported PEP source is the account's AML/CFT
+verification screening. The screening gate is mandatory: an explicit
+`pep: true` does **not** bypass `422 screening_required`; once screening
+exists, the value sent to the issuer is the conservative OR of the request
+boolean and the screening result, so a request `false` never overrides a
+screening `true`. The checklist displays the result as
+**`Politically exposed person (screening)`**.
+
+Company contact and legal-representative fields are completed from KYB UBO
+data when the request does not provide them. Company document URLs are
+completed from the KYB file using these fallbacks:
+
+| Issuer field | KYB fallback order |
+|---|---|
+| `certificate_of_good_standing_url` | `certificateOfGoodStanding`, then `legalPresence` |
+| `register_shareholder_url` | `registerShareholder`, `ownershipStructure`, then `controlStructure` |
+| `id_shareholders_url` | `idShareholders`, `uboIdentity`, `identity`, `ownershipStructure`, then `controlStructure` |
+| `address_verification_shareholders_url` | `addressVerificationShareholders`, `uboProofOfAddress`, then `proofOfAddress` |
+
+`business_license_url` has no fallback. If the assembled holder is still
+missing required issuer data, the API returns HTTP `422` with the missing
+keys and no issuer call is made:
+
+```json
+{
+  "error": "issuer_data_incomplete",
+  "message": "missing issuer data: place_of_work"
+}
+```
+
+### Catalogs
+
+Use the live catalogs rather than typing labels or inventing codes:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/catalog/occupations?q=director" \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/cards/catalog/business-activities?q=software" \
+  -H "Authorization: Bearer <token>"
+```
+
+Each response has the shape
+`{"items":[{"code":"...","label":"..."}],"meta":{"retrieved":"..."}}`.
+Send `items[].code` in `occupation` or `kind_of_business`; a label such as
+`"Engineer"` is not accepted as a code. The same code validation is used by
+the firewall checklist, so a value can be present and still be marked
+`ok: false` when it is not in the catalog.
+
+#### What if the account has no AML/CFT screening yet?
+The issuer-side PEP value cannot be derived. Complete an approved AML/CFT
+verification and retry the same card request; do not guess a PEP value.
+#### What happens to a designated person's PEP value?
+Because a designated person is not the account holder, the request must carry
+an explicit boolean `cardholder.pep`. It has no default.
+### Availability and issuance errors
+
+| HTTP | Code | Meaning and solution |
+|---|---|---|
+| 400 | `physical_temporarily_unavailable` | New physical issuance is temporarily paused. Request a digital card; existing physical cards continue operating. |
+| 409 | `card_limit_reached` | A person account already has one live card or one open application. Cancel or resolve the existing application before requesting another card. |
+| 422 | `issuer_data_incomplete` | Required issuer fields are missing or invalid after request data, verification autofill and KYB-derived values are assembled. Fix the listed keys in `message` and retry. |
+| 422 | `screening_required` | The account has no AML/CFT verification screening from which to derive the account holder's PEP value. Complete screening and retry the same card request. |
+### Occupation and business activity (catalog codes)
+
+When designating a **person**, `occupation` must be a **code** from the
+official catalog (not free text); for a **company**, so must
+`kind_of_business`. Look them up (searchable with `?q=`):
+
+```bash
+# Occupations (persons)
+curl "https://api.qbank.cl/platform/v1/cards/catalog/occupations?q=director" \
+  -H "Authorization: Bearer <token>"
+
+# Business activities (companies)
+curl "https://api.qbank.cl/platform/v1/cards/catalog/business-activities?q=software" \
+  -H "Authorization: Bearer <token>"
+```
+
+Each item is `{ "code": "...", "label": "..." }`. Use the `code` in
+`occupation` / `kind_of_business`. An out-of-catalog value returns
+`400 invalid_occupation` or `400 invalid_kind_of_business` before reaching
+the issuer. `salary_usd` is in **dollars** (integer).
+
+## Physical cards: activation
+
+A physical card is born `pending_activation` and travels **inactive** for
+security. Once the holder has it in hand:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/activate \
+  -H "Authorization: Bearer <token>"
+```
+
+## Reveal PAN and CVV (sensitive data)
+
+Only the **owning account** can reveal them (never the org admin). The
+response is one-shot: display it to the holder and discard it.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/reveal \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+  "pan": "5339880000001234",
+  "cvv": "123",
+  "exp_date": "202907",
+  "note": "sensitive data: display once, never store"
+}
+```
+
+> **Important**
+**Never store or log the PAN/CVV.** CBPay does not persist it either: the
+response comes straight from the issuer (PCI standard).
+## Limits and freeze/unfreeze
+
+```bash Update limits
+curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "limits": { "per_transaction": "200.00", "daily": "0" } }'
+```
+
+`"0"` removes a limit. To freeze (declines every purchase instantly):
+
+```bash Freeze
+curl -X PATCH https://api.qbank.cl/platform/v1/cards/{card_id} \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "frozen": true }'
+```
+
+## Transactions and their lifecycle
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/{card_id}/transactions?from=2026-07-01&to=2026-07-08&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "transactions": [
+    {
+      "transaction_id": "7a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "card_id": "3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c",
+      "kind": "purchase",
+      "merchant": "MERPAGO*SUPERMERCADO",
+      "mcc": "5411",
+      "amount_usd": "25.00",
+      "amount_usdt": "25.000000",
+      "spend_asset": "USDC",
+      "spend_amount": "25.000000",
+      "fee_asset": "USDC",
+      "fee_amount": "0.300000",
+      "status": "settled",
+      "decline_reason": "",
+      "auth_number": "123456",
+      "created_at": "2026-07-09T15:04:05Z",
+      "updated_at": "2026-07-10T09:00:00Z"
+    }
+  ]
+}
+```
+
+`spend_asset` / `spend_amount` show which balance the purchase actually
+debited and how much in that asset (`amount_usd` / `amount_usdt` remain the
+USD reference value). For BTC/GOLD/SILVER/PLATINUM, an authorized transaction's
+`spend_amount` includes the reserve cushion; after settlement it shows the
+final amount.
+
+`fee_asset` / `fee_amount` are the asset and amount of the per-purchase fee
+(definitive once `settled`; estimated while `authorized`).
+`fee_refunded_amount` appears once a refund applies from reversals or
+downward adjustments. When your operator does not configure a per-purchase
+fee, the `fee_*` fields are **not included** in the transaction — the
+historical behavior is unchanged.
+
+| Status | Meaning |
+|---|---|
+| `authorized` | Approved in real time: the amount left the chosen balance's available and sits in a hold |
+| `settled` | Confirmed at network settlement (the hold is consumed; BTC/GOLD/SILVER/PLATINUM re-quoted at the capture moment) |
+| `reversed` | Annulled: funds returned to the same balance (exact amount if not settled; re-converted at the moment's price if it had settled) |
+| `declined` | Rejected, with the reason: `insufficient_funds`, `card_limit_exceeded`, `card_frozen`, `account_blocked`, `spending_asset_unavailable`, `spending_asset_disabled`, `pricing_unavailable`, `settlement_limit_exceeded`, `settlement_daily_limit_exceeded` |
+
+If settlement arrives for a different amount than authorized (tips, merchant
+conversion), the adjustment is applied automatically: positive debits the
+difference, negative returns it.
+
+## Cancel a card
+
+Irreversible. Bills `card_cancellation` when configured.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
+  -H "Authorization: Bearer <token>"
+```
+
+### Replacing a card
+
+There is no separate blind re-issue operation in the portal API. To replace a
+card, freeze it first if compromise is suspected, then cancel it and submit a
+new digital application with a **new** idempotency key. A company can issue
+another card immediately. A person account must have no live card or open
+application, so cancellation is required before the replacement request.
+Never reuse an old key for a genuinely new card.
+
+## Webhooks
+
+| Event | When |
+|---|---|
+| `card_transaction` | A purchase was authorized, annulled or adjusted |
+| `card_status_changed` | The card changed state (including automatic freeze for unpaid monthly fee) |
+
+Subscribe the same way as every other event (see [Webhooks](https://docs.cbpayapp.com/en/webhooks)).
+
+## FAQ
+
+#### Do I have to prefund the cards?
+No. Cards hold no balance of their own: every purchase is authorized in real
+time against the account's balance (in the card's spending asset). If the
+balance covers it and the purchase respects the limits, it is approved.
+#### What if several of my company's cards purchase at the same time?
+They all spend from the account's central balances. Each authorization
+debits atomically: you can never spend more than the asset's available
+balance, no matter how many cards operate in parallel.
+#### In which currency are purchases debited?
+Purchases are processed in USD and debited from the card's configured
+balance (`spending_asset`). USD, USDT and USDC are 1:1 with the dollar, with no
+conversion fee; BTC and GOLD convert at the effective price of the moment
+of each event (the same one in the `settlement` block of `GET /v1/rates`).
+#### Can different cards spend from different balances?
+Yes: `spending_asset` is per card. A company can have, for example,
+corporate cards spending USDT, employee cards spending USDC and a personal
+one spending BTC. Changing it with `PATCH` only applies to future
+purchases.
+#### What is the cushion I see reserved on BTC/GOLD/SILVER/PLATINUM purchases?
+Network settlement arrives 1-2 days after the authorization, and the
+BTC/gold price can move in between. That is why the authorization reserves
+the purchase's equivalent plus a small percentage. It is not a charge: at
+settlement, the purchase is re-converted at that moment's price and
+everything reserved in excess automatically returns to your balance.
+#### What if the BTC/gold price is unavailable when I purchase?
+The purchase is declined (`pricing_unavailable`) — CBPay never converts
+your balance with an untrustworthy price. It is a transient condition
+(degraded price feed): retry in a few minutes or switch the card to
+USDT/USDC. Events that cannot be declined (the settlement of an
+already-approved purchase, a refund) are never blocked: they are processed
+with the last known price plus a prudential margin, audited in the
+movement.
+#### A BTC purchase of mine was refunded — why did I receive a different quantity?
+Refunds convert at the price of the refund moment, not the purchase's: you
+receive the equivalent in your asset of the refunded USD amount. If BTC
+went up since the purchase you receive less BTC (same USD value); if it
+went down, more. Your BTC/GOLD/SILVER/PLATINUM balance is always exposed to the price —
+that is the nature of spending from a volatile asset.
+#### Why did the fee of my purchase change between authorization and settlement?
+The authorization reserves an estimated fee inside the hold. At settlement
+the fee is recalculated with the configuration in force at that moment:
+if your operator changed the percent between both events, the settlement
+fee applies. The difference against the estimate is released or charged
+together with the purchase adjustment — never as a separate movement.
+#### What happens if there is no balance for the monthly fee?
+The card is frozen automatically (`card_status_changed` event with
+`reason: monthly_fee_unpaid`). No debt accrues; once the balance is topped
+up, unfreeze it with `PATCH { "frozen": false }`.
+#### Can I issue a card for someone outside my company?
+Company accounts can issue for any designated person. That person must
+have an [approved KYC verification](https://docs.cbpayapp.com/en/guides/kyc) — you pass their
+`verification_id` in the `cardholder` and their data and documents
+auto-fill. The card always spends from the balance of the issuing company
+account.
+#### Why does the wizard ask for my occupation or the company's business activity?
+These are issuer and AML/CFT fields, not a replacement for your approved
+KYC/KYB. Select a code from the live catalog: `occupation` for a person or
+`kind_of_business` for a company. The issuer uses it to create the cardholder
+and apply its compliance checks.
+#### What happens if I top up while issuance is in progress?
+An issuance hold or review does not silently retry and does not create a
+second card. Top up the same account, then wait for the existing application
+to finish or retry with the same idempotency key after a balance error. Never
+submit a new key to work around an ambiguous timeout.
+The general error catalog lives in [Errors](https://docs.cbpayapp.com/en/errors).
+
+## Card listings, summaries, and organization feeds
+`GET /v1/cards` is available to both an account credential (its own cards)
+and an organization administrator (`ops:read`). Organization admins may
+add `account_id` to narrow the result. A bank-partner credential cannot use
+the `/v1/cards` surface; the cards section is hidden for that role.
+
+The list accepts `page` (default `1`) and `page_size` (default `50`, maximum
+`200`), plus these filters:
+
+| Filter | Behavior |
+|---|---|
+| `q` | Free-text search over account email/display name, cardholder name, card ID, and account ID |
+| `physical` | `true` or `false`; any other value returns `400 invalid_filter` |
+| `cardholder_kind` | `account`, `person`, or the value used by the card |
+| `spending_asset` | Canonical ledger asset, for example `USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`, or `PLATINUM`; an unsupported value returns `400 invalid_filter` |
+| `from`, `to` | Optional inclusive date bounds in `YYYY-MM-DD`; malformed ranges return `400 invalid_range` |
+
+The response includes `total` and, on enriched reads, optional
+`account_display_name`, `account_email`, `last_txn_at`, and `billed_through`:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards?q=finance&physical=false&spending_asset=USDT&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "cards": [{
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "physical": false,
+    "cardholder_kind": "account",
+    "status": "active",
+    "spending_asset": "USDT",
+    "last_txn_at": "2026-10-24T15:04:05Z",
+    "billed_through": "2026-10"
+  }]
+}
+```
+
+For organization administrators, `GET /v1/cards/summary?account_id=...` returns
+aggregate fields (`total`, `by_status`, `new_30d`, `spend_*_usdt`, `declined_24h`).
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/summary?account_id=9b1d0000-0000-4000-8000-000000000001" \
+  -H "Authorization: Bearer <admin-token>"
+```
+
+```json
+{
+  "total": 12,
+  "by_status": {"active": 10, "frozen": 2},
+  "new_30d": 3,
+  "spend_24h_usdt": "1250.000000", "spend_30d_usdt": "18400.000000",
+  "declined_24h": 4, "has_holder": true
+}
+```
+
+`has_holder` tells the portal whether the account already has an issuer cardholder:
+scoped to the requested account, best-effort, no holder ID or personal data. Use it
+only to branch the wizard; the create endpoint remains the source of truth.
+
+`GET /v1/cards/transactions` is the organization-wide transaction feed (`card_id`,
+`account_id`, `status`, `merchant`, `mcc`, `from`, `to`, `page`, `page_size`;
+malformed `card_id` returns `400 invalid_filter`). Items add account and optional
+cardholder context.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/cards/transactions?status=settled&merchant=market&mcc=5411&from=2026-10-01&to=2026-10-25&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
+  "transactions": [{
+    "transaction_id": "7a1b0000-0000-4000-8000-000000000001",
+    "card_id": "6c1f0000-0000-4000-8000-000000000001",
+    "account_id": "9b1d0000-0000-4000-8000-000000000001",
+    "account_display_name": "Andina SpA",
+    "account_email": "finance@example.com",
+    "cardholder_name": "Operations",
+    "card_status": "active",
+    "merchant": "MARKET", "mcc": "5411", "status": "settled",
+    "amount_usd": "25.00", "amount_usdt": "25.000000",
+    "created_at": "2026-10-24T15:04:05Z"
+  }]
+}
+```
+
+`GET /v1/cards/{card_id}` enriches the card with `spent_daily` and `spent_monthly`
+(same UTC windows and authorized/settled states as JIT enforcement; declined and
+reversed transactions excluded).
+
+#### Can an account see another account's cards?
+No: account credentials see only their account; org admins need `ops:read` (scope with `account_id`).
+#### Does the summary expose customer information?
+No: aggregate counts and amounts only; customer context follows the caller scope on enriched items.
+#### What happens with an invalid filter or date?
+`400 invalid_filter` (bad `physical`/`spending_asset`/`card_id`) or `400 invalid_range` (bad `from`/`to`); filters are never silently ignored.
+## USD as the principal ledger asset
+
+Accounts use `USD` as the default for `settlement_asset` and
+`payin_settlement_asset`; change it any time with `PUT /v1/settlement`.
+In-flight operations are never re-quoted.
+
+USD ledger amounts use cents (two decimal places). Direct credits and debits,
+fees, and supported payout, checkout, POS, and card paths use USD only where
+their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
+do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
+assets; v1 money-out pricing for those assets remains unavailable.
+
+A payin credited directly to a USD-principal account exposes
+`credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`
+remains the USD-equivalent reporting field. A controversy hold follows the
+credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
+`disputed_usdt` and `held_usdt` are normalized equivalents.

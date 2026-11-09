@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 9, 2026" description="v2.246 · 1 version">
+<Update label="November 9, 2026" description="v2.247 · 2 versions">
+### v2.247
+**Changed**
+- Registration protection now sustains attack mode only after a request passes the proof-of-work gate (or another equivalent verified credential), so rejected PoW traffic cannot keep the latch active.
+- If the shared throttle is temporarily degraded, the fallback signal can still latch attack mode from the soft threshold.
+- `POST /v1/auth/pow-challenge` now shares the registration IP budget and can return `429 too_many_attempts`.
+- Add the optional `org` field to bind a new challenge to one organization. New organization-bound challenges use an organization MAC; legacy v1 challenges remain temporarily accepted for compatibility.
 ### v2.246
 **Changed**
 - Platform administrator credential changes now use double-god maker-checker. TOTP resets clear the secret without email dispatch after approval; email changes notify both mailboxes and retain a pending request on typed `409 duplicate`. Organization-scope administration remains direct.

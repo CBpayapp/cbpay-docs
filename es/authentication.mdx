@@ -28,15 +28,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register \
 ```
 
 ```json
-{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm. If no code arrives, request a new one with POST /v1/auth/password/forgot"}
+{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
 ```
-
-<Note>
-`POST /v1/auth/register` siempre responde `201 pending_verification`,
-incluso si no se puede enviar el email de verificación. No responde
-`502 otp_send_failed`; si el código no llega, usa
-`POST /v1/auth/password/forgot` para pedir uno nuevo.
-</Note>
 
 Confirma el código para verificar el buzón. El endpoint devuelve `201
 pending_2fa_enrollment` con `pending_token` válido por 30 minutos,
@@ -64,14 +57,23 @@ con el `purpose` correspondiente y usa exactamente el email en minúsculas que
 enviarás.
 
 El desafío dura 600 segundos, tiene dificultad `20` y queda ligado al email y al
-propósito. Resuélvelo en tu cliente, idealmente en un worker en segundo plano
-mientras la persona o empresa completa el formulario:
+propósito. Para un flujo específico de un tenant, incluye el `org` opcional con
+el slug de la organización; así el desafío también queda ligado a esa
+organización. Usa el mismo `org` al pedir el desafío para el registro. Resuélvelo
+en tu cliente, idealmente en un worker en segundo plano mientras la persona o
+empresa completa el formulario:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@ejemplo.com"}'
+  -d '{"purpose":"register","email":"ana@ejemplo.com","org":"cbpay"}'
 ```
+
+`org` es opcional para mantener compatibilidad hacia atrás. Si lo omites, se
+crea el desafío legacy sin organización. La emisión del desafío comparte el
+presupuesto de IP del registro, por lo que una ráfaga puede recibir
+`429 too_many_attempts`; espera y pide un desafío nuevo en vez de reenviar
+repetidamente la misma solicitud.
 
 ```json
 {
@@ -108,19 +110,12 @@ con `"purpose":"confirm"` y envíalo al confirmar:
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@ejemplo.com"}'
+  -d '{"purpose":"confirm","email":"ana@ejemplo.com","org":"cbpay"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
   -d '{"org":"cbpay","email":"ana@ejemplo.com","code":"123456","pow":{"challenge":"<challenge>","suffix":1847293}}'
 ```
-
-Para el registro social, pide el challenge con `purpose: "oauth"` y usa como
-email la llave de identidad del proveedor:
-`provider:subject@oauth.local` (por ejemplo,
-`google:provider-subject@oauth.local`). Incluye el `pow` resuelto solo cuando
-la solicitud OAuth crea una cuenta nueva durante el modo de ataque; el login de
-un usuario existente no lo necesita.
 
 En condiciones normales, registro y confirmación siguen siendo compatibles con
 clientes que omiten `pow`. Durante el modo de ataque, cada endpoint responde
@@ -152,8 +147,7 @@ clave usada en el registro.
 
 La recuperación evita enumeración. `POST /v1/auth/password/forgot` mantiene el mismo
 `200` aunque se agote el presupuesto; permite como máximo 5 envíos reales por cuenta
-por hora. También hay un límite por IP de origen; una oleada puede generar una alerta
-para operadores, pero la respuesta sigue siendo el mismo `200`. `POST /v1/auth/password/reset` permite como máximo 8 intentos de código por
+por hora. `POST /v1/auth/password/reset` permite como máximo 8 intentos de código por
 cuenta en 15 minutos. Un reset exitoso por email verifica el email y elimina
 `register_pending`.
 Los members de una cuenta empresa también pueden recibir un link de recuperación

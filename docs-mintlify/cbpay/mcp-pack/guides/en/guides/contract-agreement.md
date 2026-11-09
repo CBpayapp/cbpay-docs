@@ -1,0 +1,370 @@
+---
+title: "Grupo CB framework agreement"
+description: "Issue, review and sign the pre-filled Grupo CB Master Services Agreement for a verified company account"
+slug: en/guides/contract-agreement
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/contract-agreement
+---
+The Grupo CB framework agreement is a pre-filled document issued by CBPay for
+a verified company account. CBPay resolves the company's legal identity,
+verified address, active services, fees and its current CBPay signature before
+creating the envelope. If a required value has no verified source, the
+envelope is not created.
+
+The ceremony is completed by a human owner or operator of the company account.
+It requires explicit consent and a fresh, single-use OTP. API keys cannot sign.
+
+For test requests, use `https://cryptobank.qbank.cl/platform`; use
+`https://api.qbank.cl/platform` only for production.
+
+```mermaid
+sequenceDiagram
+  participant A as Organization admin
+  participant C as Company account
+  participant P as CBPay
+  participant W as Webhook subscriber
+  A->>P: POST /v1/org/contracts/envelopes
+  P-->>A: pending_client envelope
+  C->>P: GET envelope and PDF
+  C->>P: POST /sign + X-OTP-Token
+  P-->>C: completed envelope and final PDF
+  P-->>W: contract_envelope_completed
+```
+
+## Eligibility and states
+
+The account must be an active company account with approved KYB. The envelope
+is scoped to the organization and the account; a foreign ID returns
+`404 not_found`.
+
+| State | Meaning | Next action |
+|---|---|---|
+| `pending_client` | CBPay has pre-signed the frozen document and the client has not completed the ceremony. | Review and sign, or ask the organization admin to void/reissue it. |
+| `completed` | The client signature, consent and OTP claim succeeded; the final PDF was generated. | Read or download the final document. It cannot be voided. |
+| `voided` | An organization admin cancelled the pending envelope with a reason. | Issue a new envelope if the agreement must be corrected. |
+
+There is no `draft` or generic `pending` state.
+
+For `lang=en`, the organization must have the platform setting
+`contract_counsel_approved_en=true`. Spanish issuance does not require that
+English-counsel gate. The document template is version `v13.3`; its hash and
+the CBPay signature version are frozen in the envelope snapshot.
+
+## Pricing coverage and displayed amounts
+
+The organization issue endpoint checks pricing coverage before creating the
+envelope. If an enabled service has no effective fee row, it returns HTTP 422
+`contract_unfillable` with a `missing` array containing values in the form
+`pricing:<flag>`. An explicit zero-percent, zero-fixed row is a valid free
+configuration. `transfers` and `swaps` are exempt from this fee-row gate.
+
+Operationally, the v13.3 agreement body no longer embeds a flat fixed-price
+table. Appendix A points to the current Client Fee Schedule/Program, and its
+applicable entries are grouped with localized pricing labels matching the
+portal/admin pricing board, including Fiat payments, Compliance, Cards,
+Banking, Wallets and Other. The effective configuration captured at issue
+governs; an organization administrator must repair missing pricing and issue a
+new envelope.
+
+The internal margins `fx_spread`, `settlement_spread` and `swap_spread` do not
+appear in the account-facing `fill_snapshot` or the PDF pricing appendix. The
+organization-admin view retains the complete pricing snapshot for audit.
+
+## Ceremony
+
+### List and open the envelope
+
+Use `GET /v1/me/contracts/envelopes` and then
+    `GET /v1/me/contracts/envelopes/{envelopeID}`. The list uses `page` and
+    `page_size` (default 50, maximum 200). The list response uses `items`;
+    the detail response includes append-only `events`, with each event name in
+    `event`.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/contracts/envelopes?page=1&page_size=50" \
+  -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+### Download the document before signing
+
+`GET /v1/me/contracts/{envelopeID}/pdf` returns PDF bytes. Save the file
+    and make sure the legal name, address, service schedule and fee schedule
+    are correct. The document is pre-signed by CBPay, but remains
+    `pending_client` until the ceremony is completed.
+
+```bash
+curl -o contrato-marco.pdf \
+  "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/pdf" \
+  -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+### Provide signer identity and consent
+
+Send the signer's name and title in the JSON body. Consent must be the
+    JSON boolean `true`. Include the client's handwritten signature as
+    `signature_png`, a Base64-encoded PNG. The optional
+    `data:image/png;base64,` prefix is accepted. The OTP is **not** a JSON
+    `code` field: send the fresh single-use token in the `X-OTP-Token` header.
+
+```bash
+curl -X POST \
+  "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/sign" \
+  -H "Authorization: Bearer <CBPAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -H "X-OTP-Token: <FRESH_SINGLE_USE_OTP_TOKEN>" \
+  -d '{
+    "signer_name": "Jordan Lee",
+    "signer_title": "Chief Executive Officer",
+    "consent": true,
+    "signature_png": "<PNG_BASE64_SIGNATURE>"
+  }'
+```
+
+### Confirm completion
+
+A successful response returns the envelope in `completed`. Read the
+resource again and download the PDF so your system stores the final
+`final_hash`. The `contract_envelope_completed` event is delivered to the
+organization-admin audience. The completed client claim also automatically
+records the Client Journey milestone `contract_signed` with actor
+`system:contract-ceremony`; this is not a manual admin milestone.
+## Client signature image
+
+`signature_png` is required on every client signing request. The API accepts a
+Base64-encoded PNG with or without the `data:image/png;base64,` prefix. Before
+claiming the envelope, it decodes and validates the image: at most 700,000
+Base64 characters, at most 512 KiB decoded, minimum dimensions of 64×16
+pixels, and at least 200 ink pixels. A failure returns HTTP 422
+`invalid_signature_image`; the message identifies the validation cause.
+
+After a successful claim, the PNG is embedded in the Client signature block
+of the final PDF. List and detail responses expose only the boolean
+`has_client_signature`; the signature bytes and storage key are never returned.
+Earlier envelopes without a stored image continue to render the textual
+signature block.
+
+## Signing notification
+
+When an envelope is issued or reissued, the account receives a notification
+email with the pre-signed PDF attached. When the portal URL is configured, the
+email includes a **Review and sign** button and the same `/contracts/{id}`
+deep-link as plain text. Email delivery is best-effort; use the envelope
+resource and its events as the source of truth.
+
+## Response examples
+
+List response:
+
+```json
+{
+  "items": [
+    {
+      "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+      "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
+      "template_version": "v13.3",
+      "lang": "en",
+      "status": "pending_client",
+      "has_client_signature": false,
+      "doc_hash": "sha256-of-the-presigned-pdf",
+      "cb_signature_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "created_at": "2026-10-01T14:00:00Z",
+      "updated_at": "2026-10-01T14:00:00Z"
+    }
+  ],
+  "page": 1,
+  "page_size": 50
+}
+```
+
+Completed response:
+
+```json
+{
+  "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+  "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
+  "template_version": "v13.3",
+  "lang": "en",
+  "status": "completed",
+  "has_client_signature": true,
+  "doc_hash": "sha256-of-the-presigned-pdf",
+  "final_hash": "sha256-of-the-final-pdf",
+  "signer_name": "Jordan Lee",
+  "signer_title": "Chief Executive Officer",
+  "signer_email": "jordan@example.com",
+  "signed_at": "2026-10-01T14:03:12Z",
+  "otp_channel": "otp",
+  "created_at": "2026-10-01T14:00:00Z",
+  "updated_at": "2026-10-01T14:03:12Z",
+  "events": [
+    {
+      "event": "completed",
+      "actor": "jordan@example.com",
+      "created_at": "2026-10-01T14:03:12Z",
+      "detail": {
+        "final_hash": "sha256-of-the-final-pdf"
+      }
+    }
+  ]
+}
+```
+
+## Completion event
+
+Subscribe to `contract_envelope_completed` to update an organization-admin
+queue. The event is organization-admin only; the account receives the final
+PDF by email and can read it through its own envelope endpoints.
+
+The current platform payload is:
+
+```json
+{
+  "event_type": "contract_envelope_completed",
+  "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
+  "payload": {
+    "envelope_id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+    "final_hash": "sha256-of-the-final-pdf",
+    "signer": "Jordan Lee"
+  }
+}
+```
+
+The signed timestamp and language remain available from the envelope detail.
+Do not infer completion from email delivery: use the event and the resource
+state.
+
+## Errors and solutions
+
+| HTTP | Code | Cause and solution |
+|---|---|---|
+| 400 | `idempotency_key_required` | The org-admin issuer did not send a body key or `Idempotency-Key`; provide one and retry the same request. |
+| 400 | `invalid_idempotency_key` | The key exceeds 256 characters; use a shorter stable key. |
+| 403 | `contract_counsel_required` | English counsel approval is absent; approve the English template or issue `lang=es`. |
+| 403 | `human_session_required` | Signing with an API key is not allowed; use a human member session. |
+| 403 | `account_blocked` | The account is not active; resolve the account status with an organization admin. |
+| 401 | `invalid_otp` | The OTP is missing, expired or already consumed; request a fresh token and send it in `X-OTP-Token`. |
+| 404 | `not_found` | The envelope is unknown or belongs to another account; use the account's own list and ID. |
+| 409 | `contract_invalid_state` | The envelope is already completed or voided; do not retry the ceremony. |
+| 422 | `invalid_lang` | Use `es` or `en` exactly. |
+| 422 | `contract_account_ineligible` | The account is not an active company with approved KYB. |
+| 422 | `contract_unfillable` | A verified identity, address, signature or pricing value is missing; inspect `missing` for `pricing:<flag>`, fix the source data and issue a new envelope. |
+| 422 | `invalid_consent` | The JSON body must contain `"consent": true`. |
+| 422 | `invalid_signer` | Send a non-empty signer name and title, each no longer than 120 characters. |
+| 422 | `invalid_signature_image` | `signature_png` is not a valid non-blank PNG, exceeds the encoded or decoded size limit, or is below the minimum dimensions; send a valid signature image and retry with a fresh OTP. |
+| 502 | `storage_failed` | Private document storage failed; do not create a new ceremony key until the envelope is read and reconciled. |
+| 503 | `storage_unavailable` | Private storage is not configured or reachable; retry after operations restores it. |
+
+## Public contract verification
+
+Every final PDF carries a verification block on the signature page: a QR
+code with the public oracle URL plus a caption with the same URL and the
+12-hex short document hash. Anyone with the code can confirm the document
+is genuine, without an account or API key.
+
+The `verify_code` travels in the envelope detail (`GET
+/v1/me/contracts/envelopes/{envelopeID}`) and in the organization-admin
+envelope detail, so the client can always recover the link. The code starts
+with `K`, followed by the envelope identity and a truncated HMAC
+(`1+32+20` characters); it cannot be forged or enumerated.
+
+Browsers receive a branded HTML card; API clients send
+`Accept: application/json` (or no `Accept` header) and receive JSON:
+
+```bash
+curl -H "Accept: application/json" \
+  "https://api.qbank.cl/platform/verify/contracts/K3f9a2b7c4d1e5f60817293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c"
+```
+
+```json
+{
+  "valid": true,
+  "type": "contract",
+  "status": "ok",
+  "raw_status": "completed",
+  "org": "CBPay",
+  "client": "Acme SpA",
+  "template_version": "v13.3",
+  "lang": "es",
+  "envelope": "7c9e2f1a",
+  "doc_hash": "9d4e6f1a8b3c2d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e",
+  "final_hash": "c1d2e3f4a5b60718293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "created_at": "2026-10-05T14:20:00Z",
+  "signed_at": "2026-10-05T15:02:11Z",
+  "has_cb_signature": true,
+  "has_client_signature": true,
+  "issued_by": "CBPay"
+}
+```
+
+The oracle exposes only verification facts: validity, class, envelope
+state, issuer, client legal name, template version, language, envelope
+short ID, both hashes, timestamps and which signatures are present. Terms,
+prices, addresses, emails and any other operational data never leave the
+server. A tampered or made-up code answers HTTP 404 with the generic
+message `this verification code does not correspond to any contract issued
+by this platform`; requests are rate-limited per IP (`429
+too_many_attempts`).
+
+| `status` | `raw_status` | Badge (EN / ES / 中文) | Meaning |
+|---|---|---|---|
+| `ok` | `completed` | Signed / Firmado / 已签署 | The agreement is signed and final; `final_hash` covers the PDF. |
+| `pending` | `pending_client` | Pending signature / Pendiente de firma / 待签署 | The envelope exists and awaits the client signature. |
+| `failed` | `voided` | Voided / Anulado / 已作废 | The envelope was voided with a reason; it is kept for audit. |
+
+## Download in both languages
+
+The envelope detail returns `available_langs`, starting with the issued language — `["es"]` or `["es", "en"]` for a Spanish-issued envelope (mirrored for English-issued). This field is authoritative for portal buttons. English requires counsel approval and the current template.
+
+```bash
+curl -o master-agreement.pdf "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/pdf?lang=en" -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+The PDF response is binary and uses `contrato-marco-<short>.pdf` for Spanish or `master-agreement-<short>.pdf` for English. Requesting the other language renders the same envelope from its frozen snapshot; it is not stored or hashed separately. The cover identifies the signed PDF, its hashes, Spanish precedence under ?11 and the verification-oracle URL. The counterpart is not a second signed document.
+
+```json
+{
+  "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+  "lang": "es",
+  "status": "completed",
+  "available_langs": ["es", "en"],
+  "doc_hash": "sha256-of-the-presigned-pdf",
+  "final_hash": "sha256-of-the-final-pdf"
+}
+```
+
+| HTTP | Code | Solution |
+|---:|---|---|
+| 422 | `invalid_lang` | Use `lang=es` or `lang=en`. |
+| 403 | `contract_counsel_required` | Approve counsel before requesting English. |
+| 422 | `contract_template_superseded` | Download only the issued language, then reissue. |
+| 502 | `storage_failed` | Reconcile the envelope and retry; do not create a new ceremony. |
+| 503 | `storage_unavailable` | Restore private storage, then retry. |
+
+Issuance and signature emails mention the other portal language only when it is servable; English is omitted without counsel approval.
+
+### FAQ
+#### Does the translated PDF count as the signed agreement?No. It is a reading counterpart. The issued-language PDF remains the signed document and its hash is the verification reference.#### Why do I not see English?English requires counsel approval and the current template. Check `available_langs`; the portal enables buttons from that field.## FAQ
+
+#### Can a person account sign the agreement?
+    No. The account must be an active company account with approved KYB, and
+    the signer must be an owner or operator member.
+#### Can I submit an OTP code in the JSON body?
+    No. The current handler consumes a fresh single-use token from the
+    `X-OTP-Token` header. A JSON `code` property is not the signing contract.
+#### What happens if the PDF has a blank field?
+    The envelope is rejected with `contract_unfillable`; CBPay never issues a
+    signed PDF with an unresolved required field.
+#### Can an organization void a completed envelope?
+    No. `completed` is terminal. Void only while the envelope is
+    `pending_client`, with a reason; then issue a new envelope if needed.
+#### Can I retry the sign request?
+    Yes, but use the same envelope and a fresh OTP. The atomic claim prevents
+    a second signature; a completed envelope returns `contract_invalid_state`.
+#### The verification link answers 404. Is my contract lost?
+    No. HTTP 404 with `this verification code does not correspond to any
+    contract issued by this platform` means the code was typed or copied
+    wrong, or it belongs to a different envelope. Read `verify_code` again
+    from the envelope detail or scan the QR printed on the signature page;
+    the oracle never confirms or denies the existence of other envelopes.
+#### Does a verification code expire?
+    No. The code stays valid for the life of the envelope. If the envelope is
+    voided, the same code answers `failed` instead of `ok`.

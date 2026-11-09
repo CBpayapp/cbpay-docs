@@ -25,14 +25,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register \
 ```
 
 ```json
-{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm. If no code arrives, request a new one with POST /v1/auth/password/forgot"}
+{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
 ```
-
-<Note>
-`POST /v1/auth/register` 始终返回 `201 pending_verification`，即使验证邮件
-发送失败。它不会返回 `502 otp_send_failed`；如果没有收到验证码，请使用
-`POST /v1/auth/password/forgot` 请求新的验证码。
-</Note>
 
 确认验证码以验证邮箱。该端点返回 `201 pending_2fa_enrollment`，包含有效
 30 分钟的 `pending_token`、`factors: ["totp", "sms"]`、
@@ -55,14 +49,20 @@ CBPay 使用可选的 Hashcash 风格工作量证明来减缓自动化注册洪�
 强制要求。注册和邮箱确认分别使用此 gate；请使用相匹配的 `purpose`
 请求挑战，并提交完全相同的小写邮箱。
 
-挑战有效期为 600 秒，难度为 `20`，并绑定邮箱和 purpose。请在客户端中
-计算，最好在用户填写个人或企业表单时使用后台 worker：
+挑战有效期为 600 秒，难度为 `20`，并绑定邮箱和 purpose。对于特定租户的
+流程，可选填组织 slug `org`；这样挑战也会绑定到该组织。请求注册挑战时
+请使用相同的 `org`。请在客户端中计算，最好在用户填写个人或企业表单时
+使用后台 worker：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@example.com"}'
+  -d '{"purpose":"register","email":"ana@example.com","org":"cbpay"}'
 ```
+
+`org` 为可选字段，以保持向后兼容。省略时会创建不绑定组织的 legacy
+挑战。挑战签发与注册共用 IP 预算，因此突发请求可能收到
+`429 too_many_attempts`；请等待后请求新挑战，不要反复提交相同请求。
 
 ```json
 {
@@ -97,17 +97,12 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@example.com"}'
+  -d '{"purpose":"confirm","email":"ana@example.com","org":"cbpay"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
   -d '{"org":"cbpay","email":"ana@example.com","code":"123456","pow":{"challenge":"<challenge>","suffix":1847293}}'
 ```
-
-社交注册时，请使用 `purpose: "oauth"` 请求 challenge，并将提供方身份标识
-作为 email：`provider:subject@oauth.local`（例如
-`google:provider-subject@oauth.local`）。仅当攻击模式下 OAuth 请求会创建
-新账户时，才提交已解决的 `pow`；已有用户登录不需要它。
 
 正常情况下，省略 `pow` 的客户端仍可注册和确认。攻击模式启用后，两个
 端点都会返回 `400 pow_required`，直到解决匹配的挑战。请参阅
@@ -130,7 +125,7 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
 
 登录失败按归一化账户（组织/邮箱）计数：15 分钟内失败 8 次后，窗口期内的后续尝试返回相同的 `401 invalid_credentials`，且不再执行 bcrypt。待验证的注册成员也会收到该统一响应，无法使用注册密码登录。
 
-密码找回特意防止枚举。`POST /v1/auth/password/forgot` 即使账户发送配额用尽也返回相同的 `200` 响应体；每个账户每小时最多发送 5 次真实验证码。请求还受来源 IP 限制；出现洪峰时会提醒运营人员，但响应仍保持相同的 `200`。`POST /v1/auth/password/reset` 允许每个账户每 15 分钟尝试 8 次验证码。通过邮箱成功重置会验证邮箱并清除 `register_pending`。
+密码找回特意防止枚举。`POST /v1/auth/password/forgot` 即使账户发送配额用尽也返回相同的 `200` 响应体；每个账户每小时最多发送 5 次真实验证码。`POST /v1/auth/password/reset` 允许每个账户每 15 分钟尝试 8 次验证码。通过邮箱成功重置会验证邮箱并清除 `register_pending`。
 
 企业成员也可能收到管理员发起的恢复链接。将其中的 `token` 与 `org`、
 `new_password` 提交到 `POST /v1/auth/password/reset-link`；链接只能使用

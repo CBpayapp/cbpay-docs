@@ -1,0 +1,452 @@
+---
+title: "Autenticación y cuenta"
+description: "Sesiones JWT, API keys, tu perfil de cuenta y los miembros de una empresa"
+slug: es/authentication
+lang: es
+source_url: https://docs.cbpayapp.com/es/authentication
+---
+Todas las llamadas (salvo registro y login) requieren una credencial en el
+header `Authorization`:
+
+```
+Authorization: Bearer <token>
+```
+
+También se acepta `X-API-Key: <token>` como header alternativo.
+
+## Registro y verificación del email
+
+El registro usa verificación primero: nunca crea una sesión directamente. El endpoint
+público responde `201 pending_verification` tanto para un email nuevo como para uno
+duplicado, por lo que no sirve para enumerar cuentas. El titular recibe un código y
+completa el flujo con `POST /v1/auth/register/confirm`.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","type":"person","email":"ana@ejemplo.com","password":"una-clave-segura","display_name":"Ana Pérez","country":"CL"}'
+```
+
+```json
+{"status":"pending_verification","note":"check your email for the verification code; complete registration with POST /v1/auth/register/confirm"}
+```
+
+Confirma el código para verificar el buzón. El endpoint devuelve `201
+pending_2fa_enrollment` con `pending_token` válido por 30 minutos,
+`factors: ["totp", "sms"]`, `passkeys_available: false`, `next` y `account`;
+no crea una sesión. La sesión se entrega solo después del enrolamiento TOTP o
+SMS en [Enrolamiento 2FA obligatorio después del registro](#enrolamiento-2fa-obligatorio-después-del-registro):
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@ejemplo.com","code":"123456"}'
+```
+
+Un código con forma inválida responde `400 invalid_code`; un código incorrecto o
+vencido responde uniformemente `401 invalid_code`. Si no se puede consultar el
+servicio de verificación, responde `502 otp_check_failed`. La confirmación exitosa devuelve la forma pendiente descrita arriba; usa su token con el wizard de enrolamiento.
+
+## Prueba de trabajo adaptativa para el registro
+
+CBPay usa una prueba de trabajo tipo Hashcash opcional para frenar oleadas
+automatizadas de registros sin agregar fricción al tráfico normal. Solo se exige
+cuando la velocidad pública de registro entra en modo de ataque. El mismo gate se
+aplica por separado al registro y a la confirmación del email: pide el desafío
+con el `purpose` correspondiente y usa exactamente el email en minúsculas que
+enviarás.
+
+El desafío dura 600 segundos, tiene dificultad `20` y queda ligado al email y al
+propósito. Para un flujo específico de un tenant, incluye el `org` opcional con
+el slug de la organización; así el desafío también queda ligado a esa
+organización. Usa el mismo `org` al pedir el desafío para el registro. Resuélvelo
+en tu cliente, idealmente en un worker en segundo plano mientras la persona o
+empresa completa el formulario:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"register","email":"ana@ejemplo.com","org":"cbpay"}'
+```
+
+`org` es opcional para mantener compatibilidad hacia atrás. Si lo omites, se
+crea el desafío legacy sin organización. La emisión del desafío comparte el
+presupuesto de IP del registro, por lo que una ráfaga puede recibir
+`429 too_many_attempts`; espera y pide un desafío nuevo en vez de reenviar
+repetidamente la misma solicitud.
+
+```json
+{
+  "challenge": "<challenge>",
+  "difficulty": 20,
+  "algorithm": "sha256-leading-zero-bits-v1",
+  "expires_in": 600,
+  "input": "sha256(nonce_bytes || lowercase(email) || be64(suffix)); find suffix with difficulty leading zero bits",
+  "nonce_bytes": "first 16 bytes of the base64url payload (part before the dot)"
+}
+```
+
+Encuentra un `suffix` no negativo cuyo digest SHA-256 tenga al menos
+`difficulty` bits iniciales en cero, usando los primeros 16 bytes del payload del
+desafío, el email en minúsculas y el sufijo codificado como entero unsigned
+big-endian de 64 bits. Envía el resultado en el registro:
+
+```json
+{
+  "org": "cbpay",
+  "type": "person",
+  "email": "ana@ejemplo.com",
+  "password": "una-clave-segura",
+  "display_name": "Ana Pérez",
+  "country": "CL",
+  "pow": {"challenge": "<challenge>", "suffix": 1847293}
+}
+```
+
+Para una cuenta empresa usa el mismo flujo con `"type": "company"` y sus campos
+de registro. Después de recibir el código de verificación, pide un desafío nuevo
+con `"purpose":"confirm"` y envíalo al confirmar:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
+  -H "Content-Type: application/json" \
+  -d '{"purpose":"confirm","email":"ana@ejemplo.com","org":"cbpay"}'
+
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@ejemplo.com","code":"123456","pow":{"challenge":"<challenge>","suffix":1847293}}'
+```
+
+En condiciones normales, registro y confirmación siguen siendo compatibles con
+clientes que omiten `pow`. Durante el modo de ataque, cada endpoint responde
+`400 pow_required` hasta resolver el desafío correcto. Revisa la página central
+de [errores de autenticación](https://docs.cbpayapp.com/es/errors#errores-de-autenticacion-y-registro)
+para la acción requerida. El desafío es stateless y vence en 10 minutos; pide
+uno nuevo cuando expire en vez de reintentar una solución antigua.
+
+#### ¿Los clientes existentes necesitan una nueva versión?
+No durante el tráfico normal: omitir `pow` sigue siendo válido. Si se activa el
+modo de ataque, los clientes deben implementar el desafío y reintentar la misma
+operación con `pow`; el servidor no acepta un desafío de otro email o propósito.
+#### ¿Cuánto tarda resolverlo?
+La dificultad 20 está calibrada para un cálculo corto en el cliente, normalmente
+de algunos segundos según el dispositivo. Ejecútalo fuera del hilo de la interfaz
+y pide un desafío nuevo si pasan los 10 minutos.
+## Límites antiabuso de autenticación
+
+Los fallos de login se cuentan por cuenta normalizada (organización/email): después de
+8 fallos en 15 minutos, los intentos siguientes responden el mismo `401
+invalid_credentials` sin ejecutar bcrypt mientras dura la ventana. Los members con
+registro pendiente también reciben esa respuesta uniforme y no pueden entrar con la
+clave usada en el registro.
+
+La recuperación evita enumeración. `POST /v1/auth/password/forgot` mantiene el mismo
+`200` aunque se agote el presupuesto; permite como máximo 5 envíos reales por cuenta
+por hora. `POST /v1/auth/password/reset` permite como máximo 8 intentos de código por
+cuenta en 15 minutos. Un reset exitoso por email verifica el email y elimina
+`register_pending`.
+Los members de una cuenta empresa también pueden recibir un link de recuperación
+iniciado por su admin. Canjea su `token` con `org` y `new_password` en
+`POST /v1/auth/password/reset-link`; el link es de un solo uso y expira en
+60 minutos. Este flujo de members es independiente del reset de admins de plataforma.
+
+## Tipos de credencial
+
+#### Sesión JWT (personas con login)
+
+Se obtiene con `POST /v1/auth/login` (el registro requiere confirmar el email primero, ver abajo) y dura
+**24 horas**. Pensada para apps con usuarios que inician sesión. Junto al
+`access_token` recibes un **refresh token** para renovar la sesión sin pedir
+la contraseña de nuevo — ver [renovación de sesión](#renovacion-de-sesion-refresh-tokens).
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{ "org": "cbpay", "email": "ana@ejemplo.com", "password": "…" }'
+```
+
+```json
+{
+  "access_token": "eyJ…",
+  "expires_at": "2026-07-14T15:20:49Z",
+  "refresh_token": "rt_6a1e6c22-….XXXXXXXX…",
+  "refresh_expires_at": "2026-08-12T15:20:49Z",
+  "account_id": "…",
+  "role": "owner"
+}
+```
+
+Las cuentas empresa pueden tener varios **miembros** con roles — ver
+[miembros de una empresa](#miembros-de-una-empresa) más abajo.
+
+> **Nota**
+Si la política de la cuenta exige **OTP en el login**, la respuesta trae
+`otp_required: true` con un `pending_token` en vez de la sesión: el segundo
+paso se completa en `POST /v1/auth/login/otp` con el código recibido por
+SMS/WhatsApp. Flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/security-2fa).
+> **Nota**
+También puedes ofrecer **registro e inicio de sesión con Google, Apple,
+Microsoft o Facebook** (sin contraseña) — ver [login social](https://docs.cbpayapp.com/es/guides/social-login).
+#### API key (servidor a servidor)
+
+Formato `pk_<key_id>.<secret>`. No expira y no depende de una sesión.
+Se emite con:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/api-keys \
+  -H "Authorization: Bearer <token-de-sesion>" \
+  -H "Content-Type: application/json" \
+  -d '{ "label": "backend-produccion" }'
+```
+
+```json
+{
+  "api_key_id": "…",
+  "key_id": "a1b2c3d4e5f60718",
+  "token": "pk_a1b2c3d4e5f60718.XXXXXXXX…",
+  "note": "store this token now; it cannot be retrieved again"
+}
+```
+
+> **Importante**
+El token en claro se muestra **una sola vez**. En el servidor solo se guarda
+un hash — si lo pierdes, emite una key nueva.
+## Renovación de sesión (refresh tokens)
+
+El `access_token` dura 24 horas; el `refresh_token` (`rt_…`) permite obtener
+un par nuevo **sin re-login** durante 30 días, renovables en cada uso hasta
+un máximo de 90 días desde el login original. Es de **un solo uso**: cada
+canje devuelve un `refresh_token` nuevo y el anterior queda invalidado
+(rotación).
+
+```mermaid
+sequenceDiagram
+    participant App as Tu front
+    participant API as CBPay API
+    App->>API: POST /v1/auth/login
+    API-->>App: access_token (24h) + refresh_token A
+    Note over App: … pasan las horas, el access token vence …
+    App->>API: POST /v1/auth/refresh { refresh_token: A }
+    API-->>App: access_token nuevo + refresh_token B (A queda usado)
+    App->>API: POST /v1/auth/refresh { refresh_token: A } (reúso)
+    API-->>App: 401 + se revoca la cadena completa (posible robo)
+```
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{ "refresh_token": "rt_6a1e6c22-….XXXXXXXX…" }'
+```
+
+```json
+{
+  "access_token": "eyJ…",
+  "expires_at": "2026-07-14T15:20:50Z",
+  "refresh_token": "rt_9f2b1c30-….YYYYYYYY…",
+  "refresh_expires_at": "2026-08-12T15:20:50Z",
+  "account_id": "…",
+  "role": "owner"
+}
+```
+
+Reglas de seguridad que tu front debe conocer:
+
+- **Rotación estricta**: al canjear, el access token anterior de ese
+  dispositivo queda revocado al instante (solo hay un access token vivo por
+  cadena). Reemplaza siempre AMBOS tokens con los de la respuesta.
+- **Reúso = robo**: si un refresh token ya canjeado vuelve a presentarse, la
+  cadena completa del dispositivo se revoca (tokens y sesiones) y queda un
+  evento `refresh_token_reuse` en `GET /v1/me/security/events`. El usuario
+  debe iniciar sesión de nuevo.
+- **Muere con la sesión**: cerrar sesión (`DELETE /v1/me/sessions/{id}`),
+  `POST /v1/me/sessions/revoke-all` o un cambio/reset de contraseña
+  invalidan también los refresh tokens asociados.
+- Cualquier rechazo responde `401 invalid_refresh_token` — ante ese error,
+  manda al usuario al login.
+- Guarda el refresh token en almacenamiento seguro (Keychain/Keystore en
+  móvil; en web, preferir memoria + re-login o cookie httpOnly de tu
+  backend). Las API keys `pk_` no usan refresh: no expiran.
+
+#### ¿Cada cuánto debo refrescar?
+Cuando el access token esté por vencer (usa `expires_at`) o al recibir un
+`401` en una llamada normal. Evita refrescar en paralelo desde varios
+lugares: si dos canjes del mismo token llegan a la vez, uno gana y el otro
+recibe `401` sin castigo — pero un canje de un token YA rotado revoca la
+cadena.
+#### ¿Qué pasa a los 90 días?
+El tope absoluto de la cadena es 90 días desde el login original: aunque
+refresques a diario, al llegar al límite el refresh devuelve `401` y el
+usuario debe autenticarse de nuevo (con su contraseña, passkey o login
+social).
+#### ¿El refresh funciona con API keys?
+No aplica: las API keys `pk_` no expiran ni tienen sesión. El refresh es
+solo para sesiones JWT de usuarios humanos.
+## Nivel de acceso
+
+Tu credencial (JWT de sesión o API key) opera **tu propia cuenta**: saldos,
+payouts, payins, transferencias, crypto, KYC/KYB y webhooks propios. Si un
+endpoint responde `403 account_required` o `403 org_admin_required`, esa
+operación corresponde a otro nivel de credencial — contacta al equipo de
+CBPay.
+
+## Tu perfil de cuenta
+
+```bash
+# Leer el perfil (incluye kyc_status y type)
+curl https://api.qbank.cl/platform/v1/me \
+  -H "Authorization: Bearer <token>"
+
+# Actualizar campos del perfil (todos opcionales)
+curl -X PATCH https://api.qbank.cl/platform/v1/me \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "display_name": "Comercial Andina SpA",
+    "tax_id": "76.543.210-8",
+    "phone": "+56 9 1234 5678",
+    "country": "CL",
+    "locale": "en"
+  }'
+```
+
+```json
+{
+  "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "type": "company",
+  "display_name": "Comercial Andina SpA",
+  "email": "legal@andina.cl",
+  "tax_id": "76.543.210-8",
+  "phone": "+56 9 1234 5678",
+  "country": "CL",
+  "locale": "en",
+  "status": "active",
+  "kyc_status": "approved",
+  "created_at": "2026-06-01T12:00:00Z"
+}
+```
+
+`PATCH /v1/me` acepta `display_name`, `tax_id`, `phone`, `country` y `locale` (envía
+solo los que cambian). Un `locale` vacío guarda `en`; valores inválidos devuelven `400 invalid_locale`.
+El `email`, `status` y `kyc_status` no se autogestionan: los resuelve el administrador.
+Ver [Idioma y locale](https://docs.cbpayapp.com/es/guides/locale).
+
+## Miembros de una empresa
+
+Las cuentas **empresa** pueden tener varios usuarios con login propio y
+distinto nivel de permiso:
+
+| Rol | Permisos |
+|---|---|
+| `owner` | Todo: opera, administra miembros y credenciales |
+| `operator` | Opera el día a día (default al crear un miembro) |
+| `viewer` | Solo lectura |
+
+```bash
+# Agregar un miembro (solo cuentas company)
+curl -X POST https://api.qbank.cl/platform/v1/members \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "finanzas@andina.cl",
+    "password": "una-clave-segura",
+    "role": "viewer"
+  }'
+
+# Listar miembros
+curl "https://api.qbank.cl/platform/v1/members?page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "members": [
+    { "id": "…", "email": "legal@andina.cl", "role": "owner", "status": "active" },
+    { "id": "…", "email": "finanzas@andina.cl", "role": "viewer", "status": "active" }
+  ]
+}
+```
+
+En una cuenta persona, `POST /v1/members` responde `403 company_only`.
+
+## Buenas prácticas
+
+- Guarda las API keys en un gestor de secretos; nunca en el código ni en el
+  navegador.
+- Usa una key por ambiente/servicio (`label` descriptivo) para poder rotar
+  sin downtime.
+
+### Rotación sin downtime
+
+Emite la key nueva con `POST /v1/api-keys` (label nuevo).
+### Despliega
+
+Actualiza tu servicio para usar la key nueva.
+### Retira la antigua
+
+Pide al equipo de CBPay revocar la key anterior una vez que el tráfico
+migró.
+- Las sesiones JWT son para front-ends; para procesos automatizados usa
+  siempre API keys.
+
+## Enrolamiento 2FA obligatorio después del registro
+
+La confirmación del email prueba el buzón, pero ya no crea una sesión. `POST
+/v1/auth/register/confirm` devuelve `201` con `status:
+"pending_2fa_enrollment"`, `pending_token` válido por 30 minutos,
+`factors: ["totp", "sms"]`, `passkeys_available: false`, `next`, `note` y
+`account`. Usa el token solo en `/v1/auth/register/2fa/*`.
+
+TOTP: llama `totp/begin`, escanea el `otpauth_uri` y confirma el código de
+seis dígitos; la respuesta entrega la sesión y 10 `recovery_codes` de un solo
+uso. Para SMS o WhatsApp:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
+```
+
+La respuesta `200` tiene `phone_masked`, el `channel` efectivo, `steps` y
+`note`. `channel` es `sms` por defecto; usa `whatsapp` para enviar el código
+por WhatsApp. Confirma el código:
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","code":"482913"}'
+```
+
+La respuesta `201` entrega la primera sesión, `steps` que indican que los
+próximos logins pedirán un código SMS, y `note`, sin códigos de recuperación.
+La confirmación no depende del canal. Los endpoints passkey del registro responden `410
+passkey_not_offered`; passkey login y `/v1/me/passkeys` siguen vivos.
+
+Miembros invitados y miembros de cuentas creadas por un org-admin siguen el mismo wizard en su primer login.
+
+`channel` solo acepta `sms` o `whatsapp`; otro valor responde `400
+invalid_channel`.
+
+El login con passkey también respeta el gate de enrolamiento: si
+`must_enroll_2fa` es `true`, devuelve `pending_2fa_enrollment`; completa el
+registro con TOTP o SMS antes de recibir sesión. Un member en
+`RegisterPending` debe confirmar el buzón primero.
+
+Tanto `totp/begin` como `sms/begin` pueden devolver `201` con la sesión normal
+cuando un intento anterior ya guardó el factor y solo se interrumpió la
+limpieza del flag. TOTP devuelve `totp_secret`, `otpauth_uri`,
+`qr_png_base64` opcional, `steps` y `note`; SMS o WhatsApp devuelve
+`phone_masked`, `channel`, `steps` y `note`.

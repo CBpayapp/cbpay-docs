@@ -1,0 +1,362 @@
+---
+title: "Seguridad y 2FA (OTP)"
+description: "Códigos de un solo uso por SMS o WhatsApp para proteger login, payouts, retiros y más"
+slug: es/security-2fa
+lang: es
+source_url: https://docs.cbpayapp.com/es/security-2fa
+---
+CBPay puede exigir un **código de verificación de un solo uso (OTP)** antes
+de las acciones sensibles: iniciar sesión, crear un payout, retirar crypto,
+revelar una tarjeta, emitir una API key… El código llega por **SMS o
+WhatsApp** al teléfono de la cuenta, y tu operador decide **qué acciones lo
+exigen y por qué canal** — por cuenta o para toda la organización.
+
+> **Nota**
+El OTP aplica **solo a sesiones de usuario** (login con JWT). Las **API keys
+`pk_` están exentas**: son integraciones server-to-server y no hay un humano
+con teléfono al otro lado. Si toda tu operación usa API keys, esta página no
+cambia nada de tu integración.
+> **Nota**
+Esta página cubre el **flujo OTP por acción** que tu integración debe manejar
+(`otp_required` → challenge → verify). Todo lo que el usuario final gestiona
+sobre sus propios factores — activar el 2FA, canales (SMS/WhatsApp/email), la
+app autenticadora (TOTP), códigos de recuperación y passkeys — vive en
+[Perfil y seguridad](https://docs.cbpayapp.com/es/guides/profile).
+## Enrolamiento del registro y reanudación del login
+
+El 2FA obligatorio del registro es distinto del OTP por acción. Después de
+confirmar el email, conserva el `pending_token` durante sus 30 minutos de
+vigencia y elige la app autenticadora (TOTP) o el envío al teléfono por SMS o WhatsApp:
+
+```mermaid
+sequenceDiagram
+  participant A as App
+  participant API as CBPay API
+  A->>API: POST /v1/auth/register/confirm
+  API-->>A: 201 pending_2fa_enrollment + pending_token
+  A->>API: POST /v1/auth/register/2fa/totp/begin o sms/begin
+  API-->>A: 200 datos de configuración o teléfono enmascarado
+  A->>API: POST /v1/auth/register/2fa/totp/confirm o sms/confirm
+  API-->>A: 201 primera sesión
+```
+
+`register/confirm` responde `201 pending_2fa_enrollment` con
+`factors: ["totp", "sms"]` y `passkeys_available: false`. En TOTP, inicia,
+escanea el `otpauth_uri` y confirma el código de seis dígitos; la respuesta
+`201` entrega la sesión y 10 códigos de recuperación una sola vez.
+
+Para SMS o WhatsApp, envía un teléfono E.164 si la cuenta aún no tiene uno:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/begin \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","phone":"+56912345678","channel":"whatsapp"}'
+```
+
+La respuesta `200` contiene `phone_masked`, el `channel` efectivo, `steps`
+con la ventana de 10 minutos y `note`. `channel` es `sms` por defecto;
+usa `whatsapp` para enviar el código por WhatsApp. Nunca devuelve el código.
+
+```json
+{
+  "phone_masked": "********5678",
+  "channel": "whatsapp",
+  "steps": [
+    "1. We sent a code by WhatsApp to ********5678.",
+    "2. Enter the code within 10 minutes to verify your number."
+  ],
+  "note": "enter the code with POST /v1/auth/register/2fa/sms/confirm"
+}
+```
+
+Confírmalo así:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/register/2fa/sms/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"pending_token":"<pending-token>","code":"482913"}'
+```
+
+La respuesta `201` entrega la primera sesión, la cuenta, `steps` que indican
+que los próximos logins pedirán un código SMS y `note`; no entrega códigos de
+recuperación. La confirmación es independiente del canal usado para enviar el
+código. Los endpoints de passkey del registro responden
+`410 passkey_not_offered`; el login con passkey y `/v1/me/passkeys` siguen
+disponibles.
+
+Errores propios: `400 invalid_channel` con el mensaje `channel must be sms or whatsapp`,
+`400 invalid_phone` con el mensaje
+`phone must be E.164 format: plus sign, country code and number (example +56912345678)`,
+`409 phone_required` o `sms_not_started`, `403 otp_invalid`, `429
+too_many_attempts`, `502 otp_send_failed`/`otp_check_failed` y `401
+invalid_pending_token`.
+
+## Cómo funciona
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario (sesión JWT)
+    participant API as CBPay API
+    U->>API: POST /v1/payouts (sin OTP)
+    API-->>U: 403 otp_required {action, channel}
+    U->>API: POST /v1/otp/challenges {action: "payout"}
+    Note over U: Llega el código por SMS/WhatsApp
+    API-->>U: 201 {challenge_id, expires_at}
+    U->>API: POST /v1/otp/challenges/{id}/verify {code}
+    API-->>U: 200 {otp_token}
+    U->>API: POST /v1/payouts + header X-OTP-Token
+    API-->>U: 201 payout creado
+```
+
+El `otp_token` es de **un solo uso**, está ligado a tu usuario y a la acción
+para la que se emitió, y expira junto con el desafío (10 minutos desde el
+envío del código).
+
+> **Nota**
+Atajo: el `403` puede traer ya `challenge_id`, `phone` (destino enmascarado)
+y `expires_at` — el gate reusa un desafío vivo o crea uno por ti. Si vienen,
+verifica el código directo y reintenta con `X-OTP-Token`, saltándote el
+`POST /v1/otp/challenges` explícito de abajo (que sigue funcionando como
+respaldo).
+## 1. Consulta tu política
+
+`GET /v1/otp/settings` te dice si el OTP está activo y qué acciones lo
+exigen:
+
+```bash
+curl https://api.qbank.cl/platform/v1/otp/settings \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "enabled": true,
+  "phone": "********5678",
+  "phone_verified": true,
+  "actions": [
+    { "action": "login", "required": true, "channel": "sms" },
+    { "action": "payout", "required": true, "channel": "whatsapp" },
+    { "action": "crypto_withdrawal", "required": true, "channel": "sms" },
+    { "action": "transfer", "required": false, "channel": "sms" },
+    { "action": "banking_operation", "required": false, "channel": "sms" },
+    { "action": "card_reveal", "required": true, "channel": "sms" },
+    { "action": "api_key_create", "required": true, "channel": "sms" },
+    { "action": "member_add", "required": false, "channel": "sms" },
+    { "action": "phone_change", "required": true, "channel": "sms" }
+  ]
+}
+```
+
+## 2. Pide el código
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "action": "payout" }'
+```
+
+Respuesta `201` — el código ya viaja al teléfono de la cuenta:
+
+```json
+{
+  "challenge_id": "6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69",
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "action": "payout",
+  "channel": "whatsapp",
+  "phone": "********5678",
+  "status": "pending",
+  "created_at": "2026-07-08T21:00:00Z",
+  "expires_at": "2026-07-08T21:10:00Z"
+}
+```
+
+El canal de entrega lo eliges por desafío: `sms`, `whatsapp`, `email`
+o `totp`:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "action": "payout", "channel": "whatsapp" }'
+```
+
+Si omites `channel`, el servidor lo resuelve: primero tus ajustes de
+member, luego el default de la org, y si no hay ninguno, SMS. La respuesta
+siempre dice
+qué canal se usó y su destino enmascarado (`phone` — un número
+enmascarado, un email enmascarado o el literal `authenticator_app`
+para TOTP). El chequeo corre contra el piso efectivo — la política de
+tu cuenta primero, luego el default de la org: un canal explícito más
+débil que el piso falla con `403 channel_locked_by_org` en vez de
+actualizarse en silencio.
+
+Si la cuenta no tiene teléfono: `409 phone_required` (cárgalo con
+`PATCH /v1/me`). Hay límites de envío por hora — si te pasas,
+`429 too_many_attempts`.
+
+## 3. Verifica el código
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/otp/challenges/6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69/verify \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "code": "482913" }'
+```
+
+```json
+{
+  "challenge_id": "6f1c02aa-93a1-4f0e-a7d1-1f2e3c4b5a69",
+  "action": "payout",
+  "otp_token": "otp_Zk9uY2XIr1EYE0lq8xqlM3VayVZYX4aa11bb22cc33",
+  "expires_at": "2026-07-08T21:10:00Z",
+  "note": "single use: send it in the X-OTP-Token header of the protected action"
+}
+```
+
+Código incorrecto → `401 invalid_code` (tienes 5 intentos por desafío).
+
+## 4. Ejecuta la acción con el token
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts \
+  -H "Authorization: Bearer <token>" \
+  -H "X-OTP-Token: otp_Zk9uY2XIr1EYE0lq8xqlM3VayVZYX4aa11bb22cc33" \
+  -H "Content-Type: application/json" \
+  -d '{ "country": "CL", "currency": "CLP", "method": "bank_transfer", "amount": "50000", "beneficiary": { "...": "..." }, "idempotency_key": "pay-991" }'
+```
+
+El token se consume al usarlo, incluso si la acción falla después (por
+ejemplo por saldo insuficiente): para reintentar necesitas verificar un
+desafío nuevo. Tu `idempotency_key` sigue siendo la protección contra
+duplicados — el OTP no la reemplaza.
+
+## Login en dos pasos
+
+Si tu política exige OTP en `login`, `POST /v1/auth/login` deja de devolver
+la sesión directamente:
+
+```json
+{
+  "otp_required": true,
+  "pending_token": "eyJhbGciOi…",
+  "challenge_id": "8a2b…",
+  "channel": "sms",
+  "phone": "********5678",
+  "expires_at": "2026-07-08T21:10:00Z",
+  "note": "verify the code with POST /v1/auth/login/otp to receive the session token"
+}
+```
+
+El `pending_token` **no sirve para llamar a la API**: solo se canjea, junto
+con el código, por la sesión real:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
+  -H "Content-Type: application/json" \
+  -d '{ "pending_token": "eyJhbGciOi…", "code": "482913" }'
+```
+
+```json
+{
+  "access_token": "eyJhbGciOi…",
+  "expires_at": "2026-07-09T21:00:00Z",
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "role": "owner"
+}
+```
+> **Nota**
+**Un TOTP enrolado o un SMS efectivo siempre se exige al iniciar sesión.**
+TOTP manda si existen ambos factores. El login con passkey sigue disponible y
+no pide un código adicional.
+## El teléfono de la cuenta
+
+- Formato **E.164** (`+56912345678`), se define en el registro, con
+  `PATCH /v1/me` o por tu operador.
+- `phone_verified` pasa a `true` la primera vez que verificas un desafío:
+  demuestra que el titular tiene el teléfono en mano.
+- **Cambiar el teléfono** (acción `phone_change`) valida el código contra el
+  número **anterior** — así nadie puede redirigir tus códigos sin tener tu
+  teléfono actual.
+- Si el teléfono se enlaza por primera vez (o se cambia sin verificación),
+  los desafíos por SMS/WhatsApp quedan bloqueados por **4 horas**: es la
+  ventana anti-secuestro de sesión. Durante el cooldown, si tienes la app
+  autenticadora enrolada o tu email verificado, el desafío se emite
+  automáticamente por ese factor más fuerte (el canal llega en la respuesta
+  del desafío); solo si no tienes ninguna alternativa recibes
+  `403 phone_binding_cooldown`. El teléfono cargado por tu operador no tiene
+  cooldown. También puedes levantar el cooldown antes con
+  `POST /v1/me/phone/unlock-cooldown` (token email/totp), o tu operador
+  puede quitarlo desde tu perfil.
+  Fijar un canal explícito desactiva el fallback: `channel: sms`
+  en cooldown falla con `403 phone_binding_cooldown` aunque tengas la app
+  autenticadora enrolada.
+- El **login en dos pasos** respeta la misma regla: con 2FA de login por
+  SMS/WhatsApp y el teléfono en cooldown, el código del login se emite por
+  la app autenticadora o tu email de login (el `channel` efectivo llega en
+  la respuesta del login) — jamás viaja a un número recién enlazado sin
+  verificar. Sin factor alternativo el login responde
+  `403 phone_binding_cooldown` hasta que venza el cooldown.
+
+## Errores
+
+| HTTP | `error` | Qué significa | Qué hacer |
+|---|---|---|---|
+| 400 | `invalid_channel` | Valor de `channel` desconocido | Usa `sms`, `whatsapp`, `email` o `totp` |
+| 403 | `otp_required` | La acción exige OTP y no enviaste `X-OTP-Token` | Crea y verifica un desafío, reintenta con el header |
+| 403 | `otp_invalid` | Token inválido, expirado o ya usado | Verifica un desafío nuevo |
+| 403 | `session_required` | Pediste un desafío con una API key | Los desafíos son solo para sesiones de usuario |
+| 403 | `account_blocked` | La cuenta está bloqueada o cerrada | Pide a tu operador que la reactive |
+| 403 | `channel_locked_by_org` | Tu canal explícito es más débil que el mínimo efectivo para esta acción (la política de tu cuenta primero, luego el default de la org) | Omite `channel` o elige un factor más fuerte |
+| 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 4 h sin verificación y sin factor alternativo (app autenticadora o email verificado) | Enrola la app autenticadora o verifica tu email; libéralo antes con `POST /v1/me/phone/unlock-cooldown`, o pide a tu operador quitar el cooldown |
+| 401 | `invalid_code` | El código no coincide | Revisa el SMS/WhatsApp y reintenta (5 intentos) |
+| 401 | `invalid_pending_token` | El token intermedio del login expiró | Vuelve a iniciar sesión |
+| 409 | `phone_required` | La cuenta no tiene teléfono | `PATCH /v1/me` con `phone` E.164 |
+| 409 | `otp_phone_missing` | El login exige OTP y no hay teléfono | Contacta a tu operador |
+| 409 | `challenge_not_pending` | El desafío expiró o ya se usó | Crea uno nuevo |
+| 429 | `too_many_attempts` | Límite de envíos/verificaciones | Espera unos minutos |
+| 503 | `otp_unavailable` | El servicio de verificación no está disponible | Reintenta; la acción queda bloqueada (nunca se salta el OTP) |
+
+## FAQ
+
+#### ¿El OTP afecta mis integraciones server-to-server?
+    No. Las API keys `pk_` están exentas por diseño: la automatización no
+    pasa por OTP. Protege tus keys como corresponde — emitir una key nueva
+    sí puede exigir OTP (acción `api_key_create`).
+#### ¿Puedo elegir SMS o WhatsApp?
+    Sí: pasa `channel` (`sms`, `whatsapp`, `email` o `totp`) al crear el
+    desafío. Si lo omites, aplica el canal configurado por tu operador por
+    acción (por cuenta o para toda la organización — lo ves en
+    `GET /v1/otp/settings`). El chequeo corre contra el piso efectivo —
+    la política de tu cuenta primero, luego el default de la org — así
+    que una elección explícita más débil falla con
+    `403 channel_locked_by_org` en vez de actualizarse en silencio.
+#### ¿Puedo quitar el 2FA por SMS?
+    Sí: revisa `GET /v1/me/sms-2fa` y usa `DELETE /v1/me/sms-2fa` con un
+    `X-OTP-Token` de un desafío `security_settings` verificado por SMS o
+    WhatsApp. El piso de la organización puede responder
+    `403 policy_locked_by_org`.
+#### ¿Puedo cambiar el teléfono con SMS activo?
+    Sí, pero debes probar posesión del número anterior con un OTP
+    `phone_change`. Una API key no puede hacer ese cambio con SMS activo: la
+    solicitud falla cerrada. El teléfono nuevo queda sin verificar hasta que
+    se compruebe.
+#### ¿Por qué el login usa SMS si enrolé con WhatsApp?
+    WhatsApp se admite solo para el envío durante el enrolamiento. Después de
+    verificar el teléfono, los próximos logins piden el código por SMS. La
+    confirmación es la misma para ambos canales.
+#### ¿Por qué el registro responde 410 para passkey?
+    Passkey se retiró solo del wizard de registro. Usa app autenticadora o
+    SMS; el login con passkey y `/v1/me/passkeys` siguen vivos.
+#### ¿Cuánto dura un código y cuántos intentos tengo?
+    El código y el desafío duran 10 minutos. Tienes 5 verificaciones por
+    desafío y un límite de envíos por hora. El `otp_token` resultante es de
+    un solo uso.
+#### ¿Puedo pedir el token una vez y usarlo en varias acciones?
+    No: el token queda ligado a la acción exacta para la que pediste el
+    desafío (un token de `payout` no sirve para `transfer`) y se consume al
+    primer uso.
+#### La acción falló después de consumir el token, ¿pago dos veces?
+    No. El token consumido solo te obliga a verificar un desafío nuevo; la
+    `idempotency_key` de la operación sigue garantizando que no haya
+    duplicados.
