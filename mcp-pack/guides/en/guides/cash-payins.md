@@ -102,4 +102,7 @@ No. Delivery is physical, so the response has no `deposit_instructions`.
 #### Does confirm-received credit the balance?
 No. Only the separate checker approval credits the account.
 #### When does a cash announcement expire?
-After 72 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.
+After 72 hours while still pending. The maker request itself has no system TTL. If the payin expires while the request is pending, the maker can claim it again and the atomic claim reopens `expired` to `pending`; the checker can then approve it.
+### Expired push announcements
+
+A `push` payin may expire before the customer evidence is confirmed. If a maker-checker request is already pending, the maker may still call `confirm-received`: the claim atomically reopens `expired` to `pending`. The checker then approves through the normal flow. The approvals inbox keeps these requests visible, and a `payin_expired` webhook may precede the later `payin_credited` webhook.

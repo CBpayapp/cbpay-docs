@@ -231,6 +231,25 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login \
   -d '{ "org": "cbpay", "email": "ana@example.com", "password": "…" }'
 ```
 
+The Android app may optionally add `integrity_token` and the
+single-use `integrity_nonce` issued by
+`POST /v1/auth/integrity-nonce`:
+
+```json
+{
+  "org": "cbpay",
+  "email": "ana@example.com",
+  "password": "a-secure-password",
+  "integrity_token": "integrity-token-from-play-api",
+  "integrity_nonce": "nonce-from-integrity-nonce-endpoint"
+}
+```
+
+The nonce is bound to this `org|email` and expires after five minutes. Without
+these optional fields, login remains available for web, iOS, and older app
+versions. A counterfeit app (`mismatch` or `app_unknown` with a bound report)
+receives the same uniform `401 invalid_credentials` as any invalid login.
+
 ```json
 {
   "access_token": "eyJ…",

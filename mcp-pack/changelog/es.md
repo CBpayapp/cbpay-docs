@@ -5,7 +5,23 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.248 · 3 versiones - 9 de noviembre de 2026
+## v2.251 · 6 versiones - 9 de noviembre de 2026
+### v2.251
+#### Agregado
+
+- Se agregó orientación operativa para el replay controlado de transacciones
+  de tarjetas y el matching c11-first de liquidaciones, incluida la regla de
+  que `chain: "0"` significa que no hay dato de chain.
+### v2.250
+**Agregado**
+- Se agregó un flujo opcional de Google Play Integrity para apps Android: pedir un nonce de un solo uso, solicitar el token y reportarlo con `POST /v1/me/device-integrity`.
+
+**Cambiado**
+- Las sesiones de miembro con historial de attestation bound ahora necesitan un veredicto exitoso fresco para payouts protegidos. Re-attesta y reintenta con la misma idempotency key después de `integrity_required`; las API keys y sesiones sin historial bound siguen exentas.
+- Se agregó monitoreo de cuota diaria con alertas al war room al 70% y 90%; las alertas no bloquean solicitudes.
+### v2.249
+**Cambiado**
+- La confirmación manual ahora acepta payins push `pending` y `expired`. El claim reabre atómicamente un payin vencido a `pending`; `payin_expired` puede llegar antes que `payin_credited`.
 ### v2.248
 **Cambiado**
 - El endpoint de desafíos de prueba de trabajo ahora tiene un límite propio de

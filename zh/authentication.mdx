@@ -153,6 +153,25 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login \
   -d '{ "org": "cbpay", "email": "ana@example.com", "password": "…" }'
 ```
 
+Android 应用可以选择性地附带由
+`POST /v1/auth/integrity-nonce` 签发的一次性 `integrity_nonce` 和
+`integrity_token`：
+
+```json
+{
+  "org": "cbpay",
+  "email": "ana@example.com",
+  "password": "a-secure-password",
+  "integrity_token": "integrity-token-from-play-api",
+  "integrity_nonce": "nonce-from-integrity-nonce-endpoint"
+}
+```
+
+nonce 与此 `org|email` 绑定，并在五分钟后过期。不发送这些可选字段时，
+Web、iOS 和旧版应用仍可正常登录。伪造应用（带 bound 报告的 `mismatch`
+或 `app_unknown`）会收到与任何无效登录相同的统一
+`401 invalid_credentials`。
+
 ```json
 {
   "access_token": "eyJ…",

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.250'
+  version: '2.251'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -2131,6 +2131,63 @@ paths:
               example:
                 error: invalid_handoff
                 message: handoff token is invalid or expired
+  /v1/auth/integrity-nonce:
+    post:
+      tags:
+      - 身份认证
+      security: []
+      operationId: issueIntegrityNonce
+      summary: 签发完整性 nonce
+      description: 为 Play Integrity 请求（standard 或 classic）签发与 org+email 绑定的一次性 nonce。应用将其发送给 Google，并提交所得令牌（登录字段或 POST /v1/me/device-integrity）；服务端销毁 nonce 并与 Google 回显比对以防重放。TTL 5 分钟。每 IP 每小时限 60 次。未知 org 返回统一 401。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - org
+              - email
+              properties:
+                org:
+                  type: string
+                  description: CBPay 组织 slug(`cbpay`)。
+                email:
+                  type: string
+                  format: email
+                  description: 尝试登录的成员邮箱（小写，与 nonce 绑定）。
+            example:
+              org: cbpay
+              email: ana@example.com
+      responses:
+        '200':
+          description: nonce 已签发（原始 code，仅显示一次）。
+          content:
+            application/json:
+              example:
+                nonce: dGhpcyBpcyBhIGZha2Utbm9uY2UtZXhhbXBsZQ
+                expires_in: 300
+        '400':
+          description: 缺少 org 或 email（invalid_request）。
+          content:
+            application/json:
+              example:
+                error: invalid_request
+                message: org and email are required
+        '401':
+          description: 未知 org（invalid_credentials，与登录统一）。
+          content:
+            application/json:
+              example:
+                error: invalid_credentials
+                message: email or password is incorrect
+        '429':
+          description: nonce 请求过于频繁（rate_limited）。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many nonce requests, retry later
   /v1/auth/login:
     post:
       tags:
@@ -2157,6 +2214,12 @@ paths:
                   format: email
                 password:
                   type: string
+                integrity_token:
+                  type: string
+                  description: Android 应用可选的 Play Integrity 令牌（1-16384 个字符）。Web、iOS 和旧版应用请省略。
+                integrity_nonce:
+                  type: string
+                  description: 由 POST /v1/auth/integrity-nonce 签发的服务端 nonce，与本 org+email 绑定。防重放绑定（bound=true）必填；缺失时令牌仍会被解码和审计，但永不通过 enforcement 门禁。
             example:
               org: cbpay
               email: ana@example.com
@@ -10855,7 +10918,7 @@ paths:
       - 账户
       operationId: reportDeviceIntegrity
       summary: 上报 Android 完整性令牌
-      description: 上报 Android 应用的 Play Integrity 令牌以便服务端解码（监控模式，永不阻止）。 verdict 将作为 device_integrity 安全事件审计。无 Google 凭证时仍返回 200 且 checked=false。每成员每小时限 12 次。
+      description: 上报 Android 应用的 Play Integrity 令牌以便服务端解码。verdict 将作为 device_integrity 安全事件审计。携带 integrity_nonce（由 POST /v1/auth/integrity-nonce 签发）时上报具有防重放绑定（bound=true）；否则仍会审计，但永不通过 enforcement 门禁。verdict 取值：ok、device_basic、app_unknown、mismatch、error、unchecked、nonce_invalid。每成员每小时限 12 次。
       requestBody:
         required: true
         content:
@@ -10868,17 +10931,22 @@ paths:
                 integrity_token:
                   type: string
                   description: 标准 Play Integrity 令牌（1-16384 个字符）。
+                integrity_nonce:
+                  type: string
+                  description: 与本 org+email 绑定的服务端 nonce。一次性，TTL 5 分钟。
             example:
               integrity_token: integrity-token-from-play-api
+              integrity_nonce: nonce-from-integrity-nonce-endpoint
       responses:
         '200':
-          description: 已记录 verdict（无凭证时 checked 可能为 false）。
+          description: 已记录 verdict（无凭证时 checked 可能为 false；仅 nonce 校验通过时 bound 为 true）。
           content:
             application/json:
               example:
                 checked: true
                 verdict: ok
                 device_ok: true
+                bound: true
         '400':
           description: 令牌无效（invalid_token）。
           content:
@@ -17442,14 +17510,20 @@ paths:
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':
-          description: 账户未激活(`account_blocked`)或缺少账户凭证。
+          description: 账户未激活(`account_blocked`)、缺少账户凭证,或设备认证过期(`integrity_required`——有认证历史的成员应用会话需要新鲜 verdict;经 POST /v1/me/device-integrity 重新认证后重试)。
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: account_blocked
-                message: account is not active
+              examples:
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
+                integrity_required:
+                  value:
+                    error: integrity_required
+                    message: 'fresh device attestation required: attest and retry'
         '422':
           description: '该货币无外汇汇率(`currency_not_supported`),或 payout 被预先拒绝——响应为带 `status: failed` 的 payout 对象,扣款已退回。
 

@@ -12,7 +12,7 @@ response per operation.
 
 - **CBPay API — Postman collection** - Download `cbpay-api.postman_collection.json` (v2.1)
 
-> **Collection updated:** 2026-11-09 16:50 UTC · 482 requests · version `08165ced3d00`
+> **Collection updated:** 2026-11-09 21:37 UTC · 483 requests · version `99e6e465f377`
 
 ## How to use it
 
