@@ -157,7 +157,8 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/oauth \
     "org": "cbpay",
     "provider": "google",
     "credential": "eyJhbGciOiJSUzI1Ni…",
-    "type": "person"
+    "type": "person",
+    "pow": {"challenge": "<challenge>", "suffix": 1847293}
   }'
 ```
 
@@ -177,6 +178,13 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/oauth \
 
 The `type` field (`person` | `company`, default `person`) is only used when
 creating the account; it is ignored if the account already exists.
+
+During attack mode, `pow` is optional for an existing-user login but required
+when this request creates a new account. Obtain it from
+`POST /v1/auth/pow-challenge` with `purpose: "oauth"` and the provider identity
+key as the email value: `provider:subject@oauth.local` (for example,
+`google:provider-subject@oauth.local`). The challenge is bound to that exact
+value and is only for the account-creation path.
 
 ### How create vs. sign-in is decided
 
@@ -231,6 +239,7 @@ password and that provider is the only one linked, the API responds
 | HTTP | `error` | What it means |
 |---|---|---|
 | 400 | `invalid_provider` | Provider outside `google/apple/microsoft/facebook` |
+| 400 | `pow_required` | Attack mode requires a valid proof of work for a new account; request a challenge with `purpose: "oauth"` and retry the same creation request |
 | 400 | `provider_not_configured` | Your organization has not enabled that provider |
 | 401 | `invalid_credential` | The credential is invalid, expired or from another app |
 | 409 | `email_conflict` | An account with that email already exists; sign in with your current method and link the provider from your session |

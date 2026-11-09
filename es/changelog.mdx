@@ -4,6 +4,24 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="9 de noviembre de 2026" description="v2.244 · 1 versión">
+### v2.244
+**Cambiado**
+- El registro ahora siempre responde `201 pending_verification`. Si el código
+  por email no llega, pide uno nuevo con `POST /v1/auth/password/forgot`;
+  el registro ya no responde `502 otp_send_failed`.
+- El registro social acepta un `pow` opcional solo cuando el modo de ataque lo
+  exige para crear una cuenta nueva. Los challenges OAuth usan
+  `provider:subject@oauth.local` como llave de identidad.
+- `POST /v1/auth/pow-challenge` ahora acepta `purpose: "oauth"` para crear
+  cuentas sociales.
+- Las solicitudes de recuperación de contraseña tienen límite por IP de
+  origen y pueden generar una alerta al operador durante una oleada; la
+  respuesta pública sigue siendo el mismo `200` genérico.
+- La detección automática de clusters farm puede poner cuentas coordinadas en
+  cuarentena y alertar a operadores, manteniendo las respuestas públicas
+  anti-enumeración.
+</Update>
 <Update label="8 de noviembre de 2026" description="v2.243 · 1 versión">
 ### v2.243
 **Agregado**
