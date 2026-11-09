@@ -5,7 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.243 · 1 version - November 8, 2026
+## v2.245 · 3 versions - November 8, 2026
+### v2.245
+**Added**
+- External links in portal support threads now show the anti-phishing interstitial before opening (same protection as the admin panel).
+### v2.244
+**Changed**
+- Email OTP sends keep the tenant-level exemption and gain a per-destination cap of 6/hour (same anti-mailbox standard as card sessions): pumps to one address are cut without blocking legit logins. SMS/WhatsApp quotas unchanged (30/hour per tenant, 6/hour per destination).
 ### v2.243
 **Added**
 - Added documentation for card-review mirrors: core `review` signals become
