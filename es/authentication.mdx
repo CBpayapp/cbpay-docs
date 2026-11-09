@@ -21,6 +21,19 @@ público responde `201 pending_verification` tanto para un email nuevo como para
 duplicado, por lo que no sirve para enumerar cuentas. El titular recibe un código y
 completa el flujo con `POST /v1/auth/register/confirm`.
 
+La identidad del email evita crear varias cuentas para el mismo buzón. En
+`gmail.com` y `googlemail.com` se ignoran los puntos y todo lo que sigue a `+`,
+y `googlemail.com` se trata como `gmail.com`. También se elimina el sufijo
+`+` en los dominios Outlook, Hotmail, Live, MSN, iCloud, Me, Mac, Yahoo, Ymail,
+Rocketmail y Proton compatibles; los demás dominios se comparan exactamente.
+
+Registrar una variante equivalente devuelve la misma forma
+`201 pending_verification` sin crear otra cuenta. El mismo buzón devuelve
+`409 duplicate` o `409 email_in_use` en OAuth, cuentas creadas por
+administradores, invitaciones y cambios de email. El comportamiento se aplica
+dentro de la organización. Si una política bloquea el email, resuelve el
+bloqueo en vez de probar otra variante del mismo buzón.
+
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -57,23 +70,14 @@ con el `purpose` correspondiente y usa exactamente el email en minúsculas que
 enviarás.
 
 El desafío dura 600 segundos, tiene dificultad `20` y queda ligado al email y al
-propósito. Para un flujo específico de un tenant, incluye el `org` opcional con
-el slug de la organización; así el desafío también queda ligado a esa
-organización. Usa el mismo `org` al pedir el desafío para el registro. Resuélvelo
-en tu cliente, idealmente en un worker en segundo plano mientras la persona o
-empresa completa el formulario:
+propósito. Resuélvelo en tu cliente, idealmente en un worker en segundo plano
+mientras la persona o empresa completa el formulario:
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"register","email":"ana@ejemplo.com","org":"cbpay"}'
+  -d '{"purpose":"register","email":"ana@ejemplo.com"}'
 ```
-
-`org` es opcional para mantener compatibilidad hacia atrás. Si lo omites, se
-crea el desafío legacy sin organización. La emisión del desafío comparte el
-presupuesto de IP del registro, por lo que una ráfaga puede recibir
-`429 too_many_attempts`; espera y pide un desafío nuevo en vez de reenviar
-repetidamente la misma solicitud.
 
 ```json
 {
@@ -110,7 +114,7 @@ con `"purpose":"confirm"` y envíalo al confirmar:
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/auth/pow-challenge \
   -H "Content-Type: application/json" \
-  -d '{"purpose":"confirm","email":"ana@ejemplo.com","org":"cbpay"}'
+  -d '{"purpose":"confirm","email":"ana@ejemplo.com"}'
 
 curl -X POST https://api.qbank.cl/platform/v1/auth/register/confirm \
   -H "Content-Type: application/json" \
