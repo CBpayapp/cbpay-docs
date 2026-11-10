@@ -4,32 +4,40 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月9日" description="v2.251 · 6 个版本">
-### v2.251
+<Update label="2026年11月10日" description="v2.253 · 1 个版本">
+### v2.253
+**变更**
+- 智利 `CL/UF/card` 和 `CL/UF/cash` payin 在生产环境中暂时禁用，等待通道批准。UF 文档和示例保留作参考；当前请求返回 `409 corridor_disabled` 或 `422 core_rejected`。通道获批前请使用 `CLP`。
+</Update>
+<Update label="2026年11月9日" description="v2.252 · 7 个版本">
+### v2.252
 #### 新增
 
 - 新增受控卡片交易 replay 和 c11-first 结算 matching 的操作说明，包括
   `chain: "0"` 表示没有 chain 数据的规则。
-### v2.250
+### v2.251
 **新增**
 - 为 Android 应用增加了可选的 Google Play Integrity 流程：获取一次性 nonce、请求令牌，并使用 `POST /v1/me/device-integrity` 上报。
 
 **变更**
 - 有 bound 认证历史的成员会话现在需要新鲜的成功 verdict 才能执行受保护的 payout。收到 `integrity_required` 后重新认证，并使用相同的幂等键重试；API key 和没有 bound 历史的会话仍然豁免。
 - 增加每日 quota 监控，在 70% 和 90% 时通知 war room；告警不会阻止请求。
-### v2.249
+### v2.250
 **变更**
 - 人工确认现在支持 `pending` 和 `expired` push payin。claim 会以原子方式将过期 payin 重新打开为 `pending`；`payin_expired` 可能先于 `payin_credited` 到达。
-### v2.248
+### v2.249
 **变更**
 - 工作量证明挑战端点现在使用独立配额：每个 IP 每小时 200 次，因此
   challenge 流量不会消耗注册配额。
 - 重复的 OTP 挑战请求会直接返回当前有效挑战并返回 `200`，不会再次发送验证码。
 - 一次性邮箱 feed 现在使用兼容 UTS46 的 IDNA 处理规范化域名，与邮箱规范化保持一致。
 - 反滥用监控降级时，攻击模式通知会说明是备用信号触发了 latch。
-### v2.247
+### v2.248
 **安全**
 - 加强注册防邮箱变体滥用：Gmail 的点号/`+`（及主流邮箱的 `+` 子地址）现归一到同一邮箱用于重复检测，一个邮箱无法再开通多个账户。响应不变（`201 pending_verification`）。
+### v2.247
+**安全**
+- 密码现拒绝最常见的 10000 个（`weak_password`，错误码不变）：除至少 8 个字符外，请避免可预测的密码。显示名称上限为 120 个字符。登录不再通过时间差异泄露账户是否存在。
 ### v2.246
 **变更**
 - Platform 管理员凭证变更现在采用双 God maker-checker。批准后的 TOTP 重置会清除 secret 且不发送 email；邮箱变更会通知两个邮箱，并在类型化 `409 duplicate` 时保持请求 pending。组织 scope 管理仍为直接流程。

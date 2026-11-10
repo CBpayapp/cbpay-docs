@@ -122,9 +122,11 @@ payload 中：
 | 200 | `failed_attempt` | 如果使用已保存银行卡请求分期，请改用新卡；该失败可以重新尝试。 |
 | 200 | `review` | 如果真实 rail 中已有资金在途，请读取会话并对账；不要盲目重试。 |
 
+> **重要**
+UF 银行卡收款目前在生产环境中暂时禁用，等待该通道完成批准。下面的 UF 合约和示例保留作参考，通道获批后会恢复。当前请求会返回 `409 corridor_disabled` 或 `422 core_rejected`；生产环境的银行卡收款请使用 `CLP`。
 ## UF 银行卡收款
 
-智利银行卡通道也接受 `currency: "UF"`。金额必须使用最多两位小数的
+智利银行卡通道设计为接受 `currency: "UF"`。金额必须使用最多两位小数的
 十进制字符串：
 
 ```bash
@@ -135,7 +137,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -d '{"country":"CL","currency":"UF","method":"card","amount":"1.50","description":"订单 8842","idempotency_key":"cl-uf-card-order-8842"}'
 ```
 
-响应会在 payin 和回单中保留 `currency: "UF"` 与 `amount: "1.50"`。银行卡
+通道启用后，响应会在 payin 和回单中保留 `currency: "UF"` 与 `amount: "1.50"`。银行卡
 通道原生收取 UF 金额，并在内部换算为 CLP；`1 UF` 约为 `41,274 CLP`，
 准确值取决于适用的 UF 汇率。UF 金额可以与发卡行分期组合：在上面的
 front-token `complete` 请求中使用相同的 `months` 字段。获批期限会返回在
@@ -156,7 +158,7 @@ curl https://api.qbank.cl/v1/rates/usd/local \
 响应包含来自 OXR `CLF` ISO 来源的 `uf` 键。结算会按适用的 spot 汇率将
 UF 换算为 USDT；显示的 UF 汇率不保证固定的结算价格。
 
-获批的 UF webhook 会保留 UF 货币和金额：
+通道恢复后，获批的 UF webhook 会保留 UF 货币和金额：
 
 ```json
 {

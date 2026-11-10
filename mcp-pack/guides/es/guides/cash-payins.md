@@ -21,6 +21,7 @@ flowchart LR
 | País | Moneda | Método | Entrega |
 |---|---|---|---|
 | CL | CLP | `cash` | announced-only (presencial) |
+| CL | UF | `cash` | temporalmente deshabilitado en producción |
 | PE | PEN | `cash` | announced-only (presencial) |
 | MX | MXN | `cash` | announced-only (presencial) |
 | VE | VES | `cash` | announced-only (presencial) |
@@ -65,6 +66,8 @@ Consulta la [referencia completa de errores](https://docs.cbpayapp.com/es/errors
 | 403 `named_admin_required` | El checker no es un god nombrado | Usa un god nombrado con sesión humana. |
 | 409 `confirm_account_mismatch` | La cuenta cambió desde la solicitud maker | Relee y solicita nuevamente solo si sigue elegible. |
 
+> **Importante**
+El corredor `CL/UF/cash` está temporalmente deshabilitado en producción mientras queda pendiente su aprobación. Se conserva documentado como referencia y volverá después de la aprobación; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`. Usa `CL/CLP/cash` en producción.
 ### Vencimiento y vida de la solicitud
 
 El anuncio cash es un payin `push` normal: si queda `pending` 72 horas, el sweep lo cambia a `expired` y emite `payin_expired`. Un recibo físico tardío no se abona a ese anuncio; operaciones debe abrir un anuncio **nuevo** para él (el cash nunca produce filas `unassigned` automáticas — no hay evento de proveedor que parquear). La solicitud maker **no tiene TTL de sistema**: su timeout es operativo. Si el payin vence mientras la solicitud está pendiente, el maker puede reclamarla otra vez y el claim atómico reabre `expired` a `pending`; luego el checker puede aprobarla. La bandeja conserva visible la solicitud pendiente.

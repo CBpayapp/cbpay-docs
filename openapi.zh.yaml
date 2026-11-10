@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.251'
+  version: '2.253'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -14192,10 +14192,10 @@ paths:
                 currency:
                   type: string
                   example: BOB
-                  description: 走廊货币。除 `checkout` 外所有方式必填;`checkout` 会以 400 拒绝该字段 —— 收款以 `settlement_asset` 计价。智利银行卡收款接受 `CLP`(整数金额)与 `UF`(最多两位小数,在银行卡轨道上按 UF 原生扣款,内部再兑换)。
+                  description: 走廊货币。除 `checkout` 外所有方式必填;`checkout` 会以 400 拒绝该字段 —— 收款以 `settlement_asset` 计价。智利银行卡收款文档支持 `CLP`(整数金额)与 `UF`(最多两位小数,在银行卡轨道上按 UF 原生扣款,内部再兑换),但 `CL/UF/card` 和 `CL/UF/cash` 走廊在生产环境中暂时禁用，等待批准；当前请求返回 `409 corridor_disabled` 或 `422 core_rejected`。
                 amount:
                   type: string
-                  description: 正数十进制字符串。走廊方式为本地货币金额;`checkout` 以 `settlement_asset` 计价("50" USDT、"0.001" BTC、"2" 克黄金)。小数位数按币种封顶(CLP 不允许小数,UF 最多两位);违反时返回 422 `core_rejected`,消息为 "amount has too many decimals for this currency"。
+                  description: 正数十进制字符串。走廊方式为本地货币金额;`checkout` 以 `settlement_asset` 计价("50" USDT、"0.001" BTC、"2" 克黄金)。小数位数按币种封顶(CLP 不允许小数,UF 最多两位);违反时返回 422 `core_rejected`,消息为 "amount has too many decimals for this currency"。UF 走廊在生产环境中暂时禁用，等待批准。
                 description:
                   type: string
                 channel:

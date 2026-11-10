@@ -47,7 +47,7 @@ en la sección de miembros.
 ### Agrega o selecciona un miembro
 
 Al agregar un miembro, indica email, una contraseña de al menos ocho
-caracteres y uno de los tres roles. Al editarlo, selecciónalo antes de
+caracteres que no sea de uso común y uno de los tres roles. Al editarlo, selecciónalo antes de
 cambiar su rol o estado.
 ### Confirma la acción
 

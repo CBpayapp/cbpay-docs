@@ -109,7 +109,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_type` | `type` debe ser `person` o `company` |
 | `invalid_email` / `invalid_display_name` | Campo requerido inválido |
 | `invalid_characters` | Un nombre o etiqueta (`display_name`, `alias` de contacto, `label` de destino o de API key) contiene HTML o script ejecutable y fue rechazado; envía texto plano |
-| `weak_password` | Contraseña menor a 8 caracteres |
+| `weak_password` | La contraseña no cumple la política: mínimo 8 caracteres y no ser de uso común |
 | `invalid_role` | Rol de miembro inválido |
 | `unknown_org` | Slug de organización incorrecto (usa `cbpay`) |
 | `invalid_request` | Faltan `country`/`currency` |
