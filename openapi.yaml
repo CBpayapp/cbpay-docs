@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.251'
+  version: '2.253'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -14203,10 +14203,10 @@ paths:
                 currency:
                   type: string
                   example: BOB
-                  description: Corridor currency. Required for every method except `checkout`, which rejects it with 400 — the charge is denominated in `settlement_asset`. Chile card payins accept `CLP` (integer amounts) and `UF` (at most two decimals, charged natively on the card rail and converted internally).
+                  description: Corridor currency. Required for every method except `checkout`, which rejects it with 400 — the charge is denominated in `settlement_asset`. Chile card payins are documented for `CLP` (integer amounts) and `UF` (at most two decimals, charged natively on the card rail and converted internally), but the `CL/UF/card` and `CL/UF/cash` corridors are temporarily disabled in production pending approval; current requests return `409 corridor_disabled` or `422 core_rejected`.
                 amount:
                   type: string
-                  description: Positive decimal string. Local currency amount for corridor methods; for `checkout` it is denominated in the `settlement_asset` ("50" USDT, "0.001" BTC, "2" grams of gold). Decimal places are capped per currency (CLP admits no decimals, UF at most two); violations surface as 422 `core_rejected` with the message "amount has too many decimals for this currency".
+                  description: Positive decimal string. Local currency amount for corridor methods; for `checkout` it is denominated in the `settlement_asset` ("50" USDT, "0.001" BTC, "2" grams of gold). Decimal places are capped per currency (CLP admits no decimals, UF at most two); violations surface as 422 `core_rejected` with the message "amount has too many decimals for this currency". UF corridors are temporarily disabled in production pending approval.
                 description:
                   type: string
                 channel:
@@ -14227,7 +14227,7 @@ paths:
                   - cash
                   - pix
                   default: qr
-                  description: "Collection mode. `qr` creates an active QR charge through the processor; `bank_transfer` announces an incoming deposit and returns the reference to include in the transfer description. The amount must cover the account's fixed fee at its current rate; otherwise creation returns `422 amount_below_minimum` with the local minimum in the message. If no rate is available, this pre-check is skipped and the ledger guard remains authoritative. `fintoc` (Chile only) returns a hosted `payment_url` where the payer transfers from any Chilean bank or wallet and the deposit is detected automatically; `pix` (Brazil only) returns a hosted `payment_url` for a PIX redirect checkout (`payer_name` and `payer_document` required, minimum 1 BRL); `card` returns a hosted `payment_url` for a 3-D Secure card checkout (Bolivia in BOB, international cards in USD when `country` is `US`, or Chile cards in CLP or UF); on the Chile card page the payer may split the charge into 2-48 issuer installments (the receipt shows `months`; one-click payments with a stored card are always single-charge); `checkout` returns a public `checkout_url` where the payer picks the payment method (QR, card, bank transfer or crypto). Use /v1/payins/collect for pull collections. `wallet` is hosted or collect-only depending on the corridor; collect-only flows do not return a payment URL."
+                  description: "Collection mode. `qr` creates an active QR charge through the processor; `bank_transfer` announces an incoming deposit and returns the reference to include in the transfer description. The amount must cover the account's fixed fee at its current rate; otherwise creation returns `422 amount_below_minimum` with the local minimum in the message. If no rate is available, this pre-check is skipped and the ledger guard remains authoritative. `fintoc` (Chile only) returns a hosted `payment_url` where the payer transfers from any Chilean bank or wallet and the deposit is detected automatically; `pix` (Brazil only) returns a hosted `payment_url` for a PIX redirect checkout (`payer_name` and `payer_document` required, minimum 1 BRL); `card` returns a hosted `payment_url` for a 3-D Secure card checkout (Bolivia in BOB, international cards in USD when `country` is `US`, or Chile cards in CLP or UF); the Chile UF card and cash corridors are temporarily disabled in production pending approval and return `409 corridor_disabled` or `422 core_rejected`; on the Chile card page the payer may split the charge into 2-48 issuer installments (the receipt shows `months`; one-click payments with a stored card are always single-charge); `checkout` returns a public `checkout_url` where the payer picks the payment method (QR, card, bank transfer or crypto). Use /v1/payins/collect for pull collections. `wallet` is hosted or collect-only depending on the corridor; collect-only flows do not return a payment URL."
                 idempotency_key:
                   type: string
                   maxLength: 256

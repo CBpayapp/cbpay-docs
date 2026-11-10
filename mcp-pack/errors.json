@@ -892,9 +892,9 @@
       "code": "weak_password",
       "http": 400,
       "meaning": {
-        "en": "Password shorter than 8 characters",
-        "es": "Contraseña menor a 8 caracteres",
-        "zh": "密码少于 8 个字符"
+        "en": "Password fails the policy: minimum 8 characters and not a commonly used one",
+        "es": "La contraseña no cumple la política: mínimo 8 caracteres y no ser de uso común",
+        "zh": "密码不符合策略：至少 8 个字符且不得为常见密码"
       }
     },
     {

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.251'
+  version: '2.253'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -14214,10 +14214,10 @@ paths:
                 currency:
                   type: string
                   example: BOB
-                  description: Moneda del corredor. Obligatoria para todos los métodos salvo `checkout`, que la rechaza con 400 — el cobro se denomina en `settlement_asset`. Los cobros con tarjeta en Chile aceptan `CLP` (montos enteros) y `UF` (máximo dos decimales, se cobra nativo en el riel de tarjetas y se convierte internamente).
+                  description: Moneda del corredor. Obligatoria para todos los métodos salvo `checkout`, que la rechaza con 400 — el cobro se denomina en `settlement_asset`. Los cobros con tarjeta en Chile están documentados para `CLP` (montos enteros) y `UF` (máximo dos decimales, se cobra nativo en el riel de tarjetas y se convierte internamente), pero los corredores `CL/UF/card` y `CL/UF/cash` están temporalmente deshabilitados en producción mientras se aprueban; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`.
                 amount:
                   type: string
-                  description: String decimal positivo. Monto en moneda local para métodos de corredor; para `checkout` se denomina en el `settlement_asset` ("50" USDT, "0.001" BTC, "2" gramos de oro). Los decimales se limitan por moneda (CLP no admite decimales, UF máximo dos); violarlo responde 422 `core_rejected` con el mensaje "amount has too many decimals for this currency".
+                  description: String decimal positivo. Monto en moneda local para métodos de corredor; para `checkout` se denomina en el `settlement_asset` ("50" USDT, "0.001" BTC, "2" gramos de oro). Los decimales se limitan por moneda (CLP no admite decimales, UF máximo dos); violarlo responde 422 `core_rejected` con el mensaje "amount has too many decimals for this currency". Los corredores UF están temporalmente deshabilitados en producción mientras se aprueban.
                 description:
                   type: string
                 channel:

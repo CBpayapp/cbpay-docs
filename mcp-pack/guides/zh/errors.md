@@ -109,7 +109,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_type` | `type` 必须为 `person` 或 `company` |
 | `invalid_email` / `invalid_display_name` | 必填字段无效 |
 | `invalid_characters` | 名称或标签（`display_name`、联系人 `alias`、目的地或 API 密钥 `label`）包含 HTML 或可执行脚本，已被拒绝；请发送纯文本 |
-| `weak_password` | 密码少于 8 个字符 |
+| `weak_password` | 密码不符合策略：至少 8 个字符且不得为常见密码 |
 | `invalid_role` | 成员角色无效 |
 | `unknown_org` | 组织 slug 错误（应使用 `cbpay`） |
 | `invalid_request` | 缺少 `country`/`currency` |

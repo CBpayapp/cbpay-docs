@@ -133,9 +133,11 @@ queda guardado en el payload de auditoría del cobro:
 | 200 | `failed_attempt` | Si seleccionaste una tarjeta guardada con cuotas, usa una tarjeta nueva; el fallo permite reintentar. |
 | 200 | `review` | Si un rail real tiene dinero en curso, lee la sesión y reconcilia; nunca reintentes a ciegas. |
 
+> **Importante**
+Los cobros con tarjeta en UF están temporalmente deshabilitados en producción mientras queda pendiente la aprobación del corredor. El contrato y los ejemplos UF de abajo se conservan como referencia y volverán cuando se apruebe el corredor. Las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`; usa `CLP` para cobros con tarjeta en producción.
 ## Cobros con tarjeta en UF
 
-El corredor de tarjetas de Chile también acepta `currency: "UF"`. Envía el
+El corredor de tarjetas de Chile está diseñado para aceptar `currency: "UF"`. Envía el
 monto como string decimal con hasta dos decimales:
 
 ```bash
@@ -146,7 +148,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -d '{"country":"CL","currency":"UF","method":"card","amount":"1.50","description":"Pedido 8842","idempotency_key":"cl-uf-card-order-8842"}'
 ```
 
-La respuesta conserva `currency: "UF"` y `amount: "1.50"` en el payin y el
+Cuando esté habilitado, la respuesta conservará `currency: "UF"` y `amount: "1.50"` en el payin y el
 recibo. El rail cobra el monto UF de forma nativa y lo convierte internamente
 a CLP; `1 UF` equivale aproximadamente a `41.274 CLP` y el valor exacto
 depende de la tasa UF aplicable. Puedes combinar UF con cuotas Emisor:
@@ -171,7 +173,7 @@ La respuesta incluye la llave `uf`, proveniente de la fuente OXR con ISO
 `CLF`. La liquidación convierte UF a USDT a la tasa spot aplicable; la tasa UF
 mostrada no garantiza un precio fijo de liquidación.
 
-Un webhook UF aprobado conserva la moneda y el monto UF:
+Cuando vuelva el corredor, un webhook UF aprobado conservará la moneda y el monto UF:
 
 ```json
 {

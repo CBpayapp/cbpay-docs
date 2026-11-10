@@ -5,24 +5,28 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.251 · 6 versions - November 9, 2026
-### v2.251
+## v2.253 · 1 version - November 10, 2026
+### v2.253
+**Changed**
+- Chile `CL/UF/card` and `CL/UF/cash` payins are temporarily disabled in production while the corridor approval is pending. The UF documentation and examples remain available for reference; current requests return `409 corridor_disabled` or `422 core_rejected`. Use `CLP` until the corridor is approved.
+## v2.252 · 7 versions - November 9, 2026
+### v2.252
 #### Added
 
 - Added operator guidance for controlled card transaction replay and
   c11-first settlement matching, including the rule that `chain: "0"` means
   no chain data.
-### v2.250
+### v2.251
 **Added**
 - Added an optional Google Play Integrity flow for Android apps: fetch a single-use nonce, request the token, and report it with `POST /v1/me/device-integrity`.
 
 **Changed**
 - Member sessions with bound attestation history now need a fresh successful verdict for protected payouts. Re-attest and retry with the same idempotency key after `integrity_required`; API keys and sessions without bound history remain exempt.
 - Added daily quota monitoring with 70% and 90% war-room alerts; alerts do not block requests.
-### v2.249
+### v2.250
 **Changed**
 - Manual confirmation now supports pending and expired push payins. The claim atomically reopens an expired payin to pending; `payin_expired` may precede `payin_credited`.
-### v2.248
+### v2.249
 **Changed**
 - The proof-of-work challenge endpoint now has its own limit of 200 requests
   per hour per IP, so challenge traffic does not consume the registration
@@ -33,9 +37,12 @@ source_url: https://docs.cbpayapp.com/en/changelog
   processing, matching email normalization.
 - Degraded anti-abuse monitoring now makes the attack-mode notice explain that
   its fallback signal triggered the latch.
-### v2.247
+### v2.248
 **Security**
 - Hardened sign-up against mailbox-variant abuse: Gmail dots/plus (and `+` sub-addresses on major providers) now resolve to the same mailbox for duplicate detection, so one inbox can no longer open several accounts. Responses are unchanged (`201 pending_verification`).
+### v2.247
+**Security**
+- Passwords now reject the 10,000 most common choices (`weak_password`, same code): pick something less predictable on top of the 8-character minimum. Display names are capped at 120 characters. Login timing no longer reveals whether an account exists.
 ### v2.246
 **Changed**
 - Platform administrator credential changes now use double-god maker-checker. TOTP resets clear the secret without email dispatch after approval; email changes notify both mailboxes and retain a pending request on typed `409 duplicate`. Organization-scope administration remains direct.

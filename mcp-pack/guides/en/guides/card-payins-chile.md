@@ -142,9 +142,11 @@ same value is retained in the charge audit payload:
 | 200 | `failed_attempt` | If a stored card was selected with installments, use a new card; the failure is reattemptable. |
 | 200 | `review` | If a real verification rail has money in flight, read the session and reconcile; never blind-retry. |
 
+> **Important**
+UF card payins are temporarily disabled in production while the corridor approval is pending. The UF contract and examples below are retained for reference and will return when the corridor is approved. Current requests are rejected with `409 corridor_disabled` or `422 core_rejected`; use `CLP` for production card payins.
 ## UF card payins
 
-The Chile card corridor also accepts `currency: "UF"`. Send the amount as a
+The Chile card corridor is designed to accept `currency: "UF"`. Send the amount as a
 decimal string with up to two decimal places:
 
 ```bash
@@ -155,7 +157,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   -d '{"country":"CL","currency":"UF","method":"card","amount":"1.50","description":"Order 8842","idempotency_key":"cl-uf-card-order-8842"}'
 ```
 
-The response keeps `currency: "UF"` and `amount: "1.50"` in the payin and
+When enabled, the response keeps `currency: "UF"` and `amount: "1.50"` in the payin and
 receipt. The card rail charges the UF amount natively and converts it to CLP
 internally; `1 UF` is approximately `41,274 CLP` and the exact value depends
 on the applicable UF rate. UF amounts can be combined with issuer
@@ -180,7 +182,7 @@ The response includes the `uf` key from the OXR `CLF` ISO source. Settlement
 converts UF to USDT at the applicable spot rate; the displayed UF rate is
 not a promise of a fixed settlement price.
 
-An approved UF webhook preserves `currency: "UF"` and the UF amount:
+When the corridor returns, an approved UF webhook will preserve `currency: "UF"` and the UF amount:
 
 ```json
 {
