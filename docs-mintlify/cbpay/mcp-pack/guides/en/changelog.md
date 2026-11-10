@@ -5,7 +5,14 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.254 · 2 versions - November 10, 2026
+## v2.255 · 3 versions - November 10, 2026
+### v2.255
+**Changed**
+- Convert quotes and swaps now expose per-leg fees, `fee_total_pct` and
+  `fee_note: included_in_rate`; `/v1/rates` exposes the effective
+  `swap_spread` rows. Account support responses use the anonymous CBPay
+  Support label, and the portal documents browser-language startup before
+  login and account locale precedence after login.
 ### v2.254
 **Changed**
 - Polygon `polygon:usdce` (USDC.e) is globally disabled for new wallets and

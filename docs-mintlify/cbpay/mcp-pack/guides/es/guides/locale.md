@@ -16,6 +16,10 @@ pase lo que pase con el locale (labels, códigos de error y `message`).
 `locale` en la cuenta es la preferencia humana. Nunca traduce el contrato
 JSON. Si necesitas un PDF en español, manda `?lang=es` o fija el locale de
 la cuenta — el body de `GET /v1/payouts/{id}` sigue en inglés.
+Antes de iniciar sesión, el portal parte con el idioma del navegador cuando
+está disponible. Después de iniciar sesión, manda el idioma guardado en la
+cuenta; el navegador ya no reemplaza esa preferencia.
+
 ## Cadena de resolución
 
 Las llamadas autenticadas (`resolveRequestLocale`) recorren esta lista y

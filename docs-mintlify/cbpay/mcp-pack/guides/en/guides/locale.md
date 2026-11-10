@@ -16,6 +16,10 @@ codes and `message` strings).
 `locale` on the account is the human preference. It never translates the
 JSON contract. If you need a Spanish PDF, pass `?lang=es` or set the
 account locale — the `GET /v1/payouts/{id}` body is still English.
+Before login, the portal starts with the browser's language when it is
+supported. After login, the account locale takes precedence; the browser
+language no longer overrides the saved account preference.
+
 ## Resolution chain
 
 Authenticated API calls (`resolveRequestLocale`) walk this list and stop at

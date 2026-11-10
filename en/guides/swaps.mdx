@@ -13,8 +13,9 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 leaving your account. Any pair works (including direct `BTC` ↔ `GOLD`,
 and `USD` ↔ `USDT` at exact 1:1); local fiat (`BOB`, `MXN`, `ARS`) is not
 swappable yet (`invalid_pair`).
-The rate you see in the quote is the rate you execute at: **no separate
-fees** — quoted = received.
+The rate you see in the quote is the rate you execute at: the conversion
+fee is **included in the rate**, not debited as a separate line. The
+response exposes the fee for each leg and the effective total.
 
 ```mermaid
 flowchart LR
@@ -37,13 +38,20 @@ curl "https://api.qbank.cl/platform/v1/swaps/quote?from_asset=USDT&to_asset=BTC&
   "from_amount": "1000.000000",
   "to_amount": "0.01568419",
   "rate": "0.00001568",
+  "fees": [
+    {"leg": "from", "asset": "USDT", "percent": "0.20"},
+    {"leg": "to", "asset": "BTC", "percent": "0.15"}
+  ],
+  "fee_total_pct": "0.3495",
+  "fee_note": "included_in_rate",
   "indicative": true
 }
 ```
 
 The quote is **indicative**: the swap executes at the rate of the `POST`
 moment (BTC and GOLD prices move). Stablecoin pairs (`USDT` ↔ `USDC`) are
-stable.
+stable. In the portal, the Convert screen shows the fee beside each asset
+and the total; `fee_note: included_in_rate` means there is no extra debit.
 
 ## 2. Execute the swap
 
@@ -101,6 +109,12 @@ decimals (6 for USDT/USDC/GOLD/SILVER/PLATINUM, 8 for BTC).
   "from_amount": "1000.000000",
   "to_amount": "0.01568419",
   "rate": "0.00001568",
+  "fees": [
+    {"leg": "from", "asset": "USDT", "percent": "0.20"},
+    {"leg": "to", "asset": "BTC", "percent": "0.15"}
+  ],
+  "fee_total_pct": "0.3495",
+  "fee_note": "included_in_rate",
   "status": "completed",
   "idempotency_key": "swap-2026-07-10-a",
   "created_at": "2026-07-10T15:00:00Z"
@@ -173,12 +187,23 @@ or OTC flows.
 ## FAQ
 
 <AccordionGroup>
-<Accordion title="Why does the swap rate differ from the market price I see elsewhere?">
+<Accordion title="Where do I see the conversion fee?">
+The Convert screen shows one fee percentage for each leg and the effective
+`fee_total_pct`. The same values are returned by the quote and swap
+responses in `fees`; `fee_note` is `included_in_rate`.
+</Accordion>
+<Accordion title="Why does the rate include the conversion fee?">
 The quoted rate is your account's **execution** rate: it includes the cost
 of providing instant, guaranteed conversion (immediate liquidity, no
 slippage, without leaving your account). Same philosophy as payout and
 payin rates: what is quoted is exactly what you receive, with no surprise
-fees afterwards.
+fees afterwards. The fee is priced into that rate so the destination amount
+is final and there is no second debit.
+</Accordion>
+<Accordion title="Why does the fee have two legs?">
+The conversion applies the configured spread to the asset you give and the
+asset you receive. `fee_total_pct` is the effective sum shown for the pair;
+it is informational and does not create a second ledger entry.
 </Accordion>
 <Accordion title="Is the quote guaranteed?">
 No — it is indicative. BTC and GOLD move, so execution uses the price at

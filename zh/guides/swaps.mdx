@@ -8,7 +8,7 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
-**兑换（Swaps）**在你的七种资产 — `USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER` 和 `PLATINUM` — 之间**同步、即时**地转换余额，资金始终不离开你的账户。任意币对均可（包括 `BTC` ↔ `GOLD` 直接兑换，以及 `USD` ↔ `USDT` 精确 1:1）；本地法币（`BOB`、`MXN`、`ARS`）暂不支持兑换（`invalid_pair`）。你在报价中看到的汇率就是执行汇率：**没有额外手续费** — 报价即到账。
+**兑换（Swaps）**在你的七种资产 — `USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER` 和 `PLATINUM` — 之间**同步、即时**地转换余额，资金始终不离开你的账户。任意币对均可（包括 `BTC` ↔ `GOLD` 直接兑换，以及 `USD` ↔ `USDT` 精确 1:1）；本地法币（`BOB`、`MXN`、`ARS`）暂不支持兑换（`invalid_pair`）。你在报价中看到的汇率就是执行汇率：转换费用**已包含在汇率中**，不会作为额外的扣款；响应会显示每一边的费用和有效总额。
 
 ```mermaid
 flowchart LR
@@ -31,11 +31,17 @@ curl "https://api.qbank.cl/platform/v1/swaps/quote?from_asset=USDT&to_asset=BTC&
   "from_amount": "1000.000000",
   "to_amount": "0.01568419",
   "rate": "0.00001568",
+  "fees": [
+    {"leg": "from", "asset": "USDT", "percent": "0.20"},
+    {"leg": "to", "asset": "BTC", "percent": "0.15"}
+  ],
+  "fee_total_pct": "0.3495",
+  "fee_note": "included_in_rate",
   "indicative": true
 }
 ```
 
-报价是**指示性的**：兑换按 `POST` 时刻的汇率执行（BTC 和 GOLD 价格会波动）。稳定币币对（`USDT` ↔ `USDC`）保持稳定。
+报价是**指示性的**：兑换按 `POST` 时刻的汇率执行（BTC 和 GOLD 价格会波动）。稳定币币对（`USDT` ↔ `USDC`）保持稳定。门户的 Convert 页面会在每个资产旁显示费用和总额；`fee_note: included_in_rate` 表示不会再额外扣款。
 
 ## 2. 执行兑换
 
@@ -92,6 +98,12 @@ curl -X POST https://api.qbank.cl/platform/v1/swaps \
   "from_amount": "1000.000000",
   "to_amount": "0.01568419",
   "rate": "0.00001568",
+  "fees": [
+    {"leg": "from", "asset": "USDT", "percent": "0.20"},
+    {"leg": "to", "asset": "BTC", "percent": "0.15"}
+  ],
+  "fee_total_pct": "0.3495",
+  "fee_note": "included_in_rate",
   "status": "completed",
   "idempotency_key": "swap-2026-07-10-a",
   "created_at": "2026-07-10T15:00:00Z"
@@ -150,8 +162,16 @@ curl https://api.qbank.cl/platform/v1/swaps/{swap_id} \
 ## 常见问题
 
 <AccordionGroup>
-<Accordion title="为什么兑换汇率与我在别处看到的市场价格不同？">
+<Accordion title="在哪里可以看到转换费用？">
+Convert 页面会显示每一边的费用和有效的 `fee_total_pct`。报价和
+兑换响应中的 `fees` 包含相同信息；`fee_note` 为 `included_in_rate`。
+</Accordion>
+<Accordion title="为什么汇率包含转换费用？">
 报价汇率是你账户的**执行**汇率：它包含了提供即时、有保障兑换的成本（即时流动性、无滑点、无需资金离开账户）。与出款和入款汇率的理念相同：报价就是你实际收到的金额，事后没有任何意外费用。
+</Accordion>
+<Accordion title="为什么费用分成两边？">
+兑换会对你交出的资产和收到的资产分别应用已配置的 spread。
+`fee_total_pct` 是该币对的有效合计，仅用于说明，不会产生第二笔账本扣款。
 </Accordion>
 <Accordion title="报价有保障吗？">
 没有 — 它是指示性的。BTC 和 GOLD 价格会波动，因此执行时使用 POST 时刻的价格。稳定币之间（USDT ↔ USDC）差异可忽略不计。最终数额以兑换响应中的 `to_amount` 为准（已入账）。

@@ -134,13 +134,12 @@ la operación existente y no crees un reemplazo.
 **Sunset de USDC.e:** la red Polygon `polygon:usdce` está desactivada
 globalmente. No se pueden crear nuevas wallets ni enviar nuevos USDC.e. Los
 saldos USDC.e existentes siguen visibles con una insignia de red apagada y la
-exportación está siempre disponible. Migra cualquier saldo existente al riel
-Polygon USDC habilitado mediante tu proceso normal de migración; el saldo no
-se elimina.
+exportación está siempre disponible. Para mover un saldo existente al riel
+Polygon USDC habilitado, contacta a soporte; el saldo no se elimina.
 #### ¿Qué pasa con mi saldo USDC.e existente?
 No se pierde ni se debita por el sunset. El saldo sigue visible como USDC.e con
-la insignia de red apagada y puedes exportarlo. Puedes migrarlo al riel Polygon
-USDC habilitado mediante tu proceso normal de migración.
+la insignia de red apagada y puedes exportarlo. Contacta a soporte para
+migrarlo al riel Polygon USDC habilitado.
 #### ¿Qué pasa si deposito en mi dirección USDC.e antigua?
 La dirección de depósito Polygon USDC.e existente sigue reconocida. Un depósito
 enviado a esa dirección se acredita al saldo separado USDC.e después de las
