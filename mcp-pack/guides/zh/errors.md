@@ -67,7 +67,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 409 | `otp_phone_missing` | 登录需要 OTP 但账户没有手机号；请联系您的运营方 |
 | 409 | `challenge_not_pending` | 质询已过期或已被使用；请创建一个新的 |
 | 403 | `independent_factor_required` | 手机号冷却只能通过身份验证器应用或已验证邮箱解锁，绝不能使用发送到新号码的验证码 |
-| 429 | `too_many_attempts` | 达到发送/验证次数限制；请等待几分钟 |
+| 429 | `too_many_attempts` | 成员共享的新验证码发送预算已用尽；读取 `Retry-After`：突发（每 10 分钟 3 次）等待 600 秒，每小时（10 次）等待 3600 秒，每日（30 次）等待 86400 秒。复用有效挑战和 TOTP 不受限制，被阻止的重试不会消耗其他预算。 |
 | 503 | `otp_unavailable` | 验证服务不可用（操作保持锁定；OTP 绝不会被跳过） |
 | 409 | `otp_disabled_for_org` | 您的组织未启用按操作的双因素认证；请联系您的运营方 |
 | 422 | `sms_country_blocked` | 该电话号码所属国家不可接收短信验证码（组织白名单限制）；请改用验证器 App 或邮箱 |
@@ -403,6 +403,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `crypto_disabled` | 所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。 |
 | 400 | `invalid_crypto_control` | crypto 网络开关无效（未知的链/资产、scope 或缺少原因）。请修正请求。 |
 | 409 | `rail_not_registered` | 所选通道在此环境中未配置。请选择已注册的通道（见管理后台走廊页面）。 |
+| 503 | `crypto_controls_unavailable` | 操作前无法读取 crypto 控制状态。控制存储恢复后使用相同幂等请求重试。 |
 
 ## Banking 创建恢复错误
 

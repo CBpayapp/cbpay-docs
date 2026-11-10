@@ -14,6 +14,9 @@ source_url: https://docs.cbpayapp.com/zh/guides/locale
 > **注**
 账户上的 `locale` 是人工偏好，不会翻译 JSON 契约。若需要西班牙语 PDF，请传
 `?lang=es` 或设置账户 locale —— `GET /v1/payouts/{id}` 的响应体仍为英语。
+登录前，门户会在支持的情况下使用浏览器语言。登录后，账户中保存的语言
+优先；浏览器语言不会再覆盖账户偏好。
+
 ## 解析链
 
 已认证 API 调用（`resolveRequestLocale`）按下列顺序取值，停在第一个

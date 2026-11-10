@@ -5,10 +5,35 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.253 · 1 version - November 10, 2026
-### v2.253
+## v2.256 · 4 versions - November 10, 2026
+### v2.256
+**Changed**
+- Convert quotes and swaps now expose per-leg fees, `fee_total_pct` and
+  `fee_note: included_in_rate`; `/v1/rates` exposes the effective
+  `swap_spread` rows. Account support responses use the anonymous CBPay
+  Support label, and the portal documents browser-language startup before
+  login and account locale precedence after login.
+### v2.255
+**Changed**
+- Polygon `polygon:usdce` (USDC.e) is globally disabled for new wallets and
+  sends. Existing balances remain visible with a disabled-network badge,
+  export remains available, and deposits to existing USDC.e addresses continue
+  to credit the separate balance. Disabled controls return `409
+  crypto_disabled`; unavailable control storage returns `503
+  crypto_controls_unavailable`.
+### v2.254
 **Changed**
 - Chile `CL/UF/card` and `CL/UF/cash` payins are temporarily disabled in production while the corridor approval is pending. The UF documentation and examples remain available for reference; current requests return `409 corridor_disabled` or `422 core_rejected`. Use `CLP` until the corridor is approved.
+### v2.253
+**Changed**
+- OTP challenge sending is now all-or-nothing across the member-wide
+  budgets: a `429` never consumes another bucket, so retrying a blocked
+  request does not extend the lockout. Fresh sends are limited to 10 per
+  hour, 3 per 10 minutes, and 30 per 24 hours across actions and channels.
+  Reusing a live challenge and TOTP remain exempt. `Retry-After` identifies
+  the exceeded bucket: 600 seconds for burst, 3600 seconds for hourly, or
+  86400 seconds for daily. OTP screens now show the actual wait time in the
+  user's language.
 ## v2.252 · 7 versions - November 9, 2026
 ### v2.252
 #### Added
