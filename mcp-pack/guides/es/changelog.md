@@ -5,10 +5,35 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.253 · 1 versión - 10 de noviembre de 2026
-### v2.253
+## v2.256 · 4 versiones - 10 de noviembre de 2026
+### v2.256
+**Cambiado**
+- Las cotizaciones y swaps de Convertir ahora exponen comisiones por punta,
+  `fee_total_pct` y `fee_note: included_in_rate`; `/v1/rates` expone las
+  filas efectivas de `swap_spread`. Las respuestas de soporte de la cuenta
+  usan el label anónimo Soporte de CBPay, y el portal documenta el idioma
+  inicial del navegador y la prioridad del idioma de la cuenta al iniciar sesión.
+### v2.255
+**Cambiado**
+- Polygon `polygon:usdce` (USDC.e) queda deshabilitado globalmente para nuevas
+  wallets y envíos. Los saldos existentes siguen visibles con insignia de red
+  apagada, la exportación sigue disponible y los depósitos a direcciones
+  USDC.e existentes continúan abonando el saldo separado. Los controles
+  apagados responden `409 crypto_disabled`; si el storage no está disponible,
+  responden `503 crypto_controls_unavailable`.
+### v2.254
 **Cambiado**
 - Los payins `CL/UF/card` y `CL/UF/cash` de Chile están temporalmente deshabilitados en producción mientras queda pendiente la aprobación del corredor. La documentación y los ejemplos UF se mantienen como referencia; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`. Usa `CLP` hasta que se apruebe el corredor.
+### v2.253
+**Cambiado**
+- El envío de desafíos OTP ahora es todo-o-nada entre los presupuestos del
+  miembro: un `429` nunca consume otro bucket, por lo que reintentar una
+  solicitud bloqueada no alarga el bloqueo. Los envíos frescos tienen un
+  límite de 10 por hora, 3 por 10 minutos y 30 por 24 horas, compartido entre
+  acciones y canales. El reuso de un desafío activo y TOTP siguen exentos.
+  `Retry-After` identifica el bucket excedido: 600 segundos para ráfaga,
+  3600 segundos por hora u 86400 segundos por día. Las pantallas OTP ahora
+  muestran la espera real en el idioma del usuario.
 ## v2.252 · 7 versiones - 9 de noviembre de 2026
 ### v2.252
 #### Agregado

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.253'
+  version: '2.256'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -13724,10 +13724,10 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: Se solicitaron más de 10 envíos de códigos frescos para este miembro dentro de una hora (`too_many_attempts`). Los desafíos activos reutilizados no consumen este presupuesto. TOTP está exento porque no envía códigos.
+          description: 'Se excedió el throttle de envíos frescos compartido por miembro (`too_many_attempts`). Los tres presupuestos son 10 envíos por hora, 3 envíos por 10 minutos y 30 envíos por 24 horas entre todas las acciones y canales de entrega. La verificación es todo-o-nada: una solicitud rechazada nunca consume otro bucket, por lo que reintentar mientras está bloqueada no alarga el bloqueo. Reutilizar un desafío activo no consume el presupuesto y TOTP está exento porque no envía códigos.'
           headers:
             Retry-After:
-              description: Segundos hasta que se pueda solicitar otro envío fresco de OTP.
+              description: 'Segundos hasta que se pueda solicitar otro envío fresco de OTP para el bucket excedido: 600 para ráfaga, 3600 por hora u 86400 por día.'
               schema:
                 type: integer
                 example: 3600
@@ -25972,6 +25972,15 @@ paths:
                 from_amount: '1000.000000'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
+                fees:
+                - leg: from
+                  asset: USDT
+                  percent: '0.20'
+                - leg: to
+                  asset: BTC
+                  percent: '0.15'
+                fee_total_pct: '0.3495'
+                fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -25989,6 +25998,15 @@ paths:
                 from_amount: '1000.000000'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
+                fees:
+                - leg: from
+                  asset: USDT
+                  percent: '0.20'
+                - leg: to
+                  asset: BTC
+                  percent: '0.15'
+                fee_total_pct: '0.3495'
+                fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -26168,12 +26186,43 @@ paths:
                     description: Unidades de destino por unidad de origen (tasa de ejecución marcada).
                   indicative:
                     type: boolean
+                  fees:
+                    type: array
+                    description: Comisión efectiva de conversión por punta.
+                    items:
+                      type: object
+                      properties:
+                        leg:
+                          type: string
+                          enum:
+                          - from
+                          - to
+                        asset:
+                          type: string
+                        percent:
+                          type: string
+                  fee_total_pct:
+                    type: string
+                    description: Porcentaje total efectivo de las dos puntas.
+                  fee_note:
+                    type: string
+                    enum:
+                    - included_in_rate
               example:
                 from_asset: USDT
                 to_asset: BTC
                 from_amount: '1000.000000'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
+                fees:
+                - leg: from
+                  asset: USDT
+                  percent: '0.20'
+                - leg: to
+                  asset: BTC
+                  percent: '0.15'
+                fee_total_pct: '0.3495'
+                fee_note: included_in_rate
                 indicative: true
         '400':
           description: invalid_asset / invalid_pair / invalid_amount / amount_too_small / swap_asset_disabled
@@ -28863,6 +28912,28 @@ components:
         rate:
           type: string
           description: Unidades de destino por unidad de origen (tasa de ejecución marcada).
+        fees:
+          type: array
+          description: Comisión efectiva de conversión por punta.
+          items:
+            type: object
+            properties:
+              leg:
+                type: string
+                enum:
+                - from
+                - to
+              asset:
+                type: string
+              percent:
+                type: string
+        fee_total_pct:
+          type: string
+          description: Porcentaje total efectivo de las dos puntas.
+        fee_note:
+          type: string
+          enum:
+          - included_in_rate
         status:
           type: string
           example: completed
@@ -29066,6 +29137,7 @@ components:
           - banking_transfer_wire
           - banking_transfer_sepa
           - banking_monthly
+          - swap_spread
         country:
           type: string
         currency:

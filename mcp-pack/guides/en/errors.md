@@ -84,7 +84,7 @@ Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/securit
 | 409 | `otp_phone_missing` | Login requires OTP and the account has no phone; contact your operator |
 | 409 | `challenge_not_pending` | The challenge expired or was already used; create a new one |
 | 403 | `independent_factor_required` | The phone cooldown can only be unlocked with the authenticator app or the verified email, never with a code sent to the new number |
-| 429 | `too_many_attempts` | Send/verification limits reached; wait a few minutes |
+| 429 | `too_many_attempts` | A member-wide fresh-send bucket is full; read `Retry-After`: 600 seconds for burst (3/10 minutes), 3600 seconds for hourly (10/hour), or 86400 seconds for daily (30/24 hours). Live-challenge reuse and TOTP are exempt, and blocked retries do not consume another bucket. |
 | 409 | `otp_disabled_for_org` | Two-factor authentication is not enabled for your organization; contact support |
 | 422 | `sms_country_blocked` | SMS codes are not available for this phone country (organization allowlist); verify with your authenticator app or email instead |
 | 409 | `totp_not_started` | Confirm requires starting enrollment first (`POST /v1/me/totp/enroll`) |
@@ -426,6 +426,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 409 | `crypto_disabled` | The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator. |
 | 400 | `invalid_crypto_control` | The crypto network toggle is invalid (unknown chain/asset, scope, or missing reason). Fix the request. |
 | 409 | `rail_not_registered` | The selected rail is not configured in this environment. Pick a registered rail (see the admin corridors screen). |
+| 503 | `crypto_controls_unavailable` | The crypto-control state could not be read before the operation. Retry the same idempotent request after the control store recovers. |
 
 ## Banking creation recovery errors
 
