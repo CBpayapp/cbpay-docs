@@ -5,15 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.256 · 4 versiones - 10 de noviembre de 2026
-### v2.256
+## v2.258 · 6 versiones - 10 de noviembre de 2026
+### v2.258
 **Cambiado**
 - Las cotizaciones y swaps de Convertir ahora exponen comisiones por punta,
   `fee_total_pct` y `fee_note: included_in_rate`; `/v1/rates` expone las
   filas efectivas de `swap_spread`. Las respuestas de soporte de la cuenta
   usan el label anónimo Soporte de CBPay, y el portal documenta el idioma
   inicial del navegador y la prioridad del idioma de la cuenta al iniciar sesión.
-### v2.255
+### v2.257
 **Cambiado**
 - Los totales de comisión de swaps y conversiones ahora suman exactamente
   las dos puntas (`0.20 + 0.15 = 0.3500`), y la comisión sigue incluida en
@@ -22,7 +22,7 @@ source_url: https://docs.cbpayapp.com/es/changelog
   Conversiones**, con detalle e historial de comisiones.
 - El historial de soporte está anonimizado y usa el label público Soporte de
   CBPay.
-### v2.254
+### v2.256
 **Cambiado**
 - Polygon `polygon:usdce` (USDC.e) queda deshabilitado globalmente para nuevas
   wallets y envíos. Los saldos existentes siguen visibles con insignia de red
@@ -30,9 +30,13 @@ source_url: https://docs.cbpayapp.com/es/changelog
   USDC.e existentes continúan abonando el saldo separado. Los controles
   apagados responden `409 crypto_disabled`; si el storage no está disponible,
   responden `503 crypto_controls_unavailable`.
-### v2.254
+### v2.255
 **Cambiado**
 - Los payins `CL/UF/card` y `CL/UF/cash` de Chile están temporalmente deshabilitados en producción mientras queda pendiente la aprobación del corredor. La documentación y los ejemplos UF se mantienen como referencia; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`. Usa `CLP` hasta que se apruebe el corredor.
+### v2.254
+**Cambiado**
+- El login OTP ahora muestra una espera honesta mientras el challenge está
+  pendiente.
 ### v2.253
 **Cambiado**
 - El envío de desafíos OTP ahora es todo-o-nada entre los presupuestos del

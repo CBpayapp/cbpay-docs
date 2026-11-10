@@ -5,28 +5,31 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.256 · 4 个版本 - 2026年11月10日
-### v2.256
+## v2.258 · 6 个版本 - 2026年11月10日
+### v2.258
 **变更**
 - Convert 报价和兑换现在显示每一边的费用、`fee_total_pct` 以及
   `fee_note: included_in_rate`；`/v1/rates` 显示有效的 `swap_spread`
   行。账户支持响应使用匿名的 CBPay 支持标签，并说明登录前使用浏览器
   语言、登录后账户语言优先。
-### v2.255
+### v2.257
 **变更**
 - 兑换和转换的费用总额现在准确相加两边费用
   (`0.20 + 0.15 = 0.3500`)，费用仍包含在报价汇率中。
 - Convert 门户现在提供**我的转换费用**视图，可查看费用详情和历史。
 - 支持历史记录已匿名化，并使用公开的 CBPay 支持标签。
-### v2.254
+### v2.256
 **变更**
 - Polygon `polygon:usdce`（USDC.e）已全局停用，不再支持创建新钱包或发送。
   现有余额仍显示并带有网络停用标记，导出功能可用，向现有 USDC.e 地址
   充值仍会计入独立余额。控制停用返回 `409 crypto_disabled`；控制存储
   不可用返回 `503 crypto_controls_unavailable`。
-### v2.254
+### v2.255
 **变更**
 - 智利 `CL/UF/card` 和 `CL/UF/cash` payin 在生产环境中暂时禁用，等待通道批准。UF 文档和示例保留作参考；当前请求返回 `409 corridor_disabled` 或 `422 core_rejected`。通道获批前请使用 `CLP`。
+### v2.254
+**变更**
+- OTP 登录在 challenge 待处理期间显示真实等待时间。
 ### v2.253
 **变更**
 - OTP 挑战发送现在对成员的各项预算采用全有或全无：`429` 不会消耗其他
