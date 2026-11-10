@@ -22,6 +22,7 @@ flowchart LR
 | Country | Currency | Method | Delivery |
 |---|---|---|---|
 | CL | CLP | `cash` | announced-only (in-person) |
+| CL | UF | `cash` | temporarily disabled in production |
 | PE | PEN | `cash` | announced-only (in-person) |
 | MX | MXN | `cash` | announced-only (in-person) |
 | VE | VES | `cash` | announced-only (in-person) |
@@ -68,6 +69,8 @@ See the complete [error reference](https://docs.cbpayapp.com/en/errors) for all 
 | 403 `named_admin_required` | The checker is not a named god admin | Use a named god in a human admin session. |
 | 409 `confirm_account_mismatch` | The account changed since the maker request | Re-read the payin and submit a new evidence request only if still eligible. |
 
+> **Important**
+The `CL/UF/cash` corridor is temporarily disabled in production while its approval is pending. The corridor remains documented for reference and will return after approval; current requests receive `409 corridor_disabled` or `422 core_rejected`. Use `CL/CLP/cash` in production.
 ### Expiry and confirmation request lifetime
 
 The cash announcement is a normal `push` payin: if it remains pending for 72 hours, the expiry sweep changes it to `expired` and emits `payin_expired`. A late physical receipt is not credited to that expired announcement; operations must open a **new** announcement for it (cash never produces automatic `unassigned` rows — there is no provider event to park). The maker confirmation request has **no system TTL**: its timeout is operational. It dies with the payin, so after announcement expiry the checker receives `409 invalid_state` and the expired payin is hidden from the pending approvals list.
@@ -102,4 +105,7 @@ No. Delivery is physical, so the response has no `deposit_instructions`.
 #### Does confirm-received credit the balance?
 No. Only the separate checker approval credits the account.
 #### When does a cash announcement expire?
-After 72 hours while still pending. The maker request itself has no system TTL; it is hidden and cannot be approved once its payin expires.
+After 72 hours while still pending. The maker request itself has no system TTL. If the payin expires while the request is pending, the maker can claim it again and the atomic claim reopens `expired` to `pending`; the checker can then approve it.
+### Expired push announcements
+
+A `push` payin may expire before the customer evidence is confirmed. If a maker-checker request is already pending, the maker may still call `confirm-received`: the claim atomically reopens `expired` to `pending`. The checker then approves through the normal flow. The approvals inbox keeps these requests visible, and a `payin_expired` webhook may precede the later `payin_credited` webhook.

@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 10, 2026" description="v2.253 · 1 version">
+<Update label="November 10, 2026" description="v2.254 · 2 versions">
+### v2.254
+**Changed**
+- Polygon `polygon:usdce` (USDC.e) is globally disabled for new wallets and
+  sends. Existing balances remain visible with a disabled-network badge,
+  export remains available, and deposits to existing USDC.e addresses continue
+  to credit the separate balance. Disabled controls return `409
+  crypto_disabled`; unavailable control storage returns `503
+  crypto_controls_unavailable`.
 ### v2.253
 **Changed**
 - Chile `CL/UF/card` and `CL/UF/cash` payins are temporarily disabled in production while the corridor approval is pending. The UF documentation and examples remain available for reference; current requests return `409 corridor_disabled` or `422 core_rejected`. Use `CLP` until the corridor is approved.

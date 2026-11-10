@@ -171,6 +171,25 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login \
   -d '{ "org": "cbpay", "email": "ana@ejemplo.com", "password": "…" }'
 ```
 
+La app Android puede agregar opcionalmente `integrity_token` y el
+`integrity_nonce` de un solo uso emitido por
+`POST /v1/auth/integrity-nonce`:
+
+```json
+{
+  "org": "cbpay",
+  "email": "ana@ejemplo.com",
+  "password": "una-clave-segura",
+  "integrity_token": "integrity-token-from-play-api",
+  "integrity_nonce": "nonce-from-integrity-nonce-endpoint"
+}
+```
+
+El nonce queda ligado a este `org|email` y vence en cinco minutos. Sin estos
+campos opcionales, el login sigue disponible para web, iOS y apps antiguas.
+Una app trucha (`mismatch` o `app_unknown` con un reporte bound) recibe el mismo
+`401 invalid_credentials` uniforme que cualquier login inválido.
+
 ```json
 {
   "access_token": "eyJ…",

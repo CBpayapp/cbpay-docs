@@ -109,7 +109,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_type` | `type` 必须为 `person` 或 `company` |
 | `invalid_email` / `invalid_display_name` | 必填字段无效 |
 | `invalid_characters` | 名称或标签（`display_name`、联系人 `alias`、目的地或 API 密钥 `label`）包含 HTML 或可执行脚本，已被拒绝；请发送纯文本 |
-| `weak_password` | 密码少于 8 个字符 |
+| `weak_password` | 密码不符合策略：至少 8 个字符且不得为常见密码 |
 | `invalid_role` | 成员角色无效 |
 | `unknown_org` | 组织 slug 错误（应使用 `cbpay`） |
 | `invalid_request` | 缺少 `country`/`currency` |
@@ -403,6 +403,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `crypto_disabled` | 所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。 |
 | 400 | `invalid_crypto_control` | crypto 网络开关无效（未知的链/资产、scope 或缺少原因）。请修正请求。 |
 | 409 | `rail_not_registered` | 所选通道在此环境中未配置。请选择已注册的通道（见管理后台走廊页面）。 |
+| 503 | `crypto_controls_unavailable` | 操作前无法读取 crypto 控制状态。控制存储恢复后使用相同幂等请求重试。 |
 
 ## Banking 创建恢复错误
 

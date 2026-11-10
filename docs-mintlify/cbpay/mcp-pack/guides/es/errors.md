@@ -109,7 +109,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_type` | `type` debe ser `person` o `company` |
 | `invalid_email` / `invalid_display_name` | Campo requerido inválido |
 | `invalid_characters` | Un nombre o etiqueta (`display_name`, `alias` de contacto, `label` de destino o de API key) contiene HTML o script ejecutable y fue rechazado; envía texto plano |
-| `weak_password` | Contraseña menor a 8 caracteres |
+| `weak_password` | La contraseña no cumple la política: mínimo 8 caracteres y no ser de uso común |
 | `invalid_role` | Rol de miembro inválido |
 | `unknown_org` | Slug de organización incorrecto (usa `cbpay`) |
 | `invalid_request` | Faltan `country`/`currency` |
@@ -410,6 +410,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 409 | `crypto_disabled` | La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización. |
 | 400 | `invalid_crypto_control` | El toggle de red crypto es inválido (red/activo desconocido, scope o motivo faltante). Corrige el request. |
 | 409 | `rail_not_registered` | El riel seleccionado no está configurado en este ambiente. Elige un riel registrado (ver pantalla de corredores del admin). |
+| 503 | `crypto_controls_unavailable` | No se pudo leer el estado de controles crypto antes de la operación. Repite el mismo request idempotente cuando se recupere el storage de controles. |
 
 ## Banking creation recovery errors
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.249'
+  version: '2.253'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2151,6 +2151,63 @@ paths:
               example:
                 error: invalid_handoff
                 message: handoff token is invalid or expired
+  /v1/auth/integrity-nonce:
+    post:
+      tags:
+      - Autenticación
+      security: []
+      operationId: issueIntegrityNonce
+      summary: Emitir un nonce de integridad
+      description: Emite un nonce de un solo uso ligado a org+email para un request Play Integrity (standard o clásico). La app lo manda a Google en el request y postea el token resultante (campo del login o POST /v1/me/device-integrity); el servidor quema el nonce y lo compara con el eco de Google para cerrar replay. TTL 5 minutos. Limitado a 60/hora por IP. Org desconocida responde 401 uniforme.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - org
+              - email
+              properties:
+                org:
+                  type: string
+                  description: Slug de la organización CBPay (`cbpay`).
+                email:
+                  type: string
+                  format: email
+                  description: Email del miembro que intenta entrar (minúsculas, ligado al nonce).
+            example:
+              org: cbpay
+              email: ana@example.com
+      responses:
+        '200':
+          description: Nonce emitido (código crudo, se muestra una sola vez).
+          content:
+            application/json:
+              example:
+                nonce: dGhpcyBpcyBhIGZha2Utbm9uY2UtZXhhbXBsZQ
+                expires_in: 300
+        '400':
+          description: Falta org o email (invalid_request).
+          content:
+            application/json:
+              example:
+                error: invalid_request
+                message: org and email are required
+        '401':
+          description: Org desconocida (invalid_credentials, uniforme con login).
+          content:
+            application/json:
+              example:
+                error: invalid_credentials
+                message: email or password is incorrect
+        '429':
+          description: Demasiados nonces (rate_limited).
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many nonce requests, retry later
   /v1/auth/login:
     post:
       tags:
@@ -2177,6 +2234,12 @@ paths:
                   format: email
                 password:
                   type: string
+                integrity_token:
+                  type: string
+                  description: Token Play Integrity opcional de la app Android (1-16384 caracteres). Omitirlo en web, iOS y app vieja.
+                integrity_nonce:
+                  type: string
+                  description: Nonce server emitido por POST /v1/auth/integrity-nonce, ligado a esta org+email. Requerido para el binding anti-replay (bound=true); sin él el token igual se decodifica y audita pero jamás pasa los gates.
             example:
               org: cbpay
               email: ana@example.com
@@ -10877,7 +10940,7 @@ paths:
       - Cuenta
       operationId: reportDeviceIntegrity
       summary: Reportar un token de integridad Android
-      description: Reporta un token Play Integrity desde la app Android para decodificación server-side (modo monitor, jamás bloquea). El veredicto se audita como evento de seguridad device_integrity. Sin credenciales Google igual responde 200 con checked=false. Limitado a 12/hora por miembro.
+      description: 'Reporta un token Play Integrity desde la app Android para decodificación server-side. El veredicto se audita como evento de seguridad device_integrity. Con integrity_nonce (emitido por POST /v1/auth/integrity-nonce) el reporte queda ligado anti-replay (bound=true); sin él igual se audita pero jamás pasa los gates de enforcement. Veredictos: ok, device_basic, app_unknown, mismatch, error, unchecked, nonce_invalid. Limitado a 12/hora por miembro.'
       requestBody:
         required: true
         content:
@@ -10890,17 +10953,22 @@ paths:
                 integrity_token:
                   type: string
                   description: Token Play Integrity estándar (1-16384 caracteres).
+                integrity_nonce:
+                  type: string
+                  description: Nonce server ligado a esta org+email. Un solo uso, TTL 5 minutos.
             example:
               integrity_token: integrity-token-from-play-api
+              integrity_nonce: nonce-from-integrity-nonce-endpoint
       responses:
         '200':
-          description: Veredicto registrado (checked puede ser false sin credenciales).
+          description: Veredicto registrado (checked puede ser false sin credenciales; bound es true solo con nonce validado).
           content:
             application/json:
               example:
                 checked: true
                 verdict: ok
                 device_ok: true
+                bound: true
         '400':
           description: Token inválido (invalid_token).
           content:
@@ -14146,10 +14214,10 @@ paths:
                 currency:
                   type: string
                   example: BOB
-                  description: Moneda del corredor. Obligatoria para todos los métodos salvo `checkout`, que la rechaza con 400 — el cobro se denomina en `settlement_asset`. Los cobros con tarjeta en Chile aceptan `CLP` (montos enteros) y `UF` (máximo dos decimales, se cobra nativo en el riel de tarjetas y se convierte internamente).
+                  description: Moneda del corredor. Obligatoria para todos los métodos salvo `checkout`, que la rechaza con 400 — el cobro se denomina en `settlement_asset`. Los cobros con tarjeta en Chile están documentados para `CLP` (montos enteros) y `UF` (máximo dos decimales, se cobra nativo en el riel de tarjetas y se convierte internamente), pero los corredores `CL/UF/card` y `CL/UF/cash` están temporalmente deshabilitados en producción mientras se aprueban; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`.
                 amount:
                   type: string
-                  description: String decimal positivo. Monto en moneda local para métodos de corredor; para `checkout` se denomina en el `settlement_asset` ("50" USDT, "0.001" BTC, "2" gramos de oro). Los decimales se limitan por moneda (CLP no admite decimales, UF máximo dos); violarlo responde 422 `core_rejected` con el mensaje "amount has too many decimals for this currency".
+                  description: String decimal positivo. Monto en moneda local para métodos de corredor; para `checkout` se denomina en el `settlement_asset` ("50" USDT, "0.001" BTC, "2" gramos de oro). Los decimales se limitan por moneda (CLP no admite decimales, UF máximo dos); violarlo responde 422 `core_rejected` con el mensaje "amount has too many decimals for this currency". Los corredores UF están temporalmente deshabilitados en producción mientras se aprueban.
                 description:
                   type: string
                 channel:
@@ -16384,7 +16452,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (solo los payins pending se confirman aquí; sin cuenta declarada hay que asignar primero) o confirm_request_conflict (ya hay una solicitud con otra evidencia) o deposit_settled_treasury_trade (el movimiento ya liquidó una compra de tesorería)
+          description: invalid_state (solo los payins pending o expired se confirman aquí; sin cuenta declarada hay que asignar primero) o confirm_request_conflict (ya hay una solicitud con otra evidencia) o deposit_settled_treasury_trade (el movimiento ya liquidó una compra de tesorería)
         '422':
           description: invalid_payload — solo se pueden confirmar payins anunciados EC/USD push bank_transfer o payins push cash de un corredor cash activo
         '503':
@@ -17490,14 +17558,20 @@ paths:
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':
-          description: Cuenta no activa (`account_blocked`) o falta la credencial de cuenta.
+          description: Cuenta no activa (`account_blocked`), falta la credencial de cuenta o attestation vencida (`integrity_required` — sesiones app de miembro con historial necesitan veredicto fresco; attestear vía POST /v1/me/device-integrity y reintentar).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: account_blocked
-                message: account is not active
+              examples:
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
+                integrity_required:
+                  value:
+                    error: integrity_required
+                    message: 'fresh device attestation required: attest and retry'
         '422':
           description: 'No hay tasa de cambio para la moneda (`currency_not_supported`), o el
 

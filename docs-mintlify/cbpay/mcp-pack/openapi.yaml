@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.249'
+  version: '2.253'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -2124,6 +2124,63 @@ paths:
               example:
                 error: invalid_handoff
                 message: handoff token is invalid or expired
+  /v1/auth/integrity-nonce:
+    post:
+      tags:
+      - Authentication
+      security: []
+      operationId: issueIntegrityNonce
+      summary: Issue an integrity nonce
+      description: "Issues a single-use nonce bound to org+email for a Play Integrity request (standard or classic). The app sends it to Google in the integrity request and posts the resulting token (login field or POST /v1/me/device-integrity); the server burns the nonce and compares it with Google's echo to close replay. TTL 5 minutes. Throttled to 60/hour per IP. Unknown org answers uniform 401."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - org
+              - email
+              properties:
+                org:
+                  type: string
+                  description: CBPay organization slug (`cbpay`).
+                email:
+                  type: string
+                  format: email
+                  description: Member email attempting to log in (lowercased, bound to the nonce).
+            example:
+              org: cbpay
+              email: ana@example.com
+      responses:
+        '200':
+          description: Nonce issued (raw code, shown only once).
+          content:
+            application/json:
+              example:
+                nonce: dGhpcyBpcyBhIGZha2Utbm9uY2UtZXhhbXBsZQ
+                expires_in: 300
+        '400':
+          description: Missing org or email (invalid_request).
+          content:
+            application/json:
+              example:
+                error: invalid_request
+                message: org and email are required
+        '401':
+          description: Unknown org (invalid_credentials, uniform with login).
+          content:
+            application/json:
+              example:
+                error: invalid_credentials
+                message: email or password is incorrect
+        '429':
+          description: Too many nonce requests (rate_limited).
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many nonce requests, retry later
   /v1/auth/login:
     post:
       tags:
@@ -2131,7 +2188,7 @@ paths:
       security: []
       operationId: login
       summary: Log in
-      description: 'Members with must_enroll_2fa receive pending_2fa_enrollment instead of a session. Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials.'
+      description: 'Members with must_enroll_2fa receive pending_2fa_enrollment instead of a session. Failed login attempts are throttled per normalized organization/email account: 8 failures in 15 minutes, then uniform 401 invalid_credentials without bcrypt until the window expires. Pending-registration members also receive uniform invalid_credentials. The Android app may attach integrity_token + integrity_nonce (see POST /v1/auth/integrity-nonce): logins from a counterfeit app are rejected with the same uniform 401.'
       requestBody:
         required: true
         content:
@@ -2151,6 +2208,12 @@ paths:
                   format: email
                 password:
                   type: string
+                integrity_token:
+                  type: string
+                  description: Optional Play Integrity token from the Android app (1-16384 chars). Omit it on web, iOS and old app versions.
+                integrity_nonce:
+                  type: string
+                  description: Server nonce issued by POST /v1/auth/integrity-nonce, bound to this org+email. Required for replay binding (bound=true); without it the token is still decoded and audited but never passes enforcement gates.
             example:
               org: cbpay
               email: ana@example.com
@@ -10866,7 +10929,7 @@ paths:
       - Account
       operationId: reportDeviceIntegrity
       summary: Report an Android integrity token
-      description: Reports a Play Integrity token from the Android app for server-side decoding (monitor mode, never blocks). The verdict is audited as a device_integrity security event. Without Google credentials the endpoint still answers 200 with checked=false. Throttled to 12/hour per member.
+      description: 'Reports a Play Integrity token from the Android app for server-side decoding. The verdict is audited as a device_integrity security event. With integrity_nonce (issued by POST /v1/auth/integrity-nonce) the report is replay-bound (bound=true); without it the verdict is still audited but never passes enforcement gates. Verdicts: ok, device_basic, app_unknown, mismatch, error, unchecked, nonce_invalid. Throttled to 12/hour per member.'
       requestBody:
         required: true
         content:
@@ -10879,17 +10942,22 @@ paths:
                 integrity_token:
                   type: string
                   description: Standard Play Integrity token (1-16384 chars).
+                integrity_nonce:
+                  type: string
+                  description: Server nonce bound to this org+email. Single-use, TTL 5 minutes.
             example:
               integrity_token: integrity-token-from-play-api
+              integrity_nonce: nonce-from-integrity-nonce-endpoint
       responses:
         '200':
-          description: Verdict recorded (checked may be false without credentials).
+          description: Verdict recorded (checked may be false without credentials; bound is true only with a validated nonce).
           content:
             application/json:
               example:
                 checked: true
                 verdict: ok
                 device_ok: true
+                bound: true
         '400':
           description: Invalid token (invalid_token).
           content:
@@ -14135,10 +14203,10 @@ paths:
                 currency:
                   type: string
                   example: BOB
-                  description: Corridor currency. Required for every method except `checkout`, which rejects it with 400 — the charge is denominated in `settlement_asset`. Chile card payins accept `CLP` (integer amounts) and `UF` (at most two decimals, charged natively on the card rail and converted internally).
+                  description: Corridor currency. Required for every method except `checkout`, which rejects it with 400 — the charge is denominated in `settlement_asset`. Chile card payins are documented for `CLP` (integer amounts) and `UF` (at most two decimals, charged natively on the card rail and converted internally), but the `CL/UF/card` and `CL/UF/cash` corridors are temporarily disabled in production pending approval; current requests return `409 corridor_disabled` or `422 core_rejected`.
                 amount:
                   type: string
-                  description: Positive decimal string. Local currency amount for corridor methods; for `checkout` it is denominated in the `settlement_asset` ("50" USDT, "0.001" BTC, "2" grams of gold). Decimal places are capped per currency (CLP admits no decimals, UF at most two); violations surface as 422 `core_rejected` with the message "amount has too many decimals for this currency".
+                  description: Positive decimal string. Local currency amount for corridor methods; for `checkout` it is denominated in the `settlement_asset` ("50" USDT, "0.001" BTC, "2" grams of gold). Decimal places are capped per currency (CLP admits no decimals, UF at most two); violations surface as 422 `core_rejected` with the message "amount has too many decimals for this currency". UF corridors are temporarily disabled in production pending approval.
                 description:
                   type: string
                 channel:
@@ -14159,7 +14227,7 @@ paths:
                   - cash
                   - pix
                   default: qr
-                  description: "Collection mode. `qr` creates an active QR charge through the processor; `bank_transfer` announces an incoming deposit and returns the reference to include in the transfer description. The amount must cover the account's fixed fee at its current rate; otherwise creation returns `422 amount_below_minimum` with the local minimum in the message. If no rate is available, this pre-check is skipped and the ledger guard remains authoritative. `fintoc` (Chile only) returns a hosted `payment_url` where the payer transfers from any Chilean bank or wallet and the deposit is detected automatically; `pix` (Brazil only) returns a hosted `payment_url` for a PIX redirect checkout (`payer_name` and `payer_document` required, minimum 1 BRL); `card` returns a hosted `payment_url` for a 3-D Secure card checkout (Bolivia in BOB, international cards in USD when `country` is `US`, or Chile cards in CLP or UF); on the Chile card page the payer may split the charge into 2-48 issuer installments (the receipt shows `months`; one-click payments with a stored card are always single-charge); `checkout` returns a public `checkout_url` where the payer picks the payment method (QR, card, bank transfer or crypto). Use /v1/payins/collect for pull collections. `wallet` is hosted or collect-only depending on the corridor; collect-only flows do not return a payment URL."
+                  description: "Collection mode. `qr` creates an active QR charge through the processor; `bank_transfer` announces an incoming deposit and returns the reference to include in the transfer description. The amount must cover the account's fixed fee at its current rate; otherwise creation returns `422 amount_below_minimum` with the local minimum in the message. If no rate is available, this pre-check is skipped and the ledger guard remains authoritative. `fintoc` (Chile only) returns a hosted `payment_url` where the payer transfers from any Chilean bank or wallet and the deposit is detected automatically; `pix` (Brazil only) returns a hosted `payment_url` for a PIX redirect checkout (`payer_name` and `payer_document` required, minimum 1 BRL); `card` returns a hosted `payment_url` for a 3-D Secure card checkout (Bolivia in BOB, international cards in USD when `country` is `US`, or Chile cards in CLP or UF); the Chile UF card and cash corridors are temporarily disabled in production pending approval and return `409 corridor_disabled` or `422 core_rejected`; on the Chile card page the payer may split the charge into 2-48 issuer installments (the receipt shows `months`; one-click payments with a stored card are always single-charge); `checkout` returns a public `checkout_url` where the payer picks the payment method (QR, card, bank transfer or crypto). Use /v1/payins/collect for pull collections. `wallet` is hosted or collect-only depending on the corridor; collect-only flows do not return a payment URL."
                 idempotency_key:
                   type: string
                   maxLength: 256
@@ -16241,7 +16309,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (no pending confirm request for this payin; a credited payin with different evidence is reported through its request), second_approver_required (the checker must be a different god than the maker), confirm_account_mismatch (the payin account changed since the request; re-request), or bank_ref_conflict (the bank reference is already claimed by another operation)
+          description: invalid_state (no pending confirm request on this payin; a credited payin with different evidence is reported through its request), second_approver_required (the checker must be a different god than the maker), confirm_account_mismatch (the payin account changed since the request; re-request), or bank_ref_conflict (the bank reference is already claimed by another operation)
         '500':
           description: credit_failed (the claim is released; replay the approve)
         '503':
@@ -16283,7 +16351,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (the payin is already credited, or no pending confirm request to cancel)
+          description: invalid_state (the payin is already credited, or no pending confirm request on this payin to cancel)
   /v1/payins/{payinID}/confirm-received:
     post:
       tags:
@@ -16355,7 +16423,7 @@ paths:
         '404':
           description: not_found
         '409':
-          description: invalid_state (only pending payins can be confirmed here; without a declared account the payin must be assigned first) or confirm_request_conflict (a request with different evidence is already pending) or deposit_settled_treasury_trade (the bank movement already settled a treasury purchase)
+          description: invalid_state (only pending or expired payins can be confirmed here; without a declared account the payin must be assigned first) or confirm_request_conflict (a request with different evidence is already pending) or deposit_settled_treasury_trade (the bank movement already settled a treasury purchase)
         '422':
           description: invalid_payload — only announced EC/USD push bank_transfer payins or push cash payins from a live cash corridor can be confirmed here
         '503':
@@ -17384,14 +17452,20 @@ paths:
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':
-          description: Account not active (`account_blocked`) or missing account credential.
+          description: Account not active (`account_blocked`), missing account credential, or stale device attestation (`integrity_required` — member app sessions with attestation history need a fresh verdict; attest via POST /v1/me/device-integrity and retry).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: account_blocked
-                message: account is not active
+              examples:
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
+                integrity_required:
+                  value:
+                    error: integrity_required
+                    message: 'fresh device attestation required: attest and retry'
         '422':
           description: 'No FX rate for the currency (`currency_not_supported`), or the
 

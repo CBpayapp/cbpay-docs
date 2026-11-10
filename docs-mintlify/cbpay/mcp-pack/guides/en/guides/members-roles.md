@@ -46,7 +46,7 @@ members section.
 ### Add or select a member
 
 When adding a member, provide an email, a password with at least eight
-characters and one of the three roles. When editing a member, select the
+characters that is not a commonly used one, and one of the three roles. When editing a member, select the
 member before changing the role or status.
 ### Confirm the member action
 

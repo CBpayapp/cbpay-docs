@@ -5,14 +5,36 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.249 · 4 versiones - 9 de noviembre de 2026
-### v2.249
+## v2.254 · 2 versiones - 10 de noviembre de 2026
+### v2.254
+**Cambiado**
+- Polygon `polygon:usdce` (USDC.e) queda deshabilitado globalmente para nuevas
+  wallets y envíos. Los saldos existentes siguen visibles con insignia de red
+  apagada, la exportación sigue disponible y los depósitos a direcciones
+  USDC.e existentes continúan abonando el saldo separado. Los controles
+  apagados responden `409 crypto_disabled`; si el storage no está disponible,
+  responden `503 crypto_controls_unavailable`.
+### v2.253
+**Cambiado**
+- Los payins `CL/UF/card` y `CL/UF/cash` de Chile están temporalmente deshabilitados en producción mientras queda pendiente la aprobación del corredor. La documentación y los ejemplos UF se mantienen como referencia; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`. Usa `CLP` hasta que se apruebe el corredor.
+## v2.252 · 7 versiones - 9 de noviembre de 2026
+### v2.252
 #### Agregado
 
 - Se agregó orientación operativa para el replay controlado de transacciones
   de tarjetas y el matching c11-first de liquidaciones, incluida la regla de
   que `chain: "0"` significa que no hay dato de chain.
-### v2.248
+### v2.251
+**Agregado**
+- Se agregó un flujo opcional de Google Play Integrity para apps Android: pedir un nonce de un solo uso, solicitar el token y reportarlo con `POST /v1/me/device-integrity`.
+
+**Cambiado**
+- Las sesiones de miembro con historial de attestation bound ahora necesitan un veredicto exitoso fresco para payouts protegidos. Re-attesta y reintenta con la misma idempotency key después de `integrity_required`; las API keys y sesiones sin historial bound siguen exentas.
+- Se agregó monitoreo de cuota diaria con alertas al war room al 70% y 90%; las alertas no bloquean solicitudes.
+### v2.250
+**Cambiado**
+- La confirmación manual ahora acepta payins push `pending` y `expired`. El claim reabre atómicamente un payin vencido a `pending`; `payin_expired` puede llegar antes que `payin_credited`.
+### v2.249
 **Cambiado**
 - El endpoint de desafíos de prueba de trabajo ahora tiene un límite propio de
   200 solicitudes por hora por IP, por lo que el tráfico de challenges no
@@ -23,9 +45,12 @@ source_url: https://docs.cbpayapp.com/es/changelog
   procesamiento compatible con UTS46, en línea con la normalización del email.
 - Cuando el monitoreo antiabuso está degradado, el aviso de modo de ataque
   explica que la señal de respaldo activó el latch.
-### v2.247
+### v2.248
 **Seguridad**
 - Se endureció el registro contra abuso de variantes del buzón: los puntos/`+` de Gmail (y sub-direcciones `+` en proveedores grandes) ahora resuelven al mismo buzón para detectar duplicados, así un buzón ya no puede abrir varias cuentas. Las respuestas no cambian (`201 pending_verification`).
+### v2.247
+**Seguridad**
+- Las contraseñas ahora rechazan las 10.000 más comunes (`weak_password`, mismo código): además del mínimo de 8 caracteres, evita las predecibles. Los nombres visibles quedan topados en 120 caracteres. El login ya no filtra por tiempos si una cuenta existe.
 ### v2.246
 **Cambiado**
 - Los cambios de credenciales de administradores platform ahora usan maker-checker de dos god. Los resets TOTP limpian el secreto sin despacho de email después de aprobar; los cambios de email avisan a ambas casillas y mantienen pendiente el request ante `409 duplicate`. La administración de scope organización sigue siendo directa.

@@ -4,7 +4,15 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="10 de noviembre de 2026" description="v2.253 · 1 versión">
+<Update label="10 de noviembre de 2026" description="v2.254 · 2 versiones">
+### v2.254
+**Cambiado**
+- Polygon `polygon:usdce` (USDC.e) queda deshabilitado globalmente para nuevas
+  wallets y envíos. Los saldos existentes siguen visibles con insignia de red
+  apagada, la exportación sigue disponible y los depósitos a direcciones
+  USDC.e existentes continúan abonando el saldo separado. Los controles
+  apagados responden `409 crypto_disabled`; si el storage no está disponible,
+  responden `503 crypto_controls_unavailable`.
 ### v2.253
 **Cambiado**
 - Los payins `CL/UF/card` y `CL/UF/cash` de Chile están temporalmente deshabilitados en producción mientras queda pendiente la aprobación del corredor. La documentación y los ejemplos UF se mantienen como referencia; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`. Usa `CLP` hasta que se apruebe el corredor.
