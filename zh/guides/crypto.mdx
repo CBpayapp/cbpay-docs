@@ -122,6 +122,25 @@ V1 支持 USDC.e 钱包、充值、提现、转账、隔离余额、历史记录
 V1 不支持 swaps、卡、checkout/QR PoS 或 OTC。无法完成的自动转换保持
 `pending_retry`，请读取现有操作，不要创建替代操作。
 
+<Warning>
+**USDC.e sunset：**Polygon `polygon:usdce` 网络已全局停用。无法创建新的
+USDC.e 钱包或发送新的 USDC.e。现有 USDC.e 余额仍会显示，并带有网络已
+停用标记；导出功能始终可用。请通过正常迁移流程将现有余额迁移到已启用的
+Polygon USDC 通道；余额不会被删除。
+</Warning>
+
+<AccordionGroup>
+<Accordion title="我的现有 USDC.e 余额会怎样？">
+Sunset 不会丢失或扣除余额。余额仍作为带网络已停用标记的 USDC.e 显示，
+并且可以导出。可通过正常迁移流程将其迁移到已启用的 Polygon USDC 通道。
+</Accordion>
+<Accordion title="如果我向旧的 USDC.e 地址充值会怎样？">
+现有 Polygon USDC.e 充值地址仍会被识别。向该地址发送的存款在完成正常
+链上确认后仍会计入独立的 USDC.e 余额；请使用正确的代币和网络，不要向该
+地址发送 Polygon 原生 USDC。
+</Accordion>
+</AccordionGroup>
+
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/crypto/wallets \
   -H "Authorization: Bearer <token>" \
@@ -514,9 +533,11 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 | 400 | `invalid_asset` | 该网络/资产组合没有链上通道（支持：`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`btc`/`btc` —— `GOLD` 不支持链上操作） |
 | 400 | `to_address_required` | 缺少提现目标地址 |
 | 402 | `insufficient_funds` | 该资产余额不足（不足以支付提现或创建费用） |
+| 409 | `crypto_disabled` | 所选加密网络或组合已全局或由管理员停用；不要创建替代操作 |
 | 422 | `wallet_limit_reached` | 该账户在此网络+资产组合下已持有充值钱包（个人和企业均适用） |
 | 422 | （提现返回 `status: failed`） | 广播时被拒绝；扣款已退回 |
 | 503 | `withdrawals_unavailable` | 该通道的提现尚未启用 |
+| 503 | `crypto_controls_unavailable` | 无法读取加密控制状态；控制存储恢复后使用相同幂等请求重试 |
 ## 常见问题
 
 <AccordionGroup>

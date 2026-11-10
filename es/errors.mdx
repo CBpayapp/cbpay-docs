@@ -71,6 +71,7 @@ Detalle y flujo completo en [seguridad y 2FA](/es/security-2fa).
 | 429 | `too_many_attempts` | Límite de envíos o verificaciones; espera unos minutos |
 | 503 | `otp_unavailable` | Servicio de verificación no disponible (la acción queda bloqueada, nunca se salta el OTP) |
 | 409 | `otp_disabled_for_org` | Tu organización no tiene habilitado el 2FA por acción; contacta a tu operador |
+| 422 | `sms_country_blocked` | Los códigos SMS no están disponibles para este país (allowlist de la organización); verifica con tu app autenticadora o email |
 | 409 | `totp_not_started` | No hay enrolamiento TOTP en curso; parte con `POST /v1/me/totp/enroll` |
 
 ### Login social (OAuth)
@@ -96,18 +97,20 @@ Estos códigos provienen de **superficies de administración de organización** 
 | 503 | `core_admin_credential_missing` | Un catálogo de administrador de plataforma requiere una credencial del core configurada; contacta al administrador de plataforma |
 | 400 | `invalid_value` | Un setting de la organización se envió con el tipo incorrecto (ej. `global_treasury_read` debe ser booleano, no un string) |
 | 409 | `approval_in_progress` | Otro administrador está aplicando este ajuste; espera a que termine antes de intentarlo de nuevo |
+| 400 | `prefixes_required` | La actualización de la allowlist SMS necesita `prefixes` (manda `[]` para volver al default de plataforma) |
 
 ### Validación (400)
 
 | `error` | Significado |
 |---|---|
 | `invalid_json` | Body no es JSON válido o tiene campos desconocidos |
+| `invalid_event_ids` | Provee de 1 a 100 event_ids como UUIDs |
 | `invalid_lang` | `lang` debe ser `es`, `en` o `zh` |
 | `invalid_settings` | Los settings de la organización no son un objeto JSON válido o no pudieron normalizarse; corrige el payload y reintenta |
 | `invalid_type` | `type` debe ser `person` o `company` |
 | `invalid_email` / `invalid_display_name` | Campo requerido inválido |
 | `invalid_characters` | Un nombre o etiqueta (`display_name`, `alias` de contacto, `label` de destino o de API key) contiene HTML o script ejecutable y fue rechazado; envía texto plano |
-| `weak_password` | Contraseña menor a 8 caracteres |
+| `weak_password` | La contraseña no cumple la política: mínimo 8 caracteres y no ser de uso común |
 | `invalid_role` | Rol de miembro inválido |
 | `unknown_org` | Slug de organización incorrecto (usa `cbpay`) |
 | `invalid_request` | Faltan `country`/`currency` |
@@ -411,6 +414,7 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 409 | `crypto_disabled` | La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización. |
 | 400 | `invalid_crypto_control` | El toggle de red crypto es inválido (red/activo desconocido, scope o motivo faltante). Corrige el request. |
 | 409 | `rail_not_registered` | El riel seleccionado no está configurado en este ambiente. Elige un riel registrado (ver pantalla de corredores del admin). |
+| 503 | `crypto_controls_unavailable` | No se pudo leer el estado de controles crypto antes de la operación. Repite el mismo request idempotente cuando se recupere el storage de controles. |
 
 ## Banking creation recovery errors
 

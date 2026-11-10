@@ -1,5 +1,5 @@
 {
-  "count": 424,
+  "count": 425,
   "errors": [
     {
       "category": {
@@ -892,9 +892,9 @@
       "code": "weak_password",
       "http": 400,
       "meaning": {
-        "en": "Password shorter than 8 characters",
-        "es": "Contraseña menor a 8 caracteres",
-        "zh": "密码少于 8 个字符"
+        "en": "Password fails the policy: minimum 8 characters and not a commonly used one",
+        "es": "La contraseña no cumple la política: mínimo 8 caracteres y no ser de uso común",
+        "zh": "密码不符合策略：至少 8 个字符且不得为常见密码"
       }
     },
     {
@@ -3891,6 +3891,20 @@
         "en": "The selected rail is not configured in this environment. Pick a registered rail (see the admin corridors screen).",
         "es": "El riel seleccionado no está configurado en este ambiente. Elige un riel registrado (ver pantalla de corredores del admin).",
         "zh": "所选通道在此环境中未配置。请选择已注册的通道（见管理后台走廊页面）。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "crypto_controls_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The crypto-control state could not be read before the operation. Retry the same idempotent request after the control store recovers.",
+        "es": "No se pudo leer el estado de controles crypto antes de la operación. Repite el mismo request idempotente cuando se recupere el storage de controles.",
+        "zh": "操作前无法读取 crypto 控制状态。控制存储恢复后使用相同幂等请求重试。"
       }
     },
     {

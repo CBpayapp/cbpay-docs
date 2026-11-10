@@ -4,7 +4,13 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月10日" description="v2.253 · 1 个版本">
+<Update label="2026年11月10日" description="v2.254 · 2 个版本">
+### v2.254
+**变更**
+- Polygon `polygon:usdce`（USDC.e）已全局停用，不再支持创建新钱包或发送。
+  现有余额仍显示并带有网络停用标记，导出功能可用，向现有 USDC.e 地址
+  充值仍会计入独立余额。控制停用返回 `409 crypto_disabled`；控制存储
+  不可用返回 `503 crypto_controls_unavailable`。
 ### v2.253
 **变更**
 - 智利 `CL/UF/card` 和 `CL/UF/cash` payin 在生产环境中暂时禁用，等待通道批准。UF 文档和示例保留作参考；当前请求返回 `409 corridor_disabled` 或 `422 core_rejected`。通道获批前请使用 `CLP`。

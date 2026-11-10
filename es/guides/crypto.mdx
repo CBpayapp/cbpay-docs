@@ -135,6 +135,29 @@ disponible en swaps, tarjetas, checkout/QR PoS ni OTC. Las conversiones
 automáticas hacia USDC.e que no terminan quedan en `pending_retry`; consulta
 la operación existente y no crees un reemplazo.
 
+<Warning>
+**Sunset de USDC.e:** la red Polygon `polygon:usdce` está desactivada
+globalmente. No se pueden crear nuevas wallets ni enviar nuevos USDC.e. Los
+saldos USDC.e existentes siguen visibles con una insignia de red apagada y la
+exportación está siempre disponible. Migra cualquier saldo existente al riel
+Polygon USDC habilitado mediante tu proceso normal de migración; el saldo no
+se elimina.
+</Warning>
+
+<AccordionGroup>
+<Accordion title="¿Qué pasa con mi saldo USDC.e existente?">
+No se pierde ni se debita por el sunset. El saldo sigue visible como USDC.e con
+la insignia de red apagada y puedes exportarlo. Puedes migrarlo al riel Polygon
+USDC habilitado mediante tu proceso normal de migración.
+</Accordion>
+<Accordion title="¿Qué pasa si deposito en mi dirección USDC.e antigua?">
+La dirección de depósito Polygon USDC.e existente sigue reconocida. Un depósito
+enviado a esa dirección se acredita al saldo separado USDC.e después de las
+confirmaciones on-chain normales; usa el token y la red correctos, y no envíes
+Polygon USDC nativo a esa dirección.
+</Accordion>
+</AccordionGroup>
+
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/crypto/wallets \
   -H "Authorization: Bearer <token>" \
@@ -544,9 +567,11 @@ BTC); las wallets son puertas de entrada, el saldo por moneda es uno solo.
 | 400 | `invalid_asset` | Combinación red/activo sin riel on-chain (soportadas: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc` — `GOLD` no opera on-chain) |
 | 400 | `to_address_required` | Falta la dirección destino del retiro |
 | 402 | `insufficient_funds` | Saldo insuficiente en ese activo (para el retiro o la comisión de creación) |
+| 409 | `crypto_disabled` | La red o el par crypto está deshabilitado global o administrativamente; no crees una operación de reemplazo |
 | 422 | `wallet_limit_reached` | La cuenta ya tiene su wallet de depósito de esa combinación red+activo (aplica a personas y empresas) |
 | 422 | (retiro con `status: failed`) | Rechazado al transmitir; débito reembolsado |
 | 503 | `withdrawals_unavailable` | Retiros no habilitados aún para este corredor |
+| 503 | `crypto_controls_unavailable` | No se pudo leer el estado de controles crypto; repite el mismo request idempotente cuando se recupere el storage de controles |
 ## FAQ
 
 <AccordionGroup>

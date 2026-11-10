@@ -126,7 +126,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_type` | `type` must be `person` or `company` |
 | `invalid_email` / `invalid_display_name` | Invalid required field |
 | `invalid_characters` | A name or label (`display_name`, contact `alias`, destination `label`, API key `label`) contains HTML or executable script and was rejected; send plain text |
-| `weak_password` | Password shorter than 8 characters |
+| `weak_password` | Password fails the policy: minimum 8 characters and not a commonly used one |
 | `invalid_role` | Invalid member role |
 | `unknown_org` | Wrong organization slug (use `cbpay`) |
 | `invalid_request` | Missing `country`/`currency` |
@@ -426,6 +426,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 409 | `crypto_disabled` | The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator. |
 | 400 | `invalid_crypto_control` | The crypto network toggle is invalid (unknown chain/asset, scope, or missing reason). Fix the request. |
 | 409 | `rail_not_registered` | The selected rail is not configured in this environment. Pick a registered rail (see the admin corridors screen). |
+| 503 | `crypto_controls_unavailable` | The crypto-control state could not be read before the operation. Retry the same idempotent request after the control store recovers. |
 
 ## Banking creation recovery errors
 

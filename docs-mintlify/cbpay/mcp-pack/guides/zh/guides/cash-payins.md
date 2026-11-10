@@ -21,6 +21,7 @@ flowchart LR
 | 国家 | 货币 | 方法 | 交付 |
 |---|---|---|---|
 | CL | CLP | `cash` | announced-only (in-person) |
+| CL | UF | `cash` | 生产环境暂时禁用 |
 | PE | PEN | `cash` | announced-only (in-person) |
 | MX | MXN | `cash` | announced-only (in-person) |
 | VE | VES | `cash` | announced-only (in-person) |
@@ -65,9 +66,11 @@ org-admin maker 调用 `POST /v1/payins/{payinID}/confirm-received`，提交 `ba
 | 403 `named_admin_required` | checker 不是具名 god | 使用具名 god 人工会话。 |
 | 409 `confirm_account_mismatch` | maker 请求后账户发生变化 | 重新读取，仍符合条件时重新提交证据。 |
 
+> **重要**
+`CL/UF/cash` 走廊目前在生产环境中暂时禁用，等待完成批准。该走廊文档保留作参考，批准后会恢复；当前请求返回 `409 corridor_disabled` 或 `422 core_rejected`。生产环境请使用 `CL/CLP/cash`。
 ### 到期与确认请求生命周期
 
-现金申报是普通 `push` payin：保持 `pending` 72 小时后，过期扫描会改为 `expired` 并发送 `payin_expired`。现场收据晚到不会入账到该申报，运营应为其开立新的申报（现金不会自动产生 `unassigned` 行——没有可暂存的 provider 事件）。maker 请求**没有系统 TTL**，超时是运营规则；它随 payin 一起失效。申报到期后 checker 收到 `409 invalid_state`，待审批列表隐藏已到期 payin，因为只列 pending。
+现金申报是普通 `push` payin：保持 `pending` 72 小时后，过期扫描会改为 `expired` 并发送 `payin_expired`。现场收据晚到不会入账到该申报，运营应为其开立新的申报（现金不会自动产生 `unassigned` 行——没有可暂存的 provider 事件）。maker 请求**没有系统 TTL**，超时是运营规则。如果 payin 在请求待处理时过期，maker 可以再次 claim，原子 claim 会将 `expired` 重新打开为 `pending`，随后 checker 可以批准。待审批列表会保留该待处理请求。
 
 ### 查询与历史
 
@@ -85,7 +88,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-24&stat
 | `pending` | 申报或确认等待操作 | 交付现金或完成 maker-checker。 |
 | `credited` | 批准后按实时汇率、fee 和 ledger 入账 | 对账余额和 webhook。 |
 | `unassigned` | 现金不会出现（没有可暂存的 provider 事件） | 若已收现金，请开立新申报。 |
-| `expired` | push 申报 72 小时后过期 | 不要批准，单独对账收据。 |
+| `expired` | push 申报 72 小时后过期 | 如果存在待处理请求，继续使用 maker-checker 流程；claim 会将其重新打开为 `pending`。 |
 | `failed` | 操作无法完成 | 阅读 failure，避免重复。 |
 
 ### `payin_credited` webhook
@@ -100,3 +103,6 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-10-01&to=2026-10-24&stat
 不会，只有 checker 单独批准才入账。
 #### 现金申报何时到期？
 pending 72 小时后到期。maker 请求没有系统 TTL，payin 到期后会隐藏且不能批准。
+### 已过期的 push 公告
+
+`push` payin 可能在客户证据确认前过期。如果已有待处理的 maker-checker 请求，maker 仍可调用 `confirm-received`：claim 会以原子方式将 `expired` 重新打开为 `pending`，checker 随后按正常流程批准。审批收件箱会继续显示该请求，并且 `payin_expired` webhook 可能先于之后的 `payin_credited` webhook 到达。

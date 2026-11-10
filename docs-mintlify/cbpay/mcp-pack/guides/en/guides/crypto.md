@@ -135,6 +135,22 @@ cards, checkout/QR PoS or OTC in v1. Automatic conversions into USDC.e that
 cannot complete remain `pending_retry`; read the existing operation instead
 of creating a replacement.
 
+> **Important**
+**USDC.e sunset:** the Polygon `polygon:usdce` network is globally disabled.
+New USDC.e wallets and sends are not available. Existing USDC.e balances remain
+visible with a disabled-network badge, and export remains available at all
+times. Move any existing balance to the supported Polygon USDC route through
+your normal migration process; the balance is not deleted.
+#### What happens to my existing USDC.e balance?
+Nothing is lost or debited by the sunset. The balance remains visible as
+USDC.e with the disabled-network badge, and you can export it. It can be
+migrated to the supported Polygon USDC route through your normal migration
+process.
+#### What if I deposit to my old USDC.e address?
+The existing Polygon USDC.e deposit address remains recognized. A deposit sent
+to that address is credited to the separate USDC.e balance after the normal
+on-chain confirmations; use the correct token and network, and do not send
+native Polygon USDC to it.
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/crypto/wallets \
   -H "Authorization: Bearer <token>" \
@@ -526,9 +542,11 @@ USDC.e or BTC); wallets are entry points, each asset has a single balance.
 | 400 | `invalid_asset` | Network/asset pair without an on-chain rail (supported: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc` — `GOLD` does not operate on-chain) |
 | 400 | `to_address_required` | Missing withdrawal destination address |
 | 402 | `insufficient_funds` | Not enough balance in that asset (for the withdrawal or the creation fee) |
+| 409 | `crypto_disabled` | The selected crypto network or pair is globally or administratively disabled; do not create a replacement operation |
 | 422 | `wallet_limit_reached` | The account already holds its deposit wallet for that network+asset pair (applies to persons and companies) |
 | 422 | (withdrawal with `status: failed`) | Rejected at broadcast; debit refunded |
 | 503 | `withdrawals_unavailable` | Withdrawals not enabled for this corridor yet |
+| 503 | `crypto_controls_unavailable` | Crypto-control state could not be read; retry the same idempotent request after the control store recovers |
 ## FAQ
 
 #### Do I need to create deposit wallets?

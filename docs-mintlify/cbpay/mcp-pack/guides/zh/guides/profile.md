@@ -128,6 +128,102 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
 }
 ```
 
+## Android 应用的设备完整性
+
+Android 应用可以使用 **Google Play Integrity**，证明完整性报告属于预期的
+组织和成员。nonce 只能使用一次，与 `org|email` 绑定，并在 5 分钟后过期。
+
+```mermaid
+sequenceDiagram
+    participant App as Android 应用
+    participant API as CBPay API
+    participant Google as Google Play Integrity
+    App->>API: POST /v1/auth/integrity-nonce {org,email}
+    API-->>App: nonce + expires_in: 300
+    App->>Google: 使用 nonce 请求完整性令牌
+    Google-->>App: integrity_token
+    App->>API: POST /v1/me/device-integrity {token, nonce}
+    API-->>App: verdict + bound
+```
+
+### 获取 nonce
+
+在向 Google 请求令牌前调用 `POST /v1/auth/integrity-nonce`。该接口不需要会话：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/auth/integrity-nonce \
+  -H "Content-Type: application/json" \
+  -d '{"org":"cbpay","email":"ana@example.com"}'
+```
+
+```json
+{
+  "nonce": "dGhpcyBpcyBhIGZha2Utbm9uY2UtZXhhbXBsZQ",
+  "expires_in": 300
+}
+```
+
+缺少 `org` 或 `email` 时返回 `400 invalid_request`；未知组织统一返回
+`401 invalid_credentials`；同一 IP 每小时超过 60 次后返回 `429 rate_limited`。
+### 向 Google 请求令牌
+
+从 Android 应用的 Google Play Integrity 请求中发送 nonce。请将返回的令牌
+与 nonce 一起保存；nonce 只能使用一次。
+### 上报结果
+
+使用用户会话调用 `POST /v1/me/device-integrity`：
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/me/device-integrity \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"integrity_token":"integrity-token-from-play-api","integrity_nonce":"nonce-from-integrity-nonce-endpoint"}'
+```
+
+```json
+{
+  "checked": true,
+  "verdict": "ok",
+  "device_ok": true,
+  "bound": true
+}
+```
+
+每个成员每小时最多上报 12 次。只有 nonce 验证成功时 `bound` 才为 `true`。
+没有 nonce 时报告仍会审计，但不能通过 enforcement 门禁。
+### Verdict 对照表
+
+| Verdict | 含义 | 处理方式 |
+|---|---|---|
+| `ok` | 令牌通过完整性检查 | 继续；enforcement 还要求 `bound: true` 且报告新鲜 |
+| `device_basic` | 设备仅达到基本完整性级别 | 在受保护 payout 前使用受支持的应用/设备重新认证 |
+| `app_unknown` | 无法识别应用 | 使用预期的 Android 应用重新认证 |
+| `mismatch` | 令牌与预期应用或请求不匹配 | 使用新的 nonce 和令牌重新开始流程 |
+| `error` | 无法评估令牌 | 获取新的 nonce 并重试认证流程 |
+| `unchecked` | 报告未被检查 | 视为未验证并获取已检查的报告 |
+| `nonce_invalid` | nonce 缺失、过期、已使用或不匹配 | 获取新的 nonce，并与新令牌一起提交 |
+
+### 受保护的 payout
+
+有 bound 认证历史的成员会话必须拥有最近 15 分钟内的新鲜
+`verdict: ok`。API key，以及没有 bound 认证历史的 iOS、Web 或旧版应用会话
+不受此要求影响。
+
+如果 payout 返回：
+
+```json
+{
+  "error": "integrity_required",
+  "message": "fresh device attestation required: attest and retry"
+}
+```
+
+不要创建新的 payout 或新的幂等键。重新执行 `/v1/me/device-integrity` 流程，
+并使用**相同的幂等键**重试原 payout。
+
+> **注**
+Google quota 的默认上限是每天 10,000 次检查。达到 70% 和 90% 时通知 war
+room；这些告警不会阻止请求。
 ## 双重验证（2FA）
 
 CBPay 通过一次性验证码保护敏感操作。你可以按操作选择是否要求验证，以及通过**哪个渠道**：
