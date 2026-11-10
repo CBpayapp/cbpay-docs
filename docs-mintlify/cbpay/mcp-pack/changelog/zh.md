@@ -5,7 +5,13 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.254 · 2 个版本 - 2026年11月10日
+## v2.255 · 3 个版本 - 2026年11月10日
+### v2.255
+**变更**
+- Convert 报价和兑换现在显示每一边的费用、`fee_total_pct` 以及
+  `fee_note: included_in_rate`；`/v1/rates` 显示有效的 `swap_spread`
+  行。账户支持响应使用匿名的 CBPay 支持标签，并说明登录前使用浏览器
+  语言、登录后账户语言优先。
 ### v2.254
 **变更**
 - Polygon `polygon:usdce`（USDC.e）已全局停用，不再支持创建新钱包或发送。

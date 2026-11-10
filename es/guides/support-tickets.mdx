@@ -27,6 +27,13 @@ Hay dos formas de abrirlo: desde el detalle de una transacción o desde Soporte 
 
 Las 11 categorías son cerradas: con transacción `error`, `question`, `delay`, `amount_mismatch`, `unrecognized_operation`, `refund_request`; de cuenta u otro tema `account_verification`, `access_security`, `fraud`, `fees_limits`, `other`. `money_stuck` es una señal separada y acepta `yes`, `no` o `unknown`.
 
+### Identidad de soporte
+
+En el portal de la cuenta, el equipo aparece como **Soporte de CBPay**.
+La cuenta nunca recibe nombres de administradores, datos de asignación ni
+identificadores internos. Las respuestas y eventos quedan acotados a tu
+cuenta; sigue el caso por su número y estado.
+
 ## 2. Abrir un ticket
 
 `kind` debe ser `payout`, `payin`, `payin_refund`, `transfer`, `crypto_withdrawal`, `crypto_deposit`, `swap`, `card_purchase`, `banking_operation`, `wallet_send` o `wallet_deposit`. Envía `resource_id`; los tickets `general` deben usar categoría `other` y omitirlo.

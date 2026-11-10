@@ -5,7 +5,14 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.254 · 2 versiones - 10 de noviembre de 2026
+## v2.255 · 3 versiones - 10 de noviembre de 2026
+### v2.255
+**Cambiado**
+- Las cotizaciones y swaps de Convertir ahora exponen comisiones por punta,
+  `fee_total_pct` y `fee_note: included_in_rate`; `/v1/rates` expone las
+  filas efectivas de `swap_spread`. Las respuestas de soporte de la cuenta
+  usan el label anónimo Soporte de CBPay, y el portal documenta el idioma
+  inicial del navegador y la prioridad del idioma de la cuenta al iniciar sesión.
 ### v2.254
 **Cambiado**
 - Polygon `polygon:usdce` (USDC.e) queda deshabilitado globalmente para nuevas

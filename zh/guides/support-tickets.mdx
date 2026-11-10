@@ -29,6 +29,12 @@ sequenceDiagram
 
 11 个类别为：交易类 `error`、`question`、`delay`、`amount_mismatch`、`unrecognized_operation`、`refund_request`；账户或其他 `account_verification`、`access_security`、`fraud`、`fees_limits`、`other`。另需发送 `money_stuck`：`yes`、`no` 或 `unknown`。
 
+### 支持身份
+
+在账户门户中，支持团队显示为 **CBPay 支持**。账户不会收到管理员
+姓名、分配信息或内部标识符。回复和工单事件始终限制在你的账户范围内；
+请使用工单编号和状态跟进。
+
 ## 2. 创建工单
 
 `kind` 必须是 `payout`、`payin`、`payin_refund`、`transfer`、`crypto_withdrawal`、`crypto_deposit`、`swap`、`card_purchase`、`banking_operation`、`wallet_send` 或 `wallet_deposit`。发送 `resource_id`；`general` 工单必须使用 `general` 类别并省略该字段。

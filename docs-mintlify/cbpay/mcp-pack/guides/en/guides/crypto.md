@@ -139,13 +139,12 @@ of creating a replacement.
 **USDC.e sunset:** the Polygon `polygon:usdce` network is globally disabled.
 New USDC.e wallets and sends are not available. Existing USDC.e balances remain
 visible with a disabled-network badge, and export remains available at all
-times. Move any existing balance to the supported Polygon USDC route through
-your normal migration process; the balance is not deleted.
+times. To move an existing balance to the supported Polygon USDC route,
+contact support; the balance is not deleted.
 #### What happens to my existing USDC.e balance?
 Nothing is lost or debited by the sunset. The balance remains visible as
-USDC.e with the disabled-network badge, and you can export it. It can be
-migrated to the supported Polygon USDC route through your normal migration
-process.
+USDC.e with the disabled-network badge, and you can export it. Contact
+support to migrate it to the supported Polygon USDC route.
 #### What if I deposit to my old USDC.e address?
 The existing Polygon USDC.e deposit address remains recognized. A deposit sent
 to that address is credited to the separate USDC.e balance after the normal

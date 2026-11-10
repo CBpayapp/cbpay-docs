@@ -13,8 +13,9 @@ Los **swaps** convierten saldo entre tus siete activos — `USD`, `USDT`, `USDC`
 de tu cuenta. Cualquier par funciona (también `BTC` ↔ `GOLD` directo,
 y `USD` ↔ `USDT` a 1:1 exacto); el fiat local (`BOB`, `MXN`, `ARS`) aún
 no es intercambiable (`invalid_pair`). La
-tasa que ves en la cotización es la tasa a la que se ejecuta: **no hay
-comisiones aparte** — cotizado = recibido.
+tasa que ves en la cotización es la tasa a la que se ejecuta: la comisión
+de conversión está **incluida en la tasa**, no se debita como una línea
+aparte. La respuesta expone la comisión de cada punta y el total efectivo.
 
 ```mermaid
 flowchart LR
@@ -37,13 +38,21 @@ curl "https://api.qbank.cl/platform/v1/swaps/quote?from_asset=USDT&to_asset=BTC&
   "from_amount": "1000.000000",
   "to_amount": "0.01568419",
   "rate": "0.00001568",
+  "fees": [
+    {"leg": "from", "asset": "USDT", "percent": "0.20"},
+    {"leg": "to", "asset": "BTC", "percent": "0.15"}
+  ],
+  "fee_total_pct": "0.3495",
+  "fee_note": "included_in_rate",
   "indicative": true
 }
 ```
 
 La cotización es **indicativa**: el swap se ejecuta a la tasa del momento
 del `POST` (los precios de BTC y GOLD se mueven). Para pares entre
-stablecoins (`USDT` ↔ `USDC`) la tasa es estable.
+stablecoins (`USDT` ↔ `USDC`) la tasa es estable. En el portal, Convertir
+muestra la comisión junto a cada activo y el total; `fee_note:
+included_in_rate` significa que no hay un débito adicional.
 
 ## 2. Ejecuta el swap
 
@@ -101,6 +110,12 @@ Respuesta `201` — el swap es síncrono, tu saldo cambia al instante:
   "from_amount": "1000.000000",
   "to_amount": "0.01568419",
   "rate": "0.00001568",
+  "fees": [
+    {"leg": "from", "asset": "USDT", "percent": "0.20"},
+    {"leg": "to", "asset": "BTC", "percent": "0.15"}
+  ],
+  "fee_total_pct": "0.3495",
+  "fee_note": "included_in_rate",
   "status": "completed",
   "idempotency_key": "swap-2026-07-10-a",
   "created_at": "2026-07-10T15:00:00Z"
@@ -172,12 +187,23 @@ aplica a conversiones internas de checkout/payin ni a flujos OTC.
 ## Preguntas frecuentes
 
 <AccordionGroup>
-<Accordion title="¿Por qué la tasa del swap difiere del precio de mercado que veo en otros lados?">
+<Accordion title="¿Dónde veo la comisión de conversión?">
+La pantalla Convertir muestra una comisión para cada punta y el
+`fee_total_pct` efectivo. Los mismos valores vienen en `fees` en las
+respuestas de quote y swap; `fee_note` es `included_in_rate`.
+</Accordion>
+<Accordion title="¿Por qué la tasa incluye la comisión de conversión?">
 La tasa cotizada es la tasa **de ejecución** de tu cuenta: incluye el costo
 de proveer la conversión instantánea y garantizada (liquidez inmediata, sin
 slippage, sin salir de tu cuenta). Es la misma filosofía de las tasas de
 payouts y payins: lo cotizado es exactamente lo que recibes, sin comisiones
-sorpresa después.
+lo que recibes. La comisión queda incorporada a esa tasa para que el monto
+de destino sea final y no exista un segundo débito.
+</Accordion>
+<Accordion title="¿Por qué la comisión tiene dos puntas?">
+La conversión aplica el spread configurado al activo que entregas y al que
+recibes. `fee_total_pct` es la suma efectiva para el par; es informativo y
+no crea una segunda entrada en el ledger.
 </Accordion>
 <Accordion title="¿La cotización del quote está garantizada?">
 No — es indicativa. BTC y GOLD se mueven, así que la ejecución usa el
