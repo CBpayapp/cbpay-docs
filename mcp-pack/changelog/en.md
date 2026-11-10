@@ -5,15 +5,15 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.256 · 4 versions - November 10, 2026
-### v2.256
+## v2.258 · 6 versions - November 10, 2026
+### v2.258
 **Changed**
 - Convert quotes and swaps now expose per-leg fees, `fee_total_pct` and
   `fee_note: included_in_rate`; `/v1/rates` exposes the effective
   `swap_spread` rows. Account support responses use the anonymous CBPay
   Support label, and the portal documents browser-language startup before
   login and account locale precedence after login.
-### v2.255
+### v2.257
 **Changed**
 - Swap and conversion fee totals now add both fee legs exactly
   (`0.20 + 0.15 = 0.3500`), while the fee remains included in the quoted
@@ -21,7 +21,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - The Convert portal now includes a **My Conversion Fees** view with fee
   details and history.
 - Support history is anonymized and uses the public CBPay Support label.
-### v2.254
+### v2.256
 **Changed**
 - Polygon `polygon:usdce` (USDC.e) is globally disabled for new wallets and
   sends. Existing balances remain visible with a disabled-network badge,
@@ -29,9 +29,12 @@ source_url: https://docs.cbpayapp.com/en/changelog
   to credit the separate balance. Disabled controls return `409
   crypto_disabled`; unavailable control storage returns `503
   crypto_controls_unavailable`.
-### v2.254
+### v2.255
 **Changed**
 - Chile `CL/UF/card` and `CL/UF/cash` payins are temporarily disabled in production while the corridor approval is pending. The UF documentation and examples remain available for reference; current requests return `409 corridor_disabled` or `422 core_rejected`. Use `CLP` until the corridor is approved.
+### v2.254
+**Changed**
+- OTP login now shows an honest wait while a challenge is pending.
 ### v2.253
 **Changed**
 - OTP challenge sending is now all-or-nothing across the member-wide
