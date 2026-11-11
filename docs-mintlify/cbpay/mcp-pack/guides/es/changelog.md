@@ -5,15 +5,46 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.255 · 3 versiones - 10 de noviembre de 2026
-### v2.255
+## v2.260 · 2 versiones - 11 de noviembre de 2026
+### v2.260
+**Cambiado**
+- Los assets apagados USDC.e (`USDCE`) y UF ya no se anuncian en cero:
+  `GET /v1/balances`, `GET /v1/balances/history` (series toda-cero y snapshot
+  `current`), `enabled_assets` en `GET /v1/settlement`, `assets` en el bloque
+  `settlement` de `GET /v1/rates` y la fila UF en `rates` los omiten cuando
+  el saldo es exactamente cero. Un saldo distinto de cero (o negativo) se
+  sigue devolviendo — la plata real jamás se esconde. `PUT /v1/settlement`
+  ahora rechaza `USDCE` como `default_settlement_asset` y
+  `default_payin_asset` con `400 invalid_settlement_asset` / `invalid_asset`
+  (los defaults existentes siguen funcionando).
+### v2.259
+**Cambiado**
+- Campana del miembro curada por defecto: `corridor_status_changed` (salud
+  global de rieles), `kyc_document_validated`, `kyb_document_validated` y
+  `kyc_liveness_completed` (pasos intermedios de verificación) ya no aparecen
+  en `GET /v1/events/history`, `GET /v1/me/notifications` ni en el stream en
+  vivo del canal cuenta. El resumido `kyc/kyb_verification_status_changed` se
+  queda. Pide cualquier tipo oculto explícitamente con `event_type` / `?types=`
+  para seguir recibiéndolo; webhooks, suscripciones y el canal org-admin no
+  cambian.
+## v2.258 · 6 versiones - 10 de noviembre de 2026
+### v2.258
 **Cambiado**
 - Las cotizaciones y swaps de Convertir ahora exponen comisiones por punta,
   `fee_total_pct` y `fee_note: included_in_rate`; `/v1/rates` expone las
   filas efectivas de `swap_spread`. Las respuestas de soporte de la cuenta
   usan el label anónimo Soporte de CBPay, y el portal documenta el idioma
   inicial del navegador y la prioridad del idioma de la cuenta al iniciar sesión.
-### v2.254
+### v2.257
+**Cambiado**
+- Los totales de comisión de swaps y conversiones ahora suman exactamente
+  las dos puntas (`0.20 + 0.15 = 0.3500`), y la comisión sigue incluida en
+  la tasa cotizada.
+- El portal de Convertir ahora incluye la vista **Mis Comisiones de
+  Conversiones**, con detalle e historial de comisiones.
+- El historial de soporte está anonimizado y usa el label público Soporte de
+  CBPay.
+### v2.256
 **Cambiado**
 - Polygon `polygon:usdce` (USDC.e) queda deshabilitado globalmente para nuevas
   wallets y envíos. Los saldos existentes siguen visibles con insignia de red
@@ -21,9 +52,23 @@ source_url: https://docs.cbpayapp.com/es/changelog
   USDC.e existentes continúan abonando el saldo separado. Los controles
   apagados responden `409 crypto_disabled`; si el storage no está disponible,
   responden `503 crypto_controls_unavailable`.
-### v2.253
+### v2.255
 **Cambiado**
 - Los payins `CL/UF/card` y `CL/UF/cash` de Chile están temporalmente deshabilitados en producción mientras queda pendiente la aprobación del corredor. La documentación y los ejemplos UF se mantienen como referencia; las solicitudes actuales responden `409 corridor_disabled` o `422 core_rejected`. Usa `CLP` hasta que se apruebe el corredor.
+### v2.254
+**Cambiado**
+- El login OTP ahora muestra una espera honesta mientras el challenge está
+  pendiente.
+### v2.253
+**Cambiado**
+- El envío de desafíos OTP ahora es todo-o-nada entre los presupuestos del
+  miembro: un `429` nunca consume otro bucket, por lo que reintentar una
+  solicitud bloqueada no alarga el bloqueo. Los envíos frescos tienen un
+  límite de 10 por hora, 3 por 10 minutos y 30 por 24 horas, compartido entre
+  acciones y canales. El reuso de un desafío activo y TOTP siguen exentos.
+  `Retry-After` identifica el bucket excedido: 600 segundos para ráfaga,
+  3600 segundos por hora u 86400 segundos por día. Las pantallas OTP ahora
+  muestran la espera real en el idioma del usuario.
 ## v2.252 · 7 versiones - 9 de noviembre de 2026
 ### v2.252
 #### Agregado

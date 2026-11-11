@@ -157,6 +157,31 @@ curl -N "https://api.qbank.cl/platform/v1/events?types=payin_credited,payout_sta
   -H "Authorization: Bearer <token>"
 ```
 
+## 账户通知精选
+
+对于账户凭证，事件流和事件历史默认经过精选，让成员通知铃铛显示可操作的更新，
+而不是每个验证中间步骤或平台健康状态变化。账户通道默认排除：
+
+- `corridor_status_changed`（全局支付通道健康状态）
+- `kyc_document_validated`
+- `kyb_document_validated`
+- `kyc_liveness_completed`
+
+汇总验证状态的事件（例如
+`kyc/kyb_verification_status_changed`）仍会送达。账户范围内的业务事件和安全通知
+仍受凭证权限控制。此精选只改变账户事件流、`GET /v1/events/history` 和成员通知源；
+Webhook、Webhook 订阅以及组织管理员通道不受影响。
+
+当集成确实需要查看隐藏类型时，请明确请求它：
+
+```bash
+curl -N "https://api.qbank.cl/platform/v1/events?types=corridor_status_changed" \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-25&event_type=kyc_document_validated&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
 ## 范围：账户与组织管理员
 
 | 凭证 | 事件流内容 |

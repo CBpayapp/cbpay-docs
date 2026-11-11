@@ -20,19 +20,21 @@ identidad y con spreads cero. Todo decimal no nulo en CLP responde
 
 ```mermaid
 flowchart LR
-  balances["GET /v1/balances"] --> ledger["12 ledger assets"]
+  balances["GET /v1/balances"] --> ledger["activos del ledger"]
   history["GET /v1/balances/history"] --> ledger
   analytics["GET /v1/analytics/summary"] --> valuation["feed price or unpriced"]
 ```
 
 ## Dónde aparecen
 
-- `GET /v1/balances`: siempre devuelve los doce activos del ledger, incluido
-  USDCE, incluso
-  filas en cero. BOB/MXN/ARS usan dos decimales; CLP usa cero decimales,
+- `GET /v1/balances`: devuelve las filas activas del ledger. Omite USDCE y UF
+  apagados cuando están exactamente en cero; un saldo apagado distinto de cero
+  o negativo sigue visible. BOB/MXN/ARS usan dos decimales; CLP usa cero decimales,
   por ejemplo `"125.40"` o `"125"`.
 - `GET /v1/balances/history`: incluye una serie diaria por cada activo fiat.
-  La serie sigue `available`; los holds aparecen en el snapshot actual.
+  Omite series USDCE y UF completamente en cero, pero conserva las que tienen
+  pasado real; el snapshot actual aplica la misma regla. La serie sigue
+  `available`; los holds aparecen en el snapshot actual.
 - `GET /v1/analytics/summary`: incluye saldos y volumen fiat cuando existen.
   La valorización USD usa el feed de tasas de la organización (`1 / tasa
   local-por-USD`). Sin una tasa válida, el activo queda como `unpriced` y se

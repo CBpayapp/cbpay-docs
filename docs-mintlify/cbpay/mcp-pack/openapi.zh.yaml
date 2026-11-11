@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.255'
+  version: '2.260'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -3394,7 +3394,7 @@ paths:
       - 余额
       operationId: getBalances
       summary: 获取余额
-      description: 调用账户的十二个独立虚拟余额(USD(主资产)、USDT、USDC、USDCE、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS、CLP)。每个受支持的资产始终存在,账户未使用过该货币时为零。若账户使用 Banking,其 BANK_USD/BANK_EUR 镜像余额也会列出,`custody` 标记为 `banking`(权威余额在银行;这些余额在平台内不可消费)。
+      description: 调用账户的十二个独立虚拟余额(USD(主资产)、USDT、USDC、USDCE、BTC、以纯金克数计的 GOLD、以纯银克数计的 SILVER、以纯铂金克数计的 PLATINUM,以及 2 位小数的法币余额 BOB、MXN、ARS、CLP)。已停用的 USDCE 和 UF 在 `available` 与 `held` 恰为零时省略；非零或负余额仍会返回。其他受支持资产在账户未使用时以零值返回。若账户使用 Banking,其 BANK_USD/BANK_EUR 镜像余额也会列出,`custody` 标记为 `banking`(权威余额在银行;这些余额在平台内不可消费)。
       responses:
         '200':
           description: 调用账户的余额(每个受支持资产各一条)。
@@ -3440,7 +3440,7 @@ paths:
       - 余额
       operationId: getBalancesHistory
       summary: 获取余额历史
-      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对每个余额估值的 USD 汇总序列(USDT/USDC 按 1:1 平价;BTC/GOLD/SILVER/PLATINUM 与 USD/BOB/MXN/ARS/CLP 按当日价格)。包含期间总流入/流出及当前快照(可用 + 冻结),前端可据此渲染 Mercury 风格的余额卡片及其百分比变化。序列跟踪**可用**余额(冻结没有历史);`current` 携带今日各资产的 `held`。在历史价格存在之前用今日现价估值的日期会在 `spot_priced_dates` 中披露——绝不虚构数值。
+      description: '账户余额的每日演变,用于仪表盘图表:每个资产一条序列(每日收盘可用余额,无流水的日期沿用前值),外加一条按各日历史参考价对每个余额估值的 USD 汇总序列(USDT/USDC 按 1:1 平价;BTC/GOLD/SILVER/PLATINUM 与 USD/BOB/MXN/ARS/CLP 按当日价格)。全零的 USDCE 和 UF 序列会被省略，但有真实历史的序列会保留；`current` 使用相同规则。包含期间总流入/流出及当前快照(可用 + 冻结),前端可据此渲染 Mercury 风格的余额卡片及其百分比变化。序列跟踪**可用**余额(冻结没有历史);`current` 携带今日各资产的 `held`。在历史价格存在之前用今日现价估值的日期会在 `spot_priced_dates` 中披露——绝不虚构数值。
 
 
         `assets` 映射还包含银行账户镜像(`BANK_USD`、`BANK_EUR`),以其自身货币(2 位小数)作为独立序列提供。它们**不**计入 `total_usd` 汇总——该汇总覆盖十二个账本余额(USD、USDT、USDC、USDCE、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS、CLP)。
@@ -3483,7 +3483,7 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 每个资产一条每日收盘余额序列。包含十二个账本余额(USD、USDT、USDC、USDCE、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS、CLP)以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR);银行序列不计入 `total_usd`。
+                    description: 每个资产一条每日收盘余额序列。全零的 USDCE 和 UF 序列会被省略，但有真实历史的序列会保留；其他账本余额以及以自身货币计的银行账户镜像(BANK_USD、BANK_EUR)会返回；银行序列不计入 `total_usd`。
                     additionalProperties:
                       type: object
                       properties:
@@ -8260,7 +8260,7 @@ paths:
       - 实时事件
       operationId: listEventHistory
       summary: 事件历史
-      description: 与事件流同源的日志，可按条件查询。必须提供 `from`/`to` 日期过滤。保留期为 90 天：该日志只是通知缓冲区，资金事实保存在各自不可变的资源中（流水、收款、付款）。
+      description: 与事件流同源的日志，可按条件查询。必须提供 `from`/`to` 日期过滤。保留期为 90 天：该日志只是通知缓冲区，资金事实保存在各自不可变的资源中（流水、收款、付款）。账户通道默认精选：`corridor_status_changed`、`kyc_document_validated`、`kyb_document_validated` 和 `kyc_liveness_completed` 除非用 `event_type` 明确请求，否则不返回；Webhook、订阅和 org-admin 通道不受影响。
       parameters:
       - name: from
         in: query
@@ -8277,7 +8277,7 @@ paths:
       - name: event_type
         in: query
         required: false
-        description: 按单个事件类型过滤。
+        description: 按单个事件类型过滤。明确请求的噪声类型（通道健康、验证中间步骤）仍会返回：这是精选默认的明确豁免。
         schema:
           type: string
       - name: account_id
@@ -11192,7 +11192,7 @@ paths:
       - 账户
       operationId: listMyNotifications
       summary: 我的通知
-      description: 账户的成员通知源(与事件历史相同的信封,账户视图)。需要 `from`/`to` 日期过滤。
+      description: 账户的成员通知源(与事件历史相同的信封,账户视图)。需要 `from`/`to` 日期过滤。默认精选：`corridor_status_changed`、`kyc_document_validated`、`kyb_document_validated` 和 `kyc_liveness_completed` 除非用 `event_type` 明确请求，否则不返回。
       parameters:
       - name: from
         in: query
@@ -11219,6 +11219,7 @@ paths:
       - name: event_type
         in: query
         required: false
+        description: 按单个事件类型过滤。明确请求的噪声类型仍会返回（精选默认的明确豁免）。
         schema:
           type: string
       responses:
@@ -13702,10 +13703,10 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: 一小时内为该成员请求了超过10次新验证码发送(`too_many_attempts`)。复用有效挑战不会消耗此额度。TOTP 不发送验证码,因此不受此限制。
+          description: 已超过成员共享的新验证码发送限流（`too_many_attempts`）。三个预算分别为每小时 10 次、每 10 分钟突发 3 次、每 24 小时 30 次，适用于所有操作和发送渠道。检查采用全有或全无：被拒绝的请求不会消耗其他预算，因此在被阻止时重试不会延长锁定。复用仍有效的挑战不会消耗预算，TOTP 不发送验证码，因此不受此限制。
           headers:
             Retry-After:
-              description: 再次请求新 OTP 发送前需要等待的秒数。
+              description: 再次请求新 OTP 发送前需要等待的秒数，按超出的预算返回：突发 600 秒、每小时 3600 秒或每日 86400 秒。
               schema:
                 type: integer
                 example: 3600
@@ -21808,7 +21809,7 @@ paths:
       - 余额
       operationId: getRates
       summary: 获取我的外汇汇率与费用
-      description: 返回适用于调用账户的各国汇率——与操作执行时使用的相同(`local_amount / rate = USDT`)——以及账户的**有效**费用配置(组织默认值已与账户覆盖项解析合并),便于客户端在创建操作前计算确切成本。`rate` 为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。当 `rate_source` 为 `lot` 时, payout 报价由该货币最早的开放 FIFO 批次支持；为 `spot` 时没有可用批次、使用 spot。 对于 USDT payin，启用的 payin FIFO 库存支持报价时 `payin_rate_source` 为 `lot`，否则为 `spot`。银行卡 payin 仍使用 spot。按金额获取指示性报价时使用可选的 `lot_quote`。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为 1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在 payout 传 `settlement_asset` 之前用它来估算。
+      description: 返回适用于调用账户的各国汇率——与操作执行时使用的相同(`local_amount / rate = USDT`)——以及账户的**有效**费用配置(组织默认值已与账户覆盖项解析合并),便于客户端在创建操作前计算确切成本。`rate` 为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。当 `rate_source` 为 `lot` 时, payout 报价由该货币最早的开放 FIFO 批次支持；为 `spot` 时没有可用批次、使用 spot。 对于 USDT payin，启用的 payin FIFO 库存支持报价时 `payin_rate_source` 为 `lot`，否则为 `spot`。银行卡 payin 仍使用 spot。按金额获取指示性报价时使用可选的 `lot_quote`。UF 行不会出现在 `rates` 中；`settlement.assets` 不包含已停用资产。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为 1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在 payout 传 `settlement_asset` 之前用它来估算。
       parameters:
       - name: currency
         in: query
@@ -23959,7 +23960,6 @@ paths:
                   - USD
                   - USDT
                   - USDC
-                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
@@ -24000,7 +24000,7 @@ paths:
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '400':
-          description: 资产无效或已停用(`invalid_settlement_asset`、`settlement_asset_disabled`)。
+          description: 资产无效或已停用(`invalid_settlement_asset`、`invalid_asset`、`settlement_asset_disabled`)。
           content:
             application/json:
               schema:
@@ -25838,7 +25838,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
@@ -25864,7 +25864,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
@@ -26080,7 +26080,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 indicative: true
         '400':

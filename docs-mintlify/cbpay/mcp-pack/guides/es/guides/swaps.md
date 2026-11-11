@@ -41,7 +41,7 @@ curl "https://api.qbank.cl/platform/v1/swaps/quote?from_asset=USDT&to_asset=BTC&
     {"leg": "from", "asset": "USDT", "percent": "0.20"},
     {"leg": "to", "asset": "BTC", "percent": "0.15"}
   ],
-  "fee_total_pct": "0.3495",
+  "fee_total_pct": "0.3500",
   "fee_note": "included_in_rate",
   "indicative": true
 }
@@ -109,7 +109,7 @@ Respuesta `201` — el swap es síncrono, tu saldo cambia al instante:
     {"leg": "from", "asset": "USDT", "percent": "0.20"},
     {"leg": "to", "asset": "BTC", "percent": "0.15"}
   ],
-  "fee_total_pct": "0.3495",
+  "fee_total_pct": "0.3500",
   "fee_note": "included_in_rate",
   "status": "completed",
   "idempotency_key": "swap-2026-07-10-a",

@@ -295,7 +295,7 @@ not request a second code.
 | 409 | `phone_required` | The account has no phone | `PATCH /v1/me` with an E.164 `phone` |
 | 409 | `otp_phone_missing` | Login requires OTP and there is no phone | Contact your operator |
 | 409 | `challenge_not_pending` | The challenge expired or was already used | Create a new one |
-| 429 | `too_many_attempts` | Send/verification limits reached | Wait a few minutes |
+| 429 | `too_many_attempts` | A member-wide fresh-send bucket is full | Read `Retry-After`: wait 600 seconds for the 3-per-10-minute burst bucket, 3600 seconds for the 10-per-hour bucket, or 86400 seconds for the 30-per-24-hour bucket. The limits are shared across actions and channels; live-challenge reuse and TOTP are exempt. A blocked retry does not consume another bucket. |
 | 503 | `otp_unavailable` | The verification service is unavailable | Retry; the action stays blocked (OTP is never skipped) |
 
 ## FAQ
@@ -332,8 +332,9 @@ not request a second code.
     `/v1/me/passkeys` continue to work.
 #### How long does a code last and how many attempts do I get?
     The code and challenge last 10 minutes. You get 5 verifications per
-    challenge and an hourly send limit. The resulting `otp_token` is single
-    use.
+    challenge and member-wide fresh-send limits of 3 per 10 minutes, 10 per
+    hour, and 30 per 24 hours across actions and channels. Read `Retry-After`
+    on `429 too_many_attempts`; the resulting `otp_token` is single use.
 #### Can I request one token and use it for several actions?
     No: the token is bound to the exact action the challenge was created
     for (a `payout` token does not work for `transfer`) and is consumed on
