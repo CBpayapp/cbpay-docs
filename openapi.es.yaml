@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.259'
+  version: '2.260'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -8282,7 +8282,7 @@ paths:
       - Eventos en tiempo real
       operationId: listEventHistory
       summary: Historial de eventos
-      description: 'El mismo log que alimenta el stream, consultable. Exige filtros de fecha `from`/`to`. La retención es de 90 días: el log es un buffer de notificación, los hechos financieros viven en sus propios recursos inmutables (movimientos, payins, payouts).'
+      description: 'El mismo log que alimenta el stream, consultable. Exige filtros de fecha `from`/`to`. La retención es de 90 días: el log es un buffer de notificación, los hechos financieros viven en sus propios recursos inmutables (movimientos, payins, payouts). Canal de cuenta curado por defecto: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` y `kyc_liveness_completed` se excluyen salvo pedido explícito con `event_type`; webhooks, suscripciones y el canal org-admin no cambian.'
       parameters:
       - name: from
         in: query
@@ -8299,7 +8299,7 @@ paths:
       - name: event_type
         in: query
         required: false
-        description: Filtra por un único tipo de evento.
+        description: 'Filtra por un único tipo de evento. Un tipo ruidoso pedido explícitamente (salud de corredores, pasos intermedios de verificación) igual se devuelve: es el escape explícito del default curado de cuenta.'
         schema:
           type: string
       - name: account_id
@@ -11214,7 +11214,7 @@ paths:
       - Cuenta
       operationId: listMyNotifications
       summary: Mis notificaciones
-      description: Feed de notificaciones de la cuenta para el miembro (mismo envelope que el historial de eventos, vista cuenta). Exige filtros de fecha `from`/`to`.
+      description: 'Feed de notificaciones de la cuenta para el miembro (mismo envelope que el historial de eventos, vista cuenta). Exige filtros de fecha `from`/`to`. Curado por defecto: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` y `kyc_liveness_completed` se excluyen salvo pedido explícito con `event_type`.'
       parameters:
       - name: from
         in: query
@@ -11241,6 +11241,7 @@ paths:
       - name: event_type
         in: query
         required: false
+        description: Filtra por un único tipo de evento. Un tipo ruidoso pedido explícitamente igual se devuelve (escape explícito del default curado).
         schema:
           type: string
       responses:
@@ -13724,7 +13725,7 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: 'Se excedió el throttle de envíos frescos compartido por miembro (`too_many_attempts`). Los tres presupuestos son 20 envíos por hora, 6 envíos por 10 minutos y 60 envíos por 24 horas entre todas las acciones y canales de entrega. La verificación es todo-o-nada: una solicitud rechazada nunca consume otro bucket, por lo que reintentar mientras está bloqueada no alarga el bloqueo. Reutilizar un desafío activo no consume el presupuesto y TOTP está exento porque no envía códigos.'
+          description: 'Se excedió el throttle de envíos frescos compartido por miembro (`too_many_attempts`). Los tres presupuestos son 10 envíos por hora, 3 envíos por 10 minutos y 30 envíos por 24 horas entre todas las acciones y canales de entrega. La verificación es todo-o-nada: una solicitud rechazada nunca consume otro bucket, por lo que reintentar mientras está bloqueada no alarga el bloqueo. Reutilizar un desafío activo no consume el presupuesto y TOTP está exento porque no envía códigos.'
           headers:
             Retry-After:
               description: 'Segundos hasta que se pueda solicitar otro envío fresco de OTP para el bucket excedido: 600 para ráfaga, 3600 por hora u 86400 por día.'

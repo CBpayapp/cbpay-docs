@@ -16,9 +16,7 @@ description: "API and documentation change history"
   （`400 invalid_settlement_asset` / `invalid_asset`；现有默认值继续有效）。
 ### v2.259
 **变更**
-- 成员共享的新验证码发送现在允许每小时 20 次、每 10 分钟突发 6 次、
-  每 24 小时 60 次，适用于所有操作和发送渠道。对应预算的
-  `Retry-After` 值仍为 600、3600 和 86400 秒。
+- 成员通知铃铛默认精选：`corridor_status_changed`（全局通道健康）、`kyc_document_validated`、`kyb_document_validated` 和 `kyc_liveness_completed`（验证中间步骤）不再出现在账户通道的 `GET /v1/events/history`、`GET /v1/me/notifications` 和实时事件流中。汇总的 `kyc/kyb_verification_status_changed` 保留。用 `event_type` / `?types=` 明确请求仍可接收任何隐藏类型；Webhook、订阅和 org-admin 通道不受影响。
 </Update>
 <Update label="2026年11月10日" description="v2.258 · 6 个版本">
 ### v2.258
