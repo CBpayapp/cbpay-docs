@@ -5,6 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.259 · 1 个版本 - 2026年11月11日
+### v2.259
+**变更**
+- 已停用的 USDC.e（`USDCE`）和 UF 在余额为零时不再返回：`GET /v1/balances`、
+  `GET /v1/balances/history`（全零序列和 `current` 快照）、
+  `GET /v1/settlement` 的 `enabled_assets`、`GET /v1/rates` 的 `settlement`
+  区块的 `assets`；`rates` 中的 UF 行始终省略。USDCE 余额恰为零时省略；非零（或负）
+  余额仍会返回——真实资金永不隐藏。`PUT /v1/settlement` 现在拒绝将 `USDCE`
+  设为 `default_settlement_asset` 和 `default_payin_asset`
+  （`400 invalid_settlement_asset` / `invalid_asset`；现有默认值继续有效）。
 ## v2.258 · 6 个版本 - 2026年11月10日
 ### v2.258
 **变更**

@@ -4,6 +4,19 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="November 11, 2026" description="v2.259 · 1 version">
+### v2.259
+**Changed**
+- Sunset assets USDC.e (`USDCE`) and UF are no longer advertised at zero:
+  `GET /v1/balances`, `GET /v1/balances/history` (all-zero series and the
+  `current` snapshot), `enabled_assets` in `GET /v1/settlement`, `assets` in
+  the `settlement` block of `GET /v1/rates`, and the UF row is always omitted
+  from `rates`. USDCE is omitted when its balance is exactly zero. Any non-zero (or negative) balance
+  is still returned — real money is never hidden. `PUT /v1/settlement` now
+  rejects `USDCE` as `default_settlement_asset` and `default_payin_asset`
+  with `400 invalid_settlement_asset` / `invalid_asset` (existing defaults
+  keep working).
+</Update>
 <Update label="November 10, 2026" description="v2.258 · 6 versions">
 ### v2.258
 **Changed**
@@ -21,14 +34,6 @@ description: "History of API and documentation changes"
   details and history.
 - Support history is anonymized and uses the public CBPay Support label.
 ### v2.256
-**Changed**
-- Swap and conversion fee totals now add both fee legs exactly
-  (`0.20 + 0.15 = 0.3500`), while the fee remains included in the quoted
-  rate.
-- The Convert portal now includes a **My Conversion Fees** view with fee
-  details and history.
-- Support history is anonymized and uses the public CBPay Support label.
-### v2.254
 **Changed**
 - Polygon `polygon:usdce` (USDC.e) is globally disabled for new wallets and
   sends. Existing balances remain visible with a disabled-network badge,

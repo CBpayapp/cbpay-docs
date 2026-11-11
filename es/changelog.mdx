@@ -4,6 +4,19 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="11 de noviembre de 2026" description="v2.259 · 1 versión">
+### v2.259
+**Cambiado**
+- Los assets apagados USDC.e (`USDCE`) y UF ya no se anuncian en cero:
+  `GET /v1/balances`, `GET /v1/balances/history` (series toda-cero y snapshot
+  `current`), `enabled_assets` en `GET /v1/settlement`, `assets` en el bloque
+  `settlement` de `GET /v1/rates`; la fila UF en `rates` siempre se omite.
+  USDCE se omite cuando el saldo es exactamente cero. Un saldo distinto de cero (o negativo) se
+  sigue devolviendo — la plata real jamás se esconde. `PUT /v1/settlement`
+  ahora rechaza `USDCE` como `default_settlement_asset` y
+  `default_payin_asset` con `400 invalid_settlement_asset` / `invalid_asset`
+  (los defaults existentes siguen funcionando).
+</Update>
 <Update label="10 de noviembre de 2026" description="v2.258 · 6 versiones">
 ### v2.258
 **Cambiado**
@@ -22,15 +35,6 @@ description: "Historial de cambios de la API y de esta documentación"
 - El historial de soporte está anonimizado y usa el label público Soporte de
   CBPay.
 ### v2.256
-**Cambiado**
-- Los totales de comisión de swaps y conversiones ahora suman exactamente
-  las dos puntas (`0.20 + 0.15 = 0.3500`), y la comisión sigue incluida en
-  la tasa cotizada.
-- El portal de Convertir ahora incluye la vista **Mis Comisiones de
-  Conversiones**, con detalle e historial de comisiones.
-- El historial de soporte está anonimizado y usa el label público Soporte de
-  CBPay.
-### v2.254
 **Cambiado**
 - Polygon `polygon:usdce` (USDC.e) queda deshabilitado globalmente para nuevas
   wallets y envíos. Los saldos existentes siguen visibles con insignia de red

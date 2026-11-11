@@ -5,6 +5,18 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.259 · 1 version - November 11, 2026
+### v2.259
+**Changed**
+- Sunset assets USDC.e (`USDCE`) and UF are no longer advertised at zero:
+  `GET /v1/balances`, `GET /v1/balances/history` (all-zero series and the
+  `current` snapshot), `enabled_assets` in `GET /v1/settlement`, `assets` in
+  the `settlement` block of `GET /v1/rates`, and the UF row is always omitted
+  from `rates`. USDCE is omitted when its balance is exactly zero. Any non-zero (or negative) balance
+  is still returned — real money is never hidden. `PUT /v1/settlement` now
+  rejects `USDCE` as `default_settlement_asset` and `default_payin_asset`
+  with `400 invalid_settlement_asset` / `invalid_asset` (existing defaults
+  keep working).
 ## v2.258 · 6 versions - November 10, 2026
 ### v2.258
 **Changed**
