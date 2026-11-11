@@ -5,6 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.259 · 1 versión - 11 de noviembre de 2026
+### v2.259
+**Cambiado**
+- Los assets apagados USDC.e (`USDCE`) y UF ya no se anuncian en cero:
+  `GET /v1/balances`, `GET /v1/balances/history` (series toda-cero y snapshot
+  `current`), `enabled_assets` en `GET /v1/settlement`, `assets` en el bloque
+  `settlement` de `GET /v1/rates`; la fila UF en `rates` siempre se omite.
+  USDCE se omite cuando el saldo es exactamente cero. Un saldo distinto de cero (o negativo) se
+  sigue devolviendo — la plata real jamás se esconde. `PUT /v1/settlement`
+  ahora rechaza `USDCE` como `default_settlement_asset` y
+  `default_payin_asset` con `400 invalid_settlement_asset` / `invalid_asset`
+  (los defaults existentes siguen funcionando).
 ## v2.258 · 6 versiones - 10 de noviembre de 2026
 ### v2.258
 **Cambiado**

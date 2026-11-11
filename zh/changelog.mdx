@@ -4,6 +4,17 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年11月11日" description="v2.259 · 1 个版本">
+### v2.259
+**变更**
+- 已停用的 USDC.e（`USDCE`）和 UF 在余额为零时不再返回：`GET /v1/balances`、
+  `GET /v1/balances/history`（全零序列和 `current` 快照）、
+  `GET /v1/settlement` 的 `enabled_assets`、`GET /v1/rates` 的 `settlement`
+  区块的 `assets`；`rates` 中的 UF 行始终省略。USDCE 余额恰为零时省略；非零（或负）
+  余额仍会返回——真实资金永不隐藏。`PUT /v1/settlement` 现在拒绝将 `USDCE`
+  设为 `default_settlement_asset` 和 `default_payin_asset`
+  （`400 invalid_settlement_asset` / `invalid_asset`；现有默认值继续有效）。
+</Update>
 <Update label="2026年11月10日" description="v2.258 · 6 个版本">
 ### v2.258
 **变更**
@@ -18,12 +29,6 @@ description: "API and documentation change history"
 - Convert 门户现在提供**我的转换费用**视图，可查看费用详情和历史。
 - 支持历史记录已匿名化，并使用公开的 CBPay 支持标签。
 ### v2.256
-**变更**
-- 兑换和转换的费用总额现在准确相加两边费用
-  (`0.20 + 0.15 = 0.3500`)，费用仍包含在报价汇率中。
-- Convert 门户现在提供**我的转换费用**视图，可查看费用详情和历史。
-- 支持历史记录已匿名化，并使用公开的 CBPay 支持标签。
-### v2.254
 **变更**
 - Polygon `polygon:usdce`（USDC.e）已全局停用，不再支持创建新钱包或发送。
   现有余额仍显示并带有网络停用标记，导出功能可用，向现有 USDC.e 地址
