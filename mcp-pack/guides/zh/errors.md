@@ -143,6 +143,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | 管理端校验 |
 | `invalid_settlement_hours` | `settlement_hours` 仅支持 `payin_card` 费用服务，且必须是非负整数（`0` = 立即入账）— 参见[费用](https://docs.cbpayapp.com/zh/concepts/fees) |
 | `invalid_country` | 国家/地区代码格式错误或缺失——ISO 3166-1 alpha-2（例如 `GET /v1/aml/catalogs/cities?country=`）；也用于有效但不支持的国家/地区过滤条件（例如在银行目录查询中传入非 `US` 的 `country`） |
+| `invalid_expand` | `GET /v1/contacts` 的 `?expand=` 取值未知（仅支持 `destinations`）；`dest_type`/`dest_country` 同样需要 `expand=destinations` |
 
 ### QR payin 幂等性
 

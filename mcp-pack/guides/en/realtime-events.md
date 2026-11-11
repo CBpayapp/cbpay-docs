@@ -157,6 +157,35 @@ curl -N "https://api.qbank.cl/platform/v1/events?types=payin_credited,payout_sta
   -H "Authorization: Bearer <token>"
 ```
 
+## Curated account notifications
+
+For account credentials, the stream and event history are curated by default
+so the member bell shows actionable updates instead of every intermediate
+verification or platform-health transition. The default account channel
+excludes:
+
+- `corridor_status_changed` (global corridor health)
+- `kyc_document_validated`
+- `kyb_document_validated`
+- `kyc_liveness_completed`
+
+Account events that summarize verification status, such as
+`kyc/kyb_verification_status_changed`, continue to arrive. Account-scoped
+business events and security notifications remain subject to the credential's
+permissions. This curation changes only the account stream, `GET
+/v1/events/history`, and the member notification feed; webhooks, webhook
+subscriptions, and the organization-admin channel are unchanged.
+
+Request a hidden type explicitly when your integration needs it:
+
+```bash
+curl -N "https://api.qbank.cl/platform/v1/events?types=corridor_status_changed" \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-25&event_type=kyc_document_validated&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
 ## Scope: account vs organization admin
 
 | Credential | What the stream delivers |

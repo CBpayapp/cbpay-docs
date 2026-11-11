@@ -141,6 +141,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | Validaciones de administración |
 | `invalid_settlement_hours` | `settlement_hours` solo se acepta en el servicio de comisión `payin_card` y debe ser un entero no negativo (`0` = acreditación inmediata) — ver [comisiones](https://docs.cbpayapp.com/es/concepts/fees) |
 | `invalid_country` | Código de país mal formado o ausente — ISO 3166-1 alpha-2 (ej. `GET /v1/aml/catalogs/cities?country=`); también un filtro de país válido pero no soportado (ej. un `country` distinto de `US` en el lookup del directorio bancario) |
+| `invalid_expand` | Valor desconocido en `?expand=` de `GET /v1/contacts` (solo se soporta `destinations`); `dest_type`/`dest_country` también exigen `expand=destinations` |
 
 ### Idempotencia de payins QR
 
