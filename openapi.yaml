@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.259'
+  version: '2.260'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -8264,7 +8264,7 @@ paths:
       - Real-time events
       operationId: listEventHistory
       summary: Event history
-      description: 'The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts).'
+      description: 'The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts). Account channel: curated by default — `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`; webhooks, subscriptions and the org-admin channel are unaffected.'
       parameters:
       - name: from
         in: query
@@ -8281,7 +8281,7 @@ paths:
       - name: event_type
         in: query
         required: false
-        description: Filters by a single event type.
+        description: Filters by a single event type. An explicitly requested noisy type (corridor health, intermediate verification steps) is still returned — the explicit escape from the curated account default.
         schema:
           type: string
       - name: account_id
@@ -11203,7 +11203,7 @@ paths:
       - Account
       operationId: listMyNotifications
       summary: My notifications
-      description: Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters.
+      description: 'Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters. Curated by default: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`.'
       parameters:
       - name: from
         in: query
@@ -11230,6 +11230,7 @@ paths:
       - name: event_type
         in: query
         required: false
+        description: Filters by a single event type. An explicitly requested noisy type is still returned (explicit escape from the curated default).
         schema:
           type: string
       responses:
@@ -13713,7 +13714,7 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: 'The member-wide fresh-send throttle was exceeded (`too_many_attempts`). The three budgets are 20 sends per hour, 6 sends per 10 minutes, and 60 sends per 24 hours across all actions and delivery channels. The check is all-or-nothing: a rejected request never consumes another bucket, so retrying while blocked does not extend the lockout. Reusing a live challenge does not consume the budget, and TOTP is exempt because it sends no code.'
+          description: 'The member-wide fresh-send throttle was exceeded (`too_many_attempts`). The three budgets are 10 sends per hour, 3 sends per 10 minutes, and 30 sends per 24 hours across all actions and delivery channels. The check is all-or-nothing: a rejected request never consumes another bucket, so retrying while blocked does not extend the lockout. Reusing a live challenge does not consume the budget, and TOTP is exempt because it sends no code.'
           headers:
             Retry-After:
               description: 'Seconds until a fresh OTP send can be requested again for the exceeded bucket: 600 for burst, 3600 for hourly, or 86400 for daily.'
