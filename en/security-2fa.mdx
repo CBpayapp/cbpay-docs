@@ -305,7 +305,7 @@ not request a second code.
 | 409 | `phone_required` | The account has no phone | `PATCH /v1/me` with an E.164 `phone` |
 | 409 | `otp_phone_missing` | Login requires OTP and there is no phone | Contact your operator |
 | 409 | `challenge_not_pending` | The challenge expired or was already used | Create a new one |
-| 429 | `too_many_attempts` | A member-wide fresh-send bucket is full | Read `Retry-After`: wait 600 seconds for the 3-per-10-minute burst bucket, 3600 seconds for the 10-per-hour bucket, or 86400 seconds for the 30-per-24-hour bucket. The limits are shared across actions and channels; live-challenge reuse and TOTP are exempt. A blocked retry does not consume another bucket. |
+| 429 | `too_many_attempts` | A member-wide fresh-send bucket is full | Read `Retry-After`: wait 600 seconds for the 6-per-10-minute burst bucket, 3600 seconds for the 20-per-hour bucket, or 86400 seconds for the 60-per-24-hour bucket. The limits are shared across actions and channels; live-challenge reuse and TOTP are exempt. A blocked retry does not consume another bucket. |
 | 503 | `otp_unavailable` | The verification service is unavailable | Retry; the action stays blocked (OTP is never skipped) |
 
 ## FAQ
@@ -349,7 +349,7 @@ not request a second code.
   </Accordion>
   <Accordion title="How long does a code last and how many attempts do I get?">
     The code and challenge last 10 minutes. You get 5 verifications per
-    challenge and member-wide fresh-send limits of 3 per 10 minutes, 10 per
+    challenge and member-wide fresh-send limits of 6 per 10 minutes, 20 per
     hour, and 30 per 24 hours across actions and channels. Read `Retry-After`
     on `429 too_many_attempts`; the resulting `otp_token` is single use.
   </Accordion>

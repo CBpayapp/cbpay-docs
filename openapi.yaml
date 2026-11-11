@@ -13713,7 +13713,7 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: 'The member-wide fresh-send throttle was exceeded (`too_many_attempts`). The three budgets are 10 sends per hour, 3 sends per 10 minutes, and 30 sends per 24 hours across all actions and delivery channels. The check is all-or-nothing: a rejected request never consumes another bucket, so retrying while blocked does not extend the lockout. Reusing a live challenge does not consume the budget, and TOTP is exempt because it sends no code.'
+          description: 'The member-wide fresh-send throttle was exceeded (`too_many_attempts`). The three budgets are 20 sends per hour, 6 sends per 10 minutes, and 60 sends per 24 hours across all actions and delivery channels. The check is all-or-nothing: a rejected request never consumes another bucket, so retrying while blocked does not extend the lockout. Reusing a live challenge does not consume the budget, and TOTP is exempt because it sends no code.'
           headers:
             Retry-After:
               description: 'Seconds until a fresh OTP send can be requested again for the exceeded bucket: 600 for burst, 3600 for hourly, or 86400 for daily.'
