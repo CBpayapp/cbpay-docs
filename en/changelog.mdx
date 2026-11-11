@@ -4,18 +4,23 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 11, 2026" description="v2.259 · 1 version">
-### v2.259
+<Update label="November 11, 2026" description="v2.260 · 2 versions">
+### v2.260
 **Changed**
 - Sunset assets USDC.e (`USDCE`) and UF are no longer advertised at zero:
   `GET /v1/balances`, `GET /v1/balances/history` (all-zero series and the
   `current` snapshot), `enabled_assets` in `GET /v1/settlement`, `assets` in
-  the `settlement` block of `GET /v1/rates`, and the UF row is always omitted
-  from `rates`. USDCE is omitted when its balance is exactly zero. Any non-zero (or negative) balance
+  the `settlement` block of `GET /v1/rates`, and the UF row in `rates` omit
+  them when the balance is exactly zero. Any non-zero (or negative) balance
   is still returned — real money is never hidden. `PUT /v1/settlement` now
   rejects `USDCE` as `default_settlement_asset` and `default_payin_asset`
   with `400 invalid_settlement_asset` / `invalid_asset` (existing defaults
   keep working).
+### v2.259
+**Changed**
+- Member-wide fresh OTP sends now allow 20 per hour, 6 per 10-minute burst,
+  and 60 per 24 hours across actions and delivery channels. `Retry-After`
+  values remain 600, 3600, and 86400 seconds for the corresponding bucket.
 </Update>
 <Update label="November 10, 2026" description="v2.258 · 6 versions">
 ### v2.258

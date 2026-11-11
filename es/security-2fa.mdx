@@ -322,7 +322,7 @@ no pide un código adicional.
 | 409 | `phone_required` | La cuenta no tiene teléfono | `PATCH /v1/me` con `phone` E.164 |
 | 409 | `otp_phone_missing` | El login exige OTP y no hay teléfono | Contacta a tu operador |
 | 409 | `challenge_not_pending` | El desafío expiró o ya se usó | Crea uno nuevo |
-| 429 | `too_many_attempts` | Se llenó un bucket de envíos frescos compartido por el miembro | Lee `Retry-After`: espera 600 segundos para la ráfaga de 3 por 10 minutos, 3600 segundos para el límite de 10 por hora u 86400 segundos para el límite de 30 por 24 horas. Los límites se comparten entre acciones y canales; el reuso de desafíos activos y TOTP están exentos. Un reintento bloqueado no consume otro bucket. |
+| 429 | `too_many_attempts` | Se llenó un bucket de envíos frescos compartido por el miembro | Lee `Retry-After`: espera 600 segundos para la ráfaga de 6 por 10 minutos, 3600 segundos para el límite de 20 por hora u 86400 segundos para el límite de 60 por 24 horas. Los límites se comparten entre acciones y canales; el reuso de desafíos activos y TOTP están exentos. Un reintento bloqueado no consume otro bucket. |
 | 503 | `otp_unavailable` | El servicio de verificación no está disponible | Reintenta; la acción queda bloqueada (nunca se salta el OTP) |
 
 ## FAQ

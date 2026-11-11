@@ -13702,7 +13702,7 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: 已超过成员共享的新验证码发送限流（`too_many_attempts`）。三个预算分别为每小时 10 次、每 10 分钟突发 3 次、每 24 小时 30 次，适用于所有操作和发送渠道。检查采用全有或全无：被拒绝的请求不会消耗其他预算，因此在被阻止时重试不会延长锁定。复用仍有效的挑战不会消耗预算，TOTP 不发送验证码，因此不受此限制。
+          description: 已超过成员共享的新验证码发送限流（`too_many_attempts`）。三个预算分别为每小时 20 次、每 10 分钟突发 6 次、每 24 小时 60 次，适用于所有操作和发送渠道。检查采用全有或全无：被拒绝的请求不会消耗其他预算，因此在被阻止时重试不会延长锁定。复用仍有效的挑战不会消耗预算，TOTP 不发送验证码，因此不受此限制。
           headers:
             Retry-After:
               description: 再次请求新 OTP 发送前需要等待的秒数，按超出的预算返回：突发 600 秒、每小时 3600 秒或每日 86400 秒。
