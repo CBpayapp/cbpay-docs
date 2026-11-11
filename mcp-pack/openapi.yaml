@@ -27995,6 +27995,98 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many requests; wait a moment and retry
+  /verify/invoices/{code}:
+    get:
+      security: []
+      tags:
+      - Invoices
+      operationId: invoiceVerify
+      summary: Verify an invoice (public)
+      description: Public verification endpoint (no credentials) for the signed invoice code printed in the email link or PDF QR. API clients receive current invoice facts as JSON; browsers receive branded HTML. The code is a capability and invalid or draft invoices return a generic 404. Rate limited per IP.
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Verification code from the invoice email link or PDF QR.
+      responses:
+        '200':
+          description: The invoice code is valid; current invoice facts.
+          content:
+            application/json:
+              example:
+                valid: true
+                kind: invoice
+                invoice_number: INV-2026-0001
+                brand: CBPay
+                status: sent
+                status_word: Sent
+                currency: USD
+                total: '1250.00'
+                amount_paid: '500.00'
+                balance: '750.00'
+                issue_date: '2026-11-11'
+                due_date: '2026-12-11'
+                overdue: false
+                bill_to: Andes Logistics SpA
+                pay_url: https://pay.example/checkout/token
+        '404':
+          description: Invalid, tampered, draft or unknown verification code.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: verification code not found
+        '429':
+          description: Too many verification attempts from this IP.
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
+  /verify/invoices/{code}/pdf:
+    get:
+      security: []
+      tags:
+      - Invoices
+      operationId: invoiceVerifyPdf
+      summary: Download a verified invoice PDF (public)
+      description: Public PDF endpoint (no credentials) for a valid signed invoice code. Returns the branded invoice PDF inline; invalid, draft or unavailable invoices return a generic 404. Rate limited per IP.
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Verification code from the invoice email link or PDF QR.
+      responses:
+        '200':
+          description: Branded invoice PDF.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Inline filename for the invoice PDF.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Invalid, tampered, draft or unknown verification code.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: verification code not found
+        '429':
+          description: Too many verification attempts from this IP.
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
   /verify/qscore-fraud/{code}:
     get:
       tags:

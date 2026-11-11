@@ -27887,6 +27887,98 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many requests; wait a moment and retry
+  /verify/invoices/{code}:
+    get:
+      security: []
+      tags:
+      - Facturas
+      operationId: invoiceVerify
+      summary: Verificar una factura (público)
+      description: Endpoint público sin credenciales para el código firmado de la factura impreso en el enlace del email o QR del PDF. Los clientes API reciben los hechos vigentes como JSON; los navegadores reciben HTML brandeado. Los códigos inválidos o de borrador responden 404 genérico. Limitado por IP.
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Código del enlace del email o QR del PDF.
+      responses:
+        '200':
+          description: El código es válido; hechos vigentes de la factura.
+          content:
+            application/json:
+              example:
+                valid: true
+                kind: invoice
+                invoice_number: INV-2026-0001
+                brand: CBPay
+                status: sent
+                status_word: Sent
+                currency: USD
+                total: '1250.00'
+                amount_paid: '500.00'
+                balance: '750.00'
+                issue_date: '2026-11-11'
+                due_date: '2026-12-11'
+                overdue: false
+                bill_to: Andes Logistics SpA
+                pay_url: https://pay.example/checkout/token
+        '404':
+          description: Código inválido, adulterado, de borrador o desconocido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: verification code not found
+        '429':
+          description: Demasiados intentos de verificación desde esta IP.
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
+  /verify/invoices/{code}/pdf:
+    get:
+      security: []
+      tags:
+      - Facturas
+      operationId: invoiceVerifyPdf
+      summary: Descargar el PDF de una factura verificada (público)
+      description: Endpoint público sin credenciales para obtener inline el PDF brandeado de una factura mediante un código firmado válido. Las facturas inválidas, de borrador o no disponibles responden 404 genérico. Limitado por IP.
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Código del enlace del email o QR del PDF.
+      responses:
+        '200':
+          description: PDF brandeado de la factura.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Nombre de archivo inline del PDF.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Código inválido, adulterado, de borrador o desconocido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: verification code not found
+        '429':
+          description: Demasiados intentos de verificación desde esta IP.
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
   /verify/qscore-fraud/{code}:
     get:
       tags:

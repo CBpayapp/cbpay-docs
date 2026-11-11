@@ -27747,6 +27747,98 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many requests; wait a moment and retry
+  /verify/invoices/{code}:
+    get:
+      security: []
+      tags:
+      - 发票
+      operationId: invoiceVerify
+      summary: 验证发票（公开）
+      description: 公开端点（无需凭证），用于验证邮件链接或 PDF 二维码中的发票签名代码。API 客户端收到当前发票事实 JSON；浏览器收到品牌化 HTML。无效或草稿发票返回通用 404。按 IP 限流。
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 邮件链接或 PDF 二维码中的验证码。
+      responses:
+        '200':
+          description: 发票代码有效；发票当前事实。
+          content:
+            application/json:
+              example:
+                valid: true
+                kind: invoice
+                invoice_number: INV-2026-0001
+                brand: CBPay
+                status: sent
+                status_word: Sent
+                currency: USD
+                total: '1250.00'
+                amount_paid: '500.00'
+                balance: '750.00'
+                issue_date: '2026-11-11'
+                due_date: '2026-12-11'
+                overdue: false
+                bill_to: Andes Logistics SpA
+                pay_url: https://pay.example/checkout/token
+        '404':
+          description: 验证码无效、被篡改、属于草稿或未知。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: verification code not found
+        '429':
+          description: 来自此 IP 的验证尝试过多。
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
+  /verify/invoices/{code}/pdf:
+    get:
+      security: []
+      tags:
+      - 发票
+      operationId: invoiceVerifyPdf
+      summary: 下载已验证的发票 PDF（公开）
+      description: 公开端点（无需凭证），通过有效的发票签名代码内联返回品牌化发票 PDF。无效、草稿或不可用发票返回通用 404。按 IP 限流。
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 邮件链接或 PDF 二维码中的验证码。
+      responses:
+        '200':
+          description: 品牌化发票 PDF。
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: PDF 内联文件名。
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: 验证码无效、被篡改、属于草稿或未知。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: verification code not found
+        '429':
+          description: 来自此 IP 的验证尝试过多。
+          content:
+            application/json:
+              example:
+                error: too_many_attempts
+                message: too many verification attempts; wait a moment and retry
   /verify/qscore-fraud/{code}:
     get:
       tags:
