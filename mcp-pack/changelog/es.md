@@ -19,10 +19,14 @@ source_url: https://docs.cbpayapp.com/es/changelog
   (los defaults existentes siguen funcionando).
 ### v2.259
 **Cambiado**
-- Los envíos frescos de OTP compartidos por miembro ahora permiten 20 por
-  hora, 6 por ráfaga de 10 minutos y 60 por 24 horas entre acciones y canales
-  de entrega. Los valores de `Retry-After` se mantienen en 600, 3600 y 86400
-  segundos para el bucket correspondiente.
+- Campana del miembro curada por defecto: `corridor_status_changed` (salud
+  global de rieles), `kyc_document_validated`, `kyb_document_validated` y
+  `kyc_liveness_completed` (pasos intermedios de verificación) ya no aparecen
+  en `GET /v1/events/history`, `GET /v1/me/notifications` ni en el stream en
+  vivo del canal cuenta. El resumido `kyc/kyb_verification_status_changed` se
+  queda. Pide cualquier tipo oculto explícitamente con `event_type` / `?types=`
+  para seguir recibiéndolo; webhooks, suscripciones y el canal org-admin no
+  cambian.
 ## v2.258 · 6 versiones - 10 de noviembre de 2026
 ### v2.258
 **Cambiado**

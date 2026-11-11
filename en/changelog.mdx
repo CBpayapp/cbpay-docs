@@ -7,6 +7,7 @@ description: "History of API and documentation changes"
 <Update label="November 11, 2026" description="v2.260 · 2 versions">
 ### v2.260
 **Changed**
+- Documented the transient `waiting_funds` processing state and RFC3339 `expected_funds_at`. Account-facing withdrawal and payout messages stay neutral and corporate; do not retry with a new idempotency key or create a replacement operation.
 - Sunset assets USDC.e (`USDCE`) and UF are no longer advertised at zero:
   `GET /v1/balances`, `GET /v1/balances/history` (all-zero series and the
   `current` snapshot), `enabled_assets` in `GET /v1/settlement`, `assets` in

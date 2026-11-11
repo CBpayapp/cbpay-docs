@@ -19,9 +19,14 @@ source_url: https://docs.cbpayapp.com/en/changelog
   keep working).
 ### v2.259
 **Changed**
-- Member-wide fresh OTP sends now allow 20 per hour, 6 per 10-minute burst,
-  and 60 per 24 hours across actions and delivery channels. `Retry-After`
-  values remain 600, 3600, and 86400 seconds for the corresponding bucket.
+- Member notification bell is curated by default: `corridor_status_changed`
+  (global rail health), `kyc_document_validated`, `kyb_document_validated`
+  and `kyc_liveness_completed` (intermediate verification steps) no longer
+  show up in `GET /v1/events/history`, `GET /v1/me/notifications` or the live
+  event stream for the account channel. The summarized
+  `kyc/kyb_verification_status_changed` stays. Request any hidden type
+  explicitly with `event_type` / `?types=` to still receive it; webhooks,
+  subscriptions and the org-admin channel are unaffected.
 ## v2.258 · 6 versions - November 10, 2026
 ### v2.258
 **Changed**

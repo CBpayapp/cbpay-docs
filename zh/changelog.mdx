@@ -7,6 +7,7 @@ description: "API and documentation change history"
 <Update label="2026年11月11日" description="v2.260 · 2 个版本">
 ### v2.260
 **变更**
+- 记录临时处理状态 `waiting_funds` 以及 RFC3339 的 `expected_funds_at`。账户看到的提现和 payout 文案保持中性企业风格；不要使用新幂等键重试或创建替代操作。
 - 已停用的 USDC.e（`USDCE`）和 UF 在余额为零时不再返回：`GET /v1/balances`、
   `GET /v1/balances/history`（全零序列和 `current` 快照）、
   `GET /v1/settlement` 的 `enabled_assets`、`GET /v1/rates` 的 `settlement`

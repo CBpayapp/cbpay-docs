@@ -309,6 +309,7 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Status | Meaning | Your balance |
 |---|---|---|
 | `processing` | Accepted and executing on the local rail | Debit held in `held` |
+| `pending` + `waiting_funds` | Temporary processing state; the platform resumes the payout automatically | Existing debit/hold remains associated; do not create a replacement |
 | `pending` + `compliance_pending: true` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
 | `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening passed; debit exists while dispatch or reconciliation is pending | `funds_debited: true`; debit remains held |
 | `completed` | The money reached the beneficiary | Hold consumed — final |

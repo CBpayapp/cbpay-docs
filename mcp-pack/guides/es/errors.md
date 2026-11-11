@@ -67,7 +67,7 @@ Detalle y flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/secur
 | 409 | `otp_phone_missing` | El login exige OTP y la cuenta no tiene teléfono; contacta a tu operador |
 | 409 | `challenge_not_pending` | El desafío expiró o ya se usó; crea uno nuevo |
 | 403 | `independent_factor_required` | El cooldown del teléfono solo se desbloquea con la app autenticadora o el email verificado, jamás con un código enviado al número nuevo |
-| 429 | `too_many_attempts` | Se llenó un bucket de envíos frescos compartido por el miembro; lee `Retry-After`: 600 segundos para ráfaga (6/10 minutos), 3600 segundos por hora (20/hora) u 86400 segundos por día (60/24 horas). El reuso de desafíos activos y TOTP están exentos, y los reintentos bloqueados no consumen otro bucket. |
+| 429 | `too_many_attempts` | Se llenó un bucket de envíos frescos compartido por el miembro; lee `Retry-After`: 600 segundos para ráfaga (3/10 minutos), 3600 segundos por hora (10/hora) u 86400 segundos por día (30/24 horas). El reuso de desafíos activos y TOTP están exentos, y los reintentos bloqueados no consumen otro bucket. |
 | 503 | `otp_unavailable` | Servicio de verificación no disponible (la acción queda bloqueada, nunca se salta el OTP) |
 | 409 | `otp_disabled_for_org` | Tu organización no tiene habilitado el 2FA por acción; contacta a tu operador |
 | 422 | `sms_country_blocked` | Los códigos SMS no están disponibles para este país (allowlist de la organización); verifica con tu app autenticadora o email |
@@ -163,6 +163,8 @@ Con la misma clave y el mismo payload, la API devuelve el cobro original con
 de la identidad del replay. Consulta el estado vivo con
 `GET /v1/payins/{payinID}`.
 
+> **Nota**
+`waiting_funds` es un estado de proceso que aparece en un retiro o payout existente mientras la plataforma completa un paso transitorio de proceso. No es el error `402 insufficient_funds`: `insufficient_funds` siempre se refiere al **saldo disponible de la cuenta** para crear una operación nueva. Conserva la misma clave de idempotencia, consulta el recurso existente y no crees una operación de reemplazo.
 ### Dinero y estado (402 / 404 / 409 / 422 / 429)
 
 | HTTP | `error` | Significado |

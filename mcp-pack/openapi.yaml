@@ -7685,10 +7685,11 @@ paths:
                 amount: '100.000000'
                 fee: '1.000000'
                 total_debit: '101.000000'
-                status: processing
-                status_code: ''
-                status_message: broadcasted
-                tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
+                status: pending
+                status_code: waiting_funds
+                status_message: Your withdrawal is being processed and will complete automatically. No action is needed.
+                expected_funds_at: '2026-11-11T20:00:00Z'
+                tx_id: ''
                 created_at: '2026-07-07T12:00:00Z'
                 updated_at: '2026-07-07T12:00:00Z'
         '200':
@@ -8264,7 +8265,7 @@ paths:
       - Real-time events
       operationId: listEventHistory
       summary: Event history
-      description: 'The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts).'
+      description: 'The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts). Account channel: curated by default — `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`; webhooks, subscriptions and the org-admin channel are unaffected.'
       parameters:
       - name: from
         in: query
@@ -8281,7 +8282,7 @@ paths:
       - name: event_type
         in: query
         required: false
-        description: Filters by a single event type.
+        description: Filters by a single event type. An explicitly requested noisy type (corridor health, intermediate verification steps) is still returned — the explicit escape from the curated account default.
         schema:
           type: string
       - name: account_id
@@ -11203,7 +11204,7 @@ paths:
       - Account
       operationId: listMyNotifications
       summary: My notifications
-      description: Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters.
+      description: 'Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters. Curated by default: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`.'
       parameters:
       - name: from
         in: query
@@ -11230,6 +11231,7 @@ paths:
       - name: event_type
         in: query
         required: false
+        description: Filters by a single event type. An explicitly requested noisy type is still returned (explicit escape from the curated default).
         schema:
           type: string
       responses:
@@ -13713,7 +13715,7 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: 'The member-wide fresh-send throttle was exceeded (`too_many_attempts`). The three budgets are 20 sends per hour, 6 sends per 10 minutes, and 60 sends per 24 hours across all actions and delivery channels. The check is all-or-nothing: a rejected request never consumes another bucket, so retrying while blocked does not extend the lockout. Reusing a live challenge does not consume the budget, and TOTP is exempt because it sends no code.'
+          description: 'The member-wide fresh-send throttle was exceeded (`too_many_attempts`). The three budgets are 10 sends per hour, 3 sends per 10 minutes, and 30 sends per 24 hours across all actions and delivery channels. The check is all-or-nothing: a rejected request never consumes another bucket, so retrying while blocked does not extend the lockout. Reusing a live challenge does not consume the budget, and TOTP is exempt because it sends no code.'
           headers:
             Retry-After:
               description: 'Seconds until a fresh OTP send can be requested again for the exceeded bucket: 600 for burst, 3600 for hourly, or 86400 for daily.'
@@ -17310,9 +17312,9 @@ paths:
                       account_type: clabe
                       account_number: 012180001234567895
                     description: Invoice 8841
-                    status: processing
-                    status_code: ''
-                    status_message: ''
+                    status: pending
+                    status_code: waiting_funds
+                    status_message: Your transfer is being processed and will complete automatically. No action is needed.
                     funds_debited: true
                     compliance_pending: false
                     bank_reference: ''
@@ -29809,6 +29811,10 @@ components:
           type: string
         status_message:
           type: string
+        expected_funds_at:
+          type: string
+          format: date-time
+          description: RFC3339 estimate exposed only while `status_code` is `waiting_funds`; it may change.
         tx_id:
           type: string
         travel_rule_status:

@@ -125,14 +125,14 @@ V1 不支持 swaps、卡、checkout/QR PoS 或 OTC。无法完成的自动转换
 <Warning>
 **USDC.e sunset：**Polygon `polygon:usdce` 网络已全局停用。无法创建新的
 USDC.e 钱包或发送新的 USDC.e。现有 USDC.e 余额仍会显示，并带有网络已
-停用标记；导出功能始终可用。请通过正常迁移流程将现有余额迁移到已启用的
-Polygon USDC 通道；余额不会被删除。
+停用标记；导出功能始终可用。如需将现有余额迁移到已启用的
+Polygon USDC 通道，请联系支持；余额不会被删除。
 </Warning>
 
 <AccordionGroup>
 <Accordion title="我的现有 USDC.e 余额会怎样？">
 Sunset 不会丢失或扣除余额。余额仍作为带网络已停用标记的 USDC.e 显示，
-并且可以导出。可通过正常迁移流程将其迁移到已启用的 Polygon USDC 通道。
+并且可以导出。如需迁移到已启用的 Polygon USDC 通道，请联系支持。
 </Accordion>
 <Accordion title="如果我向旧的 USDC.e 地址充值会怎样？">
 现有 Polygon USDC.e 充值地址仍会被识别。向该地址发送的存款在完成正常
@@ -408,6 +408,23 @@ curl https://api.qbank.cl/platform/v1/crypto/withdrawals/5e8c… \
 响应包含 `receipt_url` 时，详情页标题区域提供收据下载和 tracking 链接。
 返回按钮会回到相同网络和资产的钱包。
 
+### 临时处理等待（`waiting_funds`）
+
+提现可在平台完成临时处理步骤期间继续处于处理流程。API 会返回 `status: "pending"` 和 `status_code: "waiting_funds"`；这是**临时处理状态**，不是您的账户余额错误，也不是最终失败。扣款和冻结仍属于同一笔提现，平台会使用相同的幂等上下文自动恢复处理。
+
+账户看到的是中性的企业文案，绝不会出现资金库、热钱包或通道术语：
+
+```json
+{
+  "status": "pending",
+  "status_code": "waiting_funds",
+  "status_message": "Your withdrawal is being processed and will complete automatically. No action is needed.",
+  "expected_funds_at": "2026-11-11T20:00:00Z",
+  "tx_id": ""
+}
+```
+
+`expected_funds_at` 是 RFC3339 估计时间，可能变化。请订阅 `crypto_withdrawal_status_changed` 或使用 `GET /v1/crypto/withdrawals/{withdrawalID}` 查询。**不要创建替代提现，也不要使用新幂等键重试**：现有操作会自动恢复。如果再次发送相同请求，请使用原始 `idempotency_key`，API 会返回现有操作。
 ### Travel Rule（超过阈值的提现）
 
 国际监管（FATF R.16，即 "Travel Rule"）要求 **1,000 USD 起**的链上
