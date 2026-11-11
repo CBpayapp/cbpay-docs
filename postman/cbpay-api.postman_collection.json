@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-11 11:16 UTC",
-    "_content_sha256": "a65a3c8dda2e787b5a6769a5eb7c331fcda95c48e420ddd5b98e59fbe02863e4"
+    "_generated_at": "2026-11-11 15:47 UTC",
+    "_content_sha256": "77329f88bef5afabaddf299e21888d556e2cb2598a5746f840d2ca46c27bf90a"
   },
   "auth": {
     "type": "bearer",
@@ -1822,11 +1822,11 @@
                   "key": "event_type",
                   "value": "",
                   "disabled": true,
-                  "description": ""
+                  "description": "Filters by a single event type. An explicitly requested noisy type is still returned (explicit escape from the curated default)."
                 }
               ]
             },
-            "description": "Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters."
+            "description": "Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters. Curated by default: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`."
           },
           "response": [
             {
@@ -1872,7 +1872,7 @@
                       "key": "event_type",
                       "value": "",
                       "disabled": true,
-                      "description": ""
+                      "description": "Filters by a single event type. An explicitly requested noisy type is still returned (explicit escape from the curated default)."
                     }
                   ]
                 }
@@ -14041,7 +14041,7 @@
                   "key": "event_type",
                   "value": "",
                   "disabled": true,
-                  "description": "Filters by a single event type."
+                  "description": "Filters by a single event type. An explicitly requested noisy type (corridor health, intermediate verification steps) is still returned — the explicit escape from the curated account default."
                 },
                 {
                   "key": "account_id",
@@ -14061,7 +14061,7 @@
                 }
               ]
             },
-            "description": "The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts)."
+            "description": "The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts). Account channel: curated by default — `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`; webhooks, subscriptions and the org-admin channel are unaffected."
           },
           "response": [
             {
@@ -14095,7 +14095,7 @@
                       "key": "event_type",
                       "value": "",
                       "disabled": true,
-                      "description": "Filters by a single event type."
+                      "description": "Filters by a single event type. An explicitly requested noisy type (corridor health, intermediate verification steps) is still returned — the explicit escape from the curated account default."
                     },
                     {
                       "key": "account_id",
@@ -20882,7 +20882,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"payouts\": [\n    {\n      \"payout_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"idempotency_key\": \"invoice-8841\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"local_amount\": \"1500.00\",\n      \"fx_rate\": \"17.50\",\n      \"rate_source\": \"lot\",\n      \"usdt_amount\": \"85.714286\",\n      \"fee\": \"0.300000\",\n      \"total_debit\": \"86.014286\",\n      \"settlement_asset\": \"USDT\",\n      \"settlement_amount\": \"86.014286\",\n      \"settlement_rate\": \"1\",\n      \"beneficiary\": {\n        \"name\": \"Maria Lopez\",\n        \"account_type\": \"clabe\",\n        \"account_number\": \"012180001234567895\"\n      },\n      \"description\": \"Invoice 8841\",\n      \"status\": \"processing\",\n      \"status_code\": \"\",\n      \"status_message\": \"\",\n      \"funds_debited\": true,\n      \"compliance_pending\": false,\n      \"bank_reference\": \"\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"payouts\": [\n    {\n      \"payout_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"idempotency_key\": \"invoice-8841\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"local_amount\": \"1500.00\",\n      \"fx_rate\": \"17.50\",\n      \"rate_source\": \"lot\",\n      \"usdt_amount\": \"85.714286\",\n      \"fee\": \"0.300000\",\n      \"total_debit\": \"86.014286\",\n      \"settlement_asset\": \"USDT\",\n      \"settlement_amount\": \"86.014286\",\n      \"settlement_rate\": \"1\",\n      \"beneficiary\": {\n        \"name\": \"Maria Lopez\",\n        \"account_type\": \"clabe\",\n        \"account_number\": \"012180001234567895\"\n      },\n      \"description\": \"Invoice 8841\",\n      \"status\": \"pending\",\n      \"status_code\": \"waiting_funds\",\n      \"status_message\": \"Your transfer is being processed and will complete automatically. No action is needed.\",\n      \"funds_debited\": true,\n      \"compliance_pending\": false,\n      \"bank_reference\": \"\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },

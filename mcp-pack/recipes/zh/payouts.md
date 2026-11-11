@@ -297,45 +297,12 @@ curl "https://api.qbank.cl/platform/v1/payouts/ar-alias/resolve?alias=julieta.fe
 `invalid_alias`、`query_required`、`verification_required` 和
 `too_many_attempts` 都是可处理的查询错误。请参阅[错误码](https://docs.cbpayapp.com/zh/errors)。
 
-## 3. 接收最终状态
-
-订阅 `payout_status_changed` 事件（[webhooks](https://docs.cbpayapp.com/zh/webhooks)）：
-
-```json
-{
-  "payout_id": "0d4f…",
-  "account_id": "…",
-  "country": "MX",
-  "currency": "MXN",
-  "local_amount": "1500.00",
-  "usdt_amount": "85.714286",
-  "total_debit": "86.014286",
-  "status": "completed",
-  "status_code": "",
-  "status_message": "",
-  "bank_reference": "00761123456"
-}
-```
-
-- **`completed`**：资金已到账；冻结金额被消耗。
-- **`failed`**：全部扣款自动退回（在您的账本中记为
-  `payout_refund`）。
-
-`status_message` 是与 `status_code` 一起返回的可选规范化详情；
-核心没有额外消息时该字段可以为空。
-
-您也可以随时查询：
-
-```bash
-curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
-  -H "Authorization: Bearer <token>"
-```
-
 ### 出金状态
 
 | 状态 | 含义 | 您的余额 |
 |---|---|---|
 | `processing` | 已接受并在本地通道执行 | 扣款冻结在 `held` |
+| `pending` + `waiting_funds` | 临时处理状态；平台会自动恢复 payout | 现有扣款/冻结仍关联；不要创建替代操作 |
 | `pending` + `compliance_pending: true` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
 | `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | 筛查通过；扣款已存在，等待派发或协调 | `funds_debited: true`；扣款仍在 `held` |
 | `completed` | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |

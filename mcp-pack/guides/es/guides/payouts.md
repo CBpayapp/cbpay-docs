@@ -310,6 +310,7 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Estado | Significado | ¿Tu saldo? |
 |---|---|---|
 | `processing` | Aceptado y ejecutándose en el riel local | Débito retenido en `held` |
+| `pending` + `waiting_funds` | Estado transitorio; la plataforma reanuda el payout automáticamente | El débito/hold existente sigue asociado; no crees un reemplazo |
 | `pending` + `compliance_pending: true` | El screening técnico del beneficiario espera antes de cualquier débito o despacho | **Sin débito**; `funds_debited: false` |
 | `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening aprobado; débito existente mientras espera despacho o conciliación | `funds_debited: true`; débito retenido |
 | `completed` | El dinero llegó al beneficiario | Hold consumido — final |

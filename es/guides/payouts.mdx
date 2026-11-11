@@ -316,6 +316,7 @@ curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
 | Estado | Significado | ¿Tu saldo? |
 |---|---|---|
 | `processing` | Aceptado y ejecutándose en el riel local | Débito retenido en `held` |
+| `pending` + `waiting_funds` | Estado transitorio; la plataforma reanuda el payout automáticamente | El débito/hold existente sigue asociado; no crees un reemplazo |
 | `pending` + `compliance_pending: true` | El screening técnico del beneficiario espera antes de cualquier débito o despacho | **Sin débito**; `funds_debited: false` |
 | `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening aprobado; débito existente mientras espera despacho o conciliación | `funds_debited: true`; débito retenido |
 | `completed` | El dinero llegó al beneficiario | Hold consumido — final |
@@ -392,7 +393,6 @@ las de tu cuenta en `GET /v1/rates`; el débito es `usdt_amount + fee`
 | PY | `bank_transfer` | `name` (≤35), `tax_id`, `bank_code`, `account_number` |
 | AR | `bank_transfer` | `name`, `tax_id` (CUIT/CUIL de 11 dígitos), `account_number` (CBU/CVU de 22 dígitos o alias bancario; USD solo CBU) |
 | US | `ach` / `wire` / `swift` | `name`, `account_number`, `email`, `country_code` (cualquier país), `address`, `city`, `postal_code` (+ `state` si `country_code` es `US`), `bank_name`, `bank_country` (`US` en `ach`/`wire`), `bank_code` (routing ABA para `ach`/`wire`, BIC SWIFT para `swift`; + `account_type` `CHECKING`/`SAVING` para `ach`) |
-
 
 <Tabs>
 <Tab title="Chile">

@@ -7,6 +7,7 @@ description: "Historial de cambios de la API y de esta documentación"
 <Update label="11 de noviembre de 2026" description="v2.260 · 2 versiones">
 ### v2.260
 **Cambiado**
+- Documentado el estado transitorio de proceso `waiting_funds` y `expected_funds_at` en RFC3339. Los mensajes visibles para la cuenta se mantienen corporativos y neutrales; no reintentes con una clave nueva ni crees una operación de reemplazo.
 - Los assets apagados USDC.e (`USDCE`) y UF ya no se anuncian en cero:
   `GET /v1/balances`, `GET /v1/balances/history` (series toda-cero y snapshot
   `current`), `enabled_assets` en `GET /v1/settlement`, `assets` en el bloque
