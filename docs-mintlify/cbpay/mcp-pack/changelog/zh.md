@@ -5,22 +5,52 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.255 · 3 个版本 - 2026年11月10日
-### v2.255
+## v2.260 · 2 个版本 - 2026年11月11日
+### v2.260
+**变更**
+- 已停用的 USDC.e（`USDCE`）和 UF 在余额为零时不再返回：`GET /v1/balances`、
+  `GET /v1/balances/history`（全零序列和 `current` 快照）、
+  `GET /v1/settlement` 的 `enabled_assets`、`GET /v1/rates` 的 `settlement`
+  区块的 `assets` 以及 `rates` 中的 UF 行，在余额恰为零时省略。非零（或负）
+  余额仍会返回——真实资金永不隐藏。`PUT /v1/settlement` 现在拒绝将 `USDCE`
+  设为 `default_settlement_asset` 和 `default_payin_asset`
+  （`400 invalid_settlement_asset` / `invalid_asset`；现有默认值继续有效）。
+### v2.259
+**变更**
+- 成员通知铃铛默认精选：`corridor_status_changed`（全局通道健康）、`kyc_document_validated`、`kyb_document_validated` 和 `kyc_liveness_completed`（验证中间步骤）不再出现在账户通道的 `GET /v1/events/history`、`GET /v1/me/notifications` 和实时事件流中。汇总的 `kyc/kyb_verification_status_changed` 保留。用 `event_type` / `?types=` 明确请求仍可接收任何隐藏类型；Webhook、订阅和 org-admin 通道不受影响。
+## v2.258 · 6 个版本 - 2026年11月10日
+### v2.258
 **变更**
 - Convert 报价和兑换现在显示每一边的费用、`fee_total_pct` 以及
   `fee_note: included_in_rate`；`/v1/rates` 显示有效的 `swap_spread`
   行。账户支持响应使用匿名的 CBPay 支持标签，并说明登录前使用浏览器
   语言、登录后账户语言优先。
-### v2.254
+### v2.257
+**变更**
+- 兑换和转换的费用总额现在准确相加两边费用
+  (`0.20 + 0.15 = 0.3500`)，费用仍包含在报价汇率中。
+- Convert 门户现在提供**我的转换费用**视图，可查看费用详情和历史。
+- 支持历史记录已匿名化，并使用公开的 CBPay 支持标签。
+### v2.256
 **变更**
 - Polygon `polygon:usdce`（USDC.e）已全局停用，不再支持创建新钱包或发送。
   现有余额仍显示并带有网络停用标记，导出功能可用，向现有 USDC.e 地址
   充值仍会计入独立余额。控制停用返回 `409 crypto_disabled`；控制存储
   不可用返回 `503 crypto_controls_unavailable`。
-### v2.253
+### v2.255
 **变更**
 - 智利 `CL/UF/card` 和 `CL/UF/cash` payin 在生产环境中暂时禁用，等待通道批准。UF 文档和示例保留作参考；当前请求返回 `409 corridor_disabled` 或 `422 core_rejected`。通道获批前请使用 `CLP`。
+### v2.254
+**变更**
+- OTP 登录在 challenge 待处理期间显示真实等待时间。
+### v2.253
+**变更**
+- OTP 挑战发送现在对成员的各项预算采用全有或全无：`429` 不会消耗其他
+  预算，因此重试被阻止的请求不会延长锁定。新发送在所有操作和渠道之间
+  共享限制：每小时 10 次、每 10 分钟突发 3 次、每 24 小时 30 次。
+  复用仍有效的挑战和 TOTP 仍然豁免。`Retry-After` 会标明超出的预算：
+  突发 600 秒、每小时 3600 秒或每日 86400 秒。OTP 界面现在会以用户的
+  语言显示实际等待时间。
 ## v2.252 · 7 个版本 - 2026年11月9日
 ### v2.252
 #### 新增

@@ -167,6 +167,35 @@ curl -N "https://api.qbank.cl/platform/v1/events?types=payin_credited,payout_sta
   -H "Authorization: Bearer <token>"
 ```
 
+## Notificaciones de cuenta curadas
+
+Para las credenciales de cuenta, el stream y el historial de eventos vienen
+curados por defecto para que la campana del miembro muestre actualizaciones
+accionables, en vez de cada paso intermedio de verificación o transición de
+salud de la plataforma. El canal de cuenta excluye por defecto:
+
+- `corridor_status_changed` (salud global de los corredores)
+- `kyc_document_validated`
+- `kyb_document_validated`
+- `kyc_liveness_completed`
+
+Los eventos que resumen el estado de verificación, como
+`kyc/kyb_verification_status_changed`, siguen llegando. Los eventos de negocio
+de la cuenta y las notificaciones de seguridad siguen sujetos a los permisos
+de la credencial. Esta curación solo cambia el stream de cuenta, `GET
+/v1/events/history` y el feed de notificaciones del miembro; los webhooks, sus
+suscripciones y el canal de admin de organización no cambian.
+
+Pide explícitamente un tipo oculto cuando tu integración lo necesite:
+
+```bash
+curl -N "https://api.qbank.cl/platform/v1/events?types=corridor_status_changed" \
+  -H "Authorization: Bearer <token>"
+
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-25&event_type=kyc_document_validated&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
 ## Alcance: cuenta vs admin de organización
 
 | Credencial | Qué entrega el stream |

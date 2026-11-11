@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.255'
+  version: '2.260'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -3414,7 +3414,7 @@ paths:
       - Saldos
       operationId: getBalances
       summary: Obtener saldos
-      description: Los doce saldos virtuales independientes de la cuenta que llama (USD — la moneda principal —, USDT, USDC, USDCE, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos y los saldos fiat BOB, MXN, ARS de 2 decimales y CLP sin decimales). Todos los activos soportados vienen siempre, con ceros si la cuenta no ha usado esa moneda. Si la cuenta usa Banking, sus saldos espejo BANK_USD/BANK_EUR también se listan con el marcador `custody` en `banking` (el saldo autoritativo vive en el banco; estos saldos no son gastables dentro de la plataforma).
+      description: Los doce saldos virtuales independientes de la cuenta que llama (USD — la moneda principal —, USDT, USDC, USDCE, BTC, GOLD en gramos de oro fino, SILVER, PLATINUM en gramos y los saldos fiat BOB, MXN, ARS de 2 decimales y CLP sin decimales). Los assets apagados USDCE y UF se omiten cuando `available` y `held` son exactamente cero; un saldo apagado distinto de cero o negativo sigue visible. Los demás activos soportados vienen con ceros si la cuenta no ha usado esa moneda. Si la cuenta usa Banking, sus saldos espejo BANK_USD/BANK_EUR también se listan con el marcador `custody` en `banking` (el saldo autoritativo vive en el banco; estos saldos no son gastables dentro de la plataforma).
       responses:
         '200':
           description: Saldos de la cuenta que llama (uno por activo soportado).
@@ -3460,7 +3460,7 @@ paths:
       - Saldos
       operationId: getBalancesHistory
       summary: Obtener historial de saldos
-      description: 'Evolución diaria de los saldos de la cuenta para gráficos de dashboard: una serie por asset (el saldo disponible de cierre de cada día, arrastrado en días sin movimientos) más una serie agregada en USD que valoriza cada saldo al precio de referencia histórico de cada día (USDT/USDC a la par; BTC/GOLD/SILVER/PLATINUM y USD/BOB/MXN/ARS/CLP al precio del día). Incluye las entradas/salidas totales del período y el snapshot actual (available + held), para que el front arme una tarjeta de saldo estilo dashboard con su variación porcentual. La serie refleja el saldo **disponible** (los holds no tienen historia); `current` trae el `held` de hoy por asset. Los días valorizados con el precio spot de hoy (antes de que exista precio histórico) se declaran en `spot_priced_dates` — los valores jamás se inventan.
+      description: 'Evolución diaria de los saldos de la cuenta para gráficos de dashboard: una serie por asset (el saldo disponible de cierre de cada día, arrastrado en días sin movimientos) más una serie agregada en USD que valoriza cada saldo al precio de referencia histórico de cada día (USDT/USDC a la par; BTC/GOLD/SILVER/PLATINUM y USD/BOB/MXN/ARS/CLP al precio del día). Las series totalmente en cero de USDCE y UF se omiten, pero se conservan si tienen pasado real; `current` aplica la misma regla. Incluye las entradas/salidas totales del período y el snapshot actual (available + held), para que el front arme una tarjeta de saldo estilo dashboard con su variación porcentual. La serie refleja el saldo **disponible** (los holds no tienen historia); `current` trae el `held` de hoy por asset. Los días valorizados con el precio spot de hoy (antes de que exista precio histórico) se declaran en `spot_priced_dates` — los valores jamás se inventan.
 
 
         El mapa `assets` incluye también los espejos de las cuentas banking (`BANK_USD`, `BANK_EUR`) como serie propia en su propia moneda (2 decimales). **No** forman parte del agregado `total_usd`, que cubre los doce saldos del libro mayor (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP).
@@ -8282,7 +8282,7 @@ paths:
       - Eventos en tiempo real
       operationId: listEventHistory
       summary: Historial de eventos
-      description: 'El mismo log que alimenta el stream, consultable. Exige filtros de fecha `from`/`to`. La retención es de 90 días: el log es un buffer de notificación, los hechos financieros viven en sus propios recursos inmutables (movimientos, payins, payouts).'
+      description: 'El mismo log que alimenta el stream, consultable. Exige filtros de fecha `from`/`to`. La retención es de 90 días: el log es un buffer de notificación, los hechos financieros viven en sus propios recursos inmutables (movimientos, payins, payouts). Canal de cuenta curado por defecto: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` y `kyc_liveness_completed` se excluyen salvo pedido explícito con `event_type`; webhooks, suscripciones y el canal org-admin no cambian.'
       parameters:
       - name: from
         in: query
@@ -8299,7 +8299,7 @@ paths:
       - name: event_type
         in: query
         required: false
-        description: Filtra por un único tipo de evento.
+        description: 'Filtra por un único tipo de evento. Un tipo ruidoso pedido explícitamente (salud de corredores, pasos intermedios de verificación) igual se devuelve: es el escape explícito del default curado de cuenta.'
         schema:
           type: string
       - name: account_id
@@ -11214,7 +11214,7 @@ paths:
       - Cuenta
       operationId: listMyNotifications
       summary: Mis notificaciones
-      description: Feed de notificaciones de la cuenta para el miembro (mismo envelope que el historial de eventos, vista cuenta). Exige filtros de fecha `from`/`to`.
+      description: 'Feed de notificaciones de la cuenta para el miembro (mismo envelope que el historial de eventos, vista cuenta). Exige filtros de fecha `from`/`to`. Curado por defecto: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` y `kyc_liveness_completed` se excluyen salvo pedido explícito con `event_type`.'
       parameters:
       - name: from
         in: query
@@ -11241,6 +11241,7 @@ paths:
       - name: event_type
         in: query
         required: false
+        description: Filtra por un único tipo de evento. Un tipo ruidoso pedido explícitamente igual se devuelve (escape explícito del default curado).
         schema:
           type: string
       responses:
@@ -13724,10 +13725,10 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: Se solicitaron más de 10 envíos de códigos frescos para este miembro dentro de una hora (`too_many_attempts`). Los desafíos activos reutilizados no consumen este presupuesto. TOTP está exento porque no envía códigos.
+          description: 'Se excedió el throttle de envíos frescos compartido por miembro (`too_many_attempts`). Los tres presupuestos son 10 envíos por hora, 3 envíos por 10 minutos y 30 envíos por 24 horas entre todas las acciones y canales de entrega. La verificación es todo-o-nada: una solicitud rechazada nunca consume otro bucket, por lo que reintentar mientras está bloqueada no alarga el bloqueo. Reutilizar un desafío activo no consume el presupuesto y TOTP está exento porque no envía códigos.'
           headers:
             Retry-After:
-              description: Segundos hasta que se pueda solicitar otro envío fresco de OTP.
+              description: 'Segundos hasta que se pueda solicitar otro envío fresco de OTP para el bucket excedido: 600 para ráfaga, 3600 por hora u 86400 por día.'
               schema:
                 type: integer
                 example: 3600
@@ -21964,7 +21965,7 @@ paths:
       - Saldos
       operationId: getRates
       summary: Obtener mis tasas de cambio y comisiones
-      description: Devuelve las tasas de cambio que aplican a la cuenta que llama para cada país — las mismas tasas usadas cuando las operaciones se ejecutan (`local_amount / rate = USDT`) — más la configuración de comisiones **efectiva** de la cuenta — los defaults de la organización ya resueltos contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla. `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda; cuando es `spot`, no existe un lote elegible y se usa spot. Para payins USDT, `payin_rate_source` es `lot` cuando el inventario FIFO payin habilitado respalda la cotización y `spot` en los demás casos. Los payins con tarjeta siguen usando spot. Usa `lot_quote` opcional para una cotización indicativa por monto. `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado, el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para estimar antes de enviar `settlement_asset` en un payout.
+      description: Devuelve las tasas de cambio que aplican a la cuenta que llama para cada país — las mismas tasas usadas cuando las operaciones se ejecutan (`local_amount / rate = USDT`) — más la configuración de comisiones **efectiva** de la cuenta — los defaults de la organización ya resueltos contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla. `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda; cuando es `spot`, no existe un lote elegible y se usa spot. Para payins USDT, `payin_rate_source` es `lot` cuando el inventario FIFO payin habilitado respalda la cotización y `spot` en los demás casos. Los payins con tarjeta siguen usando spot. Usa `lot_quote` opcional para una cotización indicativa por monto. La fila UF se omite de `rates`; la lista `settlement.assets` no incluye assets apagados. `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado, el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para estimar antes de enviar `settlement_asset` en un payout.
       parameters:
       - name: currency
         in: query
@@ -24110,7 +24111,6 @@ paths:
                   - USD
                   - USDT
                   - USDC
-                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
@@ -24151,7 +24151,7 @@ paths:
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '400':
-          description: Asset inválido o deshabilitado (`invalid_settlement_asset`, `settlement_asset_disabled`).
+          description: Asset inválido o deshabilitado (`invalid_settlement_asset`, `invalid_asset`, `settlement_asset_disabled`).
           content:
             application/json:
               schema:
@@ -25979,7 +25979,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
@@ -26005,7 +26005,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
@@ -26221,7 +26221,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 indicative: true
         '400':

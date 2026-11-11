@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-10 18:42 UTC",
-    "_content_sha256": "6c917f2ed95a9f295ea8129b8cb2b879e0825da0353a7cf8f497ff5a3b8d1765"
+    "_generated_at": "2026-11-11 14:49 UTC",
+    "_content_sha256": "0a345c9b7672e9069d5183c0cbc0ac50c76c9e6b34690acffd6a12d08d2ab728"
   },
   "auth": {
     "type": "bearer",
@@ -1822,11 +1822,11 @@
                   "key": "event_type",
                   "value": "",
                   "disabled": true,
-                  "description": ""
+                  "description": "Filters by a single event type. An explicitly requested noisy type is still returned (explicit escape from the curated default)."
                 }
               ]
             },
-            "description": "Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters."
+            "description": "Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters. Curated by default: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`."
           },
           "response": [
             {
@@ -1872,7 +1872,7 @@
                       "key": "event_type",
                       "value": "",
                       "disabled": true,
-                      "description": ""
+                      "description": "Filters by a single event type. An explicitly requested noisy type is still returned (explicit escape from the curated default)."
                     }
                   ]
                 }
@@ -3567,7 +3567,7 @@
                 "settlement"
               ]
             },
-            "description": "Returns which virtual balance your operations (payouts and service fees) debit from by default, the balance your payins settle into by default (`default_payin_asset`), which assets your organization allows, and the per-operation limit (USDT equivalent) applied to volatile assets (BTC/GOLD/SILVER/PLATINUM)."
+            "description": "Returns which virtual balance your operations (payouts and service fees) debit from by default, the balance your payins settle into by default (`default_payin_asset`), which assets your organization allows, and the per-operation limit (USDT equivalent) applied to volatile assets (BTC/GOLD/SILVER/PLATINUM). Sunset USDCE and UF are not included in `enabled_assets`."
           },
           "response": [
             {
@@ -3618,7 +3618,7 @@
                 "settlement"
               ]
             },
-            "description": "Changes your default balances. `default_settlement_asset` is the balance your payouts and service fees debit from when a request does not send an explicit `settlement_asset`. `default_payin_asset` is the balance your payins settle into — with `USD` (the default for new accounts) the net is credited directly in USD cents; with any other target the net amount is auto-converted through the swap engine at the real price, with no extra swap spread (the payin already paid its fee and rate; checkout and POS payins keep their per-link asset). `default_settlement_asset` accepts USD, USDT, USDC, USDCE, BTC, GOLD, SILVER or PLATINUM (if enabled for your organization); `default_payin_asset` uses the non-USDCE assets supported by the swap engine. Send one or both fields. The change applies to new operations only; nothing in flight is re-quoted.",
+            "description": "Changes your default balances. `default_settlement_asset` is the balance your payouts and service fees debit from when a request does not send an explicit `settlement_asset`. `default_payin_asset` is the balance your payins settle into — with `USD` (the default for new accounts) the net is credited directly in USD cents; with any other target the net amount is auto-converted through the swap engine at the real price, with no extra swap spread (the payin already paid its fee and rate; checkout and POS payins keep their per-link asset). `default_settlement_asset` rejects sunset USDCE with `400 invalid_settlement_asset`; `default_payin_asset` rejects it with `400 invalid_asset`. Existing defaults continue working. Send one or both fields. The change applies to new operations only; nothing in flight is re-quoted.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"default_settlement_asset\": \"BTC\",\n  \"default_payin_asset\": \"USDC\"\n}",
@@ -6847,7 +6847,7 @@
                 "balances"
               ]
             },
-            "description": "The twelve independent virtual balances of the calling account (USD — the principal currency —, USDT, USDC, USDCE, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver, PLATINUM in grams of fine platinum, and fiat BOB, MXN, ARS with two decimals and CLP with zero decimals). Every supported asset is always present, with zeros if the account has not used that currency yet. If the account uses Banking, its BANK_USD/BANK_EUR mirror balances are also listed with the `custody` marker set to `banking` (the authoritative balance lives at the bank; these balances are not spendable inside the platform)."
+            "description": "The twelve independent virtual balances of the calling account (USD — the principal currency —, USDT, USDC, USDCE, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver, PLATINUM in grams of fine platinum, and fiat BOB, MXN, ARS with two decimals and CLP with zero decimals). Sunset USDCE and UF rows are omitted when their available and held amounts are exactly zero; a non-zero or negative sunset balance remains visible. Other supported assets remain present with zero values when unused. If the account uses Banking, its BANK_USD/BANK_EUR mirror balances are also listed with the `custody` marker set to `banking` (the authoritative balance lives at the bank; these balances are not spendable inside the platform)."
           },
           "response": [
             {
@@ -6908,7 +6908,7 @@
                 }
               ]
             },
-            "description": "Daily evolution of the account's balances for dashboard charts: one series per asset (the closing available balance of each day, carried forward on days without movements) plus an aggregated USD series that values every balance at each day's historical reference price (USDT/USDC at par; BTC/GOLD/SILVER/PLATINUM and USD/BOB/MXN/ARS/CLP at the day's price). Includes the period's total inflows/outflows and the current snapshot (available + held), so a front can render a Mercury-style balance card with its percentage change. The series tracks the **available** balance (holds have no history); `current` carries today's `held` per asset. Days valued with today's spot price (before historical prices exist) are disclosed in `spot_priced_dates` — values are never invented.\n\nThe `assets` map also includes the banking account mirrors (`BANK_USD`, `BANK_EUR`) as their own series in their own currency (CLP has zero decimals; other local fiat has two). They are **not** part of the `total_usd` aggregate, which covers all twelve ledger balances (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP)."
+            "description": "Daily evolution of the account's balances for dashboard charts: one series per asset (the closing available balance of each day, carried forward on days without movements) plus an aggregated USD series that values every balance at each day's historical reference price (USDT/USDC at par; BTC/GOLD/SILVER/PLATINUM and USD/BOB/MXN/ARS/CLP at the day's price). All-zero USDCE and UF series are omitted, while a series with real historical balance is retained; `current` applies the same zero-row rule. Includes the period's total inflows/outflows and the current snapshot (available + held), so a front can render a Mercury-style balance card with its percentage change. The series tracks the **available** balance (holds have no history); `current` carries today's `held` per asset. Days valued with today's spot price (before historical prices exist) are disclosed in `spot_priced_dates` — values are never invented.\n\nThe `assets` map also includes the banking account mirrors (`BANK_USD`, `BANK_EUR`) as their own series in their own currency (CLP has zero decimals; other local fiat has two). They are **not** part of the `total_usd` aggregate, which covers all twelve ledger balances (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP)."
           },
           "response": [
             {
@@ -7113,7 +7113,7 @@
                 }
               ]
             },
-            "description": "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
+            "description": "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. The sunset UF row is omitted from `rates` when its value is not available; the `settlement.assets` list omits sunset assets. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
           },
           "response": [
             {
@@ -14041,7 +14041,7 @@
                   "key": "event_type",
                   "value": "",
                   "disabled": true,
-                  "description": "Filters by a single event type."
+                  "description": "Filters by a single event type. An explicitly requested noisy type (corridor health, intermediate verification steps) is still returned — the explicit escape from the curated account default."
                 },
                 {
                   "key": "account_id",
@@ -14061,7 +14061,7 @@
                 }
               ]
             },
-            "description": "The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts)."
+            "description": "The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts). Account channel: curated by default — `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`; webhooks, subscriptions and the org-admin channel are unaffected."
           },
           "response": [
             {
@@ -14095,7 +14095,7 @@
                       "key": "event_type",
                       "value": "",
                       "disabled": true,
-                      "description": "Filters by a single event type."
+                      "description": "Filters by a single event type. An explicitly requested noisy type (corridor health, intermediate verification steps) is still returned — the explicit escape from the curated account default."
                     },
                     {
                       "key": "account_id",
@@ -30781,7 +30781,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3495\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -30846,7 +30846,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3495\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -30911,7 +30911,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3495\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -30999,7 +30999,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3495\",\n  \"fee_note\": \"included_in_rate\",\n  \"indicative\": true\n}"
+              "body": "{\n  \"from_asset\": \"USDT\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.000000\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USDT\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"indicative\": true\n}"
             }
           ]
         },

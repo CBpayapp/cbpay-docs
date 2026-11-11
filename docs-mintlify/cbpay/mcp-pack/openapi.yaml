@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.255'
+  version: '2.260'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -3388,7 +3388,7 @@ paths:
       - Balances
       operationId: getBalances
       summary: Get balances
-      description: The twelve independent virtual balances of the calling account (USD — the principal currency —, USDT, USDC, USDCE, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver, PLATINUM in grams of fine platinum, and fiat BOB, MXN, ARS with two decimals and CLP with zero decimals). Every supported asset is always present, with zeros if the account has not used that currency yet. If the account uses Banking, its BANK_USD/BANK_EUR mirror balances are also listed with the `custody` marker set to `banking` (the authoritative balance lives at the bank; these balances are not spendable inside the platform).
+      description: The twelve independent virtual balances of the calling account (USD — the principal currency —, USDT, USDC, USDCE, BTC, GOLD in grams of fine gold, SILVER in grams of fine silver, PLATINUM in grams of fine platinum, and fiat BOB, MXN, ARS with two decimals and CLP with zero decimals). Sunset USDCE and UF rows are omitted when their available and held amounts are exactly zero; a non-zero or negative sunset balance remains visible. Other supported assets remain present with zero values when unused. If the account uses Banking, its BANK_USD/BANK_EUR mirror balances are also listed with the `custody` marker set to `banking` (the authoritative balance lives at the bank; these balances are not spendable inside the platform).
       responses:
         '200':
           description: Balances of the calling account (one per supported asset).
@@ -3434,7 +3434,7 @@ paths:
       - Balances
       operationId: getBalancesHistory
       summary: Get balance history
-      description: "Daily evolution of the account's balances for dashboard charts: one series per asset (the closing available balance of each day, carried forward on days without movements) plus an aggregated USD series that values every balance at each day's historical reference price (USDT/USDC at par; BTC/GOLD/SILVER/PLATINUM and USD/BOB/MXN/ARS/CLP at the day's price). Includes the period's total inflows/outflows and the current snapshot (available + held), so a front can render a Mercury-style balance card with its percentage change. The series tracks the **available** balance (holds have no history); `current` carries today's `held` per asset. Days valued with today's spot price (before historical prices exist) are disclosed in `spot_priced_dates` — values are never invented.\n\nThe `assets` map also includes the banking account mirrors (`BANK_USD`, `BANK_EUR`) as their own series in their own currency (CLP has zero decimals; other local fiat has two). They are **not** part of the `total_usd` aggregate, which covers all twelve ledger balances (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP).\n"
+      description: "Daily evolution of the account's balances for dashboard charts: one series per asset (the closing available balance of each day, carried forward on days without movements) plus an aggregated USD series that values every balance at each day's historical reference price (USDT/USDC at par; BTC/GOLD/SILVER/PLATINUM and USD/BOB/MXN/ARS/CLP at the day's price). All-zero USDCE and UF series are omitted, while a series with real historical balance is retained; `current` applies the same zero-row rule. Includes the period's total inflows/outflows and the current snapshot (available + held), so a front can render a Mercury-style balance card with its percentage change. The series tracks the **available** balance (holds have no history); `current` carries today's `held` per asset. Days valued with today's spot price (before historical prices exist) are disclosed in `spot_priced_dates` — values are never invented.\n\nThe `assets` map also includes the banking account mirrors (`BANK_USD`, `BANK_EUR`) as their own series in their own currency (CLP has zero decimals; other local fiat has two). They are **not** part of the `total_usd` aggregate, which covers all twelve ledger balances (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP).\n"
       parameters:
       - name: from
         in: query
@@ -3472,7 +3472,7 @@ paths:
                     example: America/New_York
                   assets:
                     type: object
-                    description: 'One daily closing-balance series per asset. Includes the twelve ledger balances (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP) and the banking account mirrors (BANK_USD, BANK_EUR) in their own currency; the banking series are excluded from `total_usd`.
+                    description: 'One daily closing-balance series per asset. All-zero USDCE and UF series are omitted; a series with historical balance is retained. The ledger balances (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP) and the banking account mirrors (BANK_USD, BANK_EUR) are represented in their own currency; the banking series are excluded from `total_usd`.
 
                       '
                     additionalProperties:
@@ -8264,7 +8264,7 @@ paths:
       - Real-time events
       operationId: listEventHistory
       summary: Event history
-      description: 'The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts).'
+      description: 'The same log that feeds the stream, queryable. Requires `from`/`to` date filters. Retention is 90 days: the log is a notification buffer, the financial facts live in their own immutable resources (movements, payins, payouts). Account channel: curated by default — `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`; webhooks, subscriptions and the org-admin channel are unaffected.'
       parameters:
       - name: from
         in: query
@@ -8281,7 +8281,7 @@ paths:
       - name: event_type
         in: query
         required: false
-        description: Filters by a single event type.
+        description: Filters by a single event type. An explicitly requested noisy type (corridor health, intermediate verification steps) is still returned — the explicit escape from the curated account default.
         schema:
           type: string
       - name: account_id
@@ -11203,7 +11203,7 @@ paths:
       - Account
       operationId: listMyNotifications
       summary: My notifications
-      description: Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters.
+      description: 'Member notification feed for the account (same envelope as event history, account view). Requires `from`/`to` date filters. Curated by default: `corridor_status_changed`, `kyc_document_validated`, `kyb_document_validated` and `kyc_liveness_completed` are excluded unless requested explicitly with `event_type`.'
       parameters:
       - name: from
         in: query
@@ -11230,6 +11230,7 @@ paths:
       - name: event_type
         in: query
         required: false
+        description: Filters by a single event type. An explicitly requested noisy type is still returned (explicit escape from the curated default).
         schema:
           type: string
       responses:
@@ -13713,10 +13714,10 @@ paths:
                 error: phone_required
                 message: the account has no phone number; set it with PATCH /v1/me before requesting OTP codes
         '429':
-          description: More than 10 fresh code sends were requested for this member within one hour (`too_many_attempts`). Reused live challenges do not consume this budget. TOTP is exempt because it sends no code.
+          description: 'The member-wide fresh-send throttle was exceeded (`too_many_attempts`). The three budgets are 10 sends per hour, 3 sends per 10 minutes, and 30 sends per 24 hours across all actions and delivery channels. The check is all-or-nothing: a rejected request never consumes another bucket, so retrying while blocked does not extend the lockout. Reusing a live challenge does not consume the budget, and TOTP is exempt because it sends no code.'
           headers:
             Retry-After:
-              description: Seconds until a fresh OTP send can be requested again.
+              description: 'Seconds until a fresh OTP send can be requested again for the exceeded bucket: 600 for burst, 3600 for hourly, or 86400 for daily.'
               schema:
                 type: integer
                 example: 3600
@@ -21895,7 +21896,7 @@ paths:
       - Balances
       operationId: getRates
       summary: Get my FX rates and fees
-      description: "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
+      description: "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. The sunset UF row is omitted from `rates` when its value is not available; the `settlement.assets` list omits sunset assets. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
       parameters:
       - name: currency
         in: query
@@ -24065,7 +24066,7 @@ paths:
       - Account
       operationId: getSettlement
       summary: Get my settlement settings
-      description: Returns which virtual balance your operations (payouts and service fees) debit from by default, the balance your payins settle into by default (`default_payin_asset`), which assets your organization allows, and the per-operation limit (USDT equivalent) applied to volatile assets (BTC/GOLD/SILVER/PLATINUM).
+      description: Returns which virtual balance your operations (payouts and service fees) debit from by default, the balance your payins settle into by default (`default_payin_asset`), which assets your organization allows, and the per-operation limit (USDT equivalent) applied to volatile assets (BTC/GOLD/SILVER/PLATINUM). Sunset USDCE and UF are not included in `enabled_assets`.
       responses:
         '200':
           description: Current settlement settings.
@@ -24095,7 +24096,7 @@ paths:
       - Account
       operationId: updateSettlement
       summary: Set my default balances (payouts and payins)
-      description: Changes your default balances. `default_settlement_asset` is the balance your payouts and service fees debit from when a request does not send an explicit `settlement_asset`. `default_payin_asset` is the balance your payins settle into — with `USD` (the default for new accounts) the net is credited directly in USD cents; with any other target the net amount is auto-converted through the swap engine at the real price, with no extra swap spread (the payin already paid its fee and rate; checkout and POS payins keep their per-link asset). `default_settlement_asset` accepts USD, USDT, USDC, USDCE, BTC, GOLD, SILVER or PLATINUM (if enabled for your organization); `default_payin_asset` uses the non-USDCE assets supported by the swap engine. Send one or both fields. The change applies to new operations only; nothing in flight is re-quoted.
+      description: Changes your default balances. `default_settlement_asset` is the balance your payouts and service fees debit from when a request does not send an explicit `settlement_asset`. `default_payin_asset` is the balance your payins settle into — with `USD` (the default for new accounts) the net is credited directly in USD cents; with any other target the net amount is auto-converted through the swap engine at the real price, with no extra swap spread (the payin already paid its fee and rate; checkout and POS payins keep their per-link asset). `default_settlement_asset` rejects sunset USDCE with `400 invalid_settlement_asset`; `default_payin_asset` rejects it with `400 invalid_asset`. Existing defaults continue working. Send one or both fields. The change applies to new operations only; nothing in flight is re-quoted.
       requestBody:
         required: true
         content:
@@ -24109,7 +24110,6 @@ paths:
                   - USD
                   - USDT
                   - USDC
-                  - USDCE
                   - BTC
                   - GOLD
                   - SILVER
@@ -24150,7 +24150,7 @@ paths:
                 volatile_op_limit_usdt: '10000.000000'
                 volatile_daily_limit_usdt: '50000.000000'
         '400':
-          description: Invalid or disabled asset (`invalid_settlement_asset`, `settlement_asset_disabled`).
+          description: Invalid or disabled asset (`invalid_settlement_asset`, `invalid_asset`, `settlement_asset_disabled`).
           content:
             application/json:
               schema:
@@ -26017,7 +26017,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
@@ -26043,7 +26043,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 status: completed
                 idempotency_key: swap-2026-07-10-a
@@ -26259,7 +26259,7 @@ paths:
                 - leg: to
                   asset: BTC
                   percent: '0.15'
-                fee_total_pct: '0.3495'
+                fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 indicative: true
         '400':
