@@ -334,18 +334,10 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 ```
 
 ```json banking_customer_status_changed
-{
-  "account_id": "ae8c…",
-  "customer_id": "9f2b…",
-  "customer_kind": "third_party",
-  "third_party_id": "77aa…",
-  "kyc_status": "approved"
-}
+{"account_id":"ae8c…","customer_id":"9f2b…","customer_kind":"third_party","third_party_id":"77aa…","kyc_status":"approved","raw_status":"READY_FOR_MODERATION","feedback_note":"已收到文件","feedback_source":"provider"}
 ```
-
-在 `banking_customer_status_changed` 中，`customer_kind` 区分自己的档案
-（`self`）和你注册的第三方（`third_party`，附 `third_party_id` — 与
-`GET /v1/banking/third-parties/{id}` 的 id 相同）。
+在 `banking_customer_status_changed` 中，`customer_kind` 区分自己的档案（`self`）和你注册的第三方（`third_party`，附 `third_party_id` — 与 `GET /v1/banking/third-parties/{id}` 的 id 相同）。
+可选字段 `raw_status`、`feedback_note` 和 `feedback_source` 携带原始审核状态和备注；`feedback_source` 为 `provider`、`ours` 或 `none`，生命周期使用 `kyc_status`。
 
 ```json banking_operation_status_changed
 {

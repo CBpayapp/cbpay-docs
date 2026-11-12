@@ -406,10 +406,10 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/do
 { "upload_url": "https://storage…", "key": "public-api/…", "expires_in": 900 }
 ```
 
-Categorías — KYC: `identity`, `proofOfResidence`; KYB: `legalPresence`,
-`ownershipStructure`, `controlStructure`, `companyDetails`. Tipos:
-`application/pdf`, `image/png`, `image/jpeg`; máximo 15 MB; la URL vence en
-15 minutos.
+Categorías — KYC: `identity`, `identity_front` (frente), `identity_back` (reverso),
+`proofOfResidence`; KYB: `legalPresence`, `ownershipStructure`, `controlStructure`,
+`companyDetails`. Tipos: `application/pdf`, `image/png`, `image/jpeg`; máximo 15 MB;
+la URL vence en 15 minutos. Para UBO invitados, usa `uboIdentity` (frente) o `uboIdentityBack` (reverso).
 ### Upload
 
 `PUT` del binario directo a `upload_url` con el mismo `Content-Type`.
@@ -713,7 +713,7 @@ Respuesta `format=json` (resumen del shape — el PDF sale del mismo modelo):
           "outcome": "FAIL",
           "passed_gate": false,
           "liveness_score": "0.98",
-          "reasons": ["No se detectó la sonrisa."],
+          "reasons": ["challenge_review"],
           "media": {
             "has_selfie": true,
             "has_video": true,
@@ -763,7 +763,7 @@ Respuesta `format=json` (resumen del shape — el PDF sale del mismo modelo):
       "outcome": "FAIL",
       "passed_gate": false,
       "liveness_score": "0.98",
-      "reasons": ["No se detectó la sonrisa."],
+      "reasons": ["challenge_review"],
       "media": {
         "has_selfie": true,
         "has_video": true,

@@ -308,16 +308,11 @@ parties you register (`customer_kind: third_party`, with their
 `third_party_id`):
 
 ```json
-{
-  "account_id": "…",
-  "customer_id": "9f2b…",
-  "customer_kind": "self",
-  "kyc_status": "approved"
-}
+{"account_id":"…","customer_id":"9f2b…","customer_kind":"self","kyc_status":"approved","feedback":{"raw_status":"READY_FOR_MODERATION","note":"Documents received","note_source":"provider"}}
 ```
-
+`GET /v1/banking/customer` includes the same read-only `feedback` object:
+`raw_status`, moderation `note`, and `note_source` (`provider`, `ours`, or `none`). Use `status`/`kyc_status` for the normalized lifecycle.
 ## 3. Open bank accounts
-
 With the profile `approved`, create the classic Banking customer account for **USD** only (ACH/Fedwire/SWIFT rails). EUR is not opened here; request a `banking_eur` virtual IBAN directly in the [EUR virtual IBAN flow](#eur-virtual-ibans).
 
 ```bash

@@ -238,9 +238,19 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/customer/submit \
   "account_id": "…",
   "customer_id": "9f2b…",
   "customer_kind": "self",
-  "kyc_status": "approved"
+  "kyc_status": "approved",
+  "feedback": {
+    "raw_status": "READY_FOR_MODERATION",
+    "note": "已收到文件",
+    "note_source": "provider"
+  }
 }
 ```
+
+`GET /v1/banking/customer` 也返回相同的 `feedback` 对象。`raw_status`
+是 banking rail 的原始状态，`note` 是最新的审核备注；`note_source`
+可以是 `provider`、`ours` 或 `none`。正常生命周期仍以
+`status`/`kyc_status` 为准，feedback 仅作为只读上下文。
 
 ## 3. 开立银行账户
 

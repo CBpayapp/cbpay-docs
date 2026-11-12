@@ -404,10 +404,10 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/do
 { "upload_url": "https://storage…", "key": "public-api/…", "expires_in": 900 }
 ```
 
-Categories — KYC: `identity`, `proofOfResidence`; KYB: `legalPresence`,
-`ownershipStructure`, `controlStructure`, `companyDetails`. Types:
-`application/pdf`, `image/png`, `image/jpeg`; 15 MB max; the upload URL
-expires in 15 minutes.
+Categories — KYC: `identity`, `identity_front` (front), `identity_back` (back),
+`proofOfResidence`; KYB: `legalPresence`, `ownershipStructure`, `controlStructure`,
+`companyDetails`. Types: `application/pdf`, `image/png`, `image/jpeg`; 15 MB max;
+the upload URL expires in 15 minutes. Invited UBOs use `uboIdentity` (front) or `uboIdentityBack` (back).
 ### Upload
 
 `PUT` the binary straight to `upload_url` with the same `Content-Type`.
@@ -712,7 +712,7 @@ evidence.
           "outcome": "FAIL",
           "passed_gate": false,
           "liveness_score": "0.98",
-          "reasons": ["Smile was not detected."],
+          "reasons": ["challenge_review"],
           "media": {
             "has_selfie": true,
             "has_video": true,
@@ -762,7 +762,7 @@ evidence.
       "outcome": "FAIL",
       "passed_gate": false,
       "liveness_score": "0.98",
-      "reasons": ["Smile was not detected."],
+      "reasons": ["challenge_review"],
       "media": {
         "has_selfie": true,
         "has_video": true,

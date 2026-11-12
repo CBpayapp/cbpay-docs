@@ -103,7 +103,10 @@
         "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
         "customer_id": "9f2b1c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d",
         "customer_kind": "self",
-        "kyc_status": "approved"
+        "feedback_note": "Documents received",
+        "feedback_source": "provider",
+        "kyc_status": "approved",
+        "raw_status": "READY_FOR_MODERATION"
       },
       "summary": {
         "en": "Banking profile verification changed",

@@ -5,7 +5,48 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.265 · 2 versions - November 12, 2026
+## v2.270 · 7 versions - November 12, 2026
+### v2.270
+**Changed**
+
+- Clarified which verification links the November 4 remediation-expiry
+  backfill left out: revoked links, links without a bound submission, and
+  non-native or non-remediable cases kept their expiry. Opening one answers
+  `410 invite_expired`: request a new link — companies can now reissue one
+  for their own third-party cases with the new endpoint — instead of
+  retrying the dead one. See the KYC remediation guide.
+### v2.269
+**Added**
+
+- New self-serve link reissue for company third-party cases:
+  `POST /v1/me/verifications/{kind}/third-party/{submissionID}/reissue-link`
+  reuses the usable link of an own case without one (revoked, expired
+  beyond resend, never issued) or mints a new link for the SAME file — the
+  case is never duplicated — and emails it to the company account. The URL
+  never travels in responses. Free, one reissue per case per day (`429`),
+  `idempotency_key` required (body or `Idempotency-Key` header; a retry
+  returns the prior result with `idempotency_hit` without re-minting).
+  Decided cases answer `409 already_decided`; invited UBO/director cases
+  stay one-way (`409 resend_only`, use resend-link).
+### v2.268
+**Changed**
+
+- Changes-requested emails to invited UBO/director cases (which have no
+  portal login) now carry the case link — reused or freshly issued for the
+  same file — or plain remediation guidance when no link can be issued,
+  instead of a portal login wall. The hourly remediation sweep now includes
+  the reviewer's note and pending documents in rescued notifications when
+  the core answers (it still degrades to the generic email when it does not).
+### v2.267
+**Added**
+
+- Banking customer reads now include provider feedback with `raw_status`,
+  `note`, and `note_source`. The `banking_customer_status_changed` webhook
+  also carries the corresponding raw status and moderation note fields.
+### v2.266
+**Changed**
+- Liveness profile sessions now expose additive face-match and antispoof forensic fields when measured, including the document category used, scorer revision, score timestamp and `scored` state. A bound identity pass can report `bound_pass` in `reasons[]`; the optional smile challenge is not by itself a failed identity check.
+- The hosted wizard distinguishes identity document front/back categories (`identity_front`, `identity_back`) and UBO back documents (`uboIdentityBack`).
 ### v2.265
 **Added**
 
@@ -15,14 +56,9 @@ source_url: https://docs.cbpayapp.com/en/changelog
   email, with a QR payload per rail; they are omitted when no rail is
   configured and for `paid` or `void` invoices.
 ### v2.264
-#### en
-
-- Added automatic release documentation for existing `EC/USD/bank_transfer`
-  manual payouts. Operators can release the existing queue row through the
-  existing admin routes; the flag is default-off and controlled operationally.
-- Added documented EC states for approval, bank settlement, bank rejection,
-  pending processing and novelty, plus safe webhook and ambiguous-outcome
-  handling.
+**Changed**
+- Authentication operations now return `503 temporarily_unavailable` when the account store cannot be read; no authentication state is changed and the client retries the same request after recovery.
+- After identity verification, blocked or closed accounts return branded `403 account_deactivated`; pre-auth failures remain uniform.
 ## v2.263 · 5 versions - November 11, 2026
 ### v2.263
 **Changed**

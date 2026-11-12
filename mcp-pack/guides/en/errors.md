@@ -716,27 +716,6 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 403 | `member_required` | Requesting or signing requires a logged-in member session; API keys cannot sign. |
 | 422 | `account_identity_mismatch` | An echoed identity field differs from the verified account; send the verified values. |
 
-## Ecuador automatic manual-payout release
-
-These codes apply when an authorized operator releases an existing
-`EC/USD/bank_transfer` payout. Deterministic errors return HTTP `422` and the
-row returns to `manual_dispatch`; ambiguous errors return HTTP `502` and leave
-`release_in_flight`. Verify the original reference and never create a second
-payout.
-
-| HTTP | `error` | Meaning and solution |
-|---:|---|---|
-| 409 | `auto_release_disabled` | The EC runtime flag is off; keep the row manual or follow the approved operational enablement. |
-| 422 | `bank_unmapped` / `bank_ambiguous` | The destination bank is missing or not uniquely mapped; correct catalog or beneficiary data. |
-| 422 | `beneficiary_rejected` / `beneficiary_mismatch` | The bank rejected the account or holder; correct the existing beneficiary after review. |
-| 422 | `joint_signatures` / `amount_out_of_limits` | Automatic release cannot satisfy the account or amount rule; use the approved manual path. |
-| 422 | `order_rejected` / `approve_rejected` / `portal_rejected` | A deterministic bank step failed; correct the displayed reason and release the same payout. |
-| 422 | `order_not_found` / `order_unverified` / `order_state_unclear` | The order cannot be verified; do not create another order. |
-| 422 | `otp_not_issued` | The approval code was not issued; verify the mailbox and portal. |
-| 502 | `portal_lookup_failed` / `portal_unavailable` | The portal read was unavailable; verify before any retry. |
-| 502 | `perform_ambiguous` / `release_ambiguous` | The bank may have received the action; verify the original reference and wait for reconciliation. |
-| 404 | `movement_not_found` | No matching history movement is visible yet; keep processing and wait for the poller. |
-
 ## Client Journey discard
 
 | HTTP | `error` | Cause and action |

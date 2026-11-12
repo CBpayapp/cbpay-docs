@@ -687,26 +687,6 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 503 | `passkeys_unavailable` | 组织未配置 WebAuthn，使用 TOTP。 |
 | 403 | `enrollment_required` | handoff 前先完成注册。 |
 
-## 厄瓜多尔人工 payout 自动释放
-
-这些代码适用于授权运营人员释放已有的 `EC/USD/bank_transfer` payout。
-确定性错误返回 HTTP `422` 并将该行恢复为 `manual_dispatch`；结果不明确
-返回 HTTP `502` 并保留 `release_in_flight`。核验原始参考号，绝不要创建
-另一个 payout。
-
-| HTTP | `error` | 含义与处理 |
-|---:|---|---|
-| 409 | `auto_release_disabled` | EC flag 已关闭；保持人工流程或按批准的运维流程启用。 |
-| 422 | `bank_unmapped` / `bank_ambiguous` | 目标银行缺失或没有唯一映射；修正目录或收款人。 |
-| 422 | `beneficiary_rejected` / `beneficiary_mismatch` | 银行拒绝账户或户名不匹配；审核后修正已有收款人。 |
-| 422 | `joint_signatures` / `amount_out_of_limits` | 自动释放不满足账户或金额规则；使用批准的人工流程。 |
-| 422 | `order_rejected` / `approve_rejected` / `portal_rejected` | 银行确定性步骤失败；修正原因并释放同一 payout。 |
-| 422 | `order_not_found` / `order_unverified` / `order_state_unclear` | 无法核验订单；不要创建另一订单。 |
-| 422 | `otp_not_issued` | 未签发代码；核验邮箱和门户。 |
-| 502 | `portal_lookup_failed` / `portal_unavailable` | 门户读取不可用；重试前先核验。 |
-| 502 | `perform_ambiguous` / `release_ambiguous` | 银行可能已收到操作；核验原始参考号并等待对账。 |
-| 404 | `movement_not_found` | 尚未看到匹配流水；保持 processing 并等待 poller。 |
-
 ## Client Journey 丢弃
 
 | HTTP | `error` | 原因与处理 |

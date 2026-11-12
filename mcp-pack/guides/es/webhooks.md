@@ -317,12 +317,18 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "customer_id": "9f2b…",
   "customer_kind": "third_party",
   "third_party_id": "77aa…",
-  "kyc_status": "approved"
+  "kyc_status": "approved",
+  "raw_status": "READY_FOR_MODERATION",
+  "feedback_note": "Documentos recibidos",
+  "feedback_source": "provider"
 }
 ```
 En `banking_customer_status_changed`, `customer_kind` distingue tu perfil
 propio (`self`) de un tercero que registraste (`third_party`, con su
 `third_party_id` — el mismo id de `GET /v1/banking/third-parties/{id}`).
+Los campos opcionales `raw_status`, `feedback_note` y `feedback_source`
+transportan el estado crudo y la nota de moderación. `feedback_source` puede
+ser `provider`, `ours` o `none`; usa `kyc_status` para el ciclo normalizado.
 ```json banking_operation_status_changed
 {
   "account_id": "ae8c…",

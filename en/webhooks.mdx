@@ -315,12 +315,18 @@ receipt fields; a failed payout refunds the exact debit.
   "customer_id": "9f2b…",
   "customer_kind": "third_party",
   "third_party_id": "77aa…",
-  "kyc_status": "approved"
+  "kyc_status": "approved",
+  "raw_status": "READY_FOR_MODERATION",
+  "feedback_note": "Documents received",
+  "feedback_source": "provider"
 }
 ```
 In `banking_customer_status_changed`, `customer_kind` tells your own
 profile (`self`) apart from a third party you registered (`third_party`,
 with its `third_party_id` — the same id as `GET /v1/banking/third-parties/{id}`).
+The optional `raw_status`, `feedback_note`, and `feedback_source` fields carry
+the provider's raw moderation state and note. `feedback_source` is
+`provider`, `ours`, or `none`; use `kyc_status` for the normalized lifecycle.
 ```json banking_operation_status_changed
 {
   "account_id": "ae8c…",

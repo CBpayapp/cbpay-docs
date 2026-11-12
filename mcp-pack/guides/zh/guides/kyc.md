@@ -379,7 +379,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/do
 { "upload_url": "https://storage…", "key": "public-api/…", "expires_in": 900 }
 ```
 
-类别——KYC：`identity`、`proofOfResidence`；KYB：`legalPresence`、`ownershipStructure`、`controlStructure`、`companyDetails`。文件类型：`application/pdf`、`image/png`、`image/jpeg`；最大 15 MB；上传 URL 15 分钟后过期。
+类别——KYC：`identity`、`identity_front`（正面）、`identity_back`（背面）、`proofOfResidence`；KYB：`legalPresence`、`ownershipStructure`、`controlStructure`、`companyDetails`。文件类型：`application/pdf`、`image/png`、`image/jpeg`；最大 15 MB；上传 URL 15 分钟后过期。受邀 UBO 使用 `uboIdentity`（正面）或 `uboIdentityBack`（背面）。
 ### 上传
 
 使用相同的 `Content-Type` 将二进制文件直接 `PUT` 到 `upload_url`。
@@ -636,7 +636,7 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
           "outcome": "FAIL",
           "passed_gate": false,
           "liveness_score": "0.98",
-          "reasons": ["未检测到微笑。"],
+          "reasons": ["challenge_review"],
           "media": {
             "has_selfie": true,
             "has_video": true,
@@ -686,7 +686,7 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
       "outcome": "FAIL",
       "passed_gate": false,
       "liveness_score": "0.98",
-      "reasons": ["未检测到微笑。"],
+      "reasons": ["challenge_review"],
       "media": {
         "has_selfie": true,
         "has_video": true,
