@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.265'
+  version: '2.269'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -9267,6 +9267,16 @@ paths:
                     status: completed
                     outcome: PASS
                     passed_gate: true
+                    face_verdict: match
+                    face_reason: ok
+                    face_doc_ref: doc-identity-front
+                    face_doc_category: identity_front
+                    face_docs_tried: 1
+                    antispoof_engine: fitted_v1
+                    spoof_score: 0.05
+                    scorer_rev: 2026-11-12.1
+                    scored_at: '2026-11-12T15:00:00Z'
+                    scored: true
                     liveness_score: '0.99'
                     antispoof_score: '0.97'
                     face_similarity: '0.95'
@@ -9285,6 +9295,16 @@ paths:
                     status: completed
                     outcome: PASS
                     passed_gate: true
+                    face_verdict: match
+                    face_reason: ok
+                    face_doc_ref: doc-identity-front
+                    face_doc_category: identity_front
+                    face_docs_tried: 1
+                    antispoof_engine: fitted_v1
+                    spoof_score: 0.05
+                    scorer_rev: 2026-11-12.1
+                    scored_at: '2026-11-12T15:00:00Z'
+                    scored: true
                     liveness_score: '0.99'
                     antispoof_score: '0.97'
                     face_similarity: '0.95'
@@ -9302,6 +9322,16 @@ paths:
                     status: completed
                     outcome: FAIL
                     passed_gate: false
+                    face_verdict: review
+                    face_reason: no_face_in_document
+                    face_doc_ref: doc-identity-front
+                    face_doc_category: identity_front
+                    face_docs_tried: 2
+                    antispoof_engine: fitted_v1
+                    spoof_score: 0.42
+                    scorer_rev: 2026-11-12.1
+                    scored_at: '2026-11-12T15:00:00Z'
+                    scored: true
                     liveness_score: '0.98'
                     antispoof_score: '0.59'
                     face_similarity: '0.55'
@@ -9404,6 +9434,16 @@ paths:
                   status: completed
                   outcome: PASS
                   passed_gate: true
+                  face_verdict: match
+                  face_reason: ok
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 1
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.05
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.99'
                   antispoof_score: '0.97'
                   face_similarity: '0.95'
@@ -9421,6 +9461,16 @@ paths:
                   status: completed
                   outcome: FAIL
                   passed_gate: false
+                  face_verdict: review
+                  face_reason: no_face_in_document
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 2
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.42
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.59'
                   face_similarity: '0.55'
@@ -10341,6 +10391,16 @@ paths:
                   status: completed
                   outcome: PASS
                   passed_gate: true
+                  face_verdict: match
+                  face_reason: ok
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 1
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.05
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.96'
                   face_similarity: '0.94'
@@ -10358,6 +10418,16 @@ paths:
                   status: completed
                   outcome: FAIL
                   passed_gate: false
+                  face_verdict: review
+                  face_reason: no_face_in_document
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 2
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.42
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.59'
                   face_similarity: '0.55'
@@ -13019,6 +13089,16 @@ paths:
                   status: completed
                   outcome: PASS
                   passed_gate: true
+                  face_verdict: match
+                  face_reason: ok
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 1
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.05
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.96'
                   face_similarity: '0.97'
@@ -13036,6 +13116,16 @@ paths:
                   status: completed
                   outcome: FAIL
                   passed_gate: false
+                  face_verdict: review
+                  face_reason: no_face_in_document
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 2
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.42
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.59'
                   face_similarity: '0.55'
@@ -13195,6 +13285,86 @@ paths:
           description: Person accounts have no third-party verifications.
         '404':
           description: Case not found or belongs to another account.
+  /v1/me/verifications/{kind}/third-party/{submissionID}/reissue-link:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: reissueMyThirdPartyLink
+      summary: Reissue a case link to my company email
+      description: Reuses the usable link of one own third-party case without one (revoked, expired-beyond-resend or never issued) or mints a NEW link for the SAME file — never duplicates cases — and emails it to the calling company account. The URL never travels in responses. Free (the case already paid its link); throttled to one reissue per case per day (429); idempotency_key is required (body or Idempotency-Key header, a retry returns the prior result with idempotency_hit without re-minting); audited.
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        description: Verification kind.
+        schema:
+          type: string
+          enum:
+          - kyc
+          - kyb
+      - name: submissionID
+        in: path
+        required: true
+        description: Submission id from the list.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - idempotency_key
+              properties:
+                idempotency_key:
+                  type: string
+                  description: Idempotency key 1-64 chars (or Idempotency-Key header).
+                expires_in_days:
+                  type: integer
+                  minimum: 1
+                  maximum: 90
+                  description: Link TTL in days (default honors the core default).
+            example:
+              idempotency_key: reissue-2026-11-12-001
+              expires_in_days: 14
+      responses:
+        '200':
+          description: Reused link emailed (or idempotent replay, see idempotency_hit).
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@ownit.example
+                expires_at: '2026-11-30T12:00:00Z'
+                reissued: false
+        '201':
+          description: New link minted and emailed.
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@ownit.example
+                expires_at: '2026-11-30T12:00:00Z'
+                reissued: true
+        '400':
+          description: idempotency_key_required | invalid_expires | invalid_payload
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Person accounts have no third-party verifications.
+        '404':
+          description: Case not found or belongs to another account.
+        '409':
+          description: already_decided (case decided) | superseded (migrated case) | resend_only (invited UBO/director) | idempotency_key_reused (key used for another case).
+        '422':
+          description: The account has no usable email or the case cannot be reissued (legacy).
+        '429':
+          description: A reissue for this case was already made in the last 24 hours.
+        '502':
+          description: The verification backend answered with an unusable response.
+        '503':
+          description: The organization is not fully configured or the verification backend failed.
   /v1/me/verifications/{kind}/third-party/{submissionID}/resend-link:
     post:
       tags:
