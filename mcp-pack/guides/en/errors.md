@@ -35,6 +35,8 @@ All errors share the same shape:
 | 403 | `org_admin_required` | Endpoint requires an admin credential |
 | 403 | `forbidden` | Credential level not allowed |
 | 403 | `account_blocked` | The account is not active; this also blocks `POST /v1/me/verification/link` — ask an administrator to restore it |
+| 403 | `account_deactivated` | Identity was verified but the account is blocked or closed; show the branded compliance message returned by the API and contact that brand's compliance email. Incorrect passwords keep the generic `invalid_credentials` response. |
+| 409 | `account_closed_terminal` | A status change would reopen a closed account; closed is terminal. Do not retry the transition. |
 | 403 | `verification_rejected_requires_admin` | Compliance rejected the account's KYC/KYB; self-service onboarding is disabled — contact your administrator to reopen verification |
 | 403 | `service_disabled` | The service is not enabled for your account (check `GET /v1/services`) |
 | 403 | `org_suspended` | Service suspended; contact the CBPay team |
@@ -86,6 +88,7 @@ Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/securit
 | 403 | `independent_factor_required` | The phone cooldown can only be unlocked with the authenticator app or the verified email, never with a code sent to the new number |
 | 429 | `too_many_attempts` | A member-wide fresh-send bucket is full; read `Retry-After`: 600 seconds for burst (3/10 minutes), 3600 seconds for hourly (10/hour), or 86400 seconds for daily (30/24 hours). Live-challenge reuse and TOTP are exempt, and blocked retries do not consume another bucket. |
 | 409 | `otp_disabled_for_org` | Two-factor authentication is not enabled for your organization; contact support |
+| 503 | `temporarily_unavailable` | The account store could not be read during an authentication gate; nothing was mutated. Retry the same request after the store recovers. |
 | 422 | `sms_country_blocked` | SMS codes are not available for this phone country (organization allowlist); verify with your authenticator app or email instead |
 | 409 | `totp_not_started` | Confirm requires starting enrollment first (`POST /v1/me/totp/enroll`) |
 | 503 | `otp_unavailable` | Verification service unavailable (the action stays blocked; OTP is never skipped) |

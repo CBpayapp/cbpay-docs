@@ -35,6 +35,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 403 | `org_admin_required` | 该端点需要管理员凭证 |
 | 403 | `forbidden` | 凭证级别不允许 |
 | 403 | `account_blocked` | 账户不是 active；这也会阻止 `POST /v1/me/verification/link` —— 请联系管理员恢复账户 |
+| 403 | `account_deactivated` | 身份已验证，但账户被冻结或关闭；显示 API 返回的品牌消息，并联系该品牌的合规邮箱。密码错误时仍返回通用 `invalid_credentials`。 |
+| 409 | `account_closed_terminal` | 状态变化会重新打开已关闭账户；closed 是终态。不要重试该转换。 |
 | 403 | `verification_rejected_requires_admin` | 合规团队已拒绝该账户的 KYC/KYB；已禁用自助入驻 —— 请联系管理员重新开放验证 |
 | 403 | `member_disabled` | 该用户已被禁止登录；请联系您组织的管理员 |
 | 403 | `passkey_rejected` | 通行密钥（passkey）验证失败；请重试或使用密码登录 |
@@ -69,6 +71,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 403 | `independent_factor_required` | 手机号冷却只能通过身份验证器应用或已验证邮箱解锁，绝不能使用发送到新号码的验证码 |
 | 429 | `too_many_attempts` | 成员共享的新验证码发送预算已用尽；读取 `Retry-After`：突发（每 10 分钟 3 次）等待 600 秒，每小时（10 次）等待 3600 秒，每日（30 次）等待 86400 秒。复用有效挑战和 TOTP 不受限制，被阻止的重试不会消耗其他预算。 |
 | 503 | `otp_unavailable` | 验证服务不可用（操作保持锁定；OTP 绝不会被跳过） |
+| 503 | `temporarily_unavailable` | 身份认证 gate 期间无法读取账户存储；未发生修改。存储恢复后重试相同请求。 |
 | 409 | `otp_disabled_for_org` | 您的组织未启用按操作的双因素认证；请联系您的运营方 |
 | 422 | `sms_country_blocked` | 该电话号码所属国家不可接收短信验证码（组织白名单限制）；请改用验证器 App 或邮箱 |
 | 409 | `totp_not_started` | 尚未开始 TOTP 注册；请先调用 `POST /v1/me/totp/enroll` |

@@ -297,6 +297,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions \
 数据模式注意事项：
 
 - 国家使用 **ISO alpha-3**（`CHL`、`USA`、`VEN`…）；日期格式 `YYYY-MM-DD`；`id_type`：`passport | id_card | drivers_license`。
+- 电话使用带国家代码的 **E.164** 格式（例如 `+56912345678`）。API 仍接受旧式数字字符串（数字、`+`、`-`、空格、括号，最多 32 个字符），但 E.164 才是正式约定。
 - KYB：在 `POST /v1/kyb/submissions` 上使用请求体 `{ external_customer_id, country?, business: {…}, ubos?, directors?, signers?, bank_info?, metadata? }`。
 - 数据模式 KYB 必须完整提供法定名称和注册号；KYC 必须提供姓名、出生日期、ISO alpha-3 国籍、证件和 ISO alpha-3 国家。未知 KYB 国家使用带该 ISO 国家值的通用 profile；`country: generic` 必须提供 `generic_country`。
 - **创建时不要求活体检测**：KYC 提交件带有 `liveness_pending: true`；通过[活体检测链接](#liveness-check-liveness-link)来完成它。

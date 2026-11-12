@@ -276,6 +276,15 @@ TOTP manda si existen ambos factores. El login con passkey sigue disponible y
 no pide un código adicional.
 </Note>
 
+Después de verificar la identidad, una cuenta bloqueada o cerrada devuelve
+`403 account_deactivated` con el mensaje de compliance de su marca. Muestra
+ese mensaje de forma consistente en el portal y en el cliente API; no reveles
+el estado de la cuenta antes de verificar la identidad. Una contraseña
+incorrecta sigue devolviendo la respuesta uniforme `401 invalid_credentials`.
+Si el store de cuentas no está disponible durante el gate, devuelve
+`503 temporarily_unavailable`; no cambia ningún estado de autenticación y el
+cliente puede reintentar la misma request.
+
 
 ## El teléfono de la cuenta
 
@@ -315,6 +324,7 @@ no pide un código adicional.
 | 403 | `otp_invalid` | Token inválido, expirado o ya usado | Verifica un desafío nuevo |
 | 403 | `session_required` | Pediste un desafío con una API key | Los desafíos son solo para sesiones de usuario |
 | 403 | `account_blocked` | La cuenta está bloqueada o cerrada | Pide a tu operador que la reactive |
+| 403 | `account_deactivated` | La identidad fue verificada, pero la cuenta está bloqueada o cerrada | Muestra el mensaje de marca y contacta al correo de compliance de esa marca |
 | 403 | `channel_locked_by_org` | Tu canal explícito es más débil que el mínimo efectivo para esta acción (la política de tu cuenta primero, luego el default de la org) | Omite `channel` o elige un factor más fuerte |
 | 403 | `phone_binding_cooldown` | Teléfono enlazado hace menos de 4 h sin verificación y sin factor alternativo (app autenticadora o email verificado) | Enrola la app autenticadora o verifica tu email; libéralo antes con `POST /v1/me/phone/unlock-cooldown`, o pide a tu operador quitar el cooldown |
 | 401 | `invalid_code` | El código no coincide | Revisa el SMS/WhatsApp y reintenta (5 intentos) |
@@ -322,8 +332,9 @@ no pide un código adicional.
 | 409 | `phone_required` | La cuenta no tiene teléfono | `PATCH /v1/me` con `phone` E.164 |
 | 409 | `otp_phone_missing` | El login exige OTP y no hay teléfono | Contacta a tu operador |
 | 409 | `challenge_not_pending` | El desafío expiró o ya se usó | Crea uno nuevo |
-| 429 | `too_many_attempts` | Se llenó un bucket de envíos frescos compartido por el miembro | Lee `Retry-After`: espera 600 segundos para la ráfaga de 6 por 10 minutos, 3600 segundos para el límite de 20 por hora u 86400 segundos para el límite de 60 por 24 horas. Los límites se comparten entre acciones y canales; el reuso de desafíos activos y TOTP están exentos. Un reintento bloqueado no consume otro bucket. |
+| 429 | `too_many_attempts` | Se llenó un bucket de envíos frescos compartido por el miembro | Lee `Retry-After`: espera 600 segundos para la ráfaga de 3 por 10 minutos, 3600 segundos para el límite de 10 por hora u 86400 segundos para el límite de 30 por 24 horas. Los límites se comparten entre acciones y canales; el reuso de desafíos activos y TOTP están exentos. Un reintento bloqueado no consume otro bucket. |
 | 503 | `otp_unavailable` | El servicio de verificación no está disponible | Reintenta; la acción queda bloqueada (nunca se salta el OTP) |
+| 503 | `temporarily_unavailable` | No se pudo leer el store de cuentas durante un gate de autenticación | Reintenta la misma request cuando se recupere; nada se mutó |
 
 ## FAQ
 
