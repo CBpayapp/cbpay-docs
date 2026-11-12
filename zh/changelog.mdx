@@ -4,7 +4,27 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月12日" description="v2.265 · 2 个版本">
+<Update label="2026年11月12日" description="v2.269 · 6 个版本">
+### v2.269
+**变更**
+
+- 明确 11 月 4 日补正过期回填未覆盖的验证链接：已撤销、未绑定档案、非原生及不可补正案件保留原过期时间。打开此类链接返回 `410 invite_expired`：请申请新链接——企业现可用新端点为自有第三方案件重签——而非重试死链。见 KYC 补件指南。
+### v2.268
+**新增**
+
+- 企业第三方案件自助重签链接：`POST /v1/me/verifications/{kind}/third-party/{submissionID}/reissue-link`
+  对没有可用链接的自有案件（已撤销、过期不可重发或从未签发）复用可用链接，或为同一档案签发一条新链接——绝不重复建档——并发送到企业账户邮箱。URL
+  绝不在响应中返回。免费，每案每天限重签一次（`429`），`idempotency_key` 必填（body 或 `Idempotency-Key`
+  请求头；重试返回此前结果并带 `idempotency_hit`，不再签发）。已裁决案件返回 `409 already_decided`；受邀
+  UBO/董事案件仍为单向（`409 resend_only`，请用 resend-link）。
+### v2.267
+**变更**
+
+- 发往受邀 UBO/董事案件（无门户登录）的 changes-requested 邮件现在携带案件链接（复用或为同一档案新签发），无法发链接时则附简明补件指引，不再是门户登录墙。整点补件扫荡在核心应答时会把复审意见和待补文件带入挽回通知（无应答时仍降级为通用邮件）。
+### v2.266
+**变更**
+- profile 的 liveness 会话在实际测量时新增人脸匹配和反欺诈取证字段，包括使用的证件、评分器版本、评分时间和 `scored` 状态。身份绑定通过时，`reasons[]` 可以返回 `bound_pass`；可选的微笑动作本身不会使身份验证失败。
+- 托管向导区分证件正反面类别（`identity_front`、`identity_back`）以及 UBO 证件背面（`uboIdentityBack`）。
 ### v2.265
 **新增**
 
@@ -13,10 +33,9 @@ description: "API and documentation change history"
   品牌化 PDF 和邮件也提供相同信息，并为每个通道提供 QR payload；未配置
   通道以及 `paid` 或 `void` 发票不会返回这些字段。
 ### v2.264
-- 新增已有 `EC/USD/bank_transfer` 人工 payout 自动释放文档。运营人员通过
-  现有管理员路由释放队列行；flag 默认关闭并由运维流程控制。
-- 新增 EC 批准、银行结算、银行拒绝、处理中和 novelty 状态，以及 webhook
-  和不明确结果的安全处理说明。
+**变更**
+- 身份认证操作在无法读取账户存储时现在返回 `503 temporarily_unavailable`；不会改变认证状态，存储恢复后客户端重试同一请求。
+- 身份验证完成后，被冻结或关闭的账户返回带品牌消息的 `403 account_deactivated`；预认证失败仍保持统一。
 </Update>
 <Update label="2026年11月11日" description="v2.263 · 5 个版本">
 ### v2.263

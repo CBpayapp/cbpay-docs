@@ -341,6 +341,7 @@ Notas del modo datos:
 
 - Países en **ISO alpha-3** (`CHL`, `USA`, `VEN`…); fechas `YYYY-MM-DD`;
   `id_type`: `passport | id_card | drivers_license`.
+- Teléfono en **E.164** con código de país (ej. `+56912345678`). La API aún acepta cadenas de dígitos legacy (dígitos, `+`, `-`, espacios, paréntesis, hasta 32 caracteres), pero E.164 es el contrato.
 - KYB: body `{ external_customer_id, country?, business: {…}, ubos?,
   directors?, signers?, bank_info?, metadata? }` en
   `POST /v1/kyb/submissions`. Además, el modo datos KYB exige nombre legal y número de registro completos; KYC exige nombres, fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Países KYB desconocidos usan el perfil genérico con ese ISO; `country: generic` exige `generic_country`.
@@ -417,10 +418,10 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/do
 { "upload_url": "https://storage…", "key": "public-api/…", "expires_in": 900 }
 ```
 
-Categorías — KYC: `identity`, `proofOfResidence`; KYB: `legalPresence`,
-`ownershipStructure`, `controlStructure`, `companyDetails`. Tipos:
-`application/pdf`, `image/png`, `image/jpeg`; máximo 15 MB; la URL vence en
-15 minutos.
+Categorías — KYC: `identity`, `identity_front` (frente), `identity_back` (reverso),
+`proofOfResidence`; KYB: `legalPresence`, `ownershipStructure`, `controlStructure`,
+`companyDetails`. Tipos: `application/pdf`, `image/png`, `image/jpeg`; máximo 15 MB;
+la URL vence en 15 minutos. Para UBO invitados, usa `uboIdentity` (frente) o `uboIdentityBack` (reverso).
 </Step>
 <Step title="Upload">
 `PUT` del binario directo a `upload_url` con el mismo `Content-Type`.
@@ -735,7 +736,7 @@ Respuesta `format=json` (resumen del shape — el PDF sale del mismo modelo):
           "outcome": "FAIL",
           "passed_gate": false,
           "liveness_score": "0.98",
-          "reasons": ["No se detectó la sonrisa."],
+          "reasons": ["challenge_review"],
           "media": {
             "has_selfie": true,
             "has_video": true,
@@ -785,7 +786,7 @@ Respuesta `format=json` (resumen del shape — el PDF sale del mismo modelo):
       "outcome": "FAIL",
       "passed_gate": false,
       "liveness_score": "0.98",
-      "reasons": ["No se detectó la sonrisa."],
+      "reasons": ["challenge_review"],
       "media": {
         "has_selfie": true,
         "has_video": true,
