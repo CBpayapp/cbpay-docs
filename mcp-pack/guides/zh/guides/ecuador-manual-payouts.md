@@ -10,9 +10,10 @@ source_url: https://docs.cbpayapp.com/zh/guides/ecuador-manual-payouts
 ## 适用范围
 
 该通道仅适用于 `country=EC`、`currency=USD` 和
-`method=bank_transfer`。它使用人工调度模式：payout 保持
-`processing`，并带有 `status_code=manual_dispatch`，直到授权运营人员在
-银行门户完成付款并确认结果。该路由不会自动调用或对账银行。
+`method=bank_transfer`。创建使用人工调度：payout 以
+`processing`/`manual_dispatch` 和 `ECM` 参考号开始。启用经批准的运行时
+flag 后，授权运营人员可以释放同一行，poller 再对账银行历史。不会增加
+新的 HTTP toggle 或路由。
 
 供应商选择和凭据属于部署配置，不属于 CBPay 的公开合同。
 
@@ -32,9 +33,12 @@ sequenceDiagram
   participant B as 银行门户
   I->>C: 创建 EC/USD bank_transfer payout
   C-->>I: processing / manual_dispatch
-  O->>B: 在银行门户手动付款
-  O->>C: 使用银行参考号确认已付款
-  C-->>I: completed / manual_confirmed
+  O->>C: 释放已有 payout
+  C->>B: 验证、OTP 和批准
+  B-->>C: approved
+  C-->>I: processing / approved
+  C->>C: 查询银行历史
+  C-->>I: completed / bank_settled
 ```
 
 ## 创建并读取 payout
@@ -87,6 +91,34 @@ Authorization: Bearer <API_KEY>
   "idempotency_hit": false
 }
 ```
+
+## 释放已有 payout
+
+拥有相应 treasury 权限的运营人员使用现有代理路由：
+
+```http
+POST /v1/org/treasury/manual-payouts/{payoutID}/release
+POST /v1/admin/core/payouts/{payoutID}/release-manual
+```
+
+两条代理背后的 core 路由是
+`POST /v1/ops/payouts/{payoutID}/release-manual`。请求 body 为空。EC
+自动通道默认关闭，通过批准的 SQL/runbook 运维控制启用。释放会验证
+收款人和订单，读取 email OTP，只批准一次，并在等待结算对账时返回已有
+payout 的 `processing`/`approved` 状态。
+
+```json
+{
+  "payout_id": "00000000-0000-4000-8000-000000000001",
+  "status": "processing",
+  "status_code": "approved",
+  "provider_payment_id": "ECM0000000000001",
+  "released_at": "2026-11-12T15:00:00Z"
+}
+```
+
+结果不明确时不要再次点击 Release。先读取 payout，并等待
+`payout_status_changed` 或最终 GET 结果。
 
 ## 确认银行付款
 
@@ -219,6 +251,21 @@ Authorization: Bearer <API_KEY>
 |---|---|---|
 | `processing` + `manual_dispatch` | payout 等待运营人员完成银行操作。 | 只在银行门户付款一次，然后确认已有 payout。 |
 | `completed` + `manual_confirmed` | 运营人员已确认银行付款。 | 重新读取 payout 并保留银行参考号。 |
+| `processing` + `approved` | 银行订单已批准，正在对账结算。 | 不要再次释放；等待 poller。 |
+| `completed` + `bank_settled` | 银行借记已出现在历史中。 | 重新读取 payout 和对账单。 |
+| `completed` + `approved` | 银行订单已批准并已终态。 | 重新读取 payout 和 webhook。 |
+| `failed` + `bank_<slug>` | 银行拒绝或撤销了订单。 | 查看原因；不要自动创建替代 payout。 |
+| `processing` + `bank_pending` / `bank_processing` / `novelty` | 银行仍在处理或报告 novelty。 | 等待对账；不要重新提交。 |
+| `release_in_flight` | 释放结果不明确。 | 在人工重试前核验原始 `ECM` 参考号。 |
+| `auto_release_disabled` | EC 自动释放已关闭。 | 保持人工流程或按批准的运维流程启用。 |
+| `bank_unmapped` / `bank_ambiguous` | 目标银行没有唯一映射。 | 修正目录或收款人数据。 |
+| `beneficiary_rejected` / `beneficiary_mismatch` | 银行拒绝账户或户名不匹配。 | 审核后修正收款人；不要替换账户。 |
+| `joint_signatures` / `amount_out_of_limits` | 账户或金额不能自动释放。 | 审核后使用批准的人工流程。 |
+| `order_rejected` / `approve_rejected` / `portal_rejected` | 银行确定性拒绝某个步骤。 | 修正显示的原因并释放同一 payout。 |
+| `order_not_found` / `order_unverified` / `order_state_unclear` | 无法一致验证订单状态。 | 不要创建另一订单；核验原始参考号。 |
+| `otp_not_issued` / `otp_unavailable` | 批准代码未签发或无法读取。 | 重试前核验邮箱和门户。 |
+| `portal_lookup_failed` / `portal_unavailable` / `perform_ambiguous` / `release_ambiguous` | 结果不明确。 | HTTP 502；先核验，绝不要提交第二个 payout。 |
+| `movement_not_found` | 尚未看到匹配的银行流水。 | 保持 processing，等待对账。 |
 | `invalid_payload` | 必填字段、金额、账户或确认字段无效。 | 修正请求；不要为同一操作创建替代请求。 |
 | `idempotency_conflict` | 同一 key 搭配不同数据或不兼容状态被重复使用。 | 读取原资源；只有真正的新操作才使用新 key。 |
 | `second_approver_required` | 批准人必须是与 maker 不同的管理员。 | 由另一名具名 god 管理员批准已打开的请求；maker 不能批准自己的请求。 |
@@ -229,6 +276,26 @@ Authorization: Bearer <API_KEY>
 
 请参阅[完整错误目录](https://docs.cbpayapp.com/zh/errors)，了解通用响应格式和错误处理规则。
 
+确定性的释放错误返回 HTTP `422`，并将该行放回 `manual_dispatch`。结果不
+明确的释放错误返回 HTTP `502`，并保留在 `release_in_flight` 等待人工核验。
+对于此通道，UETR 和 IMAD 为 `N/A`，除非银行明确提供它们。
+
+## Webhook
+
+订阅 `payout_status_changed`。payload 保持公开且不含供应商身份：
+
+```json
+{
+  "event_type": "payout_status_changed",
+  "payout_id": "00000000-0000-4000-8000-000000000001",
+  "status": "completed",
+  "status_code": "bank_settled",
+  "status_message": "settled in the bank history",
+  "bank_reference": "ECM0000000000001",
+  "funds_debited": true
+}
+```
+
 ## 常见问题
 
 #### CBPay 会自动发送厄瓜多尔银行转账吗？
@@ -238,3 +305,6 @@ Authorization: Bearer <API_KEY>
 #### timeout 后应该怎么做？
     先读取 payout。如果结果仍不确定，只能使用相同的幂等 key 重试原请求。
     在确认银行结果前，不能使用新 key 再次提交银行转账。
+#### 结果不明确的释放是什么意思？
+    银行可能已经收到释放请求。读取 payout 并核验原始 ECM 参考号；不要
+    创建另一个 payout，也不要重新发送银行操作。

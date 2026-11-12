@@ -1,5 +1,5 @@
 {
-  "count": 429,
+  "count": 445,
   "errors": [
     {
       "category": {
@@ -125,34 +125,6 @@
         "en": "The account is not active; this also blocks `POST /v1/me/verification/link` — ask an administrator to restore it",
         "es": "La cuenta no está activa; también bloquea `POST /v1/me/verification/link` — pide al administrador que la restaure",
         "zh": "账户不是 active；这也会阻止 `POST /v1/me/verification/link` —— 请联系管理员恢复账户"
-      }
-    },
-    {
-      "category": {
-        "en": "Authentication and permissions",
-        "es": "Autenticación y permisos",
-        "zh": "身份认证与权限"
-      },
-      "code": "account_deactivated",
-      "http": 403,
-      "meaning": {
-        "en": "Identity was verified but the account is blocked or closed; show the branded compliance message returned by the API and contact that brand's compliance email. Incorrect passwords keep the generic `invalid_credentials` response.",
-        "es": "La identidad fue verificada, pero la cuenta está bloqueada o cerrada; muestra el mensaje de marca devuelto por la API y contacta al correo de compliance de esa marca. Con contraseña incorrecta se mantiene `invalid_credentials` genérico.",
-        "zh": "身份已验证，但账户被冻结或关闭；显示 API 返回的品牌消息，并联系该品牌的合规邮箱。密码错误时仍返回通用 `invalid_credentials`。"
-      }
-    },
-    {
-      "category": {
-        "en": "Authentication and permissions",
-        "es": "Autenticación y permisos",
-        "zh": "身份认证与权限"
-      },
-      "code": "account_closed_terminal",
-      "http": 409,
-      "meaning": {
-        "en": "A status change would reopen a closed account; closed is terminal. Do not retry the transition.",
-        "es": "Un cambio de estado intentaría reabrir una cuenta cerrada; closed es terminal. No reintentes la transición.",
-        "zh": "状态变化会重新打开已关闭账户；closed 是终态。不要重试该转换。"
       }
     },
     {
@@ -615,20 +587,6 @@
         "en": "Two-factor authentication is not enabled for your organization; contact support",
         "es": "Tu organización no tiene habilitado el 2FA por acción; contacta a tu operador",
         "zh": "您的组织未启用按操作的双因素认证；请联系您的运营方"
-      }
-    },
-    {
-      "category": {
-        "en": "OTP / 2FA",
-        "es": "OTP / 2FA",
-        "zh": "OTP / 双因素认证"
-      },
-      "code": "temporarily_unavailable",
-      "http": 503,
-      "meaning": {
-        "en": "The account store could not be read during an authentication gate; nothing was mutated. Retry the same request after the store recovers.",
-        "es": "No se pudo leer el store de cuentas durante un gate de autenticación; nada se mutó. Reintenta la misma request cuando el store se recupere.",
-        "zh": "身份认证 gate 期间无法读取账户存储；未发生修改。存储恢复后重试相同请求。"
       }
     },
     {
@@ -5407,6 +5365,272 @@
         "en": "An echoed identity field differs from the verified account; send the verified values.",
         "es": "Un campo de identidad difiere de la cuenta verificada; envía los valores verificados.",
         "zh": "回显的身份字段与已验证账户不符；请发送已验证值。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "auto_release_disabled",
+      "http": 409,
+      "meaning": {
+        "en": "The EC runtime flag is off; keep the row manual or follow the approved operational enablement.",
+        "es": "El flag EC está apagado; mantén la fila manual o sigue el enablement operativo aprobado.",
+        "zh": "EC flag 已关闭；保持人工流程或按批准的运维流程启用。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "bank_unmapped",
+      "http": 422,
+      "meaning": {
+        "en": "The destination bank is missing or not uniquely mapped; correct catalog or beneficiary data.",
+        "es": "El banco destino falta o no tiene mapeo único; corrige catálogo o beneficiario.",
+        "zh": "目标银行缺失或没有唯一映射；修正目录或收款人。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "bank_ambiguous",
+      "http": 422,
+      "meaning": {
+        "en": "The destination bank is missing or not uniquely mapped; correct catalog or beneficiary data.",
+        "es": "El banco destino falta o no tiene mapeo único; corrige catálogo o beneficiario.",
+        "zh": "目标银行缺失或没有唯一映射；修正目录或收款人。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "beneficiary_rejected",
+      "http": 422,
+      "meaning": {
+        "en": "The bank rejected the account or holder; correct the existing beneficiary after review.",
+        "es": "El banco rechazó la cuenta o el titular; corrige el beneficiario existente tras revisar.",
+        "zh": "银行拒绝账户或户名不匹配；审核后修正已有收款人。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "beneficiary_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "The bank rejected the account or holder; correct the existing beneficiary after review.",
+        "es": "El banco rechazó la cuenta o el titular; corrige el beneficiario existente tras revisar.",
+        "zh": "银行拒绝账户或户名不匹配；审核后修正已有收款人。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "joint_signatures",
+      "http": 422,
+      "meaning": {
+        "en": "Automatic release cannot satisfy the account or amount rule; use the approved manual path.",
+        "es": "La liberación automática no cumple la regla de cuenta o monto; usa el flujo manual aprobado.",
+        "zh": "自动释放不满足账户或金额规则；使用批准的人工流程。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "amount_out_of_limits",
+      "http": 422,
+      "meaning": {
+        "en": "Automatic release cannot satisfy the account or amount rule; use the approved manual path.",
+        "es": "La liberación automática no cumple la regla de cuenta o monto; usa el flujo manual aprobado.",
+        "zh": "自动释放不满足账户或金额规则；使用批准的人工流程。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "order_rejected",
+      "http": 422,
+      "meaning": {
+        "en": "A deterministic bank step failed; correct the displayed reason and release the same payout.",
+        "es": "Falló un paso bancario determinista; corrige el motivo y libera el mismo payout.",
+        "zh": "银行确定性步骤失败；修正原因并释放同一 payout。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "approve_rejected",
+      "http": 422,
+      "meaning": {
+        "en": "A deterministic bank step failed; correct the displayed reason and release the same payout.",
+        "es": "Falló un paso bancario determinista; corrige el motivo y libera el mismo payout.",
+        "zh": "银行确定性步骤失败；修正原因并释放同一 payout。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "portal_rejected",
+      "http": 422,
+      "meaning": {
+        "en": "A deterministic bank step failed; correct the displayed reason and release the same payout.",
+        "es": "Falló un paso bancario determinista; corrige el motivo y libera el mismo payout.",
+        "zh": "银行确定性步骤失败；修正原因并释放同一 payout。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "order_not_found",
+      "http": 422,
+      "meaning": {
+        "en": "The order cannot be verified; do not create another order.",
+        "es": "No se puede verificar la orden; no crees otra.",
+        "zh": "无法核验订单；不要创建另一订单。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "order_unverified",
+      "http": 422,
+      "meaning": {
+        "en": "The order cannot be verified; do not create another order.",
+        "es": "No se puede verificar la orden; no crees otra.",
+        "zh": "无法核验订单；不要创建另一订单。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "order_state_unclear",
+      "http": 422,
+      "meaning": {
+        "en": "The order cannot be verified; do not create another order.",
+        "es": "No se puede verificar la orden; no crees otra.",
+        "zh": "无法核验订单；不要创建另一订单。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "otp_not_issued",
+      "http": 422,
+      "meaning": {
+        "en": "The approval code was not issued; verify the mailbox and portal.",
+        "es": "No se emitió el código; verifica el buzón y el portal.",
+        "zh": "未签发代码；核验邮箱和门户。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "portal_lookup_failed",
+      "http": 502,
+      "meaning": {
+        "en": "The portal read was unavailable; verify before any retry.",
+        "es": "La lectura del portal no estuvo disponible; verifica antes de reintentar.",
+        "zh": "门户读取不可用；重试前先核验。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "portal_unavailable",
+      "http": 502,
+      "meaning": {
+        "en": "The portal read was unavailable; verify before any retry.",
+        "es": "La lectura del portal no estuvo disponible; verifica antes de reintentar.",
+        "zh": "门户读取不可用；重试前先核验。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "perform_ambiguous",
+      "http": 502,
+      "meaning": {
+        "en": "The bank may have received the action; verify the original reference and wait for reconciliation.",
+        "es": "El banco pudo recibir la acción; verifica la referencia original y espera la conciliación.",
+        "zh": "银行可能已收到操作；核验原始参考号并等待对账。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "release_ambiguous",
+      "http": 502,
+      "meaning": {
+        "en": "The bank may have received the action; verify the original reference and wait for reconciliation.",
+        "es": "El banco pudo recibir la acción; verifica la referencia original y espera la conciliación.",
+        "zh": "银行可能已收到操作；核验原始参考号并等待对账。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "movement_not_found",
+      "http": 404,
+      "meaning": {
+        "en": "No matching history movement is visible yet; keep processing and wait for the poller.",
+        "es": "Todavía no aparece el movimiento coincidente; mantén el procesamiento y espera el poller.",
+        "zh": "尚未看到匹配流水；保持 processing 并等待 poller。"
       }
     },
     {

@@ -5,8 +5,8 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.264 · 1 versión - 12 de noviembre de 2026
-### v2.264
+## v2.265 · 2 versiones - 12 de noviembre de 2026
+### v2.265
 **Agregado**
 
 - La verificación pública de facturas ahora incluye las claves opcionales
@@ -14,6 +14,14 @@ source_url: https://docs.cbpayapp.com/es/changelog
   facturas USD no pagadas. Los mismos datos están disponibles en el PDF y
   email brandeados, con un payload de QR por rail; se omiten sin rail
   configurado y en facturas `paid` o `void`.
+### v2.264
+- Se agregó la documentación de liberación automática para payouts manuales
+  existentes `EC/USD/bank_transfer`. El operador libera la fila existente por
+  las rutas admin; el flag queda apagado por defecto y se controla
+  operativamente.
+- Se documentaron los estados EC de aprobación, liquidación, rechazo bancario,
+  procesamiento pendiente y novedad, junto con el webhook y el manejo seguro
+  de resultados ambiguos.
 ## v2.263 · 5 versiones - 11 de noviembre de 2026
 ### v2.263
 **Cambiado**
