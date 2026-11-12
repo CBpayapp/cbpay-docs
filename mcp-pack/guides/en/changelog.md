@@ -5,6 +5,15 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.264 · 1 version - November 12, 2026
+### v2.264
+**Added**
+
+- Public invoice verification now includes optional `wire_instructions`,
+  `wire_instructions_swift` and `wire_reference` fields for unpaid USD
+  invoices. The same details are available in the branded invoice PDF and
+  email, with a QR payload per rail; they are omitted when no rail is
+  configured and for `paid` or `void` invoices.
 ## v2.263 · 5 versions - November 11, 2026
 ### v2.263
 **Changed**

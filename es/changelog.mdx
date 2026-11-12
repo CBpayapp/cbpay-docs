@@ -4,6 +4,16 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="12 de noviembre de 2026" description="v2.264 · 1 versión">
+### v2.264
+**Agregado**
+
+- La verificación pública de facturas ahora incluye las claves opcionales
+  `wire_instructions`, `wire_instructions_swift` y `wire_reference` para
+  facturas USD no pagadas. Los mismos datos están disponibles en el PDF y
+  email brandeados, con un payload de QR por rail; se omiten sin rail
+  configurado y en facturas `paid` o `void`.
+</Update>
 <Update label="11 de noviembre de 2026" description="v2.263 · 5 versiones">
 ### v2.263
 **Cambiado**

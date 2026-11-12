@@ -775,6 +775,7 @@ The payer copies the `reference` (`CB…`) into the transfer **memo /
 remittance** field of whichever rail they use: it is the signal that matches
 the deposit to your announcement (see
 [matching an announced transfer](#matching-an-announced-transfer)).
+For an invoice wire, use `wire_reference`; public verification returns its optional wire blocks and QR payloads.
 `holder_address` is the postal address of the account holder — US banks ask
 for it in their wire form, and the QR of each rail includes it as a
 "Holder address" line whenever it has a value (same for `notes` as a "Note"
@@ -782,7 +783,6 @@ line). `intermediary_bank_name` / `intermediary_bank_swift` appear only on
 the rail that receives wires through a correspondent bank — show them to the
 payer exactly as they come; a wire that needs them and travels without them
 can bounce or arrive short.
-
 US deposit instructions are **mandatory** on this corridor: if your
 organization has not configured them yet, the announcement responds
 `422 deposit_instructions_unavailable` and nothing is created (see

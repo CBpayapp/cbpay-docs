@@ -5,6 +5,14 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.264 · 1 个版本 - 2026年11月12日
+### v2.264
+**新增**
+
+- 公开发票验证现在为未支付的 USD 发票提供可选字段
+  `wire_instructions`、`wire_instructions_swift` 和 `wire_reference`。
+  品牌化 PDF 和邮件也提供相同信息，并为每个通道提供 QR payload；未配置
+  通道以及 `paid` 或 `void` 发票不会返回这些字段。
 ## v2.263 · 5 个版本 - 2026年11月11日
 ### v2.263
 **变更**
