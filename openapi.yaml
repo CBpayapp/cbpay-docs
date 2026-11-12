@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.260'
+  version: '2.263'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -6689,6 +6689,25 @@ paths:
         in: query
         schema:
           type: boolean
+      - name: expand
+        in: query
+        schema:
+          type: string
+        description: "Include related resources. Use `destinations` to attach each contact's saved destinations to every listed contact."
+      - name: dest_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - cbpay
+          - payout
+          - crypto
+        description: Filter expanded destinations by destination type. Requires `expand=destinations`.
+      - name: dest_country
+        in: query
+        schema:
+          type: string
+        description: Filter expanded destinations by ISO alpha-2 country. Requires `expand=destinations`.
       responses:
         '200':
           description: Paged contacts.
@@ -6718,8 +6737,29 @@ paths:
                   cbpay_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                   source: import
                   favorite: true
+                  destinations:
+                  - destination_id: aa11bb22-cc33-44dd-8899-aabbccddeeff
+                    type: payout
+                    country: CL
+                    currency: CLP
+                    method: bank_transfer
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-10T15:00:00Z'
+        '400':
+          description: Invalid expand or destination filter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_expand:
+                  value:
+                    error: invalid_expand
+                    message: unknown expand value
+                invalid_filter:
+                  value:
+                    error: invalid_filter
+                    message: destination filters require expand=destinations
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -29040,7 +29080,7 @@ components:
           type: boolean
         destinations:
           type: array
-          description: Present on the detail endpoint.
+          description: Present on the detail endpoint and on contact lists when `expand=destinations`. Optional `dest_type` and `dest_country` filters apply only to this expanded field.
           items:
             $ref: '#/components/schemas/ContactDestination'
         created_at:

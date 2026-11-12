@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.260'
+  version: '2.263'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -6720,6 +6720,25 @@ paths:
         in: query
         schema:
           type: boolean
+      - name: expand
+        in: query
+        schema:
+          type: string
+        description: Incluye recursos relacionados. Usa `destinations` para adjuntar los destinos guardados de cada contacto en el listado.
+      - name: dest_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - cbpay
+          - payout
+          - crypto
+        description: Filtra los destinos expandidos por tipo. Requiere `expand=destinations`.
+      - name: dest_country
+        in: query
+        schema:
+          type: string
+        description: Filtra los destinos expandidos por país ISO alpha-2. Requiere `expand=destinations`.
       responses:
         '200':
           description: Contactos paginados.
@@ -6749,8 +6768,29 @@ paths:
                   cbpay_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                   source: import
                   favorite: true
+                  destinations:
+                  - destination_id: aa11bb22-cc33-44dd-8899-aabbccddeeff
+                    type: payout
+                    country: CL
+                    currency: CLP
+                    method: bank_transfer
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-10T15:00:00Z'
+        '400':
+          description: Expand o filtro de destinos inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_expand:
+                  value:
+                    error: invalid_expand
+                    message: unknown expand value
+                invalid_filter:
+                  value:
+                    error: invalid_filter
+                    message: destination filters require expand=destinations
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -28926,7 +28966,7 @@ components:
           type: boolean
         destinations:
           type: array
-          description: Presente en el endpoint de detalle.
+          description: Presente en el endpoint de detalle y en listados cuando se usa `expand=destinations`. Los filtros opcionales `dest_type` y `dest_country` solo aplican a este campo expandido.
           items:
             $ref: '#/components/schemas/ContactDestination'
         created_at:

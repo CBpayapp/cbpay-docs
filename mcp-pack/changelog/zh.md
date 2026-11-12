@@ -5,8 +5,8 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.260 · 2 个版本 - 2026年11月11日
-### v2.260
+## v2.263 · 5 个版本 - 2026年11月11日
+### v2.263
 **变更**
 - 已停用的 USDC.e（`USDCE`）和 UF 在余额为零时不再返回：`GET /v1/balances`、
   `GET /v1/balances/history`（全零序列和 `current` 快照）、
@@ -15,9 +15,20 @@ source_url: https://docs.cbpayapp.com/zh/changelog
   余额仍会返回——真实资金永不隐藏。`PUT /v1/settlement` 现在拒绝将 `USDCE`
   设为 `default_settlement_asset` 和 `default_payin_asset`
   （`400 invalid_settlement_asset` / `invalid_asset`；现有默认值继续有效）。
-### v2.259
+### v2.262
 **变更**
 - 成员通知铃铛默认精选：`corridor_status_changed`（全局通道健康）、`kyc_document_validated`、`kyb_document_validated` 和 `kyc_liveness_completed`（验证中间步骤）不再出现在账户通道的 `GET /v1/events/history`、`GET /v1/me/notifications` 和实时事件流中。汇总的 `kyc/kyb_verification_status_changed` 保留。用 `event_type` / `?types=` 明确请求仍可接收任何隐藏类型；Webhook、订阅和 org-admin 通道不受影响。
+### v2.261
+**变更**
+- 记录临时处理状态 `waiting_funds` 以及 RFC3339 的 `expected_funds_at`。账户看到的提现和 payout 文案保持中性企业风格；不要使用新幂等键重试或创建替代操作。
+### v2.260
+**变更**
+- `GET /v1/contacts` 现在可以使用 `expand=destinations` 返回已保存的目标，
+  并可用 `dest_type` 和 `dest_country` 筛选。目标通过一次 bulk query
+  加载，而不是每个联系人发送一次请求。
+### v2.259
+**变更**
+- 使用正确密码（或已验证的第二因素：登录 OTP、已验证 OAuth、passkey）登录已停用账户时，现在返回 `403 account_deactivated` —— "Account Deactivated. If you have any questions, please reach out to \<品牌合规邮箱\>." —— 而不是通用错误。密码错误时仍返回通用错误。
 ## v2.258 · 6 个版本 - 2026年11月10日
 ### v2.258
 **变更**

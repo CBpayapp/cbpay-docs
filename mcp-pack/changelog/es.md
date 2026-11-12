@@ -5,8 +5,8 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.260 · 2 versiones - 11 de noviembre de 2026
-### v2.260
+## v2.263 · 5 versiones - 11 de noviembre de 2026
+### v2.263
 **Cambiado**
 - Los assets apagados USDC.e (`USDCE`) y UF ya no se anuncian en cero:
   `GET /v1/balances`, `GET /v1/balances/history` (series toda-cero y snapshot
@@ -17,7 +17,7 @@ source_url: https://docs.cbpayapp.com/es/changelog
   ahora rechaza `USDCE` como `default_settlement_asset` y
   `default_payin_asset` con `400 invalid_settlement_asset` / `invalid_asset`
   (los defaults existentes siguen funcionando).
-### v2.259
+### v2.262
 **Cambiado**
 - Campana del miembro curada por defecto: `corridor_status_changed` (salud
   global de rieles), `kyc_document_validated`, `kyb_document_validated` y
@@ -27,6 +27,18 @@ source_url: https://docs.cbpayapp.com/es/changelog
   queda. Pide cualquier tipo oculto explícitamente con `event_type` / `?types=`
   para seguir recibiéndolo; webhooks, suscripciones y el canal org-admin no
   cambian.
+### v2.261
+**Cambiado**
+- Documentado el estado transitorio de proceso `waiting_funds` y `expected_funds_at` en RFC3339. Los mensajes visibles para la cuenta se mantienen corporativos y neutrales; no reintentes con una clave nueva ni crees una operación de reemplazo.
+### v2.260
+**Cambiado**
+- `GET /v1/contacts` ahora puede incluir los destinos guardados con
+  `expand=destinations`, con filtros opcionales `dest_type` y `dest_country`.
+  Los destinos se cargan en una sola query bulk, en vez de una request por
+  contacto.
+### v2.259
+**Cambiado**
+- Entrar con la clave correcta (o un segundo factor verificado: OTP de login, OAuth verificado, passkey) a una cuenta desactivada ahora devuelve `403 account_deactivated` — "Account Deactivated. If you have any questions, please reach out to \<correo de compliance de la marca\>." — en vez del error genérico. Con clave mala sigue el error genérico.
 ## v2.258 · 6 versiones - 10 de noviembre de 2026
 ### v2.258
 **Cambiado**

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-11 20:15 UTC",
-    "_content_sha256": "cec1db9ef1de0f5cd7a46d8a44ca4a5c8bc949196165deff3fe9d1c3d0c16580"
+    "_generated_at": "2026-11-12 00:55 UTC",
+    "_content_sha256": "b7e653639c4a685522e3b6e2384130a71fe13ffeae428f77b435782b48a37f70"
   },
   "auth": {
     "type": "bearer",
@@ -11996,6 +11996,24 @@
                   "value": "",
                   "disabled": true,
                   "description": ""
+                },
+                {
+                  "key": "expand",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Include related resources. Use `destinations` to attach each contact's saved destinations to every listed contact."
+                },
+                {
+                  "key": "dest_type",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter expanded destinations by destination type. Requires `expand=destinations`."
+                },
+                {
+                  "key": "dest_country",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter expanded destinations by ISO alpha-2 country. Requires `expand=destinations`."
                 }
               ]
             },
@@ -12043,6 +12061,24 @@
                       "value": "",
                       "disabled": true,
                       "description": ""
+                    },
+                    {
+                      "key": "expand",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Include related resources. Use `destinations` to attach each contact's saved destinations to every listed contact."
+                    },
+                    {
+                      "key": "dest_type",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter expanded destinations by destination type. Requires `expand=destinations`."
+                    },
+                    {
+                      "key": "dest_country",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter expanded destinations by ISO alpha-2 country. Requires `expand=destinations`."
                     }
                   ]
                 }
@@ -12056,7 +12092,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"contacts\": [\n    {\n      \"contact_id\": \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n      \"display_name\": \"Carlos Soto\",\n      \"alias\": \"Carlitos\",\n      \"phone\": \"+56987654321\",\n      \"email\": \"carlos@mail.com\",\n      \"has_cbpay\": true,\n      \"cbpay_account_id\": \"389d34a3-6c61-4782-b822-95ac173068dc\",\n      \"source\": \"import\",\n      \"favorite\": true,\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"contacts\": [\n    {\n      \"contact_id\": \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n      \"display_name\": \"Carlos Soto\",\n      \"alias\": \"Carlitos\",\n      \"phone\": \"+56987654321\",\n      \"email\": \"carlos@mail.com\",\n      \"has_cbpay\": true,\n      \"cbpay_account_id\": \"389d34a3-6c61-4782-b822-95ac173068dc\",\n      \"source\": \"import\",\n      \"favorite\": true,\n      \"destinations\": [\n        {\n          \"destination_id\": \"aa11bb22-cc33-44dd-8899-aabbccddeeff\",\n          \"type\": \"payout\",\n          \"country\": \"CL\",\n          \"currency\": \"CLP\",\n          \"method\": \"bank_transfer\"\n        }\n      ],\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
