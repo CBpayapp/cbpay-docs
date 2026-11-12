@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.263'
+  version: '2.264'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -2151,6 +2151,8 @@ paths:
               example:
                 error: invalid_handoff
                 message: handoff token is invalid or expired
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/integrity-nonce:
     post:
       tags:
@@ -2330,6 +2332,8 @@ paths:
               example:
                 error: invalid_credentials
                 message: email or password is incorrect
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/login/otp:
     post:
       tags:
@@ -2405,6 +2409,8 @@ paths:
               example:
                 error: challenge_not_pending
                 message: the challenge already expired or was used; log in again
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/oauth:
     post:
       tags:
@@ -2511,6 +2517,8 @@ paths:
               example:
                 error: email_conflict
                 message: an account with this email already exists; sign in with your current method and link this provider from your session
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/oauth/providers:
     get:
       tags:
@@ -2617,13 +2625,15 @@ paths:
                 role: owner
         '401':
           description: No se pudo verificar la passkey (`invalid_credential`).
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/password/forgot:
     post:
       tags:
       - Autenticación
       operationId: forgotPassword
       summary: Solicitar un código para recuperar la contraseña
-      description: Envía un código de recuperación al email del miembro (por defecto) o a su teléfono verificado (`channel:"sms"`). SIEMPRE responde 200 con el mismo cuerpo exista o no la cuenta — así se evita la enumeración de cuentas. Completa el reset con `POST /v1/auth/password/reset`.
+      description: Envía un código de recuperación al email del miembro (por defecto) o a su teléfono verificado (`channel:"sms"`). Responde 200 con el mismo cuerpo exista o no la cuenta — así se evita la enumeración de cuentas (503 solo si el store es ilegible). Completa el reset con `POST /v1/auth/password/reset`.
       requestBody:
         required: true
         content:
@@ -2657,6 +2667,8 @@ paths:
               example:
                 status: ok
                 note: if an account matches, a verification code was sent; complete the reset with POST /v1/auth/password/reset
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/password/reset:
     post:
       tags:
@@ -2716,6 +2728,8 @@ paths:
                 error: invalid_code
                 message: the code is invalid or expired
                 or no account matches: null
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/password/reset-link:
     post:
       tags:
@@ -2790,6 +2804,8 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many verification attempts; wait a moment and retry
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/pow-challenge:
     post:
       tags:
@@ -2938,6 +2954,8 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many refresh attempts from this address; retry later
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/register:
     post:
       tags:
@@ -3162,6 +3180,8 @@ paths:
           description: too_many_attempts; los envíos de códigos tienen límite.
         '502':
           description: otp_send_failed.
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/register/2fa/sms/confirm:
     post:
       tags:
@@ -3213,6 +3233,8 @@ paths:
           description: SMS no iniciado o enrollment_complete.
         '502':
           description: otp_check_failed.
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/register/2fa/totp/begin:
     post:
       tags:
@@ -3261,6 +3283,8 @@ paths:
                 refresh_expires_at: '2026-11-20T19:00:00Z'
                 account:
                   id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/register/2fa/totp/confirm:
     post:
       tags:
@@ -3320,6 +3344,8 @@ paths:
           description: otp_invalid; el código de 6 dígitos es inválido o venció.
         '409':
           description: TOTP no iniciado o enrollment_complete.
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/auth/register/confirm:
     post:
       tags:
@@ -3383,6 +3409,8 @@ paths:
           description: invalid_code para codigo invalido, vencido o sin coincidencia.
         '502':
           description: otp_check_failed.
+        '503':
+          description: temporarily_unavailable cuando no se puede leer la cuenta; reintenta la misma request (nada se mutó).
   /v1/avatars/{accountID}:
     get:
       tags:
@@ -8514,7 +8542,7 @@ paths:
                 created_at: '2026-07-10T12:00:00Z'
                 updated_at: '2026-07-10T12:00:00Z'
         '400':
-          description: idempotency_key_required / invalid_payload / invalid_country
+          description: idempotency_key_required / invalid_payload / invalid_country / invalid_expires (expires_in_days must be an integer 1-90)
           content:
             application/json:
               schema:
@@ -9516,7 +9544,7 @@ paths:
                 created_at: '2026-07-10T12:00:00Z'
                 updated_at: '2026-07-10T12:00:00Z'
         '400':
-          description: idempotency_key_required / invalid_payload
+          description: idempotency_key_required / invalid_payload / invalid_expires (expires_in_days must be an integer 1-90)
           content:
             application/json:
               schema:
@@ -12878,6 +12906,15 @@ paths:
                 label: Ana Perez
                 created_at: '2026-07-10T12:00:00Z'
                 updated_at: '2026-07-10T12:00:00Z'
+        '400':
+          description: invalid_expires (expires_in_days must be an integer 1-90)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_expires
+                message: expires_in_days must be an integer 1-90
         '409':
           description: La cuenta ya completó su verificación (already_verified).
           content:
@@ -27963,6 +28000,19 @@ paths:
                 overdue: false
                 bill_to: Andes Logistics SpA
                 pay_url: https://pay.example/checkout/token
+                wire_instructions:
+                  bank_name: Domestic Receiving Bank
+                  account_number: 000123456789
+                  routing_number: '021000021'
+                  reference_required: true
+                  qr_payload: 'Bank: Domestic Receiving Bank\nAccount: 000123456789\nReference: INV-2026-0001'
+                wire_instructions_swift:
+                  bank_name: International Receiving Bank
+                  account_number: '9870001234'
+                  swift: FVBAUS33
+                  reference_required: true
+                  qr_payload: 'Bank: International Receiving Bank\nAccount: 9870001234\nSWIFT: FVBAUS33\nReference: INV-2026-0001'
+                wire_reference: INV-2026-0001
         '404':
           description: Código inválido, adulterado, de borrador o desconocido.
           content:

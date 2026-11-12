@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-12 00:55 UTC",
-    "_content_sha256": "b7e653639c4a685522e3b6e2384130a71fe13ffeae428f77b435782b48a37f70"
+    "_generated_at": "2026-11-12 13:25 UTC",
+    "_content_sha256": "76259e68c440d2fd050b7bc5c4d0eb9584bfbe22734cbef86e5a3a6267009377"
   },
   "auth": {
     "type": "bearer",
@@ -5024,7 +5024,7 @@
                 "forgot"
               ]
             },
-            "description": "Sends a reset code to the member's email (default) or to their verified phone (`channel:\"sms\"`). At most 5 real sends per account are allowed per hour; extra requests keep the same 200 response. Always returns 200 with the same body regardless of whether the account exists — this prevents account enumeration. Complete the reset with `POST /v1/auth/password/reset`.",
+            "description": "Sends a reset code to the member's email (default) or to their verified phone (`channel:\"sms\"`). At most 5 real sends per account are allowed per hour; extra requests keep the same 200 response. Returns 200 with the same body regardless of whether the account exists — this prevents account enumeration (503 only when the store itself is unreadable). Complete the reset with `POST /v1/auth/password/reset`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"org\": \"cbpay\",\n  \"email\": \"taylor@example.com\"\n}",
@@ -33018,7 +33018,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"valid\": true,\n  \"kind\": \"invoice\",\n  \"invoice_number\": \"INV-2026-0001\",\n  \"brand\": \"CBPay\",\n  \"status\": \"sent\",\n  \"status_word\": \"Sent\",\n  \"currency\": \"USD\",\n  \"total\": \"1250.00\",\n  \"amount_paid\": \"500.00\",\n  \"balance\": \"750.00\",\n  \"issue_date\": \"2026-11-11\",\n  \"due_date\": \"2026-12-11\",\n  \"overdue\": false,\n  \"bill_to\": \"Andes Logistics SpA\",\n  \"pay_url\": \"https://pay.example/checkout/token\"\n}"
+              "body": "{\n  \"valid\": true,\n  \"kind\": \"invoice\",\n  \"invoice_number\": \"INV-2026-0001\",\n  \"brand\": \"CBPay\",\n  \"status\": \"sent\",\n  \"status_word\": \"Sent\",\n  \"currency\": \"USD\",\n  \"total\": \"1250.00\",\n  \"amount_paid\": \"500.00\",\n  \"balance\": \"750.00\",\n  \"issue_date\": \"2026-11-11\",\n  \"due_date\": \"2026-12-11\",\n  \"overdue\": false,\n  \"bill_to\": \"Andes Logistics SpA\",\n  \"pay_url\": \"https://pay.example/checkout/token\",\n  \"wire_instructions\": {\n    \"bank_name\": \"Domestic Receiving Bank\",\n    \"account_number\": \"000123456789\",\n    \"routing_number\": \"021000021\",\n    \"reference_required\": true,\n    \"qr_payload\": \"Bank: Domestic Receiving Bank\\\\nAccount: 000123456789\\\\nReference: INV-2026-0001\"\n  },\n  \"wire_instructions_swift\": {\n    \"bank_name\": \"International Receiving Bank\",\n    \"account_number\": \"9870001234\",\n    \"swift\": \"FVBAUS33\",\n    \"reference_required\": true,\n    \"qr_payload\": \"Bank: International Receiving Bank\\\\nAccount: 9870001234\\\\nSWIFT: FVBAUS33\\\\nReference: INV-2026-0001\"\n  },\n  \"wire_reference\": \"INV-2026-0001\"\n}"
             }
           ]
         },

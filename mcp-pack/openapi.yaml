@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.263'
+  version: '2.264'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -2124,6 +2124,8 @@ paths:
               example:
                 error: invalid_handoff
                 message: handoff token is invalid or expired
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/integrity-nonce:
     post:
       tags:
@@ -2304,6 +2306,8 @@ paths:
               example:
                 error: invalid_credentials
                 message: email or password is incorrect
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/login/otp:
     post:
       tags:
@@ -2379,6 +2383,8 @@ paths:
               example:
                 error: challenge_not_pending
                 message: the challenge already expired or was used; log in again
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/oauth:
     post:
       tags:
@@ -2485,6 +2491,8 @@ paths:
               example:
                 error: email_conflict
                 message: an account with this email already exists; sign in with your current method and link this provider from your session
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/oauth/providers:
     get:
       tags:
@@ -2591,13 +2599,15 @@ paths:
                 role: owner
         '401':
           description: The passkey could not be verified (`invalid_credential`).
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/password/forgot:
     post:
       tags:
       - Authentication
       operationId: forgotPassword
       summary: Request a password reset code
-      description: "Sends a reset code to the member's email (default) or to their verified phone (`channel:\"sms\"`). At most 5 real sends per account are allowed per hour; extra requests keep the same 200 response. Always returns 200 with the same body regardless of whether the account exists — this prevents account enumeration. Complete the reset with `POST /v1/auth/password/reset`."
+      description: "Sends a reset code to the member's email (default) or to their verified phone (`channel:\"sms\"`). At most 5 real sends per account are allowed per hour; extra requests keep the same 200 response. Returns 200 with the same body regardless of whether the account exists — this prevents account enumeration (503 only when the store itself is unreadable). Complete the reset with `POST /v1/auth/password/reset`."
       requestBody:
         required: true
         content:
@@ -2631,6 +2641,8 @@ paths:
               example:
                 status: ok
                 note: if an account matches, a verification code was sent; complete the reset with POST /v1/auth/password/reset
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/password/reset:
     post:
       tags:
@@ -2690,6 +2702,8 @@ paths:
                 error: invalid_code
                 message: the code is invalid or expired
                 or no account matches: null
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/password/reset-link:
     post:
       tags:
@@ -2764,6 +2778,8 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many verification attempts; wait a moment and retry
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/pow-challenge:
     post:
       tags:
@@ -2912,6 +2928,8 @@ paths:
               example:
                 error: too_many_attempts
                 message: too many refresh attempts from this address; retry later
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/register:
     post:
       tags:
@@ -3136,6 +3154,8 @@ paths:
           description: too_many_attempts; code sends are rate limited.
         '502':
           description: otp_send_failed.
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/register/2fa/sms/confirm:
     post:
       tags:
@@ -3187,6 +3207,8 @@ paths:
           description: sms_not_started or enrollment_complete.
         '502':
           description: otp_check_failed.
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/register/2fa/totp/begin:
     post:
       tags:
@@ -3235,6 +3257,8 @@ paths:
                 refresh_expires_at: '2026-11-20T19:00:00Z'
                 account:
                   id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/register/2fa/totp/confirm:
     post:
       tags:
@@ -3294,6 +3318,8 @@ paths:
           description: otp_invalid; the 6-digit code is invalid or expired.
         '409':
           description: totp_not_started or enrollment_complete.
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/auth/register/confirm:
     post:
       tags:
@@ -3357,6 +3383,8 @@ paths:
           description: invalid_code for an invalid, expired or unmatched code.
         '502':
           description: otp_check_failed.
+        '503':
+          description: temporarily_unavailable when the account store cannot be read; retry the same request (nothing was mutated).
   /v1/avatars/{accountID}:
     get:
       tags:
@@ -8496,7 +8524,7 @@ paths:
                 created_at: '2026-07-10T12:00:00Z'
                 updated_at: '2026-07-10T12:00:00Z'
         '400':
-          description: idempotency_key_required / invalid_payload / invalid_country
+          description: idempotency_key_required / invalid_payload / invalid_country / invalid_expires (expires_in_days must be an integer 1-90)
           content:
             application/json:
               schema:
@@ -9499,7 +9527,7 @@ paths:
                 created_at: '2026-07-10T12:00:00Z'
                 updated_at: '2026-07-10T12:00:00Z'
         '400':
-          description: idempotency_key_required / invalid_payload
+          description: idempotency_key_required / invalid_payload / invalid_expires (expires_in_days must be an integer 1-90)
           content:
             application/json:
               schema:
@@ -12867,6 +12895,15 @@ paths:
                 label: Ana Perez
                 created_at: '2026-07-10T12:00:00Z'
                 updated_at: '2026-07-10T12:00:00Z'
+        '400':
+          description: invalid_expires (expires_in_days must be an integer 1-90)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_expires
+                message: expires_in_days must be an integer 1-90
         '409':
           description: The account already completed its verification (already_verified).
           content:
@@ -28071,6 +28108,19 @@ paths:
                 overdue: false
                 bill_to: Andes Logistics SpA
                 pay_url: https://pay.example/checkout/token
+                wire_instructions:
+                  bank_name: Domestic Receiving Bank
+                  account_number: 000123456789
+                  routing_number: '021000021'
+                  reference_required: true
+                  qr_payload: 'Bank: Domestic Receiving Bank\nAccount: 000123456789\nReference: INV-2026-0001'
+                wire_instructions_swift:
+                  bank_name: International Receiving Bank
+                  account_number: '9870001234'
+                  swift: FVBAUS33
+                  reference_required: true
+                  qr_payload: 'Bank: International Receiving Bank\nAccount: 9870001234\nSWIFT: FVBAUS33\nReference: INV-2026-0001'
+                wire_reference: INV-2026-0001
         '404':
           description: Invalid, tampered, draft or unknown verification code.
           content:

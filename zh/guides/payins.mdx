@@ -744,6 +744,7 @@ SWIFT 电汇。`notes` 字段携带汇款银行正确填写表单所需的操作
 付款人将 `reference`（`CB…`）填写到所选调转账的 **memo / remittance
 （附言）**栏位：它是把入金匹配到您预告的关键信号（参见
 [预告转账的匹配规则](#预告转账的匹配规则)）。`holder_address` 是账户持有人的
+发票电汇应在同一栏位填写 `wire_reference`；公开验证会返回可选的电汇区块和 QR payload。
 邮政地址——美国银行的电汇表单会要求填写，每条轨道的 QR 在其有值时
 都会包含一行 "Holder address"（`notes` 同理，为一行 "Note"）。
 `intermediary_bank_name` / `intermediary_bank_swift` 仅在经由代理行

@@ -4,6 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="November 12, 2026" description="v2.264 · 1 version">
+### v2.264
+**Added**
+
+- Public invoice verification now includes optional `wire_instructions`,
+  `wire_instructions_swift` and `wire_reference` fields for unpaid USD
+  invoices. The same details are available in the branded invoice PDF and
+  email, with a QR payload per rail; they are omitted when no rail is
+  configured and for `paid` or `void` invoices.
+</Update>
 <Update label="November 11, 2026" description="v2.263 · 5 versions">
 ### v2.263
 **Changed**

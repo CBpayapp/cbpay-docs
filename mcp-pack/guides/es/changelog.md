@@ -5,6 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.264 · 1 versión - 12 de noviembre de 2026
+### v2.264
+**Agregado**
+
+- La verificación pública de facturas ahora incluye las claves opcionales
+  `wire_instructions`, `wire_instructions_swift` y `wire_reference` para
+  facturas USD no pagadas. Los mismos datos están disponibles en el PDF y
+  email brandeados, con un payload de QR por rail; se omiten sin rail
+  configurado y en facturas `paid` o `void`.
 ## v2.263 · 5 versiones - 11 de noviembre de 2026
 ### v2.263
 **Cambiado**

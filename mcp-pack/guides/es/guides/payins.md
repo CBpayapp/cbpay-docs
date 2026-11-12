@@ -776,6 +776,7 @@ El pagador copia la `reference` (`CB…`) en el campo **memo / remittance**
 de la transferencia, use el riel que use: es la señal que enlaza el abono
 con tu anuncio (ver
 [conciliación de una transferencia anunciada](#conciliaci%C3%B3n-de-una-transferencia-anunciada)).
+En un wire de factura, usa `wire_reference`; la verificación pública devuelve sus bloques wire opcionales y payloads de QR.
 `holder_address` es la dirección postal del titular de la cuenta — los
 bancos de EE. UU. la piden en su formulario de wire, y el QR de cada riel la
 incluye como línea "Holder address" cuando tiene valor (lo mismo para
@@ -783,7 +784,6 @@ incluye como línea "Holder address" cuando tiene valor (lo mismo para
 `intermediary_bank_swift` aparecen solo en el riel que recibe wires a través
 de un banco corresponsal — muéstralos al pagador tal cual vienen; un wire
 que los necesita y viaja sin ellos puede rebotar o llegar con monto menor.
-
 Las instrucciones de depósito de EE. UU. son **obligatorias** en este
 corredor: si tu organización todavía no las configuró, el anuncio responde
 `422 deposit_instructions_unavailable` y no se crea nada (ver
