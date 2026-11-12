@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.260'
+  version: '2.263'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -6698,6 +6698,25 @@ paths:
         in: query
         schema:
           type: boolean
+      - name: expand
+        in: query
+        schema:
+          type: string
+        description: 包含关联资源。使用 `destinations` 可在联系人列表中的每个联系人内附带已保存的目标。
+      - name: dest_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - cbpay
+          - payout
+          - crypto
+        description: 按目标类型筛选已展开的目标。需要 `expand=destinations`。
+      - name: dest_country
+        in: query
+        schema:
+          type: string
+        description: 按 ISO alpha-2 国家/地区筛选已展开的目标。需要 `expand=destinations`。
       responses:
         '200':
           description: 联系人分页。
@@ -6727,8 +6746,29 @@ paths:
                   cbpay_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                   source: import
                   favorite: true
+                  destinations:
+                  - destination_id: aa11bb22-cc33-44dd-8899-aabbccddeeff
+                    type: payout
+                    country: CL
+                    currency: CLP
+                    method: bank_transfer
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-10T15:00:00Z'
+        '400':
+          description: expand 或目标筛选条件无效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_expand:
+                  value:
+                    error: invalid_expand
+                    message: unknown expand value
+                invalid_filter:
+                  value:
+                    error: invalid_filter
+                    message: destination filters require expand=destinations
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -28864,7 +28904,7 @@ components:
           type: boolean
         destinations:
           type: array
-          description: 详情端点中出现。
+          description: 详情端点中出现；列表使用 `expand=destinations` 时也会出现。可选筛选条件 `dest_type` 和 `dest_country` 仅适用于此展开字段。
           items:
             $ref: '#/components/schemas/ContactDestination'
         created_at:
