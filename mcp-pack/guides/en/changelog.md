@@ -5,8 +5,8 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.260 · 2 versions - November 11, 2026
-### v2.260
+## v2.263 · 5 versions - November 11, 2026
+### v2.263
 **Changed**
 - Sunset assets USDC.e (`USDCE`) and UF are no longer advertised at zero:
   `GET /v1/balances`, `GET /v1/balances/history` (all-zero series and the
@@ -17,7 +17,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
   rejects `USDCE` as `default_settlement_asset` and `default_payin_asset`
   with `400 invalid_settlement_asset` / `invalid_asset` (existing defaults
   keep working).
-### v2.259
+### v2.262
 **Changed**
 - Member notification bell is curated by default: `corridor_status_changed`
   (global rail health), `kyc_document_validated`, `kyb_document_validated`
@@ -27,6 +27,18 @@ source_url: https://docs.cbpayapp.com/en/changelog
   `kyc/kyb_verification_status_changed` stays. Request any hidden type
   explicitly with `event_type` / `?types=` to still receive it; webhooks,
   subscriptions and the org-admin channel are unaffected.
+### v2.261
+**Changed**
+- Documented the transient `waiting_funds` processing state and RFC3339 `expected_funds_at`. Account-facing withdrawal and payout messages stay neutral and corporate; do not retry with a new idempotency key or create a replacement operation.
+### v2.260
+**Changed**
+- `GET /v1/contacts` can now expand saved destinations with
+  `expand=destinations`, optionally filtered by `dest_type` and
+  `dest_country`. The destinations are loaded in one bulk query instead of
+  one request per contact.
+### v2.259
+**Changed**
+- Signing in with the correct password (or a verified second factor: login OTP, verified OAuth, passkey) to a deactivated account now returns `403 account_deactivated` — "Account Deactivated. If you have any questions, please reach out to \<brand compliance email\>." — instead of the generic error. Wrong passwords still return the generic error.
 ## v2.258 · 6 versions - November 10, 2026
 ### v2.258
 **Changed**
