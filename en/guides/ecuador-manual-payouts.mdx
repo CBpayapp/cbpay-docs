@@ -11,10 +11,11 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 ## Scope
 
 This corridor is limited to `country=EC`, `currency=USD`, and
-`method=bank_transfer`. It uses the manual dispatch mode:
-the payout remains `processing` with `status_code=manual_dispatch` until an
-authorized operator pays it in the bank portal and confirms the result.
-CBPay does not call or reconcile a bank automatically for this route.
+`method=bank_transfer`. Creation uses manual dispatch:
+the payout starts at `processing` with `status_code=manual_dispatch` and an
+`ECM` reference. When the approved automatic-release flag is enabled, an
+authorized operator can release that existing row; the poller then
+reconciles the bank history. No new HTTP toggle or payout route is introduced.
 
 Provider selection and credentials are deployment concerns; they are not part
 of the public CBPay contract.
@@ -36,9 +37,12 @@ sequenceDiagram
   participant B as Bank portal
   I->>C: Create EC/USD bank_transfer payout
   C-->>I: processing / manual_dispatch
-  O->>B: Pay beneficiary manually
-  O->>C: Confirm paid with bank reference
-  C-->>I: completed / manual_confirmed
+  O->>C: Release existing payout
+  C->>B: Validate, OTP and approve
+  B-->>C: approved
+  C-->>I: processing / approved
+  C->>C: Poll bank history
+  C-->>I: completed / bank_settled
 ```
 
 ## Create and read a payout
@@ -93,6 +97,36 @@ The create response normally includes:
   "idempotency_hit": false
 }
 ```
+
+## Release the existing payout
+
+Operators with the applicable treasury permission use the existing release
+proxies:
+
+```http
+POST /v1/org/treasury/manual-payouts/{payoutID}/release
+POST /v1/admin/core/payouts/{payoutID}/release-manual
+```
+
+The core operation behind both proxies is
+`POST /v1/ops/payouts/{payoutID}/release-manual`. The body is empty. The
+automatic EC rail is default-off and is enabled through the approved
+operational SQL/runbook control. The release validates the beneficiary and
+order, obtains the email OTP, approves once, and returns the existing payout
+as transient `processing`/`approved` while settlement is reconciled.
+
+```json
+{
+  "payout_id": "00000000-0000-4000-8000-000000000001",
+  "status": "processing",
+  "status_code": "approved",
+  "provider_payment_id": "ECM0000000000001",
+  "released_at": "2026-11-12T15:00:00Z"
+}
+```
+
+Never click release again after an ambiguous result. Read the payout and wait
+for `payout_status_changed` or the final GET result.
 
 ## Confirm the bank result
 
@@ -236,6 +270,21 @@ preserves the historical catalog.
 |---|---|---|
 | `processing` + `manual_dispatch` | The payout is waiting for the operator to complete the bank action. | Pay once in the bank portal, then confirm the existing payout. |
 | `completed` + `manual_confirmed` | The operator confirmed the bank payment. | Re-read the payout and retain the bank reference. |
+| `processing` + `approved` | The bank order is approved while settlement is being reconciled. | Do not release again; wait for the poller. |
+| `completed` + `bank_settled` | The bank debit was found in history. | Re-read the payout and statement. |
+| `completed` + `approved` | The bank order is approved and terminal. | Re-read the payout and webhook. |
+| `failed` + `bank_<slug>` | The bank rejected or cancelled the order. | Review the reason; do not create a replacement automatically. |
+| `processing` + `bank_pending` / `bank_processing` / `novelty` | The bank is still processing or reports a novelty. | Wait for reconciliation and escalate novelty without resubmitting. |
+| `release_in_flight` | A release result is ambiguous. | Verify the original `ECM` reference before any human retry. |
+| `auto_release_disabled` | Automatic EC release is disabled. | Keep the payout manual or follow the approved operational enablement. |
+| `bank_unmapped` / `bank_ambiguous` | The destination bank is not uniquely mapped. | Correct the catalog or beneficiary data. |
+| `beneficiary_rejected` / `beneficiary_mismatch` | The bank rejected the account or holder. | Correct the beneficiary after review; do not substitute an account. |
+| `joint_signatures` / `amount_out_of_limits` | The account or amount cannot be released automatically. | Use the approved manual path after review. |
+| `order_rejected` / `approve_rejected` / `portal_rejected` | The bank rejected a deterministic step. | Correct the displayed reason and release the same payout. |
+| `order_not_found` / `order_unverified` / `order_state_unclear` | The order state cannot be verified. | Do not create another order; verify the original reference. |
+| `otp_not_issued` / `otp_unavailable` | The approval code was not issued or read. | Verify the mailbox and portal before a human retry. |
+| `portal_lookup_failed` / `portal_unavailable` / `perform_ambiguous` / `release_ambiguous` | The outcome is ambiguous. | HTTP 502; verify first and never submit a second payout. |
+| `movement_not_found` | No matching bank movement is visible yet. | Keep processing and wait for reconciliation. |
 | `invalid_payload` | A required field, amount, account value, or confirmation field is invalid. | Correct the request; do not create a replacement for the same operation. |
 | `idempotency_conflict` | The same key was reused with different data or an incompatible existing state. | Read the original resource and use a new key only for a genuinely new operation. |
 | `second_approver_required` | The approver must be a different admin from the maker. | A second, named god admin approves the open request; the maker cannot approve it. |
@@ -246,6 +295,28 @@ preserves the historical catalog.
 
 See the [complete error catalog](/en/errors) for the shared response format
 and error handling rules.
+
+Deterministic release errors return HTTP `422` and return the row to
+`manual_dispatch`. Ambiguous release errors return HTTP `502` and leave it in
+`release_in_flight` for human verification. UETR and IMAD are `N/A` for this
+rail unless the bank explicitly supplies them.
+
+## Webhook
+
+Subscribe to `payout_status_changed`. The payload keeps the public contract
+provider-neutral:
+
+```json
+{
+  "event_type": "payout_status_changed",
+  "payout_id": "00000000-0000-4000-8000-000000000001",
+  "status": "completed",
+  "status_code": "bank_settled",
+  "status_message": "settled in the bank history",
+  "bank_reference": "ECM0000000000001",
+  "funds_debited": true
+}
+```
 
 ## FAQ
 
@@ -262,5 +333,10 @@ and error handling rules.
     Read the payout first. If its outcome is still unknown, retry the same
     request with the same idempotency key. Never submit the bank transfer again
     with a new key without confirming what happened.
+  </Accordion>
+  <Accordion title="What does an ambiguous release mean?">
+    The bank may have received the release. Read the payout and verify the
+    original ECM reference; do not create another payout or resend the bank
+    action.
   </Accordion>
 </AccordionGroup>

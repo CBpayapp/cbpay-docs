@@ -5,8 +5,8 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.264 · 1 version - November 12, 2026
-### v2.264
+## v2.265 · 2 versions - November 12, 2026
+### v2.265
 **Added**
 
 - Public invoice verification now includes optional `wire_instructions`,
@@ -14,6 +14,15 @@ source_url: https://docs.cbpayapp.com/en/changelog
   invoices. The same details are available in the branded invoice PDF and
   email, with a QR payload per rail; they are omitted when no rail is
   configured and for `paid` or `void` invoices.
+### v2.264
+#### en
+
+- Added automatic release documentation for existing `EC/USD/bank_transfer`
+  manual payouts. Operators can release the existing queue row through the
+  existing admin routes; the flag is default-off and controlled operationally.
+- Added documented EC states for approval, bank settlement, bank rejection,
+  pending processing and novelty, plus safe webhook and ambiguous-outcome
+  handling.
 ## v2.263 · 5 versions - November 11, 2026
 ### v2.263
 **Changed**

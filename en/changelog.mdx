@@ -4,8 +4,8 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 12, 2026" description="v2.264 · 1 version">
-### v2.264
+<Update label="November 12, 2026" description="v2.265 · 2 versions">
+### v2.265
 **Added**
 
 - Public invoice verification now includes optional `wire_instructions`,
@@ -13,6 +13,15 @@ description: "History of API and documentation changes"
   invoices. The same details are available in the branded invoice PDF and
   email, with a QR payload per rail; they are omitted when no rail is
   configured and for `paid` or `void` invoices.
+### v2.264
+#### en
+
+- Added automatic release documentation for existing `EC/USD/bank_transfer`
+  manual payouts. Operators can release the existing queue row through the
+  existing admin routes; the flag is default-off and controlled operationally.
+- Added documented EC states for approval, bank settlement, bank rejection,
+  pending processing and novelty, plus safe webhook and ambiguous-outcome
+  handling.
 </Update>
 <Update label="November 11, 2026" description="v2.263 · 5 versions">
 ### v2.263

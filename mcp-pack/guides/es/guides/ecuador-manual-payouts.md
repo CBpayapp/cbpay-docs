@@ -10,10 +10,11 @@ source_url: https://docs.cbpayapp.com/es/guides/ecuador-manual-payouts
 ## Alcance
 
 Este corredor se limita a `country=EC`, `currency=USD` y
-`method=bank_transfer`. Usa el modo de despacho manual: el payout queda en
-`processing` con `status_code=manual_dispatch` hasta que un operador autorizado
-lo pague en el portal bancario y confirme el resultado. CBPay no llama ni
-concilia automáticamente un banco en esta ruta.
+`method=bank_transfer`. La creación usa despacho manual: el payout parte en
+`processing` con `status_code=manual_dispatch` y una referencia `ECM`. Cuando
+el flag operativo aprobado está habilitado, un operador autorizado puede
+liberar esa misma fila y el poller concilia la cartola bancaria. No se agrega
+un toggle HTTP ni una ruta nueva.
 
 La selección del proveedor y sus credenciales son asuntos de despliegue; no
 forman parte del contrato público de CBPay.
@@ -34,9 +35,12 @@ sequenceDiagram
   participant B as Portal bancario
   I->>C: Crear payout EC/USD bank_transfer
   C-->>I: processing / manual_dispatch
-  O->>B: Pagar al beneficiario manualmente
-  O->>C: Confirmar con la referencia bancaria
-  C-->>I: completed / manual_confirmed
+  O->>C: Liberar el payout existente
+  C->>B: Validar, OTP y aprobar
+  B-->>C: approved
+  C-->>I: processing / approved
+  C->>C: Consultar historial bancario
+  C-->>I: completed / bank_settled
 ```
 
 ## Crear y leer un payout
@@ -91,6 +95,36 @@ inicial normalmente incluye:
   "idempotency_hit": false
 }
 ```
+
+## Liberar el payout existente
+
+Los operadores con el permiso de tesorería correspondiente usan los proxies
+existentes:
+
+```http
+POST /v1/org/treasury/manual-payouts/{payoutID}/release
+POST /v1/admin/core/payouts/{payoutID}/release-manual
+```
+
+El core detrás de ambos proxies es
+`POST /v1/ops/payouts/{payoutID}/release-manual`. El body está vacío. El riel
+automático EC está apagado por defecto y se habilita mediante el control
+operativo SQL/runbook aprobado. La liberación valida beneficiario y orden,
+obtiene el OTP por email, aprueba una vez y devuelve el payout existente como
+`processing`/`approved` mientras concilia la liquidación.
+
+```json
+{
+  "payout_id": "00000000-0000-4000-8000-000000000001",
+  "status": "processing",
+  "status_code": "approved",
+  "provider_payment_id": "ECM0000000000001",
+  "released_at": "2026-11-12T15:00:00Z"
+}
+```
+
+Después de un resultado ambiguo, no vuelvas a presionar liberar. Lee el payout
+y espera `payout_status_changed` o el resultado final del GET.
 
 ## Confirmar el pago bancario
 
@@ -237,6 +271,21 @@ predeterminado. Omitir el flag conserva el catálogo histórico.
 |---|---|---|
 | `processing` + `manual_dispatch` | El payout espera que el operador complete la acción bancaria. | Paga una sola vez en el portal bancario y confirma el payout existente. |
 | `completed` + `manual_confirmed` | El operador confirmó el pago bancario. | Vuelve a leer el payout y conserva la referencia bancaria. |
+| `processing` + `approved` | La orden bancaria fue aprobada y se concilia la liquidación. | No liberes de nuevo; espera el poller. |
+| `completed` + `bank_settled` | El débito bancario apareció en el historial. | Vuelve a leer el payout y la cartola. |
+| `completed` + `approved` | La orden bancaria quedó aprobada y terminal. | Vuelve a leer el payout y el webhook. |
+| `failed` + `bank_<slug>` | El banco rechazó o anuló la orden. | Revisa el motivo; no crees un reemplazo automáticamente. |
+| `processing` + `bank_pending` / `bank_processing` / `novelty` | El banco sigue procesando o reporta una novedad. | Espera la conciliación y escala la novedad sin reenviar. |
+| `release_in_flight` | El resultado de la liberación es ambiguo. | Verifica la referencia `ECM` original antes de reintentar manualmente. |
+| `auto_release_disabled` | La liberación automática EC está deshabilitada. | Mantén el payout manual o sigue el enablement operativo aprobado. |
+| `bank_unmapped` / `bank_ambiguous` | El banco destino no tiene un mapeo único. | Corrige el catálogo o los datos del beneficiario. |
+| `beneficiary_rejected` / `beneficiary_mismatch` | El banco rechazó la cuenta o el titular no coincide. | Corrige el beneficiario tras revisar; no sustituyas la cuenta. |
+| `joint_signatures` / `amount_out_of_limits` | La cuenta o el monto no permiten liberación automática. | Usa el flujo manual aprobado después de revisar. |
+| `order_rejected` / `approve_rejected` / `portal_rejected` | El banco rechazó un paso determinista. | Corrige el motivo visible y libera el mismo payout. |
+| `order_not_found` / `order_unverified` / `order_state_unclear` | No se puede verificar el estado de la orden. | No crees otra orden; verifica la referencia original. |
+| `otp_not_issued` / `otp_unavailable` | El código de aprobación no fue emitido o leído. | Verifica el buzón y el portal antes de reintentar manualmente. |
+| `portal_lookup_failed` / `portal_unavailable` / `perform_ambiguous` / `release_ambiguous` | El resultado es ambiguo. | HTTP 502; verifica primero y nunca envíes otro payout. |
+| `movement_not_found` | Todavía no aparece un movimiento bancario coincidente. | Mantén el procesamiento y espera la conciliación. |
 | `invalid_payload` | Falta un campo o un monto, cuenta o dato de confirmación no es válido. | Corrige la solicitud; no crees un reemplazo para la misma operación. |
 | `idempotency_conflict` | La misma key se reutilizó con datos distintos o un estado incompatible. | Lee el recurso original y usa una key nueva solo para una operación realmente nueva. |
 | `second_approver_required` | El aprobador debe ser un admin distinto del maker. | Un segundo admin god nombrado aprueba la solicitud abierta; el maker no puede aprobarla. |
@@ -247,6 +296,28 @@ predeterminado. Omitir el flag conserva el catálogo histórico.
 
 Consulta el [catálogo completo de errores](https://docs.cbpayapp.com/es/errors) para el formato común
 de respuestas y las reglas de manejo.
+
+Los errores deterministas de liberación devuelven HTTP `422` y la fila vuelve a
+`manual_dispatch`. Los errores ambiguos devuelven HTTP `502` y la dejan en
+`release_in_flight` para verificación humana. UETR e IMAD son `N/A` para este
+riel salvo que el banco los entregue explícitamente.
+
+## Webhook
+
+Suscríbete a `payout_status_changed`. El payload mantiene el contrato público
+sin identidad del proveedor:
+
+```json
+{
+  "event_type": "payout_status_changed",
+  "payout_id": "00000000-0000-4000-8000-000000000001",
+  "status": "completed",
+  "status_code": "bank_settled",
+  "status_message": "settled in the bank history",
+  "bank_reference": "ECM0000000000001",
+  "funds_debited": true
+}
+```
 
 ## Preguntas frecuentes
 
@@ -261,3 +332,6 @@ de respuestas y las reglas de manejo.
     solicitud con la misma key de idempotencia. Para
     `confirm-received`, lee primero el payin y no reenvíes la confirmación con
     una nueva key sin verificar qué ocurrió en el banco.
+#### ¿Qué significa una liberación ambigua?
+    El banco pudo recibir la liberación. Lee el payout y verifica la referencia
+    ECM original; no crees otro payout ni reenvíes la acción bancaria.

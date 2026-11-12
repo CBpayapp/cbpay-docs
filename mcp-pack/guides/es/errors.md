@@ -709,6 +709,26 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 503 | `passkeys_unavailable` | Usa TOTP; la organización no configuró WebAuthn. |
 | 403 | `enrollment_required` | Completa el enrolamiento antes del handoff. |
 
+## Liberación automática de payouts manuales de Ecuador
+
+Estos códigos aplican cuando un operador autorizado libera un payout existente
+`EC/USD/bank_transfer`. Los errores deterministas devuelven HTTP `422` y la
+fila vuelve a `manual_dispatch`; los ambiguos devuelven HTTP `502` y dejan
+`release_in_flight`. Verifica la referencia original y nunca crees otro payout.
+
+| HTTP | `error` | Significado y solución |
+|---:|---|---|
+| 409 | `auto_release_disabled` | El flag EC está apagado; mantén la fila manual o sigue el enablement operativo aprobado. |
+| 422 | `bank_unmapped` / `bank_ambiguous` | El banco destino falta o no tiene mapeo único; corrige catálogo o beneficiario. |
+| 422 | `beneficiary_rejected` / `beneficiary_mismatch` | El banco rechazó la cuenta o el titular; corrige el beneficiario existente tras revisar. |
+| 422 | `joint_signatures` / `amount_out_of_limits` | La liberación automática no cumple la regla de cuenta o monto; usa el flujo manual aprobado. |
+| 422 | `order_rejected` / `approve_rejected` / `portal_rejected` | Falló un paso bancario determinista; corrige el motivo y libera el mismo payout. |
+| 422 | `order_not_found` / `order_unverified` / `order_state_unclear` | No se puede verificar la orden; no crees otra. |
+| 422 | `otp_not_issued` | No se emitió el código; verifica el buzón y el portal. |
+| 502 | `portal_lookup_failed` / `portal_unavailable` | La lectura del portal no estuvo disponible; verifica antes de reintentar. |
+| 502 | `perform_ambiguous` / `release_ambiguous` | El banco pudo recibir la acción; verifica la referencia original y espera la conciliación. |
+| 404 | `movement_not_found` | Todavía no aparece el movimiento coincidente; mantén el procesamiento y espera el poller. |
+
 ## Descarte de Client Journey
 
 | HTTP | `error` | Causa y acción |
