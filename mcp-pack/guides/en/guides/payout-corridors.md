@@ -1,370 +1,11 @@
 ---
-title: "Payouts"
-icon: "money-bill-transfer"
-description: "Send fiat to local bank accounts, debited from your USD balance"
+title: "Payout corridors"
+description: "Country and corridor-specific payout requirements"
+slug: en/guides/payout-corridors
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/payout-corridors
 ---
-
-import { EnvUrls } from "/snippets/env-urls.jsx";
-
-<EnvUrls lang="en" />
-
-A payout sends money in local currency to a bank account in the destination
-country. The amount converts from local currency to USDT at **your
-account's rate** (the one from `GET /v1/rates`) and `usdt_amount + fee`
-(the fixed fee, when configured) is debited from your balance.
-
-This is the full lifecycle, including what happens to your balance at each
-step:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant App as Your app
-    participant CB as CBPay
-    participant Rail as Local banking rail
-    App->>CB: POST /v1/payouts (idempotency_key)
-    CB->>CB: Converts at your rate and debits<br/>usdt_amount + fee (available → held)
-    CB-->>App: 202 processing (fx_rate, total_debit)
-    CB->>Rail: Disperses in local currency
-    alt The money arrives
-        Rail-->>CB: Confirmed
-        CB->>CB: Consumes the hold — final
-        CB-->>App: Webhook payout_status_changed (completed)
-    else The rail rejects
-        Rail-->>CB: Rejected
-        CB->>CB: Refunds the full debit to available
-        CB-->>App: Webhook payout_status_changed (failed + status_code)
-    end
-```
-
-## 1. Discover the available corridors
-
-Countries, currencies and methods are defined by CBPay. Always check
-the catalog:
-
-```bash
-curl https://api.qbank.cl/platform/v1/payouts/methods \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "items": [
-    { "country": "CL", "currency": "CLP", "method": "bank_transfer" },
-    { "country": "PE", "currency": "PEN", "method": "bank_transfer" },
-    { "country": "PE", "currency": "PEN", "method": "yape" },
-    { "country": "BO", "currency": "BOB", "method": "qr" }
-  ],
-  "meta": { "retrieved": 4 }
-}
-```
-
-Available corridors and methods:
-
-| Country | Currency | Methods |
-|---|---|---|
-| Chile | CLP | `bank_transfer` |
-| Peru | PEN | `bank_transfer`, `yape` |
-| Mexico | MXN | `bank_transfer` (SPEI: CLABE or debit card) |
-| Venezuela | VES | `bank_transfer`, `pago_movil` |
-| Bolivia | BOB / USD | `bank_transfer`, `qr` (see [QR payout](#qr-payout)) |
-| Brazil | BRL | `pix` (by key or to account), `qr` (PIX QR — see [QR payout](#qr-payout)) |
-| Ecuador | USD | `bank_transfer`, `deuna`, `cash_pickup`, `cnb` |
-| Paraguay | PYG | `bank_transfer` |
-| Argentina | ARS / USD | `bank_transfer` (CBU or CVU) |
-| Colombia | COP | `bank_transfer` (integer amounts, no decimals), `breb` |
-| United States | USD | `ach`, `wire`, `swift` |
-
-Availability may vary; the catalog (`GET /v1/payouts/methods`) is always
-the source of truth. If a country has a single method, `method` is
-optional. Every method is charged the same way: your rate + fixed fee.
-
-For bank transfers you also need the banks catalog (that is where the
-beneficiary's `bank_code` comes from):
-
-```bash
-curl "https://api.qbank.cl/platform/v1/payouts/banks?country=CL" \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "items": [
-    { "code": "001", "name": "Banco de Chile" },
-    { "code": "012", "name": "Banco del Estado de Chile" },
-    { "code": "016", "name": "Banco de Crédito e Inversiones" }
-  ],
-  "meta": { "retrieved": 3 }
-}
-```
-
-## 2. Create the payout
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "MX",
-    "currency": "MXN",
-    "method": "bank_transfer",
-    "amount": "1500.00",
-    "beneficiary": {
-      "name": "Maria Lopez",
-      "account_type": "clabe",
-      "account_number": "012180001234567895"
-    },
-    "description": "Invoice 8841",
-    "idempotency_key": "invoice-8841"
-  }'
-```
-
-<Warning>
-`beneficiary` is a key/value object whose required fields depend on the
-corridor (RUT and bank in Chile, CLABE in Mexico, CCI in Peru, PIX key in
-Brazil, etc.). The methods catalog documents each one.
-</Warning>
-
-<Note>
-Every payout saves the beneficiary as a [contact](/en/guides/contacts)
-automatically (`"save_contact": false` to skip it). To pay them again
-without re-typing their data, send `"beneficiary_contact_id"` instead of
-`beneficiary` — their most recent saved beneficiary for that country and
-method is used (`422 no_saved_destination` if there is none).
-</Note>
-
-Response `202 Accepted`:
-
-```json
-{
-  "payout_id": "0d4f…",
-  "account_id": "…",
-  "idempotency_key": "invoice-8841",
-  "country": "MX",
-  "currency": "MXN",
-  "method": "bank_transfer",
-  "local_amount": "1500.00",
-  "fx_rate": "17.50",
-  "usdt_amount": "85.714286",
-  "fee": "0.300000",
-  "total_debit": "86.014286",
-  "settlement_asset": "USDT",
-  "settlement_amount": "86.014286",
-  "settlement_rate": "1",
-  "status": "processing",
-  "status_code": "",
-  "status_message": "",
-  "funds_debited": true,
-  "compliance_pending": false,
-  "bank_reference": "",
-  "created_at": "2026-07-06T20:00:00Z"
-}
-```
-
-At that moment your balance already reflects the debit: `total_debit` moved
-from `available` into `held` (on the `settlement_asset` balance).
-
-<Note>
-**`bank_reference` — the bank's own id for the transfer.** On US ACH, wire
-and SWIFT it is the CBF reference returned **immediately** at create (the
-payout stays `processing` until the bank confirms). On other corridors it
-stays empty (`""`) until the payout is `completed`. It is the value the
-beneficiary can use to cross-check the payment with their bank, and it also
-appears in the `payout_status_changed` webhook, the PDF receipt, the payouts
-CSV export and the statement. Payout responses, webhooks, CSV and receipts also expose `uetr` (UETR/SWIFT gpi) and `imad` (domestic wire/ACH), both empty until reported by the bank; use the [public transaction tracker](/en/guides/tracking) for live status and the same receipt.
-</Note>
-### Paying from another balance (`settlement_asset`)
-
-The default debit comes from USD; use `PUT /v1/settlement` to change it. To pay a single operation from
-another balance, add `settlement_asset` to the request. Example: a 100,000
-CLP payout paid from the BTC balance goes through four transformations,
-all recorded on the response:
-
-1. **CLP → USDT** at your rate: `100000 / 950.25 = 105.235465 USDT`.
-2. **+ fixed fee**: `105.235465 + 0.30 = 105.535465 USDT` (`total_debit`).
-3. **USDT → BTC** at the effective settlement price (`settlement_rate`
-   `109029.34070000`): `105.535465 / 109029.3407 = 0.00096795 BTC`
-   (rounded up to the satoshi).
-4. **Debit and hold in BTC**: `settlement_amount` `0.00096795` leaves your
-   BTC balance; the beneficiary receives their 100,000 CLP exactly as
-   always.
-
-```json
-{
-  "country": "CL",
-  "currency": "CLP",
-  "local_amount": "100000",
-  "fx_rate": "950.25",
-  "usdt_amount": "105.235465",
-  "fee": "0.300000",
-  "total_debit": "105.535465",
-  "settlement_asset": "BTC",
-  "settlement_amount": "0.00096795",
-  "settlement_rate": "109029.34070000",
-  "status": "processing",
-  "status_code": "",
-  "status_message": "",
-  "funds_debited": true,
-  "compliance_pending": false,
-  "bank_reference": ""
-}
-```
-
-If the payout fails, the exact `settlement_amount` is refunded to your BTC
-balance — never re-quoted. If the BTC/GOLD/SILVER/PLATINUM execution price is unavailable
-at that moment you get `503 pricing_unavailable`, and volatile assets have
-a per-operation limit (`422 settlement_limit_exceeded`; check it in
-`GET /v1/settlement`).
-For same-currency BOB, MXN or ARS settlement, see [Fiat payout settlement](./fiat-settlement).
-### Technical screening can be pending
-CBPay screens the beneficiary before it debits your balance or calls the core.
-If the screening service is temporarily unavailable **and the technical
-screening queue is available**, the payout is persisted and the create call
-returns `202 Accepted` with the payout resource in `status: "pending"`:
-
-```json
-{
-  "payout_id": "0d4f…",
-  "idempotency_key": "invoice-8841",
-  "status": "pending",
-  "status_code": "compliance_pending",
-  "status_message": "",
-  "funds_debited": false,
-  "compliance_pending": true,
-  "predebit_failure": false,
-  "created_at": "2026-07-06T20:00:00Z",
-  "updated_at": "2026-07-06T20:00:00Z"
-}
-```
-
-While it is pending there is **no debit, hold, ledger entry, core dispatch or
-`receipt_url`**. Replaying with the same idempotency key returns the same payout
-with `idempotency_hit: true`; it never creates a second operation. When the
-screening worker receives `process`, the existing payout enters the normal debit
-and dispatch flow. A valid `hold` goes to the transactional firewall. A later
-`rejected` result ends the queued payout as `failed` with no debit.
-
-After `process` is accepted, the same payout can remain `status: "pending"`
-while the debit and dispatch are reconciled. The API and
-`payout_status_changed` webhook expose these durable transition codes:
-
-- `compliance_dispatch_pending`: screening passed, the debit/hold exists and
-  `funds_debited: true`, but the core dispatch has not completed.
-- `compliance_dispatching`: the dispatch claim is in progress.
-- `core_unreachable`: the dispatch or local settlement is ambiguous and is
-  waiting for reconciliation; do not create a second payout.
-
-These transitions are not a new payout operation. Keep the same
-`idempotency_key`, read the payout, and wait for the next status event. Once the
-payout is final, `completed` consumes the hold and `failed` refunds the exact
-debit. Final status events use the durable event path and include the normal
-receipt fields.
-
-The technical `compliance_check_unavailable` response remains applicable when
-the payout cannot be placed in the pending queue, and to flows that do not have
-this queue. It does not replace the existing validation, security or
-`compliance_hold` contracts.
-
-### Pre-debit failure is not a refund
-If screening or a hard compliance gate fails before the debit path starts, the
-same payout can finish as `failed` with `predebit_failure: true` and
-`funds_debited: false`. The response and its `payout_status_changed` event omit
-`receipt_url`, because there was no debit, hold or receipt to reverse. This is
-different from a post-debit `failed` payout, where the exact debit is refunded
-before the terminal event.
-For rate provenance and indicative FIFO quotes, see [Payout rate sources and indicative FIFO quotes](/en/guides/payout-rate-sources).
-
-## Argentina: resolve a bank alias before paying
-Resolve and confirm the holder before creating the payout (10 lookups/minute/account). Request: `GET /v1/payouts/ar-alias/resolve?alias=julieta.fernandez`. Response: `{"alias":"julieta.fernandez","account_number":"2850590940090418135201","account_type":"CBU","tax_id":"27234567891","holder_name":"Julieta Fernandez"}`. Create `POST /v1/payouts` with `account_number` set to the original alias and the returned `tax_id`/`name`; dispatch re-resolves it and records `destination_alias` in evidence. `alias_unresolvable` is deterministic; `beneficiary_lookup_unavailable` is temporary. See [Errors](/en/errors).
-## 3. Receive the final state
-
-Subscribe to the `payout_status_changed` event ([webhooks](/en/webhooks)):
-
-```json
-{
-  "payout_id": "0d4f…",
-  "account_id": "…",
-  "country": "MX",
-  "currency": "MXN",
-  "local_amount": "1500.00",
-  "usdt_amount": "85.714286",
-  "total_debit": "86.014286",
-  "status": "completed",
-  "status_code": "",
-  "status_message": "",
-  "bank_reference": "00761123456"
-}
-```
-
-- **`completed`**: the money arrived; the hold is consumed.
-- **`failed`**: the full debit is refunded automatically (`payout_refund`
-  in your ledger).
-
-`status_message` is the optional, normalized detail accompanying
-`status_code`; it can be empty when the core has no additional message.
-
-You can also query at any time:
-
-```bash
-curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
-  -H "Authorization: Bearer <token>"
-```
-
-### Payout statuses
-
-| Status | Meaning | Your balance |
-|---|---|---|
-| `processing` | Accepted and executing on the local rail | Debit held in `held` |
-| `pending` + `waiting_funds` | Temporary processing state; the platform resumes the payout automatically | Existing debit/hold remains associated; do not create a replacement |
-| `pending` + `compliance_pending: true` | Technical beneficiary screening is pending before any debit or dispatch | **No debit**; `funds_debited: false` |
-| `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | Screening passed; debit exists while dispatch or reconciliation is pending | `funds_debited: true`; debit remains held |
-| `completed` | The money reached the beneficiary | Hold consumed — final |
-| `failed` after debit | The corridor rejected it or execution failed after the debit | **Full automatic refund** (amount + fee) |
-| `failed` + `predebit_failure: true` | Screening or a hard compliance gate failed before the debit | **No debit**; `funds_debited: false`, no receipt |
-
-## Reads and history
-
-Every payout can be read individually and the listing accepts filters:
-
-```bash
-# One payout
-curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
-  -H "Authorization: Bearer <token>"
-
-# History with filters: dates, status, country, method, search and pagination
-curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&status=failed&country=MX&method=bank_transfer&search=0d4f&page=1&page_size=50" \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "page": 1,
-  "page_size": 50,
-  "payouts": [
-    {
-      "payout_id": "0d4f…",
-      "country": "MX",
-      "currency": "MXN",
-      "method": "bank_transfer",
-      "local_amount": "1500.00",
-      "fx_rate": "17.50",
-      "usdt_amount": "85.714286",
-      "fee": "0.300000",
-      "total_debit": "86.014286",
-      "status": "failed",
-      "status_code": "core_rejected",
-      "status_message": "beneficiary account does not exist",
-      "bank_reference": "",
-      "created_at": "2026-07-06T20:00:00Z"
-    }
-  ]
-}
-```
-
-`from`/`to` use `YYYY-MM-DD` (organization timezone, both inclusive); an invalid date
-responds `400 invalid_range`. `method` filters by the live payout catalog, while
-`search` performs a case-insensitive partial match on the payout ID, bank reference
-or idempotency key.
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 ## Examples by country
 
@@ -393,8 +34,7 @@ when configured; `0.30` here).
 | AR | `bank_transfer` | `name`, `tax_id` (11-digit CUIT/CUIL), `account_number` (22-digit CBU/CVU or bank alias; USD is CBU-only) |
 | US | `ach` / `wire` / `swift` | `name`, `account_number`, `email`, `country_code` (any country), `address`, `city`, `postal_code` (+ `state` if `country_code` is `US`), `bank_name`, `bank_country` (`US` on `ach`/`wire`), `bank_code` (ABA routing for `ach`/`wire`, SWIFT BIC for `swift`; + `account_type` `CHECKING`/`SAVING` for `ach`) |
 
-<Tabs>
-<Tab title="Chile">
+#### Chile
 
 Bank transfer in CLP. Requires RUT, bank and account: the Chilean peso has no minor unit, so CLP payout amounts must be whole numbers (for example, `30000` or `30000.00`).
 
@@ -441,13 +81,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 The banks catalog (`GET /v1/payouts/banks?country=CL`) lists the current `bank_code` values. `CL`/`CLP`/`bank_transfer` may be dispatched in grouped five-minute windows; `POST /v1/payouts` still returns `202` with `status: "processing"` and each payout keeps its final status and `payout_status_changed` webhook.
 
-</Tab>
-<Tab title="Peru">
+#### Peru
 
 Two methods: bank transfer (interbank CCI) and **Yape** (to a phone
 number).
-
-<CodeGroup>
 
 ```bash bank_transfer (CCI)
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -483,8 +120,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "c7a2…",
@@ -504,12 +139,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 For `yape` the phone uses the `51XXXXXXXXX` format (11 digits with country
 code). The result is usually synchronous.
 
-</Tab>
-<Tab title="Mexico">
+#### Mexico
 
 SPEI in MXN, to a CLABE (18 digits) or a debit card:
-
-<CodeGroup>
 
 ```bash CLABE
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -548,8 +180,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "0d4f…",
@@ -573,13 +203,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 With a CLABE the destination bank derives from its leading digits; with a
 card, `bank_code` is required.
 
-</Tab>
-<Tab title="Venezuela">
+#### Venezuela
 
 Two methods: **Pago Móvil** (name + phone + bank + ID) and bank transfer
 (20-digit account):
-
-<CodeGroup>
 
 ```bash pago_movil
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -618,8 +245,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "e9b4…",
@@ -639,10 +264,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 `bank_code` uses SUDEBAN codes; for `bank_transfer` it can derive from the
 account's first 4 digits.
 
-</Tab>
-<Tab title="Bolivia">
+#### Bolivia
 
-ACH transfer in BOB or USD (besides the [QR](#qr-payout)):
+ACH transfer in BOB or USD (besides the [QR](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)):
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -685,10 +309,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 For USD send `currency: "USD"` with the same structure. The organization's rail configuration decides which internal version handles Bolivia payouts; the choice is saved on the operation so later polling keeps using the right version, and responses and webhooks stay provider-agnostic.
 
-</Tab>
-<Tab title="Brazil">
+#### Brazil
 
-PIX by key (besides the [PIX QR](#qr-payout)):
+PIX by key (besides the [PIX QR](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)):
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -763,8 +386,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   (continuous reconciliation against the rail); check on demand with
   `GET /v1/payouts/{id}`.
 
-</Tab>
-<Tab title="Ecuador">
+#### Ecuador
 
 Remittances in **USD** (1 to 100,000 per operation, up to 2 decimals) with
 four methods: bank transfer, the **DE UNA** wallet (by mobile number),
@@ -773,8 +395,6 @@ correspondent** (`cnb`). This is a remittance corridor: besides the
 beneficiary, the rail requires the **sender's** data (who originates the
 payment), sent flat inside the same `beneficiary` object with the
 `sender_*` prefix.
-
-<CodeGroup>
 
 ```bash bank_transfer (to account)
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -852,8 +472,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "9f3a…",
@@ -884,8 +502,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - The final status arrives via the `payout_status_changed` webhook (with
   periodic reconciliation as backup).
 
-</Tab>
-<Tab title="Paraguay">
+#### Paraguay
 
 Bank transfer in PYG:
 
@@ -926,14 +543,11 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 `name` accepts up to 35 characters in this corridor.
 
-</Tab>
-<Tab title="Argentina">
+#### Argentina
 **Bank aliases**: for ARS and USD `bank_transfer`, `beneficiary.account_number` also accepts a bank alias from 6 to 20 letters/numbers/dots/hyphens, with at least one letter. A numeric-only value is treated as a CBU/CVU, not an alias. CBPay resolves a valid alias to its destination account before dispatch; the wire uses the resolved CBU. ARS can resolve to a CBU or CVU; USD remains CBU-to-CBU only. An alias that cannot be resolved is rejected without debiting the balance. The original alias remains available in the payout evidence for reconciliation.
 Bank transfer in **ARS** or **USD** to any 22-digit **CBU or CVU** (bank
 accounts and virtual wallets). No `bank_code` needed: the CBU/CVU
 identifies the bank on its own.
-
-<CodeGroup>
 
 ```bash ARS (CBU or CVU)
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -971,8 +585,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "b7c1…",
@@ -1002,8 +614,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   moves to `failed`, the debit is fully refunded and you receive the
   `payout_status_changed` webhook.
 
-</Tab>
-<Tab title="United States">
+#### United States
 
 Payouts in **USD** to US bank accounts, with three methods:
 
@@ -1068,8 +679,6 @@ curl "https://api.qbank.cl/platform/v1/payouts/bank-directory/lookup?routing_num
   "directory_vintage": "fed_ach_2019"
 }
 ```
-
-<CodeGroup>
 
 ```bash ach
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -1192,8 +801,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "c5f2…",
@@ -1229,221 +836,3 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   | `purpose` | Payment purpose (mandatory catalog) | — (none; required) |
   | `crypto_activity` | Whether the payment relates to crypto buy/sell activity (`Yes`/`No`) | `No` |
   | `payment_gateway` | Deposit gateway declaration | rail default |
-
-</Tab>
-</Tabs>
-
-## SEPA Instant in EUR
-See the dedicated [SEPA Instant payout guide](/en/guides/sepa-instant-payouts)
-for the single Europe (`EU`)/EUR/`sepa` routing row; the beneficiary's actual country
-comes from the IBAN. GB IBANs fail fast with HTTP 400 before dispatch; SEPA Credit
-Transfer for GB is future scope.
-
-## Mandatory supporting document on USD transfers
-
-EVERY outbound **USD** transfer over a bank rail (`ach`, `wire` or
-`swift`) requires an attached **supporting document** (invoice or
-receipt) — it is a requirement of the processing bank and applies to
-**any USD corridor**, not just the US one (for example, also to an
-international SWIFT such as `PY/USD/swift`).
-
-<Steps>
-<Step title="Upload the document">
-Send the file with `POST /v1/payouts/documents`: raw binary body with
-a PDF (`application/pdf`, up to 50 MB) and the filename in the `name`
-query param. The current US/USD payout UI accepts PDF only.
-
-```bash
-curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-2210.pdf" \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/pdf" \
-  --data-binary "@invoice-2210.pdf"
-```
-
-```json
-{
-  "document_key": "payout-docs/9f1c…/org/…/3c2e…"
-}
-```
-</Step>
-<Step title="Pass it when creating the payout">
-The `document_key` travels in `options.supporting_document_key`. On
-`ach`/`wire` you can add `options.document_reference_number` (invoice
-or document reference number) — it is sent to the bank.
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "US",
-    "currency": "USD",
-    "method": "ach",
-    "amount": "250.00",
-    "beneficiary": { "…": "…" },
-    "options": {
-      "supporting_document_key": "payout-docs/9f1c…/org/…/3c2e…",
-      "document_reference_number": "INV-2210"
-    },
-    "idempotency_key": "us-ach-2210"
-  }'
-```
-</Step>
-</Steps>
-
-- A USD bank-rail payout created **without the document** is rejected at
-  creation with `400 supporting_document_required` (no debit).
-- A key uploaded by **another account** is rejected with
-  `400 invalid_document_key`.
-- The `document_key` stays stored: if the create fails for another
-  reason, you reuse it on the retry — **no need to re-upload the file**.
-## QR payout
-
-Paying a collection QR (Bolivia, Brazil PIX) now has its own guide:
-
-<Card title="QR payout" icon="qrcode" href="/en/guides/qr-payout" horizontal>
-  Scan the QR for free, show your user the recipient's data and confirm the
-  payment in a second call - charged like a regular payout.
-</Card>
-
-## Common errors
-
-| HTTP | `error` | What to do |
-|---|---|---|
-| 400 | `idempotency_key_required` | Send the key in body or header |
-| 400 | `beneficiary_required` | Include the `beneficiary` object |
-| 400 | `supporting_document_required` | USD bank-rail transfer without the attached supporting document — upload it with `POST /v1/payouts/documents` and pass `options.supporting_document_key` (see [supporting document](/en/guides/payouts#mandatory-supporting-document-on-usd-transfers)) |
-| 400 | `invalid_document_key` | The `supporting_document_key` does not belong to your account — upload the document with your own credentials and use the returned key |
-| 402 | `insufficient_funds` | Fund the account; the payout was not created |
-| 403 | `account_blocked` | The account is not active; contact the CBPay team |
-| 403 | `service_disabled` | Payouts is not enabled for your account — see [services](/en/concepts/services) |
-| 403 | `compliance_hold` | The payout was held for review and was NOT processed (no funds moved). The API message is `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. Copy the portal reference line (UTC time, error code and short request ID) when contacting support; see [errors](/en/errors) |
-| 422 | `currency_not_supported` | No FX rate for that currency |
-| 422 | (payout with `status: failed`) | The corridor rejected the data; the debit was already refunded — fix `beneficiary` and retry with a new key |
-| 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the SAME `idempotency_key` |
-| 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in the technical screening queue; retry with the **same** idempotency key. When that queue is available, payout creation returns `202` with `status: pending` instead |
-
-## Immediate rejection vs later failure
-
-If the processor rejects the payout at creation, you receive `422` with the
-object in `status: failed` and the refund already applied. If it fails later
-(e.g. the destination account does not exist), the webhook arrives with
-`status: failed` and the automatic refund happens at that moment.
-
-### Reading `status_code` on a failed payout
-
-| `status_code` | Meaning | Action |
-|---|---|---|
-| `core_rejected` | The processor rejected the operation at creation (invalid beneficiary data, corridor unavailable) | Read `status_message`, fix the data and create a new payout with a new key |
-| `counterparty_rejected` | The banking rail rejected the beneficiary itself (US/USD corridor) | Check the beneficiary's identity and address data with the holder, then create a new payout with a new key |
-| `channel_unavailable` | The payout channel became temporarily unavailable | Retry later; the refund (if a debit happened) is already applied |
-| *another code* | Later rejection by the banking rail (e.g. destination account closed) | Same: fix the data and create a new operation |
-| *(empty)* | Generic corridor failure | Check `status_message`; if unclear, contact support with the `payout_id` |
-
-In every case the refund is already applied — verify it with the
-`payout_refund` entry in
-[movements](/en/concepts/movements-reconciliation).
-
-<Note>
-A payout in `processing` cannot be cancelled through the API: the rail
-already has it. Wait for the final state via webhook or `GET` — it always
-arrives, with an automatic refund on failure.
-</Note>
-## FAQ
-
-<AccordionGroup>
-<Accordion title="When is my balance debited?">
-At creation: the payout debits and holds the funds immediately. If the
-payout fails, the exact debited amount (fee included) is refunded
-automatically.
-</Accordion>
-<Accordion title="Can I cancel a payout in processing?">
-No — once dispatched to the rail it resolves to `completed` or `failed` on
-its own. Subscribe to `payout_status_changed` for the final state.
-</Accordion>
-<Accordion title="Which FX rate does my payout use?">
-The rate quoted at creation (returned as `fx_rate`), frozen for that
-operation. Your agreed spread is already inside the rate.
-</Accordion>
-<Accordion title="Can I pay from a balance other than USDT?">
-Yes — set a per-account default (`PUT /v1/settlement`) or override per
-payout with `settlement_asset` (USDC, BTC, GOLD). Refunds return the exact
-settled amount, never re-quoted.
-</Accordion>
-<Accordion title="What does `status: pending` with `compliance_pending: true` mean?">
-The beneficiary screening is temporarily unavailable, but CBPay persisted the
-payout in its technical screening queue. No balance was debited, no hold or
-ledger entry exists, the core was not called and there is no `receipt_url` yet.
-Replay with the same idempotency key returns the same resource. Wait for the
-`payout_status_changed` event or poll the payout; it will continue after
-`process`, enter the firewall for a valid `hold`, or become `failed` without a
-debit if the result is `rejected`.
-</Accordion>
-
-<Accordion title="What does compliance_hold (403) mean?">
-The payout was held for review and was **not** processed: no funds moved and your `idempotency_key` was not consumed. The portal shows a copyable reference
-line with UTC time, error code and short request ID. Include it when you
-contact support; the exact compliance reason is not disclosed.
-</Accordion>
-<Accordion title="How do I retry safely after a timeout or 5xx?">
-Retry with the **same** `idempotency_key`: you get the original payout
-back (`idempotency_hit: true`) — never a duplicate. A new key is a new,
-independent payout.
-</Accordion>
-<Accordion title="Why is my US ACH/wire/SWIFT payout still processing?">
-US bank-rail payouts are paid by the operator by hand. Create already
-returns the CBF in `bank_reference` and stays `processing` until the bank
-confirms. Estimates: ACH 24–48 business hours, wire/Fedwire same business day (up to 24 hours), SWIFT 24–48 business hours (potentially longer depending on the receiving bank). Listen to `payout_status_changed`; failures refund the debit.
-</Accordion>
-</AccordionGroup>
-
-For payout errors and the `422 destination_recently_rejected` retry sequence, see
-[Errors](../errors) and [Destination rejection protection](payout-destination-retries).
-
-## US/USD payment purpose and validation
-For `US`/`USD` bank-rail payouts (`ach`, `wire` and `swift`), `options.purpose`
-is mandatory. The API accepts either the visible label or its code,
-case-insensitively. The accepted catalog is:
-
-| Visible label | Accepted code |
-|---|---|
-| Asset Purchase | `Asset_Purchase` |
-| Contract Payment | `Contract_Payment` |
-| Dividends | `Dividends` |
-| Education Payment | `Education_Payment` |
-| Gift/Donation | `Gift_Donation` |
-| Investment Purchase | `Investment_Purchase` |
-| Invoice Payment | `Invoice_Payment` |
-| Loan Payments | `Loan_Payments` |
-| Materials Purchase | `Materials_Purchase` |
-| Mortgage Payments | `Mortgage_Payments` |
-| Payroll | `Payroll` |
-| Personal/Family Payment | `Personal_Family_Payment` |
-| Professional Service Payments | `Professional_Service_Payments` |
-| Reimbursements | `Reimbursements` |
-| Remittance | `Remittance` |
-| Rent/Utility Payments | `Rent_Utility_Payments` |
-| Savings | `Savings` |
-| Settlement (Trade) | `Settlement_Trade` |
-| Tax Payments | `Tax_Payments` |
-| Treasury Movement | `Treasury_Movement` |
-| Other (describe below) | `Other` |
-`options.purpose_detail` is required only when `purpose` is `Other` and is
-limited to 140 characters. It is rejected for every other purpose. A create
-request without `purpose` now returns `400 purpose_required`; this is a
-breaking change for clients that relied on the former `Invoice_Payment`
-default.
-
-`beneficiary.account_type` is required for both `ach` and `wire` and must be
-`checking` or `savings` (case-insensitive). `swift` does not use this field.
-For `wire` and `swift`, amounts below USD 25 return
-`422 amount_below_minimum`. Annex-B beneficiary or bank countries (`CU`, `IR`,
-`KP`, `SY`) return `422 prohibited_country`. These checks happen before any
-debit.
-
-The normalized validation errors are `invalid_beneficiary`,
-`invalid_amount`, `amount_below_minimum`, `prohibited_country`,
-`purpose_required`, `invalid_options` and
-`supporting_document_required`. Read `message` for the exact field to fix.
-Do not retry a rejected request unchanged; after a timeout or 5xx, reuse the
-same idempotency key.

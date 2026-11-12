@@ -85,7 +85,7 @@ generates a `claveDinamica` in their bank app and gives it to your
 integration; send that value in the `otp` field of the collect request. There
 is no preceding `/collect/otp` request for C2P. `debito_inmediato` is not a
 live corridor. Outgoing payments to Venezuela (`pago_movil`,
-`bank_transfer`) are unchanged: see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
+`bank_transfer`) are unchanged: see [payouts](https://docs.cbpayapp.com/en/guides/payouts-overview).
 Availability may vary; the catalog (`GET /v1/payins/methods`) is always the
 source of truth. For a USD-principal account, the net credit is written directly in USD cents. Configured non-USD targets use
 the documented post-credit conversion. The quoted `payin_rate` and fixed fee still
@@ -1311,7 +1311,7 @@ fees, and supported payout, checkout, POS, and card paths use USD only where
 their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
 do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
 assets; same-currency payouts debit those balances directly (see
-[payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+[payouts](https://docs.cbpayapp.com/en/guides/payouts-overview)).
 
 A payin credited directly to a USD-principal account exposes
 `credit_asset: USD` and the credited fiat amount in cents; `usdt_credited`

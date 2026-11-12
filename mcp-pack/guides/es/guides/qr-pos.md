@@ -241,7 +241,7 @@ curl "https://api.qbank.cl/platform/v1/pos/summary?from=2026-07-01&to=2026-07-17
 comisión configurada en el merchant, y `net_for_merchant` lo que le debes
 repartir (devoluciones en el mismo asset ya descontadas). El reparto lo haces
 con los rieles existentes: [transferencias](https://docs.cbpayapp.com/es/guides/transfers),
-[payouts fiat](https://docs.cbpayapp.com/es/guides/payouts) o [retiros crypto](https://docs.cbpayapp.com/es/guides/crypto).
+[payouts fiat](https://docs.cbpayapp.com/es/guides/payouts-overview) o [retiros crypto](https://docs.cbpayapp.com/es/guides/crypto).
 
 ## 5. Devoluciones
 

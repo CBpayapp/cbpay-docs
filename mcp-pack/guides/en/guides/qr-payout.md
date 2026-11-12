@@ -94,7 +94,7 @@ carries a fixed one:
   embedded). A **dynamic** QR (payload carrying the PSP's URL instead of a
   key) answers `400` with
   `dynamic pix qr codes are not supported yet` — ask the beneficiary for
-  their PIX key and use the [`pix`](https://docs.cbpayapp.com/en/guides/payouts#examples-by-country) method.
+  their PIX key and use the [`pix`](https://docs.cbpayapp.com/en/guides/payout-corridors#examples-by-country) method.
 - A tampered or truncated payload answers `400` (invalid CRC checksum).
 
 ## 2. Confirm the payment (charged here)

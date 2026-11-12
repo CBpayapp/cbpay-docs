@@ -1,363 +1,11 @@
 ---
-title: "出金（Payouts）"
-icon: "money-bill-transfer"
-description: "从您的 USD 余额扣款，向本地银行账户发送法币"
+title: "出金通道"
+description: "按国家和通道查看出金要求"
+slug: zh/guides/payout-corridors
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/guides/payout-corridors
 ---
-
-import { EnvUrls } from "/snippets/env-urls.jsx";
-
-<EnvUrls lang="zh" />
-
-出金（payout）会以当地货币向目的国的银行账户汇出资金。金额按**您账户的
-汇率**（即 `GET /v1/rates` 返回的汇率）从当地货币折算为 USDT，并从您的
-余额中扣除 `usdt_amount + fee`（如已配置固定费用）。
-
-以下是完整的生命周期，包括每一步中您的余额发生的变化：
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant App as 您的应用
-    participant CB as CBPay
-    participant Rail as 本地银行通道
-    App->>CB: POST /v1/payouts (idempotency_key)
-    CB->>CB: 按您的汇率折算并扣除<br/>usdt_amount + fee（available → held）
-    CB-->>App: 202 processing (fx_rate, total_debit)
-    CB->>Rail: 以当地货币发放
-    alt 资金到账
-        Rail-->>CB: 已确认
-        CB->>CB: 消耗冻结金额 — 最终状态
-        CB-->>App: Webhook payout_status_changed (completed)
-    else 通道拒绝
-        Rail-->>CB: 已拒绝
-        CB->>CB: 将全部扣款退回 available
-        CB-->>App: Webhook payout_status_changed (failed + status_code)
-    end
-```
-
-## 1. 查询可用通道
-
-国家、货币和方式由 CBPay 定义。请始终查询目录：
-
-```bash
-curl https://api.qbank.cl/platform/v1/payouts/methods \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "items": [
-    { "country": "CL", "currency": "CLP", "method": "bank_transfer" },
-    { "country": "PE", "currency": "PEN", "method": "bank_transfer" },
-    { "country": "PE", "currency": "PEN", "method": "yape" },
-    { "country": "BO", "currency": "BOB", "method": "qr" }
-  ],
-  "meta": { "retrieved": 4 }
-}
-```
-
-可用的通道和方式：
-
-| 国家 | 货币 | 方式 |
-|---|---|---|
-| 智利 | CLP | `bank_transfer` |
-| 秘鲁 | PEN | `bank_transfer`、`yape` |
-| 墨西哥 | MXN | `bank_transfer`（SPEI：CLABE 或借记卡） |
-| 委内瑞拉 | VES | `bank_transfer`、`pago_movil` |
-| 玻利维亚 | BOB / USD | `bank_transfer`、`qr`（参见 [QR 出金](#qr-出金)） |
-| 巴西 | BRL | `pix`（按密钥或到账户）、`qr`（PIX 二维码 —— 参见 [QR 出金](#qr-出金)） |
-| 厄瓜多尔 | USD | `bank_transfer`、`deuna`、`cash_pickup`、`cnb` |
-| 巴拉圭 | PYG | `bank_transfer` |
-| 阿根廷 | ARS / USD | `bank_transfer`（CBU 或 CVU） |
-| 哥伦比亚 | COP | `bank_transfer`（整数金额，无小数）、`breb` |
-| 美国 | USD | `ach`、`wire`、`swift` |
-
-可用性可能变化；目录（`GET /v1/payouts/methods`）始终是唯一可信来源。
-如果某个国家只有一种方式，`method` 为可选。每种方式的计费方式相同：
-您的汇率 + 固定费用。
-
-对于银行转账，您还需要银行目录（收款人的 `bank_code` 即来自这里）：
-
-```bash
-curl "https://api.qbank.cl/platform/v1/payouts/banks?country=CL" \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "items": [
-    { "code": "001", "name": "Banco de Chile" },
-    { "code": "012", "name": "Banco del Estado de Chile" },
-    { "code": "016", "name": "Banco de Crédito e Inversiones" }
-  ],
-  "meta": { "retrieved": 3 }
-}
-```
-
-## 2. 创建出金
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "MX",
-    "currency": "MXN",
-    "method": "bank_transfer",
-    "amount": "1500.00",
-    "beneficiary": {
-      "name": "Maria Lopez",
-      "account_type": "clabe",
-      "account_number": "012180001234567895"
-    },
-    "description": "Invoice 8841",
-    "idempotency_key": "invoice-8841"
-  }'
-```
-
-<Warning>
-`beneficiary` 是一个键/值对象，其必填字段取决于具体通道（智利需要 RUT
-和银行，墨西哥需要 CLABE，秘鲁需要 CCI，巴西需要 PIX 密钥等）。方式目录
-对每个通道都有说明。
-</Warning>
-
-<Note>
-每笔出金都会自动将收款人保存为[联系人](/zh/guides/contacts)
-（发送 `"save_contact": false` 可跳过）。若要再次向其付款而无需重新输入
-资料，请发送 `"beneficiary_contact_id"` 代替 `beneficiary` —— 系统将使用
-其在该国家和方式下最近保存的收款人信息（若不存在则返回
-`422 no_saved_destination`）。
-</Note>
-
-响应 `202 Accepted`：
-
-```json
-{
-  "payout_id": "0d4f…",
-  "account_id": "…",
-  "idempotency_key": "invoice-8841",
-  "country": "MX",
-  "currency": "MXN",
-  "method": "bank_transfer",
-  "local_amount": "1500.00",
-  "fx_rate": "17.50",
-  "usdt_amount": "85.714286",
-  "fee": "0.300000",
-  "total_debit": "86.014286",
-  "settlement_asset": "USDT",
-  "settlement_amount": "86.014286",
-  "settlement_rate": "1",
-  "status": "processing",
-  "status_code": "",
-  "status_message": "",
-  "funds_debited": true,
-  "compliance_pending": false,
-  "bank_reference": "",
-  "created_at": "2026-07-06T20:00:00Z"
-}
-```
-
-此时您的余额已反映该笔扣款：`total_debit` 已从 `available` 转入
-`held`（在 `settlement_asset` 对应的余额上）。
-
-<Note>
-**`bank_reference` —— 银行为该笔转账分配的交易编号。** US ACH/wire/SWIFT 在创建时**立即**返回 CBF（payout 保持 `processing` 直至银行确认）；其他通道在完成前为空（`""`）；
-当出金状态变为 `completed` 时，它会带上目的地银行/通道分配的交易编号。收款人可使用该编号
-与自己的银行核对付款。该字段同时出现在 `payout_status_changed` Webhook、PDF 回执、
-出金 CSV 导出以及对账单中。
-</Note>
-
-### 银行 tracking 标识与实时跟进
-
-Payout 响应和 `payout_status_changed` 会包含两个新增且不绑定具体提供
-商的字段：
-
-```json
-{
-  "bank_reference": "CBF1234567890123",
-  "uetr": "7d2e4b8a-9d11-4d3e-8f40-5c3b1a2e7f90",
-  "imad": ""
-}
-```
-
-- `uetr` 是 UETR/SWIFT gpi 标识，仅在银行为 SWIFT 转账报告该值时出现。
-- `imad` 是国内 wire/ACH 标识，仅在银行报告该值时出现。
-- 两个字段在可用前均为 `""`。CBPay 不会推导或编造这些值。
-
-相同字段也会出现在 payout CSV 和 payout PDF 回执中。公共
-[交易 tracker](/zh/guides/tracking) 显示当前公共状态并链接到同一份回执；
-它不会公开内部的 `manual_dispatch` 术语或合规细节。
-
-### 从其他余额支付（`settlement_asset`）
-
-扣款默认来自 USD；使用 `PUT /v1/settlement` 更改。若要让单笔操作从其他余额支付，请在请求中加入
-`settlement_asset`。示例：一笔 100,000 CLP 的出金从 BTC 余额支付，会经过
-四次转换，全部记录在响应中：
-
-1. **CLP → USDT**，按您的汇率：`100000 / 950.25 = 105.235465 USDT`。
-2. **+ 固定费用**：`105.235465 + 0.30 = 105.535465 USDT`（`total_debit`）。
-3. **USDT → BTC**，按实际结算价格（`settlement_rate`
-   `109029.34070000`）：`105.535465 / 109029.3407 = 0.00096795 BTC`
-   （向上取整到聪）。
-4. **以 BTC 扣款并冻结**：`settlement_amount` `0.00096795` 从您的 BTC
-   余额中扣除；收款人照常收到其 100,000 CLP，分毫不差。
-
-```json
-{
-  "country": "CL",
-  "currency": "CLP",
-  "local_amount": "100000",
-  "fx_rate": "950.25",
-  "usdt_amount": "105.235465",
-  "fee": "0.300000",
-  "total_debit": "105.535465",
-  "settlement_asset": "BTC",
-  "settlement_amount": "0.00096795",
-  "settlement_rate": "109029.34070000",
-  "status": "processing",
-  "status_code": "",
-  "status_message": "",
-  "funds_debited": true,
-  "compliance_pending": false,
-  "bank_reference": ""
-}
-```
-
-如果出金失败，将向您的 BTC 余额退回精确的 `settlement_amount` ——
-绝不重新报价。如果当时 BTC/GOLD/SILVER/PLATINUM 的执行价格不可用，您会收到
-`503 pricing_unavailable`；波动性资产还有单笔操作限额
-（`422 settlement_limit_exceeded`；可在 `GET /v1/settlement` 中查询）。
-有关 BOB、MXN 和 ARS 同币种法币 settlement 的 request/response 示例、
-校验错误以及 rates 中的 `same_currency_only` 字段，请参阅
-[法币 payout 结算](./fiat-settlement)。
-### 技术筛查可能处于 pending
-
-CBPay 会在扣款或调用 core 之前筛查收款人。如果筛查服务暂时不可用，**但
-技术筛查队列可用**，payout 会先持久化，创建请求返回 `202 Accepted`，
-资源状态为 `pending`：
-
-```json
-{
-  "payout_id": "0d4f…",
-  "idempotency_key": "invoice-8841",
-  "status": "pending",
-  "status_code": "compliance_pending",
-  "status_message": "",
-  "funds_debited": false,
-  "compliance_pending": true,
-  "predebit_failure": false,
-  "created_at": "2026-07-06T20:00:00Z",
-  "updated_at": "2026-07-06T20:00:00Z"
-}
-```
-
-等待期间**不会扣款、创建 hold 或账本分录，也不会调用 core，更不会生成
-`receipt_url`**。使用相同幂等键 replay 会返回同一个 payout，并带有
-`idempotency_hit: true`；绝不会创建第二笔。worker 收到 `process` 后，
-原 payout 才进入正常扣款和派发流程。有效的 `hold` 会进入交易防火墙；
-之后如果结果是 `rejected`，该 payout 会在不扣款的情况下变为 `failed`。
-
-收到 `process` 后，同一个 payout 仍可能保持 `status: "pending"`，同时
-持久化协调扣款和派发。API 与 `payout_status_changed` webhook 会暴露以下
-持久化转换码：
-
-- `compliance_dispatch_pending`：筛查通过，扣款/hold 已存在，因此
-  `funds_debited: true`；core 派发尚未完成。
-- `compliance_dispatching`：派发声明已取得，正在执行。
-- `core_unreachable`：派发或本地结算结果不明确，等待协调；不要创建第二笔
-  payout。
-
-这些转换不是新操作。保留相同的 `idempotency_key`，重新读取 payout 并
-等待下一个状态事件。payout 进入终态后，`completed` 消耗 hold，
-`failed` 退回精确扣款；终态事件使用持久化路径并携带正常的回执字段。
-
-当 payout 无法写入 pending 队列，或流程本身没有该队列时，仍使用
-`compliance_check_unavailable` 等现有技术错误。现有的校验、安全和
-`compliance_hold` 合约不变。
-
-### 扣款前失败不是退款
-
-如果筛查或硬性合规控制在扣款路径开始前失败，同一 payout 可以以
-`failed` 结束，并带有 `predebit_failure: true` 和
-`funds_debited: false`。响应及其 `payout_status_changed` 事件不包含
-`receipt_url`，因为没有可撤销的扣款、hold 或回执。这不同于扣款后的
-`failed` payout，后者会在终态事件前退回准确的扣款金额。
-有关汇率来源和 FIFO 指示性报价，请参阅 [Payout 汇率来源与 FIFO 指示性报价](/zh/guides/payout-rate-sources)。
-
-## 阿根廷：付款前解析银行别名
-
-对于 ARS 银行转账，请先解析别名、确认已验证的持有人，再使用返回的
-账户资料创建正常 payout。该查询按账户隔离，每分钟最多 10 次。
-
-```bash
-curl "https://api.qbank.cl/platform/v1/payouts/ar-alias/resolve?alias=julieta.fernandez" -H "Authorization: Bearer <token>"
-```
-
-```json
-{"alias":"julieta.fernandez","account_number":"2850590940090418135201","account_type":"CBU","tax_id":"27234567891","holder_name":"Julieta Fernandez"}
-```
-
-请在 `POST /v1/payouts` 中将原始别名作为 `account_number`，并使用返回的
-`tax_id`/`name`；dispatch 会在最新状态下重新解析别名，并在证据中记录
-`destination_alias`。`alias_unresolvable` 是确定性的，
-`beneficiary_lookup_unavailable` 是暂时性的；
-`invalid_alias`、`query_required`、`verification_required` 和
-`too_many_attempts` 都是可处理的查询错误。请参阅[错误码](/zh/errors)。
-
-### 出金状态
-
-| 状态 | 含义 | 您的余额 |
-|---|---|---|
-| `processing` | 已接受并在本地通道执行 | 扣款冻结在 `held` |
-| `pending` + `waiting_funds` | 临时处理状态；平台会自动恢复 payout | 现有扣款/冻结仍关联；不要创建替代操作 |
-| `pending` + `compliance_pending: true` | 技术筛查在扣款或派发前等待 | **不扣款**；`funds_debited: false` |
-| `pending` + `compliance_dispatch_pending` / `compliance_dispatching` / `core_unreachable` | 筛查通过；扣款已存在，等待派发或协调 | `funds_debited: true`；扣款仍在 `held` |
-| `completed` | 资金已到达收款人 | 冻结金额被消耗 —— 最终状态 |
-| `failed`（扣款后） | 通道拒绝或在扣款后执行失败 | **全额自动退款**（金额 + 手续费） |
-| `failed` + `predebit_failure: true` | 筛查或硬性合规控制在扣款前失败 | **未扣款**；`funds_debited: false`，无回执 |
-
-## 查询与历史记录
-
-每笔出金都可以单独读取，列表接口支持筛选：
-
-```bash
-# One payout
-curl https://api.qbank.cl/platform/v1/payouts/0d4f… \
-  -H "Authorization: Bearer <token>"
-
-# History with filters: dates, status, country, method, search and pagination
-curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&status=failed&country=MX&method=bank_transfer&search=0d4f&page=1&page_size=50" \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "page": 1,
-  "page_size": 50,
-  "payouts": [
-    {
-      "payout_id": "0d4f…",
-      "country": "MX",
-      "currency": "MXN",
-      "method": "bank_transfer",
-      "local_amount": "1500.00",
-      "fx_rate": "17.50",
-      "usdt_amount": "85.714286",
-      "fee": "0.300000",
-      "total_debit": "86.014286",
-      "status": "failed",
-      "status_code": "core_rejected",
-      "status_message": "beneficiary account does not exist",
-      "bank_reference": "",
-      "created_at": "2026-07-06T20:00:00Z"
-    }
-  ]
-}
-```
-
-`from`/`to` 使用 `YYYY-MM-DD`（组织时区，两端均含）；日期无效时返回
-`400 invalid_range`。`method` 按实时 payout 目录过滤，`search` 会对 payout ID、
-银行参考号或幂等键进行不区分大小写的部分匹配。
+> **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 ## 各国示例
 
@@ -385,9 +33,7 @@ curl "https://api.qbank.cl/platform/v1/payouts?from=2026-07-01&to=2026-07-08&sta
 | AR | `bank_transfer` | `name`、`tax_id`（11 位 CUIT/CUIL）、`account_number`（22 位 CBU/CVU 或银行 alias；USD 仅支持 CBU） |
 | US | `ach` / `wire` / `swift` | `name`、`account_number`、`email`、`country_code`、`address`、`city`、`postal_code`、`bank_name`、`bank_code`（`ach`/`wire` 用 ABA routing，`swift` 用 SWIFT BIC；`ach` 还需 `account_type` `CHECKING`/`SAVING`） |
 
-
-<Tabs>
-<Tab title="智利">
+#### 智利
 
 以 CLP 进行银行转账。需要 RUT、银行和账户：智利比索没有小数单位，因此 CLP payout 金额必须为整数（例如 `30000` 或 `30000.00`）。
 
@@ -438,12 +84,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 `status: "processing"`，每笔 payout 仍保留自己的最终状态和
 `payout_status_changed` webhook。
 
-</Tab>
-<Tab title="秘鲁">
+#### 秘鲁
 
 两种方式：银行转账（跨行 CCI）和 **Yape**（转到手机号码）。
-
-<CodeGroup>
 
 ```bash bank_transfer (CCI)
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -479,8 +122,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "c7a2…",
@@ -500,12 +141,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 对于 `yape`，手机号码使用 `51XXXXXXXXX` 格式（含国家代码共 11 位）。
 结果通常是同步返回的。
 
-</Tab>
-<Tab title="墨西哥">
+#### 墨西哥
 
 以 MXN 进行 SPEI 转账，转到 CLABE（18 位）或借记卡：
-
-<CodeGroup>
 
 ```bash CLABE
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -544,8 +182,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "0d4f…",
@@ -569,13 +205,10 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 使用 CLABE 时，目标银行由其前几位数字推导；使用银行卡时，必须提供
 `bank_code`。
 
-</Tab>
-<Tab title="委内瑞拉">
+#### 委内瑞拉
 
 两种方式：**Pago Móvil**（姓名 + 手机号 + 银行 + 证件）和银行转账
 （20 位账户）：
-
-<CodeGroup>
 
 ```bash pago_movil
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -614,8 +247,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "e9b4…",
@@ -635,10 +266,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 `bank_code` 使用 SUDEBAN 代码；对于 `bank_transfer`，可由账号的前 4 位
 数字推导。
 
-</Tab>
-<Tab title="玻利维亚">
+#### 玻利维亚
 
-以 BOB 或 USD 进行 ACH 转账（此外还有 [QR](#qr-出金)）：
+以 BOB 或 USD 进行 ACH 转账（此外还有 [QR](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)）：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -684,10 +314,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 组织配置决定内部使用的 rail 版本。该选择不是客户可控制的字段，并会保存在
 操作中，使后续轮询继续使用正确的版本。响应和 webhook 保持 provider-agnostic。
 
-</Tab>
-<Tab title="巴西">
+#### 巴西
 
-按密钥进行 PIX 转账（此外还有 [PIX QR](#qr-出金)）：
+按密钥进行 PIX 转账（此外还有 [PIX QR](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)）：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -756,8 +385,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - 最终状态通过 `payout_status_changed` webhook 送达（与通道持续对账）；
   也可随时使用 `GET /v1/payouts/{id}` 查询。
 
-</Tab>
-<Tab title="厄瓜多尔">
+#### 厄瓜多尔
 
 以 **USD** 汇出汇款（每笔 1 至 100,000，最多 2 位小数）；对于
 `EC/USD/bank_transfer`，低于 USD 1 返回 `amount_below_minimum`，高于
@@ -766,8 +394,6 @@ USD 100,000 返回 `amount_above_maximum`，更大金额应拆分为多笔 payou
 **非银行代理点取现**（`cnb`）。这是一个汇款通道：除收款人外，通道还
 要求提供**汇款人**（付款发起方）的信息，以 `sender_*` 前缀平铺在同一个
 `beneficiary` 对象中。
-<CodeGroup>
-
 ```bash bank_transfer（到账户）
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
   -H "Authorization: Bearer <token>" \
@@ -844,8 +470,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "9f3a…",
@@ -876,8 +500,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 - 最终状态通过 `payout_status_changed` webhook 送达（并有周期性对账
   作为兜底）。
 
-</Tab>
-<Tab title="巴拉圭">
+#### 巴拉圭
 
 以 PYG 进行银行转账：
 
@@ -918,16 +541,12 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 在此通道中，`name` 最多接受 35 个字符。
 
-</Tab>
-<Tab title="阿根廷">
+#### 阿根廷
 
 **银行 alias**：对于 ARS 和 USD 的 `bank_transfer`，`beneficiary.account_number` 也接受长度为 6–20、由字母/数字/点/连字符组成且至少包含一个字母的银行 alias。纯数字值仍按 CBU/CVU 处理，而不是 alias。CBPay 会在发起前将有效 alias 解析为目标账户，wire 使用解析后的 CBU。ARS 可解析到 CBU 或 CVU；USD 仍仅支持 CBU 到 CBU。无法解析的 alias 会在扣款前拒绝，原始 alias 会保留在 payout 证据中。
 
-
 以 **ARS** 或 **USD** 银行转账到任何 22 位的 **CBU 或 CVU**（银行账户和
 虚拟钱包）。无需 `bank_code`：CBU/CVU 本身即可识别银行。
-
-<CodeGroup>
 
 ```bash ARS（CBU 或 CVU）
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -965,8 +584,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "b7c1…",
@@ -993,8 +610,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   此时该出金变为 `failed`，扣款全额退还，并且你会收到
   `payout_status_changed` webhook。
 
-</Tab>
-<Tab title="美国">
+#### 美国
 
 以 **USD** 向美国银行账户出金，提供三种方式：
 
@@ -1056,8 +672,6 @@ curl "https://api.qbank.cl/platform/v1/payouts/bank-directory/lookup?routing_num
   "directory_vintage": "fed_ach_2019"
 }
 ```
-
-<CodeGroup>
 
 ```bash ach
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -1180,8 +794,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   }'
 ```
 
-</CodeGroup>
-
 ```json
 {
   "payout_id": "c5f2…",
@@ -1212,205 +824,3 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   | `purpose` | 付款用途（必填目录） | —（无；必填） |
   | `crypto_activity` | 该付款是否涉及加密货币买卖活动（`Yes`/`No`） | `No` |
   | `payment_gateway` | 入金网关声明 | 通道默认值 |
-
-## EUR 中的 SEPA Instant
-
-请参阅[专门的 SEPA Instant payout 指南](/zh/guides/sepa-instant-payouts)，
-了解唯一的欧洲路由走廊：请求使用 `country: "EU"`、`currency: "EUR"` 和
-`method: "sepa"`。受益人的实际国家取自 IBAN。GB IBAN 不在 SEPA Instant
-V1，并会在派发前以 HTTP 400 快速拒绝；英国的 SEPA Credit Transfer 属于
-未来范围。
-
-### 美元转账的强制支持文件
-
-银行要求**每笔通过银行通道（`ach`/`wire`/`swift`）的美元转账都附带
-支持文件**（发票或收据），无论通道国家如何 —— 包括国际 SWIFT
-（例如 `PY/USD/swift`）。没有该文件，创建将以
-`400 supporting_document_required` 被拒绝，且不会扣款：
-
-<Steps>
-  <Step title="上传文件">
-    使用 `POST /v1/payouts/documents` 发送文件：请求体为**原始文件二进制**，
-    一个 PDF（`application/pdf`，最大 50 MB），文件名通过 `name` 查询参数
-    传递。当前 US/USD payout 界面只接受 PDF。
-
-    ```bash
-    curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-2210.pdf" \
-      -H "Authorization: Bearer <token>" \
-      -H "Content-Type: application/pdf" \
-      --data-binary "@invoice-2210.pdf"
-    ```
-
-    ```json
-    {
-      "document_key": "payout-docs/9f1c…/org/…/3c2e…",
-      "file_name": "invoice-2210.pdf",
-      "content_type": "application/pdf",
-      "size_bytes": 48213
-    }
-    ```
-
-    该文件将存储在私有存储中，仅对您的组织可见。
-  </Step>
-  <Step title="创建出金时传递该 key">
-    在 `options.supporting_document_key` 中发送该 key，并可选择在
-    `options.document_reference_number` 中附上发票编号（`ach`/`wire`）。
-    如果文件已上传，使用**相同的** `idempotency_key` 重试被拒绝的创建
-    不会重复上传。
-  </Step>
-</Steps>
-
-</Tab>
-</Tabs>
-## QR 出金
-
-支付收款二维码（玻利维亚、巴西 PIX）现已拥有独立指南：
-
-<Card title="QR 出金" icon="qrcode" href="/zh/guides/qr-payout" horizontal>
-  免费扫描二维码，向用户展示收款人信息，再通过第二次调用确认支付 — 按普通出金计费。
-</Card>
-
-## 常见错误
-
-| HTTP | `error` | 应对方式 |
-|---|---|---|
-| 400 | `idempotency_key_required` | 在请求体或请求头中发送该键 |
-| 400 | `beneficiary_required` | 包含 `beneficiary` 对象 |
-| 400 | `supporting_document_required` | 美元银行通道转账缺少随附的支持文件 —— 使用 `POST /v1/payouts/documents` 上传并在 `options.supporting_document_key` 中传递（参见[支持文件](/zh/guides/payouts#美元转账的强制支持文件)） |
-| 400 | `invalid_document_key` | 该 `supporting_document_key` 不属于您的账户 —— 请使用您自己的凭据上传文件并使用返回的 key |
-| 402 | `insufficient_funds` | 为账户充值；该出金未被创建 |
-| 403 | `account_blocked` | 账户未处于激活状态；请联系 CBPay 团队 |
-| 403 | `service_disabled` | 您的账户未启用出金服务 —— 参见[服务](/zh/concepts/services) |
-| 403 | `compliance_hold` | 该出金被保留审核且未被处理（没有资金移动）。API 消息为 `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`。联系支持团队时请复制门户中的引用行（UTC 时间、错误代码和短请求 ID）；参见[错误](/zh/errors) |
-| 422 | `currency_not_supported` | 该货币没有可用的外汇汇率 |
-| 422 | （出金处于 `status: failed`） | 通道拒绝了该数据；扣款已退回 —— 修正 `beneficiary` 后使用新的键重试 |
-| 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的** `idempotency_key` 重试 |
-| 503 | `compliance_check_unavailable` | 无法完成合规校验，也无法将 payout 写入技术筛查队列；请使用**相同**幂等键重试。队列可用时，创建请求返回 `202` 且资源为 `status: pending` |
-
-## 立即拒绝与后续失败
-
-如果处理方在创建时就拒绝了出金，您会收到 `422`，对象处于
-`status: failed`，且退款已经完成。如果之后才失败（例如目标账户不存在），
-webhook 会以 `status: failed` 送达，自动退款也在那一刻发生。
-
-### 解读失败出金的 `status_code`
-
-| `status_code` | 含义 | 处理方式 |
-|---|---|---|
-| `core_rejected` | 处理方在创建时拒绝了该操作（收款人数据无效、通道不可用） | 阅读 `status_message`，修正数据后使用新的键创建新出金 |
-| `counterparty_rejected` | 银行通道拒绝了收款人本身（US/USD 通道） | 与账户持有人核对收款人的身份与地址信息，然后使用新的键创建新出金 |
-| `channel_unavailable` | 出金通道暂时不可用 | 稍后重试；退款（如已扣款）已经完成 |
-| *其他代码* | 银行通道在后续阶段拒绝（例如目标账户已注销） | 同上：修正数据后创建新的操作 |
-| *（空）* | 通道的一般性失败 | 检查 `status_message`；如仍不清楚，请携带 `payout_id` 联系支持 |
-
-无论哪种情况，退款均已完成 —— 可通过
-[账户流水](/zh/concepts/movements-reconciliation)中的 `payout_refund`
-条目进行核实。
-
-<Note>
-处于 `processing` 状态的出金无法通过 API 取消：通道已经在处理它。请通过
-webhook 或 `GET` 等待最终状态 —— 它一定会到达，失败时会自动退款。
-</Note>
-## 常见问题
-
-<AccordionGroup>
-<Accordion title="我的余额什么时候被扣款？">
-创建时：payout 立即扣款并冻结资金。如果 payout 失败，精确的扣款金额
-（含手续费）会自动退回。
-</Accordion>
-<Accordion title="可以取消 processing 中的 payout 吗？">
-不可以 —— 一旦派发到通道，它会自行解析为 `completed` 或 `failed`。订阅
-`payout_status_changed` 获取最终状态。
-</Accordion>
-<Accordion title="我的 payout 使用哪个汇率？">
-创建时报价的汇率（以 `fx_rate` 返回），对该笔操作冻结。你约定的点差
-已包含在汇率中。
-</Accordion>
-<Accordion title="可以用 USDT 以外的余额付款吗？">
-可以 —— 设置账户级默认值（`PUT /v1/settlement`）或按笔用
-`settlement_asset` 覆盖（USDC、BTC、GOLD）。退款返回精确的结算金额，
-绝不重新报价。
-</Accordion>
-<Accordion title="`status: pending` 且 `compliance_pending: true` 是什么意思？">
-收款人筛查暂时不可用，但 CBPay 已将 payout 持久化到技术筛查队列。
-没有扣款、hold 或账本分录，core 尚未被调用，也没有 `receipt_url`。使用相同
-幂等键 replay 会返回同一个资源。等待 `payout_status_changed` 或查询
-payout；结果为 `process` 时继续，`hold` 时进入防火墙，`rejected` 时
-在不扣款的情况下变为 `failed`。
-</Accordion>
-
-<Accordion title="compliance_hold（403）是什么意思？">
-payout 被保留审核且**未被**处理：没有资金移动，你的 `idempotency_key` 也未被消耗。门户会显示可复制的引用行，其中包含 UTC 时间、错误代码和短请求 ID。
-联系支持团队时请提供该引用；不会披露具体的合规原因。
-</Accordion>
-<Accordion title="超时或 5xx 之后如何安全重试？">
-用**相同**的 `idempotency_key` 重试：会返回原始 payout
-（`idempotency_hit: true`）—— 绝不会重复。新的 key 是一笔全新的独立
-payout。
-</Accordion>
-<Accordion title="为什么我的美国 ACH/wire/SWIFT payout 一直处于 processing？">
-创建时就已经返回 `bank_reference`（CBF）。payout 保持 `processing`，直到银行确认人工付款。
-预计 ACH 为 24–48 个工作小时，wire/Fedwire 为同一工作日（最长 24 小时），
-SWIFT 为 24–48 个工作小时且可能因收款银行而延长。监听
-`payout_status_changed` 以获得 `completed` 或 `failed`（已退款）。该通道没有额外的收款人 AML/CFT hold。
-</Accordion>
-</AccordionGroup>
-
-出金限额错误见公开错误参考。
-
-## 目的地拒绝保护
-
-部分银行通道会在银行近期拒绝某个目的地后保护该目的地。API 会在创建
-payout、扣除余额或消耗幂等键之前返回
-`422 destination_recently_rejected`。明确重试使用新幂等键和
-`options.destination_retry_ack`；完全相同的请求使用原幂等键重放。目的地
-会被规范化，因此改变格式不能绕过保护。
-
-详见[目的地拒绝保护与安全重试](/zh/guides/payout-destination-retries)，
-其中包含完整请求、响应、状态和恢复顺序。
-
-## US/USD 付款用途与校验
-
-对于 `US`/`USD` 银行通道出金（`ach`、`wire` 和 `swift`），
-`options.purpose` 为必填。API 不区分大小写，接受下列可见标签或对应代码：
-
-| 可见标签 | 接受的代码 |
-|---|---|
-| Asset Purchase | `Asset_Purchase` |
-| Contract Payment | `Contract_Payment` |
-| Dividends | `Dividends` |
-| Education Payment | `Education_Payment` |
-| Gift/Donation | `Gift_Donation` |
-| Investment Purchase | `Investment_Purchase` |
-| Invoice Payment | `Invoice_Payment` |
-| Loan Payments | `Loan_Payments` |
-| Materials Purchase | `Materials_Purchase` |
-| Mortgage Payments | `Mortgage_Payments` |
-| Payroll | `Payroll` |
-| Personal/Family Payment | `Personal_Family_Payment` |
-| Professional Service Payments | `Professional_Service_Payments` |
-| Reimbursements | `Reimbursements` |
-| Remittance | `Remittance` |
-| Rent/Utility Payments | `Rent_Utility_Payments` |
-| Savings | `Savings` |
-| Settlement (Trade) | `Settlement_Trade` |
-| Tax Payments | `Tax_Payments` |
-| Treasury Movement | `Treasury_Movement` |
-| Other (describe below) | `Other` |
-
-只有当 `purpose` 为 `Other` 时才必须提供 `options.purpose_detail`，最长
-140 个字符；其他用途提供该字段会被拒绝。创建请求缺少 `purpose` 现在返回
-`400 purpose_required`，这是相对于过去默认 `Invoice_Payment` 的不兼容变更。
-
-`beneficiary.account_type` 对 `ach` 和 `wire` 都是必填，值必须为
-`checking` 或 `savings`（不区分大小写）；`swift` 不使用此字段。
-`wire` 和 `swift` 低于 USD 25 时返回 `422 amount_below_minimum`。
-收款人或银行位于附录 B 国家（`CU`、`IR`、`KP`、`SY`）时返回
-`422 prohibited_country`。这些校验都在扣款前完成。
-
-规范化错误包括 `invalid_beneficiary`、`invalid_amount`、
-`amount_below_minimum`、`prohibited_country`、`purpose_required`、
-`invalid_options` 和 `supporting_document_required`。请按 `message`
-修正具体字段；拒绝请求不要原样重试，timeout 或 5xx 时使用相同幂等键。
-
-OTC 派发路径仍在内部使用 `Invoice_Payment`，公共 payout 合约不变。

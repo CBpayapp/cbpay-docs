@@ -4,10 +4,9 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 11, 2026" description="v2.260 · 2 versions">
-### v2.260
+<Update label="November 11, 2026" description="v2.263 · 5 versions">
+### v2.263
 **Changed**
-- Documented the transient `waiting_funds` processing state and RFC3339 `expected_funds_at`. Account-facing withdrawal and payout messages stay neutral and corporate; do not retry with a new idempotency key or create a replacement operation.
 - Sunset assets USDC.e (`USDCE`) and UF are no longer advertised at zero:
   `GET /v1/balances`, `GET /v1/balances/history` (all-zero series and the
   `current` snapshot), `enabled_assets` in `GET /v1/settlement`, `assets` in
@@ -17,7 +16,7 @@ description: "History of API and documentation changes"
   rejects `USDCE` as `default_settlement_asset` and `default_payin_asset`
   with `400 invalid_settlement_asset` / `invalid_asset` (existing defaults
   keep working).
-### v2.259
+### v2.262
 **Changed**
 - Member notification bell is curated by default: `corridor_status_changed`
   (global rail health), `kyc_document_validated`, `kyb_document_validated`
@@ -27,6 +26,18 @@ description: "History of API and documentation changes"
   `kyc/kyb_verification_status_changed` stays. Request any hidden type
   explicitly with `event_type` / `?types=` to still receive it; webhooks,
   subscriptions and the org-admin channel are unaffected.
+### v2.261
+**Changed**
+- Documented the transient `waiting_funds` processing state and RFC3339 `expected_funds_at`. Account-facing withdrawal and payout messages stay neutral and corporate; do not retry with a new idempotency key or create a replacement operation.
+### v2.260
+**Changed**
+- `GET /v1/contacts` can now expand saved destinations with
+  `expand=destinations`, optionally filtered by `dest_type` and
+  `dest_country`. The destinations are loaded in one bulk query instead of
+  one request per contact.
+### v2.259
+**Changed**
+- Signing in with the correct password (or a verified second factor: login OTP, verified OAuth, passkey) to a deactivated account now returns `403 account_deactivated` — "Account Deactivated. If you have any questions, please reach out to \<brand compliance email\>." — instead of the generic error. Wrong passwords still return the generic error.
 </Update>
 <Update label="November 10, 2026" description="v2.258 · 6 versions">
 ### v2.258
@@ -1902,7 +1913,7 @@ instrument. Company creation is idempotent: a new key returns
 
 - **Venezuela `pago_movil` payouts now require `beneficiary.name`**. The rail
   requires the beneficiary's given name + first family name (as on the ID) —
-  a single token is rejected. The [payouts guide](/en/guides/payouts) and the
+  a single token is rejected. The [payouts guide](/en/guides/payouts-overview) and the
   API reference examples now list `name` first among the required fields.
   Venezuela `bank_transfer` already documented `name`; no change there.
 
@@ -1997,7 +2008,7 @@ instrument. Company creation is idempotent: a new key returns
 **Changed**
 
 - **USD bank-rail payouts: the beneficiary may live in any country**
-  ([payouts guide](/en/guides/payouts)): for `ach`, `wire` and `swift`
+  ([payouts guide](/en/guides/payouts-overview)): for `ach`, `wire` and `swift`
   transfers the beneficiary's `country_code` is no longer fixed to `US` —
   for example, an ACH to a US bank account for someone living in Germany.
   The receiving bank stays in the US for `ach`/`wire`
@@ -2243,7 +2254,7 @@ instrument. Company creation is idempotent: a new key returns
 **Added**
 
 - **Bank reference of a payout, now visible on every surface**
-  ([payouts guide](/en/guides/payouts)): every payout exposes
+  ([payouts guide](/en/guides/payouts-overview)): every payout exposes
   `bank_reference` — the transaction id assigned by the destination
   bank/rail — in the responses of `POST /v1/payouts`, `GET /v1/payouts` and
   `GET /v1/payouts/{payoutID}`, in the `payout_status_changed` webhook
@@ -2343,7 +2354,7 @@ instrument. Company creation is idempotent: a new key returns
 
 **Added**
 
-- **Bank directory lookup** ([payouts guide](/en/guides/payouts)): the new
+- **Bank directory lookup** ([payouts guide](/en/guides/payouts-overview)): the new
   `GET /v1/payouts/bank-directory/lookup` autocompletes the beneficiary
   bank from an embedded public bank directory — pass exactly one of
   `routing_number` (9 digits, US only) or `swift` (8 or 11 characters; an
@@ -2475,7 +2486,7 @@ instrument. Company creation is idempotent: a new key returns
   operation you can override the rail's payment-purpose declarations in
   `options` (`purpose`, `crypto_activity`, `payment_gateway`). Corridor
   table, per-method field table, real examples and FAQ in
-  [Payouts](/en/guides/payouts); named request examples `us_ach`,
+  [Payouts](/en/guides/payouts-overview); named request examples `us_ach`,
   `us_wire` and `us_swift` in the API reference.
 
 ### v2.34
@@ -3176,7 +3187,7 @@ instrument. Company creation is idempotent: a new key returns
 
 **Added**
 
-- **New corridor: Argentina** 🇦🇷 ([payouts guide](/en/guides/payouts) · [payins guide](/en/guides/payins)):
+- **New corridor: Argentina** 🇦🇷 ([payouts guide](/en/guides/payouts-overview) · [payins guide](/en/guides/payins)):
   - **Payouts** in **ARS** and **USD** via `bank_transfer` to any 22-digit **CBU or CVU** (bank accounts and virtual wallets; USD is CBU-to-CBU only). Beneficiary takes `name`, `tax_id` (CUIT/CUIL) and `account_number` — no `bank_code` needed.
   - **Payins** in **ARS** with a **dedicated CVU account** per account (`POST /v1/payins/deposit-accounts` with `country: "AR"`): every incoming transfer is credited automatically, no references needed. CVUs are receive-only: direct debit attempts are rejected automatically.
   - Available now in the **test environment** (staging) with the simulator; production activation will be announced once bank certification completes — the catalog (`GET /v1/payouts/methods` and `GET /v1/payins/methods`) is always the source of truth.
@@ -3236,7 +3247,7 @@ instrument. Company creation is idempotent: a new key returns
 
 **Added**
 
-- **Compliance controls on outgoing payments** ([payouts guide](/en/guides/payouts), [errors](/en/errors)): payouts, crypto withdrawals with a beneficiary name and collect charges now go through additional compliance controls **before money moves**. Documented errors: `403 compliance_hold` (the operation was held and NOT created — no debit; by policy the exact reason is not disclosed, contact support with the timestamp) and `503 compliance_check_unavailable` (the check could not be evaluated; the operation was NOT created — retry with the **same** `idempotency_key`).
+- **Compliance controls on outgoing payments** ([payouts guide](/en/guides/payouts-overview), [errors](/en/errors)): payouts, crypto withdrawals with a beneficiary name and collect charges now go through additional compliance controls **before money moves**. Documented errors: `403 compliance_hold` (the operation was held and NOT created — no debit; by policy the exact reason is not disclosed, contact support with the timestamp) and `503 compliance_check_unavailable` (the check could not be evaluated; the operation was NOT created — retry with the **same** `idempotency_key`).
 
 ### v1.88
 
@@ -3616,7 +3627,7 @@ instrument. Company creation is idempotent: a new key returns
   beneficiary accepts structured names (`given_name`/`first_surname`/...)
   or automatic splitting from `name`, plus an optional sender block
   (`sender_name` or its structured fields). Per-method examples in the
-  [payouts guide](/en/guides/payouts) and the spec.
+  [payouts guide](/en/guides/payouts-overview) and the spec.
 - **New error code `channel_unavailable`** (HTTP 503): the corridor's
   payment channel is temporarily unavailable. Retry later with the same
   `idempotency_key`. Documented on the [errors](/en/errors) page.
@@ -3883,7 +3894,7 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
 
 - `GET /v1/payouts` and `GET /v1/payins` accept the `country` filter
   (ISO 3166-1 alpha-2, e.g. `?country=MX`), combinable with `status`,
-  `from`/`to` and pagination. [Payouts](/en/guides/payouts) and
+  `from`/`to` and pagination. [Payouts](/en/guides/payouts-overview) and
   [payins](/en/guides/payins) guides updated.
 - The `fees` block of `GET /v1/rates` now returns the **effective**
   fee configuration (organization defaults resolved against your

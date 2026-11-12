@@ -137,8 +137,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `idempotency_key_required` | Missing idempotency key |
 | `reserved_idempotency_key` | The key uses a system-reserved prefix (`payin-convert:` or `checkout-swap:`, owned by auto-conversions) — pick another key |
 | `beneficiary_required` | Missing payout beneficiary |
-| `invalid_cuit` | Argentina (`AR`) payouts require `beneficiary.tax_id` to be an 11-digit CUIT or CUIL — send the beneficiary's 11-digit identifier; see [payouts](/en/guides/payouts) |
-| `invalid_cbu` | Argentina (`AR`) payouts require `beneficiary.account_number` to be a 22-digit CBU or CVU; USD payouts accept only CBU — send a valid 22-digit CBU/CVU (CBU for USD); see [payouts](/en/guides/payouts) |
+| `invalid_cuit` | Argentina (`AR`) payouts require `beneficiary.tax_id` to be an 11-digit CUIT or CUIL — send the beneficiary's 11-digit identifier; see [payouts](/en/guides/payouts-overview) |
+| `invalid_cbu` | Argentina (`AR`) payouts require `beneficiary.account_number` to be a 22-digit CBU or CVU; USD payouts accept only CBU — send a valid 22-digit CBU/CVU (CBU for USD); see [payouts](/en/guides/payouts-overview) |
 | `invalid_amount` | Amount is not a valid positive decimal |
 | `recipient_required` / `self_transfer` | Invalid transfer destination |
 | `invalid_chain` / `invalid_asset` | Unsupported network or asset |
@@ -161,6 +161,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | Administration validations |
 | `invalid_settlement_hours` | `settlement_hours` is only accepted on the `payin_card` fee service and must be a non-negative integer (`0` = immediate credit) — see [fees](/en/concepts/fees) |
 | `invalid_country` | Malformed or missing country code — ISO 3166-1 alpha-2 (e.g. `GET /v1/aml/catalogs/cities?country=`); also a valid but unsupported country filter (e.g. a non-`US` `country` on the bank directory lookup) |
+| `invalid_expand` | Unknown `?expand=` value on `GET /v1/contacts` (only `destinations` is supported); `dest_type`/`dest_country` also require `expand=destinations` |
 
 ### QR payin idempotency
 

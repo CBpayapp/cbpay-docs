@@ -1,0 +1,64 @@
+---
+title: "出金特殊场景"
+icon: "money-bill-transfer"
+description: "特殊出金通道、支持文件和二维码流程"
+---
+
+import { EnvUrls } from "/snippets/env-urls.jsx";
+
+<EnvUrls lang="zh" />
+
+## EUR 中的 SEPA Instant
+
+请参阅[专门的 SEPA Instant payout 指南](/zh/guides/sepa-instant-payouts)，
+了解唯一的欧洲路由走廊：请求使用 `country: "EU"`、`currency: "EUR"` 和
+`method: "sepa"`。受益人的实际国家取自 IBAN。GB IBAN 不在 SEPA Instant
+V1，并会在派发前以 HTTP 400 快速拒绝；英国的 SEPA Credit Transfer 属于
+未来范围。
+
+### 美元转账的强制支持文件
+
+银行要求**每笔通过银行通道（`ach`/`wire`/`swift`）的美元转账都附带
+支持文件**（发票或收据），无论通道国家如何 —— 包括国际 SWIFT
+（例如 `PY/USD/swift`）。没有该文件，创建将以
+`400 supporting_document_required` 被拒绝，且不会扣款：
+
+<Steps>
+  <Step title="上传文件">
+    使用 `POST /v1/payouts/documents` 发送文件：请求体为**原始文件二进制**，
+    一个 PDF（`application/pdf`，最大 50 MB），文件名通过 `name` 查询参数
+    传递。当前 US/USD payout 界面只接受 PDF。
+
+    ```bash
+    curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-2210.pdf" \
+      -H "Authorization: Bearer <token>" \
+      -H "Content-Type: application/pdf" \
+      --data-binary "@invoice-2210.pdf"
+    ```
+
+    ```json
+    {
+      "document_key": "payout-docs/9f1c…/org/…/3c2e…",
+      "file_name": "invoice-2210.pdf",
+      "content_type": "application/pdf",
+      "size_bytes": 48213
+    }
+    ```
+
+    该文件将存储在私有存储中，仅对您的组织可见。
+  </Step>
+  <Step title="创建出金时传递该 key">
+    在 `options.supporting_document_key` 中发送该 key，并可选择在
+    `options.document_reference_number` 中附上发票编号（`ach`/`wire`）。
+    如果文件已上传，使用**相同的** `idempotency_key` 重试被拒绝的创建
+    不会重复上传。
+  </Step>
+</Steps>
+## QR 出金
+
+支付收款二维码（玻利维亚、巴西 PIX）现已拥有独立指南：
+
+<Card title="QR 出金" icon="qrcode" href="/zh/guides/qr-payout" horizontal>
+  免费扫描二维码，向用户展示收款人信息，再通过第二次调用确认支付 — 按普通出金计费。
+</Card>
+

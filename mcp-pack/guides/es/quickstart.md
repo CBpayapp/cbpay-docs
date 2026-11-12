@@ -186,7 +186,7 @@ llega por [webhook](https://docs.cbpayapp.com/es/webhooks) (`payout_status_chang
 Los campos de `beneficiary` dependen del país y método. Consulta
 `GET /v1/payouts/methods` y `GET /v1/payouts/banks?country=CL` para conocer
 los requisitos de cada corredor — la referencia completa está en
-los [ejemplos por país de la guía de payouts](https://docs.cbpayapp.com/es/guides/payouts#ejemplos-por-pais).
+los [ejemplos por país de la guía de payouts](https://docs.cbpayapp.com/es/guides/payout-corridors#ejemplos-por-pais).
 ### Cierra el ciclo: suscríbete al webhook
 
 El estado final del payout llega por push. Suscribe tu endpoint HTTPS (en

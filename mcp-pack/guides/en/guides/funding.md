@@ -44,7 +44,7 @@ alias **you choose** at creation time (`bank_alias` is required). Inbound
 pesos convert automatically to USD, your principal balance.
 
 For the full deposit-account contract see [payins](https://docs.cbpayapp.com/en/guides/payins); to
-send pesos out, see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
+send pesos out, see [payouts](https://docs.cbpayapp.com/en/guides/payouts-overview).
 
 ### 🇧🇴 BOB — Bolivian boliviano
 
@@ -52,7 +52,7 @@ Receive bolivianos through a dedicated bank-transfer account. Inbound BOB
 converts automatically to USD, your principal balance.
 
 To send bolivianos out (bank transfer in BOB or USD, plus QR), see the
-Bolivia tab in [payouts](https://docs.cbpayapp.com/en/guides/payouts).
+Bolivia tab in [payouts](https://docs.cbpayapp.com/en/guides/payouts-overview).
 
 ### 🇲🇽 MXN — Mexican peso
 
@@ -60,7 +60,7 @@ Receive pesos through a dedicated CLABE. Inbound MXN converts automatically
 to USD, your principal balance.
 
 For the full deposit-account contract see [payins](https://docs.cbpayapp.com/en/guides/payins); to
-send pesos out, see [payouts](https://docs.cbpayapp.com/en/guides/payouts).
+send pesos out, see [payouts](https://docs.cbpayapp.com/en/guides/payouts-overview).
 
 ### 🇨🇱 CLP — Chilean peso
 

@@ -94,7 +94,7 @@ QR lo trae fijo:
   llave embebida). Un QR **dinámico** (payload con URL del PSP en vez de
   llave) responde `400` con el mensaje
   `dynamic pix qr codes are not supported yet` —   pídele al beneficiario su
-  llave PIX y usa el método [`pix`](https://docs.cbpayapp.com/es/guides/payouts#ejemplos-por-pais).
+  llave PIX y usa el método [`pix`](https://docs.cbpayapp.com/es/guides/payout-corridors#ejemplos-por-pais).
 - Un payload alterado o incompleto responde `400` (checksum CRC inválido).
 
 ## 2. Confirma el pago (se cobra aquí)

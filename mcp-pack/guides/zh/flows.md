@@ -58,7 +58,7 @@ sequenceDiagram
 
 **二维码**变体（玻利维亚、巴西 PIX）：`POST /v1/payouts/qr/scan`（免费，
 解码）→ 展示数据 → `POST /v1/payouts/qr/confirm`（按普通付款计费）。
-详情：[付款](https://docs.cbpayapp.com/zh/guides/payouts) · [QR 出金](https://docs.cbpayapp.com/zh/guides/qr-payout)。
+详情：[付款](https://docs.cbpayapp.com/zh/guides/payouts-overview) · [QR 出金](https://docs.cbpayapp.com/zh/guides/qr-payout)。
 
 ## 3. 向客户收款
 
