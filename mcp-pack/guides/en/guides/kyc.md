@@ -329,6 +329,7 @@ Data-mode notes:
 
 - Countries in **ISO alpha-3** (`CHL`, `USA`, `VEN`…); dates `YYYY-MM-DD`;
   `id_type`: `passport | id_card | drivers_license`.
+- Phone in **E.164** with country code (e.g. `+56912345678`). The API still accepts legacy digit strings (digits, `+`, `-`, spaces, parentheses, up to 32 chars), but E.164 is the contract.
 - KYB: body `{ external_customer_id, country?, business: {…}, ubos?,
   directors?, signers?, bank_info?, metadata? }` on
   `POST /v1/kyb/submissions`. Also, KYB data mode requires a complete legal name and registration number; KYC requires names, date of birth, ISO alpha-3 nationality, document and ISO alpha-3 country. Unknown KYB countries use the generic profile with that ISO; `country: generic` requires `generic_country`.

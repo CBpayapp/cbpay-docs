@@ -1,5 +1,5 @@
 {
-  "count": 426,
+  "count": 429,
   "errors": [
     {
       "category": {
@@ -125,6 +125,34 @@
         "en": "The account is not active; this also blocks `POST /v1/me/verification/link` — ask an administrator to restore it",
         "es": "La cuenta no está activa; también bloquea `POST /v1/me/verification/link` — pide al administrador que la restaure",
         "zh": "账户不是 active；这也会阻止 `POST /v1/me/verification/link` —— 请联系管理员恢复账户"
+      }
+    },
+    {
+      "category": {
+        "en": "Authentication and permissions",
+        "es": "Autenticación y permisos",
+        "zh": "身份认证与权限"
+      },
+      "code": "account_deactivated",
+      "http": 403,
+      "meaning": {
+        "en": "Identity was verified but the account is blocked or closed; show the branded compliance message returned by the API and contact that brand's compliance email. Incorrect passwords keep the generic `invalid_credentials` response.",
+        "es": "La identidad fue verificada, pero la cuenta está bloqueada o cerrada; muestra el mensaje de marca devuelto por la API y contacta al correo de compliance de esa marca. Con contraseña incorrecta se mantiene `invalid_credentials` genérico.",
+        "zh": "身份已验证，但账户被冻结或关闭；显示 API 返回的品牌消息，并联系该品牌的合规邮箱。密码错误时仍返回通用 `invalid_credentials`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Authentication and permissions",
+        "es": "Autenticación y permisos",
+        "zh": "身份认证与权限"
+      },
+      "code": "account_closed_terminal",
+      "http": 409,
+      "meaning": {
+        "en": "A status change would reopen a closed account; closed is terminal. Do not retry the transition.",
+        "es": "Un cambio de estado intentaría reabrir una cuenta cerrada; closed es terminal. No reintentes la transición.",
+        "zh": "状态变化会重新打开已关闭账户；closed 是终态。不要重试该转换。"
       }
     },
     {
@@ -587,6 +615,20 @@
         "en": "Two-factor authentication is not enabled for your organization; contact support",
         "es": "Tu organización no tiene habilitado el 2FA por acción; contacta a tu operador",
         "zh": "您的组织未启用按操作的双因素认证；请联系您的运营方"
+      }
+    },
+    {
+      "category": {
+        "en": "OTP / 2FA",
+        "es": "OTP / 2FA",
+        "zh": "OTP / 双因素认证"
+      },
+      "code": "temporarily_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The account store could not be read during an authentication gate; nothing was mutated. Retry the same request after the store recovers.",
+        "es": "No se pudo leer el store de cuentas durante un gate de autenticación; nada se mutó. Reintenta la misma request cuando el store se recupere.",
+        "zh": "身份认证 gate 期间无法读取账户存储；未发生修改。存储恢复后重试相同请求。"
       }
     },
     {
