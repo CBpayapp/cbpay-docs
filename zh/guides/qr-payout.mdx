@@ -93,7 +93,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/scan \
 - 支持**静态** PIX 二维码（印刷/可重复使用、密钥内嵌的那种）。
   **动态**二维码（payload 携带 PSP 的 URL 而非密钥）会返回 `400`
   和 `dynamic pix qr codes are not supported yet` —— 请向收款方索取其
-  PIX 密钥并使用 [`pix`](/zh/guides/payouts#各国示例) 方法。
+  PIX 密钥并使用 [`pix`](/zh/guides/payout-corridors#各国示例) 方法。
 - 被篡改或截断的 payload 会返回 `400`（CRC 校验和无效）。
 
 </Tab>

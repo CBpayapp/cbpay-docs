@@ -76,7 +76,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 `otp` 字段中发送该值。C2P 没有之前的 `/collect/otp` 请求步骤。
 `debito_inmediato` 不是当前可用的通道。向委内瑞拉的对外付款
 （`pago_movil`、`bank_transfer`）不受影响：参见
-[payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)。
 可用性可能变化；目录（`GET /v1/payins/methods`）始终是唯一可信来源。
 在所有情况下入账方式相同：按已报价的 `payin_rate` 折算为 USDT，并在
 扣除固定入金费用后净额入账。入账时会按 FIFO 消费 payin 批次；若启用的
@@ -1203,7 +1203,7 @@ USD 账本金额使用美分（两位小数）。直接入账、扣账、费用�
 资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
 的 swap 按 1:1 计价，不使用 FX 预言机。BOB、MXN、ARS 仍是独立的法币
 账本资产；同币种 payout 直接从这些余额扣账（见
-[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)）。
 
 USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold

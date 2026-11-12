@@ -1848,7 +1848,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Los payouts de Venezuela `pago_movil` ahora exigen `beneficiary.name`**.
   El rail exige el nombre + primer apellido del beneficiario (tal como en la
-  cédula) — un solo token es rechazado. La [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)
+  cédula) — un solo token es rechazado. La [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)
   y los ejemplos de la referencia API ahora listan `name` primero entre los
   campos requeridos. Venezuela `bank_transfer` ya documentaba `name`; sin
   cambios ahí.
@@ -1930,7 +1930,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **Payouts USD por rail bancario: el beneficiario puede vivir en cualquier
-  país** ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)): en transferencias `ach`,
+  país** ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)): en transferencias `ach`,
   `wire` y `swift` el `country_code` del beneficiario ya no está fijo en
   `US` — por ejemplo, un ACH a una cuenta de banco de EE. UU. para alguien
   que vive en Alemania. El banco receptor sigue en EE. UU. para
@@ -2185,7 +2185,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Referencia bancaria del payout, ahora visible en todas las superficies**
-  ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)): todo payout expone
+  ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)): todo payout expone
   `bank_reference` — el id de transacción asignado por el banco/rail de
   destino — en las respuestas de `POST /v1/payouts`, `GET /v1/payouts` y
   `GET /v1/payouts/{payoutID}`, en el payload del webhook
@@ -2290,7 +2290,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Lookup del directorio bancario** ([guía de
-  payouts](https://docs.cbpayapp.com/es/guides/payouts)): el nuevo
+  payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)): el nuevo
   `GET /v1/payouts/bank-directory/lookup` autocompleta el banco
   beneficiario desde un directorio bancario público embebido — pasa
   exactamente uno de `routing_number` (9 dígitos, solo US) o `swift` (8 u
@@ -2423,7 +2423,7 @@ destino. La creación es idempotente: una clave nueva responde
   automático. Por operación puedes sobreescribir las declaraciones de
   propósito del riel en `options` (`purpose`, `crypto_activity`,
   `payment_gateway`). Tabla de corredores, tabla de campos por método,
-  ejemplos reales y FAQ en [Payouts](https://docs.cbpayapp.com/es/guides/payouts); ejemplos
+  ejemplos reales y FAQ en [Payouts](https://docs.cbpayapp.com/es/guides/payouts-overview); ejemplos
   nombrados `us_ach`, `us_wire` y `us_swift` en la referencia API.
 
 ### v2.34
@@ -3114,7 +3114,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Nuevo corredor: Argentina** 🇦🇷 ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts) · [guía payins](https://docs.cbpayapp.com/es/guides/payins)):
+- **Nuevo corredor: Argentina** 🇦🇷 ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) · [guía payins](https://docs.cbpayapp.com/es/guides/payins)):
   - **Payouts** en **ARS** y **USD** por `bank_transfer` a cualquier **CBU o CVU** de 22 dígitos (cuentas bancarias y billeteras virtuales; USD solo CBU→CBU). Beneficiario con `name`, `tax_id` (CUIT/CUIL) y `account_number` — sin `bank_code`.
   - **Payins** en **ARS** con **cuenta CVU dedicada** por cuenta (`POST /v1/payins/deposit-accounts` con `country: "AR"`): toda transferencia entrante se acredita automáticamente, sin referencias. Las CVU son receive-only: los intentos de débito directo se rechazan automáticamente.
   - Disponible ya en el **ambiente de pruebas** (staging) con el simulador; la activación en producción se anunciará al completarse la certificación bancaria — el catálogo (`GET /v1/payouts/methods` y `GET /v1/payins/methods`) es siempre la fuente de verdad.
@@ -3168,7 +3168,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Controles de cumplimiento en pagos salientes** ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts), [errores](https://docs.cbpayapp.com/es/errors)): los payouts, los retiros crypto con nombre de beneficiario y los cobros collect ahora pasan por controles de cumplimiento adicionales **antes de mover fondos**. Errores documentados: `403 compliance_hold` (la operación fue retenida y NO se creó — sin débito; por política no se informa la razón exacta, contacta a soporte con el timestamp) y `503 compliance_check_unavailable` (la verificación no se pudo evaluar; la operación NO se creó — reintenta con la **misma** `idempotency_key`).
+- **Controles de cumplimiento en pagos salientes** ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts-overview), [errores](https://docs.cbpayapp.com/es/errors)): los payouts, los retiros crypto con nombre de beneficiario y los cobros collect ahora pasan por controles de cumplimiento adicionales **antes de mover fondos**. Errores documentados: `403 compliance_hold` (la operación fue retenida y NO se creó — sin débito; por política no se informa la razón exacta, contacta a soporte con el timestamp) y `503 compliance_check_unavailable` (la verificación no se pudo evaluar; la operación NO se creó — reintenta con la **misma** `idempotency_key`).
 
 ### v1.88
 
@@ -3545,7 +3545,7 @@ destino. La creación es idempotente: una clave nueva responde
   (`given_name`/`first_surname`/...) o el split automático desde `name`, y
   un bloque opcional de remitente (`sender_name` o sus campos
   estructurados). Ejemplos por método en la
-  [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts) y en el spec.
+  [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) y en el spec.
 - **Nuevo código de error `channel_unavailable`** (HTTP 503): el canal de
   pago del corredor no está disponible temporalmente. Reintenta más tarde
   con la misma `idempotency_key`. Documentado en la página de
@@ -3812,7 +3812,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
 
 - `GET /v1/payouts` y `GET /v1/payins` aceptan el filtro `country`
   (ISO 3166-1 alfa-2, ej. `?country=MX`), combinable con `status`,
-  `from`/`to` y la paginación. Guías de [payouts](https://docs.cbpayapp.com/es/guides/payouts) y
+  `from`/`to` y la paginación. Guías de [payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) y
   [payins](https://docs.cbpayapp.com/es/guides/payins) actualizadas.
 - El bloque `fees` de `GET /v1/rates` ahora devuelve la configuración
   de comisiones **efectiva** (defaults de la organización resueltos

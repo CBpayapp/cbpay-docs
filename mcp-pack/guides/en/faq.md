@@ -103,7 +103,7 @@ returns the original payout (`idempotency_hit: true`) without creating or
 debiting anything new. Use a different key only when you truly want
 another payment. See [idempotency](https://docs.cbpayapp.com/en/concepts/idempotency).
 #### How do I know which beneficiary fields each country takes?
-[Examples by country](https://docs.cbpayapp.com/en/guides/payouts#examples-by-country) has a field table and
+[Examples by country](https://docs.cbpayapp.com/en/guides/payout-corridors#examples-by-country) has a field table and
 a complete example per country and method, and
 `GET /v1/payouts/banks?country=XX` returns the current bank codes where
 they apply.

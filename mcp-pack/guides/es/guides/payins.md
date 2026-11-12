@@ -85,7 +85,7 @@ pagador genera una `claveDinamica` en la app de su banco y te la entrega; tu
 integración la envía en el campo `otp` del collect. No existe una llamada
 previa a `/collect/otp` para C2P. `debito_inmediato` no es un corredor vivo.
 Los pagos salientes a Venezuela (`pago_movil`, `bank_transfer`) no cambian:
-ver [payouts](https://docs.cbpayapp.com/es/guides/payouts).
+ver [payouts](https://docs.cbpayapp.com/es/guides/payouts-overview).
 La disponibilidad puede variar; el catálogo (`GET /v1/payins/methods`) es
 siempre la fuente de verdad. En todos los casos el abono llega igual: se
 convierte a USDT al `payin_rate` cotizado y se acredita neto de la comisión
@@ -1306,7 +1306,7 @@ tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
 swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
 MXN y ARS siguen siendo activos fiat separados del ledger; los payouts
 en la misma moneda debitan esos saldos directamente (ver
-[payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+[payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)).
 
 Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`

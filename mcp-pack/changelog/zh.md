@@ -1604,7 +1604,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **已变更**
 
-- **委内瑞拉 `pago_movil` payout 现在要求 `beneficiary.name`**。通道要求受益人的名 + 第一姓氏（与证件一致）—— 单个词会被拒绝。[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts)和 API 参考示例现在将 `name` 列为必填字段的第一项。委内瑞拉 `bank_transfer` 此前已记录 `name`；此处无变更。
+- **委内瑞拉 `pago_movil` payout 现在要求 `beneficiary.name`**。通道要求受益人的名 + 第一姓氏（与证件一致）—— 单个词会被拒绝。[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)和 API 参考示例现在将 `name` 列为必填字段的第一项。委内瑞拉 `bank_transfer` 此前已记录 `name`；此处无变更。
 
 ## v2.65 - 2026年9月2日
 
@@ -1676,7 +1676,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 **变更**
 
 - **美元银行通道付款：收款人可居住在任何国家**
-  （[付款指南](https://docs.cbpayapp.com/zh/guides/payouts)）：对于 `ach`、`wire` 和 `swift`
+  （[付款指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)）：对于 `ach`、`wire` 和 `swift`
   转账，收款人的 `country_code` 不再固定为 `US` —— 例如，可以为居住在德国的人
   向美国银行账户发起 ACH。对于 `ach`/`wire`，接收银行必须在美国
   （`bank_country: "US"` —— 国内通道不向境外银行付款）；对于 `swift`，银行可位于
@@ -1881,7 +1881,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **付款的银行参考号现已覆盖所有界面**([付款指南](https://docs.cbpayapp.com/zh/guides/payouts)):每笔付款都会展示
+- **付款的银行参考号现已覆盖所有界面**([付款指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)):每笔付款都会展示
   `bank_reference` —— 收款银行/通道分配的交易号 —— 包括 `POST /v1/payouts`、
   `GET /v1/payouts` 和 `GET /v1/payouts/{payoutID}` 的响应、
   `payout_status_changed` webhook 负载、PDF 回执、付款 CSV 导出以及对账单
@@ -1963,7 +1963,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **银行目录查询**（[付款指南](https://docs.cbpayapp.com/zh/guides/payouts)）：新增的
+- **银行目录查询**（[付款指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)）：新增的
   `GET /v1/payouts/bank-directory/lookup` 可从嵌入式公开银行目录自动补全收款银行——`routing_number`
   （9 位数字，仅限美国）与 `swift`（8 或 11 个字符；`XXX` 后缀会归一化为总行）二者必传其一，
   它会解析出银行名称、城市、州和地址块，便于 payout 和交易对手表单在付款人输入时预填
@@ -2070,7 +2070,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `status_code: "counterparty_rejected"` 结束并自动退款。可按笔在
   `options` 中覆盖通道的付款用途声明（`purpose`、
   `crypto_activity`、`payment_gateway`）。通道表、按方式的字段表、
-  真实示例与 FAQ 见 [出金](https://docs.cbpayapp.com/zh/guides/payouts)；API 参考中新增
+  真实示例与 FAQ 见 [出金](https://docs.cbpayapp.com/zh/guides/payouts-overview)；API 参考中新增
   命名请求示例 `us_ach`、`us_wire` 和 `us_swift`。
 
 ### v2.34
@@ -2633,7 +2633,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **新通道：阿根廷** 🇦🇷（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts) · [入金指南](https://docs.cbpayapp.com/zh/guides/payins)）：
+- **新通道：阿根廷** 🇦🇷（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts-overview) · [入金指南](https://docs.cbpayapp.com/zh/guides/payins)）：
   - **出金**支持 **ARS** 和 **USD**，通过 `bank_transfer` 转账到任何 22 位的 **CBU 或 CVU**（银行账户和虚拟钱包；USD 仅支持 CBU 到 CBU）。收款人只需 `name`、`tax_id`（CUIT/CUIL）和 `account_number` —— 无需 `bank_code`。
   - **入金**支持 **ARS**，每个账户可创建**专属 CVU 账户**（`POST /v1/payins/deposit-accounts`，`country: "AR"`）：每笔到账转账自动入账，无需参考号。CVU 为只收不付：直接扣款尝试会被自动拒绝。
   - 现已在**测试环境**（staging）通过模拟器提供；生产环境的启用将在银行认证完成后公布 —— 目录（`GET /v1/payouts/methods` 和 `GET /v1/payins/methods`）始终是唯一可信来源。
@@ -2687,7 +2687,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **对外支付的合规控制**（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts)、[错误](https://docs.cbpayapp.com/zh/errors)）：出金、带受益人姓名的加密货币提现以及 collect 收款现在会在**资金移动之前**经过额外的合规控制。已记录的错误：`403 compliance_hold`（操作被拦截且未被创建 —— 未扣款；按政策不披露具体原因，请携带时间戳联系支持）与 `503 compliance_check_unavailable`（合规校验暂时无法完成；操作未被创建 —— 请使用**相同的** `idempotency_key` 重试）。
+- **对外支付的合规控制**（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)、[错误](https://docs.cbpayapp.com/zh/errors)）：出金、带受益人姓名的加密货币提现以及 collect 收款现在会在**资金移动之前**经过额外的合规控制。已记录的错误：`403 compliance_hold`（操作被拦截且未被创建 —— 未扣款；按政策不披露具体原因，请携带时间戳联系支持）与 `503 compliance_check_unavailable`（合规校验暂时无法完成；操作未被创建 —— 请使用**相同的** `idempotency_key` 重试）。
 
 ### v1.88
 
@@ -3005,7 +3005,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   账户）和 `cnb`（非银行代理点）。收款人支持结构化姓名
   （`given_name`/`first_surname`/...）或从 `name` 自动拆分，并可附带
   可选的汇款人信息块（`sender_name` 或其结构化字段）。各方式示例见
-  [出金指南](https://docs.cbpayapp.com/zh/guides/payouts)与 API 规范。
+  [出金指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)与 API 规范。
 - **新错误码 `channel_unavailable`**（HTTP 503）：该走廊的支付通道
   暂时不可用。请稍后使用相同的 `idempotency_key` 重试。详见
   [错误页面](https://docs.cbpayapp.com/zh/errors)。
@@ -3232,7 +3232,7 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
 
 - `GET /v1/payouts` 和 `GET /v1/payins` 支持 `country` 筛选
   （ISO 3166-1 alpha-2，例如 `?country=MX`），可与 `status`、
-  `from`/`to` 及分页组合使用。[付款](https://docs.cbpayapp.com/zh/guides/payouts)与
+  `from`/`to` 及分页组合使用。[付款](https://docs.cbpayapp.com/zh/guides/payouts-overview)与
   [收款](https://docs.cbpayapp.com/zh/guides/payins)指南已更新。
 - `GET /v1/rates` 的 `fees` 块现在返回**有效**费用配置（组织默认值已与账户覆盖项解析合并）。
   此前无覆盖项的账户会看到 `fees: []`；请用此块在创建操作前报价确切费用。

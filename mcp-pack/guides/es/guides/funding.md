@@ -45,7 +45,7 @@ pesos entrantes convierten automáticamente a USD, tu saldo principal.
 
 Para el contrato completo de deposit accounts ver
 [payins](https://docs.cbpayapp.com/es/guides/payins); para enviar pesos, ver
-[payouts](https://docs.cbpayapp.com/es/guides/payouts).
+[payouts](https://docs.cbpayapp.com/es/guides/payouts-overview).
 
 ### 🇧🇴 BOB — boliviano
 
@@ -54,7 +54,7 @@ bancaria. Los BOB entrantes convierten automáticamente a USD, tu saldo
 principal.
 
 Para enviar bolivianos (transferencia en BOB o USD, además de QR), ver la
-pestaña Bolivia en [payouts](https://docs.cbpayapp.com/es/guides/payouts).
+pestaña Bolivia en [payouts](https://docs.cbpayapp.com/es/guides/payouts-overview).
 
 ### 🇲🇽 MXN — peso mexicano
 
@@ -63,7 +63,7 @@ automáticamente a USD, tu saldo principal.
 
 Para el contrato completo de deposit accounts ver
 [payins](https://docs.cbpayapp.com/es/guides/payins); para enviar pesos, ver
-[payouts](https://docs.cbpayapp.com/es/guides/payouts).
+[payouts](https://docs.cbpayapp.com/es/guides/payouts-overview).
 
 ### 🇨🇱 CLP — peso chileno
 

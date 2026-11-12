@@ -122,7 +122,10 @@
                   {
                     "group": "Money out",
                     "pages": [
-                      "en/guides/payouts",
+                      "en/guides/payouts-overview",
+                      "en/guides/payout-corridors",
+                      "en/guides/payout-special-cases",
+                      "en/guides/payout-errors",
                       "en/guides/payout-destination-retries",
                       "en/guides/fiat-settlement",
                       "en/guides/sepa-instant-payouts",
@@ -274,7 +277,10 @@
                   {
                     "group": "Pagar (money out)",
                     "pages": [
-                      "es/guides/payouts",
+                      "es/guides/payouts-overview",
+                      "es/guides/payout-corridors",
+                      "es/guides/payout-special-cases",
+                      "es/guides/payout-errors",
                       "es/guides/payout-destination-retries",
                       "es/guides/fiat-settlement",
                       "es/guides/sepa-instant-payouts",
@@ -426,7 +432,10 @@
                   {
                     "group": "付款（Money out）",
                     "pages": [
-                      "zh/guides/payouts",
+                      "zh/guides/payouts-overview",
+                      "zh/guides/payout-corridors",
+                      "zh/guides/payout-special-cases",
+                      "zh/guides/payout-errors",
                       "zh/guides/payout-destination-retries",
                       "zh/guides/fiat-settlement",
                       "zh/guides/sepa-instant-payouts",
@@ -529,8 +538,20 @@
   },
   "redirects": [
     {
+      "source": "/en/guides/payouts",
+      "destination": "/en/guides/payouts-overview"
+    },
+    {
+      "source": "/es/guides/payouts",
+      "destination": "/es/guides/payouts-overview"
+    },
+    {
+      "source": "/zh/guides/payouts",
+      "destination": "/zh/guides/payouts-overview"
+    },
+    {
       "source": "/es/guias/payouts-por-pais",
-      "destination": "/es/guides/payouts"
+      "destination": "/es/guides/payout-corridors"
     },
     {
       "source": "/es/guias/payins-por-pais",
@@ -538,7 +559,7 @@
     },
     {
       "source": "/en/guides/payouts-by-country",
-      "destination": "/en/guides/payouts"
+      "destination": "/en/guides/payout-corridors"
     },
     {
       "source": "/en/guides/payins-by-country",
@@ -686,7 +707,7 @@
     },
     {
       "source": "/es/guias/payouts",
-      "destination": "/es/guides/payouts"
+      "destination": "/es/guides/payouts-overview"
     },
     {
       "source": "/es/guias/perfil",
