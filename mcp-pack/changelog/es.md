@@ -5,7 +5,52 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.265 · 2 versiones - 12 de noviembre de 2026
+## v2.270 · 7 versiones - 12 de noviembre de 2026
+### v2.270
+**Cambiado**
+
+- Aclarado qué links de verificación quedaron fuera del backfill de
+  expiración de remediación del 4 de noviembre: links revocados, sin
+  expediente atado, no-nativos y casos no-subsanables conservaron su
+  expiración. Abrir uno responde `410 invite_expired`: pide un link nuevo —
+  las empresas ahora pueden re-emitir uno para sus casos terceros propios
+  con el endpoint nuevo — en vez de reintentar el muerto. Ver la guía de
+  remediación KYC.
+### v2.269
+**Agregado**
+
+- Nueva re-emisión self-serve de links para casos terceros de empresas:
+  `POST /v1/me/verifications/{kind}/third-party/{submissionID}/reissue-link`
+  reutiliza el link usable de un caso propio sin uno (revocado, vencido más
+  allá del resend, nunca emitido) o forja un link nuevo para el MISMO
+  expediente — el caso jamás se duplica — y lo envía al email de la cuenta
+  empresa. La URL nunca viaja en respuestas. Gratis, una re-emisión por caso
+  al día (`429`), `idempotency_key` obligatoria (body o header
+  `Idempotency-Key`; el retry devuelve el resultado previo con
+  `idempotency_hit` sin re-forjar). Casos decididos responden
+  `409 already_decided`; hijas UBO/director invitadas siguen one-way
+  (`409 resend_only`, usa resend-link).
+### v2.268
+**Cambiado**
+
+- Los emails de changes-requested a hijas UBO/director invitadas (sin login
+  al portal) ahora traen el link del caso — reusado o recién emitido para el
+  mismo expediente — o guía plana de subsanación cuando no se puede emitir
+  un link, en vez de un muro de login. El barrido horario de remediación
+  ahora incluye la nota del revisor y los documentos pendientes en las
+  notificaciones rescatadas cuando el core responde (si no, degrada al email
+  genérico).
+### v2.267
+**Agregado**
+
+- Las lecturas de banking customer ahora incluyen feedback del proveedor con
+  `raw_status`, `note` y `note_source`. El webhook
+  `banking_customer_status_changed` también lleva el estado crudo y la nota
+  de moderación correspondientes.
+### v2.266
+**Cambiado**
+- Las sesiones liveness del perfil ahora exponen, cuando fueron medidos, campos forenses aditivos de face-match y antispoof, incluido el documento usado, la revisión del scorer, la hora del puntaje y el estado `scored`. Un pass con identidad atada puede informar `bound_pass` en `reasons[]`; la sonrisa opcional no convierte por sí sola la validación de identidad en fallida.
+- El wizard distingue las caras frontal y posterior del documento (`identity_front`, `identity_back`) y el reverso de documentos UBO (`uboIdentityBack`).
 ### v2.265
 **Agregado**
 
@@ -15,13 +60,9 @@ source_url: https://docs.cbpayapp.com/es/changelog
   email brandeados, con un payload de QR por rail; se omiten sin rail
   configurado y en facturas `paid` o `void`.
 ### v2.264
-- Se agregó la documentación de liberación automática para payouts manuales
-  existentes `EC/USD/bank_transfer`. El operador libera la fila existente por
-  las rutas admin; el flag queda apagado por defecto y se controla
-  operativamente.
-- Se documentaron los estados EC de aprobación, liquidación, rechazo bancario,
-  procesamiento pendiente y novedad, junto con el webhook y el manejo seguro
-  de resultados ambiguos.
+**Cambiado**
+- Las operaciones de autenticación ahora devuelven `503 temporarily_unavailable` cuando no se puede leer el store de cuentas; no cambia el estado de autenticación y el cliente reintenta la misma request cuando se recupera.
+- Después de verificar la identidad, las cuentas bloqueadas o cerradas devuelven `403 account_deactivated` con el mensaje de marca; los fallos pre-auth siguen siendo uniformes.
 ## v2.263 · 5 versiones - 11 de noviembre de 2026
 ### v2.263
 **Cambiado**

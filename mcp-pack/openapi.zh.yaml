@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.265'
+  version: '2.270'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -4498,6 +4498,10 @@ paths:
                   item:
                     type: INDIVIDUAL
                     name: Ana Perez Rojas
+                feedback:
+                  raw_status: READY_FOR_MODERATION
+                  note: 已收到文件
+                  note_source: provider
                 created_at: '2026-07-07T12:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -9262,6 +9266,16 @@ paths:
                     status: completed
                     outcome: PASS
                     passed_gate: true
+                    face_verdict: match
+                    face_reason: ok
+                    face_doc_ref: doc-identity-front
+                    face_doc_category: identity_front
+                    face_docs_tried: 1
+                    antispoof_engine: fitted_v1
+                    spoof_score: 0.05
+                    scorer_rev: 2026-11-12.1
+                    scored_at: '2026-11-12T15:00:00Z'
+                    scored: true
                     liveness_score: '0.99'
                     antispoof_score: '0.97'
                     face_similarity: '0.95'
@@ -9280,6 +9294,16 @@ paths:
                     status: completed
                     outcome: PASS
                     passed_gate: true
+                    face_verdict: match
+                    face_reason: ok
+                    face_doc_ref: doc-identity-front
+                    face_doc_category: identity_front
+                    face_docs_tried: 1
+                    antispoof_engine: fitted_v1
+                    spoof_score: 0.05
+                    scorer_rev: 2026-11-12.1
+                    scored_at: '2026-11-12T15:00:00Z'
+                    scored: true
                     liveness_score: '0.99'
                     antispoof_score: '0.97'
                     face_similarity: '0.95'
@@ -9297,6 +9321,16 @@ paths:
                     status: completed
                     outcome: FAIL
                     passed_gate: false
+                    face_verdict: review
+                    face_reason: no_face_in_document
+                    face_doc_ref: doc-identity-front
+                    face_doc_category: identity_front
+                    face_docs_tried: 2
+                    antispoof_engine: fitted_v1
+                    spoof_score: 0.42
+                    scorer_rev: 2026-11-12.1
+                    scored_at: '2026-11-12T15:00:00Z'
+                    scored: true
                     liveness_score: '0.98'
                     antispoof_score: '0.59'
                     face_similarity: '0.55'
@@ -9399,6 +9433,16 @@ paths:
                   status: completed
                   outcome: PASS
                   passed_gate: true
+                  face_verdict: match
+                  face_reason: ok
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 1
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.05
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.99'
                   antispoof_score: '0.97'
                   face_similarity: '0.95'
@@ -9416,6 +9460,16 @@ paths:
                   status: completed
                   outcome: FAIL
                   passed_gate: false
+                  face_verdict: review
+                  face_reason: no_face_in_document
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 2
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.42
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.59'
                   face_similarity: '0.55'
@@ -10333,6 +10387,16 @@ paths:
                   status: completed
                   outcome: PASS
                   passed_gate: true
+                  face_verdict: match
+                  face_reason: ok
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 1
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.05
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.96'
                   face_similarity: '0.94'
@@ -10350,6 +10414,16 @@ paths:
                   status: completed
                   outcome: FAIL
                   passed_gate: false
+                  face_verdict: review
+                  face_reason: no_face_in_document
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 2
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.42
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.59'
                   face_similarity: '0.55'
@@ -13008,6 +13082,16 @@ paths:
                   status: completed
                   outcome: PASS
                   passed_gate: true
+                  face_verdict: match
+                  face_reason: ok
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 1
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.05
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.96'
                   face_similarity: '0.97'
@@ -13025,6 +13109,16 @@ paths:
                   status: completed
                   outcome: FAIL
                   passed_gate: false
+                  face_verdict: review
+                  face_reason: no_face_in_document
+                  face_doc_ref: doc-identity-front
+                  face_doc_category: identity_front
+                  face_docs_tried: 2
+                  antispoof_engine: fitted_v1
+                  spoof_score: 0.42
+                  scorer_rev: 2026-11-12.1
+                  scored_at: '2026-11-12T15:00:00Z'
+                  scored: true
                   liveness_score: '0.98'
                   antispoof_score: '0.59'
                   face_similarity: '0.55'
@@ -13184,6 +13278,86 @@ paths:
           description: 个人账户没有第三方验证。
         '404':
           description: 案件不存在或属于其他账户。
+  /v1/me/verifications/{kind}/third-party/{submissionID}/reissue-link:
+    post:
+      tags:
+      - KYC / KYB
+      operationId: reissueMyThirdPartyLink
+      summary: 将案件链接重新签发到我的企业邮箱
+      description: 对没有可用链接的自有第三方案件(已撤销、过期不可重发或从未签发)复用 可用链接,或为同一档案签发一条新链接(绝不重复建档),并发送到调用企业账户邮箱。URL 绝不在响应中返回。免费(案件已付过链接费用);每案每天限重签一次(429); idempotency_key 必填(body 或 Idempotency-Key 请求头,重试返回此前结果并带 idempotency_hit, 不再签发);已审计。
+      parameters:
+      - name: kind
+        in: path
+        required: true
+        description: 验证类型。
+        schema:
+          type: string
+          enum:
+          - kyc
+          - kyb
+      - name: submissionID
+        in: path
+        required: true
+        description: 列表中的 submission id。
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - idempotency_key
+              properties:
+                idempotency_key:
+                  type: string
+                  description: 幂等键 1-64 字符(或 Idempotency-Key 请求头)。
+                expires_in_days:
+                  type: integer
+                  minimum: 1
+                  maximum: 90
+                  description: 链接有效天数(默认沿用核心默认值)。
+            example:
+              idempotency_key: reissue-2026-11-12-001
+              expires_in_days: 14
+      responses:
+        '200':
+          description: 复用的链接已邮寄(或幂等重放,见 idempotency_hit)。
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@ownit.example
+                expires_at: '2026-11-30T12:00:00Z'
+                reissued: false
+        '201':
+          description: 新链接已签发并邮寄。
+          content:
+            application/json:
+              example:
+                sent: true
+                reminded_to: owner@ownit.example
+                expires_at: '2026-11-30T12:00:00Z'
+                reissued: true
+        '400':
+          description: idempotency_key_required | invalid_expires | invalid_payload
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 个人账户没有第三方验证。
+        '404':
+          description: 案件不存在或属于其他账户。
+        '409':
+          description: already_decided(案件已裁决) | superseded(已迁移案件) | resend_only( 受邀 UBO/董事) | idempotency_key_reused(该键已用于其他案件)。
+        '422':
+          description: 账户没有可用邮箱或案件不支持重签(legacy)。
+        '429':
+          description: 该案件在过去 24 小时内已重签过。
+        '502':
+          description: 验证后端返回了不可用响应。
+        '503':
+          description: 组织尚未完全配置或验证后端失败。
   /v1/me/verifications/{kind}/third-party/{submissionID}/resend-link:
     post:
       tags:
@@ -30779,6 +30953,9 @@ webhooks:
                   customer_id: 9f2b1c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                   customer_kind: self
                   kyc_status: approved
+                  raw_status: READY_FOR_MODERATION
+                  feedback_note: 已收到文件
+                  feedback_source: provider
               third_party:
                 summary: 已注册的第三方
                 value:
@@ -30787,6 +30964,9 @@ webhooks:
                   customer_kind: third_party
                   third_party_id: 77aa88bb-1c2d-3e4f-5a6b-7c8d9e0f1a2b
                   kyc_status: approved
+                  raw_status: READY_FOR_MODERATION
+                  feedback_note: 已收到文件
+                  feedback_source: provider
       responses:
         '200':
           description: 返回任意 2xx 以确认。

@@ -271,9 +271,19 @@ Estados del perfil: `draft` → `submitted` → `under_review` →
   "account_id": "…",
   "customer_id": "9f2b…",
   "customer_kind": "self",
-  "kyc_status": "approved"
+  "kyc_status": "approved",
+  "feedback": {
+    "raw_status": "READY_FOR_MODERATION",
+    "note": "Documentos recibidos",
+    "note_source": "provider"
+  }
 }
 ```
+
+`GET /v1/banking/customer` devuelve el mismo objeto `feedback`. `raw_status`
+es el estado crudo del riel bancario; `note` es la última nota de moderación.
+`note_source` puede ser `provider`, `ours` o `none`. Usa `status`/`kyc_status`
+para el ciclo normalizado y trata el feedback como contexto de solo lectura.
 
 ## 3. Abre cuentas bancarias
 
