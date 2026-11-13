@@ -730,7 +730,7 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 | 400 | `invalid_kind`, `invalid_category`, `invalid_priority`, `invalid_subject`, `invalid_message`, `invalid_rating`, `invalid_comment`, `invalid_money_stuck` | Use the documented closed vocabulary and limits. |
 | 404 | `not_found` | Confirm account ownership of the ticket or transaction. |
 | 409 | `ticket_already_open` | Continue the existing ticket returned in the response. |
-| 409 | `ticket_closed` / `already_rated` | Open a new ticket or keep the existing rating. |
+| 409 | `ticket_closed` / `ticket_resolved` / `already_rated` | Open a new ticket or keep the existing rating. Resolved and closed tickets do not accept further client replies. |
 | 409 | `not_quarantined` | The reveal endpoint only works on quarantined tickets; read the thread normally. |
 | 503 | `storage_unavailable` | Wait and upload once; do not duplicate the ticket. |
 
