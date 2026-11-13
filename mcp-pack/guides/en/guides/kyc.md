@@ -8,20 +8,16 @@ source_url: https://docs.cbpayapp.com/en/guides/kyc
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 ## Account verification before creating payins
-
 Authenticated collection requires `kyc_status: approved` for person accounts and approved KYB for companies; until then, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), collect OTP/collect, dedicated deposit accounts, stored-card charges and subscriptions return `403 verification_required`. Existing public links, passive deposits, org-admin assignment and system-created instruments remain available; request `POST /v1/me/verification/link`, then retry after approval.
-
 **Identity verification** proves a person (KYC) or company (KYB) is who
 they claim to be, with real evidence: a complete form, document uploads
 validated by OCR and a **video liveness check**. It has two sides:
-
 1. **Your own verification (onboarding)** — mandatory: until approved, your
    account can only **fund** (payins, crypto deposits, incoming transfers)
    and read. Person ⇒ KYC; company ⇒ KYB.
 2. **Verifying your customers (company accounts only)** — generate hosted
    links or send data through the API to verify your own end customers,
    with a fixed fee per verification.
-
 ```mermaid
 flowchart LR
     create["POST /v1/kyc/links or /v1/kyb/links<br/>(fixed fee)"] --> link["Hosted link<br/>status: pending"]
@@ -36,7 +32,6 @@ flowchart LR
 When you register, your account starts unverified (`kyc_status: none`) and **can only fund and read**. Any outgoing-money action (payouts, transfers,
 withdrawals, banking, cards) answers `403 verification_required` until you
 are approved.
-
 > **Note**New self-service requests require a confirmed TOTP or registered passkey; see [Profile & security](https://docs.cbpayapp.com/en/guides/profile) for enrollment steps and retry. Open links are re-served before this gate; API-key automation remains exempt.### Request your verification link
 
 ```bash
@@ -915,6 +910,12 @@ open submission and liveness links do not charge again.
 | 403 | `company_account_required` | A person account tried to verify third parties | Company accounts only |
 | 403 | `service_disabled` | The `kyc` service is disabled for your account | Contact your operator |
 | 404 | `not_found` | The link/submission does not exist or is not yours | Check the id |
+| 410 | `invite_expired` | The hosted invite expired | Request a new link; do not retry the expired bearer URL |
+| 409 | `remediation_link_missing` | The same submission has no usable remediation link | Request a remediation link for the same submission with a fresh idempotency key |
+| 409 | `already_decided` | The submission already has a final decision | Read the submission; never reopen it with a new link |
+| 409 | `idempotency_key_reused` | The key belongs to another submission | Use a key dedicated to this submission |
+| 422 | `company_docs_pending` | A KYB parent has no company documents while related-party checks are complete | Upload the company evidence; the case is sent to human review after the documented wait |
+| 409 | `source_of_wealth_required` | A new KYC submission has no source-of-wealth evidence | Upload the evidence and approve again |
 | 404 | `verification_not_found` | You requested your self report without a registered verification | Complete your onboarding first |
 | 409 | `already_verified` / `self_verification_in_progress` | Onboarding link requested with an already-approved account, or while a verification is already in progress | Nothing to do, or complete that verification |
 | 503 | `verifications_unavailable` | Identity verification temporarily unavailable | Retry later |

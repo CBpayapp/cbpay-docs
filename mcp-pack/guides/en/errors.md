@@ -738,7 +738,8 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 
 | HTTP | `error` | Solution |
 |---:|---|---|
-| 409 | `liveness_required` | The profile cannot be approved with pending liveness; complete the liveness step first (god override with an audited reason only). |
+| 409 | `liveness_required` | The profile cannot be approved with pending liveness; complete the liveness step first (a compliance officer, org owner, or god admin can override with an audited reason). |
+| 403 | `liveness_override_forbidden` | The liveness override requires a compliance officer, org owner, or god admin with an audited reason; other roles can only request a recapture link. |
 
 ## Pay-slip errors
 

@@ -5,8 +5,11 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.271 · 8 versions - November 12, 2026
-### v2.271
+## v2.273 · 10 versions - November 12, 2026
+### v2.273
+**Changed**
+- Verification responses now explain expired invites, same-submission remediation, `company_docs_pending`, and the post-cutoff `source_of_wealth_required` approval gate. Resurrected links refresh expiry without sending a duplicate notification.
+### v2.272
 **Changed**
 
 - Clarified which verification links the November 4 remediation-expiry
@@ -15,7 +18,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
   `410 invite_expired`: request a new link — companies can now reissue one
   for their own third-party cases with the new endpoint — instead of
   retrying the dead one. See the KYC remediation guide.
-### v2.270
+### v2.271
 **Added**
 
 - New self-serve link reissue for company third-party cases:
@@ -28,7 +31,7 @@ source_url: https://docs.cbpayapp.com/en/changelog
   returns the prior result with `idempotency_hit` without re-minting).
   Decided cases answer `409 already_decided`; invited UBO/director cases
   stay one-way (`409 resend_only`, use resend-link).
-### v2.269
+### v2.270
 **Changed**
 
 - Changes-requested emails to invited UBO/director cases (which have no
@@ -37,25 +40,17 @@ source_url: https://docs.cbpayapp.com/en/changelog
   instead of a portal login wall. The hourly remediation sweep now includes
   the reviewer's note and pending documents in rescued notifications when
   the core answers (it still degrades to the generic email when it does not).
-### v2.268
+### v2.269
 **Added**
 
 - Banking customer reads now include provider feedback with `raw_status`,
   `note`, and `note_source`. The `banking_customer_status_changed` webhook
   also carries the corresponding raw status and moderation note fields.
-### v2.267
+### v2.268
 **Changed**
 - Liveness profile sessions now expose additive face-match and antispoof forensic fields when measured, including the document category used, scorer revision, score timestamp and `scored` state. A bound identity pass can report `bound_pass` in `reasons[]`; the optional smile challenge is not by itself a failed identity check.
 - The hosted wizard distinguishes identity document front/back categories (`identity_front`, `identity_back`) and UBO back documents (`uboIdentityBack`).
-### v2.266
-**Changed**
-- Weak single-match PEP candidates that are correlated, undocumented and
-  at or below USD 1,000 now raise an alert without a hold when their score is
-  below `0.75` and no hard or adverse signal is present. Any terror signal
-  always requires maker-checker approval, regardless of amount. Screening
-  review now uses 13 explicit categories instead of the generic `unknown`;
-  each category is retained for human review.
-### v2.265
+### v2.267
 **Added**
 
 - Public invoice verification now includes optional `wire_instructions`,
@@ -63,10 +58,23 @@ source_url: https://docs.cbpayapp.com/en/changelog
   invoices. The same details are available in the branded invoice PDF and
   email, with a QR payload per rail; they are omitted when no rail is
   configured and for `paid` or `void` invoices.
-### v2.264
+### v2.266
+**Changed**
+
+- Company framework agreements are now issued within seconds of KYB
+  approval (previously up to 24h via the daily sweep). The approval
+  response is unchanged and never waits for the document; if any required
+  data is missing, issuance is skipped with an audit trace and retried by
+  the daily sweep.
+### v2.265
 **Changed**
 - Authentication operations now return `503 temporarily_unavailable` when the account store cannot be read; no authentication state is changed and the client retries the same request after recovery.
 - After identity verification, blocked or closed accounts return branded `403 account_deactivated`; pre-auth failures remain uniform.
+### v2.264
+**Added**
+- Dispute evidence uploads accept a `category` (kyc, kyb, screening, liveness, order, delivery, other) matching the 6-block checklist from the request email; every evidence entry reports its category so coverage is visible per case.
+**Changed**
+- Dispute list and detail now show the processor reason, lot, brand, masked card and deadline from the chargeback file.
 ## v2.263 · 5 versions - November 11, 2026
 ### v2.263
 **Changed**

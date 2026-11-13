@@ -731,7 +731,8 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 
 | HTTP | `error` | Solución |
 |---:|---|---|
-| 409 | `liveness_required` | El perfil no se puede aprobar con liveness pendiente; complétala primero (override solo god con motivo auditado). |
+| 409 | `liveness_required` | El perfil no se puede aprobar con liveness pendiente; complétala primero (un oficial de cumplimiento, admin owner o god puede saltarla con motivo auditado). |
+| 403 | `liveness_override_forbidden` | Saltarse el liveness exige un oficial de cumplimiento, admin owner o god con motivo auditado; el resto de roles solo puede pedir un link de re-captura. |
 
 ## Errores de liquidaciones
 
