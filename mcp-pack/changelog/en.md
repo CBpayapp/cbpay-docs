@@ -5,7 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.274 · 1 version - November 13, 2026
+## v2.275 · 2 versions - November 13, 2026
+### v2.275
+**Changed**
+- Documented executed rates in movements, checkout quotes, swaps, statements, and receipts; same-asset payments are explicitly shown as no-conversion cases.
 ### v2.274
 **Changed**
 - Account support tickets now treat `resolved` as terminal for client portal messages and attachment uploads, returning `409 ticket_resolved`; resolved email replies are ignored and direct the customer to open a new ticket.

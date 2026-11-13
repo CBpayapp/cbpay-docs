@@ -123,3 +123,20 @@ flowchart LR
   用于会计结账、审计以及与您的财务团队共享。
 
 两者读取的是同一个账本：它们永远不会不一致。
+
+## 执行汇率
+
+在执行时定价的 movement 可能包含 `executed_rate`、使用 `FROM/TO` 方向书写的 `rate_pair`，以及中性的 `rate_source`。这是历史汇率，读取 ledger 时不会重新计算。
+
+```json
+{
+  "type": "swap_out",
+  "asset": "USDT",
+  "amount": "-100.000000",
+  "executed_rate": "0.99300000",
+  "rate_pair": "USDT/USDC",
+  "rate_source": "swap"
+}
+```
+
+FX payout 也使用相同方向，例如 `USD/BOB` 和 `executed_rate: "6.960000"`。对账时使用这些字段；`rate_source` 只表示执行类别，不表示供应商名称。

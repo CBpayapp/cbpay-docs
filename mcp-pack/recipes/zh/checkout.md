@@ -292,3 +292,24 @@ USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
 跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。
+
+## 公共支付页面中的汇率和费用
+
+`GET /pay/{token}/quote` 为每个 crypto 选项和 CBPay 余额返回可执行信息。每个选项读取 `due`、`due_rate` 和 `rate_pair`；发生转换费用时，`fees[]`、`fee_total_pct` 和 `fee_note: "included_in_rate"` 说明该汇率。
+
+```json
+{
+  "crypto": [{
+    "method": "crypto:btc:btc",
+    "asset": "BTC",
+    "due": "0.00046120",
+    "due_rate": "108474.32744506",
+    "rate_pair": "BTC/USDT",
+    "fee_total_pct": "0.6000",
+    "fee_note": "included_in_rate"
+  }],
+  "cbpay": {"rates": {"USDC": {"due_rate": "0.99800399", "rate_pair": "USDC/USDT", "fee_total_pct": "0.2000", "fee_note": "included_in_rate"}}}
+}
+```
+
+相同资产支付不发生转换：例如 pair 为 `USDT/USDT`，due rate 为 `1`，不需要 `fees`。页面会显示汇率；费用包含在汇率中时会显示提示。due 仍是付款人必须发送的金额。

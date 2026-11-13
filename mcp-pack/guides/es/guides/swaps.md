@@ -238,3 +238,7 @@ normalizados.
 El swap puede tener una cobertura interna de back-office. Esto no cambia el
 request ni la respuesta de `POST /v1/swaps`, la tasa de ejecución ni el
 contrato del ledger de la cuenta.
+
+## Referencia para checkout y ledger
+
+El mismo significado de tasa se usa fuera de swaps: checkout expone `due_rate`, `rate_pair` y los campos de comisión incluida antes del pago, mientras `GET /v1/movements` registra `executed_rate`, `rate_pair` y `rate_source` después de ejecutar. La cotización es indicativa; el movimiento o la respuesta del swap completado es el registro histórico.

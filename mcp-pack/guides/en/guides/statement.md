@@ -210,3 +210,7 @@ financial debit.
 Payin rows include `credit_asset` and optional `fiat_credited`; refund rows
 include `debited_asset` and `debited_amount`. JSON, PDF and XLSX preserve the
 real asset precision and keep the USDT equivalent separate.
+
+## Rates in statements and receipts
+
+Statement detail preserves the rate used for a priced operation. A swap row includes its execution `rate`; payout and other priced rows retain their rate information in the generated statement and individual receipt. PDF and Excel renders show the rate with at least three decimal places when it applies, while JSON keeps the precise string value. The rate is informational and does not change the ledger balance.
