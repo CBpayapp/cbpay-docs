@@ -7,26 +7,25 @@ description: "API and documentation change history"
 <Update label="2026年11月13日" description="v2.279 · 6 个版本">
 ### v2.279
 **已更改**
-- 补充明确同名释放的合规保护说明：仅为非硬性组合创建 active 自动白名单条目，使用系统 actor 并在 12 分钟后过期；制裁组合和已撤销条目永远不会自动恢复。
-
+- 补充 movements、checkout 报价、swap、对账单和回执中的执行汇率说明；明确相同资产支付不发生转换。
 ### v2.278
 **已更改**
-- 补充 movements、checkout 报价、swap、对账单和回执中的执行汇率说明；明确相同资产支付不发生转换。
-### v2.277
-**已更改**
 - 账户支持工单将 `resolved` 视为客户侧终态，门户消息和附件上传返回 `409 ticket_resolved`；已解决工单的邮件回复会被忽略并引导客户创建新工单。
-### v2.276
+### v2.277
 **新增**
 - 统一联系人：一个人可以保存多个 CBPay、出金和加密货币目的地。
 - 新增重复联系人建议、预览合并、专业列表筛选和目的地标签。
 - 新增门户联系人资料页和上下文出金链接。
-### v2.275
+### v2.276
 **Added**
 
 - 对账单现在包含客户端安全的 `timeline[]`，带有本地化标题、产品上下文、
   资产金额、余额和已记录的执行汇率。
 - PDF 新增“What happened?”概览、产品/月度图表、Timeline 和 Disputes 表格；
   XLSX 新增 Movements 和 Disputes 工作表。
+### v2.275
+**已更改**
+- **破坏性变更：** BOB、MXN、ARS 和 CLP 余额及 `BANK_*` 镜像仅属于 Banking。平台 payout、默认值、swap、转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`；现有法币默认值会自动迁移为 `USDT`。法币操作请使用 Banking。
 ### v2.274
 **新增**
 - 争议门户现记录搜索、多值 status 筛选、按截止时间排序，以及证据进度 automation chip。
@@ -467,7 +466,7 @@ description: "API and documentation change history"
 ### v2.201
 **变更**
 - 对验证单发起补件现在会将邀请链接延长 90 天（刚过期的也会恢复），申请人总能完成补件。API 无变化。
-<Update label="2026年10月31日" description="v2.279 · 6 versions">
+<Update label="2026年10月31日" description="v2.200 · 2 versions">
 - **卡收单垂直维度**：卡收款费用与公开 payin 响应在适用时返回 `highrisk` 或 `servicios7372`；发卡产品仍不使用该维度。
 ### v2.199
 **新增**

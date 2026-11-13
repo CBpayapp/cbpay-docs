@@ -8,7 +8,7 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
-CBPay 卡片以 **Just-In-Time 方式直接从账户的中央余额消费**：无需预充值，也无需在余额之间搬动资金。每张卡选择其消费来源余额（`spending_asset`：**USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM**，默认为 USD）。USD、USDT 和 USDC 与美元 1:1；BTC 和 GOLD 则**按每个事件发生时刻的价格**换算。每笔消费都会实时针对该资产的可用余额及该卡自身的限额进行授权，扣款会立即出现在流水记录中。
+CBPay 卡片以 **Just-In-Time 方式直接从账户的中央余额消费**：无需预充值，也无需在余额之间搬动资金。每张卡选择其消费来源余额（`spending_asset`：**USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM**，默认为 USD）。USD、USDT 和 USDC 与美元 1:1；BTC 和 GOLD 则**按每个事件发生时刻的价格**换算。每笔消费都会实时针对该资产的可用余额及该卡自身的限额进行授权，扣款会立即出现在流水记录中。有关法币拒绝和默认值迁移，请参阅 [Banking 结算破坏性变更](/zh/changelog)。
 
 ```mermaid
 flowchart LR

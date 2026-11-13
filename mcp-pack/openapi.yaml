@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.278'
-  description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
+  version: '2.279'
+  description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT. Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
   description: Live (production, real money)
@@ -17471,11 +17471,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
-                  description: "Virtual balance to debit for this operation. Accepted values are USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's default settlement asset (USD is the principal balance)."
+                  description: "Virtual balance to debit for this operation. Must be one of USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM; fiat returns 400. Omit to use your account's default settlement asset (USD is the principal balance)."
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -18662,10 +18658,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: "Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's default settlement asset."
                 idempotency_key:
                   type: string
@@ -22614,10 +22606,6 @@ paths:
                               type: string
                               description: Effective USD price per unit at which your balance would be valued (spread included); empty when unavailable.
                               example: '109029.34'
-                            same_currency_only:
-                              type: boolean
-                              description: Present and true for fiat assets; they can settle only payouts in the same currency.
-                              example: true
                   updated_at:
                     type: string
                   fees:
@@ -22695,10 +22683,6 @@ paths:
                   - asset: BTC
                     available: true
                     settlement_rate: '109029.34070000'
-                  - asset: BOB
-                    available: true
-                    settlement_rate: '1'
-                    same_currency_only: true
                   - asset: GOLD
                     available: true
                     settlement_rate: '106.99642950'
@@ -27012,7 +26996,7 @@ paths:
       - Transfers
       operationId: createTransfer
       summary: Create an internal transfer
-      description: "Moves balance between two CBPay accounts, atomically and always free of charge — any combination works: person to person, person to company, company to person or company to company. Works with the twelve virtual balances (`USD`, `USDT`, `USDC`, `USDCE`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`, `BOB`, `MXN`, `ARS`, `CLP`) and always between balances of the **same currency** (no conversion). The destination is resolved by `to_account_id`, `to_email`, `to_phone` (OTP-verified phones only) or `to_contact_id`. Every transfer saves the recipient as a contact automatically (opt out with `save_contact: false`). The recipient's webhook subscribers receive `transfer_received`."
+      description: "Moves balance between two CBPay accounts, atomically and always free of charge — any combination works: person to person, person to company, company to person or company to company. Works with the four transferable assets (`USDT`, `USDC`, `BTC`, `GOLD`) and never converts between assets. The destination is resolved by `to_account_id`, `to_email`, `to_phone` (OTP-verified phones only) or `to_contact_id`. Every transfer saves the recipient as a contact automatically (opt out with `save_contact: false`). The recipient's webhook subscribers receive `transfer_received`."
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -27054,10 +27038,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: "Balance currency to move (any of USD, USDT, USDC, USDCE, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS or CLP); the destination receives in this same currency. When omitted it resolves to the sender's settlement asset (USD is the principal balance)."
                 amount:
                   type: string

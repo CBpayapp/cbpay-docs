@@ -8,10 +8,11 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="en" />
 
-<Note>
-This page covers same-currency settlement for BOB, MXN, ARS and CLP. It does not
-convert one fiat balance into another.
-</Note>
+
+<Warning>
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
+</Warning>
+<Note>Same-currency fiat settlement was retired on 2026-11-13: fiat balances are Banking-only and platform fiat settlement returns `400`. In-flight operations complete normally; receiving fiat and movement history remain unchanged.</Note>
 
 Payouts can debit a local-fiat balance when the payout currency and
 `settlement_asset` are the same. The settlement rate is `"1"` and settlement

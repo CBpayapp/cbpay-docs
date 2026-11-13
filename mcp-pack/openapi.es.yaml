@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.278'
+  version: '2.279'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -17574,11 +17574,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
-                  description: Saldo virtual a debitar para esta operación. La ejecución en fiat devuelve hoy 503 pricing_unavailable. Omítelo para usar el asset de settlement predeterminado de tu cuenta (USD es el saldo principal).
+                  description: Saldo virtual a debitar para esta operación. Debe ser uno de USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM; fiat devuelve 400. Omítelo para usar el asset de settlement predeterminado de tu cuenta (USD es el saldo principal).
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -18764,10 +18760,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset de settlement predeterminado de tu cuenta.
                 idempotency_key:
                   type: string
@@ -22679,10 +22671,6 @@ paths:
                               type: string
                               description: Precio USD efectivo por unidad al que se valoraría tu saldo (spread incluido); vacío cuando no está disponible.
                               example: '109029.34'
-                            same_currency_only:
-                              type: boolean
-                              description: Presente y true para assets fiat; solo pueden liquidar payouts en la misma moneda.
-                              example: true
                   updated_at:
                     type: string
                   fees:
@@ -22760,10 +22748,6 @@ paths:
                   - asset: BTC
                     available: true
                     settlement_rate: '109029.34070000'
-                  - asset: BOB
-                    available: true
-                    settlement_rate: '1'
-                    same_currency_only: true
                   - asset: GOLD
                     available: true
                     settlement_rate: '106.99642950'
@@ -27012,10 +26996,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD es el saldo principal).
                 amount:
                   type: string

@@ -5,19 +5,19 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.278 · 5 versiones - 13 de noviembre de 2026
-### v2.278
+## v2.279 · 6 versiones - 13 de noviembre de 2026
+### v2.279
 **Cambiado**
 - Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
-### v2.277
+### v2.278
 **Cambiado**
 - Los tickets de soporte de cuenta tratan `resolved` como terminal para mensajes del portal y cargas de adjuntos, con `409 ticket_resolved`; las respuestas por correo a tickets resueltos se ignoran y dirigen al cliente a abrir un ticket nuevo.
-### v2.276
+### v2.277
 **Agregado**
 - Agenda unificada: una persona puede mantener varios destinos CBPay, payout y cripto.
 - Se agregaron sugerencias de duplicados, fusiones con vista previa, filtros pro y etiquetas de destinos.
 - Se agregaron perfiles de contactos en el portal con enlaces contextuales al payout.
-### v2.275
+### v2.276
 **Agregado**
 
 - Las cartolas ahora incluyen `timeline[]` segura para cliente, con títulos
@@ -25,6 +25,9 @@ source_url: https://docs.cbpayapp.com/es/changelog
   ejecución estampadas.
 - El PDF agrega el bloque “¿Qué pasó?”, gráficos por producto/mes, Timeline y
   Disputas. El XLSX agrega las hojas Movimientos y Disputas.
+### v2.275
+**Cambiado**
+- **Incompatible:** Los saldos BOB, MXN, ARS y CLP y los espejos `BANK_*` viven solo en Banking. Los payouts, defaults, swaps, transferencias, tarjetas, checkout, POS y comisiones de plataforma rechazan la liquidación fiat con HTTP `400`; los defaults fiat existentes migran automáticamente a `USDT`. Usa Banking para operaciones fiat.
 ### v2.274
 **Agregado**
 - El portal de disputas documenta búsqueda, filtros de status múltiple y orden por vencimiento, además del chip de avance de evidencia.

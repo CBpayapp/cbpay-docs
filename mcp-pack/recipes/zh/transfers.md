@@ -7,7 +7,9 @@ source_url: https://docs.cbpayapp.com/zh/guides/transfers
 ---
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
-内部转账在两个 **CBPay 账户**之间转移余额，在账本中原子完成且**始终免费** — 资金从不离开生态系统。它支持全部十二种 ledger 资产（`USD`、`USDT`、`USDC`、`USDCE`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`、`CLP`），并且始终**在同币种余额之间**进行：你发送的 `asset` 就是目标账户收到的 `asset`，没有任何兑换。
+> **重要**
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+内部转账在两个 **CBPay 账户**之间转移余额，在账本中原子完成且**始终免费** — 资金从不离开生态系统。它支持七种平台结算余额（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`），并且始终**在同一资产余额之间**进行：你发送的 `asset` 就是目标账户收到的 `asset`，没有任何兑换。
 
 ```mermaid
 sequenceDiagram
@@ -105,7 +107,7 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
   }'
 ```
 
-对于任何组合（个人或企业、任一方向），请求结构完全相同 — 只有调用凭据不同。`asset` 为可选，默认使用**发送方的 settlement 资产**（`USD` 为主资产）；它接受十二种 ledger 资产中的任意一种（`USD`、`USDT`、`USDC`、`USDCE`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`、`BOB`、`MXN`、`ARS`、`CLP`），目标账户会**以同一币种**收到。
+对于任何组合（个人或企业、任一方向），请求结构完全相同 — 只有调用凭据不同。`asset` 为可选，默认使用**发送方的 settlement 资产**（`USD` 为主资产）；它接受七种平台结算余额中的任意一种（`USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER`、`PLATINUM`），目标账户会**以同一资产**收到。
 
 响应 `201` — 转账是**同步且即时**的：
 
