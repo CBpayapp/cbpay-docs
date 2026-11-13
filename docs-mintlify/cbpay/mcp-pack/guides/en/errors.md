@@ -35,6 +35,8 @@ All errors share the same shape:
 | 403 | `org_admin_required` | Endpoint requires an admin credential |
 | 403 | `forbidden` | Credential level not allowed |
 | 403 | `account_blocked` | The account is not active; this also blocks `POST /v1/me/verification/link` — ask an administrator to restore it |
+| 403 | `account_deactivated` | Identity was verified but the account is blocked or closed; show the branded compliance message returned by the API and contact that brand's compliance email. Incorrect passwords keep the generic `invalid_credentials` response. |
+| 409 | `account_closed_terminal` | A status change would reopen a closed account; closed is terminal. Do not retry the transition. |
 | 403 | `verification_rejected_requires_admin` | Compliance rejected the account's KYC/KYB; self-service onboarding is disabled — contact your administrator to reopen verification |
 | 403 | `service_disabled` | The service is not enabled for your account (check `GET /v1/services`) |
 | 403 | `org_suspended` | Service suspended; contact the CBPay team |
@@ -86,6 +88,7 @@ Full flow and details in [security and 2FA](https://docs.cbpayapp.com/en/securit
 | 403 | `independent_factor_required` | The phone cooldown can only be unlocked with the authenticator app or the verified email, never with a code sent to the new number |
 | 429 | `too_many_attempts` | A member-wide fresh-send bucket is full; read `Retry-After`: 600 seconds for burst (3/10 minutes), 3600 seconds for hourly (10/hour), or 86400 seconds for daily (30/24 hours). Live-challenge reuse and TOTP are exempt, and blocked retries do not consume another bucket. |
 | 409 | `otp_disabled_for_org` | Two-factor authentication is not enabled for your organization; contact support |
+| 503 | `temporarily_unavailable` | The account store could not be read during an authentication gate; nothing was mutated. Retry the same request after the store recovers. |
 | 422 | `sms_country_blocked` | SMS codes are not available for this phone country (organization allowlist); verify with your authenticator app or email instead |
 | 409 | `totp_not_started` | Confirm requires starting enrollment first (`POST /v1/me/totp/enroll`) |
 | 503 | `otp_unavailable` | Verification service unavailable (the action stays blocked; OTP is never skipped) |
@@ -134,8 +137,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `idempotency_key_required` | Missing idempotency key |
 | `reserved_idempotency_key` | The key uses a system-reserved prefix (`payin-convert:` or `checkout-swap:`, owned by auto-conversions) — pick another key |
 | `beneficiary_required` | Missing payout beneficiary |
-| `invalid_cuit` | Argentina (`AR`) payouts require `beneficiary.tax_id` to be an 11-digit CUIT or CUIL — send the beneficiary's 11-digit identifier; see [payouts](https://docs.cbpayapp.com/en/guides/payouts) |
-| `invalid_cbu` | Argentina (`AR`) payouts require `beneficiary.account_number` to be a 22-digit CBU or CVU; USD payouts accept only CBU — send a valid 22-digit CBU/CVU (CBU for USD); see [payouts](https://docs.cbpayapp.com/en/guides/payouts) |
+| `invalid_cuit` | Argentina (`AR`) payouts require `beneficiary.tax_id` to be an 11-digit CUIT or CUIL — send the beneficiary's 11-digit identifier; see [payouts](https://docs.cbpayapp.com/en/guides/payouts-overview) |
+| `invalid_cbu` | Argentina (`AR`) payouts require `beneficiary.account_number` to be a 22-digit CBU or CVU; USD payouts accept only CBU — send a valid 22-digit CBU/CVU (CBU for USD); see [payouts](https://docs.cbpayapp.com/en/guides/payouts-overview) |
 | `invalid_amount` | Amount is not a valid positive decimal |
 | `recipient_required` / `self_transfer` | Invalid transfer destination |
 | `invalid_chain` / `invalid_asset` | Unsupported network or asset |
@@ -158,6 +161,7 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | Administration validations |
 | `invalid_settlement_hours` | `settlement_hours` is only accepted on the `payin_card` fee service and must be a non-negative integer (`0` = immediate credit) — see [fees](https://docs.cbpayapp.com/en/concepts/fees) |
 | `invalid_country` | Malformed or missing country code — ISO 3166-1 alpha-2 (e.g. `GET /v1/aml/catalogs/cities?country=`); also a valid but unsupported country filter (e.g. a non-`US` `country` on the bank directory lookup) |
+| `invalid_expand` | Unknown `?expand=` value on `GET /v1/contacts` (only `destinations` is supported); `dest_type`/`dest_country` also require `expand=destinations` |
 
 ### QR payin idempotency
 
@@ -180,6 +184,8 @@ compared by value (`100` equals `100.00`); `glosa` is display-only and is not
 part of the replay identity. Read the live status with
 `GET /v1/payins/{payinID}`.
 
+> **Note**
+`waiting_funds` is a processing state returned on an existing withdrawal or payout while the platform completes a temporary processing step. It is not the `402 insufficient_funds` error: `insufficient_funds` always refers to the **account's available balance** for creating a new operation. Keep the same idempotency key, read the existing resource, and do not create a replacement operation.
 ### Money and state (402 / 404 / 409 / 422 / 429)
 
 | HTTP | `error` | Meaning |
@@ -732,7 +738,8 @@ These errors are returned before debit for `ach`, `wire` and `swift` payouts:
 
 | HTTP | `error` | Solution |
 |---:|---|---|
-| 409 | `liveness_required` | The profile cannot be approved with pending liveness; complete the liveness step first (god override with an audited reason only). |
+| 409 | `liveness_required` | The profile cannot be approved with pending liveness; complete the liveness step first (a compliance officer, org owner, or god admin can override with an audited reason). |
+| 403 | `liveness_override_forbidden` | The liveness override requires a compliance officer, org owner, or god admin with an audited reason; other roles can only request a recapture link. |
 
 ## Pay-slip errors
 

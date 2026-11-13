@@ -297,6 +297,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions \
 数据模式注意事项：
 
 - 国家使用 **ISO alpha-3**（`CHL`、`USA`、`VEN`…）；日期格式 `YYYY-MM-DD`；`id_type`：`passport | id_card | drivers_license`。
+- 电话使用带国家代码的 **E.164** 格式（例如 `+56912345678`）。API 仍接受旧式数字字符串（数字、`+`、`-`、空格、括号，最多 32 个字符），但 E.164 才是正式约定。
 - KYB：在 `POST /v1/kyb/submissions` 上使用请求体 `{ external_customer_id, country?, business: {…}, ubos?, directors?, signers?, bank_info?, metadata? }`。
 - 数据模式 KYB 必须完整提供法定名称和注册号；KYC 必须提供姓名、出生日期、ISO alpha-3 国籍、证件和 ISO alpha-3 国家。未知 KYB 国家使用带该 ISO 国家值的通用 profile；`country: generic` 必须提供 `generic_country`。
 - **创建时不要求活体检测**：KYC 提交件带有 `liveness_pending: true`；通过[活体检测链接](#liveness-check-liveness-link)来完成它。
@@ -378,7 +379,7 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/do
 { "upload_url": "https://storage…", "key": "public-api/…", "expires_in": 900 }
 ```
 
-类别——KYC：`identity`、`proofOfResidence`；KYB：`legalPresence`、`ownershipStructure`、`controlStructure`、`companyDetails`。文件类型：`application/pdf`、`image/png`、`image/jpeg`；最大 15 MB；上传 URL 15 分钟后过期。
+类别——KYC：`identity`、`identity_front`（正面）、`identity_back`（背面）、`proofOfResidence`；KYB：`legalPresence`、`ownershipStructure`、`controlStructure`、`companyDetails`。文件类型：`application/pdf`、`image/png`、`image/jpeg`；最大 15 MB；上传 URL 15 分钟后过期。受邀 UBO 使用 `uboIdentity`（正面）或 `uboIdentityBack`（背面）。
 ### 上传
 
 使用相同的 `Content-Type` 将二进制文件直接 `PUT` 到 `upload_url`。
@@ -635,7 +636,7 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
           "outcome": "FAIL",
           "passed_gate": false,
           "liveness_score": "0.98",
-          "reasons": ["未检测到微笑。"],
+          "reasons": ["challenge_review"],
           "media": {
             "has_selfie": true,
             "has_video": true,
@@ -685,7 +686,7 @@ curl "https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/verificat
       "outcome": "FAIL",
       "passed_gate": false,
       "liveness_score": "0.98",
-      "reasons": ["未检测到微笑。"],
+      "reasons": ["challenge_review"],
       "media": {
         "has_selfie": true,
         "has_video": true,
@@ -813,6 +814,12 @@ curl "https://api.qbank.cl/platform/verify/reports/Bc3d4e5f6a7b84c9d0e1f2a3b4c5d
 | 403 | `company_account_required` | 个人账户尝试验证第三方 | 仅限企业账户 |
 | 403 | `service_disabled` | 您的账户已禁用 `kyc` 服务 | 联系您的运营方 |
 | 404 | `not_found` | 链接/提交件不存在或不属于您 | 检查 id |
+| 410 | `invite_expired` | 托管邀请已过期 | 请求新链接；不要重试已过期的 bearer URL |
+| 409 | `remediation_link_missing` | 同一 submission 没有可用的补件链接 | 为同一 submission 请求链接并使用新的幂等键 |
+| 409 | `already_decided` | submission 已有最终决定 | 读取 submission；不要用新链接重新打开 |
+| 409 | `idempotency_key_reused` | 幂等键属于其他 submission | 使用专属于此 submission 的键 |
+| 422 | `company_docs_pending` | KYB 母案件没有企业文件，但关联方审核已完成 | 上传企业证据；案件会在规定等待后转人工审核 |
+| 409 | `source_of_wealth_required` | 新 KYC submission 没有资金来源证据 | 上传证据后重新批准 |
 | 404 | `verification_not_found` | 在没有已登记验证的情况下请求自己的报告 | 请先完成您的入驻验证 |
 | 409 | `already_verified` / `self_verification_in_progress` | 已批准的账户又申请入驻链接，或已有验证进行中 | 无需处理，或完成该验证 |
 | 503 | `verifications_unavailable` | 身份验证暂时不可用 | 稍后重试 |

@@ -76,7 +76,7 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 `otp` 字段中发送该值。C2P 没有之前的 `/collect/otp` 请求步骤。
 `debito_inmediato` 不是当前可用的通道。向委内瑞拉的对外付款
 （`pago_movil`、`bank_transfer`）不受影响：参见
-[payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)。
 可用性可能变化；目录（`GET /v1/payins/methods`）始终是唯一可信来源。
 在所有情况下入账方式相同：按已报价的 `payin_rate` 折算为 USDT，并在
 扣除固定入金费用后净额入账。入账时会按 FIFO 消费 payin 批次；若启用的
@@ -703,6 +703,7 @@ SWIFT 电汇。`notes` 字段携带汇款银行正确填写表单所需的操作
 付款人将 `reference`（`CB…`）填写到所选调转账的 **memo / remittance
 （附言）**栏位：它是把入金匹配到您预告的关键信号（参见
 [预告转账的匹配规则](#预告转账的匹配规则)）。`holder_address` 是账户持有人的
+发票电汇应在同一栏位填写 `wire_reference`；公开验证会返回可选的电汇区块和 QR payload。
 邮政地址——美国银行的电汇表单会要求填写，每条轨道的 QR 在其有值时
 都会包含一行 "Holder address"（`notes` 同理，为一行 "Note"）。
 `intermediary_bank_name` / `intermediary_bank_swift` 仅在经由代理行
@@ -1203,7 +1204,7 @@ USD 账本金额使用美分（两位小数）。直接入账、扣账、费用�
 资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
 的 swap 按 1:1 计价，不使用 FX 预言机。BOB、MXN、ARS 仍是独立的法币
 账本资产；同币种 payout 直接从这些余额扣账（见
-[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)）。
 
 USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold

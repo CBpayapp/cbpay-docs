@@ -146,6 +146,14 @@ curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
 curl "https://api.qbank.cl/platform/v1/contacts?q=carlos&has_cbpay=true&page=1&page_size=50" \
   -H "Authorization: Bearer <token>"
 
+# 列出所有已保存目标（一次 bulk query，而不是每个联系人一次请求）
+curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+# 筛选已展开的目标
+curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&dest_type=payout&dest_country=CL&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
 # Create manually
 curl -X POST https://api.qbank.cl/platform/v1/contacts \
   -H "Authorization: Bearer <token>" \
@@ -162,6 +170,41 @@ curl -X PATCH https://api.qbank.cl/platform/v1/contacts/{contact_id} \
   -d '{ "alias": "Carlitos", "favorite": true }'
 curl -X DELETE https://api.qbank.cl/platform/v1/contacts/{contact_id} \
   -H "Authorization: Bearer <token>"
+```
+
+### 在列表中展开目标
+
+默认情况下，联系人列表只返回联系人的字段。当界面需要在同一响应中
+显示每个联系人的 CBPay、payout 和 crypto 已保存目标时，请加入
+`expand=destinations`。平台会通过一次 bulk query 加载这些目标，因此
+打开联系人列表不会产生 N+1 请求模式。
+
+使用 `dest_type=cbpay|payout|crypto` 和/或 `dest_country=XX` 缩小展开的
+`destinations` 数组。两个筛选条件都需要 `expand=destinations`。
+未知的 `expand` 值返回 `400 invalid_expand`；未展开时使用目标筛选条件，
+或使用无效的 `dest_type`，返回 `400 invalid_filter`。
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "contacts": [
+    {
+      "contact_id": "3f8a1b2c-…",
+      "display_name": "Carlos Soto",
+      "has_cbpay": true,
+      "destinations": [
+        {
+          "destination_id": "bb22…",
+          "type": "payout",
+          "country": "CL",
+          "currency": "CLP",
+          "method": "bank_transfer"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 联系人详情（`200`）：

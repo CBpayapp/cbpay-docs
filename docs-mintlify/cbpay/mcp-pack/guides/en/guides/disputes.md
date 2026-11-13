@@ -336,6 +336,39 @@ event. An administrator must make the explicit decision.
 #### Can I upload after the case is submitted?
 Yes. `open`, `evidence` and `submitted` accept account evidence. Won, lost and
 expired cases are closed to account uploads.
+## Upload evidence by checklist block
+
+When the account receives an evidence request, upload each document from the
+**Disputes** case view and choose the block it covers. The API field is
+`category`; the closed vocabulary is:
+
+| Category | What to upload |
+|---|---|
+| `kyc` | Holder, document, country, level and verification date. |
+| `kyb` | Company evidence, or a statement that the payer is an individual. |
+| `screening` | AML/CFT screening engine, verdict and date. |
+| `liveness` | Biometric method and result. |
+| `order` | User email, date/time, charged versus credited amount and destination wallet. |
+| `delivery` | Order ID plus on-chain transaction and explorer link. |
+| `other` | Supporting material outside the six standard blocks. |
+
+The portal accepts PDF, PNG and JPG files up to 10 MB. The server checks the
+file bytes, not only the declared MIME type. An empty or unknown category is
+normalized to `other`; selecting a category never changes the case decision.
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/disputes/<DISPUTE_ID>/evidence" \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN" \
+  -F "file=@delivery-proof.pdf;type=application/pdf" \
+  -F "category=delivery"
+```
+
+The case view shows a badge on each document and a **Checklist coverage**
+summary (`covered of 6 blocks covered`). A block remains pending until at least
+one document is labeled for it; documents labeled `other` are counted
+separately and do not make a standard block covered. Uploading creates an
+immutable evidence version and does not submit, accept or reject the case.
+
 ## Locally held fiat
 
 Disputes require a supported USDT credit. A payin with `credit_asset` BOB,

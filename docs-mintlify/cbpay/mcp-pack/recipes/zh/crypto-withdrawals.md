@@ -382,6 +382,23 @@ curl https://api.qbank.cl/platform/v1/crypto/withdrawals/5e8c… \
 响应包含 `receipt_url` 时，详情页标题区域提供收据下载和 tracking 链接。
 返回按钮会回到相同网络和资产的钱包。
 
+### 临时处理等待（`waiting_funds`）
+
+提现可在平台完成临时处理步骤期间继续处于处理流程。API 会返回 `status: "pending"` 和 `status_code: "waiting_funds"`；这是**临时处理状态**，不是您的账户余额错误，也不是最终失败。扣款和冻结仍属于同一笔提现，平台会使用相同的幂等上下文自动恢复处理。
+
+账户看到的是中性的企业文案，绝不会出现资金库、热钱包或通道术语：
+
+```json
+{
+  "status": "pending",
+  "status_code": "waiting_funds",
+  "status_message": "Your withdrawal is being processed and will complete automatically. No action is needed.",
+  "expected_funds_at": "2026-11-11T20:00:00Z",
+  "tx_id": ""
+}
+```
+
+`expected_funds_at` 是 RFC3339 估计时间，可能变化。请订阅 `crypto_withdrawal_status_changed` 或使用 `GET /v1/crypto/withdrawals/{withdrawalID}` 查询。**不要创建替代提现，也不要使用新幂等键重试**：现有操作会自动恢复。如果再次发送相同请求，请使用原始 `idempotency_key`，API 会返回现有操作。
 ### Travel Rule（超过阈值的提现）
 
 国际监管（FATF R.16，即 "Travel Rule"）要求 **1,000 USD 起**的链上

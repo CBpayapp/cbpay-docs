@@ -241,7 +241,7 @@ curl "https://api.qbank.cl/platform/v1/pos/summary?from=2026-07-01&to=2026-07-17
 is your commission configured on the merchant, and `net_for_merchant` is
 what you owe them (same-asset refunds already deducted). Distribute over the
 existing rails: [transfers](https://docs.cbpayapp.com/en/guides/transfers),
-[fiat payouts](https://docs.cbpayapp.com/en/guides/payouts) or [crypto withdrawals](https://docs.cbpayapp.com/en/guides/crypto).
+[fiat payouts](https://docs.cbpayapp.com/en/guides/payouts-overview) or [crypto withdrawals](https://docs.cbpayapp.com/en/guides/crypto).
 
 ## 5. Refunds
 

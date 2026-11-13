@@ -103,7 +103,7 @@ clave, recibes el payout original (`idempotency_hit: true`) sin crear ni
 debitar nada nuevo. Usa una clave distinta solo cuando realmente quieras
 crear otro pago. Ver [idempotencia](https://docs.cbpayapp.com/es/concepts/idempotency).
 #### ¿Cómo sé qué campos lleva el beneficiary de cada país?
-En los [ejemplos por país](https://docs.cbpayapp.com/es/guides/payouts#ejemplos-por-pais) hay una tabla de campos
+En los [ejemplos por país](https://docs.cbpayapp.com/es/guides/payout-corridors#ejemplos-por-pais) hay una tabla de campos
 y un ejemplo completo por país y método, y
 `GET /v1/payouts/banks?country=XX` te da los códigos de banco vigentes
 cuando aplican.

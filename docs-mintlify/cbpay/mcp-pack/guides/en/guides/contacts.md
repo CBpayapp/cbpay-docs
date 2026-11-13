@@ -147,6 +147,14 @@ curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
 curl "https://api.qbank.cl/platform/v1/contacts?q=carlos&has_cbpay=true&page=1&page_size=50" \
   -H "Authorization: Bearer <token>"
 
+# Listing with all saved destinations (one bulk query, not one request per contact)
+curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+# Restrict the expanded destinations
+curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&dest_type=payout&dest_country=CL&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
 # Create manually
 curl -X POST https://api.qbank.cl/platform/v1/contacts \
   -H "Authorization: Bearer <token>" \
@@ -163,6 +171,43 @@ curl -X PATCH https://api.qbank.cl/platform/v1/contacts/{contact_id} \
   -d '{ "alias": "Carlitos", "favorite": true }'
 curl -X DELETE https://api.qbank.cl/platform/v1/contacts/{contact_id} \
   -H "Authorization: Bearer <token>"
+```
+
+### Expand destinations in a list
+
+By default, a contact list returns the contact fields only. Add
+`expand=destinations` when the UI needs each contact's saved CBPay, payout
+and crypto destinations in the same response. The platform loads these
+destinations in one bulk query, so opening a page of contacts does not create
+an N+1 request pattern.
+
+Use `dest_type=cbpay|payout|crypto` and/or `dest_country=XX` to narrow the
+expanded `destinations` array. Both filters require `expand=destinations`.
+An unknown `expand` value returns `400 invalid_expand`; using either
+destination filter without the expansion, or an invalid `dest_type`, returns
+`400 invalid_filter`.
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "contacts": [
+    {
+      "contact_id": "3f8a1b2c-…",
+      "display_name": "Carlos Soto",
+      "has_cbpay": true,
+      "destinations": [
+        {
+          "destination_id": "bb22…",
+          "type": "payout",
+          "country": "CL",
+          "currency": "CLP",
+          "method": "bank_transfer"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 Contact detail (`200`):

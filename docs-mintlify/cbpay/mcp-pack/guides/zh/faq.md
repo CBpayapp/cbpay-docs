@@ -62,7 +62,7 @@ API 不设技术性最小值；金额极小时固定费用可能超过金额本�
 #### 我可以重试而不冒重复付款的风险吗？
 可以——这正是 `idempotency_key` 的用途：重复使用同一个键会返回原始付款（`idempotency_hit: true`），不会创建或扣除任何新内容。只有在您确实想发起另一笔付款时才使用不同的键。参见[幂等性](https://docs.cbpayapp.com/zh/concepts/idempotency)。
 #### 如何知道每个国家需要哪些收款人字段？
-[按国家的示例](https://docs.cbpayapp.com/zh/guides/payouts#examples-by-country)提供了字段表和每个国家及支付方式的完整示例，`GET /v1/payouts/banks?country=XX` 会返回适用场景下的最新银行代码。
+[按国家的示例](https://docs.cbpayapp.com/zh/guides/payout-corridors#examples-by-country)提供了字段表和每个国家及支付方式的完整示例，`GET /v1/payouts/banks?country=XX` 会返回适用场景下的最新银行代码。
 #### 扫描过的 QR 码会被支付两次吗？
 不会：每个扫描的 `provider_reference` 只允许一次确认。使用相同 `idempotency_key` 的重试会返回原始付款。
 #### 我可以取消或修改处理中的付款吗？

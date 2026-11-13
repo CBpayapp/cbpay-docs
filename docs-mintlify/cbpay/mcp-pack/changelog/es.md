@@ -5,8 +5,82 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.260 · 2 versiones - 11 de noviembre de 2026
-### v2.260
+## v2.273 · 10 versiones - 12 de noviembre de 2026
+### v2.273
+**Cambiado**
+- Las respuestas de verificación ahora explican invites expirados, subsanación sobre la misma submission, `company_docs_pending` y el gate de `source_of_wealth_required` al aprobar casos nuevos. Los links resucitados actualizan su expiración sin enviar avisos duplicados.
+### v2.272
+**Cambiado**
+
+- Aclarado qué links de verificación quedaron fuera del backfill de
+  expiración de remediación del 4 de noviembre: links revocados, sin
+  expediente atado, no-nativos y casos no-subsanables conservaron su
+  expiración. Abrir uno responde `410 invite_expired`: pide un link nuevo —
+  las empresas ahora pueden re-emitir uno para sus casos terceros propios
+  con el endpoint nuevo — en vez de reintentar el muerto. Ver la guía de
+  remediación KYC.
+### v2.271
+**Agregado**
+
+- Nueva re-emisión self-serve de links para casos terceros de empresas:
+  `POST /v1/me/verifications/{kind}/third-party/{submissionID}/reissue-link`
+  reutiliza el link usable de un caso propio sin uno (revocado, vencido más
+  allá del resend, nunca emitido) o forja un link nuevo para el MISMO
+  expediente — el caso jamás se duplica — y lo envía al email de la cuenta
+  empresa. La URL nunca viaja en respuestas. Gratis, una re-emisión por caso
+  al día (`429`), `idempotency_key` obligatoria (body o header
+  `Idempotency-Key`; el retry devuelve el resultado previo con
+  `idempotency_hit` sin re-forjar). Casos decididos responden
+  `409 already_decided`; hijas UBO/director invitadas siguen one-way
+  (`409 resend_only`, usa resend-link).
+### v2.270
+**Cambiado**
+
+- Los emails de changes-requested a hijas UBO/director invitadas (sin login
+  al portal) ahora traen el link del caso — reusado o recién emitido para el
+  mismo expediente — o guía plana de subsanación cuando no se puede emitir
+  un link, en vez de un muro de login. El barrido horario de remediación
+  ahora incluye la nota del revisor y los documentos pendientes en las
+  notificaciones rescatadas cuando el core responde (si no, degrada al email
+  genérico).
+### v2.269
+**Agregado**
+
+- Las lecturas de banking customer ahora incluyen feedback del proveedor con
+  `raw_status`, `note` y `note_source`. El webhook
+  `banking_customer_status_changed` también lleva el estado crudo y la nota
+  de moderación correspondientes.
+### v2.268
+**Cambiado**
+- Las sesiones liveness del perfil ahora exponen, cuando fueron medidos, campos forenses aditivos de face-match y antispoof, incluido el documento usado, la revisión del scorer, la hora del puntaje y el estado `scored`. Un pass con identidad atada puede informar `bound_pass` en `reasons[]`; la sonrisa opcional no convierte por sí sola la validación de identidad en fallida.
+- El wizard distingue las caras frontal y posterior del documento (`identity_front`, `identity_back`) y el reverso de documentos UBO (`uboIdentityBack`).
+### v2.267
+**Agregado**
+
+- La verificación pública de facturas ahora incluye las claves opcionales
+  `wire_instructions`, `wire_instructions_swift` y `wire_reference` para
+  facturas USD no pagadas. Los mismos datos están disponibles en el PDF y
+  email brandeados, con un payload de QR por rail; se omiten sin rail
+  configurado y en facturas `paid` o `void`.
+### v2.266
+**Cambiado**
+
+- El contrato marco de empresas ahora se emite segundos después de aprobar
+  el KYB (antes esperaba hasta 24h el barrido diario). La respuesta de
+  aprobación no cambia y jamás espera al documento; si falta algún dato
+  requerido, la emisión se omite con traza de auditoría y el barrido diario
+  reintenta.
+### v2.265
+**Cambiado**
+- Las operaciones de autenticación ahora devuelven `503 temporarily_unavailable` cuando no se puede leer el store de cuentas; no cambia el estado de autenticación y el cliente reintenta la misma request cuando se recupera.
+- Después de verificar la identidad, las cuentas bloqueadas o cerradas devuelven `403 account_deactivated` con el mensaje de marca; los fallos pre-auth siguen siendo uniformes.
+### v2.264
+**Agregado**
+- La subida de evidencia de disputas acepta `category` (kyc, kyb, screening, liveness, order, delivery, other) según el checklist de 6 bloques del correo de solicitud; cada evidencia reporta su categoría para ver cobertura por caso.
+**Cambiado**
+- El listado y detalle de disputas ahora muestran motivo, lote, marca, tarjeta enmascarada y vencimiento del archivo de contracargos.
+## v2.263 · 5 versiones - 11 de noviembre de 2026
+### v2.263
 **Cambiado**
 - Los assets apagados USDC.e (`USDCE`) y UF ya no se anuncian en cero:
   `GET /v1/balances`, `GET /v1/balances/history` (series toda-cero y snapshot
@@ -17,7 +91,7 @@ source_url: https://docs.cbpayapp.com/es/changelog
   ahora rechaza `USDCE` como `default_settlement_asset` y
   `default_payin_asset` con `400 invalid_settlement_asset` / `invalid_asset`
   (los defaults existentes siguen funcionando).
-### v2.259
+### v2.262
 **Cambiado**
 - Campana del miembro curada por defecto: `corridor_status_changed` (salud
   global de rieles), `kyc_document_validated`, `kyb_document_validated` y
@@ -27,6 +101,18 @@ source_url: https://docs.cbpayapp.com/es/changelog
   queda. Pide cualquier tipo oculto explícitamente con `event_type` / `?types=`
   para seguir recibiéndolo; webhooks, suscripciones y el canal org-admin no
   cambian.
+### v2.261
+**Cambiado**
+- Documentado el estado transitorio de proceso `waiting_funds` y `expected_funds_at` en RFC3339. Los mensajes visibles para la cuenta se mantienen corporativos y neutrales; no reintentes con una clave nueva ni crees una operación de reemplazo.
+### v2.260
+**Cambiado**
+- `GET /v1/contacts` ahora puede incluir los destinos guardados con
+  `expand=destinations`, con filtros opcionales `dest_type` y `dest_country`.
+  Los destinos se cargan en una sola query bulk, en vez de una request por
+  contacto.
+### v2.259
+**Cambiado**
+- Entrar con la clave correcta (o un segundo factor verificado: OTP de login, OAuth verificado, passkey) a una cuenta desactivada ahora devuelve `403 account_deactivated` — "Account Deactivated. If you have any questions, please reach out to \<correo de compliance de la marca\>." — en vez del error genérico. Con clave mala sigue el error genérico.
 ## v2.258 · 6 versiones - 10 de noviembre de 2026
 ### v2.258
 **Cambiado**
@@ -1836,7 +1922,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 - **Los payouts de Venezuela `pago_movil` ahora exigen `beneficiary.name`**.
   El rail exige el nombre + primer apellido del beneficiario (tal como en la
-  cédula) — un solo token es rechazado. La [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)
+  cédula) — un solo token es rechazado. La [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)
   y los ejemplos de la referencia API ahora listan `name` primero entre los
   campos requeridos. Venezuela `bank_transfer` ya documentaba `name`; sin
   cambios ahí.
@@ -1918,7 +2004,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **Payouts USD por rail bancario: el beneficiario puede vivir en cualquier
-  país** ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)): en transferencias `ach`,
+  país** ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)): en transferencias `ach`,
   `wire` y `swift` el `country_code` del beneficiario ya no está fijo en
   `US` — por ejemplo, un ACH a una cuenta de banco de EE. UU. para alguien
   que vive en Alemania. El banco receptor sigue en EE. UU. para
@@ -2173,7 +2259,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Referencia bancaria del payout, ahora visible en todas las superficies**
-  ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts)): todo payout expone
+  ([guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)): todo payout expone
   `bank_reference` — el id de transacción asignado por el banco/rail de
   destino — en las respuestas de `POST /v1/payouts`, `GET /v1/payouts` y
   `GET /v1/payouts/{payoutID}`, en el payload del webhook
@@ -2278,7 +2364,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Lookup del directorio bancario** ([guía de
-  payouts](https://docs.cbpayapp.com/es/guides/payouts)): el nuevo
+  payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)): el nuevo
   `GET /v1/payouts/bank-directory/lookup` autocompleta el banco
   beneficiario desde un directorio bancario público embebido — pasa
   exactamente uno de `routing_number` (9 dígitos, solo US) o `swift` (8 u
@@ -2411,7 +2497,7 @@ destino. La creación es idempotente: una clave nueva responde
   automático. Por operación puedes sobreescribir las declaraciones de
   propósito del riel en `options` (`purpose`, `crypto_activity`,
   `payment_gateway`). Tabla de corredores, tabla de campos por método,
-  ejemplos reales y FAQ en [Payouts](https://docs.cbpayapp.com/es/guides/payouts); ejemplos
+  ejemplos reales y FAQ en [Payouts](https://docs.cbpayapp.com/es/guides/payouts-overview); ejemplos
   nombrados `us_ach`, `us_wire` y `us_swift` en la referencia API.
 
 ### v2.34
@@ -3102,7 +3188,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Nuevo corredor: Argentina** 🇦🇷 ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts) · [guía payins](https://docs.cbpayapp.com/es/guides/payins)):
+- **Nuevo corredor: Argentina** 🇦🇷 ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) · [guía payins](https://docs.cbpayapp.com/es/guides/payins)):
   - **Payouts** en **ARS** y **USD** por `bank_transfer` a cualquier **CBU o CVU** de 22 dígitos (cuentas bancarias y billeteras virtuales; USD solo CBU→CBU). Beneficiario con `name`, `tax_id` (CUIT/CUIL) y `account_number` — sin `bank_code`.
   - **Payins** en **ARS** con **cuenta CVU dedicada** por cuenta (`POST /v1/payins/deposit-accounts` con `country: "AR"`): toda transferencia entrante se acredita automáticamente, sin referencias. Las CVU son receive-only: los intentos de débito directo se rechazan automáticamente.
   - Disponible ya en el **ambiente de pruebas** (staging) con el simulador; la activación en producción se anunciará al completarse la certificación bancaria — el catálogo (`GET /v1/payouts/methods` y `GET /v1/payins/methods`) es siempre la fuente de verdad.
@@ -3156,7 +3242,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Agregado**
 
-- **Controles de cumplimiento en pagos salientes** ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts), [errores](https://docs.cbpayapp.com/es/errors)): los payouts, los retiros crypto con nombre de beneficiario y los cobros collect ahora pasan por controles de cumplimiento adicionales **antes de mover fondos**. Errores documentados: `403 compliance_hold` (la operación fue retenida y NO se creó — sin débito; por política no se informa la razón exacta, contacta a soporte con el timestamp) y `503 compliance_check_unavailable` (la verificación no se pudo evaluar; la operación NO se creó — reintenta con la **misma** `idempotency_key`).
+- **Controles de cumplimiento en pagos salientes** ([guía payouts](https://docs.cbpayapp.com/es/guides/payouts-overview), [errores](https://docs.cbpayapp.com/es/errors)): los payouts, los retiros crypto con nombre de beneficiario y los cobros collect ahora pasan por controles de cumplimiento adicionales **antes de mover fondos**. Errores documentados: `403 compliance_hold` (la operación fue retenida y NO se creó — sin débito; por política no se informa la razón exacta, contacta a soporte con el timestamp) y `503 compliance_check_unavailable` (la verificación no se pudo evaluar; la operación NO se creó — reintenta con la **misma** `idempotency_key`).
 
 ### v1.88
 
@@ -3533,7 +3619,7 @@ destino. La creación es idempotente: una clave nueva responde
   (`given_name`/`first_surname`/...) o el split automático desde `name`, y
   un bloque opcional de remitente (`sender_name` o sus campos
   estructurados). Ejemplos por método en la
-  [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts) y en el spec.
+  [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) y en el spec.
 - **Nuevo código de error `channel_unavailable`** (HTTP 503): el canal de
   pago del corredor no está disponible temporalmente. Reintenta más tarde
   con la misma `idempotency_key`. Documentado en la página de
@@ -3800,7 +3886,7 @@ curl -o movimientos.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-0
 
 - `GET /v1/payouts` y `GET /v1/payins` aceptan el filtro `country`
   (ISO 3166-1 alfa-2, ej. `?country=MX`), combinable con `status`,
-  `from`/`to` y la paginación. Guías de [payouts](https://docs.cbpayapp.com/es/guides/payouts) y
+  `from`/`to` y la paginación. Guías de [payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) y
   [payins](https://docs.cbpayapp.com/es/guides/payins) actualizadas.
 - El bloque `fees` de `GET /v1/rates` ahora devuelve la configuración
   de comisiones **efectiva** (defaults de la organización resueltos

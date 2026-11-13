@@ -146,6 +146,14 @@ curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
 curl "https://api.qbank.cl/platform/v1/contacts?q=carlos&has_cbpay=true&page=1&page_size=50" \
   -H "Authorization: Bearer <token>"
 
+# Listado con todos los destinos guardados (una query bulk, no una request por contacto)
+curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
+# Limitar los destinos expandidos
+curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&dest_type=payout&dest_country=CL&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+
 # Crear a mano
 curl -X POST https://api.qbank.cl/platform/v1/contacts \
   -H "Authorization: Bearer <token>" \
@@ -162,6 +170,43 @@ curl -X PATCH https://api.qbank.cl/platform/v1/contacts/{contact_id} \
   -d '{ "alias": "Carlitos", "favorite": true }'
 curl -X DELETE https://api.qbank.cl/platform/v1/contacts/{contact_id} \
   -H "Authorization: Bearer <token>"
+```
+
+### Expandir destinos en un listado
+
+Por defecto, el listado devuelve solo los campos del contacto. Agrega
+`expand=destinations` cuando la interfaz necesite los destinos CBPay, payout
+y crypto guardados de cada contacto en la misma respuesta. La plataforma
+carga esos destinos en una sola query bulk, por lo que abrir una página de
+contactos no crea un patrón de requests N+1.
+
+Usa `dest_type=cbpay|payout|crypto` y/o `dest_country=XX` para acotar el
+arreglo expandido `destinations`. Ambos filtros requieren
+`expand=destinations`. Un valor desconocido de `expand` devuelve
+`400 invalid_expand`; usar cualquiera de los filtros sin la expansión, o un
+`dest_type` inválido, devuelve `400 invalid_filter`.
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "contacts": [
+    {
+      "contact_id": "3f8a1b2c-…",
+      "display_name": "Carlos Soto",
+      "has_cbpay": true,
+      "destinations": [
+        {
+          "destination_id": "bb22…",
+          "type": "payout",
+          "country": "CL",
+          "currency": "CLP",
+          "method": "bank_transfer"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 Detalle de un contacto (`200`):

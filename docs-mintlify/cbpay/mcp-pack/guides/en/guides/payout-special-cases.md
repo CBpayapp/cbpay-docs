@@ -1,0 +1,75 @@
+---
+title: "Payout special cases"
+description: "Special payout corridors, documents and QR flows"
+slug: en/guides/payout-special-cases
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/payout-special-cases
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+## SEPA Instant in EUR
+See the dedicated [SEPA Instant payout guide](https://docs.cbpayapp.com/en/guides/sepa-instant-payouts)
+for the single Europe (`EU`)/EUR/`sepa` routing row; the beneficiary's actual country
+comes from the IBAN. GB IBANs fail fast with HTTP 400 before dispatch; SEPA Credit
+Transfer for GB is future scope.
+
+## Mandatory supporting document on USD transfers
+
+EVERY outbound **USD** transfer over a bank rail (`ach`, `wire` or
+`swift`) requires an attached **supporting document** (invoice or
+receipt) — it is a requirement of the processing bank and applies to
+**any USD corridor**, not just the US one (for example, also to an
+international SWIFT such as `PY/USD/swift`).
+
+### Upload the document
+
+Send the file with `POST /v1/payouts/documents`: raw binary body with
+a PDF (`application/pdf`, up to 50 MB) and the filename in the `name`
+query param. The current US/USD payout UI accepts PDF only.
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/payouts/documents?name=invoice-2210.pdf" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/pdf" \
+  --data-binary "@invoice-2210.pdf"
+```
+
+```json
+{
+  "document_key": "payout-docs/9f1c…/org/…/3c2e…"
+}
+```
+### Pass it when creating the payout
+
+The `document_key` travels in `options.supporting_document_key`. On
+`ach`/`wire` you can add `options.document_reference_number` (invoice
+or document reference number) — it is sent to the bank.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "ach",
+    "amount": "250.00",
+    "beneficiary": { "…": "…" },
+    "options": {
+      "supporting_document_key": "payout-docs/9f1c…/org/…/3c2e…",
+      "document_reference_number": "INV-2210"
+    },
+    "idempotency_key": "us-ach-2210"
+  }'
+```
+- A USD bank-rail payout created **without the document** is rejected at
+  creation with `400 supporting_document_required` (no debit).
+- A key uploaded by **another account** is rejected with
+  `400 invalid_document_key`.
+- The `document_key` stays stored: if the create fails for another
+  reason, you reuse it on the retry — **no need to re-upload the file**.
+## QR payout
+
+Paying a collection QR (Bolivia, Brazil PIX) now has its own guide:
+
+- **QR payout** - Scan the QR for free, show your user the recipient's data and confirm the payment in a second call - charged like a regular payout.

@@ -279,6 +279,37 @@ expired 已关闭。
 </Accordion>
 </AccordionGroup>
 
+## 按清单区块上传证据
+
+收到补充证据请求后，在**争议**案件页面上传文件，并选择文件覆盖的区块。
+API 字段为 `category`，可选值为：
+
+| 类别 | 应上传的材料 |
+|---|---|
+| `kyc` | 持有人、证件、国家、等级和验证日期。 |
+| `kyb` | 企业材料，或说明付款人为个人。 |
+| `screening` | AML/CFT 筛查引擎、结论和日期。 |
+| `liveness` | 生物识别方式和结果。 |
+| `order` | 用户邮箱、时间、收取与入账金额、目标钱包。 |
+| `delivery` | 订单号、链上交易和浏览器链接。 |
+| `other` | 六个标准区块之外的佐证材料。 |
+
+门户接受最大 10 MB 的 PDF、PNG 和 JPG。服务器检查实际文件字节，而不只
+依赖声明的 MIME 类型。空类别或未知类别会标准化为 `other`；类别选择不会
+改变案件决定。
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/disputes/<DISPUTE_ID>/evidence" \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN" \
+  -F "file=@delivery-proof.pdf;type=application/pdf" \
+  -F "category=delivery"
+```
+
+案件页面会为每份材料显示类别 badge，并显示**清单覆盖**摘要
+（`6 个区块中已覆盖数量`）。只有某区块至少有一份对应类别的材料时才算
+覆盖；`other` 材料单独计数，不会覆盖标准区块。每次上传创建不可变证据版本，
+不会提交、接受或拒绝案件。
+
 {/* banking-fase2-fiat-hold:2026-09-24 */}
 
 ## 本地法币

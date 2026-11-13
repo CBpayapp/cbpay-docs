@@ -289,6 +289,39 @@ No. El worker solo cambia el caso a `expired` y registra el evento.
 #### ¿Puedo subir evidencia después de enviar el caso?
 Sí. `open`, `evidence` y `submitted` aceptan evidencia de cuenta. Los casos
 won, lost y expired quedan cerrados.
+## Sube evidencia por bloque del checklist
+
+Cuando la cuenta recibe una solicitud de evidencia, sube cada documento desde
+la vista del caso **Controversias** y selecciona el bloque que cubre. El campo
+de API es `category` y el vocabulario cerrado es:
+
+| Categoría | Qué subir |
+|---|---|
+| `kyc` | Titular, documento, país, nivel y fecha de verificación. |
+| `kyb` | Evidencia de empresa o indicar que el pagador es persona natural. |
+| `screening` | Motor de screening AML/CFT, veredicto y fecha. |
+| `liveness` | Método y resultado biométrico. |
+| `order` | Email, fecha/hora, monto cobrado versus acreditado y wallet destino. |
+| `delivery` | ID de orden, transacción on-chain y link al explorador. |
+| `other` | Material de respaldo fuera de los seis bloques. |
+
+El portal acepta PDF, PNG y JPG de hasta 10 MB. El servidor valida los bytes
+reales, no solo el MIME declarado. Una categoría vacía o desconocida se
+normaliza a `other`; elegir una categoría nunca decide el caso.
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/disputes/<DISPUTE_ID>/evidence" \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN" \
+  -F "file=@comprobante-entrega.pdf;type=application/pdf" \
+  -F "category=delivery"
+```
+
+La vista muestra un badge por documento y el resumen **Cobertura del
+checklist** (`bloques cubiertos de 6`). Un bloque sigue pendiente hasta tener
+al menos un documento etiquetado para él; los documentos `other` se cuentan
+aparte y no cubren un bloque estándar. Cada subida crea una versión inmutable
+y no envía, acepta ni rechaza el caso.
+
 ## Fiat local retenido
 
 Un payin con `credit_asset` BOB, MXN o ARS devuelve

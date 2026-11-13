@@ -85,7 +85,7 @@ pagador genera una `claveDinamica` en la app de su banco y te la entrega; tu
 integración la envía en el campo `otp` del collect. No existe una llamada
 previa a `/collect/otp` para C2P. `debito_inmediato` no es un corredor vivo.
 Los pagos salientes a Venezuela (`pago_movil`, `bank_transfer`) no cambian:
-ver [payouts](https://docs.cbpayapp.com/es/guides/payouts).
+ver [payouts](https://docs.cbpayapp.com/es/guides/payouts-overview).
 La disponibilidad puede variar; el catálogo (`GET /v1/payins/methods`) es
 siempre la fuente de verdad. En todos los casos el abono llega igual: se
 convierte a USDT al `payin_rate` cotizado y se acredita neto de la comisión
@@ -776,6 +776,7 @@ El pagador copia la `reference` (`CB…`) en el campo **memo / remittance**
 de la transferencia, use el riel que use: es la señal que enlaza el abono
 con tu anuncio (ver
 [conciliación de una transferencia anunciada](#conciliaci%C3%B3n-de-una-transferencia-anunciada)).
+En un wire de factura, usa `wire_reference`; la verificación pública devuelve sus bloques wire opcionales y payloads de QR.
 `holder_address` es la dirección postal del titular de la cuenta — los
 bancos de EE. UU. la piden en su formulario de wire, y el QR de cada riel la
 incluye como línea "Holder address" cuando tiene valor (lo mismo para
@@ -783,7 +784,6 @@ incluye como línea "Holder address" cuando tiene valor (lo mismo para
 `intermediary_bank_swift` aparecen solo en el riel que recibe wires a través
 de un banco corresponsal — muéstralos al pagador tal cual vienen; un wire
 que los necesita y viaja sin ellos puede rebotar o llegar con monto menor.
-
 Las instrucciones de depósito de EE. UU. son **obligatorias** en este
 corredor: si tu organización todavía no las configuró, el anuncio responde
 `422 deposit_instructions_unavailable` y no se crea nada (ver
@@ -1306,7 +1306,7 @@ tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
 swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
 MXN y ARS siguen siendo activos fiat separados del ledger; los payouts
 en la misma moneda debitan esos saldos directamente (ver
-[payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+[payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)).
 
 Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`

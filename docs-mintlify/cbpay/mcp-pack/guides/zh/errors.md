@@ -35,6 +35,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 403 | `org_admin_required` | 该端点需要管理员凭证 |
 | 403 | `forbidden` | 凭证级别不允许 |
 | 403 | `account_blocked` | 账户不是 active；这也会阻止 `POST /v1/me/verification/link` —— 请联系管理员恢复账户 |
+| 403 | `account_deactivated` | 身份已验证，但账户被冻结或关闭；显示 API 返回的品牌消息，并联系该品牌的合规邮箱。密码错误时仍返回通用 `invalid_credentials`。 |
+| 409 | `account_closed_terminal` | 状态变化会重新打开已关闭账户；closed 是终态。不要重试该转换。 |
 | 403 | `verification_rejected_requires_admin` | 合规团队已拒绝该账户的 KYC/KYB；已禁用自助入驻 —— 请联系管理员重新开放验证 |
 | 403 | `member_disabled` | 该用户已被禁止登录；请联系您组织的管理员 |
 | 403 | `passkey_rejected` | 通行密钥（passkey）验证失败；请重试或使用密码登录 |
@@ -69,6 +71,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | 403 | `independent_factor_required` | 手机号冷却只能通过身份验证器应用或已验证邮箱解锁，绝不能使用发送到新号码的验证码 |
 | 429 | `too_many_attempts` | 成员共享的新验证码发送预算已用尽；读取 `Retry-After`：突发（每 10 分钟 3 次）等待 600 秒，每小时（10 次）等待 3600 秒，每日（30 次）等待 86400 秒。复用有效挑战和 TOTP 不受限制，被阻止的重试不会消耗其他预算。 |
 | 503 | `otp_unavailable` | 验证服务不可用（操作保持锁定；OTP 绝不会被跳过） |
+| 503 | `temporarily_unavailable` | 身份认证 gate 期间无法读取账户存储；未发生修改。存储恢复后重试相同请求。 |
 | 409 | `otp_disabled_for_org` | 您的组织未启用按操作的双因素认证；请联系您的运营方 |
 | 422 | `sms_country_blocked` | 该电话号码所属国家不可接收短信验证码（组织白名单限制）；请改用验证器 App 或邮箱 |
 | 409 | `totp_not_started` | 尚未开始 TOTP 注册；请先调用 `POST /v1/me/totp/enroll` |
@@ -119,8 +122,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_document_file` | 文档文件无效；请上传有效的 PDF、JPEG 或 PNG 文件 |
 | `reserved_idempotency_key` | 幂等键使用了系统保留前缀（`payin-convert:` 或 `checkout-swap:`，属于自动转换）——请改用其他键 |
 | `beneficiary_required` | 缺少付款收款人信息 |
-| `invalid_cuit` | 阿根廷（`AR`）payout 要求 `beneficiary.tax_id` 为 11 位 CUIT 或 CUIL — 请发送收款人的 11 位标识；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts) |
-| `invalid_cbu` | 阿根廷（`AR`）payout 要求 `beneficiary.account_number` 为 22 位 CBU 或 CVU；USD payout 仅接受 CBU — 请发送有效的 22 位 CBU/CVU（USD 使用 CBU）；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts) |
+| `invalid_cuit` | 阿根廷（`AR`）payout 要求 `beneficiary.tax_id` 为 11 位 CUIT 或 CUIL — 请发送收款人的 11 位标识；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts-overview) |
+| `invalid_cbu` | 阿根廷（`AR`）payout 要求 `beneficiary.account_number` 为 22 位 CBU 或 CVU；USD payout 仅接受 CBU — 请发送有效的 22 位 CBU/CVU（USD 使用 CBU）；参见[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts-overview) |
 | `invalid_amount` | 金额不是有效的正十进制数 |
 | `recipient_required` / `self_transfer` | 转账目标无效 |
 | `invalid_chain` / `invalid_asset` | 不支持的网络或资产 |
@@ -143,6 +146,7 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | 管理端校验 |
 | `invalid_settlement_hours` | `settlement_hours` 仅支持 `payin_card` 费用服务，且必须是非负整数（`0` = 立即入账）— 参见[费用](https://docs.cbpayapp.com/zh/concepts/fees) |
 | `invalid_country` | 国家/地区代码格式错误或缺失——ISO 3166-1 alpha-2（例如 `GET /v1/aml/catalogs/cities?country=`）；也用于有效但不支持的国家/地区过滤条件（例如在银行目录查询中传入非 `US` 的 `country`） |
+| `invalid_expand` | `GET /v1/contacts` 的 `?expand=` 取值未知（仅支持 `destinations`）；`dest_type`/`dest_country` 同样需要 `expand=destinations` |
 
 ### QR payin 幂等性
 
@@ -161,6 +165,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 （`100` 与 `100.00` 相同）；`glosa` 只是展示文本，不参与 replay 身份。
 使用 `GET /v1/payins/{payinID}` 查询实时状态。
 
+> **注**
+`waiting_funds` 是现有提现或 payout 在平台完成临时处理步骤时返回的处理状态。它不是 `402 insufficient_funds` 错误：`insufficient_funds` 始终表示创建新操作所需的**账户可用余额**不足。请保留相同的幂等键，读取现有资源，不要创建替代操作。
 ### 资金与状态（402 / 404 / 409 / 422 / 429）
 
 | HTTP | `error` | 含义 |
@@ -703,7 +709,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 
 | HTTP | `error` | 解决方案 |
 |---:|---|---|
-| 409 | `liveness_required` | 活体待完成时无法批准；请先完成活体（仅具名 god 可凭审计理由覆盖）。 |
+| 409 | `liveness_required` | 活体待完成时无法批准；请先完成活体（合规官、org owner 或 god 可凭审计理由覆盖）。 |
+| 403 | `liveness_override_forbidden` | 跳过活体需要合规官、org owner 或 god 并附审计理由；其他角色只能申请重新采集链接。 |
 
 ## 工资单错误
 

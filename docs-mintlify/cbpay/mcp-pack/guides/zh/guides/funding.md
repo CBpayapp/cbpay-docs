@@ -40,21 +40,21 @@ sweep，不适用 sweep-exempt。
 （`bank_alias` 必填）。入账比索自动转换为USD——你的主余额。
 
 完整 deposit account 契约见 [payins](https://docs.cbpayapp.com/zh/guides/payins)；要付款出去见
-[payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)。
 
 ### 🇧🇴 BOB — 玻利维亚诺
 
 通过专用银行转账账户收款。入账 BOB 自动转换为USD——你的主余额。
 
 要付款出去（BOB 或 USD 银行转账，外加 QR），见
-[payouts](https://docs.cbpayapp.com/zh/guides/payouts) 中的玻利维亚页签。
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview) 中的玻利维亚页签。
 
 ### 🇲🇽 MXN — 墨西哥比索
 
 通过专用 CLABE 收款。入账 MXN 自动转换为USD——你的主余额。
 
 完整 deposit account 契约见 [payins](https://docs.cbpayapp.com/zh/guides/payins)；要付款出去见
-[payouts](https://docs.cbpayapp.com/zh/guides/payouts)。
+[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)。
 
 ### 🇨🇱 CLP — 智利比索
 
