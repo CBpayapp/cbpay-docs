@@ -4,7 +4,11 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="13 de noviembre de 2026" description="v2.278 · 5 versiones">
+<Update label="13 de noviembre de 2026" description="v2.279 · 6 versiones">
+### v2.279
+**Cambiado**
+- Documentada la protección de compliance al liberar homónimos claros: solo se crean entradas activas y automáticas de allowlist para pares no duros, con actor de sistema y expiración de 12 minutos; los pares de sanciones y las entradas revocadas nunca reviven automáticamente.
+
 ### v2.278
 **Cambiado**
 - Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
@@ -559,7 +563,7 @@ description: "Historial de cambios de la API y de esta documentación"
 ### v2.201
 **Cambiado**
 - Pedir cambios en una verificación ahora extiende el link del invite por 90 días (reviviéndolo si acababa de vencer), para que los solicitantes siempre puedan completar la subsanación. Sin cambios en la API.
-<Update label="31 de octubre de 2026" description="v2.200 · 2 versions">
+<Update label="31 de octubre de 2026" description="v2.279 · 6 versions">
 - **Verticales de adquirencia**: las comisiones de payin con tarjeta y la respuesta pública del payin reflejan `highrisk` o `servicios7372` cuando corresponde; los productos issuing siguen sin dimensión.
 ### v2.199
 **Agregado**
