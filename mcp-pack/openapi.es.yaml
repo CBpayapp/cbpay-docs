@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.273'
+  version: '2.274'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -25921,6 +25921,13 @@ paths:
               example:
                 error: not_found
                 message: support ticket not found
+        '409':
+          description: Ticket is resolved or closed
+          content:
+            application/json:
+              example:
+                error: ticket_resolved
+                message: this ticket is resolved; open a new one to continue
   /v1/support/tickets/{id}/attachments/{attachmentID}:
     parameters:
     - name: id
@@ -26043,6 +26050,13 @@ paths:
               example:
                 error: not_found
                 message: support ticket not found
+        '409':
+          description: Ticket is resolved or closed
+          content:
+            application/json:
+              example:
+                error: ticket_resolved
+                message: this ticket is resolved; open a new one to continue
   /v1/support/tickets/{id}/rate:
     parameters:
     - name: id
