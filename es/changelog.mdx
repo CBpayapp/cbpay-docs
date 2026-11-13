@@ -4,13 +4,21 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="13 de noviembre de 2026" description="v2.279 · 6 versiones">
-### v2.279
+<Update label="13 de noviembre de 2026" description="v2.281 · 8 versiones">
+### v2.281
+**Cambiado**
+- `GET /v1/rates` ahora devuelve la cotización ejecutable del riel VE/VES configurado, con `rate_source: rail` y `payin_rate_source: rail` cuando corresponde. La forma de la respuesta no cambia.
+### v2.280
 **Cambiado**
 - Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
-### v2.278
+### v2.279
 **Cambiado**
 - Los tickets de soporte de cuenta tratan `resolved` como terminal para mensajes del portal y cargas de adjuntos, con `409 ticket_resolved`; las respuestas por correo a tickets resueltos se ignoran y dirigen al cliente a abrir un ticket nuevo.
+### v2.278
+**Cambiado**
+
+- Firmar un contrato emitido con una plantilla vieja ya no queda sin salida: el servidor lo anula y emite uno fresco automáticamente, respondiendo `409 contract_reissued_fresh` con el id de reemplazo en `X-Contract-Envelope-ID` (sin consumir OTP). El portal recarga el documento nuevo para revisar y firmar.
+- El wizard KYB ahora limpia caracteres invisibles (espacios duros, zero-width) del texto libre antes de validar, y los errores de validación marcan el campo exacto en vez de un mensaje genérico.
 ### v2.277
 **Agregado**
 - Agenda unificada: una persona puede mantener varios destinos CBPay, payout y cripto.

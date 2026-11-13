@@ -5,13 +5,21 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.279 · 6 versions - November 13, 2026
-### v2.279
+## v2.281 · 8 versions - November 13, 2026
+### v2.281
+**Changed**
+- `GET /v1/rates` now returns the configured VE/VES rail's executable quote with `rate_source: rail` and `payin_rate_source: rail` when applicable. The response shape is unchanged.
+### v2.280
 **Changed**
 - Documented executed rates in movements, checkout quotes, swaps, statements, and receipts; same-asset payments are explicitly shown as no-conversion cases.
-### v2.278
+### v2.279
 **Changed**
 - Account support tickets now treat `resolved` as terminal for client portal messages and attachment uploads, returning `409 ticket_resolved`; resolved email replies are ignored and direct the customer to open a new ticket.
+### v2.278
+**Changed**
+
+- Signing a contract envelope issued on an older template no longer dead-ends: the server voids it and issues a fresh envelope automatically, answering `409 contract_reissued_fresh` with the replacement id in `X-Contract-Envelope-ID` (no OTP is consumed). The portal reloads the new document for review and signature.
+- The KYB wizard now strips invisible characters (non-breaking spaces, zero-width) from free text before validating, and backend validation errors highlight the exact field instead of a generic message.
 ### v2.277
 **Added**
 - Unified contacts: one person can keep multiple CBPay, payout and crypto destinations.

@@ -1111,8 +1111,7 @@ CBPay 运营方之后更新了登记的账户，已经存在的通报仍会指�
 ```
 
 `fx_rate` 是入账时刻您的 `payin_rate` —— 折算严格按该汇率进行：
-`usdt_gross = 700.00 / 6.91`。出现 `rate_source` 时，它表示报价来源
-（`lot` 或 `spot`）；没有加载报价的历史 payin 会省略该字段。
+`usdt_gross = 700.00 / 6.91`。出现 `rate_source` 时，它表示报价来源（`lot`、`spot` 或 `rail`）；VE/VES C2P 在已配置通道提供报价时使用 `rail`；没有加载报价的历史 payin 会省略该字段。
 
 入金对象保留完整的明细：
 
@@ -1207,8 +1206,7 @@ curl "https://api.qbank.cl/platform/v1/payins?from=2026-07-01&to=2026-07-08&stat
 </Accordion>
 <Accordion title="我的 payin 适用哪个汇率？">
 使用 `GET /v1/rates` 返回并在入账时生效的已报价 `payin_rate`。检查
-`payin_rate_source`：`lot` 表示启用的 USDT payin 库存支持了报价，
-`spot` 表示使用 spot 路径。您约定的点差已包含在汇率中 —— 绝不会单独列示。
+`payin_rate_source`：`lot` 表示启用的 USDT payin 库存支持了报价，`spot` 表示使用 spot 路径，`rail` 表示已配置的 VE/VES C2P 通道提供了可执行报价。您约定的点差已包含在汇率中 —— 绝不会单独列示。
 </Accordion>
 <Accordion title="payin 可以落在 USDT 以外的余额吗？">
 可以 —— 用 `PUT /v1/settlement` 设置 `default_payin_asset`。账户直接以 USD 分入账；其他已配置目标使用入账后转换流程，
