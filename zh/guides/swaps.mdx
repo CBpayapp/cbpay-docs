@@ -8,6 +8,10 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 <EnvUrls lang="zh" />
 
+
+<Warning>
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+</Warning>
 **兑换（Swaps）**在你的七种资产 — `USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER` 和 `PLATINUM` — 之间**同步、即时**地转换余额，资金始终不离开你的账户。任意币对均可（包括 `BTC` ↔ `GOLD` 直接兑换，以及 `USD` ↔ `USDT` 精确 1:1）；本地法币（`BOB`、`MXN`、`ARS`）暂不支持兑换（`invalid_pair`）。你在报价中看到的汇率就是执行汇率：转换费用**已包含在汇率中**，不会作为额外的扣款；响应会显示每一边的费用和有效总额。
 
 ```mermaid

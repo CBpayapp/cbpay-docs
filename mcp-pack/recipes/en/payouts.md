@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/en/guides/payouts-overview
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Important**
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
 A payout sends money in local currency to a bank account in the destination
 country. The amount converts from local currency to USDT at **your
 account's rate** (the one from `GET /v1/rates`) and `usdt_amount + fee`

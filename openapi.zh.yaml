@@ -17526,11 +17526,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
-                  description: 此操作要扣款的虚拟余额。可接受的值:USDT、USDC、USDCE、BTC、GOLD、SILVER、PLATINUM、BOB、MXN 与 ARS。法币执行目前返回 503 pricing_unavailable。省略则使用账户的默认结算资产(`default_settlement_asset`——USD 为主资产)。
+                  description: 此操作要扣款的虚拟余额。必须是 USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM；法币返回 400。省略则使用账户的默认结算资产(`default_settlement_asset`——USD 为主资产)。
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -18712,10 +18708,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产。
                 idempotency_key:
                   type: string
@@ -22523,10 +22515,6 @@ paths:
                               type: string
                               description: 你的余额将按此有效 USD 单价估值(已含点差);不可用时为空。
                               example: '109029.34'
-                            same_currency_only:
-                              type: boolean
-                              description: 法币资产会返回 true；只能用于相同 payout 货币的结算。
-                              example: true
                   updated_at:
                     type: string
                   fees:
@@ -22603,10 +22591,6 @@ paths:
                   - asset: BTC
                     available: true
                     settlement_rate: '109029.34070000'
-                  - asset: BOB
-                    available: true
-                    settlement_rate: '1'
-                    same_currency_only: true
                   - asset: GOLD
                     available: true
                     settlement_rate: '106.99642950'
@@ -26871,10 +26855,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: 要划转的余额币种;接收方以同一币种入账。省略时使用付款方的结算资产(USD 为主资产)。
                 amount:
                   type: string

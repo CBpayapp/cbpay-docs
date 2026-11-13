@@ -7,10 +7,9 @@ source_url: https://docs.cbpayapp.com/es/guides/fiat-settlement
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-> **Nota**
-Esta página cubre settlement en la misma moneda para BOB, MXN, ARS y CLP. No
-convierte un saldo fiat en otra moneda fiat.
-Un payout puede debitar un saldo fiat local cuando la moneda del payout y
+> **Importante**
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
+> **Nota**La liquidación fiat en la misma moneda se retiró el 2026-11-13: los saldos fiat viven solo en Banking y la liquidación fiat de plataforma devuelve `400`. Las operaciones en curso terminan normalmente; recibir fiat y el historial de movimientos no cambian.Un payout puede debitar un saldo fiat local cuando la moneda del payout y
 `settlement_asset` son iguales. La tasa de settlement es `"1"` y los spreads
 de settlement son cero. Las comisiones configuradas en USDT se convierten con
 la cotización bloqueada y se redondean hacia arriba a la unidad mínima de la

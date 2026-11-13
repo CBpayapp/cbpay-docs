@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/es/guides/swaps
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Importante**
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
 Los **swaps** convierten saldo entre tus siete activos — `USD`, `USDT`, `USDC`,
 `BTC`, `GOLD`, `SILVER` y `PLATINUM` — de forma **síncrona e instantánea**, sin que la plata salga
 de tu cuenta. Cualquier par funciona (también `BTC` ↔ `GOLD` directo,

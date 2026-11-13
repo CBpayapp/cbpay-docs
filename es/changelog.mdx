@@ -7,20 +7,16 @@ description: "Historial de cambios de la API y de esta documentación"
 <Update label="13 de noviembre de 2026" description="v2.279 · 6 versiones">
 ### v2.279
 **Cambiado**
-- Documentada la protección de compliance al liberar homónimos claros: solo se crean entradas activas y automáticas de allowlist para pares no duros, con actor de sistema y expiración de 12 minutos; los pares de sanciones y las entradas revocadas nunca reviven automáticamente.
-
+- Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
 ### v2.278
 **Cambiado**
-- Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
-### v2.277
-**Cambiado**
 - Los tickets de soporte de cuenta tratan `resolved` como terminal para mensajes del portal y cargas de adjuntos, con `409 ticket_resolved`; las respuestas por correo a tickets resueltos se ignoran y dirigen al cliente a abrir un ticket nuevo.
-### v2.276
+### v2.277
 **Agregado**
 - Agenda unificada: una persona puede mantener varios destinos CBPay, payout y cripto.
 - Se agregaron sugerencias de duplicados, fusiones con vista previa, filtros pro y etiquetas de destinos.
 - Se agregaron perfiles de contactos en el portal con enlaces contextuales al payout.
-### v2.275
+### v2.276
 **Agregado**
 
 - Las cartolas ahora incluyen `timeline[]` segura para cliente, con títulos
@@ -28,6 +24,9 @@ description: "Historial de cambios de la API y de esta documentación"
   ejecución estampadas.
 - El PDF agrega el bloque “¿Qué pasó?”, gráficos por producto/mes, Timeline y
   Disputas. El XLSX agrega las hojas Movimientos y Disputas.
+### v2.275
+**Cambiado**
+- **Incompatible:** Los saldos BOB, MXN, ARS y CLP y los espejos `BANK_*` viven solo en Banking. Los payouts, defaults, swaps, transferencias, tarjetas, checkout, POS y comisiones de plataforma rechazan la liquidación fiat con HTTP `400`; los defaults fiat existentes migran automáticamente a `USDT`. Usa Banking para operaciones fiat.
 ### v2.274
 **Agregado**
 - El portal de disputas documenta búsqueda, filtros de status múltiple y orden por vencimiento, además del chip de avance de evidencia.
@@ -563,7 +562,7 @@ description: "Historial de cambios de la API y de esta documentación"
 ### v2.201
 **Cambiado**
 - Pedir cambios en una verificación ahora extiende el link del invite por 90 días (reviviéndolo si acababa de vencer), para que los solicitantes siempre puedan completar la subsanación. Sin cambios en la API.
-<Update label="31 de octubre de 2026" description="v2.279 · 6 versions">
+<Update label="31 de octubre de 2026" description="v2.200 · 2 versions">
 - **Verticales de adquirencia**: las comisiones de payin con tarjeta y la respuesta pública del payin reflejan `highrisk` o `servicios7372` cuando corresponde; los productos issuing siguen sin dimensión.
 ### v2.199
 **Agregado**
