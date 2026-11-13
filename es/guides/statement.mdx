@@ -219,6 +219,62 @@ item trae `created_at`, `dispute_id`, `kind`, `status`, `disputed_usdt`,
 `held_usdt`, `case_number` opcional y `deadline_at`. El hold preventivo aparece
 una vez; el chargeback del proveedor es el débito financiero separado.
 
+## Timeline y vistas de la cuenta
+
+La respuesta JSON también incluye `timeline[]`, una vista cronológica segura
+para el cliente, con una fila por asiento del ledger dentro del período. Es la
+fuente de la vista **Movimientos** del portal y de la tabla Timeline del PDF y
+XLSX. No expone proveedor, margen ni spread.
+
+| Campo | Significado |
+|---|---|
+| `created_at`, `id` | Timestamp UTC e identificador estable del asiento |
+| `product`, `direction` | Agrupación de producto y dirección `in`/`out` |
+| `title_key`, `subtitle` | Clave de título traducible y contexto legible |
+| `asset`, `amount`, `balance_after` | Monto con signo y saldo resultante, en el activo |
+| `status` | Estado de la operación |
+| `country`, `currency`, `network` | Contexto opcional geográfico, fiat y blockchain |
+| `ref_type`, `ref_id` | Referencia opcional del origen |
+| `executed_rate`, `rate_pair`, `rate_source` | Tasa de ejecución estampada, si existe; nunca una recotización |
+
+`summary.counts.timeline` indica cuántas filas contiene la timeline. Ejemplo
+recortado:
+
+```json
+{
+  "summary": { "counts": { "timeline": 2 } },
+  "timeline": [
+    {
+      "created_at": "2026-07-07T14:00:00Z",
+      "id": "ledger-001",
+      "product": "payins",
+      "direction": "in",
+      "title_key": "payin_received",
+      "subtitle": "order-742",
+      "asset": "USDT",
+      "amount": "100.000000",
+      "balance_after": "1100.000000",
+      "status": "completed",
+      "country": "CL",
+      "currency": "CLP",
+      "ref_type": "payin",
+      "ref_id": "payin-001"
+    }
+  ]
+}
+```
+
+El portal presenta la misma respuesta en tres vistas:
+
+- **Resumen**: saldos, cuadratura y desgloses por producto y mes.
+- **Movimientos**: `timeline[]` cronológica, con producto, activo, estado y saldo.
+- **Por producto**: totales agrupados y detalle de cada producto.
+
+El PDF agrega el bloque **¿Qué pasó?**, un donut vectorial por producto, barras
+vectoriales por mes, la tabla Timeline con iconos y la tabla Disputas cuando
+corresponde. El XLSX agrega las hojas **Movimientos** y **Disputas** a las
+hojas existentes. Ambos respetan el idioma solicitado y la precisión del activo.
+
 {/* banking-fase2-fiat-hold:2026-09-24 */}
 ## Filas por activo
 

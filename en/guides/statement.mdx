@@ -217,6 +217,64 @@ period. Each item contains `created_at`, `dispute_id`, `kind`, `status`,
 preventive hold is represented once; the provider chargeback is the separate
 financial debit.
 
+## Timeline and account views
+
+The JSON response also includes `timeline[]`, a client-safe chronological view
+with one row per ledger entry in the requested period. It is the data source
+for the portal's **Movements** view and for the Timeline table in the PDF and
+XLSX exports. It does not expose provider identity, margin or spread.
+
+| Field | Meaning |
+|---|---|
+| `created_at`, `id` | UTC timestamp and stable ledger-entry identifier |
+| `product`, `direction` | Product grouping and `in`/`out` direction |
+| `title_key`, `subtitle` | Localized title key and human-readable context |
+| `asset`, `amount`, `balance_after` | Asset-denominated signed amount and resulting balance |
+| `status` | Operation status |
+| `country`, `currency`, `network` | Optional geographic, fiat and blockchain context |
+| `ref_type`, `ref_id` | Optional source reference |
+| `executed_rate`, `rate_pair`, `rate_source` | Optional stamped execution-rate fields; never a re-quote |
+
+The `summary.counts.timeline` value is the number of timeline rows. A shortened
+example:
+
+```json
+{
+  "summary": { "counts": { "timeline": 2 } },
+  "timeline": [
+    {
+      "created_at": "2026-07-07T14:00:00Z",
+      "id": "ledger-001",
+      "product": "payins",
+      "direction": "in",
+      "title_key": "payin_received",
+      "subtitle": "order-742",
+      "asset": "USDT",
+      "amount": "100.000000",
+      "balance_after": "1100.000000",
+      "status": "completed",
+      "country": "CL",
+      "currency": "CLP",
+      "ref_type": "payin",
+      "ref_id": "payin-001"
+    }
+  ]
+}
+```
+
+The portal uses three views over the same response:
+
+- **Summary**: balances, reconciliation and product/month breakdowns.
+- **Movements**: the chronological `timeline[]`, with product, asset, status
+  and balance-after context.
+- **By product**: grouped product totals and the detailed product sections.
+
+The PDF adds a **What happened?** overview, a vector donut by product, vector
+bars by month, the Timeline table with icons, and the Disputes table when
+applicable. The XLSX export has **Movements** and **Disputes** sheets in
+addition to the existing product sheets. Both exports preserve the requested
+language and asset precision.
+
 {/* banking-fase2-fiat-hold:2026-09-24 */}
 ## Asset-aware payin rows
 

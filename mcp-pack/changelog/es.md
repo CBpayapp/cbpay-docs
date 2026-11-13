@@ -5,13 +5,21 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.275 · 2 versiones - 13 de noviembre de 2026
-### v2.275
+## v2.277 · 4 versiones - 13 de noviembre de 2026
+### v2.277
 **Cambiado**
 - Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
-### v2.274
+### v2.276
 **Cambiado**
 - Los tickets de soporte de cuenta tratan `resolved` como terminal para mensajes del portal y cargas de adjuntos, con `409 ticket_resolved`; las respuestas por correo a tickets resueltos se ignoran y dirigen al cliente a abrir un ticket nuevo.
+### v2.275
+**Agregado**
+
+- Las cartolas ahora incluyen `timeline[]` segura para cliente, con títulos
+  traducibles, contexto de producto, montos por activo, saldos y tasas de
+  ejecución estampadas.
+- El PDF agrega el bloque “¿Qué pasó?”, gráficos por producto/mes, Timeline y
+  Disputas. El XLSX agrega las hojas Movimientos y Disputas.
 ### v2.274
 **Agregado**
 - El portal de disputas documenta búsqueda, filtros de status múltiple y orden por vencimiento, además del chip de avance de evidencia.

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-13 06:36 UTC",
-    "_content_sha256": "7cbc92c48117d3d3284b716ac63287ce092e9872b6d1acf0a8e706ebe35db7c3"
+    "_generated_at": "2026-11-13 13:19 UTC",
+    "_content_sha256": "429f6b185bf6e993aa69bbfa66dcb256b7f0049d567c6d0a156fc280c9943472"
   },
   "auth": {
     "type": "bearer",
@@ -7354,7 +7354,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"account\": {\n    \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"display_name\": \"Example Company SpA\",\n    \"email\": \"ops@example.com\",\n    \"type\": \"company\"\n  },\n  \"period\": {\n    \"from\": \"2026-01-01\",\n    \"to\": \"2026-07-07\",\n    \"timezone\": \"America/New_York\"\n  },\n  \"generated_at\": \"2026-07-07T15:00:00Z\",\n  \"summary\": {\n    \"opening_balance\": \"0.000000\",\n    \"total_in\": \"985633.540000\",\n    \"total_out\": \"38099.870000\",\n    \"net_change\": \"947533.670000\",\n    \"closing_balance\": \"947533.670000\",\n    \"balanced\": true,\n    \"counts\": {\n      \"payouts\": 51,\n      \"payins\": 12,\n      \"crypto_deposits\": 18,\n      \"crypto_withdrawals\": 3,\n      \"transfers\": 4,\n      \"service_charges\": 2\n    },\n    \"fees_by_service\": {\n      \"payout\": \"15.300000\",\n      \"funding\": \"897.550000\"\n    },\n    \"total_fees\": \"912.850000\"\n  },\n  \"assets\": [\n    {\n      \"asset\": \"GOLD\",\n      \"opening_balance\": \"0.000000\",\n      \"total_in\": \"12.500000\",\n      \"total_out\": \"2.000000\",\n      \"net_change\": \"10.500000\",\n      \"closing_balance\": \"10.500000\",\n      \"balanced\": true\n    }\n  ],\n  \"breakdown\": {\n    \"by_product\": [\n      {\n        \"product\": \"payouts\",\n        \"count\": 51,\n        \"usdt_in\": \"0.000000\",\n        \"usdt_out\": \"38099.870000\",\n        \"fees\": \"15.300000\"\n      }\n    ],\n    \"by_country\": [\n      {\n        \"flow\": \"payouts\",\n        \"country\": \"BO\",\n        \"currency\": \"BOB\",\n        \"count\": 14,\n        \"local_amount\": \"28748.58\",\n        \"usdt_amount\": \"2902.210000\"\n      }\n    ],\n    \"by_currency\": [\n      {\n        \"currency\": \"BOB\",\n        \"payout_local\": \"28748.58\",\n        \"payin_local\": \"700.00\"\n      }\n    ],\n    \"by_month\": [\n      {\n        \"month\": \"2026-01\",\n        \"usdt_in\": \"985633.540000\",\n        \"usdt_out\": \"35100.000000\"\n      }\n    ]\n  },\n  \"payouts\": [\n    {\n      \"created_at\": \"2026-03-19T22:57:00Z\",\n      \"payout_id\": \"0d4f2a10-1b2c-3d4e-5f60-718293a4b5c6\",\n      \"idempotency_key\": \"bo-90\",\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"method\": \"bank_transfer\",\n      \"beneficiary\": \"Juan Quispe\",\n      \"detail\": \"1234567890\",\n      \"local_amount\": \"90.00\",\n      \"fx_rate\": \"6.91\",\n      \"usdt_amount\": \"13.024600\",\n      \"fee\": \"0.300000\",\n      \"fee_percent\": \"0.200000\",\n      \"fee_fixed\": \"0.100000\",\n      \"total_debit\": \"13.324600\",\n      \"status\": \"completed\",\n      \"bank_reference\": \"00761123456\"\n    }\n  ],\n  \"payins\": [],\n  \"crypto_deposits\": [],\n  \"crypto_withdrawals\": [],\n  \"transfers\": [],\n  \"card_transactions\": [\n    {\n      \"created_at\": \"2026-03-20T10:12:00Z\",\n      \"transaction_id\": \"5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c\",\n      \"card_id\": \"c0de0791-0000-0000-0000-000000000003\",\n      \"kind\": \"purchase\",\n      \"merchant\": \"AMAZON.COM\",\n      \"amount_usd\": \"25.00\",\n      \"spend_asset\": \"USDT\",\n      \"spend_amount\": \"25.000000\",\n      \"status\": \"settled\"\n    }\n  ],\n  \"swaps\": [\n    {\n      \"created_at\": \"2026-03-21T09:00:00Z\",\n      \"swap_id\": \"1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d\",\n      \"from_asset\": \"USDT\",\n      \"to_asset\": \"BTC\",\n      \"from_amount\": \"10.000000\",\n      \"to_amount\": \"0.00015433\",\n      \"rate\": \"0.00001543\",\n      \"status\": \"completed\"\n    }\n  ],\n  \"banking_operations\": [\n    {\n      \"created_at\": \"2026-03-22T14:30:00Z\",\n      \"operation_id\": \"2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e\",\n      \"direction\": \"out\",\n      \"type\": \"wire\",\n      \"currency\": \"USD\",\n      \"amount\": \"150.00\",\n      \"counterparty\": \"Acme Inc\",\n      \"status\": \"completed\"\n    }\n  ],\n  \"service_charges\": [\n    {\n      \"created_at\": \"2026-03-23T08:00:00Z\",\n      \"type\": \"banking_fee\",\n      \"service\": \"banking_customer\",\n      \"fee_model\": \"fixed\",\n      \"asset\": \"USDT\",\n      \"reference\": \"cust-001\",\n      \"amount\": \"-0.500000\",\n      \"balance_after\": \"139.100000\"\n    }\n  ]\n}"
+              "body": "{\n  \"account\": {\n    \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n    \"display_name\": \"Example Company SpA\",\n    \"email\": \"ops@example.com\",\n    \"type\": \"company\"\n  },\n  \"period\": {\n    \"from\": \"2026-01-01\",\n    \"to\": \"2026-07-07\",\n    \"timezone\": \"America/New_York\"\n  },\n  \"generated_at\": \"2026-07-07T15:00:00Z\",\n  \"summary\": {\n    \"opening_balance\": \"0.000000\",\n    \"total_in\": \"985633.540000\",\n    \"total_out\": \"38099.870000\",\n    \"net_change\": \"947533.670000\",\n    \"closing_balance\": \"947533.670000\",\n    \"balanced\": true,\n    \"counts\": {\n      \"payouts\": 51,\n      \"payins\": 12,\n      \"crypto_deposits\": 18,\n      \"crypto_withdrawals\": 3,\n      \"transfers\": 4,\n      \"service_charges\": 2,\n      \"timeline\": 2\n    },\n    \"fees_by_service\": {\n      \"payout\": \"15.300000\",\n      \"funding\": \"897.550000\"\n    },\n    \"total_fees\": \"912.850000\"\n  },\n  \"assets\": [\n    {\n      \"asset\": \"GOLD\",\n      \"opening_balance\": \"0.000000\",\n      \"total_in\": \"12.500000\",\n      \"total_out\": \"2.000000\",\n      \"net_change\": \"10.500000\",\n      \"closing_balance\": \"10.500000\",\n      \"balanced\": true\n    }\n  ],\n  \"breakdown\": {\n    \"by_product\": [\n      {\n        \"product\": \"payouts\",\n        \"count\": 51,\n        \"usdt_in\": \"0.000000\",\n        \"usdt_out\": \"38099.870000\",\n        \"fees\": \"15.300000\"\n      }\n    ],\n    \"by_country\": [\n      {\n        \"flow\": \"payouts\",\n        \"country\": \"BO\",\n        \"currency\": \"BOB\",\n        \"count\": 14,\n        \"local_amount\": \"28748.58\",\n        \"usdt_amount\": \"2902.210000\"\n      }\n    ],\n    \"by_currency\": [\n      {\n        \"currency\": \"BOB\",\n        \"payout_local\": \"28748.58\",\n        \"payin_local\": \"700.00\"\n      }\n    ],\n    \"by_month\": [\n      {\n        \"month\": \"2026-01\",\n        \"usdt_in\": \"985633.540000\",\n        \"usdt_out\": \"35100.000000\"\n      }\n    ]\n  },\n  \"payouts\": [\n    {\n      \"created_at\": \"2026-03-19T22:57:00Z\",\n      \"payout_id\": \"0d4f2a10-1b2c-3d4e-5f60-718293a4b5c6\",\n      \"idempotency_key\": \"bo-90\",\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"method\": \"bank_transfer\",\n      \"beneficiary\": \"Juan Quispe\",\n      \"detail\": \"1234567890\",\n      \"local_amount\": \"90.00\",\n      \"fx_rate\": \"6.91\",\n      \"usdt_amount\": \"13.024600\",\n      \"fee\": \"0.300000\",\n      \"fee_percent\": \"0.200000\",\n      \"fee_fixed\": \"0.100000\",\n      \"total_debit\": \"13.324600\",\n      \"status\": \"completed\",\n      \"bank_reference\": \"00761123456\"\n    }\n  ],\n  \"payins\": [],\n  \"crypto_deposits\": [],\n  \"crypto_withdrawals\": [],\n  \"transfers\": [],\n  \"card_transactions\": [\n    {\n      \"created_at\": \"2026-03-20T10:12:00Z\",\n      \"transaction_id\": \"5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c\",\n      \"card_id\": \"c0de0791-0000-0000-0000-000000000003\",\n      \"kind\": \"purchase\",\n      \"merchant\": \"AMAZON.COM\",\n      \"amount_usd\": \"25.00\",\n      \"spend_asset\": \"USDT\",\n      \"spend_amount\": \"25.000000\",\n      \"status\": \"settled\"\n    }\n  ],\n  \"swaps\": [\n    {\n      \"created_at\": \"2026-03-21T09:00:00Z\",\n      \"swap_id\": \"1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d\",\n      \"from_asset\": \"USDT\",\n      \"to_asset\": \"BTC\",\n      \"from_amount\": \"10.000000\",\n      \"to_amount\": \"0.00015433\",\n      \"rate\": \"0.00001543\",\n      \"status\": \"completed\"\n    }\n  ],\n  \"banking_operations\": [\n    {\n      \"created_at\": \"2026-03-22T14:30:00Z\",\n      \"operation_id\": \"2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e\",\n      \"direction\": \"out\",\n      \"type\": \"wire\",\n      \"currency\": \"USD\",\n      \"amount\": \"150.00\",\n      \"counterparty\": \"Acme Inc\",\n      \"status\": \"completed\"\n    }\n  ],\n  \"service_charges\": [\n    {\n      \"created_at\": \"2026-03-23T08:00:00Z\",\n      \"type\": \"banking_fee\",\n      \"service\": \"banking_customer\",\n      \"fee_model\": \"fixed\",\n      \"asset\": \"USDT\",\n      \"reference\": \"cust-001\",\n      \"amount\": \"-0.500000\",\n      \"balance_after\": \"139.100000\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"created_at\": \"2026-03-23T08:00:00Z\",\n      \"id\": \"ledger-001\",\n      \"product\": \"service_charges\",\n      \"direction\": \"out\",\n      \"title_key\": \"service_charge\",\n      \"asset\": \"USDT\",\n      \"amount\": \"-0.500000\",\n      \"balance_after\": \"139.100000\",\n      \"status\": \"completed\"\n    }\n  ]\n}"
             }
           ]
         }
@@ -11983,7 +11983,7 @@
                   "key": "q",
                   "value": "",
                   "disabled": true,
-                  "description": "Search by name, alias, email or phone."
+                  "description": "Search by name, alias, email, phone, or any saved destination (on-chain address, chain, country, currency, method, label)."
                 },
                 {
                   "key": "has_cbpay",
@@ -11996,6 +11996,24 @@
                   "value": "",
                   "disabled": true,
                   "description": ""
+                },
+                {
+                  "key": "source",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Only contacts created by this origin."
+                },
+                {
+                  "key": "has_destinations",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Only contacts with (or without) saved destinations."
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Result order: `name` (A-Z, accent-insensitive), `recent` (last used first) or `favorite` (favorites first, the default)."
                 },
                 {
                   "key": "expand",
@@ -12048,7 +12066,7 @@
                       "key": "q",
                       "value": "",
                       "disabled": true,
-                      "description": "Search by name, alias, email or phone."
+                      "description": "Search by name, alias, email, phone, or any saved destination (on-chain address, chain, country, currency, method, label)."
                     },
                     {
                       "key": "has_cbpay",
@@ -12061,6 +12079,24 @@
                       "value": "",
                       "disabled": true,
                       "description": ""
+                    },
+                    {
+                      "key": "source",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Only contacts created by this origin."
+                    },
+                    {
+                      "key": "has_destinations",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Only contacts with (or without) saved destinations."
+                    },
+                    {
+                      "key": "sort",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Result order: `name` (A-Z, accent-insensitive), `recent` (last used first) or `favorite` (favorites first, the default)."
                     },
                     {
                       "key": "expand",
@@ -12092,7 +12128,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"contacts\": [\n    {\n      \"contact_id\": \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n      \"display_name\": \"Carlos Soto\",\n      \"alias\": \"Carlitos\",\n      \"phone\": \"+56987654321\",\n      \"email\": \"carlos@mail.com\",\n      \"has_cbpay\": true,\n      \"cbpay_account_id\": \"389d34a3-6c61-4782-b822-95ac173068dc\",\n      \"source\": \"import\",\n      \"favorite\": true,\n      \"destinations\": [\n        {\n          \"destination_id\": \"aa11bb22-cc33-44dd-8899-aabbccddeeff\",\n          \"type\": \"payout\",\n          \"country\": \"CL\",\n          \"currency\": \"CLP\",\n          \"method\": \"bank_transfer\"\n        }\n      ],\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 1,\n  \"contacts\": [\n    {\n      \"contact_id\": \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n      \"display_name\": \"Carlos Soto\",\n      \"alias\": \"Carlitos\",\n      \"phone\": \"+56987654321\",\n      \"email\": \"carlos@mail.com\",\n      \"has_cbpay\": true,\n      \"cbpay_account_id\": \"389d34a3-6c61-4782-b822-95ac173068dc\",\n      \"source\": \"import\",\n      \"favorite\": true,\n      \"destinations\": [\n        {\n          \"destination_id\": \"aa11bb22-cc33-44dd-8899-aabbccddeeff\",\n          \"type\": \"payout\",\n          \"country\": \"CL\",\n          \"currency\": \"CLP\",\n          \"method\": \"bank_transfer\"\n        }\n      ],\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"updated_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -12157,6 +12193,54 @@
           ]
         },
         {
+          "name": "Suggest duplicate groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/contacts/duplicates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "contacts",
+                "duplicates"
+              ]
+            },
+            "description": "Groups your address book by folded name (case, accents and spaces insensitive) and returns the groups with 2+ contacts, most duplicated first. Read-only suggestions for the merge UI with preview."
+          },
+          "response": [
+            {
+              "name": "200 Duplicate groups (up to 50).",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/contacts/duplicates",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "contacts",
+                    "duplicates"
+                  ]
+                }
+              },
+              "status": "Duplicate groups (up to 50).",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"groups\": [\n    {\n      \"name\": \"juan perez\",\n      \"contact_ids\": [\n        \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n        \"9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f\"\n      ],\n      \"display_names\": [\n        \"Juan Pérez\",\n        \"JUAN PEREZ\"\n      ],\n      \"contacts_count\": 2,\n      \"destinations_count\": 3\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
           "name": "Import the phone address book",
           "request": {
             "method": "POST",
@@ -12215,6 +12299,68 @@
                 }
               ],
               "body": "{\n  \"imported\": 2,\n  \"matched\": 1,\n  \"total\": 2,\n  \"contacts\": [\n    {\n      \"name\": \"Carlos Soto\",\n      \"phone\": \"+56987654321\",\n      \"contact_id\": \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n      \"has_cbpay\": true\n    },\n    {\n      \"name\": \"Ana Perez\",\n      \"phone\": \"+56912345678\",\n      \"contact_id\": \"9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f\",\n      \"has_cbpay\": false\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Merge duplicate contacts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/contacts/merge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "contacts",
+                "merge"
+              ]
+            },
+            "description": "Fuses 2 to 20 contacts into one survivor (one person = one contact with many destinations). Destinations move to the survivor; a missing or foreign id answers 404 and merges nothing (no partial merge). Not idempotent: retrying after success answers 404 (sources already deleted), so the client must not blindly retry.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contact_ids\": [\n    \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n    \"9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f\"\n  ],\n  \"surviving_contact_id\": \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Merged contact with all destinations.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/contacts/merge",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "contacts",
+                    "merge"
+                  ]
+                }
+              },
+              "status": "Merged contact with all destinations.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"contact_id\": \"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b\",\n  \"display_name\": \"Carlos Soto\",\n  \"phone\": \"+56987654321\",\n  \"has_cbpay\": true,\n  \"source\": \"import\",\n  \"favorite\": true,\n  \"destinations\": [\n    {\n      \"destination_id\": \"aa11bb22-cc33-44dd-8899-aabbccddeeff\",\n      \"type\": \"payout\",\n      \"country\": \"CL\",\n      \"currency\": \"CLP\",\n      \"method\": \"bank_transfer\"\n    },\n    {\n      \"destination_id\": \"bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c\",\n      \"type\": \"crypto\",\n      \"chain\": \"tron\",\n      \"address\": \"TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk\"\n    }\n  ],\n  \"merged_contact_ids\": [\n    \"9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f\"\n  ],\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-11-13T12:00:00Z\"\n}"
             }
           ]
         },
@@ -12485,6 +12631,92 @@
                 }
               ],
               "body": "{\n  \"destination_id\": \"bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c\",\n  \"type\": \"payout\",\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"details\": {\n    \"name\": \"Carlos Soto\",\n    \"tax_id\": \"12.345.678-5\",\n    \"bank_code\": \"012\",\n    \"account_type\": \"checking\",\n    \"account_number\": \"123456789\"\n  },\n  \"last_used_at\": \"2026-07-10T16:00:00Z\",\n  \"created_at\": \"2026-07-10T16:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Rename a saved destination",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/contacts/:contactID/destinations/:destinationID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "contacts",
+                ":contactID",
+                "destinations",
+                ":destinationID"
+              ],
+              "variable": [
+                {
+                  "key": "contactID",
+                  "value": ""
+                },
+                {
+                  "key": "destinationID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Updates the destination label (the only editable field: identity and fingerprint never change).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Cuenta vista\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Renamed destination.",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/contacts/:contactID/destinations/:destinationID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "contacts",
+                    ":contactID",
+                    "destinations",
+                    ":destinationID"
+                  ],
+                  "variable": [
+                    {
+                      "key": "contactID",
+                      "value": ""
+                    },
+                    {
+                      "key": "destinationID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Renamed destination.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"destination_id\": \"bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c\",\n  \"type\": \"payout\",\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"label\": \"Cuenta vista\",\n  \"last_used_at\": \"2026-07-10T16:00:00Z\",\n  \"created_at\": \"2026-07-10T16:00:00Z\"\n}"
             }
           ]
         },

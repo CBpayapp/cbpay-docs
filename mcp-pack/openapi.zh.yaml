@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.275'
+  version: '2.277'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -6750,7 +6750,7 @@ paths:
         in: query
         schema:
           type: string
-        description: 按姓名、别名、邮箱或电话搜索。
+        description: 按姓名、别名、邮箱、电话或任一已保存目的地(链上地址、网络、国家/地区、币种、方式、标签)搜索。
       - name: has_cbpay
         in: query
         schema:
@@ -6760,6 +6760,31 @@ paths:
         in: query
         schema:
           type: boolean
+      - name: source
+        in: query
+        schema:
+          type: string
+          enum:
+          - manual
+          - import
+          - transfer
+          - payout
+          - crypto
+        description: 仅限该来源创建的联系人。
+      - name: has_destinations
+        in: query
+        schema:
+          type: boolean
+        description: 仅限有(或无)已保存目的地的联系人。
+      - name: sort
+        in: query
+        schema:
+          type: string
+          enum:
+          - name
+          - recent
+          - favorite
+        description: 结果排序:`name`(A-Z,重音不敏感)、`recent`(最近使用优先)或 `favorite`(收藏优先,默认)。
       - name: expand
         in: query
         schema:
@@ -6791,6 +6816,9 @@ paths:
                     type: integer
                   page_size:
                     type: integer
+                  total:
+                    type: integer
+                    description: 匹配筛选条件的联系人总数。
                   contacts:
                     type: array
                     items:
@@ -6798,6 +6826,7 @@ paths:
               example:
                 page: 1
                 page_size: 50
+                total: 1
                 contacts:
                 - contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
                   display_name: Carlos Soto
@@ -6817,7 +6846,7 @@ paths:
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-10T15:00:00Z'
         '400':
-          description: expand 或目标筛选条件无效。
+          description: expand、sort、source 或目标筛选条件无效。
           content:
             application/json:
               schema:
@@ -6903,6 +6932,55 @@ paths:
                 message: duplicate
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/contacts/duplicates:
+    get:
+      tags:
+      - 联系人
+      operationId: listContactDuplicates
+      summary: 推荐重复分组
+      description: 按折叠名称(大小写、重音与空格不敏感)对你的通讯录分组,返回含 2 个以上联系人的分组,重复最多的在前。是合并 UI 预览用的只读建议。
+      responses:
+        '200':
+          description: 重复分组(最多 50 个)。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: 该组共享的折叠名称。
+                        contact_ids:
+                          type: array
+                          items:
+                            type: string
+                            format: uuid
+                        display_names:
+                          type: array
+                          items:
+                            type: string
+                        contacts_count:
+                          type: integer
+                        destinations_count:
+                          type: integer
+              example:
+                groups:
+                - name: juan perez
+                  contact_ids:
+                  - 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                  - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+                  display_names:
+                  - Juan Pérez
+                  - JUAN PEREZ
+                  contacts_count: 2
+                  destinations_count: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/contacts/import:
     post:
       tags:
@@ -6981,6 +7059,104 @@ paths:
               example:
                 error: batch_too_large
                 message: send up to 1000 contacts per request (paginate the upload)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/contacts/merge:
+    post:
+      tags:
+      - 联系人
+      operationId: mergeContacts
+      summary: 合并重复联系人
+      description: 将 2 到 20 个联系人融合为一个幸存者(一个人 = 一个联系人 + 多个目的地)。目的地将移至幸存者;缺失或他人的 id 返回 404 且不合并(无部分合并)。非幂等:成功后重试返回 404(来源已删除),客户端不得盲目重试。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - contact_ids
+              properties:
+                contact_ids:
+                  type: array
+                  minItems: 2
+                  maxItems: 20
+                  items:
+                    type: string
+                    format: uuid
+                  description: 要融合的你的通讯录中的不同联系人。
+                surviving_contact_id:
+                  type: string
+                  format: uuid
+                  description: 幸存的联系人(必须是 contact_ids 之一;默认为第一个)。
+                display_name:
+                  type: string
+                  description: 幸存者显示名称的可选覆盖。
+                alias:
+                  type: string
+                  description: 幸存者别名的可选覆盖。
+            example:
+              contact_ids:
+              - 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+              - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+              surviving_contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+      responses:
+        '200':
+          description: 带有全部目的地的融合后联系人。
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Contact'
+                - type: object
+                  properties:
+                    merged_contact_ids:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: 被合并删除的来源联系人。
+              example:
+                contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                display_name: Carlos Soto
+                phone: '+56987654321'
+                has_cbpay: true
+                source: import
+                favorite: true
+                destinations:
+                - destination_id: aa11bb22-cc33-44dd-8899-aabbccddeeff
+                  type: payout
+                  country: CL
+                  currency: CLP
+                  method: bank_transfer
+                - destination_id: bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c
+                  type: crypto
+                  chain: tron
+                  address: TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk
+                merged_contact_ids:
+                - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+                created_at: '2026-07-07T12:00:00Z'
+                updated_at: '2026-11-13T12:00:00Z'
+        '400':
+          description: invalid_payload / batch_too_large / invalid_characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_payload
+                message: contact_ids must include at least 2 distinct contacts
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 继承的电话/邮箱属于你通讯录中的另一个联系人。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: duplicate
+                message: duplicate
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/contacts/{contactID}:
@@ -7199,6 +7375,65 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/contacts/{contactID}/destinations/{destinationID}:
+    patch:
+      tags:
+      - 联系人
+      operationId: updateContactDestination
+      summary: 重命名已保存的收款目的地
+      description: 更新目的地的标签(唯一可编辑字段:身份与指纹永不改变)。
+      parameters:
+      - name: contactID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: destinationID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+            example:
+              label: Cuenta vista
+      responses:
+        '200':
+          description: 已重命名的目的地。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDestination'
+              example:
+                destination_id: bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c
+                type: payout
+                country: CL
+                currency: CLP
+                method: bank_transfer
+                label: Cuenta vista
+                last_used_at: '2026-07-10T16:00:00Z'
+                created_at: '2026-07-10T16:00:00Z'
+        '400':
+          description: invalid_characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_characters
+                message: label contains invalid characters
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     delete:
       tags:
       - 联系人
@@ -22810,8 +23045,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: '#/components/schemas/Statement'
               example:
                 account:
                   account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
@@ -22837,6 +23071,7 @@ paths:
                     crypto_withdrawals: 3
                     transfers: 4
                     service_charges: 2
+                    timeline: 2
                   fees_by_service:
                     payout: '15.300000'
                     funding: '897.550000'
@@ -22930,6 +23165,16 @@ paths:
                   reference: cust-001
                   amount: '-0.500000'
                   balance_after: '139.100000'
+                timeline:
+                - created_at: '2026-03-23T08:00:00Z'
+                  id: ledger-001
+                  product: service_charges
+                  direction: out
+                  title_key: service_charge
+                  asset: USDT
+                  amount: '-0.500000'
+                  balance_after: '139.100000'
+                  status: completed
         '400':
           description: invalid_range / invalid_format。
           content:
@@ -28708,6 +28953,107 @@ components:
           type: string
           description: 面向付款人的自由格式操作说明（例如："Select Puerto Rico as the final beneficiary bank country"）。当通道需要汇款人提供额外 指示时提供。
         created_at:
+          type: string
+          format: date-time
+    Statement:
+      type: object
+      description: 面向客户端的安全对账单；原始流水和利润仅管理员可见。
+      properties:
+        summary:
+          type: object
+          properties:
+            counts:
+              type: object
+              additionalProperties:
+                type: integer
+              properties:
+                timeline:
+                  type: integer
+                  example: 2
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientTimelineItem'
+        disputes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatementDispute'
+    ClientTimelineItem:
+      type: object
+      required:
+      - created_at
+      - id
+      - product
+      - direction
+      - title_key
+      - asset
+      - amount
+      - balance_after
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        id:
+          type: string
+        product:
+          type: string
+          example: payins
+        direction:
+          type: string
+          enum:
+          - in
+          - out
+        title_key:
+          type: string
+          example: payin_received
+        subtitle:
+          type: string
+        asset:
+          type: string
+          example: USDT
+        amount:
+          type: string
+          example: '100.000000'
+        balance_after:
+          type: string
+          example: '1100.000000'
+        status:
+          type: string
+        country:
+          type: string
+        currency:
+          type: string
+        network:
+          type: string
+        ref_type:
+          type: string
+        ref_id:
+          type: string
+        executed_rate:
+          type: string
+        rate_pair:
+          type: string
+        rate_source:
+          type: string
+    StatementDispute:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        dispute_id:
+          type: string
+        kind:
+          type: string
+        status:
+          type: string
+        disputed_usdt:
+          type: string
+        held_usdt:
+          type: string
+        case_number:
+          type: string
+        deadline_at:
           type: string
           format: date-time
         qr_payload:

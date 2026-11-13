@@ -186,6 +186,60 @@ JSON（集成）、PDF 和 XLSX —— 后两者均带有你组织的品牌标�
 `case_number` 和 `deadline_at`。预防性冻结只记录一次；provider
 chargeback 是独立的金融扣账。
 
+## Timeline 与账户视图
+
+JSON 响应还包含 `timeline[]`：按期间内每笔账本分录排列的客户端安全时间线。
+它是门户 **Movements（流水）**视图以及 PDF/XLSX Timeline 表格的数据来源。
+其中不会公开服务商身份、利润或价差。
+
+| 字段 | 含义 |
+|---|---|
+| `created_at`、`id` | UTC 时间戳和稳定的账本分录标识 |
+| `product`、`direction` | 产品分组以及 `in`/`out` 方向 |
+| `title_key`、`subtitle` | 可本地化标题键和可读上下文 |
+| `asset`、`amount`、`balance_after` | 资产单位中的带符号金额和之后余额 |
+| `status` | 操作状态 |
+| `country`、`currency`、`network` | 可选的国家、法币和区块链网络信息 |
+| `ref_type`、`ref_id` | 可选的来源引用 |
+| `executed_rate`、`rate_pair`、`rate_source` | 可选的已记录执行汇率；不会重新报价 |
+
+`summary.counts.timeline` 是时间线行数。以下为缩短示例：
+
+```json
+{
+  "summary": { "counts": { "timeline": 2 } },
+  "timeline": [
+    {
+      "created_at": "2026-07-07T14:00:00Z",
+      "id": "ledger-001",
+      "product": "payins",
+      "direction": "in",
+      "title_key": "payin_received",
+      "subtitle": "order-742",
+      "asset": "USDT",
+      "amount": "100.000000",
+      "balance_after": "1100.000000",
+      "status": "completed",
+      "country": "CL",
+      "currency": "CLP",
+      "ref_type": "payin",
+      "ref_id": "payin-001"
+    }
+  ]
+}
+```
+
+门户使用同一响应提供三个视图：
+
+- **Summary（摘要）**：余额、对账结果以及按产品和月份的分类。
+- **Movements（流水）**：`timeline[]` 时间线，显示产品、资产、状态和之后余额。
+- **By product（按产品）**：分组总额和各产品的详细分区。
+
+PDF 新增 **What happened?** 概览、按产品的矢量环形图、按月份的矢量柱状图、
+带图标的 Timeline 表格，以及在有案件时显示的 Disputes 表格。XLSX 在原有
+工作表之外新增 **Movements** 和 **Disputes** 工作表。两种导出都会保留所选
+语言和资产精度。
+
 {/* banking-fase2-fiat-hold:2026-09-24 */}
 
 ## 按资产的账单行
