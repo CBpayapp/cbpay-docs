@@ -251,6 +251,14 @@ curl -X POST https://api.qbank.cl/platform/v1/auth/login/otp \
 **An enrolled TOTP or effective SMS factor is enforced at login.** TOTP takes
 precedence when both factors exist. Passkey login remains available and does
 not request a second code.
+After identity has been verified, a blocked or closed account returns
+`403 account_deactivated` with the account's branded compliance message. Show
+that message consistently in the portal and API client; do not reveal the
+account state before identity verification. A wrong password continues to
+return the uniform `401 invalid_credentials` response. If the account store
+is unavailable during the gate, return `503 temporarily_unavailable`; no
+authentication state is changed and the client may retry the same request.
+
 ## The account's phone
 
 - **E.164** format (`+56912345678`), set at registration, through
@@ -288,6 +296,7 @@ not request a second code.
 | 403 | `otp_invalid` | Token invalid, expired or already used | Verify a new challenge |
 | 403 | `session_required` | You requested a challenge with an API key | Challenges are for user sessions only |
 | 403 | `account_blocked` | The account is blocked or closed | Ask your operator to restore the account |
+| 403 | `account_deactivated` | Identity was verified but the account is blocked or closed | Show the branded compliance message and contact the brand's compliance email |
 | 403 | `channel_locked_by_org` | Your explicit channel is weaker than the effective minimum for this action (your account's policy first, then the org default) | Leave `channel` out or pick a stronger factor |
 | 403 | `phone_binding_cooldown` | Phone linked less than 4 h ago without verification and no alternative factor (authenticator app or verified email) | Enroll the authenticator app or verify your email; lift early with `POST /v1/me/phone/unlock-cooldown`, or ask your operator to clear the cooldown |
 | 401 | `invalid_code` | The code does not match | Check the SMS/WhatsApp and retry (5 attempts) |
@@ -297,6 +306,7 @@ not request a second code.
 | 409 | `challenge_not_pending` | The challenge expired or was already used | Create a new one |
 | 429 | `too_many_attempts` | A member-wide fresh-send bucket is full | Read `Retry-After`: wait 600 seconds for the 3-per-10-minute burst bucket, 3600 seconds for the 10-per-hour bucket, or 86400 seconds for the 30-per-24-hour bucket. The limits are shared across actions and channels; live-challenge reuse and TOTP are exempt. A blocked retry does not consume another bucket. |
 | 503 | `otp_unavailable` | The verification service is unavailable | Retry; the action stays blocked (OTP is never skipped) |
+| 503 | `temporarily_unavailable` | The account store could not be read during an authentication gate | Retry the same request after recovery; nothing was mutated |
 
 ## FAQ
 

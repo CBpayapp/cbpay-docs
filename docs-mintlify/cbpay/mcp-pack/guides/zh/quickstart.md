@@ -181,7 +181,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 `beneficiary` 字段随国家和方式而异。请通过
 `GET /v1/payouts/methods` 和 `GET /v1/payouts/banks?country=CL` 查询
 各通道的要求 —— 完整参考见
-[付款指南中的各国示例](https://docs.cbpayapp.com/zh/guides/payouts#examples-by-country)。
+[付款指南中的各国示例](https://docs.cbpayapp.com/zh/guides/payout-corridors#examples-by-country)。
 ### 闭环：订阅 webhook
 
 付款的最终状态通过推送送达。请订阅您的 HTTPS 端点

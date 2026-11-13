@@ -228,7 +228,7 @@ curl "https://api.qbank.cl/platform/v1/pos/summary?from=2026-07-01&to=2026-07-17
 `gross` 是收款总额（已支付收款的目标金额），`processor_fee` 是你在商户
 上配置的佣金，`net_for_merchant` 是应分配给商户的净额（同资产的退款已
 扣除）。分账走现有通道：[内部转账](https://docs.cbpayapp.com/zh/guides/transfers)、
-[法币出金](https://docs.cbpayapp.com/zh/guides/payouts)或[加密货币提现](https://docs.cbpayapp.com/zh/guides/crypto)。
+[法币出金](https://docs.cbpayapp.com/zh/guides/payouts-overview)或[加密货币提现](https://docs.cbpayapp.com/zh/guides/crypto)。
 
 ## 5. 退款
 

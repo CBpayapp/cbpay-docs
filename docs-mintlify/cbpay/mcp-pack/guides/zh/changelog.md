@@ -5,8 +5,60 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.260 · 2 个版本 - 2026年11月11日
-### v2.260
+## v2.273 · 10 个版本 - 2026年11月12日
+### v2.273
+**变更**
+- 验证响应现在说明过期邀请、同一 submission 的补件、`company_docs_pending` 以及新案件批准时的 `source_of_wealth_required` gate。复活的链接只刷新过期时间，不会重复发送通知。
+### v2.272
+**变更**
+
+- 明确 11 月 4 日补正过期回填未覆盖的验证链接：已撤销、未绑定档案、非原生及不可补正案件保留原过期时间。打开此类链接返回 `410 invite_expired`：请申请新链接——企业现可用新端点为自有第三方案件重签——而非重试死链。见 KYC 补件指南。
+### v2.271
+**新增**
+
+- 企业第三方案件自助重签链接：`POST /v1/me/verifications/{kind}/third-party/{submissionID}/reissue-link`
+  对没有可用链接的自有案件（已撤销、过期不可重发或从未签发）复用可用链接，或为同一档案签发一条新链接——绝不重复建档——并发送到企业账户邮箱。URL
+  绝不在响应中返回。免费，每案每天限重签一次（`429`），`idempotency_key` 必填（body 或 `Idempotency-Key`
+  请求头；重试返回此前结果并带 `idempotency_hit`，不再签发）。已裁决案件返回 `409 already_decided`；受邀
+  UBO/董事案件仍为单向（`409 resend_only`，请用 resend-link）。
+### v2.270
+**变更**
+
+- 发往受邀 UBO/董事案件（无门户登录）的 changes-requested 邮件现在携带案件链接（复用或为同一档案新签发），无法发链接时则附简明补件指引，不再是门户登录墙。整点补件扫荡在核心应答时会把复审意见和待补文件带入挽回通知（无应答时仍降级为通用邮件）。
+### v2.269
+**新增**
+
+- Banking customer 查询现在包含 provider feedback：`raw_status`、`note` 和
+  `note_source`。`banking_customer_status_changed` webhook 也会携带对应的
+  原始状态和审核备注字段。
+### v2.268
+**变更**
+- profile 的 liveness 会话在实际测量时新增人脸匹配和反欺诈取证字段，包括使用的证件、评分器版本、评分时间和 `scored` 状态。身份绑定通过时，`reasons[]` 可以返回 `bound_pass`；可选的微笑动作本身不会使身份验证失败。
+- 托管向导区分证件正反面类别（`identity_front`、`identity_back`）以及 UBO 证件背面（`uboIdentityBack`）。
+### v2.267
+**新增**
+
+- 公开发票验证现在为未支付的 USD 发票提供可选字段
+  `wire_instructions`、`wire_instructions_swift` 和 `wire_reference`。
+  品牌化 PDF 和邮件也提供相同信息，并为每个通道提供 QR payload；未配置
+  通道以及 `paid` 或 `void` 发票不会返回这些字段。
+### v2.266
+**变更**
+
+- 企业主协议现在在 KYB 获批后数秒内签发（之前需等待每日扫尾、最多
+  24 小时）。审批响应不变，从不等待文档；如缺少必填数据，则跳过签发
+  并留下审计痕迹，由每日扫尾重试。
+### v2.265
+**变更**
+- 身份认证操作在无法读取账户存储时现在返回 `503 temporarily_unavailable`；不会改变认证状态，存储恢复后客户端重试同一请求。
+- 身份验证完成后，被冻结或关闭的账户返回带品牌消息的 `403 account_deactivated`；预认证失败仍保持统一。
+### v2.264
+**新增**
+- 争议证据上传接受 `category`（kyc、kyb、screening、liveness、order、delivery、other），与请求邮件的 6 项清单对应；每条证据均回传类别，便于按案件查看覆盖率。
+**变更**
+- 争议列表与详情现展示拒付文件中的原因、批次、品牌、掩码卡号与截止日期。
+## v2.263 · 5 个版本 - 2026年11月11日
+### v2.263
 **变更**
 - 已停用的 USDC.e（`USDCE`）和 UF 在余额为零时不再返回：`GET /v1/balances`、
   `GET /v1/balances/history`（全零序列和 `current` 快照）、
@@ -15,9 +67,20 @@ source_url: https://docs.cbpayapp.com/zh/changelog
   余额仍会返回——真实资金永不隐藏。`PUT /v1/settlement` 现在拒绝将 `USDCE`
   设为 `default_settlement_asset` 和 `default_payin_asset`
   （`400 invalid_settlement_asset` / `invalid_asset`；现有默认值继续有效）。
-### v2.259
+### v2.262
 **变更**
 - 成员通知铃铛默认精选：`corridor_status_changed`（全局通道健康）、`kyc_document_validated`、`kyb_document_validated` 和 `kyc_liveness_completed`（验证中间步骤）不再出现在账户通道的 `GET /v1/events/history`、`GET /v1/me/notifications` 和实时事件流中。汇总的 `kyc/kyb_verification_status_changed` 保留。用 `event_type` / `?types=` 明确请求仍可接收任何隐藏类型；Webhook、订阅和 org-admin 通道不受影响。
+### v2.261
+**变更**
+- 记录临时处理状态 `waiting_funds` 以及 RFC3339 的 `expected_funds_at`。账户看到的提现和 payout 文案保持中性企业风格；不要使用新幂等键重试或创建替代操作。
+### v2.260
+**变更**
+- `GET /v1/contacts` 现在可以使用 `expand=destinations` 返回已保存的目标，
+  并可用 `dest_type` 和 `dest_country` 筛选。目标通过一次 bulk query
+  加载，而不是每个联系人发送一次请求。
+### v2.259
+**变更**
+- 使用正确密码（或已验证的第二因素：登录 OTP、已验证 OAuth、passkey）登录已停用账户时，现在返回 `403 account_deactivated` —— "Account Deactivated. If you have any questions, please reach out to \<品牌合规邮箱\>." —— 而不是通用错误。密码错误时仍返回通用错误。
 ## v2.258 · 6 个版本 - 2026年11月10日
 ### v2.258
 **变更**
@@ -1593,7 +1656,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **已变更**
 
-- **委内瑞拉 `pago_movil` payout 现在要求 `beneficiary.name`**。通道要求受益人的名 + 第一姓氏（与证件一致）—— 单个词会被拒绝。[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts)和 API 参考示例现在将 `name` 列为必填字段的第一项。委内瑞拉 `bank_transfer` 此前已记录 `name`；此处无变更。
+- **委内瑞拉 `pago_movil` payout 现在要求 `beneficiary.name`**。通道要求受益人的名 + 第一姓氏（与证件一致）—— 单个词会被拒绝。[payout 指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)和 API 参考示例现在将 `name` 列为必填字段的第一项。委内瑞拉 `bank_transfer` 此前已记录 `name`；此处无变更。
 
 ## v2.65 - 2026年9月2日
 
@@ -1665,7 +1728,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 **变更**
 
 - **美元银行通道付款：收款人可居住在任何国家**
-  （[付款指南](https://docs.cbpayapp.com/zh/guides/payouts)）：对于 `ach`、`wire` 和 `swift`
+  （[付款指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)）：对于 `ach`、`wire` 和 `swift`
   转账，收款人的 `country_code` 不再固定为 `US` —— 例如，可以为居住在德国的人
   向美国银行账户发起 ACH。对于 `ach`/`wire`，接收银行必须在美国
   （`bank_country: "US"` —— 国内通道不向境外银行付款）；对于 `swift`，银行可位于
@@ -1870,7 +1933,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **付款的银行参考号现已覆盖所有界面**([付款指南](https://docs.cbpayapp.com/zh/guides/payouts)):每笔付款都会展示
+- **付款的银行参考号现已覆盖所有界面**([付款指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)):每笔付款都会展示
   `bank_reference` —— 收款银行/通道分配的交易号 —— 包括 `POST /v1/payouts`、
   `GET /v1/payouts` 和 `GET /v1/payouts/{payoutID}` 的响应、
   `payout_status_changed` webhook 负载、PDF 回执、付款 CSV 导出以及对账单
@@ -1952,7 +2015,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **银行目录查询**（[付款指南](https://docs.cbpayapp.com/zh/guides/payouts)）：新增的
+- **银行目录查询**（[付款指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)）：新增的
   `GET /v1/payouts/bank-directory/lookup` 可从嵌入式公开银行目录自动补全收款银行——`routing_number`
   （9 位数字，仅限美国）与 `swift`（8 或 11 个字符；`XXX` 后缀会归一化为总行）二者必传其一，
   它会解析出银行名称、城市、州和地址块，便于 payout 和交易对手表单在付款人输入时预填
@@ -2059,7 +2122,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   `status_code: "counterparty_rejected"` 结束并自动退款。可按笔在
   `options` 中覆盖通道的付款用途声明（`purpose`、
   `crypto_activity`、`payment_gateway`）。通道表、按方式的字段表、
-  真实示例与 FAQ 见 [出金](https://docs.cbpayapp.com/zh/guides/payouts)；API 参考中新增
+  真实示例与 FAQ 见 [出金](https://docs.cbpayapp.com/zh/guides/payouts-overview)；API 参考中新增
   命名请求示例 `us_ach`、`us_wire` 和 `us_swift`。
 
 ### v2.34
@@ -2622,7 +2685,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **新通道：阿根廷** 🇦🇷（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts) · [入金指南](https://docs.cbpayapp.com/zh/guides/payins)）：
+- **新通道：阿根廷** 🇦🇷（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts-overview) · [入金指南](https://docs.cbpayapp.com/zh/guides/payins)）：
   - **出金**支持 **ARS** 和 **USD**，通过 `bank_transfer` 转账到任何 22 位的 **CBU 或 CVU**（银行账户和虚拟钱包；USD 仅支持 CBU 到 CBU）。收款人只需 `name`、`tax_id`（CUIT/CUIL）和 `account_number` —— 无需 `bank_code`。
   - **入金**支持 **ARS**，每个账户可创建**专属 CVU 账户**（`POST /v1/payins/deposit-accounts`，`country: "AR"`）：每笔到账转账自动入账，无需参考号。CVU 为只收不付：直接扣款尝试会被自动拒绝。
   - 现已在**测试环境**（staging）通过模拟器提供；生产环境的启用将在银行认证完成后公布 —— 目录（`GET /v1/payouts/methods` 和 `GET /v1/payins/methods`）始终是唯一可信来源。
@@ -2676,7 +2739,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **对外支付的合规控制**（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts)、[错误](https://docs.cbpayapp.com/zh/errors)）：出金、带受益人姓名的加密货币提现以及 collect 收款现在会在**资金移动之前**经过额外的合规控制。已记录的错误：`403 compliance_hold`（操作被拦截且未被创建 —— 未扣款；按政策不披露具体原因，请携带时间戳联系支持）与 `503 compliance_check_unavailable`（合规校验暂时无法完成；操作未被创建 —— 请使用**相同的** `idempotency_key` 重试）。
+- **对外支付的合规控制**（[出金指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)、[错误](https://docs.cbpayapp.com/zh/errors)）：出金、带受益人姓名的加密货币提现以及 collect 收款现在会在**资金移动之前**经过额外的合规控制。已记录的错误：`403 compliance_hold`（操作被拦截且未被创建 —— 未扣款；按政策不披露具体原因，请携带时间戳联系支持）与 `503 compliance_check_unavailable`（合规校验暂时无法完成；操作未被创建 —— 请使用**相同的** `idempotency_key` 重试）。
 
 ### v1.88
 
@@ -2994,7 +3057,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   账户）和 `cnb`（非银行代理点）。收款人支持结构化姓名
   （`given_name`/`first_surname`/...）或从 `name` 自动拆分，并可附带
   可选的汇款人信息块（`sender_name` 或其结构化字段）。各方式示例见
-  [出金指南](https://docs.cbpayapp.com/zh/guides/payouts)与 API 规范。
+  [出金指南](https://docs.cbpayapp.com/zh/guides/payouts-overview)与 API 规范。
 - **新错误码 `channel_unavailable`**（HTTP 503）：该走廊的支付通道
   暂时不可用。请稍后使用相同的 `idempotency_key` 重试。详见
   [错误页面](https://docs.cbpayapp.com/zh/errors)。
@@ -3221,7 +3284,7 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
 
 - `GET /v1/payouts` 和 `GET /v1/payins` 支持 `country` 筛选
   （ISO 3166-1 alpha-2，例如 `?country=MX`），可与 `status`、
-  `from`/`to` 及分页组合使用。[付款](https://docs.cbpayapp.com/zh/guides/payouts)与
+  `from`/`to` 及分页组合使用。[付款](https://docs.cbpayapp.com/zh/guides/payouts-overview)与
   [收款](https://docs.cbpayapp.com/zh/guides/payins)指南已更新。
 - `GET /v1/rates` 的 `fees` 块现在返回**有效**费用配置（组织默认值已与账户覆盖项解析合并）。
   此前无覆盖项的账户会看到 `fees: []`；请用此块在创建操作前报价确切费用。

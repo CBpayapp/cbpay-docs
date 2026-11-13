@@ -8,19 +8,15 @@ source_url: https://docs.cbpayapp.com/es/guides/kyc
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 ## Verificación de la cuenta antes de crear payins
-
 La cobranza autenticada requiere `kyc_status: approved` en personas y KYB aprobado en empresas; mientras tanto, `POST /v1/payins` (QR/card/checkout/bank_transfer/fintoc), OTP/collect, cuentas de depósito dedicadas, cobros con tarjeta guardada y suscripciones responden `403 verification_required`. Los links públicos, abonos pasivos, asignación de org-admin e instrumentos del sistema siguen disponibles; solicita `POST /v1/me/verification/link` y reintenta después de aprobar.
-
 La **verificación de identidad** comprueba que una persona (KYC) o empresa
 (KYB) es quien dice ser, con evidencia real: formulario completo, subida de
 documentos validados por OCR y **prueba de vida en video**. Tiene dos caras:
-
 1. **Tu propia verificación (onboarding)** — obligatoria: hasta aprobarla, tu cuenta solo puede **fondear** (payins, depósitos crypto, recibir
    transferencias) y consultar. Persona ⇒ KYC; empresa ⇒ KYB.
 2. **Verificación de tus clientes (solo cuentas empresa)** — generas links
    hosteados o envías los datos por API para verificar a tus propios
    clientes finales, con una comisión fija por verificación.
-
 ```mermaid
 flowchart LR
     crear["POST /v1/kyc/links o /v1/kyb/links<br/>(fee fijo)"] --> link["Link hosteado<br/>status: pending"]
@@ -36,7 +32,6 @@ Al registrarte, tu cuenta nace sin verificar (`kyc_status: none`) y **solo
 puede fondear y leer**. Cualquier acción de dinero saliente (payouts,
 transferencias, retiros, banking, tarjetas) responde
 `403 verification_required` hasta que apruebes.
-
 > **Nota**Las solicitudes nuevas exigen TOTP confirmado o passkey registrado; revisa [Perfil y seguridad](https://docs.cbpayapp.com/es/guides/profile) para enrolar uno y reintenta. Los links abiertos se re-sirven antes del gate; la automatización con API key sigue exenta.### Pide tu link de verificación
 
 ```bash
@@ -330,6 +325,7 @@ Notas del modo datos:
 
 - Países en **ISO alpha-3** (`CHL`, `USA`, `VEN`…); fechas `YYYY-MM-DD`;
   `id_type`: `passport | id_card | drivers_license`.
+- Teléfono en **E.164** con código de país (ej. `+56912345678`). La API aún acepta cadenas de dígitos legacy (dígitos, `+`, `-`, espacios, paréntesis, hasta 32 caracteres), pero E.164 es el contrato.
 - KYB: body `{ external_customer_id, country?, business: {…}, ubos?,
   directors?, signers?, bank_info?, metadata? }` en
   `POST /v1/kyb/submissions`. Además, el modo datos KYB exige nombre legal y número de registro completos; KYC exige nombres, fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Países KYB desconocidos usan el perfil genérico con ese ISO; `country: generic` exige `generic_country`.
@@ -405,10 +401,10 @@ curl -X POST https://api.qbank.cl/platform/v1/kyc/submissions/{submission_id}/do
 { "upload_url": "https://storage…", "key": "public-api/…", "expires_in": 900 }
 ```
 
-Categorías — KYC: `identity`, `proofOfResidence`; KYB: `legalPresence`,
-`ownershipStructure`, `controlStructure`, `companyDetails`. Tipos:
-`application/pdf`, `image/png`, `image/jpeg`; máximo 15 MB; la URL vence en
-15 minutos.
+Categorías — KYC: `identity`, `identity_front` (frente), `identity_back` (reverso),
+`proofOfResidence`; KYB: `legalPresence`, `ownershipStructure`, `controlStructure`,
+`companyDetails`. Tipos: `application/pdf`, `image/png`, `image/jpeg`; máximo 15 MB;
+la URL vence en 15 minutos. Para UBO invitados, usa `uboIdentity` (frente) o `uboIdentityBack` (reverso).
 ### Upload
 
 `PUT` del binario directo a `upload_url` con el mismo `Content-Type`.
@@ -712,7 +708,7 @@ Respuesta `format=json` (resumen del shape — el PDF sale del mismo modelo):
           "outcome": "FAIL",
           "passed_gate": false,
           "liveness_score": "0.98",
-          "reasons": ["No se detectó la sonrisa."],
+          "reasons": ["challenge_review"],
           "media": {
             "has_selfie": true,
             "has_video": true,
@@ -762,7 +758,7 @@ Respuesta `format=json` (resumen del shape — el PDF sale del mismo modelo):
       "outcome": "FAIL",
       "passed_gate": false,
       "liveness_score": "0.98",
-      "reasons": ["No se detectó la sonrisa."],
+      "reasons": ["challenge_review"],
       "media": {
         "has_selfie": true,
         "has_video": true,
@@ -916,6 +912,12 @@ submission abierta y liveness links no cobran de nuevo.
 | 403 | `company_account_required` | Una cuenta persona intentó verificar terceros | Solo cuentas empresa |
 | 403 | `service_disabled` | El servicio `kyc` está deshabilitado para tu cuenta | Contacta a tu operador |
 | 404 | `not_found` | El link/submission no existe o no es tuyo | Verifica el id |
+| 410 | `invite_expired` | El invite hosteado expiró | Solicita un link nuevo; no reintentes la URL bearer expirada |
+| 409 | `remediation_link_missing` | La misma submission no tiene un link de subsanación usable | Solicita un link para esa submission con una clave de idempotencia nueva |
+| 409 | `already_decided` | La submission ya tiene una decisión final | Lee la submission; nunca la reabras con un link nuevo |
+| 409 | `idempotency_key_reused` | La clave pertenece a otra submission | Usa una clave exclusiva para esta submission |
+| 422 | `company_docs_pending` | El padre KYB no tiene documentos de empresa y las revisiones de relacionados están completas | Sube la evidencia de la empresa; el caso se deriva a revisión humana tras la espera documentada |
+| 409 | `source_of_wealth_required` | Una submission KYC nueva no tiene evidencia de origen de fondos | Sube la evidencia y aprueba de nuevo |
 | 404 | `verification_not_found` | Pediste tu informe self sin una verificación registrada | Completa tu onboarding primero |
 | 409 | `already_verified` / `self_verification_in_progress` | Pediste link de onboarding con la cuenta ya aprobada, o con una verificación ya en curso | Nada que hacer, o completa esa verificación |
 | 503 | `verifications_unavailable` | Verificación de identidad temporalmente no disponible | Reintenta más tarde |

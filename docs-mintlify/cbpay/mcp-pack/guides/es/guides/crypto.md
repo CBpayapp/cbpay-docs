@@ -411,6 +411,23 @@ La descarga del recibo y el enlace de tracking aparecen en el encabezado
 cuando la respuesta incluye `receipt_url`. El botón para volver regresa a la
 wallet de la misma red y activo.
 
+### Espera transitoria de proceso (`waiting_funds`)
+
+Un retiro puede mantenerse en el flujo de proceso mientras la plataforma completa un paso transitorio de proceso. La API lo expone como `status: "pending"` con `status_code: "waiting_funds"`; es un **estado transitorio de proceso**, no un error de saldo de tu cuenta ni un fallo final. El débito y el hold siguen asociados al mismo retiro, y la plataforma lo reanuda automáticamente con el mismo contexto de idempotencia.
+
+La respuesta visible para la cuenta usa un mensaje corporativo neutral y nunca expone términos de tesorería, hot wallet o corredor:
+
+```json
+{
+  "status": "pending",
+  "status_code": "waiting_funds",
+  "status_message": "Your withdrawal is being processed and will complete automatically. No action is needed.",
+  "expected_funds_at": "2026-11-11T20:00:00Z",
+  "tx_id": ""
+}
+```
+
+`expected_funds_at` es una estimación RFC3339 y puede cambiar. Suscríbete a `crypto_withdrawal_status_changed` o consulta el retiro con `GET /v1/crypto/withdrawals/{withdrawalID}`. **No crees un retiro de reemplazo ni reintentes con una clave nueva**: la operación existente se reanuda sola. Si vuelves a enviar la solicitud, usa el `idempotency_key` original para que la API devuelva la operación existente.
 ### Travel Rule (retiros sobre el umbral)
 
 Por regulación internacional (FATF R.16, "Travel Rule"), los retiros

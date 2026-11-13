@@ -60,7 +60,7 @@ sequenceDiagram
 
 Variante **QR** (Bolivia, PIX de Brasil): `POST /v1/payouts/qr/scan`
 (gratis, decodifica) → muestra los datos → `POST /v1/payouts/qr/confirm`
-(cobra como un payout normal). Detalle: [payouts](https://docs.cbpayapp.com/es/guides/payouts) ·
+(cobra como un payout normal). Detalle: [payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) ·
 [payout QR](https://docs.cbpayapp.com/es/guides/qr-payout).
 
 ## 3. Cobrar a un cliente

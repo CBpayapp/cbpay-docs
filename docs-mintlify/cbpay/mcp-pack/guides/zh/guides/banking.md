@@ -43,7 +43,7 @@ CLP 余额和流水，但不发起 payout：CL payout 始终从 root 账户发�
 
 按本指南的档案 → 账户 → 操作流程开立经典 Banking 客户账户（ACH、Fedwire
 和 SWIFT 通道，见下文「开立银行账户」一节）。通过 Banking 收到的 USD 保留
-用于付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）；发送到您 CBPay 余额的 USD 落入
+用于付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)）；发送到您 CBPay 余额的 USD 落入
 您的主资产（USD 为主资产）。
 
 对于美国通道，账户操作和 `WITHDRAW` 付款可按以下时间估算：**ACH 约需
@@ -68,13 +68,13 @@ SWIFT 约需 24–48 个工作小时，且可能因收款银行而延长。**这
 
 通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收比索：
 `fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
-保留 MXN 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+保留 MXN 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)）。
 
 ### 🇦🇷 ARS — 阿根廷比索
 
 通过带 `purpose` 的[充值目的地](https://docs.cbpayapp.com/zh/guides/payins)接收比索：
 `fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
-保留 ARS 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts)）。
+保留 ARS 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)）。
 
 ## 企业多银行：运营账户
 
@@ -238,9 +238,19 @@ curl -X POST https://api.qbank.cl/platform/v1/banking/customer/submit \
   "account_id": "…",
   "customer_id": "9f2b…",
   "customer_kind": "self",
-  "kyc_status": "approved"
+  "kyc_status": "approved",
+  "feedback": {
+    "raw_status": "READY_FOR_MODERATION",
+    "note": "已收到文件",
+    "note_source": "provider"
+  }
 }
 ```
+
+`GET /v1/banking/customer` 也返回相同的 `feedback` 对象。`raw_status`
+是 banking rail 的原始状态，`note` 是最新的审核备注；`note_source`
+可以是 `provider`、`ours` 或 `none`。正常生命周期仍以
+`status`/`kyc_status` 为准，feedback 仅作为只读上下文。
 
 ## 3. 开立银行账户
 

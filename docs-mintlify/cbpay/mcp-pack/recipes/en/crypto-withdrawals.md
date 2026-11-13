@@ -416,6 +416,23 @@ The receipt download and tracking link are available from the detail header
 when the response provides `receipt_url`. Use the back link to return to the
 wallet for the matching chain and asset.
 
+### Temporary processing wait (`waiting_funds`)
+
+A withdrawal can remain in the processing flow while the platform completes a temporary processing step. The API exposes this as `status: "pending"` with `status_code: "waiting_funds"`; this is a **transient processing state**, not a customer balance error or a final failure. The debit and hold remain associated with the same withdrawal, and the platform resumes it automatically with the same idempotency context.
+
+The account-facing response uses neutral corporate copy and never exposes treasury, hot-wallet or corridor terminology:
+
+```json
+{
+  "status": "pending",
+  "status_code": "waiting_funds",
+  "status_message": "Your withdrawal is being processed and will complete automatically. No action is needed.",
+  "expected_funds_at": "2026-11-11T20:00:00Z",
+  "tx_id": ""
+}
+```
+
+`expected_funds_at` is an RFC3339 estimate and may change. Subscribe to `crypto_withdrawal_status_changed` or read the withdrawal with `GET /v1/crypto/withdrawals/{withdrawalID}`. **Do not create a replacement withdrawal and do not retry with a new key**; the existing operation resumes automatically. If you send the same request again, use the original `idempotency_key` so the API returns the existing operation.
 ### Travel Rule (withdrawals above the threshold)
 
 International regulation (FATF R.16, the "Travel Rule") requires on-chain

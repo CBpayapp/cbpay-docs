@@ -46,7 +46,7 @@ la cuenta root y no aplica sweep-exempt físico.
 Abre una cuenta Banking clásica (rieles ACH, Fedwire y SWIFT) con el flujo
 perfil → cuentas → operaciones de esta guía
 ([abrir cuentas bancarias](#3-abre-cuentas-bancarias)). Los USD recibidos por
-Banking se mantienen para payouts ([payouts](https://docs.cbpayapp.com/es/guides/payouts)); los USD
+Banking se mantienen para payouts ([payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)); los USD
 enviados a tus saldos CBPay aterrizan en tu asset principal (USD es el saldo
 principal).
 
@@ -79,7 +79,7 @@ Ver [Fondeo](https://docs.cbpayapp.com/es/guides/funding) para el flujo de fonde
 Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
 `purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
 (USD es el saldo principal); `banking` conserva MXN para payouts locales
-([payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+([payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)).
 
 ## Multi-banking para empresas: cuentas operativas
 
@@ -148,7 +148,7 @@ madre/centralizador.
 Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payins) con un
 `purpose`: `fondeo` (por defecto) convierte el abono a tu asset principal
 (USD es el saldo principal); `banking` conserva ARS para payouts locales
-([payouts](https://docs.cbpayapp.com/es/guides/payouts)).
+([payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)).
 
 > **Nota**
 Las comisiones de banking vienen en dos formas. Las **fijas standalone**
@@ -271,9 +271,19 @@ Estados del perfil: `draft` → `submitted` → `under_review` →
   "account_id": "…",
   "customer_id": "9f2b…",
   "customer_kind": "self",
-  "kyc_status": "approved"
+  "kyc_status": "approved",
+  "feedback": {
+    "raw_status": "READY_FOR_MODERATION",
+    "note": "Documentos recibidos",
+    "note_source": "provider"
+  }
 }
 ```
+
+`GET /v1/banking/customer` devuelve el mismo objeto `feedback`. `raw_status`
+es el estado crudo del riel bancario; `note` es la última nota de moderación.
+`note_source` puede ser `provider`, `ours` o `none`. Usa `status`/`kyc_status`
+para el ciclo normalizado y trata el feedback como contexto de solo lectura.
 
 ## 3. Abre cuentas bancarias
 

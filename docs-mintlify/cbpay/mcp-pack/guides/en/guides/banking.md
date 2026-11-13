@@ -45,7 +45,7 @@ account, and no physical sweep-exempt flag applies.
 Open a classic Banking customer account (ACH, Fedwire and SWIFT rails) with
 the profile → accounts → operations flow in this guide
 ([open bank accounts](#3-open-bank-accounts)). USD received through Banking
-is held for payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)); USD sent to your CBPay
+is held for payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts-overview)); USD sent to your CBPay
 balances lands in your principal asset (USD is the principal balance).
 
 For the US rails, use these planning estimates for account operations and
@@ -76,14 +76,14 @@ payouts. See [Funding](https://docs.cbpayapp.com/en/guides/funding) for the fund
 Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
 `purpose`: `fondeo` (default) auto-converts the credit to your principal
 asset (USD is the principal balance); `banking` retains MXN for local
-payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts-overview)).
 
 ### 🇦🇷 ARS — Argentine peso
 
 Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a
 `purpose`: `fondeo` (default) auto-converts the credit to your principal
 asset (USD is the principal balance); `banking` retains ARS for local
-payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts)).
+payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts-overview)).
 
 ### 🇨🇱 CLP — Chilean peso
 
@@ -299,16 +299,11 @@ parties you register (`customer_kind: third_party`, with their
 `third_party_id`):
 
 ```json
-{
-  "account_id": "…",
-  "customer_id": "9f2b…",
-  "customer_kind": "self",
-  "kyc_status": "approved"
-}
+{"account_id":"…","customer_id":"9f2b…","customer_kind":"self","kyc_status":"approved","feedback":{"raw_status":"READY_FOR_MODERATION","note":"Documents received","note_source":"provider"}}
 ```
-
+`GET /v1/banking/customer` includes the same read-only `feedback` object:
+`raw_status`, moderation `note`, and `note_source` (`provider`, `ours`, or `none`). Use `status`/`kyc_status` for the normalized lifecycle.
 ## 3. Open bank accounts
-
 With the profile `approved`, create the classic Banking customer account for **USD** only (ACH/Fedwire/SWIFT rails). EUR is not opened here; request a `banking_eur` virtual IBAN directly in the [EUR virtual IBAN flow](#eur-virtual-ibans).
 
 ```bash

@@ -35,6 +35,8 @@ Todos los errores comparten el mismo formato:
 | 403 | `org_admin_required` | El endpoint exige credencial de administrador |
 | 403 | `forbidden` | Nivel de credencial no permitido |
 | 403 | `account_blocked` | La cuenta no está activa; también bloquea `POST /v1/me/verification/link` — pide al administrador que la restaure |
+| 403 | `account_deactivated` | La identidad fue verificada, pero la cuenta está bloqueada o cerrada; muestra el mensaje de marca devuelto por la API y contacta al correo de compliance de esa marca. Con contraseña incorrecta se mantiene `invalid_credentials` genérico. |
+| 409 | `account_closed_terminal` | Un cambio de estado intentaría reabrir una cuenta cerrada; closed es terminal. No reintentes la transición. |
 | 403 | `verification_rejected_requires_admin` | Compliance rechazó el KYC/KYB de la cuenta; el onboarding self-service está deshabilitado — contacta al administrador para reabrir la verificación |
 | 403 | `service_disabled` | El servicio no está habilitado para tu cuenta (consulta `GET /v1/services`) |
 | 403 | `org_suspended` | El servicio está suspendido; contacta al equipo de CBPay |
@@ -69,6 +71,7 @@ Detalle y flujo completo en [seguridad y 2FA](https://docs.cbpayapp.com/es/secur
 | 403 | `independent_factor_required` | El cooldown del teléfono solo se desbloquea con la app autenticadora o el email verificado, jamás con un código enviado al número nuevo |
 | 429 | `too_many_attempts` | Se llenó un bucket de envíos frescos compartido por el miembro; lee `Retry-After`: 600 segundos para ráfaga (3/10 minutos), 3600 segundos por hora (10/hora) u 86400 segundos por día (30/24 horas). El reuso de desafíos activos y TOTP están exentos, y los reintentos bloqueados no consumen otro bucket. |
 | 503 | `otp_unavailable` | Servicio de verificación no disponible (la acción queda bloqueada, nunca se salta el OTP) |
+| 503 | `temporarily_unavailable` | No se pudo leer el store de cuentas durante un gate de autenticación; nada se mutó. Reintenta la misma request cuando el store se recupere. |
 | 409 | `otp_disabled_for_org` | Tu organización no tiene habilitado el 2FA por acción; contacta a tu operador |
 | 422 | `sms_country_blocked` | Los códigos SMS no están disponibles para este país (allowlist de la organización); verifica con tu app autenticadora o email |
 | 409 | `totp_not_started` | No hay enrolamiento TOTP en curso; parte con `POST /v1/me/totp/enroll` |
@@ -117,8 +120,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `idempotency_key_required` | Falta la clave de idempotencia |
 | `reserved_idempotency_key` | La clave usa un prefijo reservado del sistema (`payin-convert:` o `checkout-swap:`, propios de las auto-conversiones) — usa otra clave |
 | `beneficiary_required` | Falta el beneficiario del payout |
-| `invalid_cuit` | Los payouts de Argentina (`AR`) exigen que `beneficiary.tax_id` sea un CUIT o CUIL de 11 dígitos — envía el identificador de 11 dígitos del beneficiario; consulta la [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts) |
-| `invalid_cbu` | Los payouts de Argentina (`AR`) exigen que `beneficiary.account_number` sea un CBU o CVU de 22 dígitos; los payouts en USD aceptan solo CBU — envía un CBU/CVU válido de 22 dígitos (CBU para USD); consulta la [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts) |
+| `invalid_cuit` | Los payouts de Argentina (`AR`) exigen que `beneficiary.tax_id` sea un CUIT o CUIL de 11 dígitos — envía el identificador de 11 dígitos del beneficiario; consulta la [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) |
+| `invalid_cbu` | Los payouts de Argentina (`AR`) exigen que `beneficiary.account_number` sea un CBU o CVU de 22 dígitos; los payouts en USD aceptan solo CBU — envía un CBU/CVU válido de 22 dígitos (CBU para USD); consulta la [guía de payouts](https://docs.cbpayapp.com/es/guides/payouts-overview) |
 | `invalid_amount` | Monto no es un decimal positivo válido |
 | `recipient_required` / `self_transfer` | Destino de transferencia inválido |
 | `invalid_chain` / `invalid_asset` | Red o activo no soportado |
@@ -141,6 +144,7 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_status` / `invalid_kyc_status` / `invalid_direction` / `reason_required` / `account_id_required` / `invalid_service` / `invalid_fee` | Validaciones de administración |
 | `invalid_settlement_hours` | `settlement_hours` solo se acepta en el servicio de comisión `payin_card` y debe ser un entero no negativo (`0` = acreditación inmediata) — ver [comisiones](https://docs.cbpayapp.com/es/concepts/fees) |
 | `invalid_country` | Código de país mal formado o ausente — ISO 3166-1 alpha-2 (ej. `GET /v1/aml/catalogs/cities?country=`); también un filtro de país válido pero no soportado (ej. un `country` distinto de `US` en el lookup del directorio bancario) |
+| `invalid_expand` | Valor desconocido en `?expand=` de `GET /v1/contacts` (solo se soporta `destinations`); `dest_type`/`dest_country` también exigen `expand=destinations` |
 
 ### Idempotencia de payins QR
 
@@ -163,6 +167,8 @@ Con la misma clave y el mismo payload, la API devuelve el cobro original con
 de la identidad del replay. Consulta el estado vivo con
 `GET /v1/payins/{payinID}`.
 
+> **Nota**
+`waiting_funds` es un estado de proceso que aparece en un retiro o payout existente mientras la plataforma completa un paso transitorio de proceso. No es el error `402 insufficient_funds`: `insufficient_funds` siempre se refiere al **saldo disponible de la cuenta** para crear una operación nueva. Conserva la misma clave de idempotencia, consulta el recurso existente y no crees una operación de reemplazo.
 ### Dinero y estado (402 / 404 / 409 / 422 / 429)
 
 | HTTP | `error` | Significado |
@@ -725,7 +731,8 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 
 | HTTP | `error` | Solución |
 |---:|---|---|
-| 409 | `liveness_required` | El perfil no se puede aprobar con liveness pendiente; complétala primero (override solo god con motivo auditado). |
+| 409 | `liveness_required` | El perfil no se puede aprobar con liveness pendiente; complétala primero (un oficial de cumplimiento, admin owner o god puede saltarla con motivo auditado). |
+| 403 | `liveness_override_forbidden` | Saltarse el liveness exige un oficial de cumplimiento, admin owner o god con motivo auditado; el resto de roles solo puede pedir un link de re-captura. |
 
 ## Errores de liquidaciones
 
