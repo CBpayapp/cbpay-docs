@@ -177,3 +177,7 @@ chargeback 是独立的金融扣账。
 ## 按资产的账单行
 
 收款行包含 `credit_asset`/可选 `fiat_credited`，退款行包含 `debited_asset`/`debited_amount`。JSON、PDF、XLSX 保留实际资产精度。
+
+## 对账单和回执中的汇率
+
+对账单详情保留定价操作使用的汇率。swap 行包含执行 `rate`；payout 和其他定价操作在对账单及单笔回执中保留汇率信息。PDF 和 Excel 在适用时至少显示三位小数，JSON 保留精确字符串。汇率仅用于说明，不会改变 ledger 余额。

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-13 01:12 UTC",
-    "_content_sha256": "18e291f4d036f9f92c5794ab24fec8dc81dc9c510419c35d82d3ea5654557043"
+    "_generated_at": "2026-11-13 06:36 UTC",
+    "_content_sha256": "7cbc92c48117d3d3284b716ac63287ce092e9872b6d1acf0a8e706ebe35db7c3"
   },
   "auth": {
     "type": "bearer",
@@ -721,7 +721,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"method\": \"crypto:btc:btc\",\n  \"payload\": {\n    \"chain\": \"btc\",\n    \"asset\": \"BTC\",\n    \"address\": \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\",\n    \"due\": \"0.00046120\",\n    \"received\": \"0.00000000\",\n    \"qr_payload\": \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\",\n    \"qr_png_base64\": \"iVBORw0KGgo…\",\n    \"quote_expires_at\": \"2026-07-16T18:15:00Z\",\n    \"note\": \"send the exact amount to the address; the payment is confirmed on-chain automatically\"\n  }\n}"
+              "body": "{\n  \"method\": \"crypto:btc:btc\",\n  \"payload\": {\n    \"method\": \"crypto:btc:btc\",\n    \"chain\": \"btc\",\n    \"asset\": \"BTC\",\n    \"address\": \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\",\n    \"due\": \"0.00046120\",\n    \"received\": \"0.00000000\",\n    \"qr_payload\": \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\",\n    \"qr_png_base64\": \"iVBORw0KGgo…\",\n    \"quote_expires_at\": \"2026-07-16T18:15:00Z\",\n    \"note\": \"send the exact amount to the address; the payment is confirmed on-chain automatically\"\n  }\n}"
             }
           ]
         },
@@ -755,7 +755,7 @@
                 }
               ]
             },
-            "description": "Indicative quotes for a universal checkout link BEFORE materializing — the catalog of countries with live fiat methods (card excluded — see `cards`), the card options listed separately per country+currency in `cards[]` with the quoted due amount (a corridor may accept several charge currencies, e.g. BOB and USD), the due amount per crypto option (conversion cost included when the pay asset differs from the settlement asset), and the CBPay direct payment dues per enabled balance. Each country lists its corridors in `options[]` — one row per method+currency (a country may offer the same method in several currencies, e.g. QR in BOB and USD) with `collect: true` on pull methods that ask for the payer's data on the page (see `POST /pay/{token}/collect`), and `payer_required: true` on hosted redirect methods whose materialization needs the payer name and document in the POST body. With `?country=XX` it also returns the quoted local amount per option for that country. Materializing freezes the definitive quote. No credentials; rate limited per IP.",
+            "description": "Indicative quotes for a universal checkout link BEFORE materializing — the catalog of countries with live fiat methods (card excluded — see `cards`), the card options listed separately per country+currency in `cards[]` with the quoted due amount (a corridor may accept several charge currencies, e.g. BOB and USD), the due amount per crypto option (conversion cost included when the pay asset differs from the settlement asset), and the CBPay direct payment dues per enabled balance. Each country lists its corridors in `options[]` — one row per method+currency (a country may offer the same method in several currencies, e.g. QR in BOB and USD) with `collect: true` on pull methods that ask for the payer's data on the page (see `POST /pay/{token}/collect`), and `payer_required: true` on hosted redirect methods whose materialization needs the payer name and document in the POST body. With `?country=XX` it also returns the quoted local amount per option for that country. Materializing freezes the definitive quote. No credentials; rate limited per IP. Each crypto option and CBPay balance also carries its exhibited rate (`due_rate`, settlement per 1 pay-asset unit, same semantics as the swaps rate) with `rate_pair`, plus the leg fees included in the rate (`fees[]`, `fee_total_pct`).",
             "auth": {
               "type": "noauth"
             }
@@ -800,7 +800,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"status\": \"pending\",\n  \"settlement_asset\": \"USDT\",\n  \"asset_amount\": \"50\",\n  \"countries\": [\n    {\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"methods\": [\n        \"qr\"\n      ],\n      \"options\": [\n        {\n          \"method\": \"qr\",\n          \"currency\": \"BOB\"\n        },\n        {\n          \"method\": \"qr\",\n          \"currency\": \"USD\"\n        }\n      ]\n    },\n    {\n      \"country\": \"CL\",\n      \"currency\": \"CLP\",\n      \"methods\": [\n        \"bank_transfer\",\n        \"fintoc\"\n      ],\n      \"options\": [\n        {\n          \"method\": \"bank_transfer\",\n          \"currency\": \"CLP\"\n        },\n        {\n          \"method\": \"fintoc\",\n          \"currency\": \"CLP\"\n        }\n      ]\n    }\n  ],\n  \"cards\": [\n    {\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"local_amount\": \"543.30\"\n    },\n    {\n      \"country\": \"BO\",\n      \"currency\": \"USD\",\n      \"local_amount\": \"50.75\"\n    }\n  ],\n  \"crypto\": [\n    {\n      \"method\": \"crypto:tron:usdt\",\n      \"chain\": \"tron\",\n      \"asset\": \"USDT\",\n      \"due\": \"50.000000\"\n    },\n    {\n      \"method\": \"crypto:btc:btc\",\n      \"chain\": \"btc\",\n      \"asset\": \"BTC\",\n      \"due\": \"0.00046120\",\n      \"quote_ttl_seconds\": 900\n    }\n  ],\n  \"cbpay\": {\n    \"alias\": \"tayl.code\",\n    \"dues\": {\n      \"USDT\": \"50.000000\",\n      \"USDC\": \"50.100200\",\n      \"BTC\": \"0.00046120\",\n      \"GOLD\": \"0.462100\",\n      \"SILVER\": \"0.462100\",\n      \"PLATINUM\": \"0.462100\"\n    }\n  },\n  \"country_quote\": {\n    \"country\": \"BO\",\n    \"currency\": \"BOB\",\n    \"methods\": [\n      \"qr\"\n    ],\n    \"local_amount\": \"543.30\",\n    \"options\": [\n      {\n        \"method\": \"qr\",\n        \"currency\": \"BOB\",\n        \"local_amount\": \"543.30\"\n      },\n      {\n        \"method\": \"qr\",\n        \"currency\": \"USD\",\n        \"local_amount\": \"50.75\"\n      }\n    ]\n  }\n}"
+              "body": "{\n  \"status\": \"pending\",\n  \"settlement_asset\": \"USDT\",\n  \"asset_amount\": \"50\",\n  \"countries\": [\n    {\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"methods\": [\n        \"qr\"\n      ],\n      \"options\": [\n        {\n          \"method\": \"qr\",\n          \"currency\": \"BOB\"\n        },\n        {\n          \"method\": \"qr\",\n          \"currency\": \"USD\"\n        }\n      ]\n    },\n    {\n      \"country\": \"CL\",\n      \"currency\": \"CLP\",\n      \"methods\": [\n        \"bank_transfer\",\n        \"fintoc\"\n      ],\n      \"options\": [\n        {\n          \"method\": \"bank_transfer\",\n          \"currency\": \"CLP\"\n        },\n        {\n          \"method\": \"fintoc\",\n          \"currency\": \"CLP\"\n        }\n      ]\n    }\n  ],\n  \"cards\": [\n    {\n      \"country\": \"BO\",\n      \"currency\": \"BOB\",\n      \"local_amount\": \"543.30\"\n    },\n    {\n      \"country\": \"BO\",\n      \"currency\": \"USD\",\n      \"local_amount\": \"50.75\"\n    }\n  ],\n  \"crypto\": [\n    {\n      \"method\": \"crypto:tron:usdt\",\n      \"chain\": \"tron\",\n      \"asset\": \"USDT\",\n      \"due\": \"50.000000\",\n      \"due_rate\": \"1\",\n      \"rate_pair\": \"USDT/USDT\"\n    },\n    {\n      \"method\": \"crypto:btc:btc\",\n      \"chain\": \"btc\",\n      \"asset\": \"BTC\",\n      \"due\": \"0.00046120\",\n      \"due_rate\": \"108474.32744506\",\n      \"rate_pair\": \"BTC/USDT\",\n      \"fees\": [\n        {\n          \"leg\": \"from\",\n          \"asset\": \"BTC\",\n          \"percent\": \"0.30\"\n        },\n        {\n          \"leg\": \"to\",\n          \"asset\": \"USDT\",\n          \"percent\": \"0.30\"\n        }\n      ],\n      \"fee_total_pct\": \"0.6000\",\n      \"fee_note\": \"included_in_rate\",\n      \"quote_ttl_seconds\": 900\n    }\n  ],\n  \"cbpay\": {\n    \"alias\": \"tayl.code\",\n    \"dues\": {\n      \"USDT\": \"50.000000\",\n      \"USDC\": \"50.100200\",\n      \"BTC\": \"0.00046120\",\n      \"GOLD\": \"0.462100\",\n      \"SILVER\": \"0.462100\",\n      \"PLATINUM\": \"0.462100\"\n    },\n    \"rates\": {\n      \"USDT\": {\n        \"due_rate\": \"1\",\n        \"rate_pair\": \"USDT/USDT\"\n      },\n      \"USDC\": {\n        \"due_rate\": \"0.99800399\",\n        \"rate_pair\": \"USDC/USDT\",\n        \"fees\": [\n          {\n            \"leg\": \"from\",\n            \"asset\": \"USDC\",\n            \"percent\": \"0.10\"\n          },\n          {\n            \"leg\": \"to\",\n            \"asset\": \"USDT\",\n            \"percent\": \"0.10\"\n          }\n        ],\n        \"fee_total_pct\": \"0.2000\",\n        \"fee_note\": \"included_in_rate\"\n      }\n    }\n  },\n  \"country_quote\": {\n    \"country\": \"BO\",\n    \"currency\": \"BOB\",\n    \"methods\": [\n      \"qr\"\n    ],\n    \"local_amount\": \"543.30\",\n    \"options\": [\n      {\n        \"method\": \"qr\",\n        \"currency\": \"BOB\",\n        \"local_amount\": \"543.30\"\n      },\n      {\n        \"method\": \"qr\",\n        \"currency\": \"USD\",\n        \"local_amount\": \"50.75\"\n      }\n    ]\n  }\n}"
             }
           ]
         },
@@ -7011,7 +7011,7 @@
                 }
               ]
             },
-            "description": "Immutable ledger history of the calling account."
+            "description": "Immutable ledger history of the calling account. Legs that executed at a stamped rate carry executed_rate/rate_pair/rate_source."
           },
           "response": [
             {
@@ -7080,7 +7080,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"page\": 1,\n  \"page_size\": 50,\n  \"movements\": [\n    {\n      \"id\": \"0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0\",\n      \"asset\": \"USDT\",\n      \"amount\": \"-86.014286\",\n      \"type\": \"payout_debit\",\n      \"reference_type\": \"payout\",\n      \"reference_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n      \"description\": \"\",\n      \"balance_after\": \"39.415714\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    },\n    {\n      \"id\": \"9a8b7c6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4\",\n      \"asset\": \"USDT\",\n      \"amount\": \"-1.000000\",\n      \"type\": \"wallet_creation_fee\",\n      \"reference_type\": \"crypto_wallet\",\n      \"reference_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d:tron:usdt\",\n      \"description\": \"service fee: wallet_creation\",\n      \"balance_after\": \"125.430000\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"page\": 1,\n  \"page_size\": 50,\n  \"movements\": [\n    {\n      \"id\": \"0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0\",\n      \"asset\": \"USDT\",\n      \"amount\": \"-86.014286\",\n      \"type\": \"payout_debit\",\n      \"reference_type\": \"payout\",\n      \"reference_id\": \"7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f\",\n      \"description\": \"\",\n      \"balance_after\": \"39.415714\",\n      \"created_at\": \"2026-07-07T12:00:00Z\",\n      \"executed_rate\": \"6.960000\",\n      \"rate_pair\": \"USD/BOB\",\n      \"rate_source\": \"payout\"\n    },\n    {\n      \"id\": \"9a8b7c6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4\",\n      \"asset\": \"USDT\",\n      \"amount\": \"-1.000000\",\n      \"type\": \"wallet_creation_fee\",\n      \"reference_type\": \"crypto_wallet\",\n      \"reference_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d:tron:usdt\",\n      \"description\": \"service fee: wallet_creation\",\n      \"balance_after\": \"125.430000\",\n      \"created_at\": \"2026-07-07T12:00:00Z\"\n    },\n    {\n      \"id\": \"7c6d5e4f-3a2b-1c0d-9e8f-a7b6c5d4e3f2\",\n      \"asset\": \"USDT\",\n      \"amount\": \"-100.000000\",\n      \"type\": \"swap_out\",\n      \"reference_type\": \"swap\",\n      \"reference_id\": \"1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d\",\n      \"description\": \"Swap USDT -> USDC\",\n      \"balance_after\": \"25.430000\",\n      \"created_at\": \"2026-07-07T12:05:00Z\",\n      \"executed_rate\": \"0.99300000\",\n      \"rate_pair\": \"USDT/USDC\",\n      \"rate_source\": \"swap\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -13670,26 +13670,38 @@
                 {
                   "key": "from",
                   "value": "",
-                  "disabled": false,
+                  "disabled": true,
                   "description": "Inclusive organization date, YYYY-MM-DD."
                 },
                 {
                   "key": "to",
                   "value": "",
-                  "disabled": false,
+                  "disabled": true,
                   "description": "Inclusive organization date, YYYY-MM-DD."
                 },
                 {
                   "key": "status",
                   "value": "",
                   "disabled": true,
-                  "description": "Case status filter."
+                  "description": "One status or comma-separated (open,evidence,submitted,won,lost,expired). Repeatable."
                 },
                 {
                   "key": "kind",
                   "value": "",
                   "disabled": true,
                   "description": "dispute or fraud_hold."
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Free-text search over case number, processor reason, lot, brand, masked PAN, note and IDs."
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Result order. Default deadline (most urgent first)."
                 },
                 {
                   "key": "page",
@@ -13725,26 +13737,38 @@
                     {
                       "key": "from",
                       "value": "",
-                      "disabled": false,
+                      "disabled": true,
                       "description": "Inclusive organization date, YYYY-MM-DD."
                     },
                     {
                       "key": "to",
                       "value": "",
-                      "disabled": false,
+                      "disabled": true,
                       "description": "Inclusive organization date, YYYY-MM-DD."
                     },
                     {
                       "key": "status",
                       "value": "",
                       "disabled": true,
-                      "description": "Case status filter."
+                      "description": "One status or comma-separated (open,evidence,submitted,won,lost,expired). Repeatable."
                     },
                     {
                       "key": "kind",
                       "value": "",
                       "disabled": true,
                       "description": "dispute or fraud_hold."
+                    },
+                    {
+                      "key": "q",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Free-text search over case number, processor reason, lot, brand, masked PAN, note and IDs."
+                    },
+                    {
+                      "key": "sort",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Result order. Default deadline (most urgent first)."
                     },
                     {
                       "key": "page",
@@ -13770,7 +13794,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"disputes\": [\n    {\n      \"dispute_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\n      \"account_id\": \"5c4b3a29-1111-4222-8333-444455556666\",\n      \"kind\": \"dispute\",\n      \"status\": \"evidence\",\n      \"currency\": \"USD\",\n      \"hold_asset\": \"USDT\",\n      \"disputed\": \"100.000000\",\n      \"held\": \"100.000000\",\n      \"disputed_usdt\": \"100.000000\",\n      \"held_usdt\": \"100.000000\",\n      \"underfunded\": false,\n      \"case_number\": \"CASE-2026-00041\",\n      \"processor_reason\": \"SERVICIOS NO PRESTADOS\",\n      \"lot\": \"460514\",\n      \"brand\": \"VISA\",\n      \"pan_masked\": \"403792******4203\",\n      \"source\": \"import\",\n      \"opened_by\": \"admin:2c1...\",\n      \"created_at\": \"2026-09-19T12:00:00Z\",\n      \"updated_at\": \"2026-09-19T12:05:00Z\",\n      \"deadline_at\": \"2026-10-01T00:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"disputes\": [\n    {\n      \"dispute_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\n      \"account_id\": \"5c4b3a29-1111-4222-8333-444455556666\",\n      \"kind\": \"dispute\",\n      \"status\": \"evidence\",\n      \"currency\": \"USD\",\n      \"hold_asset\": \"USDT\",\n      \"disputed\": \"100.000000\",\n      \"held\": \"100.000000\",\n      \"disputed_usdt\": \"100.000000\",\n      \"held_usdt\": \"100.000000\",\n      \"underfunded\": false,\n      \"case_number\": \"CASE-2026-00041\",\n      \"processor_reason\": \"SERVICIOS NO PRESTADOS\",\n      \"lot\": \"460514\",\n      \"brand\": \"VISA\",\n      \"pan_masked\": \"403792******4203\",\n      \"source\": \"import\",\n      \"opened_by\": \"admin:2c1...\",\n      \"created_at\": \"2026-09-19T12:00:00Z\",\n      \"updated_at\": \"2026-09-19T12:05:00Z\",\n      \"deadline_at\": \"2026-10-01T00:00:00Z\",\n      \"automation\": {\n        \"pack_status\": \"ready\",\n        \"pack_version\": 2,\n        \"requested_at\": \"2026-09-19T12:10:00Z\",\n        \"evidence_complete\": true,\n        \"send_status\": \"pending\",\n        \"send_reason\": \"waiting_merchant\",\n        \"auto_sends\": 0,\n        \"paused\": false\n      }\n    }\n  ]\n}"
             }
           ]
         },

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.274'
+  version: '2.275'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -582,6 +582,7 @@ paths:
                   value:
                     method: crypto:btc:btc
                     payload:
+                      method: crypto:btc:btc
                       chain: btc
                       asset: BTC
                       address: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh
@@ -703,7 +704,7 @@ paths:
       - 收银台(Checkout)
       operationId: checkoutQuote
       summary: 选择前报价收款链接（公开）
-      description: '在生成支付选项前获取通用收款链接的指示性报价 — 有可用法币方式的国家目录（不含银行卡， 见 `cards`）、在 `cards[]` 中按国家+币种单独列出的银行卡选项及其报价应付金额（同一通道可能接受 多种扣款币种，例如 BOB 和 USD）、每个加密货币选项的应付金额（付款资产与结算资产不同时已含兑换 成本），以及按已启用余额列出的 CBPay 直接付款金额。每个国家在 `options[]` 中列出其通道 — 每个方式+币种一行（同一国家可能以多种币种提供同一方式，例如 BOB 和 USD 的二维码），拉取式 方式带 `collect: true`（需要付款人在页面上填写数据，见 `POST /pay/{token}/collect`）， 需要在 POST body 中提供付款人姓名和证件的托管跳转方式带 `payer_required: true`。 传 `?country=XX` 时额外返回该国家每个选项的本地报价金额。最终报价在生成支付选项时冻结。 无需凭证；按 IP 限流。'
+      description: '在生成支付选项前获取通用收款链接的指示性报价 — 有可用法币方式的国家目录（不含银行卡， 见 `cards`）、在 `cards[]` 中按国家+币种单独列出的银行卡选项及其报价应付金额（同一通道可能接受 多种扣款币种，例如 BOB 和 USD）、每个加密货币选项的应付金额（付款资产与结算资产不同时已含兑换 成本），以及按已启用余额列出的 CBPay 直接付款金额。每个国家在 `options[]` 中列出其通道 — 每个方式+币种一行（同一国家可能以多种币种提供同一方式，例如 BOB 和 USD 的二维码），拉取式 方式带 `collect: true`（需要付款人在页面上填写数据，见 `POST /pay/{token}/collect`）， 需要在 POST body 中提供付款人姓名和证件的托管跳转方式带 `payer_required: true`。 传 `?country=XX` 时额外返回该国家每个选项的本地报价金额。最终报价在生成支付选项时冻结。 无需凭证；按 IP 限流。每个加密货币选项和每个 CBPay 余额还附带其展示汇率（`due_rate`，1 单位付款资产可兑换的结算资产数量，与 swaps 汇率语义相同）及 `rate_pair`，以及已包含在汇率中的分腿手续费（`fees[]`、`fee_total_pct`）。'
       parameters:
       - name: token
         in: path
@@ -758,10 +759,23 @@ paths:
                   chain: tron
                   asset: USDT
                   due: '50.000000'
+                  due_rate: '1'
+                  rate_pair: USDT/USDT
                 - method: crypto:btc:btc
                   chain: btc
                   asset: BTC
                   due: '0.00046120'
+                  due_rate: '108474.32744506'
+                  rate_pair: BTC/USDT
+                  fees:
+                  - leg: from
+                    asset: BTC
+                    percent: '0.30'
+                  - leg: to
+                    asset: USDT
+                    percent: '0.30'
+                  fee_total_pct: '0.6000'
+                  fee_note: included_in_rate
                   quote_ttl_seconds: 900
                 cbpay:
                   alias: tayl.code
@@ -772,6 +786,22 @@ paths:
                     GOLD: '0.462100'
                     SILVER: '0.462100'
                     PLATINUM: '0.462100'
+                  rates:
+                    USDT:
+                      due_rate: '1'
+                      rate_pair: USDT/USDT
+                    USDC:
+                      due_rate: '0.99800399'
+                      rate_pair: USDC/USDT
+                      fees:
+                      - leg: from
+                        asset: USDC
+                        percent: '0.10'
+                      - leg: to
+                        asset: USDT
+                        percent: '0.10'
+                      fee_total_pct: '0.2000'
+                      fee_note: included_in_rate
                 country_quote:
                   country: BO
                   currency: BOB
@@ -7896,13 +7926,13 @@ paths:
       parameters:
       - name: from
         in: query
-        required: true
+        required: false
         schema:
           type: string
         description: Inclusive organization date, YYYY-MM-DD.
       - name: to
         in: query
-        required: true
+        required: false
         schema:
           type: string
         description: Inclusive organization date, YYYY-MM-DD.
@@ -7911,13 +7941,37 @@ paths:
         required: false
         schema:
           type: string
-        description: Case status filter.
+        description: One status or comma-separated (open,evidence,submitted,won,lost,expired). Repeatable.
+        example: open,evidence
       - name: kind
         in: query
         required: false
         schema:
           type: string
         description: dispute or fraud_hold.
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 120
+        description: Free-text search over case number, processor reason, lot, brand, masked PAN, note and IDs.
+        example: '460514'
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - deadline
+          - -deadline
+          - created
+          - -created
+          - amount
+          - -amount
+          default: deadline
+        description: Result order. Default deadline (most urgent first).
+        example: deadline
       - name: page
         in: query
         required: false
@@ -7966,8 +8020,17 @@ paths:
                       created_at: '2026-09-19T12:00:00Z'
                       updated_at: '2026-09-19T12:05:00Z'
                       deadline_at: '2026-10-01T00:00:00Z'
+                      automation:
+                        pack_status: ready
+                        pack_version: 2
+                        requested_at: '2026-09-19T12:10:00Z'
+                        evidence_complete: true
+                        send_status: pending
+                        send_reason: waiting_merchant
+                        auto_sends: 0
+                        paused: false
         '400':
-          description: invalid_range
+          description: invalid_range, invalid_status, invalid_sort or invalid_q
           content:
             application/json:
               schema:
@@ -7977,6 +8040,18 @@ paths:
                   value:
                     error: invalid_range
                     message: from and to must be YYYY-MM-DD
+                invalid_status:
+                  value:
+                    error: invalid_status
+                    message: status must be open, evidence, submitted, won, lost or expired (comma-separated)
+                invalid_sort:
+                  value:
+                    error: invalid_sort
+                    message: sort must be deadline, created or amount (prefix - for descending)
+                invalid_q:
+                  value:
+                    error: invalid_q
+                    message: q is too long (max 120 characters)
         '404':
           description: not_found
           content:
@@ -13768,7 +13843,7 @@ paths:
       - 余额
       operationId: listMovements
       summary: 列出流水
-      description: 调用账户不可变的账本历史。
+      description: 调用账户不可变的账本历史。带有实际执行汇率的分录会附带 executed_rate/rate_pair/rate_source。
       parameters:
       - $ref: '#/components/parameters/page'
       - $ref: '#/components/parameters/pageSize'
@@ -13850,6 +13925,9 @@ paths:
                   description: ''
                   balance_after: '39.415714'
                   created_at: '2026-07-07T12:00:00Z'
+                  executed_rate: '6.960000'
+                  rate_pair: USD/BOB
+                  rate_source: payout
                 - id: 9a8b7c6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4
                   asset: USDT
                   amount: '-1.000000'
@@ -13859,6 +13937,18 @@ paths:
                   description: 服务费:wallet_creation
                   balance_after: '125.430000'
                   created_at: '2026-07-07T12:00:00Z'
+                - id: 7c6d5e4f-3a2b-1c0d-9e8f-a7b6c5d4e3f2
+                  asset: USDT
+                  amount: '-100.000000'
+                  type: swap_out
+                  reference_type: swap
+                  reference_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
+                  description: Swap USDT -> USDC
+                  balance_after: '25.430000'
+                  created_at: '2026-07-07T12:05:00Z'
+                  executed_rate: '0.99300000'
+                  rate_pair: USDT/USDC
+                  rate_source: swap
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -29424,6 +29514,15 @@ components:
               created_at:
                 type: string
                 format: date-time
+              executed_rate:
+                type: string
+                description: 该分录实际执行的汇率（完整精度，如 "0.99300000"）。仅当分录自带汇率时出现——绝不重新报价，也绝非硬编码的 1:1。
+              rate_pair:
+                type: string
+                description: executed_rate 的交易对，格式为 FROM/TO（1 单位 FROM 可兑换的 TO 数量，如 "USDT/USD"）。
+              rate_source:
+                type: string
+                description: 执行汇率的来源——swap、settlement、fx、payin、payout 或 banking_funding。
     FeeConfig:
       type: object
       properties:

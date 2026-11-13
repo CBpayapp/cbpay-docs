@@ -129,3 +129,20 @@ flowchart LR
   y para compartir con tu equipo de finanzas.
 
 Ambos leen el mismo ledger: nunca van a discrepar entre sí.
+
+## Tasas ejecutadas
+
+Un movimiento valorizado durante la ejecución puede incluir `executed_rate`, su par `rate_pair` escrito como `FROM/TO` y un `rate_source` neutral. La tasa es histórica: no se recalcula al volver a leer el ledger.
+
+```json
+{
+  "type": "swap_out",
+  "asset": "USDT",
+  "amount": "-100.000000",
+  "executed_rate": "0.99300000",
+  "rate_pair": "USDT/USDC",
+  "rate_source": "swap"
+}
+```
+
+En un payout con FX, el par mantiene la misma dirección; por ejemplo, `USD/BOB` con `executed_rate: "6.960000"`. Usa estos campos para cuadrar el monto. `rate_source` indica solo la categoría de ejecución, nunca el nombre de un proveedor.

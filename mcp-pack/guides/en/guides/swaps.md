@@ -235,3 +235,7 @@ A payin credited directly to a USD-principal account exposes
 remains the USD-equivalent reporting field. A controversy hold follows the
 credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.
+
+## Checkout and ledger rate references
+
+The same rate semantics are used outside the swap flow: checkout exposes `due_rate`, `rate_pair`, and the included-fee fields before payment, while `GET /v1/movements` records `executed_rate`, `rate_pair`, and `rate_source` after execution. A quote is indicative; the movement or completed swap response is the historical execution record.

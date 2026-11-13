@@ -225,3 +225,7 @@ una vez; el chargeback del proveedor es el débito financiero separado.
 Payins incluyen `credit_asset` y `fiat_credited` opcional; devoluciones
 incluyen `debited_asset` y `debited_amount`. JSON, PDF y XLSX conservan la
 precisión del activo real y separan el equivalente USDT.
+
+## Tasas en cartolas y comprobantes
+
+El detalle de la cartola conserva la tasa usada en cada operación valorizada. Una fila de swap incluye su `rate` de ejecución; los payouts y otras operaciones con precio mantienen la información de tasa en la cartola y el comprobante individual. PDF y Excel muestran la tasa con al menos tres decimales cuando aplica, mientras JSON conserva el valor preciso. La tasa es informativa y no modifica el saldo del ledger.

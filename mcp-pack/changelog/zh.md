@@ -5,7 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.274 · 1 个版本 - 2026年11月13日
+## v2.275 · 2 个版本 - 2026年11月13日
+### v2.275
+**已更改**
+- 补充 movements、checkout 报价、swap、对账单和回执中的执行汇率说明；明确相同资产支付不发生转换。
 ### v2.274
 **已更改**
 - 账户支持工单将 `resolved` 视为客户侧终态，门户消息和附件上传返回 `409 ticket_resolved`；已解决工单的邮件回复会被忽略并引导客户创建新工单。

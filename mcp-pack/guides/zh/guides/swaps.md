@@ -189,3 +189,7 @@ USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及
 
 swap 可能有内部后台对冲流程。这不会改变 `POST /v1/swaps` 的请求、
 响应、执行汇率或账户 ledger 合同。
+
+## Checkout 和 ledger 的汇率参考
+
+相同的汇率语义也用于 swap 之外：checkout 在付款前返回 `due_rate`、`rate_pair` 和包含费用的字段，`GET /v1/movements` 在执行后记录 `executed_rate`、`rate_pair` 和 `rate_source`。报价是 indicative；已完成 swap 的响应或 movement 才是历史执行记录。

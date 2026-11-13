@@ -343,3 +343,33 @@ A payin credited directly to a USD-principal account exposes
 remains the USD-equivalent reporting field. A controversy hold follows the
 credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.
+
+## Rates and fees on the public payment page
+
+`GET /pay/{token}/quote` now shows the executable information for each crypto option and CBPay balance. For every option, read `due`, `due_rate`, and `rate_pair`; when a conversion fee applies, `fees[]`, `fee_total_pct`, and `fee_note: "included_in_rate"` explain the rate.
+
+```json
+{
+  "crypto": [{
+    "method": "crypto:btc:btc",
+    "asset": "BTC",
+    "due": "0.00046120",
+    "due_rate": "108474.32744506",
+    "rate_pair": "BTC/USDT",
+    "fees": [
+      {"leg": "from", "asset": "BTC", "percent": "0.30"},
+      {"leg": "to", "asset": "USDT", "percent": "0.30"}
+    ],
+    "fee_total_pct": "0.6000",
+    "fee_note": "included_in_rate"
+  }],
+  "cbpay": {"rates": {"USDC": {
+    "due_rate": "0.99800399",
+    "rate_pair": "USDC/USDT",
+    "fee_total_pct": "0.2000",
+    "fee_note": "included_in_rate"
+  }}}
+}
+```
+
+Same-asset payment has no conversion fee: its pair is `USDT/USDT` (or the selected asset repeated), its due rate is `1`, and no `fees` block is needed. The page displays the rate and a commission hint when the fee is included in the rate; the due remains the amount the payer must send.
