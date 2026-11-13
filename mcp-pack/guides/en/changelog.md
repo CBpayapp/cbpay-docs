@@ -12,6 +12,12 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ### v2.274
 **Changed**
 - Account support tickets now treat `resolved` as terminal for client portal messages and attachment uploads, returning `409 ticket_resolved`; resolved email replies are ignored and direct the customer to open a new ticket.
+### v2.274
+**Added**
+- The disputes portal now documents search, multi-status filtering and deadline-first ordering, plus the evidence-progress automation chip.
+- Merchants can follow the `kontigo-std-v1` evidence checklist and understand what happens after all required blocks are complete.
+**Changed**
+- Dispute guidance explains that automatic ATC delivery starts only after a fresh pack and complete merchant evidence.
 ## v2.273 · 10 versions - November 12, 2026
 ### v2.273
 **Changed**
