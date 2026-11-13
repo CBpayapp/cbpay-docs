@@ -22545,6 +22545,12 @@ paths:
                     rate: '950.25'
                     rate_source: lot
                     payin_rate: '955.10'
+                  venezuela:
+                    currency: VES
+                    rate: '962.654000'
+                    rate_source: rail
+                    payin_rate: '1020.604704'
+                    payin_rate_source: rail
                   mexico:
                     currency: MXN
                     rate: '17.50'
