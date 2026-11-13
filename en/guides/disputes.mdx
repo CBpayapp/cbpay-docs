@@ -403,3 +403,73 @@ A payin credited directly to a USD-principal account exposes
 remains the USD-equivalent reporting field. A controversy hold follows the
 credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.
+
+## Find a case and follow evidence progress
+
+The portal list supports `status` (repeatable or comma-separated), `kind`,
+`from`, `to`, free-text `q` up to 120 characters, and `sort` by `deadline`,
+`created` or `amount` (prefix `-` for descending). The default is the closest
+deadline:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/disputes?status=open,evidence&from=2026-11-01&to=2026-11-30&q=560679&sort=deadline&page=1&page_size=50" \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN"
+```
+
+Each row and detail can show an `automation` object. Use it to understand the
+evidence-progress chip:
+
+```json
+{
+  "pack_status": "ready",
+  "pack_version": 2,
+  "requested_at": "2026-09-19T12:10:00Z",
+  "evidence_complete": false,
+  "send_status": "pending",
+  "send_reason": "waiting_merchant",
+  "auto_sends": 0,
+  "paused": false
+}
+```
+
+The portal never exposes ATC recipients or provider-facing send history. The
+chip only tells the account whether evidence is still requested, ready for
+review, or already progressing through the case.
+
+## What emails the merchant receives
+
+The automatic request uses the `kontigo-std-v1` checklist. Depending on the
+account type, the email asks for these six evidence blocks:
+
+| Block | Minimum evidence |
+|---|---|
+| End-user KYC | Holder, document, country, level and verification date. |
+| KYB | Company evidence, or a statement that the payer is an individual. |
+| AML/CFT screening | Screening engine, verdict and date. |
+| Liveness | Biometric method and result. |
+| Order record | User email, date/time, charged versus credited amount and destination wallet. |
+| Delivery proof | Order ID plus on-chain transaction and explorer link. |
+
+For a personal account, the KYB block is not required; the other five blocks
+remain required. Upload each document from the case view and select its
+category. `other` is accepted for supporting material but does not complete a
+standard block.
+
+When all required blocks are covered, the worker generates or refreshes the
+pack and sends it to the organization’s configured ATC recipients. The
+merchant does not submit the representation from the account API: its role is
+to provide evidence and monitor the case. Uploading evidence is immutable and
+does not itself change the decision.
+
+<AccordionGroup>
+<Accordion title="What happens after I complete the checklist?">
+The evidence-progress chip changes to complete, the worker refreshes the pack
+if needed, and a normal dispute becomes eligible for automatic ATC delivery.
+The worker re-checks the deadline and other safety controls before delivery.
+</Accordion>
+<Accordion title="Why am I still seeing a pending block?">
+Every standard block needs at least one document with that category. Documents
+labeled `other` do not cover a standard block. A personal account does not
+need KYB; a company account does.
+</Accordion>
+</AccordionGroup>

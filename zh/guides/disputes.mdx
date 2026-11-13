@@ -330,3 +330,64 @@ USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
 跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。
+
+## 搜索案件并查看材料进度
+
+门户列表支持可重复或逗号分隔的 `status`、`kind`、`from`、`to`、最多
+120 个字符的 `q`，以及按 `deadline`、`created` 或 `amount` 排序（前缀
+`-` 表示降序）。默认按最近截止时间排序：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/disputes?status=open,evidence&from=2026-11-01&to=2026-11-30&q=560679&sort=deadline&page=1&page_size=50" \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN"
+```
+
+每行和详情可以包含 `automation` 对象，用于显示证据进度 chip：
+
+```json
+{
+  "pack_status": "ready",
+  "pack_version": 2,
+  "requested_at": "2026-09-19T12:10:00Z",
+  "evidence_complete": false,
+  "send_status": "pending",
+  "send_reason": "waiting_merchant",
+  "auto_sends": 0,
+  "paused": false
+}
+```
+
+门户不会显示 ATC 收件人或内部发送历史。chip 只说明材料是否缺失、是否
+已准备好审核，以及案件是否继续处理。
+
+## 商户会收到哪些邮件
+
+自动邮件使用 `kontigo-std-v1` 清单。根据账户类型，邮件会请求以下六个
+证据区块：
+
+| 区块 | 最低材料 |
+|---|---|
+| 最终用户 KYC | 持有人、证件、国家、等级和验证日期。 |
+| KYB | 公司材料，或付款人为个人的明确说明。 |
+| AML/CFT 筛查 | 筛查引擎、结论和日期。 |
+| 活体检测 | 生物识别方法和结果。 |
+| 订单记录 | 用户 email、日期/时间、扣款与入账金额、目标钱包。 |
+| 交付证明 | 订单 ID、链上交易和浏览器链接。 |
+
+个人账户不要求 KYB；其余五个区块仍然需要。请在案件页面上传材料并选择
+类别。`other` 可用于补充材料，但不会覆盖标准区块。
+
+所有必需区块覆盖后，worker 会生成或刷新 pack，并发送给组织配置的 ATC
+收件人。商户不能通过账户 API 提交 representation；账户 API 的职责是
+提供材料并查看案件。上传材料是不可变的，不会单独改变案件决定。
+
+<AccordionGroup>
+<Accordion title="完成清单后会发生什么？">
+证据进度 chip 会变为完成，worker 必要时刷新 pack，普通争议随后具备自动
+发送到 ATC 的条件。发送前仍会重新检查截止时间和安全控制。
+</Accordion>
+<Accordion title="为什么仍显示某个区块待处理？">
+每个标准区块至少需要一份带对应类别的材料。`other` 材料不会覆盖标准
+区块。个人账户不需要 KYB；企业账户需要。
+</Accordion>
+</AccordionGroup>
