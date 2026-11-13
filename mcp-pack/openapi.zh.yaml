@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.271'
+  version: '2.273'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -7957,6 +7957,10 @@ paths:
                       held_usdt: '100.000000'
                       underfunded: false
                       case_number: CASE-2026-00041
+                      processor_reason: SERVICIOS NO PRESTADOS
+                      lot: '460514'
+                      brand: VISA
+                      pan_masked: 403792******4203
                       source: import
                       opened_by: admin:2c1...
                       created_at: '2026-09-19T12:00:00Z'
@@ -8126,6 +8130,9 @@ paths:
                 file:
                   type: string
                   format: binary
+                category:
+                  type: string
+                  description: 所覆盖的清单板块（kyc|kyb|screening|liveness|order|delivery|other）。可选，默认为 other。
             examples:
               pdf:
                 value:
@@ -8143,6 +8150,7 @@ paths:
                     evidence_id: 1f2...
                     version: 2
                     kind: merchant_doc
+                    category: kyc
                     sha256: b4e2...
                     bytes: 482110
                     created_at: '2026-09-19T12:10:00Z'

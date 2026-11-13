@@ -709,7 +709,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 
 | HTTP | `error` | 解决方案 |
 |---:|---|---|
-| 409 | `liveness_required` | 活体待完成时无法批准；请先完成活体（仅具名 god 可凭审计理由覆盖）。 |
+| 409 | `liveness_required` | 活体待完成时无法批准；请先完成活体（合规官、org owner 或 god 可凭审计理由覆盖）。 |
+| 403 | `liveness_override_forbidden` | 跳过活体需要合规官、org owner 或 god 并附审计理由；其他角色只能申请重新采集链接。 |
 
 ## 工资单错误
 

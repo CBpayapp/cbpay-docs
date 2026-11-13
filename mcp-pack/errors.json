@@ -1,5 +1,5 @@
 {
-  "count": 429,
+  "count": 430,
   "errors": [
     {
       "category": {
@@ -5568,9 +5568,23 @@
       "code": "liveness_required",
       "http": 409,
       "meaning": {
-        "en": "The profile cannot be approved with pending liveness; complete the liveness step first (god override with an audited reason only).",
-        "es": "El perfil no se puede aprobar con liveness pendiente; complétala primero (override solo god con motivo auditado).",
-        "zh": "活体待完成时无法批准；请先完成活体（仅具名 god 可凭审计理由覆盖）。"
+        "en": "The profile cannot be approved with pending liveness; complete the liveness step first (a compliance officer, org owner, or god admin can override with an audited reason).",
+        "es": "El perfil no se puede aprobar con liveness pendiente; complétala primero (un oficial de cumplimiento, admin owner o god puede saltarla con motivo auditado).",
+        "zh": "活体待完成时无法批准；请先完成活体（合规官、org owner 或 god 可凭审计理由覆盖）。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "liveness_override_forbidden",
+      "http": 403,
+      "meaning": {
+        "en": "The liveness override requires a compliance officer, org owner, or god admin with an audited reason; other roles can only request a recapture link.",
+        "es": "Saltarse el liveness exige un oficial de cumplimiento, admin owner o god con motivo auditado; el resto de roles solo puede pedir un link de re-captura.",
+        "zh": "跳过活体需要合规官、org owner 或 god 并附审计理由；其他角色只能申请重新采集链接。"
       }
     },
     {

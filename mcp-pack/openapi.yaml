@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.271'
+  version: '2.273'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -7965,6 +7965,10 @@ paths:
                       held_usdt: '100.000000'
                       underfunded: false
                       case_number: CASE-2026-00041
+                      processor_reason: SERVICIOS NO PRESTADOS
+                      lot: '460514'
+                      brand: VISA
+                      pan_masked: 403792******4203
                       source: import
                       opened_by: admin:2c1...
                       created_at: '2026-09-19T12:00:00Z'
@@ -8134,6 +8138,9 @@ paths:
                 file:
                   type: string
                   format: binary
+                category:
+                  type: string
+                  description: Checklist block covered (kyc|kyb|screening|liveness|order|delivery|other). Optional, defaults to other.
             examples:
               pdf:
                 value:
@@ -8151,6 +8158,7 @@ paths:
                     evidence_id: 1f2...
                     version: 2
                     kind: merchant_doc
+                    category: kyc
                     sha256: b4e2...
                     bytes: 482110
                     created_at: '2026-09-19T12:10:00Z'
