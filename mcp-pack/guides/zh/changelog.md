@@ -5,13 +5,20 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.275 · 2 个版本 - 2026年11月13日
-### v2.275
+## v2.277 · 4 个版本 - 2026年11月13日
+### v2.277
 **已更改**
 - 补充 movements、checkout 报价、swap、对账单和回执中的执行汇率说明；明确相同资产支付不发生转换。
-### v2.274
+### v2.276
 **已更改**
 - 账户支持工单将 `resolved` 视为客户侧终态，门户消息和附件上传返回 `409 ticket_resolved`；已解决工单的邮件回复会被忽略并引导客户创建新工单。
+### v2.275
+**Added**
+
+- 对账单现在包含客户端安全的 `timeline[]`，带有本地化标题、产品上下文、
+  资产金额、余额和已记录的执行汇率。
+- PDF 新增“What happened?”概览、产品/月度图表、Timeline 和 Disputes 表格；
+  XLSX 新增 Movements 和 Disputes 工作表。
 ### v2.274
 **新增**
 - 争议门户现记录搜索、多值 status 筛选、按截止时间排序，以及证据进度 automation chip。

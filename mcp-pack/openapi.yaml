@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.275'
+  version: '2.277'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the twelve balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -6745,7 +6745,7 @@ paths:
         in: query
         schema:
           type: string
-        description: Search by name, alias, email or phone.
+        description: Search by name, alias, email, phone, or any saved destination (on-chain address, chain, country, currency, method, label).
       - name: has_cbpay
         in: query
         schema:
@@ -6755,6 +6755,31 @@ paths:
         in: query
         schema:
           type: boolean
+      - name: source
+        in: query
+        schema:
+          type: string
+          enum:
+          - manual
+          - import
+          - transfer
+          - payout
+          - crypto
+        description: Only contacts created by this origin.
+      - name: has_destinations
+        in: query
+        schema:
+          type: boolean
+        description: Only contacts with (or without) saved destinations.
+      - name: sort
+        in: query
+        schema:
+          type: string
+          enum:
+          - name
+          - recent
+          - favorite
+        description: 'Result order: `name` (A-Z, accent-insensitive), `recent` (last used first) or `favorite` (favorites first, the default).'
       - name: expand
         in: query
         schema:
@@ -6786,6 +6811,9 @@ paths:
                     type: integer
                   page_size:
                     type: integer
+                  total:
+                    type: integer
+                    description: Total contacts matching the filters.
                   contacts:
                     type: array
                     items:
@@ -6793,6 +6821,7 @@ paths:
               example:
                 page: 1
                 page_size: 50
+                total: 1
                 contacts:
                 - contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
                   display_name: Carlos Soto
@@ -6812,7 +6841,7 @@ paths:
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-10T15:00:00Z'
         '400':
-          description: Invalid expand or destination filter.
+          description: Invalid expand, sort, source or destination filter.
           content:
             application/json:
               schema:
@@ -6898,6 +6927,55 @@ paths:
                 message: duplicate
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/contacts/duplicates:
+    get:
+      tags:
+      - Contacts
+      operationId: listContactDuplicates
+      summary: Suggest duplicate groups
+      description: Groups your address book by folded name (case, accents and spaces insensitive) and returns the groups with 2+ contacts, most duplicated first. Read-only suggestions for the merge UI with preview.
+      responses:
+        '200':
+          description: Duplicate groups (up to 50).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Folded name shared by the group.
+                        contact_ids:
+                          type: array
+                          items:
+                            type: string
+                            format: uuid
+                        display_names:
+                          type: array
+                          items:
+                            type: string
+                        contacts_count:
+                          type: integer
+                        destinations_count:
+                          type: integer
+              example:
+                groups:
+                - name: juan perez
+                  contact_ids:
+                  - 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                  - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+                  display_names:
+                  - Juan Pérez
+                  - JUAN PEREZ
+                  contacts_count: 2
+                  destinations_count: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/contacts/import:
     post:
       tags:
@@ -6976,6 +7054,104 @@ paths:
               example:
                 error: batch_too_large
                 message: send up to 1000 contacts per request (paginate the upload)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/contacts/merge:
+    post:
+      tags:
+      - Contacts
+      operationId: mergeContacts
+      summary: Merge duplicate contacts
+      description: 'Fuses 2 to 20 contacts into one survivor (one person = one contact with many destinations). Destinations move to the survivor; a missing or foreign id answers 404 and merges nothing (no partial merge). Not idempotent: retrying after success answers 404 (sources already deleted), so the client must not blindly retry.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - contact_ids
+              properties:
+                contact_ids:
+                  type: array
+                  minItems: 2
+                  maxItems: 20
+                  items:
+                    type: string
+                    format: uuid
+                  description: Distinct contacts of your account book to fuse.
+                surviving_contact_id:
+                  type: string
+                  format: uuid
+                  description: The contact that survives (must be one of contact_ids; defaults to the first).
+                display_name:
+                  type: string
+                  description: Optional override for the surviving display name.
+                alias:
+                  type: string
+                  description: Optional override for the surviving alias.
+            example:
+              contact_ids:
+              - 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+              - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+              surviving_contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+      responses:
+        '200':
+          description: Merged contact with all destinations.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Contact'
+                - type: object
+                  properties:
+                    merged_contact_ids:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: Source contacts that were deleted by the merge.
+              example:
+                contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                display_name: Carlos Soto
+                phone: '+56987654321'
+                has_cbpay: true
+                source: import
+                favorite: true
+                destinations:
+                - destination_id: aa11bb22-cc33-44dd-8899-aabbccddeeff
+                  type: payout
+                  country: CL
+                  currency: CLP
+                  method: bank_transfer
+                - destination_id: bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c
+                  type: crypto
+                  chain: tron
+                  address: TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk
+                merged_contact_ids:
+                - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+                created_at: '2026-07-07T12:00:00Z'
+                updated_at: '2026-11-13T12:00:00Z'
+        '400':
+          description: invalid_payload / batch_too_large / invalid_characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_payload
+                message: contact_ids must include at least 2 distinct contacts
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: An inherited phone/email belongs to another contact of your book.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: duplicate
+                message: duplicate
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/contacts/{contactID}:
@@ -7194,6 +7370,65 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/contacts/{contactID}/destinations/{destinationID}:
+    patch:
+      tags:
+      - Contacts
+      operationId: updateContactDestination
+      summary: Rename a saved destination
+      description: 'Updates the destination label (the only editable field: identity and fingerprint never change).'
+      parameters:
+      - name: contactID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: destinationID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+            example:
+              label: Cuenta vista
+      responses:
+        '200':
+          description: Renamed destination.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDestination'
+              example:
+                destination_id: bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c
+                type: payout
+                country: CL
+                currency: CLP
+                method: bank_transfer
+                label: Cuenta vista
+                last_used_at: '2026-07-10T16:00:00Z'
+                created_at: '2026-07-10T16:00:00Z'
+        '400':
+          description: invalid_characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_characters
+                message: label contains invalid characters
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     delete:
       tags:
       - Contacts
@@ -22902,8 +23137,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: '#/components/schemas/Statement'
               example:
                 account:
                   account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
@@ -22929,6 +23163,7 @@ paths:
                     crypto_withdrawals: 3
                     transfers: 4
                     service_charges: 2
+                    timeline: 2
                   fees_by_service:
                     payout: '15.300000'
                     funding: '897.550000'
@@ -23022,6 +23257,16 @@ paths:
                   reference: cust-001
                   amount: '-0.500000'
                   balance_after: '139.100000'
+                timeline:
+                - created_at: '2026-03-23T08:00:00Z'
+                  id: ledger-001
+                  product: service_charges
+                  direction: out
+                  title_key: service_charge
+                  asset: USDT
+                  amount: '-0.500000'
+                  balance_after: '139.100000'
+                  status: completed
         '400':
           description: invalid_range / invalid_format.
           content:
@@ -30736,6 +30981,107 @@ components:
         qr_png_base64:
           type: string
           description: "Base64 PNG rendering `qr_payload` as a QR code, with your\norganization's branding symbol centered on top.\n"
+    Statement:
+      type: object
+      description: Client-safe account statement. Raw movements and margins are admin-only.
+      properties:
+        summary:
+          type: object
+          properties:
+            counts:
+              type: object
+              additionalProperties:
+                type: integer
+              properties:
+                timeline:
+                  type: integer
+                  example: 2
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientTimelineItem'
+        disputes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatementDispute'
+    ClientTimelineItem:
+      type: object
+      required:
+      - created_at
+      - id
+      - product
+      - direction
+      - title_key
+      - asset
+      - amount
+      - balance_after
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        id:
+          type: string
+        product:
+          type: string
+          example: payins
+        direction:
+          type: string
+          enum:
+          - in
+          - out
+        title_key:
+          type: string
+          example: payin_received
+        subtitle:
+          type: string
+        asset:
+          type: string
+          example: USDT
+        amount:
+          type: string
+          example: '100.000000'
+        balance_after:
+          type: string
+          example: '1100.000000'
+        status:
+          type: string
+        country:
+          type: string
+        currency:
+          type: string
+        network:
+          type: string
+        ref_type:
+          type: string
+        ref_id:
+          type: string
+        executed_rate:
+          type: string
+        rate_pair:
+          type: string
+        rate_source:
+          type: string
+    StatementDispute:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        dispute_id:
+          type: string
+        kind:
+          type: string
+        status:
+          type: string
+        disputed_usdt:
+          type: string
+        held_usdt:
+          type: string
+        case_number:
+          type: string
+        deadline_at:
+          type: string
+          format: date-time
 webhooks:
   dispute_status_changed:
     post:

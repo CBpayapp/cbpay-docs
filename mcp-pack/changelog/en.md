@@ -5,13 +5,20 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.275 · 2 versions - November 13, 2026
-### v2.275
+## v2.277 · 4 versions - November 13, 2026
+### v2.277
 **Changed**
 - Documented executed rates in movements, checkout quotes, swaps, statements, and receipts; same-asset payments are explicitly shown as no-conversion cases.
-### v2.274
+### v2.276
 **Changed**
 - Account support tickets now treat `resolved` as terminal for client portal messages and attachment uploads, returning `409 ticket_resolved`; resolved email replies are ignored and direct the customer to open a new ticket.
+### v2.275
+**Added**
+
+- Account statements now include a client-safe `timeline[]` with localized
+  titles, product context, asset amounts, balances and stamped execution rates.
+- PDF statements add a “What happened?” overview, product/month charts, a
+  Timeline table and a Disputes table. XLSX adds Movements and Disputes sheets.
 ### v2.274
 **Added**
 - The disputes portal now documents search, multi-status filtering and deadline-first ordering, plus the evidence-progress automation chip.
