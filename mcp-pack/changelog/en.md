@@ -5,6 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.274 · 1 version - November 13, 2026
+### v2.274
+**Changed**
+- Account support tickets now treat `resolved` as terminal for client portal messages and attachment uploads, returning `409 ticket_resolved`; resolved email replies are ignored and direct the customer to open a new ticket.
 ## v2.273 · 10 versions - November 12, 2026
 ### v2.273
 **Changed**

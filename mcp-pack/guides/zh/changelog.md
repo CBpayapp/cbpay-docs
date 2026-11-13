@@ -5,6 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.274 · 1 个版本 - 2026年11月13日
+### v2.274
+**已更改**
+- 账户支持工单将 `resolved` 视为客户侧终态，门户消息和附件上传返回 `409 ticket_resolved`；已解决工单的邮件回复会被忽略并引导客户创建新工单。
 ## v2.273 · 10 个版本 - 2026年11月12日
 ### v2.273
 **变更**

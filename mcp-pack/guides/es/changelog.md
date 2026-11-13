@@ -5,6 +5,10 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.274 · 1 versión - 13 de noviembre de 2026
+### v2.274
+**Cambiado**
+- Los tickets de soporte de cuenta tratan `resolved` como terminal para mensajes del portal y cargas de adjuntos, con `409 ticket_resolved`; las respuestas por correo a tickets resueltos se ignoran y dirigen al cliente a abrir un ticket nuevo.
 ## v2.273 · 10 versiones - 12 de noviembre de 2026
 ### v2.273
 **Cambiado**
