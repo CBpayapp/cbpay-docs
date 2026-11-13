@@ -5,13 +5,21 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.279 · 6 个版本 - 2026年11月13日
-### v2.279
+## v2.281 · 8 个版本 - 2026年11月13日
+### v2.281
+**已更改**
+- 配置 VE/VES 通道时，`GET /v1/rates` 现在返回该通道的可执行报价，并在适用时使用 `rate_source: rail` 和 `payin_rate_source: rail`。响应结构不变。
+### v2.280
 **已更改**
 - 补充 movements、checkout 报价、swap、对账单和回执中的执行汇率说明；明确相同资产支付不发生转换。
-### v2.278
+### v2.279
 **已更改**
 - 账户支持工单将 `resolved` 视为客户侧终态，门户消息和附件上传返回 `409 ticket_resolved`；已解决工单的邮件回复会被忽略并引导客户创建新工单。
+### v2.278
+**变更**
+
+- 签署旧模板信封不再走入死胡同：服务器会自动作废并签发新信封，返回 `409 contract_reissued_fresh`，并在 `X-Contract-Envelope-ID` 中给出替代信封（不消耗 OTP）。门户会重新加载新文档以供查阅签署。
+- KYB 向导现会在校验前清理自由文本中的不可见字符（硬空格、零宽字符），校验错误会标出具体字段，而非通用提示。
 ### v2.277
 **新增**
 - 统一联系人：一个人可以保存多个 CBPay、出金和加密货币目的地。

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.279'
+  version: '2.280'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT. Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -11362,12 +11362,26 @@ paths:
                 error: invalid_otp
                 message: the verification code is invalid or expired
         '409':
-          description: The envelope is no longer signable.
+          description: The envelope is no longer signable, or it was replaced by a fresh one.
+          headers:
+            X-Contract-Envelope-ID:
+              description: 'Present only with contract_reissued_fresh: the replacement envelope to review and sign.'
+              schema:
+                type: string
+                format: uuid
           content:
             application/json:
-              example:
-                error: contract_invalid_state
-                message: the contract envelope cannot be signed in its current state
+              examples:
+                invalid_state:
+                  summary: Envelope already completed or voided without successor.
+                  value:
+                    error: contract_invalid_state
+                    message: the contract envelope cannot be signed in its current state
+                reissued_fresh:
+                  summary: Stale template auto-recovered; review and sign the new envelope instead.
+                  value:
+                    error: contract_reissued_fresh
+                    message: the envelope was replaced by 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f; open the new envelope to review and sign
         '422':
           description: Consent, signer data or signature image is invalid, or the envelope template was superseded.
           content:
@@ -22477,7 +22491,7 @@ paths:
       - Balances
       operationId: getRates
       summary: Get my FX rates and fees
-      description: "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. The sunset UF row is omitted from `rates` when its value is not available; the `settlement.assets` list omits sunset assets. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
+      description: "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote; and when it is `rail`, a configured rail's executable market backs the quote for VE/VES. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise, or `rail` for a configured VE/VES C2P rail. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. The sunset UF row is omitted from `rates` when its value is not available; the `settlement.assets` list omits sunset assets. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
       parameters:
       - name: currency
         in: query
@@ -22519,7 +22533,8 @@ paths:
                           enum:
                           - lot
                           - spot
-                          description: The payout-side rate is backed by the oldest open FIFO lot or a spot fallback.
+                          - rail
+                          description: The payout-side rate is backed by the oldest open FIFO lot, a spot fallback, or the configured VE/VES rail.
                           example: lot
                         payin_rate:
                           type: string
@@ -22530,7 +22545,8 @@ paths:
                           enum:
                           - lot
                           - spot
-                          description: Payin quote provenance for USDT v1. FIFO inventory or spot.
+                          - rail
+                          description: 'Payin quote provenance for USDT v1: FIFO inventory, spot, or the configured VE/VES C2P rail.'
                           example: lot
                   asset_prices:
                     type: object
@@ -22621,6 +22637,12 @@ paths:
                     rate_source: lot
                     payin_rate: '955.10'
                     payin_rate_source: lot
+                  venezuela:
+                    currency: VES
+                    rate: '962.654000'
+                    rate_source: rail
+                    payin_rate: '1020.604704'
+                    payin_rate_source: rail
                   mexico:
                     currency: MXN
                     rate: '17.50'

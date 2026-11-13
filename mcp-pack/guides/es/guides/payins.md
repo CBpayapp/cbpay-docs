@@ -1128,7 +1128,7 @@ acredita automáticamente y se emite el webhook `payin_credited`:
 
 `fx_rate` es tu `payin_rate` del momento del abono — la conversión se hace
 exactamente a esa tasa: `usdt_gross = 700.00 / 6.91`. Cuando aparece,
-`rate_source` indica el origen de la cotización (`lot` o `spot`); los payins
+`rate_source` indica el origen de la cotización (`lot`, `spot` o `rail`); un payin C2P de VE/VES usa `rail` cuando el mercado del riel configurado entrega la cotización. Los payins
 históricos sin cotización cargada omiten el campo.
 
 El objeto payin queda con el detalle completo:
@@ -1223,8 +1223,7 @@ Suscríbete a `payin_credited`: trae la tasa FX aplicada, la comisión y el
 `usdt_credited` exacto. También puedes consultar `GET /v1/payins/{id}`.
 #### ¿Qué tasa FX aplica a mi payin?
 El `payin_rate` cotizado por `GET /v1/rates` y vigente al momento de
-acreditar. Revisa `payin_rate_source`: `lot` significa que el inventario USDT
-payin habilitado respaldó la cotización; `spot` significa que se usó spot. Tu
+acreditar. Revisa `payin_rate_source`: `lot` significa que el inventario USDT payin habilitado respaldó la cotización, `spot` significa que se usó spot y `rail` significa que el riel C2P VE/VES configurado entregó la cotización ejecutable. Tu
 spread acordado ya viene dentro de la tasa — nunca se itemiza.
 #### ¿Los payins pueden caer en un saldo distinto de USDT?
 Sí — configura `default_payin_asset` con `PUT /v1/settlement`. Las cuentas

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.279'
+  version: '2.280'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -11347,12 +11347,26 @@ paths:
                 error: invalid_otp
                 message: the verification code is invalid or expired
         '409':
-          description: 信封已不可签署。
+          description: 信封已不可签署，或已被新信封取代。
+          headers:
+            X-Contract-Envelope-ID:
+              description: 仅随 contract_reissued_fresh 返回：待查阅签署的替代信封。
+              schema:
+                type: string
+                format: uuid
           content:
             application/json:
-              example:
-                error: contract_invalid_state
-                message: the contract envelope cannot be signed in its current state
+              examples:
+                invalid_state:
+                  summary: 信封已完成或已作废且无后继。
+                  value:
+                    error: contract_invalid_state
+                    message: the contract envelope cannot be signed in its current state
+                reissued_fresh:
+                  summary: 旧模板已自动恢复；请查阅并签署新信封。
+                  value:
+                    error: contract_reissued_fresh
+                    message: the envelope was replaced by 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f; open the new envelope to review and sign
         '422':
           description: 同意、签署人或签名图片无效，或信封模板已被取代。
           content:
@@ -22386,7 +22400,7 @@ paths:
       - 余额
       operationId: getRates
       summary: 获取我的外汇汇率与费用
-      description: 返回适用于调用账户的各国汇率——与操作执行时使用的相同(`local_amount / rate = USDT`)——以及账户的**有效**费用配置(组织默认值已与账户覆盖项解析合并),便于客户端在创建操作前计算确切成本。`rate` 为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。当 `rate_source` 为 `lot` 时, payout 报价由该货币最早的开放 FIFO 批次支持；为 `spot` 时没有可用批次、使用 spot。 对于 USDT payin，启用的 payin FIFO 库存支持报价时 `payin_rate_source` 为 `lot`，否则为 `spot`。银行卡 payin 仍使用 spot。按金额获取指示性报价时使用可选的 `lot_quote`。UF 行不会出现在 `rates` 中；`settlement.assets` 不包含已停用资产。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为 1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在 payout 传 `settlement_asset` 之前用它来估算。
+      description: 返回适用于调用账户的各国汇率——与操作执行时使用的相同(`local_amount / rate = USDT`)——以及账户的**有效**费用配置(组织默认值已与账户覆盖项解析合并),便于客户端在创建操作前计算确切成本。`rate` 为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。当 `rate_source` 为 `lot` 时, payout 报价由该货币最早的开放 FIFO 批次支持；为 `spot` 时没有可用批次、使用 spot；为 `rail` 时，VE/VES 使用已配置通道的可执行市场。 对于 USDT payin，启用的 payin FIFO 库存支持报价时 `payin_rate_source` 为 `lot`，否则为 `spot`，或在配置 VE/VES C2P 通道时为 `rail`。银行卡 payin 仍使用 spot。按金额获取指示性报价时使用可选的 `lot_quote`。UF 行不会出现在 `rates` 中；`settlement.assets` 不包含已停用资产。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为 1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在 payout 传 `settlement_asset` 之前用它来估算。
       parameters:
       - name: currency
         in: query
@@ -22428,7 +22442,8 @@ paths:
                           enum:
                           - lot
                           - spot
-                          description: payout 汇率由最早开放的 FIFO 批次或 spot fallback 支持。
+                          - rail
+                          description: payout 汇率由最早开放的 FIFO 批次、spot fallback 或已配置的 VE/VES 通道支持。
                           example: lot
                         payin_rate:
                           type: string
@@ -22439,7 +22454,8 @@ paths:
                           enum:
                           - lot
                           - spot
-                          description: USDT v1 payin 报价来源：FIFO 库存或 spot。
+                          - rail
+                          description: USDT v1 payin 报价来源：FIFO 库存、spot 或已配置的 VE/VES C2P 通道。
                           example: lot
                   asset_prices:
                     type: object
