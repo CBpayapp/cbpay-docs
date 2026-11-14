@@ -4,6 +4,18 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="November 14, 2026" description="v2.283 · 1 version">
+### v2.283
+**Changed**
+- Payouts now keep temporary channel or treasury shortfalls in the
+  account-facing review flow when possible, instead of exposing an internal
+  funds message or immediately returning a business error. The account sees
+  neutral copy: the payout is under review, will complete automatically when
+  released, or could not be completed and the funds were returned.
+- If a reviewed payout cannot continue because its original dispatch key was
+  consumed, approval returns `reissue_required`. The client creates a new
+  payout with a new idempotency key; CBPay never re-issues the operation.
+</Update>
 <Update label="November 13, 2026" description="v2.282 · 9 versions">
 ### v2.282
 **Changed**
