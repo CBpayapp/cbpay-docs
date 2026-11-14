@@ -64,8 +64,8 @@ sin pricing FX. Ver
 Consulta `GET /v1/rates` (devuelve **tu** tasa por país) y calcula:
 
 ```
-usdt_amount ≈ monto_local / tasa       (redondeo hacia arriba, 6 decimales)
-total_debit = usdt_amount + fee fijo   (tus fees vienen en la misma respuesta)
+equivalente del saldo predeterminado ≈ monto_local / tasa (redondeo hacia arriba)
+total_debit = equivalente del saldo predeterminado + fee fijo   (tus fees vienen en la misma respuesta)
 ```
 
 El objeto payout devuelve los valores exactos (`fx_rate`, `usdt_amount`,

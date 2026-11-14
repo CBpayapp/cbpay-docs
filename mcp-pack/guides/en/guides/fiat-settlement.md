@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/en/guides/fiat-settlement
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Important**
-**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Legacy accounts keep their explicit `USDT` default; new accounts use `USD` as the principal balance. Use Banking for fiat operations.
 > **Note**Same-currency fiat settlement was retired on 2026-11-13. The examples below describe the former platform behavior and are preserved for reconciliation and migration reference. In-flight operations completed normally; receiving fiat and movement history remained unchanged. New fiat balances and fiat operations belong to [Banking](https://docs.cbpayapp.com/en/guides/banking); platform fiat settlement returns `400`.## Former platform behavior (historical)
 
 Payouts can debit a local-fiat balance when the payout currency and

@@ -17,7 +17,12 @@ entrega en tres formatos:
 |---|---|---|
 | `json` (default) | Mostrar la cartola en tu web/app | `format=json` |
 | `pdf` | Documento formal con branding CBPay | `format=pdf` |
-| `xlsx` | Excel con hojas por sección, filtros y celdas numéricas | `format=xlsx` |
+| `xlsx` | Excel con hojas por sección, filtros, celdas numéricas y gráficos nativos | `format=xlsx` |
+
+La portada del XLSX incluye gráficos nativos cuando existen datos: un gráfico
+de dona con las salidas por producto y un gráfico de columnas agrupadas que
+compara entradas y salidas por mes. También incluye la tabla mensual usada por
+los gráficos. Si no hay datos para mostrar, los gráficos se omiten.
 
 ```mermaid
 flowchart LR
@@ -52,12 +57,29 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 
 ## Qué contiene
 
+### Saldo principal y exportaciones bancarias
+
+El `summary` reconcilia el saldo principal de la cuenta. Las cuentas nuevas
+usan `USD`; las cuentas legacy con principal USDT explícito siguen usando
+`USDT`. La respuesta expone la denominación elegida en `summary_asset`, y los
+rótulos del PDF/XLSX usan ese activo de forma dinámica. Los demás activos
+siguen conciliándose por separado en `assets`; la actividad on-chain y el
+USDT legítimo no cambian.
+
+El JSON y la cartola web mantienen la vista completa, incluidos datos fallidos,
+en proceso y de disputas. PDF y XLSX son exportaciones bancarias: el detalle
+lista solo operaciones exitosas, pero sus totales siguen incluyendo los holds
+de operaciones en proceso para mantener la cuadratura del saldo final. Las
+disputas quedan fuera de las secciones de la exportación bancaria; sus patas
+reales del ledger siguen reflejándose en los totales cuando corresponde.
+
 ```json
 {
   "account": { "account_id": "…", "display_name": "Empresa Ejemplo SpA", "type": "company" },
   "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "America/New_York" },
   "generated_at": "2026-07-07T15:00:00Z",
   "summary": {
+    "summary_asset": "USD",
     "opening_balance": "0.000000",
     "total_in": "985633.540000",
     "total_out": "38099.870000",
@@ -100,8 +122,8 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 Secciones:
 
 1. **`summary`** — saldo inicial, entradas, salidas, saldo final, comisiones
-   por servicio y el flag `balanced` del **saldo USDT** (el resumen
-   principal siempre concilia USDT).
+   por servicio y el flag `balanced` del saldo principal identificado por
+   `summary_asset`.
 2. **`assets`** — una sección conciliada por cada saldo no-USDT con
    actividad o saldo (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN,
    ARS y, si usas Banking, los espejos
@@ -144,8 +166,8 @@ saldo_inicial + total_entradas − total_salidas = saldo_final
 - El saldo final de un período empalma con el saldo inicial del siguiente.
 - El rango `from`/`to` se interpreta en la zona horaria de la organización (`period.timezone`), pero los timestamps de detalle de cada operación van en UTC (JSON en RFC3339 con `Z`; columnas Fecha (UTC) en PDF/Excel).
 - Las comisiones nunca quedan escondidas: cada operación expone bruto,
-  comisión y neto por separado; `fees_by_service` sigue siendo solo USDT por
-  diseño.
+  comisión y neto por separado; `fees_by_service` usa el `summary_asset`
+  principal.
 - Los nombres de las hojas XLSX siguen el `lang` solicitado (`en`, `es` o
   `zh`), incluyendo Crypto, Segregated, Cards, Swaps, Banking y Margins
   cuando esas secciones están presentes.
@@ -223,7 +245,12 @@ XLSX. No expone proveedor, margen ni spread.
 | `status` | Estado de la operación |
 | `country`, `currency`, `network` | Contexto opcional geográfico, fiat y blockchain |
 | `ref_type`, `ref_id` | Referencia opcional del origen |
+| `group_id` | Identificador opcional del grupo, como `swap:<id>` o `funding:<id>`, para patas agrupadas |
+| `group_title_key` | Clave de título traducible opcional del grupo: `swap_group` o `funding_group` |
 | `executed_rate`, `rate_pair`, `rate_source` | Tasa de ejecución estampada, si existe; nunca una recotización |
+
+Los integradores pueden usar `group_id` y `group_title_key` para mostrar las
+patas agrupadas como una sola operación, conservando cada fila del timeline.
 
 `summary.counts.timeline` indica cuántas filas contiene la timeline. Ejemplo
 recortado:
@@ -246,7 +273,9 @@ recortado:
       "country": "CL",
       "currency": "CLP",
       "ref_type": "payin",
-      "ref_id": "payin-001"
+      "ref_id": "payin-001",
+      "group_id": "funding:funding-001",
+      "group_title_key": "funding_group"
     }
   ]
 }
@@ -284,9 +313,11 @@ mayúsculas y minúsculas, en `id`, `ref_id`, `subtitle`, `network`,
 `currency` y `country`.
 
 El PDF agrega el bloque **¿Qué pasó?**, un donut vectorial por producto, barras
-vectoriales por mes, la tabla Timeline con iconos y la tabla Disputas cuando
-corresponde. El XLSX agrega las hojas **Movimientos** y **Disputas** a las
-hojas existentes. Ambos respetan el idioma solicitado y la precisión del activo.
+vectoriales por mes y la tabla Timeline con iconos. Las patas agrupadas se
+marcan con `[Gn]`, donde `n` identifica el grupo. La portada del XLSX incluye
+gráficos nativos por producto y por mes, además de la tabla mensual; también
+agrega la hoja **Movimientos** a las hojas existentes, pero no una hoja
+Disputas. Ambos respetan el idioma solicitado y la precisión del activo.
 
 ## Filas por activo
 

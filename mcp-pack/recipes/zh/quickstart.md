@@ -134,8 +134,8 @@ curl https://api.qbank.cl/platform/v1/rates \
 ```
 
 返回的汇率已包含您的外汇加成，因此可以在创建前估算成本：
-`usdt_amount ≈ local_amount / rate`（向上取整），且
-`total_debit = usdt_amount + fixed`。
+账户默认余额的等值金额约为 `local_amount / rate`（向上取整），
+再加固定费用。
 
 ### 创建您的第一笔付款
 

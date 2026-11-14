@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.281'
+  version: '2.286'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -12545,6 +12545,11 @@ paths:
                           - banking_operation
                           - risk_report
                           - risk_fraud_report
+                          - card_transaction
+                          - checkout
+                          - webhook_event
+                          - support_ticket
+                          - segregated_wallet_tx
                         matched_by:
                           type: string
                           enum:
@@ -23147,7 +23152,7 @@ paths:
       - 余额
       operationId: getAccountStatement
       summary: 账户对账单(JSON、PDF 或 Excel)
-      description: '将期间内的全部流水——payouts、payins、加密充值与提现、内部转账及服务费——合并为一份可审计的对账单,并做精确对账:opening_balance + total_in − total_out = closing_balance,与账本核验(`balanced`)。摘要覆盖 USDT 余额；其他有活动的虚拟余额（USD、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS）在 `assets` 中独立核对。客户响应省略原始账本流水；请按产品分区对账，并使用 `GET /v1/movements` 进行深入审计。请求 `format=pdf` 或 `format=xlsx` 可下载 CBPay 品牌文件(Content-Disposition: attachment)。'
+      description: '将期间内的全部流水——payouts、payins、加密充值与提现、内部转账及服务费——合并为一份可审计的对账单,并做精确对账:opening_balance + total_in − total_out = closing_balance,与账本核验(`balanced`)。摘要核对账户的主余额（`summary_asset`：新账户为 USD，旧账户为明确的 USDT）；其他有活动的虚拟余额在 `assets` 中独立核对。客户响应省略原始账本流水；请按产品分区对账，并使用 `GET /v1/movements` 进行深入审计。请求 `format=pdf` 或 `format=xlsx` 可下载 CBPay 品牌银行对账单(Content-Disposition: attachment)：仅列出已完成的操作，从不包括失败或处理中的操作。总额仍反映账本，包括处理中操作的预留金额。'
       parameters:
       - name: from
         in: query
@@ -23202,6 +23207,7 @@ paths:
                   timezone: America/New_York
                 generated_at: '2026-07-07T15:00:00Z'
                 summary:
+                  summary_asset: USDT
                   opening_balance: '0.000000'
                   total_in: '985633.540000'
                   total_out: '38099.870000'

@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/en/guides/transfers
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Important**
-**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Legacy accounts keep their explicit `USDT` default; new accounts use `USD` as the principal balance. Use Banking for fiat operations.
 Internal transfers move balance between two **CBPay accounts**, atomically
 in the ledger and **always free of charge** — the money never leaves the
 ecosystem. They work with the four transferable assets (`USDT`, `USDC`, `BTC`,
