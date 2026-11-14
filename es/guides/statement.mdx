@@ -270,6 +270,31 @@ El portal presenta la misma respuesta en tres vistas:
 - **Movimientos**: `timeline[]` cronológica, con producto, activo, estado y saldo.
 - **Por producto**: totales agrupados y detalle de cada producto.
 
+### Filas de movimientos agrupadas
+
+El portal agrupa en una sola fila cabecera, colapsada por defecto, las patas
+de swaps y fondeo que comparten la misma referencia. La cabecera muestra el
+título de la operación, el conteo exacto de patas, el rango de fechas y un
+chevron. Al seleccionarla puedes expandirla y ver cada pata original intacta,
+con su mismo ícono, título, monto, saldo posterior y drawer de detalle.
+
+![Filas de movimientos agrupadas y colapsadas en el portal CBPay. La interfaz aparece en inglés.](/images/statement-timeline-groups.png)
+
+*Filas de movimientos agrupadas y colapsadas en el portal CBPay. La interfaz
+aparece en inglés.*
+
+![Filas de movimientos agrupadas y expandidas en el portal CBPay. La interfaz aparece en inglés.](/images/statement-timeline-group-open.png)
+
+*Filas de movimientos agrupadas y expandidas en el portal CBPay. La interfaz
+aparece en inglés.*
+
+La agrupación es solo de presentación: la API sigue entregando las patas
+originales de `timeline[]`. Un filtro encuentra el grupo si coincide **alguna**
+pata y el conteo mostrado corresponde exactamente a las patas que coinciden.
+La única caja de búsqueda permite coincidencias parciales, sin distinguir
+mayúsculas y minúsculas, en `id`, `ref_id`, `subtitle`, `network`, `asset`,
+`currency` y `country`.
+
 El PDF agrega el bloque **¿Qué pasó?**, un donut vectorial por producto, barras
 vectoriales por mes, la tabla Timeline con iconos y la tabla Disputas cuando
 corresponde. El XLSX agrega las hojas **Movimientos** y **Disputas** a las
