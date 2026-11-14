@@ -235,6 +235,26 @@ JSON 响应还包含 `timeline[]`：按期间内每笔账本分录排列的客�
 - **Movements（流水）**：`timeline[]` 时间线，显示产品、资产、状态和之后余额。
 - **By product（按产品）**：分组总额和各产品的详细分区。
 
+### 分组流水行
+
+对于引用相同的 swap 和 funding 流水，门户会将各条腿合并为一条默认
+折叠的标题行。标题行显示操作标题、准确的流水腿数、日期范围和箭头。
+点击后即可展开并查看每一条保持原样的流水腿，包括相同的图标、标题、
+金额、之后余额和详情抽屉。
+
+![CBPay 门户中折叠的分组流水行。界面显示为英文。](/images/statement-timeline-groups.png)
+
+*CBPay 门户中折叠的分组流水行。界面显示为英文。*
+
+![CBPay 门户中展开的分组流水行。界面显示为英文。](/images/statement-timeline-group-open.png)
+
+*CBPay 门户中展开的分组流水行。界面显示为英文。*
+
+分组仅改变显示方式：API 仍返回原始的 `timeline[]` 流水腿。如果任意一条
+流水腿匹配，筛选结果就会包含该组；显示的数量始终是实际匹配的流水腿数。
+单一搜索框支持对 `id`、`ref_id`、`subtitle`、`network`、`asset`、
+`currency` 和 `country` 进行部分匹配，且不区分大小写。
+
 PDF 新增 **What happened?** 概览、按产品的矢量环形图、按月份的矢量柱状图、
 带图标的 Timeline 表格，以及在有案件时显示的 Disputes 表格。XLSX 在原有
 工作表之外新增 **Movements** 和 **Disputes** 工作表。两种导出都会保留所选
