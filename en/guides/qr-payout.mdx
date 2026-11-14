@@ -153,7 +153,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
 </Tab>
 </Tabs>
 
-- `usdt_amount + fixed fee` is debited at **your rate**, just like a
+- the account-default balance equivalent plus the fixed fee is debited at **your rate**, just like a
   `bank_transfer`.
 - The result is **synchronous**: the response already carries the final
   state (`completed`, or `failed` with an automatic refund) — no waiting.

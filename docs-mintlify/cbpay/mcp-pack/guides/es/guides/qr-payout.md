@@ -141,7 +141,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
 - El pago sale por el mismo riel PIX del método `pix` (24/7); el `txid`
   del QR viaja con el pago para que el comercio concilie automático.
 
-- Se debita `usdt_amount + fijo` a **tu tasa**, igual que un
+- Se debita el equivalente del saldo predeterminado más el fijo a **tu tasa**, igual que un
   `bank_transfer`.
 - El resultado es **síncrono**: la respuesta ya trae el estado final
   (`completed` o `failed` con reembolso automático) — sin esperas.

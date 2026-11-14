@@ -10,12 +10,13 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 
 <Warning>
-**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Legacy accounts keep their explicit `USDT` default; new accounts use `USD` as the principal balance. Use Banking for fiat operations.
 </Warning>
 A payout sends money in local currency to a bank account in the destination
-country. The amount converts from local currency to USDT at **your
-account's rate** (the one from `GET /v1/rates`) and `usdt_amount + fee`
-(the fixed fee, when configured) is debited from your balance.
+country. The amount converts from local currency to your account's default balance at **your
+account's rate** (the one from `GET /v1/rates`) and the reported equivalent plus fee
+(the fixed fee, when configured) is debited from that default balance. Legacy accounts
+with an explicit USDT default continue to debit USDT.
 
 This is the full lifecycle, including what happens to your balance at each
 step:
@@ -27,7 +28,7 @@ sequenceDiagram
     participant CB as CBPay
     participant Rail as Local banking rail
     App->>CB: POST /v1/payouts (idempotency_key)
-    CB->>CB: Converts at your rate and debits<br/>usdt_amount + fee (available → held)
+    CB->>CB: Converts at your rate and debits<br/>default-balance equivalent + fee (available → held)
     CB-->>App: 202 processing (fx_rate, total_debit)
     CB->>Rail: Disperses in local currency
     alt The money arrives

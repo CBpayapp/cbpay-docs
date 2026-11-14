@@ -64,8 +64,8 @@ without FX pricing. See the
 Query `GET /v1/rates` (returns **your** rate per country) and compute:
 
 ```
-usdt_amount ≈ local_amount / rate      (rounded up, 6 decimals)
-total_debit = usdt_amount + fixed fee  (your fees come in the same response)
+account-default balance equivalent ≈ local_amount / rate (rounded up)
+total_debit = account-default equivalent + fixed fee (your fees come in the same response)
 ```
 
 The payout object returns the exact server-computed values (`fx_rate`,

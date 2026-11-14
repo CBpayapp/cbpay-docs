@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/es/guides/accounts
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Importante**
-**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Las cuentas legacy conservan su default explícito `USDT`; las cuentas nuevas usan `USD` como saldo principal. Usa Banking para las operaciones fiat.
 ## Un solo lugar para tus datos de recepción
 
 La página **Mis cuentas** es el directorio del portal con los destinos que

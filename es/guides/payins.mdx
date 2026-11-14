@@ -91,10 +91,11 @@ Los pagos salientes a Venezuela (`pago_movil`, `bank_transfer`) no cambian:
 ver [payouts](/es/guides/payouts-overview).
 </Note>
 
-La disponibilidad puede variar; el catálogo (`GET /v1/payins/methods`) es
-siempre la fuente de verdad. En todos los casos el abono llega igual: se
-convierte a USDT al `payin_rate` cotizado y se acredita neto de la comisión
-fija de payin. Los lotes payin se consumen FIFO al aplicar el crédito. Si el
+La disponibilidad puede variar; el catálogo (`GET /v1/payins/methods`) es siempre
+la fuente de verdad. En una cuenta con USD como principal, el abono neto se registra
+directamente en centavos USD. Los destinos no-USD configurados siguen la conversión posterior al crédito; el `payin_rate` cotizado y la comisión fija
+siguen aplicándose. Los lotes payin se consumen
+FIFO al aplicar el crédito. Si el
 inventario habilitado no alcanza, la cotización existente sigue siendo
 autoritativa y el faltante se registra como fallback spot con alerta operativa.
 Si prefieres quedarte con tus cobros en otro saldo

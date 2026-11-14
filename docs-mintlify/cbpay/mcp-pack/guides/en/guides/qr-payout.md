@@ -142,7 +142,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
   (24/7); the QR's `txid` goes with it so the merchant reconciles
   automatically.
 
-- `usdt_amount + fixed fee` is debited at **your rate**, just like a
+- the account-default balance equivalent plus the fixed fee is debited at **your rate**, just like a
   `bank_transfer`.
 - The result is **synchronous**: the response already carries the final
   state (`completed`, or `failed` with an automatic refund) — no waiting.

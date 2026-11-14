@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.281'
+  version: '2.284'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -49,7 +49,7 @@ tags:
 - name: 联系人
   description: 按账户维护的收款人通讯录(CBPay、银行与加密货币目的地),支持手机号匹配与每次发送时自动保存。
 - name: 兑换(Swaps)
-  description: 按账户报价即时兑换账户的 USDT、USDC、BTC 与 GOLD 余额。
+  description: 按账户报价即时兑换账户的 USD（默认）、USDT、USDC、BTC 与 GOLD 余额。
 - name: 加密货币
   description: 链上充值与提现(TRON、Ethereum 和 Bitcoin)。
 - name: 隔离钱包
@@ -725,7 +725,7 @@ paths:
             application/json:
               example:
                 status: pending
-                settlement_asset: USDT
+                settlement_asset: USD
                 asset_amount: '50'
                 countries:
                 - country: BO
@@ -798,7 +798,7 @@ paths:
                         asset: USDC
                         percent: '0.10'
                       - leg: to
-                        asset: USDT
+                        asset: USD
                         percent: '0.10'
                       fee_total_pct: '0.2000'
                       fee_note: included_in_rate
@@ -874,7 +874,7 @@ paths:
                   summary: 待支付（含冻结法币报价与加密货币进度）
                   value:
                     status: pending
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     asset_amount: '50'
                     description: Order 8841
                     expires_at: '2026-07-17T17:57:44Z'
@@ -1344,8 +1344,8 @@ paths:
                 service: compliance_monitoring
                 monitor: true
                 monitoring_enabled: true
-                screening_fee: '1.000000'
-                fee_asset: USDT
+                screening_fee: '1.00'
+                fee_asset: USD
                 idempotency_key: aml-monitor-enable-1
                 created_at: '2026-07-12T20:00:00Z'
                 compliance_service: compliance_monitoring
@@ -1404,8 +1404,8 @@ paths:
                 kind: rescreen
                 service: compliance_rescreen
                 risk: low
-                screening_fee: '1.000000'
-                fee_asset: USDT
+                screening_fee: '1.00'
+                fee_asset: USD
                 idempotency_key: aml-rescreen-2026-07-12
                 created_at: '2026-07-12T19:00:00Z'
                 result:
@@ -1683,8 +1683,8 @@ paths:
                 subject_name: Ana Perez Rojas
                 risk: low
                 monitor: false
-                screening_fee: '2.000000'
-                fee_asset: USDT
+                screening_fee: '2.00'
+                fee_asset: USD
                 idempotency_key: aml-screen-ana-1
                 created_at: '2026-07-12T18:00:00Z'
                 result:
@@ -1768,8 +1768,8 @@ paths:
                   subject_name: Ana Perez Rojas
                   risk: low
                   monitor: false
-                  screening_fee: '2.000000'
-                  fee_asset: USDT
+                  screening_fee: '2.00'
+                  fee_asset: USD
                   idempotency_key: aml-screen-ana-1
                   created_at: '2026-07-12T18:00:00Z'
         '400':
@@ -1802,8 +1802,8 @@ paths:
                 subject_name: Ana Perez Rojas
                 risk: low
                 monitor: false
-                screening_fee: '2.000000'
-                fee_asset: USDT
+                screening_fee: '2.00'
+                fee_asset: USD
                 idempotency_key: aml-screen-ana-1
                 created_at: '2026-07-12T18:00:00Z'
                 result:
@@ -6117,7 +6117,7 @@ paths:
                     cardholder_kind: account
                     cardholder_name: Ana Rojas
                     status: active
-                    spending_asset: USDT
+                    spending_asset: USD
                     limits:
                       monthly: '5000.000000'
                     created_at: '2026-07-08T12:00:00Z'
@@ -6262,7 +6262,7 @@ paths:
                   physical: false
                   cardholder_kind: account
                   status: active
-                  spending_asset: USDT
+                  spending_asset: USD
                   limits: {}
                   created_at: '2026-07-08T12:00:00Z'
                   updated_at: '2026-07-08T12:00:00Z'
@@ -6437,7 +6437,7 @@ paths:
                 physical: false
                 cardholder_kind: account
                 status: active
-                spending_asset: USDT
+                spending_asset: USD
                 limits:
                   monthly: '5000.000000'
                 created_at: '2026-07-08T12:00:00Z'
@@ -7589,6 +7589,144 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/crypto/network-moves:
+    post:
+      tags:
+      - Crypto
+      operationId: createNetworkMove
+      summary: 执行同资产跨链转账
+      description: 跨链转账恒为一次带 from_chain 上下文的提现：资金只在 crypto_withdrawals 中记一次（相同的扣款、广播、对账单与 webhook）。按账户 + idempotency_key 幂等；与提现一样需要 OTP。若被交易防火墙拦截，响应为提现形态。
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - asset
+              - from_chain
+              - to_chain
+              - to_address
+              - amount
+              - idempotency_key
+            example:
+              asset: USDT
+              from_chain: tron
+              to_chain: eth
+              to_address: 0xabc...
+              amount: '100'
+              idempotency_key: move-001
+      responses:
+        '200':
+          description: 含镜像提现的跨链记录
+          content:
+            application/json:
+              example:
+                move_id: 22222222-2222-2222-2222-222222222222
+                status: processing
+                from_chain: tron
+        '400':
+          description: 资产组合、地址或金额无效
+        '409':
+          description: 幂等重放返回原始记录
+    get:
+      tags:
+      - Crypto
+      operationId: listNetworkMoves
+      summary: 列出账户的跨链转账
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 分页的跨链记录（含镜像提现状态）
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                moves: []
+  /v1/crypto/network-moves/quote:
+    post:
+      tags:
+      - Crypto
+      operationId: quoteNetworkMove
+      summary: 为同资产跨链转账获取报价
+      description: 纯预览（无副作用）：校验资产与两条链，计算提现手续费，并报告目标热钱包是否已配置。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - asset
+              - from_chain
+              - to_chain
+              - amount
+            example:
+              asset: USDT
+              from_chain: tron
+              to_chain: eth
+              amount: '100'
+      responses:
+        '200':
+          description: 含手续费与总扣款的报价
+          content:
+            application/json:
+              example:
+                asset: USDT
+                from_chain: tron
+                to_chain: eth
+                amount: '100'
+                fee: '1'
+                platform_fee: '0.1'
+                total_debit: '101'
+                hot_configured: true
+        '400':
+          description: 资产组合或金额无效
+  /v1/crypto/network-moves/{moveID}:
+    get:
+      tags:
+      - Crypto
+      operationId: getNetworkMove
+      summary: 按 id 获取跨链转账
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 含镜像提现的跨链记录
+          content:
+            application/json:
+              example:
+                move_id: 22222222-2222-2222-2222-222222222222
+                status: completed
+        '404':
+          description: 跨链记录不存在
   /v1/crypto/networks:
     get:
       tags:
@@ -8705,12 +8843,12 @@ paths:
                   cursor: '4821'
                   data:
                     account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
-                    asset: USDT
-                    amount: '10.000000'
+                    asset: USD
+                    amount: '10.00'
                     direction: credit
                     reason: manual top-up
-                    available: '109.700000'
-                    held: '0.000000'
+                    available: '109.70'
+                    held: '0.00'
         '400':
           $ref: '#/components/responses/InvalidRange'
         '401':
@@ -14166,8 +14304,8 @@ paths:
                 page_size: 50
                 movements:
                 - id: 0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0
-                  asset: USDT
-                  amount: '-86.014286'
+                  asset: USD
+                  amount: '-86.02'
                   type: payout_debit
                   reference_type: payout
                   reference_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
@@ -14178,17 +14316,17 @@ paths:
                   rate_pair: USD/BOB
                   rate_source: payout
                 - id: 9a8b7c6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4
-                  asset: USDT
-                  amount: '-1.000000'
+                  asset: USD
+                  amount: '-1.00'
                   type: wallet_creation_fee
                   reference_type: crypto_wallet
                   reference_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d:tron:usdt
                   description: 服务费:wallet_creation
-                  balance_after: '125.430000'
+                  balance_after: '125.43'
                   created_at: '2026-07-07T12:00:00Z'
                 - id: 7c6d5e4f-3a2b-1c0d-9e8f-a7b6c5d4e3f2
-                  asset: USDT
-                  amount: '-100.000000'
+                  asset: USD
+                  amount: '-100.00'
                   type: swap_out
                   reference_type: swap
                   reference_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
@@ -15030,7 +15168,7 @@ paths:
                 value:
                   method: checkout
                   amount: '50'
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   country: CL
                   description: Order 8841
                   success_url: https://your-app.com/payment/ok
@@ -15305,7 +15443,7 @@ paths:
                     payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
                     kind: checkout
                     status: pending
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     asset_amount: '50'
                     country: CL
                     description: Order 8841
@@ -15627,7 +15765,7 @@ paths:
                   currency: ''
                   method: checkout
                   local_amount: ''
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   asset_amount: '50'
                   status: pending
                   reference: CB68JZCT46QE
@@ -17396,7 +17534,7 @@ paths:
       - 付款(Payouts)
       operationId: createPayout
       summary: 创建 payout
-      description: '向本地银行账户派发法币。本地金额按**你账户的汇率**(与 `GET /v1/rates` 返回的相同)转换为 USDT;扣除 `usdt_amount` 加固定费用(如有配置)并冻结,直到派发完成。若失败,全额退款。
+      description: '向本地银行账户派发法币。本地金额按**你账户的汇率**(与 `GET /v1/rates` 返回的相同)转换为默认余额 (USD);扣除 `usdt_amount` 加固定费用(如有配置)并冻结,直到派发完成。若失败,全额退款。
 
 
         **从任意余额支付**:默认从你账户的默认结算资产扣款(`default_settlement_asset`——USD 为主资产;用 `PUT /v1/settlement` 更改)。传 `settlement_asset`(USD、USDT、USDC、USDCE、BTC、GOLD、SILVER 或 PLATINUM) 可让这笔操作从其他余额支付:总额按当时的有效结算价格转换为该资产(见 `GET /v1/rates` 的 `settlement` 块),扣款、冻结以及失败时的退款都在该资产中且金额完全一致。若 BTC/GOLD/SILVER/PLATINUM 的执行价格不可用,请求返回 `503 pricing_unavailable`;波动性资产还有单笔限额(`422 settlement_limit_exceeded`)。
@@ -17956,8 +18094,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: &id008
                       name: Maria Lopez
@@ -17986,8 +18124,8 @@ paths:
                     usdt_amount: '108.695652'
                     fee: '0.300000'
                     total_debit: '108.995652'
-                    settlement_asset: USDT
-                    settlement_amount: '108.995652'
+                    settlement_asset: USD
+                    settlement_amount: '109.00'
                     settlement_rate: '1'
                     beneficiary:
                       beneficiary_type: individual
@@ -18019,8 +18157,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -18048,8 +18186,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -18079,8 +18217,8 @@ paths:
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
+                settlement_asset: USD
+                settlement_amount: '86.02'
                 settlement_rate: '1'
                 beneficiary: *id008
                 description: 发票 8841
@@ -18144,8 +18282,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: 发票 8841
@@ -18750,8 +18888,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: &id010
                   qr_reference: QR-REF-889923
@@ -18780,8 +18918,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: *id010
                 description: QR 午餐付款
@@ -18839,8 +18977,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: *id010
                 description: QR 午餐付款
@@ -18985,8 +19123,8 @@ paths:
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
+                settlement_asset: USD
+                settlement_amount: '86.01'
                 settlement_rate: '1'
                 beneficiary:
                   name: Maria Lopez
@@ -19104,7 +19242,7 @@ paths:
                   payin_id: bd3d88ca-af9c-4c05-a6f8-0982a2d187d5
                   status: paid
                   amount: '25'
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   crypto: tron:usdt
                   due: '25.000000'
                   received: '25.000000'
@@ -19188,7 +19326,7 @@ paths:
                 account_id: 5138e8dd-64bd-43ef-aafe-8d9ef23bec9e
                 status: pending
                 amount: '25'
-                settlement_asset: USDT
+                settlement_asset: USD
                 crypto: tron:usdt
                 chain: tron
                 asset: USDT
@@ -19257,7 +19395,7 @@ paths:
                     confirming: true
                     detected_amount: '25.000000'
                     amount: '25'
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     crypto: tron:usdt
                     due: '25.000000'
                     received: '0.000000'
@@ -19274,7 +19412,7 @@ paths:
                     payin_id: bd3d88ca-af9c-4c05-a6f8-0982a2d187d5
                     status: paid
                     amount: '25'
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     crypto: tron:usdt
                     due: '25.000000'
                     received: '25.000000'
@@ -22400,7 +22538,7 @@ paths:
       - 余额
       operationId: getRates
       summary: 获取我的外汇汇率与费用
-      description: 返回适用于调用账户的各国汇率——与操作执行时使用的相同(`local_amount / rate = USDT`)——以及账户的**有效**费用配置(组织默认值已与账户覆盖项解析合并),便于客户端在创建操作前计算确切成本。`rate` 为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。当 `rate_source` 为 `lot` 时, payout 报价由该货币最早的开放 FIFO 批次支持；为 `spot` 时没有可用批次、使用 spot；为 `rail` 时，VE/VES 使用已配置通道的可执行市场。 对于 USDT payin，启用的 payin FIFO 库存支持报价时 `payin_rate_source` 为 `lot`，否则为 `spot`，或在配置 VE/VES C2P 通道时为 `rail`。银行卡 payin 仍使用 spot。按金额获取指示性报价时使用可选的 `lot_quote`。UF 行不会出现在 `rates` 中；`settlement.assets` 不包含已停用资产。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为 1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在 payout 传 `settlement_asset` 之前用它来估算。
+      description: 返回适用于调用账户的各国汇率——与操作执行时使用的相同(`local_amount / rate = USD (default balance)`)——以及账户的**有效**费用配置(组织默认值已与账户覆盖项解析合并),便于客户端在创建操作前计算确切成本。`rate` 为 payout(派发)侧,`payin_rate` 为 payin(充值)侧。当 `rate_source` 为 `lot` 时, payout 报价由该货币最早的开放 FIFO 批次支持；为 `spot` 时没有可用批次、使用 spot；为 `rail` 时，VE/VES 使用已配置通道的可执行市场。 对于默认余额 (USD) payin，启用的 payin FIFO 库存支持报价时 `payin_rate_source` 为 `lot`，否则为 `spot`，或在配置 VE/VES C2P 通道时为 `rail`。银行卡 payin 仍使用 spot。按金额获取指示性报价时使用可选的 `lot_quote`。UF 行不会出现在 `rates` 中；`settlement.assets` 不包含已停用资产。`asset_prices` 携带各虚拟余额资产的 USD 参考价(BTC 按单位、GOLD 按克;稳定币约定为 1)用于展示/估值。`settlement` 块按启用的资产显示你的账户此刻从该余额支付操作可获得的**有效结算价格**(`settlement_rate`,已含点差)及该资产当前是否 `available`——可在 payout 传 `settlement_asset` 之前用它来估算。
       parameters:
       - name: currency
         in: query
@@ -22602,7 +22740,7 @@ paths:
                   marked_rate: '13.28728500'
                   indicative: true
                 settlement:
-                  default_asset: USDT
+                  default_asset: USD
                   assets:
                   - asset: USDT
                     available: true
@@ -22623,7 +22761,7 @@ paths:
                   account_id: ''
                   service: payout
                   country: CL
-                  asset: USDT
+                  asset: USD
                   percent: '0'
                   fixed_amount: '0.30'
                   status: active
@@ -23141,15 +23279,15 @@ paths:
                   kind: purchase
                   merchant: AMAZON.COM
                   amount_usd: '25.00'
-                  spend_asset: USDT
-                  spend_amount: '25.000000'
+                  spend_asset: USD
+                  spend_amount: '25.00'
                   status: settled
                 swaps:
                 - created_at: '2026-03-21T09:00:00Z'
                   swap_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
-                  from_amount: '10.000000'
+                  from_amount: '10.00'
                   to_amount: '0.00015433'
                   rate: '0.00001543'
                   status: completed
@@ -23167,19 +23305,19 @@ paths:
                   type: banking_fee
                   service: banking_customer
                   fee_model: fixed
-                  asset: USDT
+                  asset: USD
                   reference: cust-001
-                  amount: '-0.500000'
-                  balance_after: '139.100000'
+                  amount: '-0.50'
+                  balance_after: '139.10'
                 timeline:
                 - created_at: '2026-03-23T08:00:00Z'
                   id: ledger-001
                   product: service_charges
                   direction: out
                   title_key: service_charge
-                  asset: USDT
-                  amount: '-0.500000'
-                  balance_after: '139.100000'
+                  asset: USD
+                  amount: '-0.50'
+                  balance_after: '139.10'
                   status: completed
         '400':
           description: invalid_range / invalid_format。
@@ -23269,8 +23407,8 @@ paths:
                     address: TN2BBWc9EF8MMB6i1c4HZHXAssTEXstMDo
                     chain: tron
                     risk: Low
-                    screening_fee: '0.500000'
-                    fee_asset: USDT
+                    screening_fee: '0.50'
+                    fee_asset: USD
                     idempotency_key: scan-customer-742-1
                     created_at: '2026-07-12T14:30:00Z'
                     assessment:
@@ -23290,8 +23428,8 @@ paths:
                     chain: eth
                     risk: Severe
                     risk_reason: Identified as Sanctioned Entity
-                    screening_fee: '0.500000'
-                    fee_asset: USDT
+                    screening_fee: '0.50'
+                    fee_asset: USD
                     idempotency_key: scan-suspicious-9
                     created_at: '2026-07-12T14:31:00Z'
                     assessment:
@@ -23315,8 +23453,8 @@ paths:
                 address: TN2BBWc9EF8MMB6i1c4HZHXAssTEXstMDo
                 chain: tron
                 risk: Low
-                screening_fee: '0.500000'
-                fee_asset: USDT
+                screening_fee: '0.50'
+                fee_asset: USD
                 idempotency_key: scan-customer-742-1
                 created_at: '2026-07-12T14:30:00Z'
                 idempotency_hit: true
@@ -23392,8 +23530,8 @@ paths:
                   chain: eth
                   risk: Severe
                   risk_reason: Identified as Sanctioned Entity
-                  screening_fee: '0.500000'
-                  fee_asset: USDT
+                  screening_fee: '0.50'
+                  fee_asset: USD
                   idempotency_key: scan-suspicious-9
                   created_at: '2026-07-12T14:31:00Z'
         '400':
@@ -23425,8 +23563,8 @@ paths:
                 chain: eth
                 risk: Severe
                 risk_reason: Identified as Sanctioned Entity
-                screening_fee: '0.500000'
-                fee_asset: USDT
+                screening_fee: '0.50'
+                fee_asset: USD
                 idempotency_key: scan-suspicious-9
                 created_at: '2026-07-12T14:31:00Z'
                 assessment:
@@ -24087,8 +24225,8 @@ paths:
                 asset: USDT
                 to_address: TXYZdestination00000000000000000000
                 amount_raw: '25500000'
-                fee: '0.000000'
-                fee_asset: USDT
+                fee: '0.00'
+                fee_asset: USD
                 status: processing
                 tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
                 idempotency_key: send-2026-07-11-a
@@ -26411,9 +26549,9 @@ paths:
                   description: '客户端选择的键。前缀 payin-convert: 和 checkout-swap: 保留给系统自动转换使用，会被拒绝并返回 400 reserved_idempotency_key。'
             examples:
               usdt_btc:
-                summary: USDT 兑换 BTC
+                summary: USD 兑换 BTC
                 value:
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
                   amount: '1000'
                   idempotency_key: swap-2026-07-10-a
@@ -26425,9 +26563,9 @@ paths:
                   amount: '0.01'
                   idempotency_key: swap-2026-07-10-b
               stables:
-                summary: USDT 兑换 USDC
+                summary: USD 兑换 USDC
                 value:
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: USDC
                   amount: '500'
                   idempotency_key: swap-2026-07-10-c
@@ -26441,14 +26579,14 @@ paths:
               example:
                 swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -26467,14 +26605,14 @@ paths:
               example:
                 swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -26587,9 +26725,9 @@ paths:
                 swaps:
                 - swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                   account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
-                  from_amount: '1000.000000'
+                  from_amount: '1000.00'
                   to_amount: '0.01568419'
                   rate: '0.00001568'
                   status: completed
@@ -26605,7 +26743,7 @@ paths:
       - 兑换(Swaps)
       operationId: quoteSwap
       summary: swap 报价
-      description: 在你的 USDT、USDC、BTC、GOLD、SILVER 和 PLATINUM 余额之间兑换的免费指示性报价(任意交易对,源与目标不同)。你看到的汇率就是你账户的执行汇率——所见即所得,无额外费用。指示性:执行时使用 POST 当刻的价格(稳定币对保持稳定)。
+      description: 在你的 USD（默认）、USDT、USDC、BTC、GOLD、SILVER 和 PLATINUM 余额之间兑换的免费指示性报价(任意交易对,源与目标不同)。你看到的汇率就是你账户的执行汇率——所见即所得,无额外费用。指示性:执行时使用 POST 当刻的价格(稳定币对保持稳定)。
       parameters:
       - name: from_asset
         in: query
@@ -26683,14 +26821,14 @@ paths:
                     enum:
                     - included_in_rate
               example:
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -26944,8 +27082,8 @@ paths:
                 transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
                 from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: 费用分摊
                 status: completed
                 created_at: '2026-07-07T12:00:00Z'
@@ -26959,8 +27097,8 @@ paths:
                 transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
                 from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: 费用分摊
                 status: completed
                 created_at: '2026-07-07T12:00:00Z'
@@ -27046,8 +27184,8 @@ paths:
                 - transfer_id: 77b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                   from_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                   to_account_id: ae8cf540-22a9-414d-82cc-8ac04732be4f
-                  asset: USDT
-                  amount: '25.000000'
+                  asset: USD
+                  amount: '25.00'
                   description: 费用分摊
                   status: completed
                   direction: sent
@@ -27079,8 +27217,8 @@ paths:
                 transfer_id: 77b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 from_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                 to_account_id: ae8cf540-22a9-414d-82cc-8ac04732be4f
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: 费用分摊
                 status: completed
                 direction: sent
@@ -29301,7 +29439,7 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: 卡片消费扣款的余额。USDT/USDC 与 USD 1:1;BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换。默认 USD。修改仅影响之后的消费。
+          description: 卡片消费扣款的余额。USD/USDT/USDC 与 USD 1:1;BTC/GOLD/SILVER/PLATINUM 按每笔事件当时价格转换。默认 USD。修改仅影响之后的消费。
         limits:
           type: object
           description: 消费限额,始终以 USD 计,与消费资产无关。
@@ -30036,7 +30174,7 @@ components:
           description: 从结算资产余额实际扣除的准确金额(以该资产单位表示)。当资产为 USDT 时等于 `total_debit`。若 payout 失败,退款即为该准确金额——绝不重新计价。
         settlement_rate:
           type: string
-          description: 用于转换 USDT 总额的结算资产有效 USD 单价(USDT/USDC 为 "1")。
+          description: 用于转换 USDT 总额的结算资产有效 USD 单价(USD/USDT/USDC 为 "1")。
         beneficiary:
           type: object
         description:
@@ -30272,7 +30410,7 @@ components:
           description: 仅当该收款存在退款或拒付时出现。由累计金额推导 —— 收款的 `status` 永不重写。
         refunded_amount:
           type: string
-          description: 该收款因退款与拒付累计扣除的 USDT。
+          description: 该收款因退款与拒付累计扣除的金额（以该收款的入账资产计，见 `credit_asset`）。
         refunded_local:
           type: string
           description: 以原始本地货币累计退还的金额。
@@ -30364,7 +30502,7 @@ components:
           type: string
         usdt_debited:
           type: string
-          description: 从 USDT 余额中扣除的金额。原收款的手续费与汇率点差不予退还。
+          description: 扣除金额（micro-USDT 等值）。原收款的手续费与汇率点差不予退还。
         requested_by:
           type: string
           enum:
@@ -30385,7 +30523,7 @@ components:
           description: 退款处于 `pending` 期间出现 —— 结果由对账流程解决，绝不会重新下发。
         balance_after:
           type: string
-          description: 出现在 `payin_refunded` webhook 中 —— 该笔变动后的 USDT 余额（拒付时可能为负）。
+          description: 出现在 `payin_refunded` webhook 中 —— 扣款后余额（该收款的入账资产；拒付时可能为负）。
         receipt_url:
           type: string
         created_at:
@@ -31172,8 +31310,8 @@ webhooks:
               transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
               from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '25.000000'
+              asset: USD
+              amount: '25.00'
               description: 费用分摊
               created_at: '2026-07-07T12:00:00Z'
       responses:
@@ -31209,8 +31347,8 @@ webhooks:
               employee_id: 4c9d1e3f-6a7b-8c92-0d1e-3f4a5b6c7d8e
               employee_name: Jane Doe
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '1500.000000'
+              asset: USD
+              amount: '1500.00'
       responses:
         '200':
           description: 请返回任意 2xx 以确认投递。
@@ -31271,8 +31409,8 @@ webhooks:
               category: operating_expenses
               vendor_name: Acme Supplies
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '250.000000'
+              asset: USD
+              amount: '250.00'
       responses:
         '200':
           description: 请返回任意 2xx 以确认投递。
@@ -31786,12 +31924,12 @@ webhooks:
               created_at: '2026-07-25T18:02:00Z'
               data:
                 account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
-                asset: USDT
-                amount: '10.000000'
+                asset: USD
+                amount: '10.00'
                 direction: credit
                 reason: manual top-up
-                available: '109.700000'
-                held: '0.000000'
+                available: '109.70'
+                held: '0.00'
       responses:
         '200':
           description: 已接收。

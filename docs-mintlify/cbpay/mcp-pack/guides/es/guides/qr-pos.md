@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/es/guides/qr-pos
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Importante**
-**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Las cuentas legacy conservan su default explícito `USDT`; las cuentas nuevas usan `USD` como saldo principal. Usa Banking para las operaciones fiat.
 QR Crypto POS es el producto para **procesadores y adquirentes con cuenta empresa**
 que operan POS físicos: registras a tus comercios (restaurantes, hoteles,
 tiendas) como *merchants* verificados y generas **cobros QR crypto con monto

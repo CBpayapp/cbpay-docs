@@ -16,7 +16,12 @@ into one auditable document. A single endpoint serves it in three formats:
 |---|---|---|
 | `json` (default) | Rendering the statement in your web/app | `format=json` |
 | `pdf` | Formal document with CBPay branding | `format=pdf` |
-| `xlsx` | Excel with per-section sheets, filters and numeric cells | `format=xlsx` |
+| `xlsx` | Excel with per-section sheets, filters, numeric cells and native charts | `format=xlsx` |
+
+The XLSX cover includes native charts when the corresponding data exists: a
+donut chart of outflows by product and a clustered column chart comparing
+inflows and outflows by month. It also includes the monthly summary table used
+by the charts. Charts are omitted when there is no data to display.
 
 ```mermaid
 flowchart LR
@@ -221,7 +226,12 @@ XLSX exports. It does not expose provider identity, margin or spread.
 | `status` | Operation status |
 | `country`, `currency`, `network` | Optional geographic, fiat and blockchain context |
 | `ref_type`, `ref_id` | Optional source reference |
+| `group_id` | Optional group identifier, such as `swap:<id>` or `funding:<id>`, for grouped legs |
+| `group_title_key` | Optional localized title key for the group: `swap_group` or `funding_group` |
 | `executed_rate`, `rate_pair`, `rate_source` | Optional stamped execution-rate fields; never a re-quote |
+
+Integrators can use `group_id` and `group_title_key` to render grouped legs as
+one user-facing operation while retaining each timeline row.
 
 The `summary.counts.timeline` value is the number of timeline rows. A shortened
 example:
@@ -244,7 +254,9 @@ example:
       "country": "CL",
       "currency": "CLP",
       "ref_type": "payin",
-      "ref_id": "payin-001"
+      "ref_id": "payin-001",
+      "group_id": "funding:funding-001",
+      "group_title_key": "funding_group"
     }
   ]
 }
@@ -283,9 +295,11 @@ supports partial, case-insensitive matches across the movement `id`,
 
 The PDF adds a **What happened?** overview, a vector donut by product, vector
 bars by month, the Timeline table with icons, and the Disputes table when
-applicable. The XLSX export has **Movements** and **Disputes** sheets in
-addition to the existing product sheets. Both exports preserve the requested
-language and asset precision.
+applicable. Grouped legs are marked with `[Gn]`, where `n` identifies the
+group. The XLSX cover includes native product and monthly charts plus the
+monthly summary table; it has **Movements** and **Disputes** sheets in addition
+to the existing product sheets. Both exports preserve the requested language
+and asset precision.
 
 ## Asset-aware payin rows
 

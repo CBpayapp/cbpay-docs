@@ -17,7 +17,12 @@ entrega en tres formatos:
 |---|---|---|
 | `json` (default) | Mostrar la cartola en tu web/app | `format=json` |
 | `pdf` | Documento formal con branding CBPay | `format=pdf` |
-| `xlsx` | Excel con hojas por sección, filtros y celdas numéricas | `format=xlsx` |
+| `xlsx` | Excel con hojas por sección, filtros, celdas numéricas y gráficos nativos | `format=xlsx` |
+
+La portada del XLSX incluye gráficos nativos cuando existen datos: un gráfico
+de dona con las salidas por producto y un gráfico de columnas agrupadas que
+compara entradas y salidas por mes. También incluye la tabla mensual usada por
+los gráficos. Si no hay datos para mostrar, los gráficos se omiten.
 
 ```mermaid
 flowchart LR
@@ -223,7 +228,12 @@ XLSX. No expone proveedor, margen ni spread.
 | `status` | Estado de la operación |
 | `country`, `currency`, `network` | Contexto opcional geográfico, fiat y blockchain |
 | `ref_type`, `ref_id` | Referencia opcional del origen |
+| `group_id` | Identificador opcional del grupo, como `swap:<id>` o `funding:<id>`, para patas agrupadas |
+| `group_title_key` | Clave de título traducible opcional del grupo: `swap_group` o `funding_group` |
 | `executed_rate`, `rate_pair`, `rate_source` | Tasa de ejecución estampada, si existe; nunca una recotización |
+
+Los integradores pueden usar `group_id` y `group_title_key` para mostrar las
+patas agrupadas como una sola operación, conservando cada fila del timeline.
 
 `summary.counts.timeline` indica cuántas filas contiene la timeline. Ejemplo
 recortado:
@@ -246,7 +256,9 @@ recortado:
       "country": "CL",
       "currency": "CLP",
       "ref_type": "payin",
-      "ref_id": "payin-001"
+      "ref_id": "payin-001",
+      "group_id": "funding:funding-001",
+      "group_title_key": "funding_group"
     }
   ]
 }
@@ -285,8 +297,11 @@ mayúsculas y minúsculas, en `id`, `ref_id`, `subtitle`, `network`,
 
 El PDF agrega el bloque **¿Qué pasó?**, un donut vectorial por producto, barras
 vectoriales por mes, la tabla Timeline con iconos y la tabla Disputas cuando
-corresponde. El XLSX agrega las hojas **Movimientos** y **Disputas** a las
-hojas existentes. Ambos respetan el idioma solicitado y la precisión del activo.
+corresponde. Las patas agrupadas se marcan con `[Gn]`, donde `n` identifica
+el grupo. La portada del XLSX incluye gráficos nativos por producto y por mes,
+además de la tabla mensual; también agrega las hojas **Movimientos** y
+**Disputas** a las hojas existentes. Ambos respetan el idioma solicitado y la
+precisión del activo.
 
 ## Filas por activo
 

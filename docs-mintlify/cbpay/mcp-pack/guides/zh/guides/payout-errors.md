@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/payout-errors
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 > **重要**
-**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。已有账户保留明确设置的 `USDT` 默认值；新账户使用 `USD` 作为主余额。法币操作请使用 Banking。
 ## 常见错误
 
 | HTTP | `error` | 应对方式 |
@@ -23,14 +23,22 @@ source_url: https://docs.cbpayapp.com/zh/guides/payout-errors
 | 403 | `compliance_hold` | 该出金被保留审核且未被处理（没有资金移动）。API 消息为 `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`。联系支持团队时请复制门户中的引用行（UTC 时间、错误代码和短请求 ID）；参见[错误](https://docs.cbpayapp.com/zh/errors) |
 | 422 | `currency_not_supported` | 该货币没有可用的外汇汇率 |
 | 422 | （出金处于 `status: failed`） | 通道拒绝了该数据；扣款已退回 —— 修正 `beneficiary` 后使用新的键重试 |
-| 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的** `idempotency_key` 重试 |
+| 503 | `channel_unavailable` | 出金通道暂时不可用。这可能是临时的资金库或通道状况，而不是收款人数据错误。直接收到 503 时请稍后使用**相同的** `idempotency_key` 重放；如果 payout 进入 `in_review`，请按审核结果处理 |
 | 503 | `compliance_check_unavailable` | 无法完成合规校验，也无法将 payout 写入技术筛查队列；请使用**相同**幂等键重试。队列可用时，创建请求返回 `202` 且资源为 `status: pending` |
 
 ## 立即拒绝与后续失败
 
-如果处理方在创建时就拒绝了出金，您会收到 `422`，对象处于
-`status: failed`，且退款已经完成。如果之后才失败（例如目标账户不存在），
-webhook 会以 `status: failed` 送达，自动退款也在那一刻发生。
+如果处理方在创建时因可修正的业务原因拒绝了出金，您会收到 `422`，
+对象处于 `status: failed`，且退款已经完成。修正收款人或请求数据后，
+使用新的 key 创建新的 payout。临时的通道或资金库资金不足则不同：
+平台可以将 payout 保持在 `in_review`，而不是立即失败，因此在知道审核
+结果前不要创建新的 payout。
+
+当 payout 处于 `in_review` 时，账户看到的消息会保持通用：正在审核，
+释放后会自动完成。不要因为这个状态修改收款人数据。如果审核通过但
+原始派发 key 已被消耗，审批会返回 `reissue_required`；只有这时才可
+使用**新的** `idempotency_key` 创建新的 payout。CBPay 不会自动重新发起
+这笔资金操作。
 
 ### 解读失败出金的 `status_code`
 
@@ -38,17 +46,20 @@ webhook 会以 `status: failed` 送达，自动退款也在那一刻发生。
 |---|---|---|
 | `core_rejected` | 处理方在创建时拒绝了该操作（收款人数据无效、通道不可用） | 阅读 `status_message`，修正数据后使用新的键创建新出金 |
 | `counterparty_rejected` | 银行通道拒绝了收款人本身（US/USD 通道） | 与账户持有人核对收款人的身份与地址信息，然后使用新的键创建新出金 |
-| `channel_unavailable` | 出金通道暂时不可用 | 稍后重试；退款（如已扣款）已经完成 |
+| `channel_unavailable` | 出金通道暂时不可用 | 直接 503 时使用相同 key 重放。如果 payout 处于 `in_review`，等待审核；如果审批返回 `reissue_required`，使用新的 key 创建新的 payout |
 | *其他代码* | 银行通道在后续阶段拒绝（例如目标账户已注销） | 同上：修正数据后创建新的操作 |
 | *（空）* | 通道的一般性失败 | 检查 `status_message`；如仍不清楚，请携带 `payout_id` 联系支持 |
 
-无论哪种情况，退款均已完成 —— 可通过
-[账户流水](https://docs.cbpayapp.com/zh/concepts/movements-reconciliation)中的 `payout_refund`
-条目进行核实。
+对于已终止的 failed payout，账户消息会说明操作未能完成且资金已经退回。
+可通过[账户流水](https://docs.cbpayapp.com/zh/concepts/movements-reconciliation)中的
+`payout_refund` 条目核实。仍处于 `in_review` 的 payout 尚未终止；请等待
+审核结果，不要假定已经退款或重新派发。
 
 > **注**
-处于 `processing` 状态的出金无法通过 API 取消：通道已经在处理它。请通过
-webhook 或 `GET` 等待最终状态 —— 它一定会到达，失败时会自动退款。
+处于 `processing` 状态的出金无法通过 API 取消：通道已经在处理它。处于
+`in_review` 的 payout 也不是客户端取消流程；请等待审核结果。两种状态
+都应通过 webhook 或 `GET` 等待最终状态。终止失败会退回资金；审批若返回
+`reissue_required`，则必须由客户端使用新 key 创建新的操作。
 ## 常见问题
 
 #### 我的余额什么时候被扣款？
@@ -73,6 +84,15 @@ payout；结果为 `process` 时继续，`hold` 时进入防火墙，`rejected` 
 #### compliance_hold（403）是什么意思？
 payout 被保留审核且**未被**处理：没有资金移动，你的 `idempotency_key` 也未被消耗。门户会显示可复制的引用行，其中包含 UTC 时间、错误代码和短请求 ID。
 联系支持团队时请提供该引用；不会披露具体的合规原因。
+#### payout 的 `status: in_review` 是什么意思？
+payout 正在审核，账户看到的消息会保持通用：释放后会自动完成。当通道或其
+资金库暂时不可用时，平台可能用此状态保护 payout。处于审核期间不要修改
+收款人，也不要创建第二笔 payout。如果审批返回 `reissue_required`，请使用
+新的幂等键创建新的 payout；CBPay 不会自动重新发起。
+#### 为什么 payout 返回 503，却没有收款人错误？
+部分临时通道状况并非由收款人数据造成。直接收到 503 时，请使用相同的
+幂等键重放。如果 payout 已进入 `in_review`，请等待审核结果；只有明确的
+`reissue_required` 才表示可以使用新的 key 创建新的 payout。
 #### 超时或 5xx 之后如何安全重试？
 用**相同**的 `idempotency_key` 重试：会返回原始 payout
 （`idempotency_hit: true`）—— 绝不会重复。新的 key 是一笔全新的独立

@@ -5,6 +5,21 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.284 · 2 versions - November 14, 2026
+### v2.284
+**Changed**
+- Payouts now keep temporary channel or treasury shortfalls in the
+  account-facing review flow when possible, instead of exposing an internal
+  funds message or immediately returning a business error. The account sees
+  neutral copy: the payout is under review, will complete automatically when
+  released, or could not be completed and the funds were returned.
+- If a reviewed payout cannot continue because its original dispatch key was
+  consumed, approval returns `reissue_required`. The client creates a new
+  payout with a new idempotency key; CBPay never re-issues the operation.
+### v2.283
+**Changed**
+- USD is the principal default balance for new accounts. Legacy accounts keep an explicitly configured USDT default; omitted swap sides resolve to the account principal.
+- Payouts, fees, transfers, swaps, POS charges and card selectors now document default-balance behavior, with USD-first examples and readable default-balance errors. Explicit asset overrides remain supported.
 ## v2.282 · 9 versions - November 13, 2026
 ### v2.282
 **Changed**

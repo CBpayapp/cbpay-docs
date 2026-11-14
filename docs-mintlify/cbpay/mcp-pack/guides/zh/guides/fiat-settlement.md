@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/fiat-settlement
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 > **重要**
-**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。已有账户保留明确设置的 `USDT` 默认值；新账户使用 `USD` 作为主余额。法币操作请使用 Banking。
 > **注**同币种法币结算已于 2026-11-13 下线。以下示例描述平台过去的行为，保留用于迁移和对账参考。进行中的操作正常完成；接收法币和流水历史保持不变。新的法币余额和法币操作属于 [Banking](https://docs.cbpayapp.com/zh/guides/banking)；平台法币结算返回 `400`。## 平台过去的行为（历史参考）
 
 当 payout 货币与 `settlement_asset` 相同时，payout 可以从本地法币余额

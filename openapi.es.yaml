@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.281'
+  version: '2.284'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -65,7 +65,7 @@ tags:
 - name: Contacts
   description: Libreta de beneficiarios por cuenta (destinos CBPay, bancarios y crypto) con match por teléfono y auto-guardado en cada envío.
 - name: Swaps
-  description: Conversión instantánea entre los saldos USDT, USDC, BTC, GOLD, SILVER y PLATINUM de la cuenta a la tasa cotizada de la cuenta.
+  description: Conversión instantánea entre los saldos USD (predeterminado), USDT, USDC, BTC, GOLD, SILVER y PLATINUM de la cuenta a la tasa cotizada de la cuenta.
 - name: Crypto
   description: Fondeo y retiros on-chain (TRON, Ethereum y Bitcoin).
 - name: Wallets segregadas
@@ -741,7 +741,7 @@ paths:
             application/json:
               example:
                 status: pending
-                settlement_asset: USDT
+                settlement_asset: USD
                 asset_amount: '50'
                 countries:
                 - country: BO
@@ -814,7 +814,7 @@ paths:
                         asset: USDC
                         percent: '0.10'
                       - leg: to
-                        asset: USDT
+                        asset: USD
                         percent: '0.10'
                       fee_total_pct: '0.2000'
                       fee_note: included_in_rate
@@ -890,7 +890,7 @@ paths:
                   summary: Pendiente con cotización fiat congelada y progreso crypto
                   value:
                     status: pending
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     asset_amount: '50'
                     description: Order 8841
                     expires_at: '2026-07-17T17:57:44Z'
@@ -1360,8 +1360,8 @@ paths:
                 service: compliance_monitoring
                 monitor: true
                 monitoring_enabled: true
-                screening_fee: '1.000000'
-                fee_asset: USDT
+                screening_fee: '1.00'
+                fee_asset: USD
                 idempotency_key: aml-monitor-enable-1
                 created_at: '2026-07-12T20:00:00Z'
                 compliance_service: compliance_monitoring
@@ -1420,8 +1420,8 @@ paths:
                 kind: rescreen
                 service: compliance_rescreen
                 risk: low
-                screening_fee: '1.000000'
-                fee_asset: USDT
+                screening_fee: '1.00'
+                fee_asset: USD
                 idempotency_key: aml-rescreen-2026-07-12
                 created_at: '2026-07-12T19:00:00Z'
                 result:
@@ -1699,8 +1699,8 @@ paths:
                 subject_name: Ana Perez Rojas
                 risk: low
                 monitor: false
-                screening_fee: '2.000000'
-                fee_asset: USDT
+                screening_fee: '2.00'
+                fee_asset: USD
                 idempotency_key: aml-screen-ana-1
                 created_at: '2026-07-12T18:00:00Z'
                 result:
@@ -1784,8 +1784,8 @@ paths:
                   subject_name: Ana Perez Rojas
                   risk: low
                   monitor: false
-                  screening_fee: '2.000000'
-                  fee_asset: USDT
+                  screening_fee: '2.00'
+                  fee_asset: USD
                   idempotency_key: aml-screen-ana-1
                   created_at: '2026-07-12T18:00:00Z'
         '400':
@@ -1818,8 +1818,8 @@ paths:
                 subject_name: Ana Perez Rojas
                 risk: low
                 monitor: false
-                screening_fee: '2.000000'
-                fee_asset: USDT
+                screening_fee: '2.00'
+                fee_asset: USD
                 idempotency_key: aml-screen-ana-1
                 created_at: '2026-07-12T18:00:00Z'
                 result:
@@ -6139,7 +6139,7 @@ paths:
                     cardholder_kind: account
                     cardholder_name: Ana Rojas
                     status: active
-                    spending_asset: USDT
+                    spending_asset: USD
                     limits:
                       monthly: '5000.000000'
                     created_at: '2026-07-08T12:00:00Z'
@@ -6284,7 +6284,7 @@ paths:
                   physical: false
                   cardholder_kind: account
                   status: active
-                  spending_asset: USDT
+                  spending_asset: USD
                   limits: {}
                   created_at: '2026-07-08T12:00:00Z'
                   updated_at: '2026-07-08T12:00:00Z'
@@ -6459,7 +6459,7 @@ paths:
                 physical: false
                 cardholder_kind: account
                 status: active
-                spending_asset: USDT
+                spending_asset: USD
                 limits:
                   monthly: '5000.000000'
                 created_at: '2026-07-08T12:00:00Z'
@@ -7611,6 +7611,144 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/crypto/network-moves:
+    post:
+      tags:
+      - Crypto
+      operationId: createNetworkMove
+      summary: Ejecutar un cambio de red explícito del mismo activo
+      description: 'Un cambio de red es siempre un retiro con contexto from_chain: el dinero vive una sola vez en crypto_withdrawals (mismo débito, despacho, cartola y webhooks). Idempotente por cuenta + idempotency_key; exige OTP como los retiros. Si el firewall transaccional lo retiene, la respuesta trae forma de retiro.'
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - asset
+              - from_chain
+              - to_chain
+              - to_address
+              - amount
+              - idempotency_key
+            example:
+              asset: USDT
+              from_chain: tron
+              to_chain: eth
+              to_address: 0xabc...
+              amount: '100'
+              idempotency_key: move-001
+      responses:
+        '200':
+          description: Cambio con su retiro espejado
+          content:
+            application/json:
+              example:
+                move_id: 22222222-2222-2222-2222-222222222222
+                status: processing
+                from_chain: tron
+        '400':
+          description: Par, dirección o monto inválido
+        '409':
+          description: El replay de idempotencia devuelve el original
+    get:
+      tags:
+      - Crypto
+      operationId: listNetworkMoves
+      summary: Listar cambios de red de la cuenta
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Cambios paginados con estado espejado del retiro
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                moves: []
+  /v1/crypto/network-moves/quote:
+    post:
+      tags:
+      - Crypto
+      operationId: quoteNetworkMove
+      summary: Cotizar un cambio de red explícito del mismo activo
+      description: 'Vista previa pura (sin efectos): valida el activo y ambas redes, valoriza el fee de retiro e informa si la hot wallet de destino está configurada.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - asset
+              - from_chain
+              - to_chain
+              - amount
+            example:
+              asset: USDT
+              from_chain: tron
+              to_chain: eth
+              amount: '100'
+      responses:
+        '200':
+          description: Cotización con fees y débito total
+          content:
+            application/json:
+              example:
+                asset: USDT
+                from_chain: tron
+                to_chain: eth
+                amount: '100'
+                fee: '1'
+                platform_fee: '0.1'
+                total_debit: '101'
+                hot_configured: true
+        '400':
+          description: Par o monto inválido
+  /v1/crypto/network-moves/{moveID}:
+    get:
+      tags:
+      - Crypto
+      operationId: getNetworkMove
+      summary: Obtener un cambio de red por id
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: El cambio con su retiro espejado
+          content:
+            application/json:
+              example:
+                move_id: 22222222-2222-2222-2222-222222222222
+                status: completed
+        '404':
+          description: Cambio no encontrado
   /v1/crypto/networks:
     get:
       tags:
@@ -8727,12 +8865,12 @@ paths:
                   cursor: '4821'
                   data:
                     account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
-                    asset: USDT
-                    amount: '10.000000'
+                    asset: USD
+                    amount: '10.00'
                     direction: credit
                     reason: manual top-up
-                    available: '109.700000'
-                    held: '0.000000'
+                    available: '109.70'
+                    held: '0.00'
         '400':
           $ref: '#/components/responses/InvalidRange'
         '401':
@@ -14188,8 +14326,8 @@ paths:
                 page_size: 50
                 movements:
                 - id: 0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0
-                  asset: USDT
-                  amount: '-86.014286'
+                  asset: USD
+                  amount: '-86.02'
                   type: payout_debit
                   reference_type: payout
                   reference_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
@@ -14200,17 +14338,17 @@ paths:
                   rate_pair: USD/BOB
                   rate_source: payout
                 - id: 9a8b7c6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4
-                  asset: USDT
-                  amount: '-1.000000'
+                  asset: USD
+                  amount: '-1.00'
                   type: wallet_creation_fee
                   reference_type: crypto_wallet
                   reference_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d:tron:usdt
                   description: 'service fee: wallet_creation'
-                  balance_after: '125.430000'
+                  balance_after: '125.43'
                   created_at: '2026-07-07T12:00:00Z'
                 - id: 7c6d5e4f-3a2b-1c0d-9e8f-a7b6c5d4e3f2
-                  asset: USDT
-                  amount: '-100.000000'
+                  asset: USD
+                  amount: '-100.00'
                   type: swap_out
                   reference_type: swap
                   reference_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
@@ -15049,7 +15187,7 @@ paths:
                 value:
                   method: checkout
                   amount: '50'
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   country: CL
                   description: Order 8841
                   success_url: https://your-app.com/payment/ok
@@ -15324,7 +15462,7 @@ paths:
                     payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
                     kind: checkout
                     status: pending
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     asset_amount: '50'
                     country: CL
                     description: Order 8841
@@ -15647,7 +15785,7 @@ paths:
                   currency: ''
                   method: checkout
                   local_amount: ''
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   asset_amount: '50'
                   status: pending
                   reference: CB68JZCT46QE
@@ -17424,7 +17562,7 @@ paths:
       - Payouts
       operationId: createPayout
       summary: Crear un payout
-      description: 'Dispersa fiat a una cuenta bancaria local. El monto local se convierte a USDT a **la tasa de tu cuenta** (la misma que devuelve `GET /v1/rates`); se debita `usdt_amount` más la comisión fija (cuando está configurada) y queda retenido hasta que la dispersión se complete. Si falla, se reembolsa el débito completo.
+      description: 'Dispersa fiat a una cuenta bancaria local. El monto local se convierte a tu saldo predeterminado (USD) a **la tasa de tu cuenta** (la misma que devuelve `GET /v1/rates`); se debita `usdt_amount` más la comisión fija (cuando está configurada) y queda retenido hasta que la dispersión se complete. Si falla, se reembolsa el débito completo.
 
 
         **Paga desde cualquier saldo**: por defecto el débito sale del asset de settlement predeterminado de tu cuenta (`default_settlement_asset` — USD es el saldo principal; cámbialo con `PUT /v1/settlement`). Envía `settlement_asset` (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER o PLATINUM) para pagar esta operación puntual desde otro saldo: el total se convierte a ese asset al precio efectivo de settlement del momento (ver el bloque `settlement` de `GET /v1/rates`) y el débito, la retención y — si falla — el reembolso viven en ese asset por el monto exacto. Si el precio de ejecución de BTC/GOLD/SILVER/PLATINUM no está disponible, el request devuelve `503 pricing_unavailable`; los assets volátiles además tienen un límite por operación (`422 settlement_limit_exceeded`).
@@ -18004,8 +18142,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: &id008
                       name: Maria Lopez
@@ -18034,8 +18172,8 @@ paths:
                     usdt_amount: '108.695652'
                     fee: '0.300000'
                     total_debit: '108.995652'
-                    settlement_asset: USDT
-                    settlement_amount: '108.995652'
+                    settlement_asset: USD
+                    settlement_amount: '109.00'
                     settlement_rate: '1'
                     beneficiary:
                       beneficiary_type: individual
@@ -18067,8 +18205,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -18096,8 +18234,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -18127,8 +18265,8 @@ paths:
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
+                settlement_asset: USD
+                settlement_amount: '86.02'
                 settlement_rate: '1'
                 beneficiary: *id008
                 description: Invoice 8841
@@ -18196,8 +18334,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -18802,8 +18940,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: &id010
                   qr_reference: QR-REF-889923
@@ -18832,8 +18970,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: *id010
                 description: QR lunch payment
@@ -18891,8 +19029,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: *id010
                 description: QR lunch payment
@@ -19037,8 +19175,8 @@ paths:
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
+                settlement_asset: USD
+                settlement_amount: '86.01'
                 settlement_rate: '1'
                 beneficiary:
                   name: Maria Lopez
@@ -19156,7 +19294,7 @@ paths:
                   payin_id: bd3d88ca-af9c-4c05-a6f8-0982a2d187d5
                   status: paid
                   amount: '25'
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   crypto: tron:usdt
                   due: '25.000000'
                   received: '25.000000'
@@ -19240,7 +19378,7 @@ paths:
                 account_id: 5138e8dd-64bd-43ef-aafe-8d9ef23bec9e
                 status: pending
                 amount: '25'
-                settlement_asset: USDT
+                settlement_asset: USD
                 crypto: tron:usdt
                 chain: tron
                 asset: USDT
@@ -19309,7 +19447,7 @@ paths:
                     confirming: true
                     detected_amount: '25.000000'
                     amount: '25'
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     crypto: tron:usdt
                     due: '25.000000'
                     received: '0.000000'
@@ -19326,7 +19464,7 @@ paths:
                     payin_id: bd3d88ca-af9c-4c05-a6f8-0982a2d187d5
                     status: paid
                     amount: '25'
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     crypto: tron:usdt
                     due: '25.000000'
                     received: '25.000000'
@@ -22556,7 +22694,7 @@ paths:
       - Saldos
       operationId: getRates
       summary: Obtener mis tasas de cambio y comisiones
-      description: Devuelve las tasas de cambio que aplican a la cuenta que llama para cada país — las mismas tasas usadas cuando las operaciones se ejecutan (`local_amount / rate = USDT`) — más la configuración de comisiones **efectiva** de la cuenta — los defaults de la organización ya resueltos contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla. `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda; cuando es `spot`, no existe un lote elegible y se usa spot; y cuando es `rail`, la cotización usa el mercado ejecutable del riel configurado para VE/VES. Para payins USDT, `payin_rate_source` es `lot` cuando el inventario FIFO payin habilitado respalda la cotización y `spot` en los demás casos, o `rail` cuando el riel C2P de VE/VES está configurado. Los payins con tarjeta siguen usando spot. Usa `lot_quote` opcional para una cotización indicativa por monto. La fila UF se omite de `rates`; la lista `settlement.assets` no incluye assets apagados. `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado, el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para estimar antes de enviar `settlement_asset` en un payout.
+      description: Devuelve las tasas de cambio que aplican a la cuenta que llama para cada país — las mismas tasas usadas cuando las operaciones se ejecutan (`local_amount / rate = USD (default balance)`) — más la configuración de comisiones **efectiva** de la cuenta — los defaults de la organización ya resueltos contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla. `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda; cuando es `spot`, no existe un lote elegible y se usa spot; y cuando es `rail`, la cotización usa el mercado ejecutable del riel configurado para VE/VES. Para payins al saldo predeterminado (USD), `payin_rate_source` es `lot` cuando el inventario FIFO payin habilitado respalda la cotización y `spot` en los demás casos, o `rail` cuando el riel C2P de VE/VES está configurado. Los payins con tarjeta siguen usando spot. Usa `lot_quote` opcional para una cotización indicativa por monto. La fila UF se omite de `rates`; la lista `settlement.assets` no incluye assets apagados. `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado, el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para estimar antes de enviar `settlement_asset` en un payout.
       parameters:
       - name: currency
         in: query
@@ -22759,7 +22897,7 @@ paths:
                   marked_rate: '13.28728500'
                   indicative: true
                 settlement:
-                  default_asset: USDT
+                  default_asset: USD
                   assets:
                   - asset: USDT
                     available: true
@@ -22780,7 +22918,7 @@ paths:
                   account_id: ''
                   service: payout
                   country: CL
-                  asset: USDT
+                  asset: USD
                   percent: '0'
                   fixed_amount: '0.30'
                   status: active
@@ -23298,15 +23436,15 @@ paths:
                   kind: purchase
                   merchant: AMAZON.COM
                   amount_usd: '25.00'
-                  spend_asset: USDT
-                  spend_amount: '25.000000'
+                  spend_asset: USD
+                  spend_amount: '25.00'
                   status: settled
                 swaps:
                 - created_at: '2026-03-21T09:00:00Z'
                   swap_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
-                  from_amount: '10.000000'
+                  from_amount: '10.00'
                   to_amount: '0.00015433'
                   rate: '0.00001543'
                   status: completed
@@ -23324,19 +23462,19 @@ paths:
                   type: banking_fee
                   service: banking_customer
                   fee_model: fixed
-                  asset: USDT
+                  asset: USD
                   reference: cust-001
-                  amount: '-0.500000'
-                  balance_after: '139.100000'
+                  amount: '-0.50'
+                  balance_after: '139.10'
                 timeline:
                 - created_at: '2026-03-23T08:00:00Z'
                   id: ledger-001
                   product: service_charges
                   direction: out
                   title_key: service_charge
-                  asset: USDT
-                  amount: '-0.500000'
-                  balance_after: '139.100000'
+                  asset: USD
+                  amount: '-0.50'
+                  balance_after: '139.10'
                   status: completed
         '400':
           description: invalid_range / invalid_format.
@@ -23426,8 +23564,8 @@ paths:
                     address: TN2BBWc9EF8MMB6i1c4HZHXAssTEXstMDo
                     chain: tron
                     risk: Low
-                    screening_fee: '0.500000'
-                    fee_asset: USDT
+                    screening_fee: '0.50'
+                    fee_asset: USD
                     idempotency_key: scan-cliente-742-1
                     created_at: '2026-07-12T14:30:00Z'
                     assessment:
@@ -23447,8 +23585,8 @@ paths:
                     chain: eth
                     risk: Severe
                     risk_reason: Identified as Sanctioned Entity
-                    screening_fee: '0.500000'
-                    fee_asset: USDT
+                    screening_fee: '0.50'
+                    fee_asset: USD
                     idempotency_key: scan-sospechosa-9
                     created_at: '2026-07-12T14:31:00Z'
                     assessment:
@@ -23472,8 +23610,8 @@ paths:
                 address: TN2BBWc9EF8MMB6i1c4HZHXAssTEXstMDo
                 chain: tron
                 risk: Low
-                screening_fee: '0.500000'
-                fee_asset: USDT
+                screening_fee: '0.50'
+                fee_asset: USD
                 idempotency_key: scan-cliente-742-1
                 created_at: '2026-07-12T14:30:00Z'
                 idempotency_hit: true
@@ -23549,8 +23687,8 @@ paths:
                   chain: eth
                   risk: Severe
                   risk_reason: Identified as Sanctioned Entity
-                  screening_fee: '0.500000'
-                  fee_asset: USDT
+                  screening_fee: '0.50'
+                  fee_asset: USD
                   idempotency_key: scan-sospechosa-9
                   created_at: '2026-07-12T14:31:00Z'
         '400':
@@ -23582,8 +23720,8 @@ paths:
                 chain: eth
                 risk: Severe
                 risk_reason: Identified as Sanctioned Entity
-                screening_fee: '0.500000'
-                fee_asset: USDT
+                screening_fee: '0.50'
+                fee_asset: USD
                 idempotency_key: scan-sospechosa-9
                 created_at: '2026-07-12T14:31:00Z'
                 assessment:
@@ -24244,8 +24382,8 @@ paths:
                 asset: USDT
                 to_address: TXYZdestination00000000000000000000
                 amount_raw: '25500000'
-                fee: '0.000000'
-                fee_asset: USDT
+                fee: '0.00'
+                fee_asset: USD
                 status: processing
                 tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
                 idempotency_key: send-2026-07-11-a
@@ -26552,9 +26690,9 @@ paths:
                   description: 'Clave elegida por el cliente. Los prefijos payin-convert: y checkout-swap: están reservados para las auto-conversiones del sistema y se rechazan con 400 reserved_idempotency_key.'
             examples:
               usdt_btc:
-                summary: USDT a BTC
+                summary: USD a BTC
                 value:
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
                   amount: '1000'
                   idempotency_key: swap-2026-07-10-a
@@ -26566,9 +26704,9 @@ paths:
                   amount: '0.01'
                   idempotency_key: swap-2026-07-10-b
               stables:
-                summary: USDT a USDC
+                summary: USD a USDC
                 value:
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: USDC
                   amount: '500'
                   idempotency_key: swap-2026-07-10-c
@@ -26582,14 +26720,14 @@ paths:
               example:
                 swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -26608,14 +26746,14 @@ paths:
               example:
                 swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -26728,9 +26866,9 @@ paths:
                 swaps:
                 - swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                   account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
-                  from_amount: '1000.000000'
+                  from_amount: '1000.00'
                   to_amount: '0.01568419'
                   rate: '0.00001568'
                   status: completed
@@ -26746,7 +26884,7 @@ paths:
       - Swaps
       operationId: quoteSwap
       summary: Cotizar un swap
-      description: 'Cotización indicativa gratis para convertir entre tus saldos USDT, USDC, BTC, GOLD, SILVER y PLATINUM (cualquier par, origen distinto del destino). La tasa que ves es la tasa de ejecución de tu cuenta — cotizado = recibido, sin comisiones aparte. Indicativa: la ejecución usa el precio del momento del POST (los pares entre stablecoins son estables).'
+      description: 'Cotización indicativa gratis para convertir entre tus saldos USD (predeterminado), USDT, USDC, BTC, GOLD, SILVER y PLATINUM (cualquier par, origen distinto del destino). La tasa que ves es la tasa de ejecución de tu cuenta — cotizado = recibido, sin comisiones aparte. Indicativa: la ejecución usa el precio del momento del POST (los pares entre stablecoins son estables).'
       parameters:
       - name: from_asset
         in: query
@@ -26824,14 +26962,14 @@ paths:
                     enum:
                     - included_in_rate
               example:
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -27085,8 +27223,8 @@ paths:
                 transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
                 from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: Expense split
                 status: completed
                 created_at: '2026-07-07T12:00:00Z'
@@ -27100,8 +27238,8 @@ paths:
                 transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
                 from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: Expense split
                 status: completed
                 created_at: '2026-07-07T12:00:00Z'
@@ -27187,8 +27325,8 @@ paths:
                 - transfer_id: 77b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                   from_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                   to_account_id: ae8cf540-22a9-414d-82cc-8ac04732be4f
-                  asset: USDT
-                  amount: '25.000000'
+                  asset: USD
+                  amount: '25.00'
                   description: Split de gastos
                   status: completed
                   direction: sent
@@ -27220,8 +27358,8 @@ paths:
                 transfer_id: 77b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 from_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                 to_account_id: ae8cf540-22a9-414d-82cc-8ac04732be4f
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: Split de gastos
                 status: completed
                 direction: sent
@@ -29262,7 +29400,7 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: Saldo desde el que gastan las compras de la tarjeta. USDT/USDC 1:1 con el USD; BTC/GOLD/SILVER/PLATINUM convertidos al precio del momento de cada evento. USD por defecto. Cambiarlo solo afecta compras futuras.
+          description: Saldo desde el que gastan las compras de la tarjeta. USD/USDT/USDC 1:1 con el USD; BTC/GOLD/SILVER/PLATINUM convertidos al precio del momento de cada evento. USD por defecto. Cambiarlo solo afecta compras futuras.
         limits:
           type: object
           description: Límites de gasto, siempre medidos en USD, independientes del asset de gasto.
@@ -29997,7 +30135,7 @@ components:
           description: Monto exacto debitado del saldo del asset de settlement (en unidades de ese asset). Es igual a `total_debit` cuando el asset es USDT. Si el payout falla se reembolsa este monto exacto — nunca se re-cotiza.
         settlement_rate:
           type: string
-          description: Precio USD efectivo por unidad del asset de settlement usado para convertir el total en USDT ("1" para USDT/USDC).
+          description: Precio USD efectivo por unidad del asset de settlement usado para convertir el total en USDT ("1" para USD/USDT/USDC).
         beneficiary:
           type: object
         description:
@@ -30233,7 +30371,7 @@ components:
           description: Presente solo cuando el payin tiene devoluciones o un contracargo. Se deriva de los montos acumulados — el `status` del payin nunca se reescribe.
         refunded_amount:
           type: string
-          description: USDT acumulado debitado por devoluciones y contracargos de este payin.
+          description: Monto acumulado debitado por devoluciones y contracargos de este payin, en el asset de crédito del payin (ver `credit_asset`).
         refunded_local:
           type: string
           description: Monto acumulado devuelto en la moneda local original.
@@ -30325,7 +30463,7 @@ components:
           type: string
         usdt_debited:
           type: string
-          description: Monto debitado del saldo USDT. La comisión y el spread FX del payin original NO se devuelven.
+          description: Monto debitado, en equivalente micro-USDT. La comisión y el spread FX del payin original NO se devuelven.
         requested_by:
           type: string
           enum:
@@ -30346,7 +30484,7 @@ components:
           description: Presente mientras la devolución está `pending` — el resultado lo resuelve la conciliación y jamás se re-despacha.
         balance_after:
           type: string
-          description: Presente en el webhook `payin_refunded` — el saldo USDT después del movimiento (puede ser negativo en un contracargo).
+          description: Presente en el webhook `payin_refunded` — el saldo debitado después del movimiento (el asset de crédito del payin; puede ser negativo en un contracargo).
         receipt_url:
           type: string
         created_at:
@@ -31340,8 +31478,8 @@ webhooks:
               transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
               from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '25.000000'
+              asset: USD
+              amount: '25.00'
               description: Expense split
               created_at: '2026-07-07T12:00:00Z'
       responses:
@@ -31377,8 +31515,8 @@ webhooks:
               employee_id: 4c9d1e3f-6a7b-8c92-0d1e-3f4a5b6c7d8e
               employee_name: Jane Doe
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '1500.000000'
+              asset: USD
+              amount: '1500.00'
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.
@@ -31439,8 +31577,8 @@ webhooks:
               category: operating_expenses
               vendor_name: Acme Supplies
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '250.000000'
+              asset: USD
+              amount: '250.00'
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.
@@ -31954,12 +32092,12 @@ webhooks:
               created_at: '2026-07-25T18:02:00Z'
               data:
                 account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
-                asset: USDT
-                amount: '10.000000'
+                asset: USD
+                amount: '10.00'
                 direction: credit
                 reason: manual top-up
-                available: '109.700000'
-                held: '0.000000'
+                available: '109.70'
+                held: '0.00'
       responses:
         '200':
           description: Recibido.

@@ -139,8 +139,8 @@ curl https://api.qbank.cl/platform/v1/rates \
 ```
 
 The rates already include your FX margin, so you can estimate the cost
-before creating: `usdt_amount ≈ local_amount / rate` (rounded up) and
-`total_debit = usdt_amount + fixed`.
+before creating: the account-default balance equivalent is approximately
+`local_amount / rate` (rounded up), plus the fixed fee.
 
 ### Create your first payout
 
