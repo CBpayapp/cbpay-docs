@@ -14,11 +14,7 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 |---|---|---|
 | `json`（默认） | 在你的网页/应用中渲染对账单 | `format=json` |
 | `pdf` | 带 CBPay 品牌的正式文档 | `format=pdf` |
-| `xlsx` | 按分区分工作表、带筛选、数值单元格和原生图表的 Excel | `format=xlsx` |
-
-当存在相应数据时，XLSX 封面会包含原生图表：按产品统计流出的环形图，
-以及按月份比较流入和流出的分组柱状图。封面还会包含图表使用的月度汇总
-表。没有可显示的数据时，会省略相应图表。
+| `xlsx` | 按分区分工作表、带筛选和数值单元格的 Excel | `format=xlsx` |
 
 ```mermaid
 flowchart LR
@@ -205,12 +201,7 @@ JSON 响应还包含 `timeline[]`：按期间内每笔账本分录排列的客�
 | `status` | 操作状态 |
 | `country`、`currency`、`network` | 可选的国家、法币和区块链网络信息 |
 | `ref_type`、`ref_id` | 可选的来源引用 |
-| `group_id` | 可选的分组标识，例如 `swap:<id>` 或 `funding:<id>`，用于分组流水 |
-| `group_title_key` | 可选的分组本地化标题键：`swap_group` 或 `funding_group` |
 | `executed_rate`、`rate_pair`、`rate_source` | 可选的已记录执行汇率；不会重新报价 |
-
-集成方可以使用 `group_id` 和 `group_title_key` 将分组流水显示为一笔面向
-用户的操作，同时保留每一条时间线记录。
 
 `summary.counts.timeline` 是时间线行数。以下为缩短示例：
 
@@ -261,14 +252,12 @@ JSON 响应还包含 `timeline[]`：按期间内每笔账本分录排列的客�
 
 分组仅改变显示方式：API 仍返回原始的 `timeline[]` 流水腿。如果任意一条
 流水腿匹配，筛选结果就会包含该组；显示的数量始终是实际匹配的流水腿数。
-单一搜索框支持对 `id`、`ref_id`、`subtitle`、`network`、`asset`、
+单一搜索框支持对 `id`、`ref_id`、`subtitle`、`network`、
 `currency` 和 `country` 进行部分匹配，且不区分大小写。
 
 PDF 新增 **What happened?** 概览、按产品的矢量环形图、按月份的矢量柱状图、
-带图标的 Timeline 表格，以及在有案件时显示的 Disputes 表格。分组流水会
-标记为 `[Gn]`，其中 `n` 表示分组编号。XLSX 封面包含按产品和月份的原生
-图表及月度汇总表，并在原有工作表之外新增 **Movements** 和 **Disputes**
-工作表。两种导出都会保留所选
+带图标的 Timeline 表格，以及在有案件时显示的 Disputes 表格。XLSX 在原有
+工作表之外新增 **Movements** 和 **Disputes** 工作表。两种导出都会保留所选
 语言和资产精度。
 
 {/* banking-fase2-fiat-hold:2026-09-24 */}

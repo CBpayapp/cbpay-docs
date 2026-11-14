@@ -257,6 +257,30 @@ The portal uses three views over the same response:
   and balance-after context.
 - **By product**: grouped product totals and the detailed product sections.
 
+### Grouped movement rows
+
+The portal groups swap and funding legs that share the same reference into one
+collapsed header row. The header shows the operation title, the exact number
+of legs, the date range and a chevron. Select the row to expand it and see
+each original leg unchanged, including its icon, title, amount, balance after
+and detail drawer.
+
+!Collapsed grouped movement rows in the CBPay portal. The UI is shown in English.
+
+*Collapsed grouped movement rows in the CBPay portal. The UI is shown in
+English.*
+
+!Expanded grouped movement rows in the CBPay portal. The UI is shown in English.
+
+*Expanded grouped movement rows in the CBPay portal. The UI is shown in
+English.*
+
+Grouping is a presentation-only behavior: the API still returns the original
+`timeline[]` legs. Filters match a group when **any** leg matches, and the
+displayed count is the exact number of matching legs. The single search field
+supports partial, case-insensitive matches across the movement `id`,
+`ref_id`, `subtitle`, `network`, `currency` and `country`.
+
 The PDF adds a **What happened?** overview, a vector donut by product, vector
 bars by month, the Timeline table with icons, and the Disputes table when
 applicable. The XLSX export has **Movements** and **Disputes** sheets in
