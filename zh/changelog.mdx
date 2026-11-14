@@ -4,8 +4,8 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月14日" description="v2.283 · 1 个版本">
-### v2.283
+<Update label="2026年11月14日" description="v2.284 · 2 个版本">
+### v2.284
 **已更改**
 - 在可能的情况下，payout 现在会将通道或资金库的临时资金不足保留在
   审核流程中，而不是暴露内部资金消息或立即返回业务错误。账户看到的消息
@@ -13,6 +13,10 @@ description: "API and documentation change history"
 - 如果审核中的 payout 因原始派发 key 已被消耗而无法继续，审批会返回
   `reissue_required`。客户端使用新的幂等键创建新的 payout；CBPay 不会自动
   重新发起该操作。
+### v2.283
+**已更改**
+- 对新账户而言，USD 是主默认余额。已有账户保留明确设置的 USDT 默认值；swap 省略的一侧解析为账户主余额。
+- payout、手续费、转账、swap、POS 收费和卡片选择器现已说明默认余额行为，示例优先使用 USD，错误信息会显示默认余额。明确指定的资产覆盖仍受支持。
 </Update>
 <Update label="2026年11月13日" description="v2.282 · 9 个版本">
 ### v2.282

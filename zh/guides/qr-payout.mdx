@@ -147,7 +147,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
 </Tab>
 </Tabs>
 
-- 按**您的汇率**扣除 `usdt_amount + 固定费用`，与 `bank_transfer`
+- 按**您的汇率**从账户默认余额扣除等值金额和固定费用，与 `bank_transfer`
   完全一致。
 - 结果为**同步**返回：响应中已包含最终状态（`completed`，或 `failed`
   并自动退款）—— 无需等待。
