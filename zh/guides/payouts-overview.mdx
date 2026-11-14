@@ -10,11 +10,12 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 
 <Warning>
-**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。已有账户保留明确设置的 `USDT` 默认值；新账户使用 `USD` 作为主余额。法币操作请使用 Banking。
 </Warning>
 出金（payout）会以当地货币向目的国的银行账户汇出资金。金额按**您账户的
-汇率**（即 `GET /v1/rates` 返回的汇率）从当地货币折算为 USDT，并从您的
-余额中扣除 `usdt_amount + fee`（如已配置固定费用）。
+汇率**（即 `GET /v1/rates` 返回的汇率）从当地货币折算为账户默认余额，并从该
+余额中扣除等值金额和固定费用（如已配置）。明确设置 USDT 默认值的 legacy 账户
+仍从 USDT 余额扣款。
 
 以下是完整的生命周期，包括每一步中您的余额发生的变化：
 
@@ -25,7 +26,7 @@ sequenceDiagram
     participant CB as CBPay
     participant Rail as 本地银行通道
     App->>CB: POST /v1/payouts (idempotency_key)
-    CB->>CB: 按您的汇率折算并扣除<br/>usdt_amount + fee（available → held）
+    CB->>CB: 按您的汇率折算并扣除<br/>账户默认余额等值金额 + 费用（available → held）
     CB-->>App: 202 processing (fx_rate, total_debit)
     CB->>Rail: 以当地货币发放
     alt 资金到账

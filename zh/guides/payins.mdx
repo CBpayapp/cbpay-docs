@@ -86,8 +86,9 @@ curl https://api.qbank.cl/platform/v1/payins/methods \
 </Note>
 
 可用性可能变化；目录（`GET /v1/payins/methods`）始终是唯一可信来源。
-在所有情况下入账方式相同：按已报价的 `payin_rate` 折算为 USDT，并在
-扣除固定入金费用后净额入账。入账时会按 FIFO 消费 payin 批次；若启用的
+对于 USD 主余额账户，净入账金额直接写入 USD 美分。已配置的非 USD
+目标继续使用入账后的转换流程；已报价的 `payin_rate` 和固定费用仍然适用。
+入账时会按 FIFO 消费 payin 批次；若启用的
 库存不足，原报价仍然有效，缺口记录为 spot fallback 并发送运维告警。
 如果您希望将收款保留在其他余额（USDC、BTC
 或 GOLD），请配置 `default_payin_asset` — 参见

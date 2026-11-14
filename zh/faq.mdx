@@ -63,8 +63,8 @@ swap、checkout/POS 和卡片在没有 FX 定价时保持阻断。参见[资金�
 查询 `GET /v1/rates`（返回**您专属的**各国汇率）并计算：
 
 ```
-usdt_amount ≈ local_amount / rate      (rounded up, 6 decimals)
-total_debit = usdt_amount + fixed fee  (your fees come in the same response)
+账户默认余额等值金额 ≈ local_amount / rate（向上取整）
+total_debit = 默认余额等值金额 + 固定费用（费用会在同一响应中返回）
 ```
 
 付款对象会返回服务器计算的精确值（`fx_rate`、`usdt_amount`、`fee`、`total_debit`）。
