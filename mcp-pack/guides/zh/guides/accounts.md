@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/accounts
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 > **重要**
-**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。已有账户保留明确设置的 `USDT` 默认值；新账户使用 `USD` 作为主余额。法币操作请使用 Banking。
 ## 集中查看收款信息
 
 **我的账户**是账户门户中的收款目的地目录。打开 `/accounts`，它位于
@@ -103,6 +103,56 @@ NIT 或账户号码。
 `GET /v1/banking/company-wallets` 和 `GET /v1/crypto/wallets`。这是导航与
 分享页面，不是新的 API contract。
 
+## 搜索你的活动：360 操作搜索
+
+如果你知道某个操作值，却不知道它属于哪个产品，可以使用限制在账户内的
+搜索：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/search?q=521287" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+`GET /v1/me/search` 是只读接口，并严格限制在已认证账户内。它不会接受
+查询字符串中的 `account_id` 或 `org_id`，也不会返回其他账户的数据。它会搜索
+你的 payout、payin、transfer、crypto 提现、swap、refund、ledger 条目、
+Banking 操作、风险结果、卡交易、checkout 链接、webhook 投递、支持工单、
+隔离钱包交易和联系人。
+
+查询支持 ID、`CB…` 参考号、交易哈希、幂等键、带可选币种的精确金额、
+部分银行参考号、姓名、收款人、交易对手和描述。银行参考号的分隔符会被标准化，
+因此 `521287` 可以找到保存为 `000000521287` 的委内瑞拉 payout。结果只包含
+可读字段，绝不暴露原始 JSON 或服务商身份。
+
+```json
+{
+  "query": "521287",
+  "matches": [
+    {
+      "type": "payout",
+      "matched_by": "reference_partial",
+      "id": "7c8614c4-9a1b-4c2d-8e3f-0a1b2c3d4e5f",
+      "status": "completed",
+      "created_at": "2026-11-14T13:22:00Z",
+      "detail": { "country": "VE", "method": "bank_transfer" },
+      "matched_value": "000000521287"
+    }
+  ]
+}
+```
+
+搜索至少需要两个字符，最多接受 128 个字符；每分钟最多 60 次，超时为
+六秒。`400 query_too_short` 和 `query_too_long` 是校验响应；`429
+too_many_attempts` 表示应等待后再读取。读取超时绝不会重试或重新发送金融操作。
+
+#### 可以搜索其他账户吗？
+    不可以。接口使用已认证会话中的账户。`account_id` 和 `org_id` 参数不能
+    扩大搜索范围。
+#### 搜索会改变余额或重新发送付款吗？
+    不会。它只定位现有资源，不会创建、重试、重新入队、重新投递或修改任何内容。
+#### 为什么看不到支持工单？
+    搜索只返回属于你的账户的资源。工单可见性仍受支持流程和账户 ownership
+    约束，接口不会透露其他账户的工单。
 ## 诚实的空状态与处理中状态
 
 - **没有 hero QR：**账户没有可用 QR token。页面不会伪造 QR，也不会把

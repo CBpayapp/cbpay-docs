@@ -16,7 +16,12 @@ into one auditable document. A single endpoint serves it in three formats:
 |---|---|---|
 | `json` (default) | Rendering the statement in your web/app | `format=json` |
 | `pdf` | Formal document with CBPay branding | `format=pdf` |
-| `xlsx` | Excel with per-section sheets, filters and numeric cells | `format=xlsx` |
+| `xlsx` | Excel with per-section sheets, filters, numeric cells and native charts | `format=xlsx` |
+
+The XLSX cover includes native charts when the corresponding data exists: a
+donut chart of outflows by product and a clustered column chart comparing
+inflows and outflows by month. It also includes the monthly summary table used
+by the charts. Charts are omitted when there is no data to display.
 
 ```mermaid
 flowchart LR
@@ -51,12 +56,29 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 
 ## What it contains
 
+### Principal balance and bank exports
+
+The `summary` reconciles the account's principal balance. New accounts use
+`USD`; legacy accounts with an explicit USDT principal continue to use
+`USDT`. The response exposes the selected denomination as `summary_asset`,
+and the summary labels in the PDF/XLSX use that asset dynamically. Other
+assets remain independently reconciled in `assets`; on-chain and legitimate
+USDT activity is unchanged.
+
+JSON and the web statement keep the complete view, including failed,
+in-process and dispute data. PDF and XLSX are bank-style exports: their
+detail lists only successful operations, while their totals still include
+holds from in-process operations so the closing balance remains reconciled.
+Disputes are excluded from the bank-export sections; their real ledger legs
+remain reflected in the totals where applicable.
+
 ```json
 {
   "account": { "account_id": "…", "display_name": "Example Company SpA", "type": "company" },
   "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "America/New_York" },
   "generated_at": "2026-07-07T15:00:00Z",
   "summary": {
+    "summary_asset": "USD",
     "opening_balance": "0.000000",
     "total_in": "985633.540000",
     "total_out": "38099.870000",
@@ -99,8 +121,8 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 Sections:
 
 1. **`summary`** — opening balance, inflows, outflows, closing balance,
-   fees by service and the `balanced` flag of the **USDT balance** (the
-   main summary always reconciles USDT).
+   fees by service and the `balanced` flag of the principal balance identified
+   by `summary_asset`.
 2. **`assets`** — one reconciled section per non-USDT balance with activity
    or balance (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS and,
    if you use Banking, the `BANK_USD`/`BANK_EUR` mirrors of your bank accounts): opening/closing
@@ -121,7 +143,7 @@ Sections:
 **Transparent fees.** On payouts, payins and crypto withdrawals, when the
 fee combines a percentage and a fixed component, the statement splits them
 into `fee_percent` and `fee_fixed` (they add up exactly to `fee`).
-Standalone charges (compliance, wallets, banking, verifications and cards) are always fixed-amount charges, include the charged `asset` (USDT for the USDT-only fee summary), and carry `fee_model: "fixed"` — the PDF/Excel labels them **Fixed Com**.
+Standalone charges (compliance, wallets, banking, verifications and cards) are always fixed-amount charges, include the charged `asset`, and carry `fee_model: "fixed"` — the PDF/Excel labels them **Fixed Com**.
 ## How to reconcile it (for your accountant)
 
 The statement satisfies exact accounting identities, without rounding:
@@ -143,7 +165,7 @@ opening_balance + total_in − total_out = closing_balance
 - The closing balance of one period matches the opening balance of the next.
 - The `from`/`to` range is interpreted in the organization's timezone (`period.timezone`), but each operation's detail timestamps are in UTC (JSON in RFC3339 with `Z`; Date (UTC) columns in PDF/Excel).
 - Fees are never hidden: each operation exposes gross, fee and net
-  separately, while `fees_by_service` remains USDT-only by design.
+  separately, while `fees_by_service` uses the principal `summary_asset`.
 - XLSX sheet names follow the requested `lang` (`en`, `es` or `zh`), including
   Crypto, Segregated, Cards, Swaps, Banking and Margins when those sections
   are present.
@@ -221,7 +243,12 @@ XLSX exports. It does not expose provider identity, margin or spread.
 | `status` | Operation status |
 | `country`, `currency`, `network` | Optional geographic, fiat and blockchain context |
 | `ref_type`, `ref_id` | Optional source reference |
+| `group_id` | Optional group identifier, such as `swap:<id>` or `funding:<id>`, for grouped legs |
+| `group_title_key` | Optional localized title key for the group: `swap_group` or `funding_group` |
 | `executed_rate`, `rate_pair`, `rate_source` | Optional stamped execution-rate fields; never a re-quote |
+
+Integrators can use `group_id` and `group_title_key` to render grouped legs as
+one user-facing operation while retaining each timeline row.
 
 The `summary.counts.timeline` value is the number of timeline rows. A shortened
 example:
@@ -244,7 +271,9 @@ example:
       "country": "CL",
       "currency": "CLP",
       "ref_type": "payin",
-      "ref_id": "payin-001"
+      "ref_id": "payin-001",
+      "group_id": "funding:funding-001",
+      "group_title_key": "funding_group"
     }
   ]
 }
@@ -282,10 +311,11 @@ supports partial, case-insensitive matches across the movement `id`,
 `ref_id`, `subtitle`, `network`, `currency` and `country`.
 
 The PDF adds a **What happened?** overview, a vector donut by product, vector
-bars by month, the Timeline table with icons, and the Disputes table when
-applicable. The XLSX export has **Movements** and **Disputes** sheets in
-addition to the existing product sheets. Both exports preserve the requested
-language and asset precision.
+bars by month and the Timeline table with icons. Grouped legs are marked with
+`[Gn]`, where `n` identifies the group. The XLSX cover includes native product
+and monthly charts plus the monthly summary table; it has a **Movements** sheet
+in addition to the existing product sheets, but no Disputes sheet. Both exports
+preserve the requested language and asset precision.
 
 ## Asset-aware payin rows
 

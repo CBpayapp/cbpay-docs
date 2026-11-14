@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.281'
+  version: '2.286'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -12567,6 +12567,11 @@ paths:
                           - banking_operation
                           - risk_report
                           - risk_fraud_report
+                          - card_transaction
+                          - checkout
+                          - webhook_event
+                          - support_ticket
+                          - segregated_wallet_tx
                         matched_by:
                           type: string
                           enum:
@@ -23304,7 +23309,7 @@ paths:
       - Saldos
       operationId: getAccountStatement
       summary: Cartola / estado de cuenta (JSON, PDF o Excel)
-      description: 'Consolida todos los movimientos del período — payouts, payins, depósitos y retiros crypto, transferencias internas y cargos por servicio — en una cartola auditable con cuadratura exacta: opening_balance + total_in − total_out = closing_balance, verificada contra el ledger (`balanced`). El resumen cubre el saldo USDT; cada otro saldo virtual (USD, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS y CLP) con actividad se reconcilia de forma independiente dentro de `assets`. La respuesta del cliente omite el ledger crudo; usa las secciones de producto para cuadrar y `GET /v1/movements` para una auditoría profunda. Pide `format=pdf` o `format=xlsx` para descargar el archivo con branding CBPay (Content-Disposition: attachment).'
+      description: 'Consolida todos los movimientos del período — payouts, payins, depósitos y retiros crypto, transferencias internas y cargos por servicio — en una cartola auditable con cuadratura exacta: opening_balance + total_in − total_out = closing_balance, verificada contra el ledger (`balanced`). El resumen reconcilia el saldo principal de la cuenta (`summary_asset`: USD en cuentas nuevas, USDT legacy explícito); cada otro saldo virtual con actividad se reconcilia de forma independiente dentro de `assets`. La respuesta del cliente omite el ledger crudo; usa las secciones de producto para cuadrar y `GET /v1/movements` para una auditoría profunda. Pide `format=pdf` o `format=xlsx` para descargar la cartola bancaria con branding CBPay (Content-Disposition: attachment): lista solo operaciones completadas, jamás fallidas ni en proceso. Los totales siguen reflejando el ledger, incluidos holds de operaciones en proceso.'
       parameters:
       - name: from
         in: query
@@ -23359,6 +23364,7 @@ paths:
                   timezone: America/New_York
                 generated_at: '2026-07-07T15:00:00Z'
                 summary:
+                  summary_asset: USDT
                   opening_balance: '0.000000'
                   total_in: '985633.540000'
                   total_out: '38099.870000'

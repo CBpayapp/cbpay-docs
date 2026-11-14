@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/en/guides/payout-errors
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Important**
-**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Legacy accounts keep their explicit `USDT` default; new accounts use `USD` as the principal balance. Use Banking for fiat operations.
 ## Common errors
 
 | HTTP | `error` | What to do |
@@ -23,15 +23,24 @@ source_url: https://docs.cbpayapp.com/en/guides/payout-errors
 | 403 | `compliance_hold` | The payout was held for review and was NOT processed (no funds moved). The API message is `this operation was held for review and was not processed; no funds were moved; contact support with the request reference (X-Request-ID)`. Copy the portal reference line (UTC time, error code and short request ID) when contacting support; see [errors](https://docs.cbpayapp.com/en/errors) |
 | 422 | `currency_not_supported` | No FX rate for that currency |
 | 422 | (payout with `status: failed`) | The corridor rejected the data; the debit was already refunded — fix `beneficiary` and retry with a new key |
-| 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the SAME `idempotency_key` |
+| 503 | `channel_unavailable` | The payout channel is temporarily unavailable. This can be a temporary treasury or channel condition, not a beneficiary-data error. Retry a direct 503 with the SAME `idempotency_key`; if the payout is placed `in_review`, follow the review outcome below |
 | 503 | `compliance_check_unavailable` | The compliance check could not be evaluated and the payout could not be placed in the technical screening queue; retry with the **same** idempotency key. When that queue is available, payout creation returns `202` with `status: pending` instead |
 
 ## Immediate rejection vs later failure
 
-If the processor rejects the payout at creation, you receive `422` with the
-object in `status: failed` and the refund already applied. If it fails later
-(e.g. the destination account does not exist), the webhook arrives with
-`status: failed` and the automatic refund happens at that moment.
+If the processor rejects the payout at creation for a correctable business
+reason, you receive `422` with the object in `status: failed` and the refund
+already applied. Fix the beneficiary or request data and create a new payout
+with a new key. A channel or treasury shortfall is different: the platform
+can keep the payout in `in_review` instead of failing it immediately, so no
+new payout should be created until the review outcome says what to do.
+
+When a payout is in `in_review`, the account-facing message is intentionally
+generic: it is under review and will complete automatically once released.
+Do not correct beneficiary data for this state. If the review is approved but
+the original dispatch key has already been consumed, the approval returns
+`reissue_required`; create a new payout with a **new** `idempotency_key` only
+then. CBPay never re-issues the money operation automatically.
 
 ### Reading `status_code` on a failed payout
 
@@ -39,18 +48,24 @@ object in `status: failed` and the refund already applied. If it fails later
 |---|---|---|
 | `core_rejected` | The processor rejected the operation at creation (invalid beneficiary data, corridor unavailable) | Read `status_message`, fix the data and create a new payout with a new key |
 | `counterparty_rejected` | The banking rail rejected the beneficiary itself (US/USD corridor) | Check the beneficiary's identity and address data with the holder, then create a new payout with a new key |
-| `channel_unavailable` | The payout channel became temporarily unavailable | Retry later; the refund (if a debit happened) is already applied |
+| `channel_unavailable` | The payout channel became temporarily unavailable | For a direct 503, replay with the same key. If the payout is `in_review`, wait for review; if approval returns `reissue_required`, create a new payout with a new key |
 | *another code* | Later rejection by the banking rail (e.g. destination account closed) | Same: fix the data and create a new operation |
 | *(empty)* | Generic corridor failure | Check `status_message`; if unclear, contact support with the `payout_id` |
 
-In every case the refund is already applied — verify it with the
+For a terminal failed payout, the account-facing message says that it could
+not be completed and the funds were returned. Verify the refund with the
 `payout_refund` entry in
-[movements](https://docs.cbpayapp.com/en/concepts/movements-reconciliation).
+[movements](https://docs.cbpayapp.com/en/concepts/movements-reconciliation). A payout still in
+`in_review` is not terminal; wait for its review result instead of assuming
+that a refund or a new dispatch has happened.
 
 > **Note**
-A payout in `processing` cannot be cancelled through the API: the rail
-already has it. Wait for the final state via webhook or `GET` — it always
-arrives, with an automatic refund on failure.
+A payout in `processing` cannot be cancelled through the API: the channel
+already has it. A payout in `in_review` is also not a client-side
+cancellation flow; wait for the review result. For either state, wait for
+the final state via webhook or `GET`. A terminal failure returns the funds;
+an approval that reports `reissue_required` requires a new client-created
+operation with a new key.
 ## FAQ
 
 #### When is my balance debited?
@@ -79,6 +94,18 @@ debit if the result is `rejected`.
 The payout was held for review and was **not** processed: no funds moved and your `idempotency_key` was not consumed. The portal shows a copyable reference
 line with UTC time, error code and short request ID. Include it when you
 contact support; the exact compliance reason is not disclosed.
+#### What does `status: in_review` mean for a payout?
+The payout is under review and the account-facing message is generic: it will
+complete automatically once released. This state can protect a payout when
+the channel or its treasury is temporarily unavailable. Do not change the
+beneficiary or create a second payout while it is in review. If approval
+returns `reissue_required`, create a new payout with a new idempotency key;
+CBPay never re-issues it automatically.
+#### Why did a payout return 503 without a beneficiary error?
+Some temporary channel conditions are not caused by your beneficiary data.
+Replay the direct 503 with the same idempotency key. If the payout was
+placed in `in_review`, wait for the review outcome; only an explicit
+`reissue_required` result authorizes a new payout with a new key.
 #### How do I retry safely after a timeout or 5xx?
 Retry with the **same** `idempotency_key`: you get the original payout
 back (`idempotency_hit: true`) — never a duplicate. A new key is a new,

@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/es/guides/accounts
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Importante**
-**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Las cuentas legacy conservan su default explícito `USDT`; las cuentas nuevas usan `USD` como saldo principal. Usa Banking para las operaciones fiat.
 ## Un solo lugar para tus datos de recepción
 
 La página **Mis cuentas** es el directorio del portal con los destinos que
@@ -115,6 +115,63 @@ portal: `GET /v1/me/qr`, `GET /v1/payins/deposit-accounts`,
 `GET /v1/banking/company-wallets` y `GET /v1/crypto/wallets`. Es una
 superficie de navegación y compartir, no un contrato API nuevo.
 
+## Buscar tu actividad: búsqueda de operaciones 360
+
+Si conoces un valor de una operación, pero no sabes qué producto lo contiene,
+usa la búsqueda acotada a tu cuenta:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/search?q=521287" \
+  -H "Authorization: Bearer <account-token>"
+```
+
+`GET /v1/me/search` es de solo lectura y queda acotado de forma estricta a la
+cuenta autenticada. Nunca acepta `account_id` u `org_id` desde la query ni
+devuelve datos de otra cuenta. Busca tus payouts, payins, transfers, retiros
+crypto, swaps, refunds, asientos de ledger, operaciones banking, resultados de
+riesgo, transacciones con tarjeta, links de checkout, entregas de webhooks,
+tickets de soporte, transacciones de wallets segregadas y contactos.
+
+Acepta IDs, referencias `CB…`, hashes de transacción, claves de idempotencia,
+montos exactos con moneda opcional, referencias bancarias parciales, nombres,
+beneficiarios, contrapartes y descripciones. Los separadores de referencias
+bancarias se normalizan, por lo que `521287` puede encontrar un payout
+venezolano guardado como `000000521287`. Los resultados muestran solo campos
+legibles; nunca exponen JSON crudo ni la identidad del proveedor.
+
+```json
+{
+  "query": "521287",
+  "matches": [
+    {
+      "type": "payout",
+      "matched_by": "reference_partial",
+      "id": "7c8614c4-9a1b-4c2d-8e3f-0a1b2c3d4e5f",
+      "status": "completed",
+      "created_at": "2026-11-14T13:22:00Z",
+      "detail": { "country": "VE", "method": "bank_transfer" },
+      "matched_value": "000000521287"
+    }
+  ]
+}
+```
+
+La búsqueda exige al menos dos caracteres, acepta como máximo 128, tiene un
+límite de 60 consultas por minuto y timeout de seis segundos. `400
+query_too_short` y `query_too_long` son respuestas de validación; `429
+too_many_attempts` indica que debes esperar antes de volver a leer. Un timeout
+de lectura nunca reintenta ni reenvía una operación financiera.
+
+#### ¿Puedo buscar otra cuenta?
+    No. La ruta usa la cuenta de la sesión autenticada. Los parámetros
+    `account_id` y `org_id` no pueden ampliar ese alcance.
+#### ¿La búsqueda cambia mi saldo o reenvía un pago?
+    No. Solo ubica recursos existentes. No crea, reintenta, reencola,
+    redelivery ni modifica nada.
+#### ¿Por qué no aparece un ticket de soporte?
+    La búsqueda devuelve solo recursos de tu cuenta. La visibilidad de tickets
+    sigue el flujo de soporte y el ownership de la cuenta; nunca revela el
+    ticket de otra cuenta.
 ## Estados vacíos y pendientes honestos
 
 - **Sin QR del hero:** la cuenta no tiene un token QR disponible. La página no

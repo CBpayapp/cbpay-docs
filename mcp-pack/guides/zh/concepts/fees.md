@@ -16,20 +16,20 @@ source_url: https://docs.cbpayapp.com/zh/concepts/fees
 您的汇率，也正是执行时所使用的汇率 — 没有额外的百分比。每个国家
 都包含两个方向：
 
-- `rate` — 您的**出款**（付款分发）汇率。如果您分发等值 100 USDT
-  的金额，将被扣除 **100 USDT 加上固定费用**（若您的账户配置了该费用）。
+- `rate` — 您的**出款**（付款分发）汇率。如果您分发等值 100 USD
+  的金额，将从账户默认余额扣除等值金额和固定费用（若您的账户配置了该费用）。
 - `payin_rate` — 您的**收款**（法币收款/入金）汇率。入账金额为按该
   汇率换算的本地金额，**减去固定费用**（若您的账户配置了该费用）。
 
 ```
-payout:  usdt_amount   = local_amount / rate
-         total_debit   = usdt_amount + fixed_amount
+payout:  default_balance_equivalent = local_amount / rate
+         total_debit   = default_balance_equivalent + fixed_amount
 payin:   usdt_gross    = local_amount / payin_rate
          usdt_credited = usdt_gross − fixed_amount
 ```
 
 收款人收到的金额（出款）或您获得的入账金额（收款）取决于您账户在
-该国家的汇率。报价即收费，始终如此。
+该国家的汇率。入账资产可以是账户默认资产。报价即收费，始终如此。
 
 ## 收取固定或百分比费用的服务
 
@@ -149,7 +149,7 @@ CBPay 账户之间的转账（`POST /v1/transfers`）**不收取任何费用**�
 
 `GET /v1/rates` 返回**您账户自己的汇率**（按国家划分）— 与您操作
 执行时使用的汇率完全一致，没有意外：出款使用 `rate`，收款使用
-`payin_rate`（`local_amount / rate = USDT`）。
+`payin_rate`（`local_amount / rate = USD 等值金额`；入账资产可以是账户默认资产）。
 
 ## 查看您的条款
 
