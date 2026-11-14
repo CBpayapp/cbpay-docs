@@ -4,8 +4,8 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 14, 2026" description="v2.284 · 2 versions">
-### v2.284
+<Update label="November 14, 2026" description="v2.285 · 3 versions">
+### v2.285
 **Changed**
 - Payouts now keep temporary channel or treasury shortfalls in the
   account-facing review flow when possible, instead of exposing an internal
@@ -15,6 +15,11 @@ description: "History of API and documentation changes"
 - If a reviewed payout cannot continue because its original dispatch key was
   consumed, approval returns `reissue_required`. The client creates a new
   payout with a new idempotency key; CBPay never re-issues the operation.
+### v2.284
+**Added**
+- The account portal now documents 360 read-only search for operations,
+  normalized bank-reference fragments, exact amounts and human-readable
+  matches scoped to the authenticated account.
 ### v2.283
 **Changed**
 - USD is the principal default balance for new accounts. Legacy accounts keep an explicitly configured USDT default; omitted swap sides resolve to the account principal.
