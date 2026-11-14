@@ -5,8 +5,8 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.284 · 2 versiones - 14 de noviembre de 2026
-### v2.284
+## v2.286 · 4 versiones - 14 de noviembre de 2026
+### v2.286
 **Cambiado**
 - Los payouts ahora mantienen en el flujo de revisión los faltantes
   temporales del canal o de tesorería cuando es posible, en vez de exponer un
@@ -17,10 +17,19 @@ source_url: https://docs.cbpayapp.com/es/changelog
   consumió, la aprobación responde `reissue_required`. El cliente crea un
   payout nuevo con una clave de idempotencia nueva; CBPay nunca vuelve a emitir
   la operación.
-### v2.283
+### v2.285
+**Agregado**
+- El portal de cuentas ahora documenta la búsqueda 360 de solo lectura para
+  operaciones, fragmentos de referencias bancarias normalizados, montos exactos
+  y coincidencias legibles acotadas a la cuenta autenticada.
+### v2.284
 **Cambiado**
 - USD es el saldo principal predeterminado para las cuentas nuevas. Las cuentas legacy conservan un default USDT configurado explícitamente; los lados omitidos de un swap resuelven al principal de la cuenta.
 - Payouts, comisiones, transferencias, swaps, cargos POS y selectores de tarjetas ahora documentan el comportamiento del saldo predeterminado, con ejemplos USD primero y errores legibles. Los overrides explícitos de activo siguen disponibles.
+### v2.283
+**Cambiado**
+- El resumen de la cartola ahora reconcilia el saldo principal de la cuenta (`summary_asset`: USD en cuentas nuevas, USDT legacy explícito) en vez de siempre USDT. Los desgloses siguen el mismo asset; las cuentas legacy USDT quedan iguales.
+- Los export PDF y Excel ahora listan solo operaciones completadas (sin filas fallidas ni en proceso, sin sección disputas), como una cartola bancaria. El JSON y la web siguen mostrando todo.
 ## v2.282 · 9 versiones - 13 de noviembre de 2026
 ### v2.282
 **Cambiado**

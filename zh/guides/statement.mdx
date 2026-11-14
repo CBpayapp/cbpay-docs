@@ -52,12 +52,25 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 
 ## 包含哪些内容
 
+### 主余额与银行导出
+
+`summary` 核对账户的主余额。新账户使用 `USD`；明确使用 USDT 作为主余额
+的旧账户继续使用 `USDT`。响应通过 `summary_asset` 返回实际使用的资产，
+PDF/XLSX 中的摘要标签也会动态显示该资产。其他资产仍在 `assets` 中分别
+核对；链上活动和合法的 USDT 活动不变。
+
+JSON 和网页对账单保留完整视图，包括失败、处理中和争议数据。PDF 和 XLSX
+是银行对账单式导出：明细只列出成功的操作，但总额仍包含处理中操作的
+hold，以保持期末余额核对一致。争议不出现在银行导出的分区中；其真实
+账本流水在适用时仍反映在总额里。
+
 ```json
 {
   "account": { "account_id": "…", "display_name": "Example Company SpA", "type": "company" },
   "period": { "from": "2026-01-01", "to": "2026-07-07", "timezone": "America/New_York" },
   "generated_at": "2026-07-07T15:00:00Z",
   "summary": {
+    "summary_asset": "USD",
     "opening_balance": "0.000000",
     "total_in": "985633.540000",
     "total_out": "38099.870000",
@@ -99,14 +112,15 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 
 分区：
 
-1. **`summary`** — 期初余额、流入、流出、期末余额、按服务分类的手续费，以及 **USDT 余额**（主汇总始终对账 USDT）的 `balanced` 标志。
+1. **`summary`** — 期初余额、流入、流出、期末余额、按服务分类的手续费，以及由
+   `summary_asset` 标识的主余额的 `balanced` 标志。
 2. **`assets`** — 每个有活动或余额的非 USDT 资产各有一个已对账的分区（USD、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS，以及若使用 Banking，则包括你银行账户的 `BANK_USD`/`BANK_EUR` 镜像）：期初/期末余额、流入、流出和各自的 `balanced` 标志，按各资产的精度呈现；客户端视图不含原始明细，各资产的原始明细仅见于 org-admin 对账单。如果你只使用 USDT，此分区为空。
 3. **`breakdown`** — 按产品、按国家（出款和入款，含本地金额和 USDT）、按法币币种和按月份。
 4. **按产品的明细** — 出款（收款人、汇率和扣款）、入款（按模式）、加密货币（含 `tx_id` 及其 `asset`）、转账（含对手方和 `asset`）、银行卡消费（`card_transactions`，含商户和消费余额）、余额兑换（`swaps`）、银行业务操作（`banking_operations`）和服务费（含退款）。
 5. **产品分区与审计路径** — 客户对账单省略原始账本 `movements`、各资产的 `assets[].movements` 以及 `summary.counts.movements`。请按产品分区核对，并使用费用和加密货币充值中的 `balance_after`。如需深入审计，请使用 org-admin 对账单或 `GET /v1/movements`。
 
 <Note>
-**透明的手续费。** 在出款、入款和加密货币提现中，当手续费由百分比和固定部分组成时，对账单会将其拆分为 `fee_percent` 和 `fee_fixed`（两者之和精确等于 `fee`）。独立收费（合规、钱包、银行业务、身份核验和银行卡）始终是固定金额，并包含实际收费的 `asset`（仅 USDT 的手续费汇总使用 USDT），同时带有 `fee_model: "fixed"`；PDF/Excel 将其标记为 **Fixed Com**。
+**透明的手续费。** 在出款、入款和加密货币提现中，当手续费由百分比和固定部分组成时，对账单会将其拆分为 `fee_percent` 和 `fee_fixed`（两者之和精确等于 `fee`）。独立收费（合规、钱包、银行业务、身份核验和银行卡）始终是固定金额，并包含实际收费的 `asset`，同时带有 `fee_model: "fixed"`；PDF/Excel 将其标记为 **Fixed Com**。
 </Note>
 
 ## 如何对账（给你的会计）
@@ -117,7 +131,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 期初余额 + 总流入 − 总流出 = 期末余额
 ```
 
-- `balanced: true` 表示 USDT 汇总以及每个 `assets` 分区分别与账本相符。
+- `balanced: true` 表示由 `summary_asset` 标识的汇总以及每个 `assets` 分区分别与账本相符。
   不同资产的余额绝不会相加。
 - 每个产品分区使用自己的金额和状态进行核对。费用和加密货币充值
   都带有 `balance_after`，因此可以核验其对相应余额的影响，无需依赖
@@ -129,7 +143,7 @@ curl -OJ "https://api.qbank.cl/platform/v1/reports/statement?from=2026-01-01&to=
 - 一个期间的期末余额与下一个期间的期初余额一致。
 - `from`/`to` 区间按组织时区（`period.timezone`）解释，但每笔操作的明细时间戳均为 UTC（JSON 为带 `Z` 的 RFC3339；PDF/Excel 中为“日期（UTC）”列）。
 - 手续费不会隐藏：每笔操作分别显示总额、手续费和净额；
-  `fees_by_service` 按设计仅汇总 USDT 手续费。
+  `fees_by_service` 使用主余额的 `summary_asset`。
 - XLSX 工作表名称会根据请求的 `lang`（`en`、`es` 或 `zh`）本地化；
   若分区存在，Crypto、Segregated、Cards、Swaps、Banking 和 Margins
   工作表也会随之本地化。
@@ -232,7 +246,9 @@ JSON 响应还包含 `timeline[]`：按期间内每笔账本分录排列的客�
       "country": "CL",
       "currency": "CLP",
       "ref_type": "payin",
-      "ref_id": "payin-001"
+      "ref_id": "payin-001",
+      "group_id": "funding:funding-001",
+      "group_title_key": "funding_group"
     }
   ]
 }
@@ -261,14 +277,14 @@ JSON 响应还包含 `timeline[]`：按期间内每笔账本分录排列的客�
 
 分组仅改变显示方式：API 仍返回原始的 `timeline[]` 流水腿。如果任意一条
 流水腿匹配，筛选结果就会包含该组；显示的数量始终是实际匹配的流水腿数。
-单一搜索框支持对 `id`、`ref_id`、`subtitle`、`network`、`currency` 和 `country` 进行部分匹配，且不区分大小写。
+单一搜索框支持对 `id`、`ref_id`、`subtitle`、`network`、
+`currency` 和 `country` 进行部分匹配，且不区分大小写。
 
-PDF 新增 **What happened?** 概览、按产品的矢量环形图、按月份的矢量柱状图、
-带图标的 Timeline 表格，以及在有案件时显示的 Disputes 表格。分组流水会
-标记为 `[Gn]`，其中 `n` 表示分组编号。XLSX 封面包含按产品和月份的原生
-图表及月度汇总表，并在原有工作表之外新增 **Movements** 和 **Disputes**
-工作表。两种导出都会保留所选
-语言和资产精度。
+PDF 新增 **What happened?** 概览、按产品的矢量环形图、按月份的矢量柱状图
+和带图标的 Timeline 表格。分组流水会标记为 `[Gn]`，其中 `n` 表示分组
+编号。XLSX 封面包含按产品和月份的原生图表及月度汇总表，并在原有工作表
+之外新增 **Movements** 工作表，不包含 Disputes 工作表。两种导出都会保留
+所选语言和资产精度。
 
 {/* banking-fase2-fiat-hold:2026-09-24 */}
 
