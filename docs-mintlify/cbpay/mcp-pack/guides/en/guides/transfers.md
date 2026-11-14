@@ -7,9 +7,11 @@ source_url: https://docs.cbpayapp.com/en/guides/transfers
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Important**
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
 Internal transfers move balance between two **CBPay accounts**, atomically
 in the ledger and **always free of charge** — the money never leaves the
-ecosystem. They work with all six currencies (`USDT`, `USDC`, `BTC`,
+ecosystem. They work with the four transferable assets (`USDT`, `USDC`, `BTC`,
 `GOLD`) and always **between balances of the same currency**: the `asset`
 you send is the `asset` the destination receives, with no conversion.
 
@@ -113,9 +115,10 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
 
 The request shape is identical for every combination (person or company,
 in any direction) — only the calling credential changes. `asset` is
-optional and defaults to the **sender's settlement asset** (`USD` is the principal balance); it accepts any of the twelve ledger assets
-(`USD`, `USDT`, `USDC`, `USDCE`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`, `BOB`, `MXN`,
-`ARS`, `CLP`), and the destination receives **in that same currency**.
+optional and defaults to the **sender's settlement asset** (`USD` is the principal balance); it accepts the seven platform settlement assets
+(`USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`), and the destination
+receives **in that same asset**. Fiat balances and fiat transfers are handled in
+[Banking](https://docs.cbpayapp.com/en/guides/banking), not by this platform endpoint.
 
 Response `201` — the transfer is **synchronous and immediate**:
 
@@ -179,8 +182,7 @@ Each row carries `direction` (`sent` or `received`) from your perspective.
 - You cannot transfer to yourself (`400 self_transfer`).
 - Requires `idempotency_key` (body or `Idempotency-Key` header); replays
   return `200` with `idempotency_hit: true`.
-- `amount` accepts up to the currency's decimals: 2 for `USD`/`BOB`/`MXN`/
-  `ARS`, 0 for `CLP`, 6 for `USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM`, 8 for `BTC`.
+- `amount` accepts up to the currency's decimals: 2 for `USD`, 6 for `USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM`, and 8 for `BTC`.
 
 ## Errors
 

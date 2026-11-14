@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/es/guides/swaps
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Importante**
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
 Los **swaps** convierten saldo entre tus siete activos — `USD`, `USDT`, `USDC`,
 `BTC`, `GOLD`, `SILVER` y `PLATINUM` — de forma **síncrona e instantánea**, sin que la plata salga
 de tu cuenta. Cualquier par funciona (también `BTC` ↔ `GOLD` directo,
@@ -224,9 +226,7 @@ Las operaciones en vuelo nunca se vuelven a cotizar.
 Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
 d débitos directos, las comisiones y los flujos de payout, checkout, POS y
 tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
-swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
-MXN y ARS siguen siendo activos fiat separados del ledger; en v1 el pricing
-de money-out para esos activos sigue no disponible.
+swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. Los saldos y operaciones money-out fiat ahora pertenecen a [Banking](https://docs.cbpayapp.com/es/guides/banking); el comportamiento anterior del ledger fiat queda solo como referencia histórica.
 
 Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`
@@ -238,3 +238,7 @@ normalizados.
 El swap puede tener una cobertura interna de back-office. Esto no cambia el
 request ni la respuesta de `POST /v1/swaps`, la tasa de ejecución ni el
 contrato del ledger de la cuenta.
+
+## Referencia para checkout y ledger
+
+El mismo significado de tasa se usa fuera de swaps: checkout expone `due_rate`, `rate_pair` y los campos de comisión incluida antes del pago, mientras `GET /v1/movements` registra `executed_rate`, `rate_pair` y `rate_source` después de ejecutar. La cotización es indicativa; el movimiento o la respuesta del swap completado es el registro histórico.

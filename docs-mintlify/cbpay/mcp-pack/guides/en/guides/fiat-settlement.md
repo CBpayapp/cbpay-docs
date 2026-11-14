@@ -1,15 +1,16 @@
 ---
-title: "Fiat payout settlement"
-description: "Debit BOB, MXN or ARS payouts from the matching local-fiat balance"
+title: "Fiat payout settlement (retired)"
+description: "Historical reference: same-currency fiat payout settlement"
 slug: en/guides/fiat-settlement
 lang: en
 source_url: https://docs.cbpayapp.com/en/guides/fiat-settlement
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-> **Note**
-This page covers same-currency settlement for BOB, MXN, ARS and CLP. It does not
-convert one fiat balance into another.
+> **Important**
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
+> **Note**Same-currency fiat settlement was retired on 2026-11-13. The examples below describe the former platform behavior and are preserved for reconciliation and migration reference. In-flight operations completed normally; receiving fiat and movement history remained unchanged. New fiat balances and fiat operations belong to [Banking](https://docs.cbpayapp.com/en/guides/banking); platform fiat settlement returns `400`.## Former platform behavior (historical)
+
 Payouts can debit a local-fiat balance when the payout currency and
 `settlement_asset` are the same. The settlement rate is `"1"` and settlement
 spreads are zero. Fees configured in USDT are converted using the locked quote

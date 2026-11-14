@@ -1,7 +1,7 @@
 ---
-title: "Settlement de payouts fiat"
+title: "Settlement de payouts fiat (retirado)"
 icon: "coins"
-description: "Debita payouts BOB, MXN o ARS desde el saldo fiat local correspondiente"
+description: "Referencia histórica: settlement fiat en la misma moneda"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
@@ -12,7 +12,9 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 <Warning>
 **Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
 </Warning>
-<Note>La liquidación fiat en la misma moneda se retiró el 2026-11-13: los saldos fiat viven solo en Banking y la liquidación fiat de plataforma devuelve `400`. Las operaciones en curso terminan normalmente; recibir fiat y el historial de movimientos no cambian.</Note>
+<Note>El settlement fiat en la misma moneda se retiró el 2026-11-13. Los ejemplos siguientes describen el comportamiento anterior de la plataforma y se conservan como referencia de migración y conciliación. Las operaciones en curso terminaron normalmente; recibir fiat y el historial de movimientos quedaron intactos. Los saldos y operaciones fiat nuevas viven en [Banking](/es/guides/banking); el settlement fiat de plataforma devuelve `400`.</Note>
+
+## Comportamiento anterior de la plataforma (histórico)
 
 Un payout puede debitar un saldo fiat local cuando la moneda del payout y
 `settlement_asset` son iguales. La tasa de settlement es `"1"` y los spreads

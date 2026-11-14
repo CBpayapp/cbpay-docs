@@ -1,5 +1,5 @@
 {
-  "count": 430,
+  "count": 431,
   "errors": [
     {
       "category": {
@@ -5526,9 +5526,23 @@
       "code": "ticket_closed",
       "http": 409,
       "meaning": {
-        "en": "Open a new ticket or keep the existing rating.",
-        "es": "Abre otro ticket o conserva la calificación.",
-        "zh": "创建新工单或保留原评价。"
+        "en": "Open a new ticket or keep the existing rating. Resolved and closed tickets do not accept further client replies.",
+        "es": "Abre otro ticket o conserva la calificación. Los tickets resueltos y cerrados no aceptan más respuestas del cliente.",
+        "zh": "创建新工单或保留原评价。已解决和已关闭的工单不再接受客户回复。"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "ticket_resolved",
+      "http": 409,
+      "meaning": {
+        "en": "Open a new ticket or keep the existing rating. Resolved and closed tickets do not accept further client replies.",
+        "es": "Abre otro ticket o conserva la calificación. Los tickets resueltos y cerrados no aceptan más respuestas del cliente.",
+        "zh": "创建新工单或保留原评价。已解决和已关闭的工单不再接受客户回复。"
       }
     },
     {
@@ -5540,9 +5554,9 @@
       "code": "already_rated",
       "http": 409,
       "meaning": {
-        "en": "Open a new ticket or keep the existing rating.",
-        "es": "Abre otro ticket o conserva la calificación.",
-        "zh": "创建新工单或保留原评价。"
+        "en": "Open a new ticket or keep the existing rating. Resolved and closed tickets do not accept further client replies.",
+        "es": "Abre otro ticket o conserva la calificación. Los tickets resueltos y cerrados no aceptan más respuestas del cliente.",
+        "zh": "创建新工单或保留原评价。已解决和已关闭的工单不再接受客户回复。"
       }
     },
     {

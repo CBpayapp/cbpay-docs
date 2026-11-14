@@ -94,8 +94,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 如果数据不足，系统会省略该消息并继续由人工处理。
 
 组织专员可以为单个工单关闭自动化。此操作只停止该工单未来的自动消息，
-不会删除对话或改变状态。账户回复会将 `pending_customer`、`on_hold` 或
-`resolved` 重新打开为 `open`；`closed` 仍是终态。如果工单在 72 小时内
+不会删除对话或改变状态。账户回复会将 `pending_customer` 或 `on_hold` 重新打开为 `open`；`resolved` 和 `closed` 仍是终态。如果工单在 72 小时内
 没有账户回复而自动关闭，请在关闭期限前按普通支持流程回复，或创建新工单。
 
 ## 通过邮件回复和通知
@@ -104,6 +103,8 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 `Reply-To` 地址绑定具体工单（`support+<token>@...`），有效期为 90 天。
 回复该地址会将内容追加到原工单；无效或过期 token 会被拒绝，不会创建
 新工单。
+
+对于已解决的工单，账户的邮件回复会被忽略而不会追加到线程：通知不带 `Reply-To`，并告知客户创建新工单。
 
 账户通过邮件回复时，系统会通知主管理员和额外负责人。门户通知可以点击，
 会直接打开工单。支持的图片附件会显示 inline 缩略图；原始下载仍需认证，
@@ -126,7 +127,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 | `open` | 等待支持处理 | 必要时补充信息 |
 | `pending_customer` | 支持已答复，等待账户 | 回复或关闭 |
 | `on_hold` | 支持暂时暂停 | 等待或补充信息 |
-| `resolved` | 支持已解决 | 评价或发送消息重新打开 |
+| `resolved` | 支持已解决 | 评价；客户消息和附件上传返回 `409 ticket_resolved`，如需继续请创建新工单 |
 | `closed` | 终态 | 创建新工单 |
 
 默认首次回复 SLA 按 low、normal、high、urgent 分别为 4、2、1、0.5 小时；解决 SLA 为 48、24、8、4 小时。组织可以配置日历及等待客户时暂停 SLA，`sla_breached` 由服务器计算。
@@ -138,7 +139,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
 | 401 | `unauthorized` | 发送有效的账户 API 密钥。 |
 | 403 | `account_required` | 使用拥有该工单的账户凭证（非组织/管理员）。 |
 | 404 | `not_found` | 确认交易或工单属于当前账户。 |
-| 409 | `ticket_already_open`、`ticket_closed`、`already_rated` | 继续现有工单、创建新工单或保留评价。重复上传相同字节返回已有附件及 `duplicates_omitted`（HTTP 200，非错误）。 |
+| 409 | `ticket_already_open`、`ticket_closed`、`ticket_resolved`、`already_rated` | 继续现有工单、创建新工单或保留评价。已解决和已关闭的工单不再接受客户回复。重复上传相同字节返回已有附件及 `duplicates_omitted`（HTTP 200，非错误）。 |
 | 503 | `storage_unavailable` | 等待后只重新上传一次，不创建重复工单。 |
 
 请参阅[错误目录](https://docs.cbpayapp.com/zh/errors)和[webhook 事件](https://docs.cbpayapp.com/zh/webhooks#支持工单事件)。

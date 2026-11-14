@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.273'
+  version: '2.281'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -598,6 +598,7 @@ paths:
                   value:
                     method: crypto:btc:btc
                     payload:
+                      method: crypto:btc:btc
                       chain: btc
                       asset: BTC
                       address: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh
@@ -719,7 +720,7 @@ paths:
       - Checkout
       operationId: checkoutQuote
       summary: Cotizar un link de cobro antes de elegir (público)
-      description: 'Cotizaciones indicativas de un link de cobro universal ANTES de materializar — el catálogo de países con métodos fiat vivos (tarjeta excluida — ver `cards`), las opciones de tarjeta listadas aparte por país+moneda en `cards[]` con el monto adeudado cotizado (un corredor puede aceptar varias monedas de cargo, ej. BOB y USD), el monto adeudado por opción crypto (con el costo de conversión incluido cuando el asset de pago difiere del de settlement) y los montos de pago directo CBPay por saldo habilitado. Cada país lista sus corredores en `options[]` — una fila por método+moneda (un país puede ofrecer el mismo método en varias monedas, ej. QR en BOB y USD) con `collect: true` en los métodos pull que piden los datos del pagador en la página (ver `POST /pay/{token}/collect`), y `payer_required: true` en los hosted redirect cuya materialización necesita nombre y documento del pagador en el body del POST. Con `?country=XX` devuelve además el monto local cotizado por opción de ese país. La materialización congela la cotización definitiva. Sin credenciales; rate limit por IP.'
+      description: 'Cotizaciones indicativas de un link de cobro universal ANTES de materializar — el catálogo de países con métodos fiat vivos (tarjeta excluida — ver `cards`), las opciones de tarjeta listadas aparte por país+moneda en `cards[]` con el monto adeudado cotizado (un corredor puede aceptar varias monedas de cargo, ej. BOB y USD), el monto adeudado por opción crypto (con el costo de conversión incluido cuando el asset de pago difiere del de settlement) y los montos de pago directo CBPay por saldo habilitado. Cada país lista sus corredores en `options[]` — una fila por método+moneda (un país puede ofrecer el mismo método en varias monedas, ej. QR en BOB y USD) con `collect: true` en los métodos pull que piden los datos del pagador en la página (ver `POST /pay/{token}/collect`), y `payer_required: true` en los hosted redirect cuya materialización necesita nombre y documento del pagador en el body del POST. Con `?country=XX` devuelve además el monto local cotizado por opción de ese país. La materialización congela la cotización definitiva. Sin credenciales; rate limit por IP. Cada opción crypto y cada saldo CBPay trae además su tasa exhibida (`due_rate`, settlement por 1 unidad del asset de pago, misma semántica que la tasa de swaps) con `rate_pair`, más las comisiones por pata incluidas en la tasa (`fees[]`, `fee_total_pct`).'
       parameters:
       - name: token
         in: path
@@ -774,10 +775,23 @@ paths:
                   chain: tron
                   asset: USDT
                   due: '50.000000'
+                  due_rate: '1'
+                  rate_pair: USDT/USDT
                 - method: crypto:btc:btc
                   chain: btc
                   asset: BTC
                   due: '0.00046120'
+                  due_rate: '108474.32744506'
+                  rate_pair: BTC/USDT
+                  fees:
+                  - leg: from
+                    asset: BTC
+                    percent: '0.30'
+                  - leg: to
+                    asset: USDT
+                    percent: '0.30'
+                  fee_total_pct: '0.6000'
+                  fee_note: included_in_rate
                   quote_ttl_seconds: 900
                 cbpay:
                   alias: tayl.code
@@ -788,6 +802,22 @@ paths:
                     GOLD: '0.462100'
                     SILVER: '0.462100'
                     PLATINUM: '0.462100'
+                  rates:
+                    USDT:
+                      due_rate: '1'
+                      rate_pair: USDT/USDT
+                    USDC:
+                      due_rate: '0.99800399'
+                      rate_pair: USDC/USDT
+                      fees:
+                      - leg: from
+                        asset: USDC
+                        percent: '0.10'
+                      - leg: to
+                        asset: USDT
+                        percent: '0.10'
+                      fee_total_pct: '0.2000'
+                      fee_note: included_in_rate
                 country_quote:
                   country: BO
                   currency: BOB
@@ -6742,7 +6772,7 @@ paths:
         in: query
         schema:
           type: string
-        description: Busca por nombre, alias, email o teléfono.
+        description: Busca por nombre, alias, email, teléfono o cualquier destino guardado (dirección on-chain, red, país, moneda, método, etiqueta).
       - name: has_cbpay
         in: query
         schema:
@@ -6752,6 +6782,31 @@ paths:
         in: query
         schema:
           type: boolean
+      - name: source
+        in: query
+        schema:
+          type: string
+          enum:
+          - manual
+          - import
+          - transfer
+          - payout
+          - crypto
+        description: Solo contactos creados por este origen.
+      - name: has_destinations
+        in: query
+        schema:
+          type: boolean
+        description: Solo contactos con (o sin) destinos guardados.
+      - name: sort
+        in: query
+        schema:
+          type: string
+          enum:
+          - name
+          - recent
+          - favorite
+        description: 'Orden del resultado: `name` (A-Z, insensible a tildes), `recent` (último uso primero) o `favorite` (favoritos primero, el default).'
       - name: expand
         in: query
         schema:
@@ -6783,6 +6838,9 @@ paths:
                     type: integer
                   page_size:
                     type: integer
+                  total:
+                    type: integer
+                    description: Total de contactos que matchean los filtros.
                   contacts:
                     type: array
                     items:
@@ -6790,6 +6848,7 @@ paths:
               example:
                 page: 1
                 page_size: 50
+                total: 1
                 contacts:
                 - contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
                   display_name: Carlos Soto
@@ -6809,7 +6868,7 @@ paths:
                   created_at: '2026-07-07T12:00:00Z'
                   updated_at: '2026-07-10T15:00:00Z'
         '400':
-          description: Expand o filtro de destinos inválido.
+          description: Expand, sort, source o filtro de destinos inválido.
           content:
             application/json:
               schema:
@@ -6895,6 +6954,55 @@ paths:
                 message: duplicate
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/contacts/duplicates:
+    get:
+      tags:
+      - Contacts
+      operationId: listContactDuplicates
+      summary: Sugerir grupos de duplicados
+      description: Agrupa tu libreta por nombre plegado (insensible a mayúsculas, tildes y espacios) y devuelve los grupos con 2+ contactos, primero los más duplicados. Sugerencias de solo lectura para la UI de fusión con vista previa.
+      responses:
+        '200':
+          description: Grupos de duplicados (hasta 50).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Nombre plegado compartido por el grupo.
+                        contact_ids:
+                          type: array
+                          items:
+                            type: string
+                            format: uuid
+                        display_names:
+                          type: array
+                          items:
+                            type: string
+                        contacts_count:
+                          type: integer
+                        destinations_count:
+                          type: integer
+              example:
+                groups:
+                - name: juan perez
+                  contact_ids:
+                  - 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                  - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+                  display_names:
+                  - Juan Pérez
+                  - JUAN PEREZ
+                  contacts_count: 2
+                  destinations_count: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/contacts/import:
     post:
       tags:
@@ -6973,6 +7081,104 @@ paths:
               example:
                 error: batch_too_large
                 message: send up to 1000 contacts per request (paginate the upload)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/contacts/merge:
+    post:
+      tags:
+      - Contacts
+      operationId: mergeContacts
+      summary: Fusionar contactos duplicados
+      description: 'Fusiona de 2 a 20 contactos en un sobreviviente (una persona = un contacto con muchos destinos). Los destinos se mueven al sobreviviente; un id inexistente o ajeno responde 404 y no fusiona nada (sin fusión parcial). No es idempotente: reintentar tras el éxito responde 404 (fuentes ya borradas), así que el cliente no debe reintentar a ciegas.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - contact_ids
+              properties:
+                contact_ids:
+                  type: array
+                  minItems: 2
+                  maxItems: 20
+                  items:
+                    type: string
+                    format: uuid
+                  description: Contactos distintos de tu libreta a fusionar.
+                surviving_contact_id:
+                  type: string
+                  format: uuid
+                  description: El contacto que sobrevive (debe ser uno de contact_ids; por defecto el primero).
+                display_name:
+                  type: string
+                  description: Override opcional del nombre del sobreviviente.
+                alias:
+                  type: string
+                  description: Override opcional del alias del sobreviviente.
+            example:
+              contact_ids:
+              - 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+              - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+              surviving_contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+      responses:
+        '200':
+          description: Contacto fusionado con todos sus destinos.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Contact'
+                - type: object
+                  properties:
+                    merged_contact_ids:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: Contactos fuente borrados por la fusión.
+              example:
+                contact_id: 3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+                display_name: Carlos Soto
+                phone: '+56987654321'
+                has_cbpay: true
+                source: import
+                favorite: true
+                destinations:
+                - destination_id: aa11bb22-cc33-44dd-8899-aabbccddeeff
+                  type: payout
+                  country: CL
+                  currency: CLP
+                  method: bank_transfer
+                - destination_id: bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c
+                  type: crypto
+                  chain: tron
+                  address: TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk
+                merged_contact_ids:
+                - 9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f
+                created_at: '2026-07-07T12:00:00Z'
+                updated_at: '2026-11-13T12:00:00Z'
+        '400':
+          description: invalid_payload / batch_too_large / invalid_characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_payload
+                message: contact_ids must include at least 2 distinct contacts
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Un teléfono/email heredado pertenece a otro contacto de tu libreta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: duplicate
+                message: duplicate
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/contacts/{contactID}:
@@ -7191,6 +7397,65 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/contacts/{contactID}/destinations/{destinationID}:
+    patch:
+      tags:
+      - Contacts
+      operationId: updateContactDestination
+      summary: Renombrar un destino guardado
+      description: 'Actualiza la etiqueta del destino (el único campo editable: la identidad y el fingerprint jamás cambian).'
+      parameters:
+      - name: contactID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: destinationID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+            example:
+              label: Cuenta vista
+      responses:
+        '200':
+          description: Destino renombrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDestination'
+              example:
+                destination_id: bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c
+                type: payout
+                country: CL
+                currency: CLP
+                method: bank_transfer
+                label: Cuenta vista
+                last_used_at: '2026-07-10T16:00:00Z'
+                created_at: '2026-07-10T16:00:00Z'
+        '400':
+          description: invalid_characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_characters
+                message: label contains invalid characters
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     delete:
       tags:
       - Contacts
@@ -7918,13 +8183,13 @@ paths:
       parameters:
       - name: from
         in: query
-        required: true
+        required: false
         schema:
           type: string
         description: Inclusive organization date, YYYY-MM-DD.
       - name: to
         in: query
-        required: true
+        required: false
         schema:
           type: string
         description: Inclusive organization date, YYYY-MM-DD.
@@ -7933,13 +8198,37 @@ paths:
         required: false
         schema:
           type: string
-        description: Case status filter.
+        description: One status or comma-separated (open,evidence,submitted,won,lost,expired). Repeatable.
+        example: open,evidence
       - name: kind
         in: query
         required: false
         schema:
           type: string
         description: dispute or fraud_hold.
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 120
+        description: Free-text search over case number, processor reason, lot, brand, masked PAN, note and IDs.
+        example: '460514'
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - deadline
+          - -deadline
+          - created
+          - -created
+          - amount
+          - -amount
+          default: deadline
+        description: Result order. Default deadline (most urgent first).
+        example: deadline
       - name: page
         in: query
         required: false
@@ -7988,8 +8277,17 @@ paths:
                       created_at: '2026-09-19T12:00:00Z'
                       updated_at: '2026-09-19T12:05:00Z'
                       deadline_at: '2026-10-01T00:00:00Z'
+                      automation:
+                        pack_status: ready
+                        pack_version: 2
+                        requested_at: '2026-09-19T12:10:00Z'
+                        evidence_complete: true
+                        send_status: pending
+                        send_reason: waiting_merchant
+                        auto_sends: 0
+                        paused: false
         '400':
-          description: invalid_range
+          description: invalid_range, invalid_status, invalid_sort or invalid_q
           content:
             application/json:
               schema:
@@ -7999,6 +8297,18 @@ paths:
                   value:
                     error: invalid_range
                     message: from and to must be YYYY-MM-DD
+                invalid_status:
+                  value:
+                    error: invalid_status
+                    message: status must be open, evidence, submitted, won, lost or expired (comma-separated)
+                invalid_sort:
+                  value:
+                    error: invalid_sort
+                    message: sort must be deadline, created or amount (prefix - for descending)
+                invalid_q:
+                  value:
+                    error: invalid_q
+                    message: q is too long (max 120 characters)
         '404':
           description: not_found
           content:
@@ -11059,12 +11369,26 @@ paths:
                 error: invalid_otp
                 message: the verification code is invalid or expired
         '409':
-          description: El sobre ya no se puede firmar.
+          description: El sobre ya no se puede firmar, o fue reemplazado por uno nuevo.
+          headers:
+            X-Contract-Envelope-ID:
+              description: 'Solo con contract_reissued_fresh: el sobre de reemplazo a revisar y firmar.'
+              schema:
+                type: string
+                format: uuid
           content:
             application/json:
-              example:
-                error: contract_invalid_state
-                message: the contract envelope cannot be signed in its current state
+              examples:
+                invalid_state:
+                  summary: Sobre ya completado o anulado sin sucesor.
+                  value:
+                    error: contract_invalid_state
+                    message: the contract envelope cannot be signed in its current state
+                reissued_fresh:
+                  summary: Plantilla vieja auto-recuperada; revisar y firmar el sobre nuevo.
+                  value:
+                    error: contract_reissued_fresh
+                    message: the envelope was replaced by 7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f; open the new envelope to review and sign
         '422':
           description: Consentimiento, firmante o imagen de firma inválidos, o la plantilla del sobre fue reemplazada.
           content:
@@ -13790,7 +14114,7 @@ paths:
       - Saldos
       operationId: listMovements
       summary: Listar movimientos
-      description: Historial inmutable del ledger de la cuenta que llama.
+      description: Historial inmutable del ledger de la cuenta que llama. Las patas que ejecutaron con tasa estampada traen executed_rate/rate_pair/rate_source.
       parameters:
       - $ref: '#/components/parameters/page'
       - $ref: '#/components/parameters/pageSize'
@@ -13872,6 +14196,9 @@ paths:
                   description: ''
                   balance_after: '39.415714'
                   created_at: '2026-07-07T12:00:00Z'
+                  executed_rate: '6.960000'
+                  rate_pair: USD/BOB
+                  rate_source: payout
                 - id: 9a8b7c6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4
                   asset: USDT
                   amount: '-1.000000'
@@ -13881,6 +14208,18 @@ paths:
                   description: 'service fee: wallet_creation'
                   balance_after: '125.430000'
                   created_at: '2026-07-07T12:00:00Z'
+                - id: 7c6d5e4f-3a2b-1c0d-9e8f-a7b6c5d4e3f2
+                  asset: USDT
+                  amount: '-100.000000'
+                  type: swap_out
+                  reference_type: swap
+                  reference_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
+                  description: Swap USDT -> USDC
+                  balance_after: '25.430000'
+                  created_at: '2026-07-07T12:05:00Z'
+                  executed_rate: '0.99300000'
+                  rate_pair: USDT/USDC
+                  rate_source: swap
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -17249,11 +17588,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
-                  description: Saldo virtual a debitar para esta operación. La ejecución en fiat devuelve hoy 503 pricing_unavailable. Omítelo para usar el asset de settlement predeterminado de tu cuenta (USD es el saldo principal).
+                  description: Saldo virtual a debitar para esta operación. Debe ser uno de USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM; fiat devuelve 400. Omítelo para usar el asset de settlement predeterminado de tu cuenta (USD es el saldo principal).
                 source_virtual_iban_id:
                   type: string
                   format: uuid
@@ -18439,10 +18774,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: Saldo virtual a debitar para esta operación. Omítelo para usar el asset de settlement predeterminado de tu cuenta.
                 idempotency_key:
                   type: string
@@ -22225,7 +22556,7 @@ paths:
       - Saldos
       operationId: getRates
       summary: Obtener mis tasas de cambio y comisiones
-      description: Devuelve las tasas de cambio que aplican a la cuenta que llama para cada país — las mismas tasas usadas cuando las operaciones se ejecutan (`local_amount / rate = USDT`) — más la configuración de comisiones **efectiva** de la cuenta — los defaults de la organización ya resueltos contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla. `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda; cuando es `spot`, no existe un lote elegible y se usa spot. Para payins USDT, `payin_rate_source` es `lot` cuando el inventario FIFO payin habilitado respalda la cotización y `spot` en los demás casos. Los payins con tarjeta siguen usando spot. Usa `lot_quote` opcional para una cotización indicativa por monto. La fila UF se omite de `rates`; la lista `settlement.assets` no incluye assets apagados. `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado, el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para estimar antes de enviar `settlement_asset` en un payout.
+      description: Devuelve las tasas de cambio que aplican a la cuenta que llama para cada país — las mismas tasas usadas cuando las operaciones se ejecutan (`local_amount / rate = USDT`) — más la configuración de comisiones **efectiva** de la cuenta — los defaults de la organización ya resueltos contra los overrides de tu cuenta — para calcular el costo exacto de una operación antes de crearla. `rate` es la punta de payouts (dispersiones) y `payin_rate` la de payins (depósitos). Cuando `rate_source` es `lot`, la cotización de payout usa el lote FIFO abierto más antiguo de esa moneda; cuando es `spot`, no existe un lote elegible y se usa spot; y cuando es `rail`, la cotización usa el mercado ejecutable del riel configurado para VE/VES. Para payins USDT, `payin_rate_source` es `lot` cuando el inventario FIFO payin habilitado respalda la cotización y `spot` en los demás casos, o `rail` cuando el riel C2P de VE/VES está configurado. Los payins con tarjeta siguen usando spot. Usa `lot_quote` opcional para una cotización indicativa por monto. La fila UF se omite de `rates`; la lista `settlement.assets` no incluye assets apagados. `asset_prices` trae el precio USD de referencia de cada saldo virtual (BTC por unidad, GOLD por gramo; los stablecoins valen 1 por convención) para valorizar. El bloque `settlement` muestra, por asset habilitado, el **precio efectivo de settlement** que tu cuenta obtendría ahora mismo si pagara una operación desde ese saldo (`settlement_rate`, spread incluido) y si el asset está `available` — úsalo para estimar antes de enviar `settlement_asset` en un payout.
       parameters:
       - name: currency
         in: query
@@ -22267,7 +22598,8 @@ paths:
                           enum:
                           - lot
                           - spot
-                          description: La tasa de payout usa el lote FIFO abierto más antiguo o el fallback spot.
+                          - rail
+                          description: La tasa de payout usa el lote FIFO abierto más antiguo, el fallback spot o el riel VE/VES configurado.
                           example: lot
                         payin_rate:
                           type: string
@@ -22278,7 +22610,8 @@ paths:
                           enum:
                           - lot
                           - spot
-                          description: 'Origen de la cotización payin en USDT v1: inventario FIFO o spot.'
+                          - rail
+                          description: 'Origen de la cotización payin en USDT v1: inventario FIFO, spot o el riel C2P VE/VES configurado.'
                           example: lot
                   asset_prices:
                     type: object
@@ -22354,10 +22687,6 @@ paths:
                               type: string
                               description: Precio USD efectivo por unidad al que se valoraría tu saldo (spread incluido); vacío cuando no está disponible.
                               example: '109029.34'
-                            same_currency_only:
-                              type: boolean
-                              description: Presente y true para assets fiat; solo pueden liquidar payouts en la misma moneda.
-                              example: true
                   updated_at:
                     type: string
                   fees:
@@ -22373,6 +22702,12 @@ paths:
                     rate_source: lot
                     payin_rate: '955.10'
                     payin_rate_source: lot
+                  venezuela:
+                    currency: VES
+                    rate: '962.654000'
+                    rate_source: rail
+                    payin_rate: '1020.604704'
+                    payin_rate_source: rail
                   mexico:
                     currency: MXN
                     rate: '17.50'
@@ -22435,10 +22770,6 @@ paths:
                   - asset: BTC
                     available: true
                     settlement_rate: '109029.34070000'
-                  - asset: BOB
-                    available: true
-                    settlement_rate: '1'
-                    same_currency_only: true
                   - asset: GOLD
                     available: true
                     settlement_rate: '106.99642950'
@@ -22877,8 +23208,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: '#/components/schemas/Statement'
               example:
                 account:
                   account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
@@ -22904,6 +23234,7 @@ paths:
                     crypto_withdrawals: 3
                     transfers: 4
                     service_charges: 2
+                    timeline: 2
                   fees_by_service:
                     payout: '15.300000'
                     funding: '897.550000'
@@ -22997,6 +23328,16 @@ paths:
                   reference: cust-001
                   amount: '-0.500000'
                   balance_after: '139.100000'
+                timeline:
+                - created_at: '2026-03-23T08:00:00Z'
+                  id: ledger-001
+                  product: service_charges
+                  direction: out
+                  title_key: service_charge
+                  asset: USDT
+                  amount: '-0.500000'
+                  balance_after: '139.100000'
+                  status: completed
         '400':
           description: invalid_range / invalid_format.
           content:
@@ -25921,6 +26262,13 @@ paths:
               example:
                 error: not_found
                 message: support ticket not found
+        '409':
+          description: Ticket is resolved or closed
+          content:
+            application/json:
+              example:
+                error: ticket_resolved
+                message: this ticket is resolved; open a new one to continue
   /v1/support/tickets/{id}/attachments/{attachmentID}:
     parameters:
     - name: id
@@ -26043,6 +26391,13 @@ paths:
               example:
                 error: not_found
                 message: support ticket not found
+        '409':
+          description: Ticket is resolved or closed
+          content:
+            application/json:
+              example:
+                error: ticket_resolved
+                message: this ticket is resolved; open a new one to continue
   /v1/support/tickets/{id}/rate:
     parameters:
     - name: id
@@ -26663,10 +27018,6 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  - BOB
-                  - MXN
-                  - ARS
-                  - CLP
                   description: Moneda del saldo a mover; el destino recibe en esta misma moneda. Si se omite, se usa el asset de liquidación del emisor (USD es el saldo principal).
                 amount:
                   type: string
@@ -29472,6 +29823,15 @@ components:
               created_at:
                 type: string
                 format: date-time
+              executed_rate:
+                type: string
+                description: Tasa de ejecución estampada de esta pata (precisión completa, ej. "0.99300000"). Solo cuando el asiento trae tasa — jamás re-cotizada, jamás un 1:1 fijo.
+              rate_pair:
+                type: string
+                description: Par de executed_rate como FROM/TO (unidades de TO por 1 unidad de FROM, ej. "USDT/USD").
+              rate_source:
+                type: string
+                description: Qué tasa estampada es — swap, settlement, fx, payin, payout o banking_funding.
     FeeConfig:
       type: object
       properties:
@@ -30504,6 +30864,107 @@ components:
             símbolo de marca de tu organización centrado.
 
             '
+    Statement:
+      type: object
+      description: Cartola segura para cliente; movimientos crudos y márgenes son solo de administrador.
+      properties:
+        summary:
+          type: object
+          properties:
+            counts:
+              type: object
+              additionalProperties:
+                type: integer
+              properties:
+                timeline:
+                  type: integer
+                  example: 2
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientTimelineItem'
+        disputes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatementDispute'
+    ClientTimelineItem:
+      type: object
+      required:
+      - created_at
+      - id
+      - product
+      - direction
+      - title_key
+      - asset
+      - amount
+      - balance_after
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        id:
+          type: string
+        product:
+          type: string
+          example: payins
+        direction:
+          type: string
+          enum:
+          - in
+          - out
+        title_key:
+          type: string
+          example: payin_received
+        subtitle:
+          type: string
+        asset:
+          type: string
+          example: USDT
+        amount:
+          type: string
+          example: '100.000000'
+        balance_after:
+          type: string
+          example: '1100.000000'
+        status:
+          type: string
+        country:
+          type: string
+        currency:
+          type: string
+        network:
+          type: string
+        ref_type:
+          type: string
+        ref_id:
+          type: string
+        executed_rate:
+          type: string
+        rate_pair:
+          type: string
+        rate_source:
+          type: string
+    StatementDispute:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        dispute_id:
+          type: string
+        kind:
+          type: string
+        status:
+          type: string
+        disputed_usdt:
+          type: string
+        held_usdt:
+          type: string
+        case_number:
+          type: string
+        deadline_at:
+          type: string
+          format: date-time
 webhooks:
   dispute_status_changed:
     post:

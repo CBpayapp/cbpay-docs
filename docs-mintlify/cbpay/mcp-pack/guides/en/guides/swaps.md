@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/en/guides/swaps
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Important**
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
 **Swaps** convert balance between your seven assets — `USD`, `USDT`, `USDC`,
 `BTC`, `GOLD`, `SILVER` and `PLATINUM` — **synchronously and instantly**, without the money ever
 leaving your account. Any pair works (including direct `BTC` ↔ `GOLD`,
@@ -223,8 +225,7 @@ In-flight operations are never re-quoted.
 USD ledger amounts use cents (two decimal places). Direct credits and debits,
 fees, and supported payout, checkout, POS, and card paths use USD only where
 their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
-do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
-assets; v1 money-out pricing for those assets remains unavailable.
+do not use an FX oracle. Fiat balances and money-out operations are now owned by [Banking](https://docs.cbpayapp.com/en/guides/banking); the former platform fiat-ledger behavior is retained only in the historical guide.
 
 Swap execution may have an internal back-office coverage workflow. This does
 not change the `POST /v1/swaps` request or response, the execution rate, or
@@ -235,3 +236,7 @@ A payin credited directly to a USD-principal account exposes
 remains the USD-equivalent reporting field. A controversy hold follows the
 credited asset: USD credits use `hold_asset: USD`. `disputed` and `held` use hold-asset units;
 `disputed_usdt` and `held_usdt` are normalized equivalents.
+
+## Checkout and ledger rate references
+
+The same rate semantics are used outside the swap flow: checkout exposes `due_rate`, `rate_pair`, and the included-fee fields before payment, while `GET /v1/movements` records `executed_rate`, `rate_pair`, and `rate_source` after execution. A quote is indicative; the movement or completed swap response is the historical execution record.

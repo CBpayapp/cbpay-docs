@@ -52,7 +52,7 @@ La clave se exige en body o header y es por organización+cuenta. Repetirla devu
 
 ## 3. Seguimiento en 3 pasos
 
-`open` significa investigación; la primera respuesta cambia a `pending_customer`; `resolved` permite CSAT y `closed` es terminal. Una respuesta de la cuenta reabre `pending_customer`, `on_hold` o `resolved`. La cuenta no ve notas internas ni Actividad.
+`open` significa investigación; la primera respuesta cambia a `pending_customer`; `resolved` permite CSAT. Para la cuenta, `resolved` y `closed` son terminales: los mensajes del portal y las cargas de adjuntos devuelven `409` con `ticket_resolved` o `ticket_closed`. No reabren el ticket; abre uno nuevo para continuar. La cuenta no ve notas internas ni Actividad.
 
 ## 4. Buscar y vincular transacciones
 
@@ -68,7 +68,7 @@ curl -X POST https://api.qbank.cl/platform/v1/support/tickets/TICKET_ID/messages
   -d '{"body":"Aquí hay contexto adicional."}'
 ```
 
-Un mensaje de la cuenta reabre tickets `pending_customer`, `on_hold` o `resolved` como `open`. `closed` es terminal; abre uno nuevo.
+Un mensaje de la cuenta reabre tickets `pending_customer` o `on_hold` como `open`. `resolved` y `closed` son terminales; abre un ticket nuevo.
 
 ## Adjuntos y deduplicación
 
@@ -99,8 +99,7 @@ el ticket sigue con un agente.
 
 Un agente de la organización puede desactivar la automatización de un ticket.
 Esto detiene los mensajes automáticos futuros sin borrar la conversación ni
-cambiar su estado. Una respuesta de la cuenta reabre `pending_customer`,
-`on_hold` o `resolved` como `open`; `closed` sigue siendo terminal. Si el
+cambiar su estado. Una respuesta de la cuenta reabre `pending_customer` o `on_hold` como `open`; `resolved` y `closed` siguen siendo terminales. Si el
 ticket se cierra automáticamente después de 72 horas sin respuesta, usa el
 flujo normal de Soporte para abrir uno nuevo o responde antes de la fecha de
 cierre.
@@ -112,6 +111,8 @@ respuesta citada y un botón que abre el ticket en el portal. La dirección
 `Reply-To` está vinculada al ticket (`support+<token>@...`) y vence a los
 90 días. Responderla agrega el mensaje a ese hilo; un token inválido o
 vencido se rechaza y nunca crea un ticket nuevo.
+
+En un ticket resuelto, una respuesta de correo de la cuenta se ignora en vez de agregarse: la notificación no incluye `Reply-To` e indica al cliente que abra un ticket nuevo.
 
 Cuando la cuenta responde por correo, se notifica al administrador primario y
 a los administradores extra. Las notificaciones del portal son clicables y
@@ -149,7 +150,7 @@ El SLA predeterminado de primera respuesta es 4 h, 2 h, 1 h y 30 min; resolució
 | 401 | `unauthorized` | Envía una API key de cuenta válida. |
 | 403 | `account_required` | Usa una credencial de cuenta (no org/admin) con ownership del ticket. |
 | 404 | `not_found` | Confirma ownership de la transacción o ticket. |
-| 409 | `ticket_already_open`, `ticket_closed`, `already_rated` | Continúa el existente, abre uno nuevo o conserva la calificación. Re-subir bytes idénticos devuelve el adjunto existente con `duplicates_omitted` (HTTP 200, no es error). |
+| 409 | `ticket_already_open`, `ticket_closed`, `ticket_resolved`, `already_rated` | Continúa el existente, abre uno nuevo o conserva la calificación. Los tickets resueltos y cerrados no aceptan más respuestas del cliente. Re-subir bytes idénticos devuelve el adjunto existente con `duplicates_omitted` (HTTP 200, no es error). |
 | 503 | `storage_unavailable` | Lee el ticket con la misma clave de idempotencia; no crees otro ticket ni uses una clave nueva. |
 
 Revisa el [catálogo de errores](https://docs.cbpayapp.com/es/errors) y los [eventos webhook](https://docs.cbpayapp.com/es/webhooks#eventos-de-tickets-de-soporte).

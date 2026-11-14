@@ -7,6 +7,10 @@ source_url: https://docs.cbpayapp.com/es/guides/fiat-ledger-assets
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Importante**
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
+> **Nota**Modelo de plataforma retirado. Desde el 2026-11-13, los saldos fiat, los espejos `BANK_*` y las operaciones de movimientos fiat pertenecen a [Banking](https://docs.cbpayapp.com/es/guides/banking). Esta página conserva el contrato anterior para conciliación histórica; no uses este contenido para integraciones nuevas de plataforma.## Modelo de plataforma histórico (retirado)
+
 Las cuentas CBPay ahora exponen cuatro activos fiat locales del ledger:
 **BOB**, **MXN**, **ARS** y **CLP**. BOB/MXN/ARS usan dos decimales; CLP usa
 cero decimales (pesos enteros). Son saldos independientes junto a USD, USDT,

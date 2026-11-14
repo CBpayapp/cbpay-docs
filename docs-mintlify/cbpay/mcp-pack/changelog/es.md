@@ -5,6 +5,43 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.281 · 8 versiones - 13 de noviembre de 2026
+### v2.281
+**Cambiado**
+- `GET /v1/rates` ahora devuelve la cotización ejecutable del riel VE/VES configurado, con `rate_source: rail` y `payin_rate_source: rail` cuando corresponde. La forma de la respuesta no cambia.
+### v2.280
+**Cambiado**
+- Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
+### v2.279
+**Cambiado**
+- Los tickets de soporte de cuenta tratan `resolved` como terminal para mensajes del portal y cargas de adjuntos, con `409 ticket_resolved`; las respuestas por correo a tickets resueltos se ignoran y dirigen al cliente a abrir un ticket nuevo.
+### v2.278
+**Cambiado**
+
+- Firmar un contrato emitido con una plantilla vieja ya no queda sin salida: el servidor lo anula y emite uno fresco automáticamente, respondiendo `409 contract_reissued_fresh` con el id de reemplazo en `X-Contract-Envelope-ID` (sin consumir OTP). El portal recarga el documento nuevo para revisar y firmar.
+- El wizard KYB ahora limpia caracteres invisibles (espacios duros, zero-width) del texto libre antes de validar, y los errores de validación marcan el campo exacto en vez de un mensaje genérico.
+### v2.277
+**Agregado**
+- Agenda unificada: una persona puede mantener varios destinos CBPay, payout y cripto.
+- Se agregaron sugerencias de duplicados, fusiones con vista previa, filtros pro y etiquetas de destinos.
+- Se agregaron perfiles de contactos en el portal con enlaces contextuales al payout.
+### v2.276
+**Agregado**
+
+- Las cartolas ahora incluyen `timeline[]` segura para cliente, con títulos
+  traducibles, contexto de producto, montos por activo, saldos y tasas de
+  ejecución estampadas.
+- El PDF agrega el bloque “¿Qué pasó?”, gráficos por producto/mes, Timeline y
+  Disputas. El XLSX agrega las hojas Movimientos y Disputas.
+### v2.275
+**Cambiado**
+- **Incompatible:** Los saldos BOB, MXN, ARS y CLP y los espejos `BANK_*` viven solo en Banking. Los payouts, defaults, swaps, transferencias, tarjetas, checkout, POS y comisiones de plataforma rechazan la liquidación fiat con HTTP `400`; los defaults fiat existentes migran automáticamente a `USDT`. Usa Banking para operaciones fiat.
+### v2.274
+**Agregado**
+- El portal de disputas documenta búsqueda, filtros de status múltiple y orden por vencimiento, además del chip de avance de evidencia.
+- El comercio puede seguir el checklist `kontigo-std-v1` y saber qué ocurre al completar todos los bloques requeridos.
+**Cambiado**
+- La guía explica que el envío automático a ATC comienza solo con pack vigente y evidencia completa.
 ## v2.273 · 10 versiones - 12 de noviembre de 2026
 ### v2.273
 **Cambiado**

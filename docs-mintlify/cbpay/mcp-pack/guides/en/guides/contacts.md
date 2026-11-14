@@ -1,278 +1,180 @@
 ---
 title: "Contacts"
-description: "Contact book: fills itself with every send, imports the phone address book, discovers who has CBPay and enables sending money by phone number"
+description: "Build one reusable contact per person, with every CBPay, payout and crypto destination attached."
 slug: en/guides/contacts
 lang: en
 source_url: https://docs.cbpayapp.com/en/guides/contacts
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-The **contact book** kills repeated typing: every send (internal transfer,
-fiat payout or crypto withdrawal) saves the destination as a contact
-automatically, you can **import the phone's address book** to discover
-which of your contacts have CBPay, and transfers accept a **phone number**
-or a `contact_id` directly as destination.
+A contact represents one person, not one destination. Each person can have many reusable destinations: a linked CBPay account, payout beneficiaries by corridor, and crypto addresses by chain. Contacts are created automatically by successful sends and can also be created or imported explicitly.
 
 ```mermaid
 flowchart LR
-    send["Any send<br/>(transfer / payout / crypto)"] -->|"auto-save"| contact["Contact + reusable<br/>destinations"]
-    book["POST /v1/contacts/import<br/>(phone address book)"] --> contact
-    contact -->|"has_cbpay: true"| cbpay["Has CBPay"]
-    contact -->|"contact_id"| send2["Quick send"]
-    phone["to_phone (verified)"] --> send2
+  send["Successful send"] --> save["Save or update contact"]
+  save --> book["One person + N destinations"]
+  book --> profile["/contacts/{id} profile"]
+  profile --> payout["/payouts/new?contact_id=&destination_id="]
+  book --> dup["Duplicate suggestions"]
+  dup --> preview["Preview merge"]
+  preview --> merge["POST /v1/contacts/merge"]
 ```
 
-## Contacts create themselves
+## Unified agenda
 
-Every send saves its destination in your book (deduplicated: repeating the
-same destination never creates duplicates, it only marks it as used):
+The platform groups automatic saves by normalized display name when a send has no phone, email or linked account to identify the person. Normalization folds case, accents and repeated spaces. If more than one possible contact remains, the platform does not guess: the send continues with its existing destination behavior and the user can choose from the agenda later.
 
-| Send | What gets saved |
-|---|---|
-| Internal transfer | The destination CBPay account (name, email and its phone when verified) |
-| Fiat payout | The full beneficiary (bank, account, document…) per country and method |
-| Crypto withdrawal | The address per network (name it with `contact_name` on the withdrawal) |
+A contact can contain:
 
-Don't want to save a one-off destination? Add `"save_contact": false` to
-the send body. Auto-save never affects the send: if anything fails, the
-send goes through anyway.
+- a linked CBPay destination;
+- one or more payout destinations, each with country, currency and method;
+- one or more crypto destinations, each with chain and address.
 
-## Import the phone address book
+The contact book is private to the account. Destination data is scoped to the owner and is never exposed across accounts.
 
-Upload the phone's contacts (up to **1,000 per request**; paginate beyond
-that) and CBPay tells you **who already has an account** — matching is by
-phone number, and only against accounts of the same operator:
+## Manage contacts in the portal
+
+The portal's `/contacts` screen has a toolbar with search, source, CBPay-only, favorites, destination type, country and sort filters. It shows the server-side total and lets the user page through results. Search also matches destination data when the list is expanded, including labels, payout corridor fields and crypto chain/address text.
+
+Each row opens `/contacts/{id}`. The profile has a toolbar with back navigation, edit and delete actions, favorite state, a destination count and grouped destination cards. From a card the user can rename its label, delete it, or use the contextual **Send** action. A destination send opens `/payouts/new?contact_id=<contact_id>&destination_id=<destination_id>` so the wizard can use that exact saved destination.
+
+The profile's merge action opens a preview UI. It shows the contacts, destinations and the selected survivor before submitting; it never merges merely because a suggestion exists.
+
+## List and filter contacts
+
+Use `expand=destinations` when the client needs destinations in the same list response. This is a bulk expansion, not one request per contact. `dest_type` and `dest_country` require that expansion. The supported filters are `q`, `source`, `has_destinations`, `sort`, `has_cbpay`, `favorite`, `page` and `page_size`; `total` is returned with the page.
 
 ```bash
-curl -X POST https://api.qbank.cl/platform/v1/contacts/import \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contacts": [
-      { "name": "Carlos Soto", "phones": ["+56 9 8765 4321"] },
-      { "name": "Ana Pérez", "phones": ["912345678"] },
-      { "name": "Aunt Rosa", "phones": ["not-a-number"] }
-    ]
-  }'
-```
-
-`200` response:
-
-```json
-{
-  "imported": 2,
-  "matched": 1,
-  "total": 3,
-  "contacts": [
-    { "name": "Carlos Soto", "phone": "+56987654321", "contact_id": "3f8a…", "has_cbpay": true },
-    { "name": "Ana Pérez", "phone": "+56912345678", "contact_id": "9c1d…", "has_cbpay": false },
-    { "name": "Aunt Rosa", "skipped": true, "reason": "no_valid_phone" }
-  ]
-}
-```
-
-- Numbers are normalized to **E.164** automatically: accepts `+…`, `00…`
-  and local numbers (your account's country code is prepended). Invalid
-  ones are skipped.
-- Re-importing is safe: existing contacts are never duplicated.
-- `has_cbpay: true` means that phone belongs to an active account of the
-  same operator — you can transfer to it instantly.
-
-## Send money by phone number
-
-Internal transfers accept `to_phone` (besides `to_account_id`, `to_email`
-and `to_contact_id`):
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/transfers \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to_phone": "+56987654321",
-    "amount": "25.000000",
-    "description": "Lunch",
-    "idempotency_key": "lunch-2026-07-10"
-  }'
-```
-
-> **Important**
-For safety, `to_phone` only resolves accounts with an **OTP-verified**
-phone (we never guess a money destination from an unverified number). If
-the number is not verified: `404 recipient_not_found`; if more than one
-account shares it: `422 recipient_ambiguous` (use `to_account_id` or
-`to_email`).
-## Send to a contact
-
-Every send accepts the contact directly:
-
-```bash Transfer (contact with CBPay)
-curl -X POST https://api.qbank.cl/platform/v1/transfers \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{ "to_contact_id": "3f8a…", "amount": "10.000000", "idempotency_key": "t-991" }'
-```
-
-```bash Payout (saved beneficiary)
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "CL", "currency": "CLP", "amount": "45000",
-    "beneficiary_contact_id": "7b2c…",
-    "idempotency_key": "rent-07"
-  }'
-```
-
-```bash Crypto withdrawal (saved address)
-curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{ "chain": "tron", "to_contact_id": "5d4e…", "amount": "100.000000", "idempotency_key": "w-2211" }'
-```
-
-- **Payouts**: uses the contact's most recent saved beneficiary for that
-  country (and method when sent; otherwise the saved destination's method
-  applies). An explicit `beneficiary` in the body always wins. No saved
-  destination for that corridor: `422 no_saved_destination`.
-- **Crypto**: uses the saved address for that `chain`; an explicit
-  `to_address` wins.
-- **Transfers**: uses the contact's linked CBPay account; if the contact
-  only has a phone, its (verified) number is tried. Neither:
-  `422 contact_not_linked`.
-
-## Manage the book
-
-```bash
-# Listing with search and filters
-curl "https://api.qbank.cl/platform/v1/contacts?q=carlos&has_cbpay=true&page=1&page_size=50" \
-  -H "Authorization: Bearer <token>"
-
-# Listing with all saved destinations (one bulk query, not one request per contact)
-curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&page=1&page_size=50" \
-  -H "Authorization: Bearer <token>"
-
-# Restrict the expanded destinations
-curl "https://api.qbank.cl/platform/v1/contacts?expand=destinations&dest_type=payout&dest_country=CL&page=1&page_size=50" \
-  -H "Authorization: Bearer <token>"
-
-# Create manually
-curl -X POST https://api.qbank.cl/platform/v1/contacts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{ "display_name": "Carlos Soto", "phone": "+56987654321", "email": "carlos@mail.com", "favorite": true }'
-
-# Detail (includes saved destinations)
-curl https://api.qbank.cl/platform/v1/contacts/{contact_id} \
-  -H "Authorization: Bearer <token>"
-
-# Edit / delete
-curl -X PATCH https://api.qbank.cl/platform/v1/contacts/{contact_id} \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{ "alias": "Carlitos", "favorite": true }'
-curl -X DELETE https://api.qbank.cl/platform/v1/contacts/{contact_id} \
+curl "https://api.qbank.cl/platform/v1/contacts?q=carlos&source=import&has_destinations=true&sort=recent&expand=destinations&dest_type=payout&dest_country=CL&page=1&page_size=50" \\
   -H "Authorization: Bearer <token>"
 ```
-
-### Expand destinations in a list
-
-By default, a contact list returns the contact fields only. Add
-`expand=destinations` when the UI needs each contact's saved CBPay, payout
-and crypto destinations in the same response. The platform loads these
-destinations in one bulk query, so opening a page of contacts does not create
-an N+1 request pattern.
-
-Use `dest_type=cbpay|payout|crypto` and/or `dest_country=XX` to narrow the
-expanded `destinations` array. Both filters require `expand=destinations`.
-An unknown `expand` value returns `400 invalid_expand`; using either
-destination filter without the expansion, or an invalid `dest_type`, returns
-`400 invalid_filter`.
 
 ```json
 {
   "page": 1,
   "page_size": 50,
-  "contacts": [
-    {
-      "contact_id": "3f8a1b2c-…",
-      "display_name": "Carlos Soto",
-      "has_cbpay": true,
-      "destinations": [
-        {
-          "destination_id": "bb22…",
-          "type": "payout",
-          "country": "CL",
-          "currency": "CLP",
-          "method": "bank_transfer"
-        }
-      ]
-    }
-  ]
+  "total": 1,
+  "contacts": [{
+    "contact_id": "3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b",
+    "display_name": "Carlos Soto",
+    "has_cbpay": true,
+    "destinations": [{
+      "destination_id": "bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c",
+      "type": "payout",
+      "country": "CL",
+      "currency": "CLP",
+      "method": "bank_transfer",
+      "label": "Cuenta principal"
+    }]
+  }]
 }
 ```
 
-Contact detail (`200`):
+Invalid boolean, sort, source or destination filters fail closed with `400 invalid_filter`. Unknown expansion values return `400 invalid_expand`.
+
+## Create, read and update a contact
+
+Automatic saving is preferred for send flows, but an integrator can create a contact directly:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/contacts \\
+  -H "Authorization: Bearer <token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"display_name":"Carlos Soto","phone":"+56987654321","favorite":true}'
+```
 
 ```json
 {
-  "contact_id": "3f8a1b2c-…",
+  "contact_id": "3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b",
   "display_name": "Carlos Soto",
-  "alias": "Carlitos",
   "phone": "+56987654321",
-  "email": "carlos@mail.com",
   "has_cbpay": true,
-  "cbpay_account_id": "389d34a3-…",
-  "source": "import",
+  "source": "manual",
   "favorite": true,
-  "destinations": [
-    { "destination_id": "aa11…", "type": "cbpay", "last_used_at": "2026-07-10T15:00:00Z", "created_at": "2026-07-08T10:00:00Z" },
-    { "destination_id": "bb22…", "type": "payout", "country": "CL", "currency": "CLP", "method": "bank_transfer",
-      "details": { "name": "Carlos Soto", "tax_id": "12.345.678-5", "bank_code": "012", "account_type": "checking", "account_number": "123456789" },
-      "last_used_at": "2026-07-09T18:30:00Z", "created_at": "2026-07-09T18:30:00Z" },
-    { "destination_id": "cc33…", "type": "crypto", "chain": "tron", "address": "TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk",
-      "last_used_at": "2026-07-07T12:00:00Z", "created_at": "2026-07-07T12:00:00Z" }
-  ],
-  "created_at": "2026-07-07T12:00:00Z",
-  "updated_at": "2026-07-10T15:00:00Z"
+  "destinations": [],
+  "created_at": "2026-11-13T12:00:00Z",
+  "updated_at": "2026-11-13T12:00:00Z"
 }
 ```
 
-You can also add destinations manually (`POST
-/v1/contacts/{id}/destinations` with `type: payout|crypto|cbpay` and its
-fields) and delete them (`DELETE .../destinations/{destination_id}`).
+Read the complete profile, including destinations, with `GET /v1/contacts/{contact_id}`. Update only the fields that changed with `PATCH /v1/contacts/{contact_id}`:
 
-## Errors
+```bash
+curl -X PATCH https://api.qbank.cl/platform/v1/contacts/3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b \\
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \\
+  -d '{"display_name":"Carlos Soto","alias":"Carlitos","favorite":true}'
+```
 
-| HTTP | `error` | Cause | Solution |
+The response is the updated complete contact. A changed phone re-runs the CBPay match. `DELETE /v1/contacts/{contact_id}` deletes the contact and its saved destinations.
+
+## Add and label destinations
+
+Add a payout, crypto or linked CBPay destination with `POST /v1/contacts/{contact_id}/destinations`. Destinations are deduplicated by their fingerprint.
+
+```bash
+curl -X PATCH https://api.qbank.cl/platform/v1/contacts/3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b/destinations/bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c \\
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \\
+  -d '{"label":"Cuenta principal"}'
+```
+
+```json
+{
+  "destination_id": "bb22c3d4-5e6f-7a80-9b0c-1d2e3f4a5b6c",
+  "type": "payout",
+  "country": "CL",
+  "currency": "CLP",
+  "method": "bank_transfer",
+  "label": "Cuenta principal",
+  "last_used_at": "2026-11-13T12:05:00Z"
+}
+```
+
+Use `DELETE /v1/contacts/{contact_id}/destinations/{destination_id}` to remove one destination without removing the person.
+
+## Find duplicates and preview a merge
+
+Suggestions are read-only and grouped by folded name. They are candidates, not an automatic merge:
+
+```bash
+curl https://api.qbank.cl/platform/v1/contacts/duplicates \\
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "groups": [{
+    "name": "juan perez",
+    "contact_ids": ["3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b", "9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f"],
+    "display_names": ["Juan Pérez", "JUAN PEREZ"],
+    "contacts_count": 2,
+    "destinations_count": 3
+  }]
+}
+```
+
+The portal loads the full contact profiles and shows a preview. To confirm, send two to twenty distinct IDs and choose the survivor when needed:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/contacts/merge \\
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \\
+  -d '{"contact_ids":["3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b","9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f"],"surviving_contact_id":"3f8a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b"}'
+```
+
+The `200` response is the surviving complete contact and includes `merged_contact_ids`. Destinations move to the survivor in one transaction; a foreign or missing ID returns `404` and performs no partial merge.
+
+> **Important**
+`POST /v1/contacts/merge` is not idempotent. After a successful merge, source contacts are deleted, so blindly retrying the same request returns `404`. Do not resend it after an ambiguous timeout; query the contact and duplicate suggestions, then let the client decide whether a new operation is needed.
+## Errors and states
+
+| HTTP | Error | What it means | What to do |
 |---|---|---|---|
-| 400 | `invalid_phone` | The phone could not be normalized to E.164 | Send it as `+<country><number>` |
-| 400 | `batch_too_large` | Import with more than 1,000 contacts | Paginate the upload |
-| 404 | `not_found` | The contact/destination does not exist or is not yours | Check the id |
-| 404 | `recipient_not_found` | No verified phone matches | Ask the recipient to verify their phone, or use email/account_id |
-| 409 | `duplicate` | You already have a contact with that phone/email | Edit the existing one |
-| 422 | `recipient_ambiguous` | More than one account shares the phone | Use `to_account_id` or `to_email` |
-| 422 | `contact_not_linked` | The contact has no linked CBPay account | Transfer through another identifier, or pay them out |
-| 422 | `no_saved_destination` | The contact has no saved destination for that corridor/chain | Send the explicit `beneficiary`/`to_address` (it will be saved) |
+| 400 | `invalid_filter` / `invalid_expand` | A filter or expansion is unsupported | Use the documented values and require `expand=destinations` for destination filters |
+| 400 | `batch_too_large` | More than 20 contacts were sent to merge | Split the user-reviewed operation |
+| 404 | `not_found` | The contact or destination is absent or belongs to another account | Re-fetch the profile; never guess another ID |
+| 409 | `duplicate` | A phone or email would collide with another contact | Edit the existing contact or review duplicates |
+
+Contact mutations are synchronous: a successful `200` or `201` is final, while `4xx` is rejected and made no partial change. There are no contact webhooks; money movement created from a contact keeps the normal payout, transfer or withdrawal status and idempotency rules of that operation.
 
 ## FAQ
 
-#### Does the recipient know I saved them as a contact?
-No. The book is private to your account: importing your address book or
-saving contacts never notifies anyone or shares your data. Only you see
-your book.
-#### Why does a contact I know has CBPay show has_cbpay: false?
-Matching is by exact phone number (E.164) against accounts of the same
-operator. If that person registered a different number (or none) on their
-account, there is no match. Once they register and verify that phone, a
-re-import picks it up.
-#### Can I transfer to a contact with has_cbpay: false?
-Not via internal transfer (there is no account to credit). But you can send
-a fiat payout to their bank account or a crypto send to their wallet — and
-those destinations get saved on the contact too.
-#### What if two people in my org share the same number?
-Sending by phone fails explicitly with 422 recipient_ambiguous — we never
-guess a money destination. Use to_account_id or to_email in that case.
-#### Can the import be used to probe whether any number has CBPay?
-Matching is only against accounts of your same operator, with a cap of
-1,000 contacts per request under the API's global rate limit. It exposes
-nothing about the matched account beyond its existence (needed to be able
-to transfer to it).
+#### Does one person need one contact even with several bank accounts?Yes. Keep one contact and attach one payout destination per country, currency and method as needed.#### Why did two people with the same name not merge automatically?Duplicate suggestions are deliberately conservative. If more than one candidate is possible, the platform does not infer identity; use the preview and select the survivor yourself.#### Can I retry a merge after a timeout?No blind retry. The merge is not idempotent. Read the contact and duplicate suggestions first; after success the source IDs no longer exist.#### How do I send from the profile?Select a destination's Send action. The portal opens `/payouts/new?contact_id=...&destination_id=...` and the wizard uses that destination context.#### Can another account read my destinations?No. Contact and destination reads and writes are scoped to the authenticated account.#### What happens if a destination is removed?Only that destination is deleted. The contact and its other destinations remain available.

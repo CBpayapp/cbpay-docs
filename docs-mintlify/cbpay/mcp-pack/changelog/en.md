@@ -5,6 +5,42 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.281 · 8 versions - November 13, 2026
+### v2.281
+**Changed**
+- `GET /v1/rates` now returns the configured VE/VES rail's executable quote with `rate_source: rail` and `payin_rate_source: rail` when applicable. The response shape is unchanged.
+### v2.280
+**Changed**
+- Documented executed rates in movements, checkout quotes, swaps, statements, and receipts; same-asset payments are explicitly shown as no-conversion cases.
+### v2.279
+**Changed**
+- Account support tickets now treat `resolved` as terminal for client portal messages and attachment uploads, returning `409 ticket_resolved`; resolved email replies are ignored and direct the customer to open a new ticket.
+### v2.278
+**Changed**
+
+- Signing a contract envelope issued on an older template no longer dead-ends: the server voids it and issues a fresh envelope automatically, answering `409 contract_reissued_fresh` with the replacement id in `X-Contract-Envelope-ID` (no OTP is consumed). The portal reloads the new document for review and signature.
+- The KYB wizard now strips invisible characters (non-breaking spaces, zero-width) from free text before validating, and backend validation errors highlight the exact field instead of a generic message.
+### v2.277
+**Added**
+- Unified contacts: one person can keep multiple CBPay, payout and crypto destinations.
+- Added duplicate suggestions, previewed merges, professional list filters and destination labels.
+- Added portal contact profiles with contextual payout links.
+### v2.276
+**Added**
+
+- Account statements now include a client-safe `timeline[]` with localized
+  titles, product context, asset amounts, balances and stamped execution rates.
+- PDF statements add a “What happened?” overview, product/month charts, a
+  Timeline table and a Disputes table. XLSX adds Movements and Disputes sheets.
+### v2.275
+**Changed**
+- **Breaking:** BOB, MXN, ARS and CLP balances and `BANK_*` mirrors are Banking-only. Platform payouts, defaults, swaps, transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`; existing fiat defaults migrate automatically to `USDT`. Use Banking for fiat operations.
+### v2.274
+**Added**
+- The disputes portal now documents search, multi-status filtering and deadline-first ordering, plus the evidence-progress automation chip.
+- Merchants can follow the `kontigo-std-v1` evidence checklist and understand what happens after all required blocks are complete.
+**Changed**
+- Dispute guidance explains that automatic ATC delivery starts only after a fresh pack and complete merchant evidence.
 ## v2.273 · 10 versions - November 12, 2026
 ### v2.273
 **Changed**
