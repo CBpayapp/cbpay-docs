@@ -4,6 +4,19 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="14 de noviembre de 2026" description="v2.283 · 1 versión">
+### v2.283
+**Cambiado**
+- Los payouts ahora mantienen en el flujo de revisión los faltantes
+  temporales del canal o de tesorería cuando es posible, en vez de exponer un
+  mensaje interno de fondos o devolver de inmediato un error de negocio. La
+  cuenta ve mensajes neutros: el payout está en revisión y se completará solo
+  al liberarse, o no se pudo completar y los fondos fueron devueltos.
+- Si un payout revisado no puede continuar porque su clave de despacho ya se
+  consumió, la aprobación responde `reissue_required`. El cliente crea un
+  payout nuevo con una clave de idempotencia nueva; CBPay nunca vuelve a emitir
+  la operación.
+</Update>
 <Update label="13 de noviembre de 2026" description="v2.282 · 9 versiones">
 ### v2.282
 **Cambiado**
