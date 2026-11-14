@@ -11,7 +11,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/payout-corridors
 
 每条通道均附有其精确的 `beneficiary`、完整的请求和真实的响应。汇率
 （`fx_rate`）仅供参考 —— 实际始终采用 `GET /v1/rates` 返回的您账户的
-汇率；扣款为 `usdt_amount + fee`（固定费用，如已配置；此处为 `0.30`）。
+汇率；扣款为账户默认余额的等值金额加固定费用（如已配置；此处为 `0.30`）。
 
 ### 各通道的收款人字段
 

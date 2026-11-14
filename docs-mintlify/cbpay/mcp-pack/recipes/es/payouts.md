@@ -8,11 +8,12 @@ source_url: https://docs.cbpayapp.com/es/guides/payouts-overview
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Importante**
-**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Las cuentas legacy conservan su default explícito `USDT`; las cuentas nuevas usan `USD` como saldo principal. Usa Banking para las operaciones fiat.
 Un payout envía dinero en moneda local a una cuenta bancaria del país
-destino. El monto se convierte de moneda local a USDT con **la tasa de tu
-cuenta** (la de `GET /v1/rates`) y se debita `usdt_amount + fee` (el fijo,
-si está configurado) de tu saldo.
+destino. El monto se convierte al saldo predeterminado de tu cuenta con **la tasa de tu
+cuenta** (la de `GET /v1/rates`) y se descuenta de ese saldo el equivalente reportado
+más la comisión fija, si está configurada. Las cuentas legacy con default USDT
+explícito siguen descontando USDT.
 
 Así se ve el ciclo completo, incluido qué pasa con tu saldo en cada paso:
 
@@ -23,7 +24,7 @@ sequenceDiagram
     participant CB as CBPay
     participant Rail as Rail bancario local
     App->>CB: POST /v1/payouts (idempotency_key)
-    CB->>CB: Convierte a tu tasa y debita<br/>usdt_amount + fee (available → held)
+    CB->>CB: Convierte a tu tasa y debita<br/>equivalente del saldo predeterminado + comisión (available → held)
     CB-->>App: 202 processing (fx_rate, total_debit)
     CB->>Rail: Dispersa en moneda local
     alt El dinero llega

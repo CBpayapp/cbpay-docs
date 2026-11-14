@@ -5,6 +5,22 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.284 · 2 versiones - 14 de noviembre de 2026
+### v2.284
+**Cambiado**
+- Los payouts ahora mantienen en el flujo de revisión los faltantes
+  temporales del canal o de tesorería cuando es posible, en vez de exponer un
+  mensaje interno de fondos o devolver de inmediato un error de negocio. La
+  cuenta ve mensajes neutros: el payout está en revisión y se completará solo
+  al liberarse, o no se pudo completar y los fondos fueron devueltos.
+- Si un payout revisado no puede continuar porque su clave de despacho ya se
+  consumió, la aprobación responde `reissue_required`. El cliente crea un
+  payout nuevo con una clave de idempotencia nueva; CBPay nunca vuelve a emitir
+  la operación.
+### v2.283
+**Cambiado**
+- USD es el saldo principal predeterminado para las cuentas nuevas. Las cuentas legacy conservan un default USDT configurado explícitamente; los lados omitidos de un swap resuelven al principal de la cuenta.
+- Payouts, comisiones, transferencias, swaps, cargos POS y selectores de tarjetas ahora documentan el comportamiento del saldo predeterminado, con ejemplos USD primero y errores legibles. Los overrides explícitos de activo siguen disponibles.
 ## v2.282 · 9 versiones - 13 de noviembre de 2026
 ### v2.282
 **Cambiado**

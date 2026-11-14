@@ -11,7 +11,7 @@ source_url: https://docs.cbpayapp.com/es/guides/payout-corridors
 
 Cada corredor con su `beneficiary` exacto, el request completo y la
 respuesta real. Las tasas (`fx_rate`) son ilustrativas — siempre aplican
-las de tu cuenta en `GET /v1/rates`; el débito es `usdt_amount + fee`
+las de tu cuenta en `GET /v1/rates`; el débito es el equivalente del saldo predeterminado + la comisión
 (fijo, si está configurado; aquí `0.30`).
 
 ### Campos del beneficiary por corredor

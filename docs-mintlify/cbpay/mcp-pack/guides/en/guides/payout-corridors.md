@@ -11,8 +11,8 @@ source_url: https://docs.cbpayapp.com/en/guides/payout-corridors
 
 Every corridor with its exact `beneficiary`, the full request and the real
 response. Rates (`fx_rate`) are illustrative — your account's rates from
-`GET /v1/rates` always apply; the debit is `usdt_amount + fee` (fixed,
-when configured; `0.30` here).
+`GET /v1/rates` always apply; the debit is the account-default balance equivalent plus
+the fixed fee (when configured; `0.30` here).
 
 ### Beneficiary fields per corridor
 

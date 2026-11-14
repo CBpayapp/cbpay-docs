@@ -20,15 +20,15 @@ El pricing FX está en **tu tipo de cambio**: las tasas que ves en
 ejecutar — sin porcentajes aparte. Cada país trae las dos puntas:
 
 - `rate` — la tasa de tus **payouts** (dispersiones). Si dispersas el
-  equivalente a 100 USDT, se debitan **100 USDT + el fijo** (si tu cuenta
-  lo tiene configurado).
+  equivalente a 100 USD, se debita el equivalente del saldo predeterminado
+  más el fijo (si tu cuenta lo tiene configurado).
 - `payin_rate` — la tasa de tus **payins** (cobros/depósitos fiat). El
   abono es el monto local convertido a esa tasa, **menos el fijo** (si tu
   cuenta lo tiene configurado).
 
 ```
-payout:  usdt_amount   = monto_local / rate
-         total_debit   = usdt_amount + fixed_amount
+payout:  default_balance_equivalent = monto_local / rate
+         total_debit   = default_balance_equivalent + fixed_amount
 payin:   usdt_gross    = monto_local / payin_rate
          usdt_credited = usdt_gross − fixed_amount
 ```
@@ -177,7 +177,8 @@ empresa↔empresa. El dinero se mueve dentro del ecosistema.
 `GET /v1/rates` devuelve **el tipo de cambio propio de tu cuenta** en cada
 país — las mismas tasas con las que se ejecutan tus operaciones, sin
 sorpresas: `rate` para payouts y `payin_rate` para payins
-(`monto_local / tasa = USDT`).
+(`monto_local / tasa = equivalente en USD`; el activo acreditado puede ser
+el saldo predeterminado).
 
 ## Consulta tus condiciones
 

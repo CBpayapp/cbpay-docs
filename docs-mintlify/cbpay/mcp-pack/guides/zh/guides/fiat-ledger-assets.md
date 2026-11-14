@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/fiat-ledger-assets
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 > **重要**
-**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。已有账户保留明确设置的 `USDT` 默认值；新账户使用 `USD` 作为主余额。法币操作请使用 Banking。
 > **注**平台旧模型已下线。自 2026-11-13 起，法币余额、`BANK_*` 镜像和法币流水操作均属于 [Banking](https://docs.cbpayapp.com/zh/guides/banking)。本页保留旧账本契约用于历史对账；不要据此构建新的平台集成。## 平台历史模型（已下线）
 
 历史上，CBPay 账户支持四种本地法币账本资产：**BOB**、**MXN**、**ARS** 和

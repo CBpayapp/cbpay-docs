@@ -10,7 +10,7 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 
 
 <Warning>
-**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
+**Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Legacy accounts keep their explicit `USDT` default; new accounts use `USD` as the principal balance. Use Banking for fiat operations.
 </Warning>
 ## One place for your receiving details
 
