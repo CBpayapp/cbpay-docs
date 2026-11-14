@@ -225,8 +225,7 @@ In-flight operations are never re-quoted.
 USD ledger amounts use cents (two decimal places). Direct credits and debits,
 fees, and supported payout, checkout, POS, and card paths use USD only where
 their asset field accepts it. Swaps between USD and USDT use 1:1 pricing and
-do not use an FX oracle. BOB, MXN, and ARS remain separate fiat-ledger
-assets; v1 money-out pricing for those assets remains unavailable.
+do not use an FX oracle. Fiat balances and money-out operations are now owned by [Banking](https://docs.cbpayapp.com/en/guides/banking); the former platform fiat-ledger behavior is retained only in the historical guide.
 
 Swap execution may have an internal back-office coverage workflow. This does
 not change the `POST /v1/swaps` request or response, the execution rate, or

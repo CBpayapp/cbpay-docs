@@ -226,9 +226,7 @@ Las operaciones en vuelo nunca se vuelven a cotizar.
 Los montos del ledger en USD usan centavos (dos decimales). Los créditos y
 d débitos directos, las comisiones y los flujos de payout, checkout, POS y
 tarjetas usan USD solo cuando el campo de activo de ese flujo lo acepta. Los
-swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. BOB,
-MXN y ARS siguen siendo activos fiat separados del ledger; en v1 el pricing
-de money-out para esos activos sigue no disponible.
+swaps entre USD y USDT usan paridad 1:1 y no consultan un oráculo FX. Los saldos y operaciones money-out fiat ahora pertenecen a [Banking](https://docs.cbpayapp.com/es/guides/banking); el comportamiento anterior del ledger fiat queda solo como referencia histórica.
 
 Un payin acreditado directamente a una cuenta USD-principal expone
 `credit_asset: USD` y el monto fiat acreditado en centavos; `usdt_credited`

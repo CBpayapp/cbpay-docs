@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: CBPay API
   version: '2.281'
-  description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT. Use Banking for fiat operations.\n"
+  description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
   description: Live (production, real money)
@@ -36,7 +36,7 @@ tags:
 - name: Contacts
   description: Per-account address book of beneficiaries (CBPay, bank and crypto destinations) with phone matching and auto-save on every send.
 - name: Swaps
-  description: "Instant conversion between the account's USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances at the account's quoted rate."
+  description: "Instant conversion between the account's USD (default), USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances at the account's quoted rate."
 - name: Crypto
   description: On-chain funding and withdrawals (TRON, Ethereum and Bitcoin).
 - name: Segregated wallets
@@ -714,7 +714,7 @@ paths:
             application/json:
               example:
                 status: pending
-                settlement_asset: USDT
+                settlement_asset: USD
                 asset_amount: '50'
                 countries:
                 - country: BO
@@ -787,7 +787,7 @@ paths:
                         asset: USDC
                         percent: '0.10'
                       - leg: to
-                        asset: USDT
+                        asset: USD
                         percent: '0.10'
                       fee_total_pct: '0.2000'
                       fee_note: included_in_rate
@@ -863,7 +863,7 @@ paths:
                   summary: Pending with a frozen fiat quote and crypto progress
                   value:
                     status: pending
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     asset_amount: '50'
                     description: Order 8841
                     expires_at: '2026-07-17T17:57:44Z'
@@ -1333,8 +1333,8 @@ paths:
                 service: compliance_monitoring
                 monitor: true
                 monitoring_enabled: true
-                screening_fee: '1.000000'
-                fee_asset: USDT
+                screening_fee: '1.00'
+                fee_asset: USD
                 idempotency_key: aml-monitor-enable-1
                 created_at: '2026-07-12T20:00:00Z'
                 compliance_service: compliance_monitoring
@@ -1393,8 +1393,8 @@ paths:
                 kind: rescreen
                 service: compliance_rescreen
                 risk: low
-                screening_fee: '1.000000'
-                fee_asset: USDT
+                screening_fee: '1.00'
+                fee_asset: USD
                 idempotency_key: aml-rescreen-2026-07-12
                 created_at: '2026-07-12T19:00:00Z'
                 result:
@@ -1672,8 +1672,8 @@ paths:
                 subject_name: Ana Perez Rojas
                 risk: low
                 monitor: false
-                screening_fee: '2.000000'
-                fee_asset: USDT
+                screening_fee: '2.00'
+                fee_asset: USD
                 idempotency_key: aml-screen-ana-1
                 created_at: '2026-07-12T18:00:00Z'
                 result:
@@ -1757,8 +1757,8 @@ paths:
                   subject_name: Ana Perez Rojas
                   risk: low
                   monitor: false
-                  screening_fee: '2.000000'
-                  fee_asset: USDT
+                  screening_fee: '2.00'
+                  fee_asset: USD
                   idempotency_key: aml-screen-ana-1
                   created_at: '2026-07-12T18:00:00Z'
         '400':
@@ -1791,8 +1791,8 @@ paths:
                 subject_name: Ana Perez Rojas
                 risk: low
                 monitor: false
-                screening_fee: '2.000000'
-                fee_asset: USDT
+                screening_fee: '2.00'
+                fee_asset: USD
                 idempotency_key: aml-screen-ana-1
                 created_at: '2026-07-12T18:00:00Z'
                 result:
@@ -6112,7 +6112,7 @@ paths:
                     cardholder_kind: account
                     cardholder_name: Ana Rojas
                     status: active
-                    spending_asset: USDT
+                    spending_asset: USD
                     limits:
                       monthly: '5000.000000'
                     created_at: '2026-07-08T12:00:00Z'
@@ -6257,7 +6257,7 @@ paths:
                   physical: false
                   cardholder_kind: account
                   status: active
-                  spending_asset: USDT
+                  spending_asset: USD
                   limits: {}
                   created_at: '2026-07-08T12:00:00Z'
                   updated_at: '2026-07-08T12:00:00Z'
@@ -6432,7 +6432,7 @@ paths:
                 physical: false
                 cardholder_kind: account
                 status: active
-                spending_asset: USDT
+                spending_asset: USD
                 limits:
                   monthly: '5000.000000'
                 created_at: '2026-07-08T12:00:00Z'
@@ -7584,6 +7584,144 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/crypto/network-moves:
+    post:
+      tags:
+      - Crypto
+      operationId: createNetworkMove
+      summary: Execute an explicit same-asset network move
+      description: 'A network move is always a withdrawal with from_chain context: the money lives once in crypto_withdrawals (same debit, dispatch, statement and webhooks). Idempotent by account + idempotency_key; OTP required like withdrawals. If held by the transaction firewall, the response carries the withdrawal shape.'
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - asset
+              - from_chain
+              - to_chain
+              - to_address
+              - amount
+              - idempotency_key
+            example:
+              asset: USDT
+              from_chain: tron
+              to_chain: eth
+              to_address: 0xabc...
+              amount: '100'
+              idempotency_key: move-001
+      responses:
+        '200':
+          description: Move with its mirrored withdrawal
+          content:
+            application/json:
+              example:
+                move_id: 22222222-2222-2222-2222-222222222222
+                status: processing
+                from_chain: tron
+        '400':
+          description: Invalid pair, address or amount
+        '409':
+          description: Idempotency replay conflict handled by returning the original
+    get:
+      tags:
+      - Crypto
+      operationId: listNetworkMoves
+      summary: List account network moves
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Paginated moves with mirrored withdrawal state
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                moves: []
+  /v1/crypto/network-moves/quote:
+    post:
+      tags:
+      - Crypto
+      operationId: quoteNetworkMove
+      summary: Quote an explicit same-asset network move
+      description: 'Pure preview (no side effects): validates the asset and both chains, prices the withdrawal fee and reports whether the destination hot wallet is configured.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - asset
+              - from_chain
+              - to_chain
+              - amount
+            example:
+              asset: USDT
+              from_chain: tron
+              to_chain: eth
+              amount: '100'
+      responses:
+        '200':
+          description: Quote with fees and total debit
+          content:
+            application/json:
+              example:
+                asset: USDT
+                from_chain: tron
+                to_chain: eth
+                amount: '100'
+                fee: '1'
+                platform_fee: '0.1'
+                total_debit: '101'
+                hot_configured: true
+        '400':
+          description: Invalid pair or amount
+  /v1/crypto/network-moves/{moveID}:
+    get:
+      tags:
+      - Crypto
+      operationId: getNetworkMove
+      summary: Get one network move by id
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The move with its mirrored withdrawal
+          content:
+            application/json:
+              example:
+                move_id: 22222222-2222-2222-2222-222222222222
+                status: completed
+        '404':
+          description: Move not found
   /v1/crypto/networks:
     get:
       tags:
@@ -8713,12 +8851,12 @@ paths:
                   cursor: '4821'
                   data:
                     account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
-                    asset: USDT
-                    amount: '10.000000'
+                    asset: USD
+                    amount: '10.00'
                     direction: credit
                     reason: manual top-up
-                    available: '109.700000'
-                    held: '0.000000'
+                    available: '109.70'
+                    held: '0.00'
         '400':
           $ref: '#/components/responses/InvalidRange'
         '401':
@@ -14181,8 +14319,8 @@ paths:
                 page_size: 50
                 movements:
                 - id: 0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0
-                  asset: USDT
-                  amount: '-86.014286'
+                  asset: USD
+                  amount: '-86.02'
                   type: payout_debit
                   reference_type: payout
                   reference_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
@@ -14193,17 +14331,17 @@ paths:
                   rate_pair: USD/BOB
                   rate_source: payout
                 - id: 9a8b7c6d-5e4f-3a2b-1c0d-e9f8a7b6c5d4
-                  asset: USDT
-                  amount: '-1.000000'
+                  asset: USD
+                  amount: '-1.00'
                   type: wallet_creation_fee
                   reference_type: crypto_wallet
                   reference_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d:tron:usdt
                   description: 'service fee: wallet_creation'
-                  balance_after: '125.430000'
+                  balance_after: '125.43'
                   created_at: '2026-07-07T12:00:00Z'
                 - id: 7c6d5e4f-3a2b-1c0d-9e8f-a7b6c5d4e3f2
-                  asset: USDT
-                  amount: '-100.000000'
+                  asset: USD
+                  amount: '-100.00'
                   type: swap_out
                   reference_type: swap
                   reference_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
@@ -15045,7 +15183,7 @@ paths:
                 value:
                   method: checkout
                   amount: '50'
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   description: Order 8841
                   country: CL
                   success_url: https://your-app.com/payment/ok
@@ -15320,7 +15458,7 @@ paths:
                     payin_id: d0135ed5-8e9c-4f8b-a522-8ec100470426
                     kind: checkout
                     status: pending
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     asset_amount: '50'
                     country: CL
                     description: Order 8841
@@ -15634,7 +15772,7 @@ paths:
                   currency: ''
                   method: checkout
                   local_amount: ''
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   asset_amount: '50'
                   status: pending
                   reference: CB68JZCT46QE
@@ -17399,7 +17537,7 @@ paths:
       - Payouts
       operationId: createPayout
       summary: Create a payout
-      description: "Disperses fiat to a local bank account. The local amount converts to USDT at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (`default_settlement_asset` — USD is the principal balance; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER or PLATINUM) to pay this specific operation from another balance: the total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD/SILVER/PLATINUM is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the technical screening queue is available, the response is `202` with a payout resource in `status: pending`, `status_code: compliance_pending`, `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch. After screening returns `process`, the same resource can remain `pending` with `compliance_dispatch_pending`, `compliance_dispatching` or `core_unreachable` while `funds_debited` is true; keep the same idempotency key and wait for reconciliation. A terminal screening failure before the debit path can return `failed` with `predebit_failure: true` and `funds_debited: false`; it has no `receipt_url`."
+      description: "Disperses fiat to a local bank account. The local amount converts to your default balance (USD) at **your account's rate** (the same one returned by `GET /v1/rates`); `usdt_amount` plus the fixed fee (when configured) is debited and held until the dispersal completes. If it fails, the full debit is refunded.\n\n**Pay from any balance**: by default the debit comes from your account's default settlement asset (`default_settlement_asset` — USD is the principal balance; change it via `PUT /v1/settlement`). Send `settlement_asset` (USD, USDT, USDC, USDCE, BTC, GOLD, SILVER or PLATINUM) to pay this specific operation from another balance: the total converts to that asset at the effective settlement price of the moment (see the `settlement` block in `GET /v1/rates`) and the debit, hold and — if it fails — the refund all live in that asset for the exact same amount. If the execution price for BTC/GOLD/SILVER/PLATINUM is unavailable the request returns `503 pricing_unavailable`; volatile assets also have a per-operation limit (`422 settlement_limit_exceeded`).\n\nRequires an idempotency key (body field or `Idempotency-Key` header). Retrying with the same key returns the original payout (`200` with `idempotency_hit: true`).\nIf technical beneficiary screening is temporarily unavailable and the technical screening queue is available, the response is `202` with a payout resource in `status: pending`, `status_code: compliance_pending`, `compliance_pending: true` and `funds_debited: false`, before any debit or core dispatch. After screening returns `process`, the same resource can remain `pending` with `compliance_dispatch_pending`, `compliance_dispatching` or `core_unreachable` while `funds_debited` is true; keep the same idempotency key and wait for reconciliation. A terminal screening failure before the debit path can return `failed` with `predebit_failure: true` and `funds_debited: false`; it has no `receipt_url`."
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -17902,8 +18040,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: &id008
                       name: Maria Lopez
@@ -17932,8 +18070,8 @@ paths:
                     usdt_amount: '108.695652'
                     fee: '0.300000'
                     total_debit: '108.995652'
-                    settlement_asset: USDT
-                    settlement_amount: '108.995652'
+                    settlement_asset: USD
+                    settlement_amount: '109.00'
                     settlement_rate: '1'
                     beneficiary:
                       beneficiary_type: individual
@@ -17965,8 +18103,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -17993,8 +18131,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -18025,8 +18163,8 @@ paths:
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
+                settlement_asset: USD
+                settlement_amount: '86.02'
                 settlement_rate: '1'
                 beneficiary: *id008
                 description: Invoice 8841
@@ -18094,8 +18232,8 @@ paths:
                     usdt_amount: '85.714286'
                     fee: '0.300000'
                     total_debit: '86.014286'
-                    settlement_asset: USDT
-                    settlement_amount: '86.014286'
+                    settlement_asset: USD
+                    settlement_amount: '86.02'
                     settlement_rate: '1'
                     beneficiary: *id008
                     description: Invoice 8841
@@ -18672,7 +18810,7 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: "Virtual balance to debit for this operation. Accepted values are USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's default settlement asset."
+                  description: "Virtual balance to debit for this operation. Accepted values are USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's default settlement asset."
                 idempotency_key:
                   type: string
             example:
@@ -18700,8 +18838,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: &id010
                   qr_reference: QR-REF-889923
@@ -18730,8 +18868,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: *id010
                 description: QR lunch payment
@@ -18789,8 +18927,8 @@ paths:
                 usdt_amount: '101.302460'
                 fee: '0.300000'
                 total_debit: '101.602460'
-                settlement_asset: USDT
-                settlement_amount: '101.602460'
+                settlement_asset: USD
+                settlement_amount: '101.61'
                 settlement_rate: '1'
                 beneficiary: *id010
                 description: QR lunch payment
@@ -18935,8 +19073,8 @@ paths:
                 usdt_amount: '85.714286'
                 fee: '0.300000'
                 total_debit: '86.014286'
-                settlement_asset: USDT
-                settlement_amount: '86.014286'
+                settlement_asset: USD
+                settlement_amount: '86.01'
                 settlement_rate: '1'
                 beneficiary:
                   name: Maria Lopez
@@ -19054,7 +19192,7 @@ paths:
                   payin_id: bd3d88ca-af9c-4c05-a6f8-0982a2d187d5
                   status: paid
                   amount: '25'
-                  settlement_asset: USDT
+                  settlement_asset: USD
                   crypto: tron:usdt
                   due: '25.000000'
                   received: '25.000000'
@@ -19138,7 +19276,7 @@ paths:
                 account_id: 5138e8dd-64bd-43ef-aafe-8d9ef23bec9e
                 status: pending
                 amount: '25'
-                settlement_asset: USDT
+                settlement_asset: USD
                 crypto: tron:usdt
                 chain: tron
                 asset: USDT
@@ -19207,7 +19345,7 @@ paths:
                     confirming: true
                     detected_amount: '25.000000'
                     amount: '25'
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     crypto: tron:usdt
                     due: '25.000000'
                     received: '0.000000'
@@ -19224,7 +19362,7 @@ paths:
                     payin_id: bd3d88ca-af9c-4c05-a6f8-0982a2d187d5
                     status: paid
                     amount: '25'
-                    settlement_asset: USDT
+                    settlement_asset: USD
                     crypto: tron:usdt
                     due: '25.000000'
                     received: '25.000000'
@@ -22491,7 +22629,7 @@ paths:
       - Balances
       operationId: getRates
       summary: Get my FX rates and fees
-      description: "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USDT`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote; and when it is `rail`, a configured rail's executable market backs the quote for VE/VES. For USDT payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise, or `rail` for a configured VE/VES C2P rail. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. The sunset UF row is omitted from `rates` when its value is not available; the `settlement.assets` list omits sunset assets. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
+      description: "Returns the exchange rates that apply to the calling account for each country — the same rates used when operations execute (`local_amount / rate = USD (default balance)`) — plus the account's **effective** fee configuration — org defaults already resolved against your account's overrides — so clients can compute the exact cost of an operation before creating it. `rate` is the payout (dispersal) side and `payin_rate` the payin (deposit) side. When `rate_source` is `lot`, the payout-side quote is backed by the oldest open FIFO lot for that currency; when it is `spot`, no eligible lot backs the quote; and when it is `rail`, a configured rail's executable market backs the quote for VE/VES. For default-balance (USD) payins, `payin_rate_source` is `lot` when enabled payin FIFO inventory backs the quote and `spot` otherwise, or `rail` for a configured VE/VES C2P rail. Card payins remain spot-priced. Use the optional `lot_quote` for an amount-specific indicative quote. The sunset UF row is omitted from `rates` when its value is not available; the `settlement.assets` list omits sunset assets. `asset_prices` carries the USD reference price of each virtual balance asset (BTC per unit, GOLD per gram; stablecoins are 1 by convention) for display/valuation. The `settlement` block shows, per enabled asset, the **effective settlement price** your account would get right now if it paid an operation from that balance (`settlement_rate`, spread included) and whether the asset is currently `available` — use it to estimate before sending `settlement_asset` in a payout."
       parameters:
       - name: currency
         in: query
@@ -22694,7 +22832,7 @@ paths:
                   marked_rate: '13.28728500'
                   indicative: true
                 settlement:
-                  default_asset: USDT
+                  default_asset: USD
                   assets:
                   - asset: USDT
                     available: true
@@ -22715,7 +22853,7 @@ paths:
                   account_id: ''
                   service: payout
                   country: CL
-                  asset: USDT
+                  asset: USD
                   percent: '0'
                   fixed_amount: '0.30'
                   status: active
@@ -23233,15 +23371,15 @@ paths:
                   kind: purchase
                   merchant: AMAZON.COM
                   amount_usd: '25.00'
-                  spend_asset: USDT
-                  spend_amount: '25.000000'
+                  spend_asset: USD
+                  spend_amount: '25.00'
                   status: settled
                 swaps:
                 - created_at: '2026-03-21T09:00:00Z'
                   swap_id: 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
-                  from_amount: '10.000000'
+                  from_amount: '10.00'
                   to_amount: '0.00015433'
                   rate: '0.00001543'
                   status: completed
@@ -23259,19 +23397,19 @@ paths:
                   type: banking_fee
                   service: banking_customer
                   fee_model: fixed
-                  asset: USDT
+                  asset: USD
                   reference: cust-001
-                  amount: '-0.500000'
-                  balance_after: '139.100000'
+                  amount: '-0.50'
+                  balance_after: '139.10'
                 timeline:
                 - created_at: '2026-03-23T08:00:00Z'
                   id: ledger-001
                   product: service_charges
                   direction: out
                   title_key: service_charge
-                  asset: USDT
-                  amount: '-0.500000'
-                  balance_after: '139.100000'
+                  asset: USD
+                  amount: '-0.50'
+                  balance_after: '139.10'
                   status: completed
         '400':
           description: invalid_range / invalid_format.
@@ -23361,8 +23499,8 @@ paths:
                     address: TN2BBWc9EF8MMB6i1c4HZHXAssTEXstMDo
                     chain: tron
                     risk: Low
-                    screening_fee: '0.500000'
-                    fee_asset: USDT
+                    screening_fee: '0.50'
+                    fee_asset: USD
                     idempotency_key: scan-customer-742-1
                     created_at: '2026-07-12T14:30:00Z'
                     assessment:
@@ -23382,8 +23520,8 @@ paths:
                     chain: eth
                     risk: Severe
                     risk_reason: Identified as Sanctioned Entity
-                    screening_fee: '0.500000'
-                    fee_asset: USDT
+                    screening_fee: '0.50'
+                    fee_asset: USD
                     idempotency_key: scan-suspicious-9
                     created_at: '2026-07-12T14:31:00Z'
                     assessment:
@@ -23407,8 +23545,8 @@ paths:
                 address: TN2BBWc9EF8MMB6i1c4HZHXAssTEXstMDo
                 chain: tron
                 risk: Low
-                screening_fee: '0.500000'
-                fee_asset: USDT
+                screening_fee: '0.50'
+                fee_asset: USD
                 idempotency_key: scan-customer-742-1
                 created_at: '2026-07-12T14:30:00Z'
                 idempotency_hit: true
@@ -23484,8 +23622,8 @@ paths:
                   chain: eth
                   risk: Severe
                   risk_reason: Identified as Sanctioned Entity
-                  screening_fee: '0.500000'
-                  fee_asset: USDT
+                  screening_fee: '0.50'
+                  fee_asset: USD
                   idempotency_key: scan-suspicious-9
                   created_at: '2026-07-12T14:31:00Z'
         '400':
@@ -23517,8 +23655,8 @@ paths:
                 chain: eth
                 risk: Severe
                 risk_reason: Identified as Sanctioned Entity
-                screening_fee: '0.500000'
-                fee_asset: USDT
+                screening_fee: '0.50'
+                fee_asset: USD
                 idempotency_key: scan-suspicious-9
                 created_at: '2026-07-12T14:31:00Z'
                 assessment:
@@ -24179,8 +24317,8 @@ paths:
                 asset: USDT
                 to_address: TXYZdestination00000000000000000000
                 amount_raw: '25500000'
-                fee: '0.000000'
-                fee_asset: USDT
+                fee: '0.00'
+                fee_asset: USD
                 status: processing
                 tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
                 idempotency_key: send-2026-07-11-a
@@ -26594,9 +26732,9 @@ paths:
                   description: 'Client-chosen key. The prefixes payin-convert: and checkout-swap: are reserved for system auto-conversions and are rejected with 400 reserved_idempotency_key.'
             examples:
               usdt_btc:
-                summary: USDT to BTC
+                summary: USD to BTC
                 value:
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
                   amount: '1000'
                   idempotency_key: swap-2026-07-10-a
@@ -26608,9 +26746,9 @@ paths:
                   amount: '0.01'
                   idempotency_key: swap-2026-07-10-b
               stables:
-                summary: USDT to USDC
+                summary: USD to USDC
                 value:
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: USDC
                   amount: '500'
                   idempotency_key: swap-2026-07-10-c
@@ -26624,14 +26762,14 @@ paths:
               example:
                 swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -26650,14 +26788,14 @@ paths:
               example:
                 swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -26770,9 +26908,9 @@ paths:
                 swaps:
                 - swap_id: 8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                   account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                  from_asset: USDT
+                  from_asset: USD
                   to_asset: BTC
-                  from_amount: '1000.000000'
+                  from_amount: '1000.00'
                   to_amount: '0.01568419'
                   rate: '0.00001568'
                   status: completed
@@ -26788,7 +26926,7 @@ paths:
       - Swaps
       operationId: quoteSwap
       summary: Quote a swap
-      description: "Free indicative quote to convert between your USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances (any pair, source different from destination). The rate you see is your account's execution rate — quoted = received, no separate fees. Indicative: execution uses the price at the POST moment (stablecoin pairs are stable)."
+      description: "Free indicative quote to convert between your USD (default), USDT, USDC, BTC, GOLD, SILVER and PLATINUM balances (any pair, source different from destination). The rate you see is your account's execution rate — quoted = received, no separate fees. Indicative: execution uses the price at the POST moment (stablecoin pairs are stable)."
       parameters:
       - name: from_asset
         in: query
@@ -26866,14 +27004,14 @@ paths:
                     enum:
                     - included_in_rate
               example:
-                from_asset: USDT
+                from_asset: USD
                 to_asset: BTC
-                from_amount: '1000.000000'
+                from_amount: '1000.00'
                 to_amount: '0.01568419'
                 rate: '0.00001568'
                 fees:
                 - leg: from
-                  asset: USDT
+                  asset: USD
                   percent: '0.20'
                 - leg: to
                   asset: BTC
@@ -27127,8 +27265,8 @@ paths:
                 transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
                 from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: Expense split
                 status: completed
                 created_at: '2026-07-07T12:00:00Z'
@@ -27142,8 +27280,8 @@ paths:
                 transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
                 from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
                 to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: Expense split
                 status: completed
                 created_at: '2026-07-07T12:00:00Z'
@@ -27229,8 +27367,8 @@ paths:
                 - transfer_id: 77b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                   from_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                   to_account_id: ae8cf540-22a9-414d-82cc-8ac04732be4f
-                  asset: USDT
-                  amount: '25.000000'
+                  asset: USD
+                  amount: '25.00'
                   description: Split de gastos
                   status: completed
                   direction: sent
@@ -27262,8 +27400,8 @@ paths:
                 transfer_id: 77b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d
                 from_account_id: 389d34a3-6c61-4782-b822-95ac173068dc
                 to_account_id: ae8cf540-22a9-414d-82cc-8ac04732be4f
-                asset: USDT
-                amount: '25.000000'
+                asset: USD
+                amount: '25.00'
                 description: Split de gastos
                 status: completed
                 direction: sent
@@ -29374,7 +29512,7 @@ components:
           - GOLD
           - SILVER
           - PLATINUM
-          description: "Balance the card's purchases spend from. USDT/USDC 1:1 with the USD; BTC/GOLD/SILVER/PLATINUM converted at the price of the moment of each event. Changing it only affects future purchases."
+          description: "Balance the card's purchases spend from. USD/USDT/USDC 1:1 with the USD (USD is the default); BTC/GOLD/SILVER/PLATINUM converted at the price of the moment of each event. Changing it only affects future purchases."
         limits:
           type: object
           description: Spending limits, always measured in USD regardless of the spending asset.
@@ -30115,7 +30253,7 @@ components:
           description: "Exact amount debited from the settlement asset's balance (in that asset's units). Equals `total_debit` when the asset is USDT. If the payout fails this exact amount is refunded — never re-quoted."
         settlement_rate:
           type: string
-          description: Effective USD price per unit of the settlement asset used to convert the USDT total ("1" for USDT/USDC).
+          description: Effective USD price per unit of the settlement asset used to convert the USDT total ("1" for USD/USDT/USDC).
         beneficiary:
           type: object
         description:
@@ -30351,7 +30489,7 @@ components:
           description: Present only once the payin has refunds or a chargeback. Derived from the accumulated amounts — the payin `status` is never rewritten.
         refunded_amount:
           type: string
-          description: Accumulated USDT debited by refunds and chargebacks on this payin.
+          description: "Accumulated amount debited by refunds and chargebacks on this payin, in the payin's credit asset (see `credit_asset`)."
         refunded_local:
           type: string
           description: Accumulated amount refunded in the original local currency.
@@ -30443,7 +30581,7 @@ components:
           type: string
         usdt_debited:
           type: string
-          description: Amount debited from the USDT balance. The fee and the FX spread of the original payin are NOT refunded.
+          description: Micro-USDT equivalent of the amount debited. The fee and the FX spread of the original payin are NOT refunded.
         requested_by:
           type: string
           enum:
@@ -30464,7 +30602,7 @@ components:
           description: Present while the refund is `pending` — the outcome is resolved by reconciliation and is never re-dispatched.
         balance_after:
           type: string
-          description: Present in the `payin_refunded` webhook — the USDT balance after the movement (can be negative on a chargeback).
+          description: "Present in the `payin_refunded` webhook — the debited balance after the movement (the payin's credit asset; can be negative on a chargeback)."
         receipt_url:
           type: string
         created_at:
@@ -31459,8 +31597,8 @@ webhooks:
               transfer_id: 2a7b9c1d-4e5f-6a70-8b9c-0d1e2f3a4b5c
               from_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '25.000000'
+              asset: USD
+              amount: '25.00'
               description: Expense split
               created_at: '2026-07-07T12:00:00Z'
       responses:
@@ -31496,8 +31634,8 @@ webhooks:
               employee_id: 4c9d1e3f-6a7b-8c92-0d1e-3f4a5b6c7d8e
               employee_name: Jane Doe
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '1500.000000'
+              asset: USD
+              amount: '1500.00'
       responses:
         '200':
           description: Return any 2xx to acknowledge the delivery.
@@ -31558,8 +31696,8 @@ webhooks:
               category: operating_expenses
               vendor_name: Acme Supplies
               to_account_id: 5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b
-              asset: USDT
-              amount: '250.000000'
+              asset: USD
+              amount: '250.00'
       responses:
         '200':
           description: Return any 2xx to acknowledge the delivery.
@@ -32066,12 +32204,12 @@ webhooks:
               created_at: '2026-07-25T18:02:00Z'
               data:
                 account_id: c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10
-                asset: USDT
-                amount: '10.000000'
+                asset: USD
+                amount: '10.00'
                 direction: credit
                 reason: manual top-up
-                available: '109.700000'
-                held: '0.000000'
+                available: '109.70'
+                held: '0.00'
       responses:
         '200':
           description: Received.

@@ -5,16 +5,20 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.281 · 8 versions - November 13, 2026
-### v2.281
+## v2.282 · 9 versions - November 13, 2026
+### v2.282
 **Changed**
 - `GET /v1/rates` now returns the configured VE/VES rail's executable quote with `rate_source: rail` and `payin_rate_source: rail` when applicable. The response shape is unchanged.
-### v2.280
+### v2.281
 **Changed**
 - Documented executed rates in movements, checkout quotes, swaps, statements, and receipts; same-asset payments are explicitly shown as no-conversion cases.
-### v2.279
+### v2.280
 **Changed**
 - Account support tickets now treat `resolved` as terminal for client portal messages and attachment uploads, returning `409 ticket_resolved`; resolved email replies are ignored and direct the customer to open a new ticket.
+### v2.279
+**Added**
+- Explicit network moves (`/v1/crypto/network-moves/*`): quote, execute, list and get for same-asset chain changes. A move is always a withdrawal with `from_chain` context — money lives once, with the same limits, Travel Rule, KYT, screening, firewall and dispatch as withdrawals.
+- Crypto proof-of-reserves (`GET /v1/org/treasury/crypto-proof`, treasury:read): on-ledger liabilities vs on-chain hot inventory per asset, audited and fail-closed on unreadable hots.
 ### v2.278
 **Changed**
 

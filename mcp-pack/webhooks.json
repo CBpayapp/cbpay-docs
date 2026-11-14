@@ -76,11 +76,11 @@
         "created_at": "2026-07-25T18:02:00Z",
         "data": {
           "account_id": "c57f05b6-8f2e-4d51-9a0c-5b7e2d3f4a10",
-          "amount": "10.000000",
-          "asset": "USDT",
-          "available": "109.700000",
+          "amount": "10.00",
+          "asset": "USD",
+          "available": "109.70",
           "direction": "credit",
-          "held": "0.000000",
+          "held": "0.00",
           "reason": "manual top-up"
         },
         "event_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
@@ -551,8 +551,8 @@
       },
       "event": "org_expense_credited",
       "payload_example": {
-        "amount": "250.000000",
-        "asset": "USDT",
+        "amount": "250.00",
+        "asset": "USD",
         "category": "operating_expenses",
         "entry_id": "1a2b3c4d-5e6f-7a80-9b0c-1d2e3f4a5b6c",
         "expense_id": "6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c",
@@ -723,8 +723,8 @@
       },
       "event": "payroll_credited",
       "payload_example": {
-        "amount": "1500.000000",
-        "asset": "USDT",
+        "amount": "1500.00",
+        "asset": "USD",
         "employee_id": "4c9d1e3f-6a7b-8c92-0d1e-3f4a5b6c7d8e",
         "employee_name": "Jane Doe",
         "entry_id": "1a2b3c4d-5e6f-7a80-9b0c-1d2e3f4a5b6c",
@@ -1056,8 +1056,8 @@
       },
       "event": "transfer_received",
       "payload_example": {
-        "amount": "25.000000",
-        "asset": "USDT",
+        "amount": "25.00",
+        "asset": "USD",
         "created_at": "2026-07-07T12:00:00Z",
         "description": "Expense split",
         "from_account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",

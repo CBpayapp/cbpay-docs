@@ -5,16 +5,20 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.281 · 8 versiones - 13 de noviembre de 2026
-### v2.281
+## v2.282 · 9 versiones - 13 de noviembre de 2026
+### v2.282
 **Cambiado**
 - `GET /v1/rates` ahora devuelve la cotización ejecutable del riel VE/VES configurado, con `rate_source: rail` y `payin_rate_source: rail` cuando corresponde. La forma de la respuesta no cambia.
-### v2.280
+### v2.281
 **Cambiado**
 - Documentadas las tasas ejecutadas en movimientos, cotizaciones de checkout, swaps, cartolas y comprobantes; los pagos en el mismo activo quedan explícitamente sin conversión.
-### v2.279
+### v2.280
 **Cambiado**
 - Los tickets de soporte de cuenta tratan `resolved` como terminal para mensajes del portal y cargas de adjuntos, con `409 ticket_resolved`; las respuestas por correo a tickets resueltos se ignoran y dirigen al cliente a abrir un ticket nuevo.
+### v2.279
+**Agregado**
+- Cambios de red explícitos (`/v1/crypto/network-moves/*`): cotizar, ejecutar, listar y obtener cambios de cadena del mismo activo. Un cambio es siempre un retiro con contexto `from_chain`: el dinero vive una sola vez, con los mismos límites, Travel Rule, KYT, screening, firewall y despacho que los retiros.
+- Prueba de reservas crypto (`GET /v1/org/treasury/crypto-proof`, treasury:read): pasivos on-ledger vs inventario on-chain en hots por activo, auditada y fail-closed ante hots ilegibles.
 ### v2.278
 **Cambiado**
 
