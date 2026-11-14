@@ -5,8 +5,8 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.284 · 2 versions - November 14, 2026
-### v2.284
+## v2.286 · 4 versions - November 14, 2026
+### v2.286
 **Changed**
 - Payouts now keep temporary channel or treasury shortfalls in the
   account-facing review flow when possible, instead of exposing an internal
@@ -16,10 +16,19 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - If a reviewed payout cannot continue because its original dispatch key was
   consumed, approval returns `reissue_required`. The client creates a new
   payout with a new idempotency key; CBPay never re-issues the operation.
-### v2.283
+### v2.285
+**Added**
+- The account portal now documents 360 read-only search for operations,
+  normalized bank-reference fragments, exact amounts and human-readable
+  matches scoped to the authenticated account.
+### v2.284
 **Changed**
 - USD is the principal default balance for new accounts. Legacy accounts keep an explicitly configured USDT default; omitted swap sides resolve to the account principal.
 - Payouts, fees, transfers, swaps, POS charges and card selectors now document default-balance behavior, with USD-first examples and readable default-balance errors. Explicit asset overrides remain supported.
+### v2.283
+**Changed**
+- The statement summary now reconciles the account principal balance (`summary_asset`: USD for new accounts, explicit legacy USDT) instead of always USDT. Breakdowns follow the same asset; legacy USDT accounts are unchanged.
+- PDF and Excel exports now list only completed operations (no failed or in-process rows, no disputes section), like a bank statement. The JSON response and the web statement keep showing everything.
 ## v2.282 · 9 versions - November 13, 2026
 ### v2.282
 **Changed**
