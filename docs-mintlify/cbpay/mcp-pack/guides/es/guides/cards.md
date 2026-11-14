@@ -13,7 +13,7 @@ saldo gasta (`spending_asset`: **USD, USDT, USDC, BTC, GOLD, SILVER o PLATINUM**
 1:1 con el dólar; BTC y GOLD se convierten **al precio del momento de cada
 evento**. Cada compra se autoriza en tiempo real contra el saldo disponible
 de ese asset y los límites propios de la tarjeta, y el débito queda de
-inmediato en el historial de movimientos.
+inmediato en el historial de movimientos. Consulta el [cambio incompatible de liquidación Banking](https://docs.cbpayapp.com/es/changelog) para conocer el rechazo fiat y la migración de defaults.
 
 ```mermaid
 flowchart LR
@@ -25,7 +25,6 @@ flowchart LR
     liquidacion -->|"confirmada"| settle["Hold consumido<br/>(BTC/GOLD/SILVER/PLATINUM: re-cotizado al momento)"]
     liquidacion -->|"anulada"| refund["Fondos devueltos<br/>al mismo saldo"]
 ```
-
 ## Cuántas tarjetas puedes tener
 
 | Tipo de cuenta | Virtuales | Físicas | ¿Para terceros? |

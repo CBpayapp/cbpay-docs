@@ -198,8 +198,7 @@ GOLD 代表足金克数，BTC 代表比特币：在不离开生态系统的情�
 
 USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
 资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
-的 swap 按 1:1 计价，不使用 FX 预言机。BOB、MXN、ARS 仍是独立的法币
-账本资产；v1 中这些资产的 money-out 定价仍不可用。
+的 swap 按 1:1 计价，不使用 FX 预言机。法币余额和 money-out 操作现在属于 [Banking](/zh/guides/banking)；平台旧法币账本行为仅保留为历史参考。
 
 USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold

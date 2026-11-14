@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/zh/guides/payouts-overview
 ---
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
+> **重要**
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
 出金（payout）会以当地货币向目的国的银行账户汇出资金。金额按**您账户的
 汇率**（即 `GET /v1/rates` 返回的汇率）从当地货币折算为 USDT，并从您的
 余额中扣除 `usdt_amount + fee`（如已配置固定费用）。

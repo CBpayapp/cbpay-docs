@@ -1,7 +1,7 @@
 ---
-title: "Fiat payout settlement"
+title: "Fiat payout settlement (retired)"
 icon: "coins"
-description: "Debit BOB, MXN or ARS payouts from the matching local-fiat balance"
+description: "Historical reference: same-currency fiat payout settlement"
 ---
 
 import { EnvUrls } from "/snippets/env-urls.jsx";
@@ -12,7 +12,9 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 <Warning>
 **Breaking change — 2026-11-13.** BOB, MXN, ARS and CLP ledger balances, plus `BANK_*` mirrors, are Banking-only. Platform payouts, swaps, internal transfers, cards, checkout, POS and fees reject fiat settlement with HTTP `400`. Existing fiat defaults migrate automatically to `USDT`; use Banking for fiat operations.
 </Warning>
-<Note>Same-currency fiat settlement was retired on 2026-11-13: fiat balances are Banking-only and platform fiat settlement returns `400`. In-flight operations complete normally; receiving fiat and movement history remain unchanged.</Note>
+<Note>Same-currency fiat settlement was retired on 2026-11-13. The examples below describe the former platform behavior and are preserved for reconciliation and migration reference. In-flight operations completed normally; receiving fiat and movement history remained unchanged. New fiat balances and fiat operations belong to [Banking](/en/guides/banking); platform fiat settlement returns `400`.</Note>
+
+## Former platform behavior (historical)
 
 Payouts can debit a local-fiat balance when the payout currency and
 `settlement_asset` are the same. The settlement rate is `"1"` and settlement

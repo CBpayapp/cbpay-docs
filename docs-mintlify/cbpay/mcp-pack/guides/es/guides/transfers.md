@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/es/guides/transfers
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Importante**
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
 Las transferencias internas mueven saldo entre dos cuentas **CBPay**, de
 forma atómica en el ledger y **siempre sin comisión** — el dinero nunca sale
 del ecosistema. Funcionan con las seis monedas (`USDT`, `USDC`, `BTC`,
@@ -114,9 +116,10 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
 La forma del request es idéntica en todas las combinaciones (persona o
 empresa, en cualquier dirección) — cambia solo la credencial que llama.
 `asset` es opcional y por defecto usa el **settlement asset del emisor**
-(`USD` es el saldo principal); acepta cualquiera de los doce
-assets del ledger (`USD`, `USDT`, `USDC`, `USDCE`, `BTC`, `GOLD`, `SILVER`,
-`PLATINUM`, `BOB`, `MXN`, `ARS`, `CLP`) y el destino recibe **en esa misma moneda**.
+(`USD` es el saldo principal); acepta los siete activos de settlement de la plataforma
+(`USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) y el destino recibe
+**el mismo activo**. Los saldos y transferencias fiat se operan en
+[Banking](https://docs.cbpayapp.com/es/guides/banking), no en este endpoint de plataforma.
 
 Respuesta `201` — la transferencia es **síncrona e inmediata**:
 
@@ -182,8 +185,7 @@ Cada fila trae `direction` (`sent` o `received`) desde tu perspectiva.
 - No puedes transferirte a ti mismo (`400 self_transfer`).
 - Requiere `idempotency_key` (body o header `Idempotency-Key`); el replay
   devuelve `200` con `idempotency_hit: true`.
-- `amount` acepta hasta los decimales de la moneda: 2 para `USD`/`BOB`/`MXN`/
-  `ARS`, 0 para `CLP`, 6 para `USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM`, 8 para `BTC`.
+- `amount` acepta hasta los decimales de la moneda: 2 para `USD`, 6 para `USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM` y 8 para `BTC`.
 
 ## Errores
 

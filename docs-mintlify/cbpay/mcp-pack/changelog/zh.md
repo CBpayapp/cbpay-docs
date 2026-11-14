@@ -5,6 +5,42 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.281 · 8 个版本 - 2026年11月13日
+### v2.281
+**已更改**
+- 配置 VE/VES 通道时，`GET /v1/rates` 现在返回该通道的可执行报价，并在适用时使用 `rate_source: rail` 和 `payin_rate_source: rail`。响应结构不变。
+### v2.280
+**已更改**
+- 补充 movements、checkout 报价、swap、对账单和回执中的执行汇率说明；明确相同资产支付不发生转换。
+### v2.279
+**已更改**
+- 账户支持工单将 `resolved` 视为客户侧终态，门户消息和附件上传返回 `409 ticket_resolved`；已解决工单的邮件回复会被忽略并引导客户创建新工单。
+### v2.278
+**变更**
+
+- 签署旧模板信封不再走入死胡同：服务器会自动作废并签发新信封，返回 `409 contract_reissued_fresh`，并在 `X-Contract-Envelope-ID` 中给出替代信封（不消耗 OTP）。门户会重新加载新文档以供查阅签署。
+- KYB 向导现会在校验前清理自由文本中的不可见字符（硬空格、零宽字符），校验错误会标出具体字段，而非通用提示。
+### v2.277
+**新增**
+- 统一联系人：一个人可以保存多个 CBPay、出金和加密货币目的地。
+- 新增重复联系人建议、预览合并、专业列表筛选和目的地标签。
+- 新增门户联系人资料页和上下文出金链接。
+### v2.276
+**Added**
+
+- 对账单现在包含客户端安全的 `timeline[]`，带有本地化标题、产品上下文、
+  资产金额、余额和已记录的执行汇率。
+- PDF 新增“What happened?”概览、产品/月度图表、Timeline 和 Disputes 表格；
+  XLSX 新增 Movements 和 Disputes 工作表。
+### v2.275
+**已更改**
+- **破坏性变更：** BOB、MXN、ARS 和 CLP 余额及 `BANK_*` 镜像仅属于 Banking。平台 payout、默认值、swap、转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`；现有法币默认值会自动迁移为 `USDT`。法币操作请使用 Banking。
+### v2.274
+**新增**
+- 争议门户现记录搜索、多值 status 筛选、按截止时间排序，以及证据进度 automation chip。
+- 商户可以按 `kontigo-std-v1` 清单上传材料，并了解完成所有必需区块后的流程。
+**变更**
+- 指南说明只有在 pack 有效且商户材料完整后才会自动发送到 ATC。
 ## v2.273 · 10 个版本 - 2026年11月12日
 ### v2.273
 **变更**

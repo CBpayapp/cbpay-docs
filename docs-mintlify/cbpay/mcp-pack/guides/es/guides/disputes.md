@@ -347,3 +347,68 @@ sigue siendo el equivalente USD para reportes. El hold de una controversia
 sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.
+
+## Busca un caso y sigue la evidencia
+
+El listado del portal acepta `status` repetible o separado por comas, `kind`,
+`from`, `to`, búsqueda libre `q` de hasta 120 caracteres y `sort` por
+`deadline`, `created` o `amount` (prefijo `-` para descendente). El orden
+predeterminado es el plazo más cercano:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/disputes?status=open,evidence&from=2026-11-01&to=2026-11-30&q=560679&sort=deadline&page=1&page_size=50" \
+  -H "Authorization: Bearer $ACCOUNT_TOKEN"
+```
+
+Cada fila y detalle puede mostrar el objeto `automation`, que alimenta el chip
+de avance de evidencia:
+
+```json
+{
+  "pack_status": "ready",
+  "pack_version": 2,
+  "requested_at": "2026-09-19T12:10:00Z",
+  "evidence_complete": false,
+  "send_status": "pending",
+  "send_reason": "waiting_merchant",
+  "auto_sends": 0,
+  "paused": false
+}
+```
+
+El portal no expone destinatarios ATC ni el historial interno de envíos. El
+chip solo indica si falta evidencia, si está lista para revisión o si el caso
+avanza.
+
+## Qué emails recibe el comercio
+
+El email automático usa el checklist `kontigo-std-v1`. Según el tipo de
+cuenta, solicita estos seis bloques:
+
+| Bloque | Evidencia mínima |
+|---|---|
+| KYC del usuario final | Titular, documento, país, nivel y fecha de verificación. |
+| KYB | Evidencia de empresa, o declaración de que el pagador es persona. |
+| Screening AML/CFT | Motor de screening, veredicto y fecha. |
+| Liveness | Método biométrico y resultado. |
+| Registro de la orden | Email, fecha/hora, monto cobrado versus acreditado y wallet destino. |
+| Prueba de entrega | ID de orden, transacción on-chain y enlace al explorador. |
+
+En una cuenta persona no se exige KYB; los otros cinco bloques siguen siendo
+obligatorios. Sube cada documento desde el caso y selecciona su categoría.
+`other` sirve para material adicional, pero no completa un bloque estándar.
+
+Cuando todos los bloques requeridos están cubiertos, el worker genera o
+actualiza el pack y lo envía a los destinatarios ATC configurados por la
+organización. El comercio no envía la representación desde la API de cuenta:
+su rol es aportar evidencia y seguir el caso. Subir evidencia es inmutable y
+no cambia por sí solo la decisión.
+
+#### ¿Qué pasa cuando completo el checklist?
+El chip pasa a completo, el worker actualiza el pack si corresponde y una
+controversia normal queda habilitada para el envío automático a ATC. Antes de
+enviar vuelve a revisar el plazo y los controles de seguridad.
+#### ¿Por qué sigue apareciendo un bloque pendiente?
+Cada bloque estándar necesita al menos un documento con esa categoría. Los
+documentos `other` no cubren un bloque estándar. Una cuenta persona no necesita
+KYB; una cuenta empresa sí.

@@ -723,7 +723,7 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 400 | Errores `invalid_*` de ticket | Usa el vocabulario cerrado y sus límites. |
 | 404 | `not_found` | Confirma el ownership del ticket o transacción. |
 | 409 | `ticket_already_open` | Continúa el ticket existente de la respuesta. |
-| 409 | `ticket_closed` / `already_rated` | Abre otro ticket o conserva la calificación. |
+| 409 | `ticket_closed` / `ticket_resolved` / `already_rated` | Abre otro ticket o conserva la calificación. Los tickets resueltos y cerrados no aceptan más respuestas del cliente. |
 | 409 | `not_quarantined` | El reveal solo funciona en tickets en cuarentena; lee el hilo normal. |
 | 503 | `storage_unavailable` | Espera y sube una vez; no dupliques. |
 

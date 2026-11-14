@@ -22,8 +22,7 @@ remain processable, org-admin assignment remains operational, and
 system-created deposit instruments are not blocked.
 A payin is a fiat collection: your customer pays in local currency and your account is credited directly in USD cents. When another asset is configured, the net follows
 the post-credit conversion flow at **your payin rate** (`payin_rate` in
-`GET /v1/rates`) minus the fixed payin fee. In USDT v1, `payin_rate_source` tells you whether
-that rate is backed by enabled payin FIFO inventory (`lot`) or spot (`spot`).
+`GET /v1/rates`) minus the fixed payin fee. In USDT v1, `payin_rate_source` tells you whether that rate is backed by enabled payin FIFO inventory (`lot`), spot (`spot`), or the configured VE/VES C2P rail (`rail`). For VE/VES C2P, the rail quote is the executable market used at collection time.
 The rate is fixed before the asynchronous payment is credited. See [QR payins — Share a payment link](https://docs.cbpayapp.com/en/guides/payins-qr#share-a-payment-link).
 Whatever the mode, every path ends the same way — automatic credit +
 webhook:
@@ -1130,7 +1129,7 @@ credited automatically and the `payin_credited` webhook fires:
 
 `fx_rate` is your `payin_rate` at credit time — the conversion happens at
 exactly that rate: `usdt_gross = 700.00 / 6.91`. When present,
-`rate_source` is the quote provenance (`lot` or `spot`); historical payins
+`rate_source` is the quote provenance (`lot`, `spot`, or `rail`); a VE/VES C2P payin uses `rail` when the configured rail market supplies the quote. Historical payins
 without a loaded quote omit it.
 
 The payin object keeps the full detail:
@@ -1225,7 +1224,7 @@ the exact `usdt_credited`. You can also poll `GET /v1/payins/{id}`.
 #### Which FX rate applies to my payin?
 The quoted `payin_rate` returned by `GET /v1/rates` and carried by the payin
 at credit time. Check `payin_rate_source`: `lot` means enabled USDT payin
-inventory backed the quote, while `spot` means the spot path was used. Your
+inventory backed the quote, `spot` means the spot path was used, and `rail` means the configured VE/VES C2P rail supplied the executable quote. Your
 agreed spread is already inside the rate — it is never itemized.
 #### Can payins land in a balance other than USDT?
 Yes — set `default_payin_asset` with `PUT /v1/settlement`. Accounts credit directly in USD cents; another configured target uses the post-credit conversion flow and

@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/zh/guides/swaps
 ---
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
+> **重要**
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
 **兑换（Swaps）**在你的七种资产 — `USD`、`USDT`、`USDC`、`BTC`、`GOLD`、`SILVER` 和 `PLATINUM` — 之间**同步、即时**地转换余额，资金始终不离开你的账户。任意币对均可（包括 `BTC` ↔ `GOLD` 直接兑换，以及 `USD` ↔ `USDT` 精确 1:1）；本地法币（`BOB`、`MXN`、`ARS`）暂不支持兑换（`invalid_pair`）。你在报价中看到的汇率就是执行汇率：转换费用**已包含在汇率中**，不会作为额外的扣款；响应会显示每一边的费用和有效总额。
 
 ```mermaid
@@ -179,8 +181,7 @@ GOLD 代表足金克数，BTC 代表比特币：在不离开生态系统的情�
 
 USD 账本金额使用美分（两位小数）。直接入账、扣账、费用以及支持 USD
 资产字段的 payout、checkout、POS 和卡片流程使用 USD。USD 与 USDT 之间
-的 swap 按 1:1 计价，不使用 FX 预言机。BOB、MXN、ARS 仍是独立的法币
-账本资产；v1 中这些资产的 money-out 定价仍不可用。
+的 swap 按 1:1 计价，不使用 FX 预言机。法币余额和 money-out 操作现在属于 [Banking](https://docs.cbpayapp.com/zh/guides/banking)；平台旧法币账本行为仅保留为历史参考。
 
 USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及以美分
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
@@ -189,3 +190,7 @@ USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及
 
 swap 可能有内部后台对冲流程。这不会改变 `POST /v1/swaps` 的请求、
 响应、执行汇率或账户 ledger 合同。
+
+## Checkout 和 ledger 的汇率参考
+
+相同的汇率语义也用于 swap 之外：checkout 在付款前返回 `due_rate`、`rate_pair` 和包含费用的字段，`GET /v1/movements` 在执行后记录 `executed_rate`、`rate_pair` 和 `rate_source`。报价是 indicative；已完成 swap 的响应或 movement 才是历史执行记录。

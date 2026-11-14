@@ -8,6 +8,8 @@ source_url: https://docs.cbpayapp.com/zh/guides/checkout
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 > **重要**
+**破坏性变更 — 2026-11-13。** BOB、MXN、ARS 和 CLP 余额以及 `BANK_*` 镜像仅属于 Banking。平台 payout、swap、内部转账、银行卡、checkout、POS 和手续费拒绝法币结算并返回 HTTP `400`。现有法币默认值会自动迁移为 `USDT`；法币操作请使用 Banking。
+> **重要**
 商户账户必须先通过身份审核，才能使用认证的 `POST /v1/payins` 创建 checkout
 链接。个人账户需要 KYC 获批，企业账户需要 KYB 获批；否则 API 返回 HTTP
 `403 verification_required`。
@@ -292,3 +294,24 @@ USD 主账户的 payin 直接入账时，响应包含 `credit_asset: USD` 以及
 表示的 fiat 入账金额；`usdt_credited` 仍用于 USD 等值报表。争议 hold
 跟随实际入账资产：USD 入账使用 `hold_asset: USD`。`disputed` 与 `held` 使用 hold 资产的单位；
 `disputed_usdt` 与 `held_usdt` 是归一化后的等值字段。
+
+## 公共支付页面中的汇率和费用
+
+`GET /pay/{token}/quote` 为每个 crypto 选项和 CBPay 余额返回可执行信息。每个选项读取 `due`、`due_rate` 和 `rate_pair`；发生转换费用时，`fees[]`、`fee_total_pct` 和 `fee_note: "included_in_rate"` 说明该汇率。
+
+```json
+{
+  "crypto": [{
+    "method": "crypto:btc:btc",
+    "asset": "BTC",
+    "due": "0.00046120",
+    "due_rate": "108474.32744506",
+    "rate_pair": "BTC/USDT",
+    "fee_total_pct": "0.6000",
+    "fee_note": "included_in_rate"
+  }],
+  "cbpay": {"rates": {"USDC": {"due_rate": "0.99800399", "rate_pair": "USDC/USDT", "fee_total_pct": "0.2000", "fee_note": "included_in_rate"}}}
+}
+```
+
+相同资产支付不发生转换：例如 pair 为 `USDT/USDT`，due rate 为 `1`，不需要 `fees`。页面会显示汇率；费用包含在汇率中时会显示提示。due 仍是付款人必须发送的金额。

@@ -7,6 +7,8 @@ source_url: https://docs.cbpayapp.com/es/guides/payouts-overview
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
+> **Importante**
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
 Un payout envía dinero en moneda local a una cuenta bancaria del país
 destino. El monto se convierte de moneda local a USDT con **la tasa de tu
 cuenta** (la de `GET /v1/rates`) y se debita `usdt_amount + fee` (el fijo,

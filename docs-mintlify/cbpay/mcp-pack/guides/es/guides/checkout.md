@@ -8,6 +8,8 @@ source_url: https://docs.cbpayapp.com/es/guides/checkout
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
 > **Importante**
+**Cambio incompatible — 2026-11-13.** Los saldos BOB, MXN, ARS y CLP, junto con los espejos `BANK_*`, viven solo en Banking. Los payouts, swaps, transferencias internas, tarjetas, checkout, POS y comisiones de la plataforma rechazan la liquidación fiat con HTTP `400`. Los defaults fiat existentes migran automáticamente a `USDT`; usa Banking para las operaciones fiat.
+> **Importante**
 La cuenta comerciante debe tener identidad aprobada antes de crear un link
 checkout autenticado con `POST /v1/payins`. Las cuentas persona requieren KYC
 aprobado y las cuentas empresa KYB aprobado; de lo contrario la API responde
@@ -343,3 +345,25 @@ sigue siendo el equivalente USD para reportes. El hold de una controversia
 sigue el activo acreditado: los créditos USD usan `hold_asset: USD`. `disputed` y `held` usan las
 unidades del activo retenido; `disputed_usdt` y `held_usdt` son equivalentes
 normalizados.
+
+## Tasas y comisiones en la página de pago
+
+`GET /pay/{token}/quote` muestra la información ejecutable de cada opción crypto y saldo CBPay. Para cada opción lee `due`, `due_rate` y `rate_pair`; cuando corresponde una comisión de conversión, `fees[]`, `fee_total_pct` y `fee_note: "included_in_rate"` explican la tasa.
+
+```json
+{
+  "crypto": [{
+    "method": "crypto:btc:btc",
+    "asset": "BTC",
+    "due": "0.00046120",
+    "due_rate": "108474.32744506",
+    "rate_pair": "BTC/USDT",
+    "fees": [{"leg": "from", "asset": "BTC", "percent": "0.30"}, {"leg": "to", "asset": "USDT", "percent": "0.30"}],
+    "fee_total_pct": "0.6000",
+    "fee_note": "included_in_rate"
+  }],
+  "cbpay": {"rates": {"USDC": {"due_rate": "0.99800399", "rate_pair": "USDC/USDT", "fee_total_pct": "0.2000", "fee_note": "included_in_rate"}}}
+}
+```
+
+Un pago en el mismo activo no tiene conversión: el par es `USDT/USDT` (o el activo repetido), la tasa es `1` y no hace falta `fees`. La página muestra la tasa y una sugerencia de comisión cuando esta viene incluida; el due sigue siendo el monto que debe enviar el pagador.
