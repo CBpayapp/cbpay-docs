@@ -4,8 +4,8 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="14 de noviembre de 2026" description="v2.284 · 2 versiones">
-### v2.284
+<Update label="14 de noviembre de 2026" description="v2.285 · 3 versiones">
+### v2.285
 **Cambiado**
 - Los payouts ahora mantienen en el flujo de revisión los faltantes
   temporales del canal o de tesorería cuando es posible, en vez de exponer un
@@ -16,6 +16,11 @@ description: "Historial de cambios de la API y de esta documentación"
   consumió, la aprobación responde `reissue_required`. El cliente crea un
   payout nuevo con una clave de idempotencia nueva; CBPay nunca vuelve a emitir
   la operación.
+### v2.284
+**Agregado**
+- El portal de cuentas ahora documenta la búsqueda 360 de solo lectura para
+  operaciones, fragmentos de referencias bancarias normalizados, montos exactos
+  y coincidencias legibles acotadas a la cuenta autenticada.
 ### v2.283
 **Cambiado**
 - USD es el saldo principal predeterminado para las cuentas nuevas. Las cuentas legacy conservan un default USDT configurado explícitamente; los lados omitidos de un swap resuelven al principal de la cuenta.
