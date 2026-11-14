@@ -1,5 +1,5 @@
 {
-  "count": 431,
+  "count": 433,
   "errors": [
     {
       "category": {
@@ -3919,6 +3919,34 @@
         "en": "The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator.",
         "es": "La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización.",
         "zh": "所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "same_chain",
+      "http": 400,
+      "meaning": {
+        "en": "A network move needs two different chains for the same asset. Send a `to_chain` that differs from `from_chain`.",
+        "es": "Un cambio de red necesita dos cadenas distintas para el mismo activo. Envía un `to_chain` distinto de `from_chain`.",
+        "zh": "跨链转账的同一资产需要两条不同的链。请发送与 `from_chain` 不同的 `to_chain`。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "move_conflict",
+      "http": 409,
+      "meaning": {
+        "en": "The `idempotency_key` already exists with a different payload (asset, chains, amount or explicit address compared by value). Replay only with the identical payload.",
+        "es": "El `idempotency_key` ya existe con otro payload (activo, cadenas, monto o dirección explícita comparados por valor). Repite solo con el payload idéntico.",
+        "zh": "该 `idempotency_key` 已存在且载荷不同（按值比较资产、链、金额或显式地址）。请仅以完全相同的载荷重放。"
       }
     },
     {

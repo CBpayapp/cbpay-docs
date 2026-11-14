@@ -5,16 +5,20 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.281 · 8 个版本 - 2026年11月13日
-### v2.281
+## v2.282 · 9 个版本 - 2026年11月13日
+### v2.282
 **已更改**
 - 配置 VE/VES 通道时，`GET /v1/rates` 现在返回该通道的可执行报价，并在适用时使用 `rate_source: rail` 和 `payin_rate_source: rail`。响应结构不变。
-### v2.280
+### v2.281
 **已更改**
 - 补充 movements、checkout 报价、swap、对账单和回执中的执行汇率说明；明确相同资产支付不发生转换。
-### v2.279
+### v2.280
 **已更改**
 - 账户支持工单将 `resolved` 视为客户侧终态，门户消息和附件上传返回 `409 ticket_resolved`；已解决工单的邮件回复会被忽略并引导客户创建新工单。
+### v2.279
+**新增**
+- 显式跨链转账（`/v1/crypto/network-moves/*`）：同资产换链的报价、执行、列表与查询。跨链恒为一次带 `from_chain` 上下文的提现：资金只记一次，限额、Travel Rule、KYT、筛查、防火墙与广播与提现完全一致。
+- 加密储备证明（`GET /v1/org/treasury/crypto-proof`，treasury:read）：按资产比较账本负债与热钱包链上库存，已审计，热钱包不可读时 fail-closed。
 ### v2.278
 **变更**
 

@@ -116,9 +116,10 @@ curl -X POST https://api.qbank.cl/platform/v1/transfers \
 La forma del request es idéntica en todas las combinaciones (persona o
 empresa, en cualquier dirección) — cambia solo la credencial que llama.
 `asset` es opcional y por defecto usa el **settlement asset del emisor**
-(`USD` es el saldo principal); acepta cualquiera de los doce
-assets del ledger (`USD`, `USDT`, `USDC`, `USDCE`, `BTC`, `GOLD`, `SILVER`,
-`PLATINUM`, `BOB`, `MXN`, `ARS`, `CLP`) y el destino recibe **en esa misma moneda**.
+(`USD` es el saldo principal); acepta los siete activos de settlement de la plataforma
+(`USD`, `USDT`, `USDC`, `BTC`, `GOLD`, `SILVER`, `PLATINUM`) y el destino recibe
+**el mismo activo**. Los saldos y transferencias fiat se operan en
+[Banking](https://docs.cbpayapp.com/es/guides/banking), no en este endpoint de plataforma.
 
 Respuesta `201` — la transferencia es **síncrona e inmediata**:
 
@@ -184,8 +185,7 @@ Cada fila trae `direction` (`sent` o `received`) desde tu perspectiva.
 - No puedes transferirte a ti mismo (`400 self_transfer`).
 - Requiere `idempotency_key` (body o header `Idempotency-Key`); el replay
   devuelve `200` con `idempotency_hit: true`.
-- `amount` acepta hasta los decimales de la moneda: 2 para `USD`/`BOB`/`MXN`/
-  `ARS`, 0 para `CLP`, 6 para `USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM`, 8 para `BTC`.
+- `amount` acepta hasta los decimales de la moneda: 2 para `USD`, 6 para `USDT`/`USDC`/`GOLD`/`SILVER`/`PLATINUM` y 8 para `BTC`.
 
 ## Errores
 
