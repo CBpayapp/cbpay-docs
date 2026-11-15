@@ -5,6 +5,13 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.288 · 2 versiones - 15 de noviembre de 2026
+### v2.288
+**Agregado**
+- Documentos tributarios en el portal: lista y consulta los DTE chilenos facturados a tu cuenta vía `GET /v1/me/billing/docs` y `.../docs/{docID}`, incluido el XML DTE firmado.
+### v2.287
+**Cambiado**
+- El desglose por producto de la cartola ahora incluye swaps, transacciones de tarjeta, operaciones bancarias y devoluciones de cobros con montos en el asset del resumen (antes solo conteos en algunas vistas). Las operaciones bancarias se cuentan pero jamás se suman aquí (cuadran en sus secciones BANK_*).
 ## v2.286 · 4 versiones - 14 de noviembre de 2026
 ### v2.286
 **Cambiado**

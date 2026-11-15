@@ -145,6 +145,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_settlement_hours` | `settlement_hours` solo se acepta en el servicio de comisión `payin_card` y debe ser un entero no negativo (`0` = acreditación inmediata) — ver [comisiones](https://docs.cbpayapp.com/es/concepts/fees) |
 | `invalid_country` | Código de país mal formado o ausente — ISO 3166-1 alpha-2 (ej. `GET /v1/aml/catalogs/cities?country=`); también un filtro de país válido pero no soportado (ej. un `country` distinto de `US` en el lookup del directorio bancario) |
 | `invalid_expand` | Valor desconocido en `?expand=` de `GET /v1/contacts` (solo se soporta `destinations`); `dest_type`/`dest_country` también exigen `expand=destinations` |
+| `invalid_flag` | `flag_key` desconocido (registro cerrado de feature flags) |
+| `account_without_org` | El scope de cuenta exige `org_id` |
 
 ### Idempotencia de payins QR
 
@@ -199,6 +201,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 409 | `no_banking_customer` | Operación Banking clásica sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
 | 400 | `banking_eur_requires_viban` | Las cuentas Banking EUR se abren como vIBAN. Solicita `purpose: "banking_eur"` desde Operar EUR en vez de crear un customer Banking genérico |
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
+| 409 | `resubmit_rejected_duplicate` | El cliente banking rechazado duplica a uno vivo (mismo documento de identidad) — reenvía el cliente sobreviviente o reintenta con `acknowledge_duplicate` explícito tras revisión humana |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 409 | `bank_ref_conflict` | La referencia bancaria ya fue reclamada por otra operación (la respuesta la nombra con `claimed_by`/`claimed_kind` cuando pertenece a tu tenant) — corrige la evidencia en vez de reintentar con otra referencia |

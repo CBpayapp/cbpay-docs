@@ -162,6 +162,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_settlement_hours` | `settlement_hours` is only accepted on the `payin_card` fee service and must be a non-negative integer (`0` = immediate credit) — see [fees](https://docs.cbpayapp.com/en/concepts/fees) |
 | `invalid_country` | Malformed or missing country code — ISO 3166-1 alpha-2 (e.g. `GET /v1/aml/catalogs/cities?country=`); also a valid but unsupported country filter (e.g. a non-`US` `country` on the bank directory lookup) |
 | `invalid_expand` | Unknown `?expand=` value on `GET /v1/contacts` (only `destinations` is supported); `dest_type`/`dest_country` also require `expand=destinations` |
+| `invalid_flag` | Unknown `flag_key` (closed feature-flag registry) |
+| `account_without_org` | Account scope requires `org_id` |
 
 ### QR payin idempotency
 
@@ -216,6 +218,7 @@ part of the replay identity. Read the live status with
 | 409 | `no_banking_customer` | Classic Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
 | 400 | `banking_eur_requires_viban` | EUR Banking accounts are opened as virtual IBANs. Request `purpose: "banking_eur"` from Operar EUR instead of creating a generic banking customer |
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
+| 409 | `resubmit_rejected_duplicate` | The rejected banking customer duplicates a live one (same identity document) — resubmit the surviving customer instead, or retry with explicit `acknowledge_duplicate` after human review |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
 | 409 | `bank_ref_conflict` | The bank reference is already claimed by another operation (the response names it with `claimed_by`/`claimed_kind` when it belongs to your tenant) — fix the evidence instead of retrying with a different reference |
