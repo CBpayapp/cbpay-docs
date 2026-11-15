@@ -4,10 +4,16 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="15 de noviembre de 2026" description="v2.287 · 1 versión">
-### v2.287
+<Update label="15 de noviembre de 2026" description="v2.289 · 3 versiones">
+### v2.289
+**Cambiado**
+- Los swaps BTC ahora fallan cerrados con 503 `coverage_unavailable` cuando el spread efectivo cae bajo el piso de cobertura (la casa nunca cotiza a pérdida).
+### v2.288
 **Agregado**
 - Documentos tributarios en el portal: lista y consulta los DTE chilenos facturados a tu cuenta vía `GET /v1/me/billing/docs` y `.../docs/{docID}`, incluido el XML DTE firmado.
+### v2.287
+**Cambiado**
+- El desglose por producto de la cartola ahora incluye swaps, transacciones de tarjeta, operaciones bancarias y devoluciones de cobros con montos en el asset del resumen (antes solo conteos en algunas vistas). Las operaciones bancarias se cuentan pero jamás se suman aquí (cuadran en sus secciones BANK_*).
 </Update>
 <Update label="14 de noviembre de 2026" description="v2.286 · 4 versiones">
 ### v2.286
