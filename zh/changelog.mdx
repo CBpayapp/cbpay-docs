@@ -4,10 +4,13 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月15日" description="v2.289 · 3 个版本">
-### v2.289
+<Update label="2026年11月15日" description="v2.290 · 4 个版本">
+### v2.290
 **变更**
 - 当有效价差低于对冲覆盖下限时，BTC 兑换现以 503 `coverage_unavailable` 明确失败（公司绝不亏本报价）。
+### v2.289
+**新增**
+- RWA 版税代币（ledger 优先）：通过 `GET /v1/rwa/projects` 浏览项目，用 USDT 认购（`POST /v1/rwa/subscriptions`）、按平价赎回（`POST /v1/rwa/redemptions`）、跟踪持仓和季度 USDT 分红、在组织内账户间转移代币，并下载签名 PDF 回单。新增 webhook `rwa_subscription_completed`、`rwa_distribution_credited` 和 `rwa_redeem_completed`。
 ### v2.288
 **新增**
 - 门户账单文档：通过 `GET /v1/me/billing/docs` 和 `.../docs/{docID}` 列出并查看向你的账户开具的智利税务文档（DTE），包括已签名的 DTE XML。
