@@ -102,6 +102,26 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `payroll_credited` | La organización acreditó un sueldo al saldo de la cuenta (crédito directo de tesorería) |
 | `org_expense_credited` | La organización pagó un gasto operativo al saldo de la cuenta (crédito directo de tesorería) |
 | `referral_credited` | La organización pagó un cierre de referidor al saldo de la cuenta payout (comisión del período) |
+| `rwa_subscription_completed` | Se suscribieron tokens de regalía con USDT (débito neto + comisión, tokens acreditados) |
+| `rwa_distribution_credited` | Una distribución de regalías acreditó USDT pro-rata sobre el saldo del snapshot |
+| `rwa_redeem_completed` | Se rescataron tokens de regalía por USDT al precio de suscripción del proyecto |
+
+Los payloads RWA usan cadenas decimales exactas e incluyen el identificador de la operación:
+
+```json
+{
+  "event_type": "rwa_distribution_credited",
+  "distribution_id": "66666666-6666-4666-8666-666666666666",
+  "project_code": "RWA-MIN01",
+  "period": "2026-Q4",
+  "tokens": "890.000000",
+  "share_usdt": "12.500000",
+  "fee_usdt": "0.125000",
+  "status": "completed"
+}
+```
+
+Verifica la firma y deduplica por `X-Webhook-Event-ID`. El webhook notifica; no es un comando. Usa el `GET` correspondiente para conciliar.
 | `crypto_deposit_credited` | Un depósito on-chain fue confirmado y abonado |
 | `crypto_deposit_held` | Un depósito entrante quedó retenido por riesgo del remitente ([screening](https://docs.cbpayapp.com/es/guides/screenings)) |
 | `crypto_deposit_alert` | Un depósito se acreditó pero el remitente presenta riesgo alto (informativo) |

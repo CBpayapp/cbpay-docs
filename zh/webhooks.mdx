@@ -111,6 +111,11 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `payroll_credited` | 组织向该账户余额发放了一笔工资（财务直接入账）|
 | `org_expense_credited` | 组织向该账户余额支付了一笔运营费用（财务直接入账）|
 | `referral_credited` | 组织向 payout 账户余额支付了一笔推荐人结算（该期间的推荐人佣金）|
+| `rwa_subscription_completed` | 已用 USDT 认购版税代币（扣除净额+手续费，记入代币）|
+| `rwa_distribution_credited` | 版税分红已按快照余额比例记入 USDT |
+| `rwa_redeem_completed` | 已按项目认购价将版税代币赎回为 USDT |
+
+RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Event-ID` 去重。Webhook 只是通知，不是命令；请使用对应的 `GET` 接口对账。
 | `crypto_deposit_credited` | 一笔链上充值已确认并入账 |
 | `crypto_deposit_held` | 一笔入账充值因发送方风险被暂扣（[筛查](/zh/guides/screenings)） |
 | `crypto_deposit_alert` | 一笔充值已入账，但发送方显示高风险（仅提示） |

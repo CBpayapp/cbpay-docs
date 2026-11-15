@@ -794,3 +794,33 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 400 | `invalid_batch` | Una operación masiva tiene menos de 1 o más de 100 IDs | Envía UUIDs de gastos, entre 1 y 100 |
 | 400 | `invalid_horizon` | El horizonte no es 3, 6 ni 12 meses | Usa `horizon=3`, `6` o `12` |
 | 400 | `invalid_icon` | El icono supera el formato o largo permitido | Usa hasta 40 letras, dígitos, `_` o `-` |
+
+## Errores RWA de regalías
+
+| HTTP | `error` | Significado | Solución |
+|---|---|---|---|
+| 404 | `rwa_project_not_found` | Ningún proyecto RWA calza con ese código en tu org (superficie transfers; suscribir/consultar usan `not_found`) | Lista `GET /v1/rwa/projects` y usa un código vivo |
+| 422 | `rwa_transfers_disabled` | El proyecto deshabilitó transfers internas | Solo se mueven en funding/active/distributing con el switch on |
+| 422 | `project_not_subscribable` | El proyecto no está en funding | Suscribe mientras el proyecto esté en funding |
+| 422 | `window_closed` | Fuera de la ventana de suscripción | Revisa `subscription_opens_at` / `subscription_closes_at` |
+| 422 | `cap_exceeded` | Se excedería el tope por cuenta o de levantamiento | Baja el monto o espera capacidad |
+| 422 | `amount_below_minimum` | Bajo el mínimo del proyecto (o polvo tras comisiones) | Sube el monto sobre el mínimo |
+| 422 | `fee_exceeds_amount` | La comisión configurada excede el monto | Sube el monto o pide a tu org revisar comisiones |
+| 422 | `invalid_transition` | Transición de estado no permitida | Sigue draft → funding → active → distributing, o pausa/default antes |
+| 422 | `attestation_math_mismatch` | La regalía no cuadra floor(neto × pct / 100) | Recomputa la matemática exacta |
+| 422 | `quorum_not_met` | Firmas válidas bajo el quorum | Reúne las firmas distintas requeridas |
+| 422 | `escrow_missing` | El proyecto no tiene cuenta escrow | Fija `escrow_account_id` antes de funding |
+| 422 | `escrow_insufficient` | El escrow no cubre el total a distribuir | Fondea el escrow y re-propón |
+| 422 | `nothing_to_distribute` | La regalía del período es cero | Un trimestre cero no paga |
+| 422 | `no_holders` | Sin holders en el snapshot; marcada fallida | Re-propón cuando haya tokens en manos |
+| 422 | `redeem_disabled` | Rescates deshabilitados para el proyecto | Requieren switch on en funding/active/distributing |
+| 400 | `invalid_date` | Un campo fecha no es RFC3339 | Envía timestamps RFC3339 |
+| 409 | `project_exists` | Código duplicado al crear | Elige otro código `RWA-*` |
+| 400 | `invalid_terms` | Los términos del proyecto fallaron validación | Corrige el campo marcado (rangos, enums, fechas, JSON) |
+| 400 | `invalid_attestation` | El payload de attestation falló validación | Corrige período, montos, tasa, evidencia o firmas |
+| 422 | `attestation_project_mismatch` | La attestation es de otro proyecto | Empareja recursos del mismo proyecto |
+| 422 | `attestation_not_approved` | La attestation no está aprobada | Apruébala con un segundo admin antes |
+| 422 | `project_not_distributable` | El proyecto no está activo para attestations/distribuciones | Opera en active/distributing |
+| 422 | `royalty_pct_mismatch` | La tasa difiere de los términos del proyecto | Usa el `royalty_pct` exacto del proyecto |
+| 422 | `royalty_cap_exceeded` | La distribución excedería cap × levantado | Baja el total o espera más suscripciones |
+| 422 | `escrow_blocked` | La cuenta escrow no está activa | Desbloquea la cuenta escrow antes |

@@ -1,5 +1,5 @@
 {
-  "count": 436,
+  "count": 460,
   "errors": [
     {
       "category": {
@@ -6061,6 +6061,342 @@
         "en": "A custom expense icon exceeds the allowed format or length — Fix: Use up to 40 letters, digits, `_` or `-`",
         "es": "El icono supera el formato o largo permitido — Fix: Usa hasta 40 letras, dígitos, `_` o `-`",
         "zh": "自定义图标格式或长度超出限制 — Fix: 使用不超过 40 个字母、数字、`_` 或 `-`"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "rwa_project_not_found",
+      "http": 404,
+      "meaning": {
+        "en": "No RWA project matches that asset code in your org (transfers surface; subscribe/get use `not_found`) — Fix: List `GET /v1/rwa/projects` and use a live code",
+        "es": "Ningún proyecto RWA calza con ese código en tu org (superficie transfers; suscribir/consultar usan `not_found`) — Fix: Lista `GET /v1/rwa/projects` y usa un código vivo",
+        "zh": "你所在组织无此资产代码的 RWA 项目（transfers 接口；认购/查询用 `not_found`） — Fix: 调用 `GET /v1/rwa/projects` 使用有效代码"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "rwa_transfers_disabled",
+      "http": 422,
+      "meaning": {
+        "en": "The project disabled internal transfers — Fix: Transfers only move in funding/active/distributing with the switch on",
+        "es": "El proyecto deshabilitó transfers internas — Fix: Solo se mueven en funding/active/distributing con el switch on",
+        "zh": "项目禁用了内部转账 — Fix: 仅 funding/active/distributing 且开关开启时可转"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "project_not_subscribable",
+      "http": 422,
+      "meaning": {
+        "en": "The project is not in funding status — Fix: Subscribe while the project is funding",
+        "es": "El proyecto no está en funding — Fix: Suscribe mientras el proyecto esté en funding",
+        "zh": "项目不在 funding 状态 — Fix: 在 funding 期间认购"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "window_closed",
+      "http": 422,
+      "meaning": {
+        "en": "Outside the subscription window — Fix: Check `subscription_opens_at` / `subscription_closes_at`",
+        "es": "Fuera de la ventana de suscripción — Fix: Revisa `subscription_opens_at` / `subscription_closes_at`",
+        "zh": "不在认购窗口内 — Fix: 查看 `subscription_opens_at` / `subscription_closes_at`"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "cap_exceeded",
+      "http": 422,
+      "meaning": {
+        "en": "Per-account or raise cap would be exceeded — Fix: Lower the amount or wait for capacity",
+        "es": "Se excedería el tope por cuenta o de levantamiento — Fix: Baja el monto o espera capacidad",
+        "zh": "将超出账户或募资上限 — Fix: 降低金额或等待额度"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "fee_exceeds_amount",
+      "http": 422,
+      "meaning": {
+        "en": "The configured fee exceeds the operation amount — Fix: Raise the amount or ask your org to review fees",
+        "es": "La comisión configurada excede el monto — Fix: Sube el monto o pide a tu org revisar comisiones",
+        "zh": "配置手续费超过操作金额 — Fix: 提高金额或请组织检查费率"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_transition",
+      "http": 422,
+      "meaning": {
+        "en": "Status transition not allowed — Fix: Follow draft → funding → active → distributing, or pause/default first",
+        "es": "Transición de estado no permitida — Fix: Sigue draft → funding → active → distributing, o pausa/default antes",
+        "zh": "状态流转不允许 — Fix: 遵循 draft → funding → active → distributing，或先暂停/违约"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "attestation_math_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "Royalty due does not equal floor(net × pct / 100) — Fix: Recompute the royalty math exactly",
+        "es": "La regalía no cuadra floor(neto × pct / 100) — Fix: Recomputa la matemática exacta",
+        "zh": "版税不等于 floor（净额 × pct / 100） — Fix: 精确重算版税"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "quorum_not_met",
+      "http": 422,
+      "meaning": {
+        "en": "Valid auditor signatures are below quorum — Fix: Collect the required distinct auditor signatures",
+        "es": "Firmas válidas bajo el quorum — Fix: Reúne las firmas distintas requeridas",
+        "zh": "有效审计师签名不足 quorum — Fix: 收集所需的不同签名"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "escrow_missing",
+      "http": 422,
+      "meaning": {
+        "en": "The project has no escrow account — Fix: Set `escrow_account_id` before funding",
+        "es": "El proyecto no tiene cuenta escrow — Fix: Fija `escrow_account_id` antes de funding",
+        "zh": "项目没有托管账户 — Fix: funding 前先设置 `escrow_account_id`"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "escrow_insufficient",
+      "http": 422,
+      "meaning": {
+        "en": "Escrow balance is below the distribution total — Fix: Fund the escrow and re-propose",
+        "es": "El escrow no cubre el total a distribuir — Fix: Fondea el escrow y re-propón",
+        "zh": "托管余额不足以支付总额 — Fix: 注资托管后重新提议"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "nothing_to_distribute",
+      "http": 422,
+      "meaning": {
+        "en": "The attestation royalty due is zero — Fix: No payout for a zero quarter",
+        "es": "La regalía del período es cero — Fix: Un trimestre cero no paga",
+        "zh": "本周期版税为零 — Fix: 零季度不分红"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "no_holders",
+      "http": 422,
+      "meaning": {
+        "en": "No holders at snapshot; marked failed — Fix: Re-propose once tokens are held",
+        "es": "Sin holders en el snapshot; marcada fallida — Fix: Re-propón cuando haya tokens en manos",
+        "zh": "快照无持有人；已标记失败 — Fix: 有持有人后再提议"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "redeem_disabled",
+      "http": 422,
+      "meaning": {
+        "en": "Redemptions disabled for the project — Fix: Redemptions need the switch on in funding/active/distributing",
+        "es": "Rescates deshabilitados para el proyecto — Fix: Requieren switch on en funding/active/distributing",
+        "zh": "项目禁用赎回 — Fix: 需在 funding/active/distributing 开启开关"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_date",
+      "http": 400,
+      "meaning": {
+        "en": "A date field is not RFC3339 — Fix: Send RFC3339 timestamps",
+        "es": "Un campo fecha no es RFC3339 — Fix: Envía timestamps RFC3339",
+        "zh": "日期字段不是 RFC3339 — Fix: 发送 RFC3339 时间戳"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "project_exists",
+      "http": 409,
+      "meaning": {
+        "en": "Duplicate project code on create — Fix: Pick another `RWA-*` code",
+        "es": "Código duplicado al crear — Fix: Elige otro código `RWA-*`",
+        "zh": "创建时代码重复 — Fix: 换一个 `RWA-*` 代码"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_terms",
+      "http": 400,
+      "meaning": {
+        "en": "Project terms failed validation — Fix: Correct the flagged field (ranges, enums, dates, JSON)",
+        "es": "Los términos del proyecto fallaron validación — Fix: Corrige el campo marcado (rangos, enums, fechas, JSON)",
+        "zh": "项目条款校验失败 — Fix: 修正标记字段（范围、枚举、日期、JSON）"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_attestation",
+      "http": 400,
+      "meaning": {
+        "en": "Attestation payload failed validation — Fix: Correct period, amounts, rate, evidence or signatures",
+        "es": "El payload de attestation falló validación — Fix: Corrige período, montos, tasa, evidencia o firmas",
+        "zh": "Attestation 内容校验失败 — Fix: 修正周期、金额、费率、证据或签名"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "attestation_project_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "The attestation belongs to another project — Fix: Pair resources of the same project",
+        "es": "La attestation es de otro proyecto — Fix: Empareja recursos del mismo proyecto",
+        "zh": "该 attestation 属于另一项目 — Fix: 配对同一项目的资源"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "attestation_not_approved",
+      "http": 422,
+      "meaning": {
+        "en": "The attestation is not approved — Fix: Approve it with a second admin first",
+        "es": "La attestation no está aprobada — Fix: Apruébala con un segundo admin antes",
+        "zh": "Attestation 尚未批准 — Fix: 先由第二位 admin 批准"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "project_not_distributable",
+      "http": 422,
+      "meaning": {
+        "en": "The project is not active for attestations/distributions — Fix: Operate in active/distributing status",
+        "es": "El proyecto no está activo para attestations/distribuciones — Fix: Opera en active/distributing",
+        "zh": "项目未处于可分红激活状态 — Fix: 在 active/distributing 状态下操作"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "royalty_pct_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "The attestation rate differs from project terms — Fix: Use the exact project `royalty_pct`",
+        "es": "La tasa difiere de los términos del proyecto — Fix: Usa el `royalty_pct` exacto del proyecto",
+        "zh": "费率与项目条款不一致 — Fix: 使用项目精确的 `royalty_pct`"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "royalty_cap_exceeded",
+      "http": 422,
+      "meaning": {
+        "en": "The distribution would exceed cap × raised — Fix: Lower the total or wait for more subscriptions",
+        "es": "La distribución excedería cap × levantado — Fix: Baja el total o espera más suscripciones",
+        "zh": "分红将超过 cap × 募资额 — Fix: 降低总额或等待更多认购"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "escrow_blocked",
+      "http": 422,
+      "meaning": {
+        "en": "The escrow account is not active — Fix: Unblock the escrow account first",
+        "es": "La cuenta escrow no está activa — Fix: Desbloquea la cuenta escrow antes",
+        "zh": "托管账户未激活 — Fix: 先解封托管账户"
       }
     }
   ]

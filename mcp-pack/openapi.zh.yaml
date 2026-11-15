@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.288'
+  version: '2.290'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -23507,6 +23507,496 @@ paths:
           description: 无匹配账户(`not_found`)。
         '429':
           description: 查询次数过多(`too_many_attempts`)。
+  /v1/rwa/distributions:
+    get:
+      tags:
+      - RWA
+      operationId: listRWADistributions
+      summary: 列出你的 RWA 分红入账
+      description: 按日期范围分页列出当前账户的版税分红入账。
+      parameters:
+      - name: from
+        in: query
+        description: 起始时间（RFC3339）。
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: 结束时间（RFC3339）。
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: 分页分红入账。
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                distributions:
+                - leg_id: 55555555-5555-4555-8555-555555555555
+                  distribution_id: 66666666-6666-4666-8666-666666666666
+                  project_code: RWA-MIN01
+                  period: 2026-Q4
+                  tokens: '890.000000'
+                  share_usdt: '12.500000'
+                  fee_usdt: '0.125000'
+                  created_at: '2026-11-15T15:00:00Z'
+        '400':
+          description: 日期范围无效。
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/distributions/{distributionID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWADistributionLeg
+      summary: 查询单笔分红入账
+      description: 你在一次版税分红中的入账明细。
+      parameters:
+      - name: distributionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 分红入账详情。
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/distributions/{distributionID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWADistributionReceipt
+      summary: 下载分红回单（PDF）
+      description: 品牌分红回单 PDF，含快照代币、分红份额和签名验证二维码。账户查看自己的部分；admin 传递 account_id 选择持有人部分。
+      parameters:
+      - name: distributionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: account_id
+        in: query
+        description: 持有人部分选择器（仅 admin；无账户凭证时必填）。
+        schema:
+          type: string
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/holdings:
+    get:
+      tags:
+      - RWA
+      operationId: listRWAHoldings
+      summary: 列出你的 RWA 持仓
+      description: 当前账户的 RWA-* 余额，含项目条款和募资合计。
+      responses:
+        '200':
+          description: 按项目的持仓。
+          content:
+            application/json:
+              example:
+                holdings:
+                - project_code: RWA-MIN01
+                  project_name: Minera Norte Royalty I
+                  project_status: active
+                  available: '890.000000'
+                  held: '0.000000'
+                  subscribed_gross_usdt: '1000.000000'
+                  redeemed_tokens: '100.000000'
+                  distributions_received_usdt: '12.500000'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/projects:
+    get:
+      tags:
+      - RWA
+      operationId: listRWAProjects
+      summary: 列出 RWA 版税项目
+      description: 你所在组织的版税代币项目，含条款、状态和募资进度。任何账户可查；购买需要完成身份验证。
+      parameters:
+      - name: status
+        in: query
+        description: 按项目状态过滤（draft、funding、active、distributing、defaulted、redeemed、paused）。
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: 分页项目列表。
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                projects:
+                - project_id: 11111111-1111-4111-8111-111111111111
+                  code: RWA-MIN01
+                  name: Minera Norte Royalty I
+                  mineral: copper
+                  spv_name: Norte Royalty SPV Ltd
+                  status: funding
+                  royalty_pct: '5'
+                  royalty_base: nsr
+                  cap_multiple: '2'
+                  term_years: 7
+                  supply_total: '10000000.000000'
+                  subscription_price_usdt: '1.000000'
+                  min_per_account: '100.000000'
+                  distribution_frequency: quarterly
+                  chain: polygon
+                  bridge_enabled: false
+                  transfers_enabled: true
+                  redeem_enabled: true
+                  sold_tokens: '1200000.000000'
+                  raised_gross_usdt: '1200000.000000'
+                  subscribers: 84
+                  redeemed_tokens: '0.000000'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/projects/{code}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWAProject
+      summary: 查询单个 RWA 项目
+      description: 你所在组织单个项目的完整条款、审计师公钥、证据文档和募资进度。
+      parameters:
+      - name: code
+        in: path
+        required: true
+        description: 项目资产代码（例如 RWA-MIN01）。
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 项目详情。
+          content:
+            application/json:
+              example:
+                project_id: 11111111-1111-4111-8111-111111111111
+                code: RWA-MIN01
+                name: Minera Norte Royalty I
+                mineral: copper
+                spv_name: Norte Royalty SPV Ltd
+                status: funding
+                royalty_pct: '5'
+                royalty_base: nsr
+                cap_multiple: '2'
+                term_years: 7
+                supply_total: '10000000.000000'
+                subscription_price_usdt: '1.000000'
+                min_per_account: '100.000000'
+                distribution_frequency: quarterly
+                chain: polygon
+                sold_tokens: '1200000.000000'
+                raised_gross_usdt: '1200000.000000'
+                subscribers: 84
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/redemptions:
+    post:
+      tags:
+      - RWA
+      operationId: createRWARedemption
+      summary: 赎回 RWA 代币为 USDT
+      description: 按项目认购价（平价）返还版税代币。原子扣减 RWA-* 代币并记入 USDT。需要完成身份验证、人工会话需要 OTP，并提供幂等键；重放返回原始赎回单。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - tokens
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                tokens:
+                  type: string
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              tokens: '100.000000'
+              idempotency_key: red-min01-0001
+      responses:
+        '201':
+          description: 赎回完成。
+          content:
+            application/json:
+              example:
+                redemption_id: 44444444-4444-4444-8444-444444444444
+                account_id: 33333333-3333-4333-8333-333333333333
+                project_id: 11111111-1111-4111-8111-111111111111
+                project_code: RWA-MIN01
+                tokens: '100.000000'
+                usdt_credited: '100.000000'
+                price_usdt: '1.000000'
+                status: completed
+                created_at: '2026-11-15T14:00:00Z'
+                receipt_url: /v1/rwa/redemptions/44444444-4444-4444-8444-444444444444/receipt
+        '200':
+          description: 已存在赎回单的幂等重放。
+        '400':
+          description: 金额无效或缺少幂等键。
+        '403':
+          description: 服务未启用、需要验证、需要 OTP 或合规拦截。
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: 赎回已禁用、金额为粉尘或代币余额不足。
+    get:
+      tags:
+      - RWA
+      operationId: listRWARedemptions
+      summary: 列出你的 RWA 赎回单
+      description: 按日期范围分页列出当前账户的赎回单。
+      parameters:
+      - name: from
+        in: query
+        description: 起始时间（RFC3339）。
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: 结束时间（RFC3339）。
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: 分页赎回单。
+        '400':
+          description: 日期范围无效。
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/redemptions/{redemptionID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWARedemption
+      summary: 查询单笔 RWA 赎回
+      description: 当前账户单笔赎回单的详情。
+      parameters:
+      - name: redemptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 赎回单详情。
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/redemptions/{redemptionID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWARedemptionReceipt
+      summary: 下载赎回回单（PDF）
+      description: 品牌赎回回单 PDF，含返还代币、记入 USDT 和签名验证二维码。
+      parameters:
+      - name: redemptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/subscriptions:
+    post:
+      tags:
+      - RWA
+      operationId: createRWASubscription
+      summary: 认购 RWA 项目
+      description: 以项目认购价用 USDT 购买版税代币。原子扣款 USDT（净额+手续费）并记入 RWA-* 代币。需要完成身份验证、人工会话需要 OTP，并提供幂等键；重放返回原始认购单。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - usdt_amount
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                usdt_amount:
+                  type: string
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              usdt_amount: '1000.000000'
+              idempotency_key: sub-min01-0001
+      responses:
+        '201':
+          description: 认购完成。
+          content:
+            application/json:
+              example:
+                subscription_id: 22222222-2222-4222-8222-222222222222
+                account_id: 33333333-3333-4333-8333-333333333333
+                project_id: 11111111-1111-4111-8111-111111111111
+                project_code: RWA-MIN01
+                usdt_gross: '1000.000000'
+                fee_usdt: '10.000000'
+                usdt_net: '990.000000'
+                tokens_credited: '990.000000'
+                price_usdt: '1.000000'
+                status: completed
+                created_at: '2026-11-15T13:00:00Z'
+                receipt_url: /v1/rwa/subscriptions/22222222-2222-4222-8222-222222222222/receipt
+        '200':
+          description: 已存在认购单的幂等重放。
+        '400':
+          description: 金额无效或缺少幂等键。
+        '403':
+          description: 服务未启用、需要验证、需要 OTP 或合规拦截。
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: 窗口已关闭、超出上限、手续费超过金额、项目不可认购或余额不足。
+    get:
+      tags:
+      - RWA
+      operationId: listRWASubscriptions
+      summary: 列出你的 RWA 认购单
+      description: 按日期范围分页列出当前账户的认购单。
+      parameters:
+      - name: from
+        in: query
+        description: 起始时间（RFC3339）。
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: 结束时间（RFC3339）。
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: 分页认购单。
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                subscriptions:
+                - subscription_id: 22222222-2222-4222-8222-222222222222
+                  project_code: RWA-MIN01
+                  usdt_gross: '1000.000000'
+                  fee_usdt: '10.000000'
+                  usdt_net: '990.000000'
+                  tokens_credited: '990.000000'
+                  price_usdt: '1.000000'
+                  status: completed
+                  created_at: '2026-11-15T13:00:00Z'
+        '400':
+          description: 日期范围无效。
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/subscriptions/{subscriptionID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWASubscription
+      summary: 查询单笔 RWA 认购
+      description: 当前账户单笔认购单的详情。
+      parameters:
+      - name: subscriptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 认购单详情。
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/subscriptions/{subscriptionID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWASubscriptionReceipt
+      summary: 下载认购回单（PDF）
+      description: 品牌认购回单 PDF，含 USDT 明细、记入代币和签名验证二维码。
+      parameters:
+      - name: subscriptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/screenings/addresses:
     post:
       tags:
@@ -26804,7 +27294,7 @@ paths:
                     error: guard_diverged
                     message: market price diverged from the reference; retry in a moment or split the operation
         '503':
-          description: 执行价格不可用或过期(pricing_unavailable)。
+          description: 执行价格不可用或过期(pricing_unavailable)，或 BTC 价差低于对冲覆盖下限(coverage_unavailable，fail-closed)。
           content:
             application/json:
               schema:
@@ -26990,7 +27480,7 @@ paths:
                 error: invalid_pair
                 message: from_asset and to_asset must differ
         '503':
-          description: 执行价格不可用或过期(pricing_unavailable)。
+          description: 执行价格不可用或过期(pricing_unavailable)，或 BTC 价差低于对冲覆盖下限(coverage_unavailable，fail-closed)。
           content:
             application/json:
               schema:
@@ -32651,6 +33141,60 @@ webhooks:
               change: status
               priority: high
               assigned_admin_id: admin-01
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_subscription_completed:
+    post:
+      summary: RWA subscription completed
+      description: Royalty tokens were subscribed with USDT (net + fee debited, tokens credited).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              subscription_id: 22222222-2222-4222-8222-222222222222
+              project_code: RWA-MIN01
+              usdt_gross: '1000.000000'
+              fee_usdt: '10.000000'
+              usdt_net: '990.000000'
+              tokens_credited: '990.000000'
+              price_usdt: '1.000000'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_distribution_credited:
+    post:
+      summary: RWA distribution credited
+      description: A royalty distribution credited USDT pro-rata on the snapshot balance.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              distribution_id: 66666666-6666-4666-8666-666666666666
+              project_code: RWA-MIN01
+              period: 2026-Q4
+              tokens: '890.000000'
+              share_usdt: '12.500000'
+              fee_usdt: '0.125000'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_redeem_completed:
+    post:
+      summary: RWA redemption completed
+      description: Royalty tokens were redeemed for USDT at the project subscription price.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              redemption_id: 44444444-4444-4444-8444-444444444444
+              project_code: RWA-MIN01
+              tokens: '100.000000'
+              usdt_credited: '100.000000'
+              price_usdt: '1.000000'
       responses:
         '200':
           description: Return any 2xx to acknowledge delivery.
