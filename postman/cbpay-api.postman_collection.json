@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-14 21:04 UTC",
-    "_content_sha256": "98c9502d56ccb18c52ccd6c88afa3b1883ab8848cc074549a2a0f8739825b55c"
+    "_generated_at": "2026-11-15 10:29 UTC",
+    "_content_sha256": "c5d4bb1518c5ad4f93d4dc272c90796ea692bffb4edb8f026f3575b9f463fde7"
   },
   "auth": {
     "type": "bearer",
@@ -983,6 +983,54 @@
           ]
         },
         {
+          "name": "Get effective feature flags",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/account/flags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "account",
+                "flags"
+              ]
+            },
+            "description": "Effective feature-flag values for the calling account (account scope over organization scope over global, default OFF). Front-driven gating: the front reads this once per session and toggles UI accordingly. Read-only, no PII."
+          },
+          "response": [
+            {
+              "name": "200 Effective flags for the caller.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/account/flags",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "account",
+                    "flags"
+                  ]
+                }
+              },
+              "status": "Effective flags for the caller.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"flags\": {\n    \"diag.echo\": false\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Create an API key",
           "request": {
             "method": "POST",
@@ -1482,6 +1530,184 @@
                 }
               ],
               "body": "{\n  \"status\": \"avatar_deleted\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List your Chilean billing documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/billing/docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "billing",
+                "docs"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by document status."
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created from (RFC3339)."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created until (RFC3339, exclusive)."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Paginated tax documents (DTE) billed to the authenticated account. Documents from other accounts are never returned."
+          },
+          "response": [
+            {
+              "name": "200 Paginated documents of the authenticated account.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/billing/docs",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "billing",
+                    "docs"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by document status."
+                    },
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Created from (RFC3339)."
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Created until (RFC3339, exclusive)."
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Paginated documents of the authenticated account.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"docs\": [\n    {\n      \"id\": \"dte-7c9e2f1a\",\n      \"doc_type\": 33,\n      \"status\": \"accepted\",\n      \"folio\": 1001,\n      \"fch_emis\": \"2026-11-14\",\n      \"mnt_total\": 1250000,\n      \"receptor_rut\": \"76543210-9\",\n      \"track_id\": \"sii-track-123\",\n      \"sii_state\": \"accepted\",\n      \"created_at\": \"2026-11-14T15:10:00Z\",\n      \"updated_at\": \"2026-11-14T15:12:00Z\"\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retrieve one of your billing documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/billing/docs/:docID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "billing",
+                "docs",
+                ":docID"
+              ],
+              "variable": [
+                {
+                  "key": "docID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Detail of a tax document billed to the authenticated account, including the signed DTE XML when available. Documents from other accounts return 404."
+          },
+          "response": [
+            {
+              "name": "200 Document detail.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/billing/docs/:docID",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "billing",
+                    "docs",
+                    ":docID"
+                  ],
+                  "variable": [
+                    {
+                      "key": "docID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Document detail.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"dte-7c9e2f1a\",\n  \"status\": \"accepted\",\n  \"doc_type\": 33,\n  \"folio\": 1001,\n  \"fch_emis\": \"2026-11-14\",\n  \"mnt_total\": 1250000,\n  \"receptor_rut\": \"76543210-9\",\n  \"sii_state\": \"accepted\",\n  \"dte_xml\": \"<DTE>...</DTE>\"\n}"
             }
           ]
         },
