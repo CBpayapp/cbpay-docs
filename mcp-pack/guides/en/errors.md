@@ -801,3 +801,33 @@ These codes are used by organization payroll and recurring-expense series operat
 | 400 | `invalid_batch` | A bulk expense operation has fewer than 1 or more than 100 IDs | Send 1–100 expense UUIDs |
 | 400 | `invalid_horizon` | The forecast horizon is not 3, 6 or 12 months | Use `horizon=3`, `6` or `12` |
 | 400 | `invalid_icon` | A custom expense icon exceeds the allowed format or length | Use up to 40 letters, digits, `_` or `-` |
+
+## RWA royalty errors
+
+| HTTP | `error` | Meaning | Fix |
+|---|---|---|---|
+| 404 | `rwa_project_not_found` | No RWA project matches that asset code in your org (transfers surface; subscribe/get use `not_found`) | List `GET /v1/rwa/projects` and use a live code |
+| 422 | `rwa_transfers_disabled` | The project disabled internal transfers | Transfers only move in funding/active/distributing with the switch on |
+| 422 | `project_not_subscribable` | The project is not in funding status | Subscribe while the project is funding |
+| 422 | `window_closed` | Outside the subscription window | Check `subscription_opens_at` / `subscription_closes_at` |
+| 422 | `cap_exceeded` | Per-account or raise cap would be exceeded | Lower the amount or wait for capacity |
+| 422 | `amount_below_minimum` | Below the project minimum (or dust after fees) | Raise the amount above the minimum |
+| 422 | `fee_exceeds_amount` | The configured fee exceeds the operation amount | Raise the amount or ask your org to review fees |
+| 422 | `invalid_transition` | Status transition not allowed | Follow draft → funding → active → distributing, or pause/default first |
+| 422 | `attestation_math_mismatch` | Royalty due does not equal floor(net × pct / 100) | Recompute the royalty math exactly |
+| 422 | `quorum_not_met` | Valid auditor signatures are below quorum | Collect the required distinct auditor signatures |
+| 422 | `escrow_missing` | The project has no escrow account | Set `escrow_account_id` before funding |
+| 422 | `escrow_insufficient` | Escrow balance is below the distribution total | Fund the escrow and re-propose |
+| 422 | `nothing_to_distribute` | The attestation royalty due is zero | No payout for a zero quarter |
+| 422 | `no_holders` | No holders at snapshot; marked failed | Re-propose once tokens are held |
+| 422 | `redeem_disabled` | Redemptions disabled for the project | Redemptions need the switch on in funding/active/distributing |
+| 400 | `invalid_date` | A date field is not RFC3339 | Send RFC3339 timestamps |
+| 409 | `project_exists` | Duplicate project code on create | Pick another `RWA-*` code |
+| 400 | `invalid_terms` | Project terms failed validation | Correct the flagged field (ranges, enums, dates, JSON) |
+| 400 | `invalid_attestation` | Attestation payload failed validation | Correct period, amounts, rate, evidence or signatures |
+| 422 | `attestation_project_mismatch` | The attestation belongs to another project | Pair resources of the same project |
+| 422 | `attestation_not_approved` | The attestation is not approved | Approve it with a second admin first |
+| 422 | `project_not_distributable` | The project is not active for attestations/distributions | Operate in active/distributing status |
+| 422 | `royalty_pct_mismatch` | The attestation rate differs from project terms | Use the exact project `royalty_pct` |
+| 422 | `royalty_cap_exceeded` | The distribution would exceed cap × raised | Lower the total or wait for more subscriptions |
+| 422 | `escrow_blocked` | The escrow account is not active | Unblock the escrow account first |

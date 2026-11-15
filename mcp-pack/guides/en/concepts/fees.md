@@ -233,6 +233,12 @@ equivalent at your `payin_rate` minus the fixed fee.
 
 | `risk_fraud_score` | Fixed-only fee for each fraud and identity report; refunded if generation fails |
 
+## RWA royalty tokens
+
+| `rwa_subscription` | Percent + fixed over the USDT subscribed (charged on top, tokens computed from the net) |
+| `rwa_distribution` | Percent + fixed over each USDT distribution credited (capped at the share) |
+| `rwa_bridge` | Fixed-only fee per on-chain bridge move (ledger lock + mint, or burn + unlock) *(F2 — bridge flow pending)* |
+
 ## EUR banking fee services
 
 The following service identifiers are present in the product configuration:

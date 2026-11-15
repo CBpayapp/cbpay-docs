@@ -772,3 +772,33 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 400 | `invalid_batch` | 批量操作的 ID 少于 1 个或超过 100 个 | 发送 1–100 个费用 UUID |
 | 400 | `invalid_horizon` | horizon 不是 3、6 或 12 个月 | 使用 `horizon=3`、`6` 或 `12` |
 | 400 | `invalid_icon` | 自定义图标格式或长度超出限制 | 使用不超过 40 个字母、数字、`_` 或 `-` |
+
+## RWA 版税错误
+
+| HTTP | `error` | 含义 | 处理 |
+|---|---|---|---|
+| 404 | `rwa_project_not_found` | 你所在组织无此资产代码的 RWA 项目（transfers 接口；认购/查询用 `not_found`） | 调用 `GET /v1/rwa/projects` 使用有效代码 |
+| 422 | `rwa_transfers_disabled` | 项目禁用了内部转账 | 仅 funding/active/distributing 且开关开启时可转 |
+| 422 | `project_not_subscribable` | 项目不在 funding 状态 | 在 funding 期间认购 |
+| 422 | `window_closed` | 不在认购窗口内 | 查看 `subscription_opens_at` / `subscription_closes_at` |
+| 422 | `cap_exceeded` | 将超出账户或募资上限 | 降低金额或等待额度 |
+| 422 | `amount_below_minimum` | 低于项目最低额（或扣费后为粉尘） | 提高金额至最低额以上 |
+| 422 | `fee_exceeds_amount` | 配置手续费超过操作金额 | 提高金额或请组织检查费率 |
+| 422 | `invalid_transition` | 状态流转不允许 | 遵循 draft → funding → active → distributing，或先暂停/违约 |
+| 422 | `attestation_math_mismatch` | 版税不等于 floor（净额 × pct / 100） | 精确重算版税 |
+| 422 | `quorum_not_met` | 有效审计师签名不足 quorum | 收集所需的不同签名 |
+| 422 | `escrow_missing` | 项目没有托管账户 | funding 前先设置 `escrow_account_id` |
+| 422 | `escrow_insufficient` | 托管余额不足以支付总额 | 注资托管后重新提议 |
+| 422 | `nothing_to_distribute` | 本周期版税为零 | 零季度不分红 |
+| 422 | `no_holders` | 快照无持有人；已标记失败 | 有持有人后再提议 |
+| 422 | `redeem_disabled` | 项目禁用赎回 | 需在 funding/active/distributing 开启开关 |
+| 400 | `invalid_date` | 日期字段不是 RFC3339 | 发送 RFC3339 时间戳 |
+| 409 | `project_exists` | 创建时代码重复 | 换一个 `RWA-*` 代码 |
+| 400 | `invalid_terms` | 项目条款校验失败 | 修正标记字段（范围、枚举、日期、JSON） |
+| 400 | `invalid_attestation` | Attestation 内容校验失败 | 修正周期、金额、费率、证据或签名 |
+| 422 | `attestation_project_mismatch` | 该 attestation 属于另一项目 | 配对同一项目的资源 |
+| 422 | `attestation_not_approved` | Attestation 尚未批准 | 先由第二位 admin 批准 |
+| 422 | `project_not_distributable` | 项目未处于可分红激活状态 | 在 active/distributing 状态下操作 |
+| 422 | `royalty_pct_mismatch` | 费率与项目条款不一致 | 使用项目精确的 `royalty_pct` |
+| 422 | `royalty_cap_exceeded` | 分红将超过 cap × 募资额 | 降低总额或等待更多认购 |
+| 422 | `escrow_blocked` | 托管账户未激活 | 先解封托管账户 |

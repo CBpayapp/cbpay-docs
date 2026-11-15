@@ -5,7 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.288 · 2 versions - November 15, 2026
+## v2.290 · 4 versions - November 15, 2026
+### v2.290
+**Changed**
+- BTC swaps now fail closed with 503 `coverage_unavailable` when the effective spread drops below the hedge coverage floor (the house never quotes at a loss).
+### v2.289
+**Added**
+- RWA royalty tokens (ledger-first): browse projects via `GET /v1/rwa/projects`, subscribe with USDT (`POST /v1/rwa/subscriptions`), redeem at par (`POST /v1/rwa/redemptions`), track holdings and quarterly USDT distributions, move tokens between accounts of your org, and download signed PDF receipts. Webhooks `rwa_subscription_completed`, `rwa_distribution_credited` and `rwa_redeem_completed`.
 ### v2.288
 **Added**
 - Portal billing documents: list and retrieve the Chilean tax documents (DTE) billed to your account via `GET /v1/me/billing/docs` and `.../docs/{docID}`, including the signed DTE XML.
