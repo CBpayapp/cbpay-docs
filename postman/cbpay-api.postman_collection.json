@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-15 10:29 UTC",
-    "_content_sha256": "c5d4bb1518c5ad4f93d4dc272c90796ea692bffb4edb8f026f3575b9f463fde7"
+    "_generated_at": "2026-11-15 19:21 UTC",
+    "_content_sha256": "6626ffda80bd6d5ec0e035950e339410953a64af06bee6b3b4148e38872e1548"
   },
   "auth": {
     "type": "bearer",
@@ -10675,6 +10675,95 @@
             "auth": {
               "type": "noauth"
             }
+          }
+        },
+        {
+          "name": "Download the distribution receipt (PDF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/distributions/:distributionID/receipt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "distributions",
+                ":distributionID",
+                "receipt"
+              ],
+              "query": [
+                {
+                  "key": "account_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Holder leg selector (admins only; required without an account credential)."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "distributionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Branded PDF receipt of one royalty distribution credit with tokens held, share and the signed verification QR. Accounts see their own leg; admins pass account_id to select one holder leg."
+          }
+        },
+        {
+          "name": "Download the redemption receipt (PDF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/redemptions/:redemptionID/receipt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "redemptions",
+                ":redemptionID",
+                "receipt"
+              ],
+              "variable": [
+                {
+                  "key": "redemptionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Branded PDF receipt of the RWA redemption with tokens returned, USDT credited and the signed verification QR."
+          }
+        },
+        {
+          "name": "Download the subscription receipt (PDF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/subscriptions/:subscriptionID/receipt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "subscriptions",
+                ":subscriptionID",
+                "receipt"
+              ],
+              "variable": [
+                {
+                  "key": "subscriptionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Branded PDF receipt of the RWA subscription with USDT legs, tokens credited and the signed verification QR."
           }
         },
         {
@@ -28299,6 +28388,626 @@
               ]
             },
             "description": "Full statement of the calling referrer in a range: totals, per-client summary, per-transaction detail, closings and reconciliation flag. `format` json (default), pdf or xlsx; `lang` es/en/zh."
+          }
+        }
+      ]
+    },
+    {
+      "name": "RWA",
+      "item": [
+        {
+          "name": "List your RWA distribution credits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/distributions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "distributions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created from (RFC3339)."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created until (RFC3339)."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Paginated royalty distribution credits of the authenticated account in a date range."
+          },
+          "response": [
+            {
+              "name": "200 Paginated distribution credits.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/distributions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "distributions"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Created from (RFC3339)."
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Created until (RFC3339)."
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Paginated distribution credits.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"distributions\": [\n    {\n      \"leg_id\": \"55555555-5555-4555-8555-555555555555\",\n      \"distribution_id\": \"66666666-6666-4666-8666-666666666666\",\n      \"project_code\": \"RWA-MIN01\",\n      \"period\": \"2026-Q4\",\n      \"tokens\": \"890.000000\",\n      \"share_usdt\": \"12.500000\",\n      \"fee_usdt\": \"0.125000\",\n      \"created_at\": \"2026-11-15T15:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retrieve one distribution credit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/distributions/:distributionID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "distributions",
+                ":distributionID"
+              ],
+              "variable": [
+                {
+                  "key": "distributionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Detail of your credit leg of one royalty distribution."
+          }
+        },
+        {
+          "name": "List your RWA holdings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/holdings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "holdings"
+              ]
+            },
+            "description": "Current RWA-* balances of the authenticated account with project terms and funding totals."
+          },
+          "response": [
+            {
+              "name": "200 Holdings by project.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/holdings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "holdings"
+                  ]
+                }
+              },
+              "status": "Holdings by project.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"holdings\": [\n    {\n      \"project_code\": \"RWA-MIN01\",\n      \"project_name\": \"Minera Norte Royalty I\",\n      \"project_status\": \"active\",\n      \"available\": \"890.000000\",\n      \"held\": \"0.000000\",\n      \"subscribed_gross_usdt\": \"1000.000000\",\n      \"redeemed_tokens\": \"100.000000\",\n      \"distributions_received_usdt\": \"12.500000\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List RWA royalty projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "projects"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by project status (draft, funding, active, distributing, defaulted, redeemed, paused)."
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Royalty-token projects of your organization with terms, status and funding progress. Open to any account; buying requires a verified identity."
+          },
+          "response": [
+            {
+              "name": "200 Paginated projects.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/projects",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "projects"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by project status (draft, funding, active, distributing, defaulted, redeemed, paused)."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Paginated projects.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"projects\": [\n    {\n      \"project_id\": \"11111111-1111-4111-8111-111111111111\",\n      \"code\": \"RWA-MIN01\",\n      \"name\": \"Minera Norte Royalty I\",\n      \"mineral\": \"copper\",\n      \"spv_name\": \"Norte Royalty SPV Ltd\",\n      \"status\": \"funding\",\n      \"royalty_pct\": \"5\",\n      \"royalty_base\": \"nsr\",\n      \"cap_multiple\": \"2\",\n      \"term_years\": 7,\n      \"supply_total\": \"10000000.000000\",\n      \"subscription_price_usdt\": \"1.000000\",\n      \"min_per_account\": \"100.000000\",\n      \"distribution_frequency\": \"quarterly\",\n      \"chain\": \"polygon\",\n      \"bridge_enabled\": false,\n      \"transfers_enabled\": true,\n      \"redeem_enabled\": true,\n      \"sold_tokens\": \"1200000.000000\",\n      \"raised_gross_usdt\": \"1200000.000000\",\n      \"subscribers\": 84,\n      \"redeemed_tokens\": \"0.000000\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retrieve one RWA project",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/projects/:code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "projects",
+                ":code"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Full terms, auditor keys, evidence documents and funding progress of one project of your organization."
+          },
+          "response": [
+            {
+              "name": "200 Project detail.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/projects/:code",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "projects",
+                    ":code"
+                  ],
+                  "variable": [
+                    {
+                      "key": "code",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Project detail.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"project_id\": \"11111111-1111-4111-8111-111111111111\",\n  \"code\": \"RWA-MIN01\",\n  \"name\": \"Minera Norte Royalty I\",\n  \"mineral\": \"copper\",\n  \"spv_name\": \"Norte Royalty SPV Ltd\",\n  \"status\": \"funding\",\n  \"royalty_pct\": \"5\",\n  \"royalty_base\": \"nsr\",\n  \"cap_multiple\": \"2\",\n  \"term_years\": 7,\n  \"supply_total\": \"10000000.000000\",\n  \"subscription_price_usdt\": \"1.000000\",\n  \"min_per_account\": \"100.000000\",\n  \"distribution_frequency\": \"quarterly\",\n  \"chain\": \"polygon\",\n  \"sold_tokens\": \"1200000.000000\",\n  \"raised_gross_usdt\": \"1200000.000000\",\n  \"subscribers\": 84\n}"
+            }
+          ]
+        },
+        {
+          "name": "List your RWA redemptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/redemptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "redemptions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created from (RFC3339)."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created until (RFC3339)."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Paginated redemptions of the authenticated account in a date range."
+          }
+        },
+        {
+          "name": "Redeem RWA tokens for USDT",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/redemptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "redemptions"
+              ]
+            },
+            "description": "Return royalty tokens at the project subscription price (par). Debits RWA-* tokens and credits USDT atomically. Requires a verified identity, OTP for human sessions, and an idempotency key; replays return the original redemption.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_code\": \"RWA-MIN01\",\n  \"tokens\": \"100.000000\",\n  \"idempotency_key\": \"red-min01-0001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Redemption completed.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/redemptions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "redemptions"
+                  ]
+                }
+              },
+              "status": "Redemption completed.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"redemption_id\": \"44444444-4444-4444-8444-444444444444\",\n  \"account_id\": \"33333333-3333-4333-8333-333333333333\",\n  \"project_id\": \"11111111-1111-4111-8111-111111111111\",\n  \"project_code\": \"RWA-MIN01\",\n  \"tokens\": \"100.000000\",\n  \"usdt_credited\": \"100.000000\",\n  \"price_usdt\": \"1.000000\",\n  \"status\": \"completed\",\n  \"created_at\": \"2026-11-15T14:00:00Z\",\n  \"receipt_url\": \"/v1/rwa/redemptions/44444444-4444-4444-8444-444444444444/receipt\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retrieve one RWA redemption",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/redemptions/:redemptionID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "redemptions",
+                ":redemptionID"
+              ],
+              "variable": [
+                {
+                  "key": "redemptionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Detail of one redemption of the authenticated account."
+          }
+        },
+        {
+          "name": "List your RWA subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created from (RFC3339)."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Created until (RFC3339)."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Paginated subscriptions of the authenticated account in a date range."
+          },
+          "response": [
+            {
+              "name": "200 Paginated subscriptions.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/subscriptions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "subscriptions"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Created from (RFC3339)."
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Created until (RFC3339)."
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Paginated subscriptions.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"subscriptions\": [\n    {\n      \"subscription_id\": \"22222222-2222-4222-8222-222222222222\",\n      \"project_code\": \"RWA-MIN01\",\n      \"usdt_gross\": \"1000.000000\",\n      \"fee_usdt\": \"10.000000\",\n      \"usdt_net\": \"990.000000\",\n      \"tokens_credited\": \"990.000000\",\n      \"price_usdt\": \"1.000000\",\n      \"status\": \"completed\",\n      \"created_at\": \"2026-11-15T13:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Subscribe to an RWA project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "subscriptions"
+              ]
+            },
+            "description": "Buy royalty tokens with USDT at the project subscription price. Debits USDT (net + fee) and credits RWA-* tokens atomically. Requires a verified identity, OTP for human sessions, and an idempotency key; replays return the original subscription.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_code\": \"RWA-MIN01\",\n  \"usdt_amount\": \"1000.000000\",\n  \"idempotency_key\": \"sub-min01-0001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Subscription completed.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/subscriptions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "subscriptions"
+                  ]
+                }
+              },
+              "status": "Subscription completed.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"subscription_id\": \"22222222-2222-4222-8222-222222222222\",\n  \"account_id\": \"33333333-3333-4333-8333-333333333333\",\n  \"project_id\": \"11111111-1111-4111-8111-111111111111\",\n  \"project_code\": \"RWA-MIN01\",\n  \"usdt_gross\": \"1000.000000\",\n  \"fee_usdt\": \"10.000000\",\n  \"usdt_net\": \"990.000000\",\n  \"tokens_credited\": \"990.000000\",\n  \"price_usdt\": \"1.000000\",\n  \"status\": \"completed\",\n  \"created_at\": \"2026-11-15T13:00:00Z\",\n  \"receipt_url\": \"/v1/rwa/subscriptions/22222222-2222-4222-8222-222222222222/receipt\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retrieve one RWA subscription",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/subscriptions/:subscriptionID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "subscriptions",
+                ":subscriptionID"
+              ],
+              "variable": [
+                {
+                  "key": "subscriptionID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Detail of one subscription of the authenticated account."
           }
         }
       ]
