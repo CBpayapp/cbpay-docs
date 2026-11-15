@@ -115,6 +115,23 @@ hold，以保持期末余额核对一致。争议不出现在银行导出的分�
    `summary_asset` 标识的主余额的 `balanced` 标志。
 2. **`assets`** — 每个有活动或余额的非 USDT 资产各有一个已对账的分区（USD、USDC、BTC、GOLD、SILVER、PLATINUM、BOB、MXN、ARS，以及若使用 Banking，则包括你银行账户的 `BANK_USD`/`BANK_EUR` 镜像）：期初/期末余额、流入、流出和各自的 `balanced` 标志，按各资产的精度呈现；客户端视图不含原始明细，各资产的原始明细仅见于 org-admin 对账单。如果你只使用 USDT，此分区为空。
 3. **`breakdown`** — 按产品、按国家（出款和入款，含本地金额和 USDT）、按法币币种和按月份。
+
+按产品分类遵循对账单的会计规则：
+
+- **Swaps** 计算两条流水腿。只有当某条腿的资产等于
+  `summary_asset` 时才计入金额：`from_asset` 腿是流出，
+  `to_asset` 腿是流入。只有终态成功的兑换（`status: "completed"`）
+  才会计入金额；失败或处理中的兑换仍计入 `count`。
+- **银行卡交易** 计算每一行，但只有已结算交易（`status: "settled"`）
+  才会计入金额，并计入消费资产。
+- **Payin 退款** 计算每一行，但只有已完成退款（`status: "completed"`）
+  才会计入金额，并计入 `debited_asset` 指定的资产。
+- **银行业务操作** 只计入产品数量。其金额不会计入此产品分类；
+  财务流水会在对应的 `BANK_*` 资产分区中核对。
+
+对于这四个产品分区，数量包含期间返回的全部记录；分类金额只包含适用于
+`summary_asset` 的终态成功记录。这样既保留完整数量，也不会混合不同资产的
+计价单位。
 4. **按产品的明细** — 出款（收款人、汇率和扣款）、入款（按模式）、加密货币（含 `tx_id` 及其 `asset`）、转账（含对手方和 `asset`）、银行卡消费（`card_transactions`，含商户和消费余额）、余额兑换（`swaps`）、银行业务操作（`banking_operations`）和服务费（含退款）。
 5. **产品分区与审计路径** — 客户对账单省略原始账本 `movements`、各资产的 `assets[].movements` 以及 `summary.counts.movements`。请按产品分区核对，并使用费用和加密货币充值中的 `balance_after`。如需深入审计，请使用 org-admin 对账单或 `GET /v1/movements`。
 

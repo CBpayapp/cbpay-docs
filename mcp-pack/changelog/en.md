@@ -5,6 +5,13 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.288 · 2 versions - November 15, 2026
+### v2.288
+**Added**
+- Portal billing documents: list and retrieve the Chilean tax documents (DTE) billed to your account via `GET /v1/me/billing/docs` and `.../docs/{docID}`, including the signed DTE XML.
+### v2.287
+**Changed**
+- The statement product breakdown now includes swaps, card transactions, banking operations and payin refunds with amounts in the summary asset (previously only counts in some views). Banking operations are counted but never summed here (they reconcile in their BANK_* asset sections).
 ## v2.286 · 4 versions - November 14, 2026
 ### v2.286
 **Changed**

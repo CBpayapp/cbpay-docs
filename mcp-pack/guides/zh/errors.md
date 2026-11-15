@@ -147,6 +147,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_settlement_hours` | `settlement_hours` 仅支持 `payin_card` 费用服务，且必须是非负整数（`0` = 立即入账）— 参见[费用](https://docs.cbpayapp.com/zh/concepts/fees) |
 | `invalid_country` | 国家/地区代码格式错误或缺失——ISO 3166-1 alpha-2（例如 `GET /v1/aml/catalogs/cities?country=`）；也用于有效但不支持的国家/地区过滤条件（例如在银行目录查询中传入非 `US` 的 `country`） |
 | `invalid_expand` | `GET /v1/contacts` 的 `?expand=` 取值未知（仅支持 `destinations`）；`dest_type`/`dest_country` 同样需要 `expand=destinations` |
+| `invalid_flag` | 未知的 `flag_key`（封闭式 feature flag 注册表） |
+| `account_without_org` | 账号范围需要 `org_id` |
 
 ### QR payin 幂等性
 
@@ -197,6 +199,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `no_banking_customer` | 传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程 |
 | 400 | `banking_eur_requires_viban` | EUR Banking 账户通过虚拟 IBAN 开立。请在 Operar EUR 中请求 `purpose: "banking_eur"`，不要创建通用 banking customer |
 | 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
+| 409 | `resubmit_rejected_duplicate` | 被拒绝的银行客户与一个有效客户重复（同一身份证件）——请重新提交存续客户，或经人工审核后使用显式的 `acknowledge_duplicate` 重试 |
 | 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
 | 409 | `bank_ref_conflict` | 该银行参考号已被另一笔操作认领（属于你租户时，响应会用 `claimed_by`/`claimed_kind` 指明）——请修正证据，不要换参考号重试 |

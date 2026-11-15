@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.286'
+  version: '2.288'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -1062,6 +1062,25 @@ paths:
           description: company_account_required o account_blocked.
         '413':
           description: logo_too_large.
+  /v1/account/flags:
+    get:
+      tags:
+      - Account
+      operationId: getAccountFlags
+      summary: Obtener feature flags efectivos
+      description: 'Valores efectivos de feature flags para la cuenta llamante (scope cuenta sobre organización sobre global, default OFF). Gating dirigido por front: el front lee una vez por sesión y alterna UI. Solo lectura, sin PII.'
+      responses:
+        '200':
+          description: Flags efectivos del llamante.
+          content:
+            application/json:
+              example:
+                flags:
+                  diag.echo: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: account_required o account_blocked.
   /v1/aml/catalogs:
     get:
       tags:
@@ -11267,6 +11286,125 @@ paths:
             application/json:
               example:
                 status: avatar_deleted
+  /v1/me/billing/docs:
+    get:
+      tags:
+      - Account
+      operationId: listMyBillingDocs
+      summary: Listar tus documentos tributarios chilenos
+      description: Documentos tributarios (DTE) paginados facturados a la cuenta autenticada. Nunca devuelve documentos de otras cuentas.
+      parameters:
+      - name: status
+        in: query
+        description: Filtrar por estado del documento.
+        schema:
+          type: string
+      - name: from
+        in: query
+        description: Creados desde (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: Creados hasta (RFC3339, exclusivo).
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: page_size
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+      responses:
+        '200':
+          description: Documentos paginados de la cuenta autenticada.
+          content:
+            application/json:
+              example:
+                docs:
+                - id: dte-7c9e2f1a
+                  doc_type: 33
+                  status: accepted
+                  folio: 1001
+                  fch_emis: '2026-11-14'
+                  mnt_total: 1250000
+                  receptor_rut: 76543210-9
+                  track_id: sii-track-123
+                  sii_state: accepted
+                  created_at: '2026-11-14T15:10:00Z'
+                  updated_at: '2026-11-14T15:12:00Z'
+                page: 1
+                page_size: 50
+                total: 1
+        '400':
+          description: Estado o rango de fechas inválido.
+          content:
+            application/json:
+              examples:
+                invalid_status:
+                  value:
+                    error: invalid_status
+                    message: unknown DTE status filter
+                invalid_range:
+                  value:
+                    error: invalid_range
+                    message: invalid from date (YYYY-MM-DD)
+        '403':
+          description: Se requiere una credencial de cuenta.
+          content:
+            application/json:
+              example:
+                error: account_required
+                message: this endpoint requires an account credential
+  /v1/me/billing/docs/{docID}:
+    get:
+      tags:
+      - Account
+      operationId: getMyBillingDoc
+      summary: Ver uno de tus documentos tributarios
+      description: Detalle de un documento tributario facturado a la cuenta autenticada, incluido el XML DTE firmado cuando existe. Los documentos de otras cuentas devuelven 404.
+      parameters:
+      - name: docID
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Detalle del documento.
+          content:
+            application/json:
+              example:
+                id: dte-7c9e2f1a
+                status: accepted
+                doc_type: 33
+                folio: 1001
+                fch_emis: '2026-11-14'
+                mnt_total: 1250000
+                receptor_rut: 76543210-9
+                sii_state: accepted
+                dte_xml: <DTE>...</DTE>
+        '404':
+          description: Documento no encontrado en tu cuenta.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: document not found
+        '403':
+          description: Se requiere una credencial de cuenta.
+          content:
+            application/json:
+              example:
+                error: account_required
+                message: this endpoint requires an account credential
   /v1/me/contracts/envelopes:
     get:
       tags:

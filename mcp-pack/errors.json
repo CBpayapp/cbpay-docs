@@ -1,5 +1,5 @@
 {
-  "count": 433,
+  "count": 436,
   "errors": [
     {
       "category": {
@@ -1529,6 +1529,34 @@
     },
     {
       "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "invalid_flag",
+      "http": 400,
+      "meaning": {
+        "en": "Unknown `flag_key` (closed feature-flag registry)",
+        "es": "`flag_key` desconocido (registro cerrado de feature flags)",
+        "zh": "未知的 `flag_key`（封闭式 feature flag 注册表）"
+      }
+    },
+    {
+      "category": {
+        "en": "Validation (400)",
+        "es": "Validación (400)",
+        "zh": "校验（400）"
+      },
+      "code": "account_without_org",
+      "http": 400,
+      "meaning": {
+        "en": "Account scope requires `org_id`",
+        "es": "El scope de cuenta exige `org_id`",
+        "zh": "账号范围需要 `org_id`"
+      }
+    },
+    {
+      "category": {
         "en": "Money and state (402 / 404 / 409 / 422 / 429)",
         "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
         "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
@@ -1875,6 +1903,20 @@
         "en": "The account already has a banking profile (one per account)",
         "es": "La cuenta ya tiene perfil bancario (es uno por cuenta)",
         "zh": "该账户已有银行账户资料（每个账户仅限一个）"
+      }
+    },
+    {
+      "category": {
+        "en": "Money and state (402 / 404 / 409 / 422 / 429)",
+        "es": "Dinero y estado (402 / 404 / 409 / 422 / 429)",
+        "zh": "资金与状态（402 / 404 / 409 / 422 / 429）"
+      },
+      "code": "resubmit_rejected_duplicate",
+      "http": 409,
+      "meaning": {
+        "en": "The rejected banking customer duplicates a live one (same identity document) — resubmit the surviving customer instead, or retry with explicit `acknowledge_duplicate` after human review",
+        "es": "El cliente banking rechazado duplica a uno vivo (mismo documento de identidad) — reenvía el cliente sobreviviente o reintenta con `acknowledge_duplicate` explícito tras revisión humana",
+        "zh": "被拒绝的银行客户与一个有效客户重复（同一身份证件）——请重新提交存续客户，或经人工审核后使用显式的 `acknowledge_duplicate` 重试"
       }
     },
     {

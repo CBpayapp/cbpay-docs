@@ -133,6 +133,27 @@ Sections:
    only operate USDT.
 3. **`breakdown`** — by product, by country (payouts and payins with local
    amount and USDT), by fiat currency and by month.
+
+The product breakdown follows the statement's accounting rules:
+
+- **Swaps** count both legs. A leg contributes its amount only when its asset
+  is `summary_asset`: the `from_asset` leg is an outflow and the `to_asset`
+  leg is an inflow. Only terminal-success swaps (`status: "completed"`) add
+  amounts; failed or in-process swaps still count in `count`.
+- **Card transactions** count every card row, but amounts are added only for
+  settled transactions (`status: "settled"`). The settled spend is added to
+  the spending asset.
+- **Payin refunds** count every refund row, but amounts are added only for
+  completed refunds (`status: "completed"`). The completed debit is added to
+  the asset in `debited_asset`.
+- **Banking operations** contribute only to the product count. Their amounts
+  are not added to this product breakdown; the financial legs reconcile in
+  the corresponding `BANK_*` asset section.
+
+For these four product sections, counts include all rows returned for the
+period, while breakdown amounts include only the terminal-success rows
+applicable to the `summary_asset`. This keeps product counts complete without
+mixing asset denominations.
 4. **Per-product detail** — payouts (beneficiary, rate and debit), payins
    (per mode), crypto (with `tx_id` and its `asset`), transfers (with
    counterparty and `asset`), card purchases (`card_transactions`, with
