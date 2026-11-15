@@ -4,10 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 15, 2026" description="v2.287 · 1 version">
-### v2.287
+<Update label="November 15, 2026" description="v2.289 · 3 versions">
+### v2.289
+**Changed**
+- BTC swaps now fail closed with 503 `coverage_unavailable` when the effective spread drops below the hedge coverage floor (the house never quotes at a loss).
+### v2.288
 **Added**
 - Portal billing documents: list and retrieve the Chilean tax documents (DTE) billed to your account via `GET /v1/me/billing/docs` and `.../docs/{docID}`, including the signed DTE XML.
+### v2.287
+**Changed**
+- The statement product breakdown now includes swaps, card transactions, banking operations and payin refunds with amounts in the summary asset (previously only counts in some views). Banking operations are counted but never summed here (they reconcile in their BANK_* asset sections).
 </Update>
 <Update label="November 14, 2026" description="v2.286 · 4 versions">
 ### v2.286

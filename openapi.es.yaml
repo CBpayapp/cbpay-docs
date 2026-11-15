@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.287'
+  version: '2.289'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -26945,7 +26945,7 @@ paths:
                     error: guard_diverged
                     message: market price diverged from the reference; retry in a moment or split the operation
         '503':
-          description: Precio de ejecución no disponible o desactualizado (pricing_unavailable).
+          description: Precio de ejecución no disponible o desactualizado (pricing_unavailable), o spread BTC bajo el piso de cobertura (coverage_unavailable, fail-closed).
           content:
             application/json:
               schema:
@@ -27131,7 +27131,7 @@ paths:
                 error: invalid_pair
                 message: from_asset and to_asset must differ
         '503':
-          description: Precio de ejecución no disponible o desactualizado (pricing_unavailable).
+          description: Precio de ejecución no disponible o desactualizado (pricing_unavailable), o spread BTC bajo el piso de cobertura (coverage_unavailable, fail-closed).
           content:
             application/json:
               schema:
