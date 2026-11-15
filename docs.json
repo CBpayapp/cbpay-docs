@@ -156,7 +156,8 @@
                   "en/guides/pay-slips",
                       "en/guides/receipts",
                       "en/guides/tracking",
-                      "en/guides/analytics"
+                      "en/guides/analytics",
+                      "en/guides/billing"
                     ]
                   },
                   {
@@ -311,7 +312,8 @@
                   "es/guides/pay-slips",
                       "es/guides/receipts",
                       "es/guides/tracking",
-                      "es/guides/analytics"
+                      "es/guides/analytics",
+                      "es/guides/billing"
                     ]
                   },
                   {
@@ -466,7 +468,8 @@
                   "zh/guides/pay-slips",
                       "zh/guides/receipts",
                       "zh/guides/tracking",
-                      "zh/guides/analytics"
+                      "zh/guides/analytics",
+                      "zh/guides/billing"
                     ]
                   },
                   {
