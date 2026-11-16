@@ -215,6 +215,12 @@ usdt_credited = 99.70 USDT
 
 | `risk_fraud_score` | 每份欺诈与身份报告的固定费用；生成失败会退款 |
 
+## RWA 版税代币
+
+| `rwa_subscription` | 按认购 USDT 收取百分比+固定费用（额外收取，按净额计算代币） |
+| `rwa_distribution` | 按每笔记入 USDT 分红收取百分比+固定费用（不超过份额） |
+| `rwa_bridge` | 每次链上桥接的固定费用（锁定+铸造，或销毁+解锁）*(F2 —— 桥接流程待开发)* |
+
 ## EUR banking fee services
 
 The following service identifiers are present in the product configuration:

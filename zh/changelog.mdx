@@ -4,12 +4,16 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月16日" description="v2.291 · 1 个版本">
-### v2.291
+<Update label="2026年11月16日" description="v2.292 · 2 个版本">
+### v2.292
 **新增**
 - RWA 跨链转出现在支持 allowlist 钱包的 lock/mint/burn/unlock 生命周期，
   并提供幂等重放、OTP、限额、Travel Rule 和 KYT 检查，以及成功或失败
   webhook。
+### v2.291
+**修复**
+
+- 企业框架协议签发已恢复：RWA 价格（认购、分红、跨链）现已纳入价格附录，从当前零默认值起算。旧模板信封在签署时也会自动恢复，不再走入死胡同。
 </Update>
 <Update label="2026年11月15日" description="v2.290 · 4 个版本">
 ### v2.290

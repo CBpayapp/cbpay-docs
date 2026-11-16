@@ -1,5 +1,5 @@
 {
-  "count": 54,
+  "count": 60,
   "events": [
     {
       "description": {
@@ -937,6 +937,129 @@
         "en": "Qscore score changed",
         "es": "Cambió el score Qscore",
         "zh": "Qscore 评分已变更"
+      }
+    },
+    {
+      "description": {
+        "en": "An on-chain burn was detected confirmed and the title was credited back to the ledger.",
+        "es": "An on-chain burn was detected confirmed and the title was credited back to the ledger.",
+        "zh": "An on-chain burn was detected confirmed and the title was credited back to the ledger."
+      },
+      "event": "rwa_bridge_in_credited",
+      "payload_example": {
+        "amount": "50.000000",
+        "burn_tx_id": "0xburn1234567890burn1234567890burn1234567890burn1234567890burn12",
+        "move_id": "66666666-6666-4666-8666-666666666666",
+        "project_code": "RWA-MIN01",
+        "wallet_address": "0x1234567890abcdef1234567890abcdef12345678"
+      },
+      "summary": {
+        "en": "RWA bridge-in credited",
+        "es": "RWA bridge-in credited",
+        "zh": "RWA bridge-in credited"
+      }
+    },
+    {
+      "description": {
+        "en": "Title burned in the ledger was minted on-chain to the holder wallet.",
+        "es": "Title burned in the ledger was minted on-chain to the holder wallet.",
+        "zh": "Title burned in the ledger was minted on-chain to the holder wallet."
+      },
+      "event": "rwa_bridge_out_completed",
+      "payload_example": {
+        "amount": "100.000000",
+        "core_tx_id": "0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890",
+        "move_id": "55555555-5555-4555-8555-555555555555",
+        "project_code": "RWA-MIN01",
+        "wallet_address": "0x1234567890abcdef1234567890abcdef12345678"
+      },
+      "summary": {
+        "en": "RWA bridge-out completed",
+        "es": "RWA bridge-out completed",
+        "zh": "RWA bridge-out completed"
+      }
+    },
+    {
+      "description": {
+        "en": "The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held).",
+        "es": "The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held).",
+        "zh": "The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held)."
+      },
+      "event": "rwa_bridge_out_failed",
+      "payload_example": {
+        "amount": "100.000000",
+        "move_id": "55555555-5555-4555-8555-555555555555",
+        "project_code": "RWA-MIN01",
+        "reason": "core:broadcast_failed",
+        "wallet_address": "0x1234567890abcdef1234567890abcdef12345678"
+      },
+      "summary": {
+        "en": "RWA bridge-out failed",
+        "es": "RWA bridge-out failed",
+        "zh": "RWA bridge-out failed"
+      }
+    },
+    {
+      "description": {
+        "en": "A royalty distribution credited USDT pro-rata on the snapshot balance.",
+        "es": "A royalty distribution credited USDT pro-rata on the snapshot balance.",
+        "zh": "A royalty distribution credited USDT pro-rata on the snapshot balance."
+      },
+      "event": "rwa_distribution_credited",
+      "payload_example": {
+        "distribution_id": "66666666-6666-4666-8666-666666666666",
+        "fee_usdt": "0.125000",
+        "period": "2026-Q4",
+        "project_code": "RWA-MIN01",
+        "share_usdt": "12.500000",
+        "tokens": "890.000000"
+      },
+      "summary": {
+        "en": "RWA distribution credited",
+        "es": "RWA distribution credited",
+        "zh": "RWA distribution credited"
+      }
+    },
+    {
+      "description": {
+        "en": "Royalty tokens were redeemed for USDT at the project subscription price.",
+        "es": "Royalty tokens were redeemed for USDT at the project subscription price.",
+        "zh": "Royalty tokens were redeemed for USDT at the project subscription price."
+      },
+      "event": "rwa_redeem_completed",
+      "payload_example": {
+        "price_usdt": "1.000000",
+        "project_code": "RWA-MIN01",
+        "redemption_id": "44444444-4444-4444-8444-444444444444",
+        "tokens": "100.000000",
+        "usdt_credited": "100.000000"
+      },
+      "summary": {
+        "en": "RWA redemption completed",
+        "es": "RWA redemption completed",
+        "zh": "RWA redemption completed"
+      }
+    },
+    {
+      "description": {
+        "en": "Royalty tokens were subscribed with USDT (net + fee debited, tokens credited).",
+        "es": "Royalty tokens were subscribed with USDT (net + fee debited, tokens credited).",
+        "zh": "Royalty tokens were subscribed with USDT (net + fee debited, tokens credited)."
+      },
+      "event": "rwa_subscription_completed",
+      "payload_example": {
+        "fee_usdt": "10.000000",
+        "price_usdt": "1.000000",
+        "project_code": "RWA-MIN01",
+        "subscription_id": "22222222-2222-4222-8222-222222222222",
+        "tokens_credited": "990.000000",
+        "usdt_gross": "1000.000000",
+        "usdt_net": "990.000000"
+      },
+      "summary": {
+        "en": "RWA subscription completed",
+        "es": "RWA subscription completed",
+        "zh": "RWA subscription completed"
       }
     },
     {

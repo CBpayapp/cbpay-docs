@@ -133,6 +133,28 @@ Secciones:
    asset vive solo en la cartola org-admin. Si solo operas USDT, viene vacía.
 3. **`breakdown`** — por producto, por país (payouts y payins con monto
    local y USDT), por moneda fiat y por mes.
+
+El desglose por producto sigue las reglas contables de la cartola:
+
+- **Swaps** cuentan sus dos patas. Cada pata aporta su monto solo cuando su
+  activo es `summary_asset`: la pata `from_asset` es una salida y la pata
+  `to_asset` es una entrada. Solo los swaps con éxito terminal
+  (`status: "completed"`) suman montos; los swaps fallidos o en proceso
+  igual cuentan en `count`.
+- **Operaciones con tarjeta** cuentan cada fila, pero solo suman montos las
+  operaciones liquidadas (`status: "settled"`). El gasto liquidado se suma
+  en el activo de gasto.
+- **Devoluciones de payin** cuentan cada fila, pero solo suman montos las
+  devoluciones completadas (`status: "completed"`). El débito completado se
+  suma en el activo indicado por `debited_asset`.
+- **Operaciones bancarias** aportan solo al conteo del producto. Sus montos
+  no se suman en este desglose; las patas financieras cuadran en la sección
+  del activo `BANK_*` correspondiente.
+
+En estas cuatro secciones, los conteos incluyen todas las filas devueltas para
+el período, mientras que los montos del desglose solo incluyen filas con éxito
+terminal aplicables a `summary_asset`. Así los conteos quedan completos sin
+mezclar denominaciones de activos.
 4. **Detalle por producto** — payouts (con beneficiario, tasa y débito),
    payins (por modalidad), crypto (con `tx_id` y su `asset`),
    transferencias (con contraparte y `asset`), compras con tarjeta

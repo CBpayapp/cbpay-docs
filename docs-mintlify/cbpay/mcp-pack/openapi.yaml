@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.286'
+  version: '2.292'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -1035,6 +1035,25 @@ paths:
           description: company_account_required or account_blocked.
         '413':
           description: logo_too_large.
+  /v1/account/flags:
+    get:
+      tags:
+      - Account
+      operationId: getAccountFlags
+      summary: Get effective feature flags
+      description: 'Effective feature-flag values for the calling account (account scope over organization scope over global, default OFF). Front-driven gating: the front reads this once per session and toggles UI accordingly. Read-only, no PII.'
+      responses:
+        '200':
+          description: Effective flags for the caller.
+          content:
+            application/json:
+              example:
+                flags:
+                  diag.echo: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: account_required or account_blocked.
   /v1/aml/catalogs:
     get:
       tags:
@@ -11257,6 +11276,125 @@ paths:
             application/json:
               example:
                 status: avatar_deleted
+  /v1/me/billing/docs:
+    get:
+      tags:
+      - Account
+      operationId: listMyBillingDocs
+      summary: List your Chilean billing documents
+      description: Paginated tax documents (DTE) billed to the authenticated account. Documents from other accounts are never returned.
+      parameters:
+      - name: status
+        in: query
+        description: Filter by document status.
+        schema:
+          type: string
+      - name: from
+        in: query
+        description: Created from (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: Created until (RFC3339, exclusive).
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: page_size
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+      responses:
+        '200':
+          description: Paginated documents of the authenticated account.
+          content:
+            application/json:
+              example:
+                docs:
+                - id: dte-7c9e2f1a
+                  doc_type: 33
+                  status: accepted
+                  folio: 1001
+                  fch_emis: '2026-11-14'
+                  mnt_total: 1250000
+                  receptor_rut: 76543210-9
+                  track_id: sii-track-123
+                  sii_state: accepted
+                  created_at: '2026-11-14T15:10:00Z'
+                  updated_at: '2026-11-14T15:12:00Z'
+                page: 1
+                page_size: 50
+                total: 1
+        '400':
+          description: Invalid status or date range.
+          content:
+            application/json:
+              examples:
+                invalid_status:
+                  value:
+                    error: invalid_status
+                    message: unknown DTE status filter
+                invalid_range:
+                  value:
+                    error: invalid_range
+                    message: invalid from date (YYYY-MM-DD)
+        '403':
+          description: An account credential is required.
+          content:
+            application/json:
+              example:
+                error: account_required
+                message: this endpoint requires an account credential
+  /v1/me/billing/docs/{docID}:
+    get:
+      tags:
+      - Account
+      operationId: getMyBillingDoc
+      summary: Retrieve one of your billing documents
+      description: Detail of a tax document billed to the authenticated account, including the signed DTE XML when available. Documents from other accounts return 404.
+      parameters:
+      - name: docID
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Document detail.
+          content:
+            application/json:
+              example:
+                id: dte-7c9e2f1a
+                status: accepted
+                doc_type: 33
+                folio: 1001
+                fch_emis: '2026-11-14'
+                mnt_total: 1250000
+                receptor_rut: 76543210-9
+                sii_state: accepted
+                dte_xml: <DTE>...</DTE>
+        '404':
+          description: Document not found in your account.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: document not found
+        '403':
+          description: An account credential is required.
+          content:
+            application/json:
+              example:
+                error: account_required
+                message: this endpoint requires an account credential
   /v1/me/contracts/envelopes:
     get:
       tags:
@@ -23461,6 +23599,646 @@ paths:
           description: No account matches (`not_found`).
         '429':
           description: Too many lookups (`too_many_attempts`).
+  /v1/rwa/bridge/moves:
+    get:
+      tags:
+      - RWA
+      operationId: listRWABridgeMoves
+      summary: List your bridge moves
+      description: Paginated bridge-out and bridge-in moves of the authenticated account.
+      parameters:
+      - name: direction
+        in: query
+        description: in or out (empty = both).
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter by move status.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Paginated bridge moves.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/moves/{moveID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWABridgeMove
+      summary: Retrieve one bridge move
+      description: Detail of one bridge move of the authenticated account.
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Bridge move detail.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/moves/{moveID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWABridgeMoveReceipt
+      summary: Download the bridge move receipt (PDF)
+      description: Branded PDF receipt of one bridge move with title amount, wallet, chain tx hash and the signed verification QR.
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/withdrawals:
+    post:
+      tags:
+      - RWA
+      operationId: createRWABridgeOut
+      summary: Bridge RWA tokens out to your wallet
+      description: 'Burns title in your ledger and mints the same amount on-chain to your allowlisted wallet (Polygon). Runs OTP, money-out limits, Travel Rule attestation (always required when enabled for your org: RWA is unpriced), KYT preflight and beneficiary screening before debiting. Returns 202 while the mint confirms; finality arrives via the rwa_bridge_out_completed / rwa_bridge_out_failed webhooks and email receipt. Same-key replays report the existing move; a failed move refunds the title automatically and retries use a fresh key.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - amount
+              - to_address
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                amount:
+                  type: string
+                  description: Title amount in tokens (up to 6 decimals).
+                to_address:
+                  type: string
+                  description: Your allowlisted 0x wallet.
+                wallet_type:
+                  type: string
+                  description: self_hosted (with beneficiary_name) or vasp.
+                beneficiary_name:
+                  type: string
+                travel_address:
+                  type: string
+                  description: VASP Travel Rule address (TRP exchange).
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              to_address: '0x1234567890abcdef1234567890abcdef12345678'
+              wallet_type: self_hosted
+              beneficiary_name: Jane Doe
+              idempotency_key: bridge-out-min01-0001
+      responses:
+        '202':
+          description: Bridge move accepted (lock debited, mint dispatched or pending).
+          content:
+            application/json:
+              example:
+                move_id: 55555555-5555-4555-8555-555555555555
+                account_id: 33333333-3333-4333-8333-333333333333
+                project_code: RWA-MIN01
+                direction: out
+                amount: '100.000000'
+                amount_raw: '100000000'
+                wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+                status: dispatched
+                core_tx_id: '0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890'
+                fee_usdt: '2.500000'
+                fee_usdt_raw: '2500000'
+                fail_reason: ''
+                created_at: '2026-11-16T01:00:00Z'
+                updated_at: '2026-11-16T01:00:05Z'
+                confirmed_at: null
+        '200':
+          description: Idempotent replay of an existing move.
+        '400':
+          description: Invalid amount, address or missing idempotency key.
+        '403':
+          description: Service disabled, verification required, OTP required, or compliance hold.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Project not bridgeable, limits exceeded, Travel Rule data missing, fee misconfigured, or insufficient funds.
+  /v1/rwa/distributions:
+    get:
+      tags:
+      - RWA
+      operationId: listRWADistributions
+      summary: List your RWA distribution credits
+      description: Paginated royalty distribution credits of the authenticated account in a date range.
+      parameters:
+      - name: from
+        in: query
+        description: Created from (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: Created until (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Paginated distribution credits.
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                distributions:
+                - leg_id: 55555555-5555-4555-8555-555555555555
+                  distribution_id: 66666666-6666-4666-8666-666666666666
+                  project_code: RWA-MIN01
+                  period: 2026-Q4
+                  tokens: '890.000000'
+                  share_usdt: '12.500000'
+                  fee_usdt: '0.125000'
+                  created_at: '2026-11-15T15:00:00Z'
+        '400':
+          description: Invalid date range.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/distributions/{distributionID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWADistributionLeg
+      summary: Retrieve one distribution credit
+      description: Detail of your credit leg of one royalty distribution.
+      parameters:
+      - name: distributionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Distribution credit detail.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/distributions/{distributionID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWADistributionReceipt
+      summary: Download the distribution receipt (PDF)
+      description: Branded PDF receipt of one royalty distribution credit with tokens held, share and the signed verification QR. Accounts see their own leg; admins pass account_id to select one holder leg.
+      parameters:
+      - name: distributionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: account_id
+        in: query
+        description: Holder leg selector (admins only; required without an account credential).
+        schema:
+          type: string
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/holdings:
+    get:
+      tags:
+      - RWA
+      operationId: listRWAHoldings
+      summary: List your RWA holdings
+      description: Current RWA-* balances of the authenticated account with project terms and funding totals.
+      responses:
+        '200':
+          description: Holdings by project.
+          content:
+            application/json:
+              example:
+                holdings:
+                - project_code: RWA-MIN01
+                  project_name: Minera Norte Royalty I
+                  project_status: active
+                  available: '890.000000'
+                  held: '0.000000'
+                  subscribed_gross_usdt: '1000.000000'
+                  redeemed_tokens: '100.000000'
+                  distributions_received_usdt: '12.500000'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/projects:
+    get:
+      tags:
+      - RWA
+      operationId: listRWAProjects
+      summary: List RWA royalty projects
+      description: Royalty-token projects of your organization with terms, status and funding progress. Open to any account; buying requires a verified identity.
+      parameters:
+      - name: status
+        in: query
+        description: Filter by project status (draft, funding, active, distributing, defaulted, redeemed, paused).
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Paginated projects.
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                projects:
+                - project_id: 11111111-1111-4111-8111-111111111111
+                  code: RWA-MIN01
+                  name: Minera Norte Royalty I
+                  mineral: copper
+                  spv_name: Norte Royalty SPV Ltd
+                  status: funding
+                  royalty_pct: '5'
+                  royalty_base: nsr
+                  cap_multiple: '2'
+                  term_years: 7
+                  supply_total: '10000000.000000'
+                  subscription_price_usdt: '1.000000'
+                  min_per_account: '100.000000'
+                  distribution_frequency: quarterly
+                  chain: polygon
+                  bridge_enabled: false
+                  transfers_enabled: true
+                  redeem_enabled: true
+                  sold_tokens: '1200000.000000'
+                  raised_gross_usdt: '1200000.000000'
+                  subscribers: 84
+                  redeemed_tokens: '0.000000'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/projects/{code}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWAProject
+      summary: Retrieve one RWA project
+      description: Full terms, auditor keys, evidence documents and funding progress of one project of your organization.
+      parameters:
+      - name: code
+        in: path
+        required: true
+        description: Project asset code (e.g. RWA-MIN01).
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Project detail.
+          content:
+            application/json:
+              example:
+                project_id: 11111111-1111-4111-8111-111111111111
+                code: RWA-MIN01
+                name: Minera Norte Royalty I
+                mineral: copper
+                spv_name: Norte Royalty SPV Ltd
+                status: funding
+                royalty_pct: '5'
+                royalty_base: nsr
+                cap_multiple: '2'
+                term_years: 7
+                supply_total: '10000000.000000'
+                subscription_price_usdt: '1.000000'
+                min_per_account: '100.000000'
+                distribution_frequency: quarterly
+                chain: polygon
+                sold_tokens: '1200000.000000'
+                raised_gross_usdt: '1200000.000000'
+                subscribers: 84
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/redemptions:
+    post:
+      tags:
+      - RWA
+      operationId: createRWARedemption
+      summary: Redeem RWA tokens for USDT
+      description: Return royalty tokens at the project subscription price (par). Debits RWA-* tokens and credits USDT atomically. Requires a verified identity, OTP for human sessions, and an idempotency key; replays return the original redemption.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - tokens
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                tokens:
+                  type: string
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              tokens: '100.000000'
+              idempotency_key: red-min01-0001
+      responses:
+        '201':
+          description: Redemption completed.
+          content:
+            application/json:
+              example:
+                redemption_id: 44444444-4444-4444-8444-444444444444
+                account_id: 33333333-3333-4333-8333-333333333333
+                project_id: 11111111-1111-4111-8111-111111111111
+                project_code: RWA-MIN01
+                tokens: '100.000000'
+                usdt_credited: '100.000000'
+                price_usdt: '1.000000'
+                status: completed
+                created_at: '2026-11-15T14:00:00Z'
+                receipt_url: /v1/rwa/redemptions/44444444-4444-4444-8444-444444444444/receipt
+        '200':
+          description: Idempotent replay of an existing redemption.
+        '400':
+          description: Invalid amount or missing idempotency key.
+        '403':
+          description: Service disabled, verification required, OTP required, or compliance hold.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Redemptions disabled, dust amount, or insufficient token balance.
+    get:
+      tags:
+      - RWA
+      operationId: listRWARedemptions
+      summary: List your RWA redemptions
+      description: Paginated redemptions of the authenticated account in a date range.
+      parameters:
+      - name: from
+        in: query
+        description: Created from (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: Created until (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Paginated redemptions.
+        '400':
+          description: Invalid date range.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/redemptions/{redemptionID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWARedemption
+      summary: Retrieve one RWA redemption
+      description: Detail of one redemption of the authenticated account.
+      parameters:
+      - name: redemptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Redemption detail.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/redemptions/{redemptionID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWARedemptionReceipt
+      summary: Download the redemption receipt (PDF)
+      description: Branded PDF receipt of the RWA redemption with tokens returned, USDT credited and the signed verification QR.
+      parameters:
+      - name: redemptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/subscriptions:
+    post:
+      tags:
+      - RWA
+      operationId: createRWASubscription
+      summary: Subscribe to an RWA project
+      description: Buy royalty tokens with USDT at the project subscription price. Debits USDT (net + fee) and credits RWA-* tokens atomically. Requires a verified identity, OTP for human sessions, and an idempotency key; replays return the original subscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - usdt_amount
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                usdt_amount:
+                  type: string
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              usdt_amount: '1000.000000'
+              idempotency_key: sub-min01-0001
+      responses:
+        '201':
+          description: Subscription completed.
+          content:
+            application/json:
+              example:
+                subscription_id: 22222222-2222-4222-8222-222222222222
+                account_id: 33333333-3333-4333-8333-333333333333
+                project_id: 11111111-1111-4111-8111-111111111111
+                project_code: RWA-MIN01
+                usdt_gross: '1000.000000'
+                fee_usdt: '10.000000'
+                usdt_net: '990.000000'
+                tokens_credited: '990.000000'
+                price_usdt: '1.000000'
+                status: completed
+                created_at: '2026-11-15T13:00:00Z'
+                receipt_url: /v1/rwa/subscriptions/22222222-2222-4222-8222-222222222222/receipt
+        '200':
+          description: Idempotent replay of an existing subscription.
+        '400':
+          description: Invalid amount or missing idempotency key.
+        '403':
+          description: Service disabled, verification required, OTP required, or compliance hold.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Window closed, caps exceeded, fee exceeds amount, project not subscribable, or insufficient funds.
+    get:
+      tags:
+      - RWA
+      operationId: listRWASubscriptions
+      summary: List your RWA subscriptions
+      description: Paginated subscriptions of the authenticated account in a date range.
+      parameters:
+      - name: from
+        in: query
+        description: Created from (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: Created until (RFC3339).
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Paginated subscriptions.
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                subscriptions:
+                - subscription_id: 22222222-2222-4222-8222-222222222222
+                  project_code: RWA-MIN01
+                  usdt_gross: '1000.000000'
+                  fee_usdt: '10.000000'
+                  usdt_net: '990.000000'
+                  tokens_credited: '990.000000'
+                  price_usdt: '1.000000'
+                  status: completed
+                  created_at: '2026-11-15T13:00:00Z'
+        '400':
+          description: Invalid date range.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/subscriptions/{subscriptionID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWASubscription
+      summary: Retrieve one RWA subscription
+      description: Detail of one subscription of the authenticated account.
+      parameters:
+      - name: subscriptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Subscription detail.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/subscriptions/{subscriptionID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWASubscriptionReceipt
+      summary: Download the subscription receipt (PDF)
+      description: Branded PDF receipt of the RWA subscription with USDT legs, tokens credited and the signed verification QR.
+      parameters:
+      - name: subscriptionID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/screenings/addresses:
     post:
       tags:
@@ -26849,7 +27627,7 @@ paths:
                     error: guard_diverged
                     message: market price diverged from the reference; retry in a moment or split the operation
         '503':
-          description: Execution price unavailable or stale (pricing_unavailable).
+          description: Execution price unavailable or stale (pricing_unavailable), or BTC spread below hedge coverage floor (coverage_unavailable, fail-closed).
           content:
             application/json:
               schema:
@@ -27035,7 +27813,7 @@ paths:
                 error: invalid_pair
                 message: from_asset and to_asset must differ
         '503':
-          description: Execution price unavailable or stale (pricing_unavailable).
+          description: Execution price unavailable or stale (pricing_unavailable), or BTC spread below hedge coverage floor (coverage_unavailable, fail-closed).
           content:
             application/json:
               schema:
@@ -32784,6 +33562,111 @@ webhooks:
               change: status
               priority: high
               assigned_admin_id: admin-01
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_subscription_completed:
+    post:
+      summary: RWA subscription completed
+      description: Royalty tokens were subscribed with USDT (net + fee debited, tokens credited).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              subscription_id: 22222222-2222-4222-8222-222222222222
+              project_code: RWA-MIN01
+              usdt_gross: '1000.000000'
+              fee_usdt: '10.000000'
+              usdt_net: '990.000000'
+              tokens_credited: '990.000000'
+              price_usdt: '1.000000'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_distribution_credited:
+    post:
+      summary: RWA distribution credited
+      description: A royalty distribution credited USDT pro-rata on the snapshot balance.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              distribution_id: 66666666-6666-4666-8666-666666666666
+              project_code: RWA-MIN01
+              period: 2026-Q4
+              tokens: '890.000000'
+              share_usdt: '12.500000'
+              fee_usdt: '0.125000'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_redeem_completed:
+    post:
+      summary: RWA redemption completed
+      description: Royalty tokens were redeemed for USDT at the project subscription price.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              redemption_id: 44444444-4444-4444-8444-444444444444
+              project_code: RWA-MIN01
+              tokens: '100.000000'
+              usdt_credited: '100.000000'
+              price_usdt: '1.000000'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_out_completed:
+    post:
+      summary: RWA bridge-out completed
+      description: Title burned in the ledger was minted on-chain to the holder wallet.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 55555555-5555-4555-8555-555555555555
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              core_tx_id: '0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_out_failed:
+    post:
+      summary: RWA bridge-out failed
+      description: The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 55555555-5555-4555-8555-555555555555
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              reason: core:broadcast_failed
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_in_credited:
+    post:
+      summary: RWA bridge-in credited
+      description: An on-chain burn was detected confirmed and the title was credited back to the ledger.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 66666666-6666-4666-8666-666666666666
+              project_code: RWA-MIN01
+              amount: '50.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              burn_tx_id: 0xburn1234567890burn1234567890burn1234567890burn1234567890burn12
       responses:
         '200':
           description: Return any 2xx to acknowledge delivery.

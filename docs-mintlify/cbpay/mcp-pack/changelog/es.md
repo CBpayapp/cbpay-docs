@@ -5,6 +5,29 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.292 · 2 versiones - 16 de noviembre de 2026
+### v2.292
+**Agregado**
+- El bridge-out de RWA ahora soporta el ciclo lock/mint/burn/unlock para
+  billeteras autorizadas, con replay idempotente, validaciones OTP, límites,
+  Travel Rule y KYT, más webhooks de éxito o falla.
+### v2.291
+**Corregido**
+
+- La emisión del contrato marco vuelve a funcionar para empresas: los precios RWA (suscripción, distribución, puente) ahora son parte del apéndice de precios, partiendo de los ceros actuales. Los sobres de plantillas viejas también vuelven a recuperarse solos al firmar en vez de quedar sin salida.
+## v2.290 · 4 versiones - 15 de noviembre de 2026
+### v2.290
+**Cambiado**
+- Los swaps BTC ahora fallan cerrados con 503 `coverage_unavailable` cuando el spread efectivo cae bajo el piso de cobertura (la casa nunca cotiza a pérdida).
+### v2.289
+**Agregado**
+- Tokens RWA de regalías (ledger-first): explora proyectos vía `GET /v1/rwa/projects`, suscribe con USDT (`POST /v1/rwa/subscriptions`), rescata a par (`POST /v1/rwa/redemptions`), sigue holdings y distribuciones USDT trimestrales, mueve tokens entre cuentas de tu org y descarga comprobantes PDF firmados. Webhooks `rwa_subscription_completed`, `rwa_distribution_credited` y `rwa_redeem_completed`.
+### v2.288
+**Agregado**
+- Documentos tributarios en el portal: lista y consulta los DTE chilenos facturados a tu cuenta vía `GET /v1/me/billing/docs` y `.../docs/{docID}`, incluido el XML DTE firmado.
+### v2.287
+**Cambiado**
+- El desglose por producto de la cartola ahora incluye swaps, transacciones de tarjeta, operaciones bancarias y devoluciones de cobros con montos en el asset del resumen (antes solo conteos en algunas vistas). Las operaciones bancarias se cuentan pero jamás se suman aquí (cuadran en sus secciones BANK_*).
 ## v2.286 · 4 versiones - 14 de noviembre de 2026
 ### v2.286
 **Cambiado**

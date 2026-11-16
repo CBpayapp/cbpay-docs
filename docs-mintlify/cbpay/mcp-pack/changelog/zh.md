@@ -5,6 +5,29 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.292 · 2 个版本 - 2026年11月16日
+### v2.292
+**新增**
+- RWA 跨链转出现在支持 allowlist 钱包的 lock/mint/burn/unlock 生命周期，
+  并提供幂等重放、OTP、限额、Travel Rule 和 KYT 检查，以及成功或失败
+  webhook。
+### v2.291
+**修复**
+
+- 企业框架协议签发已恢复：RWA 价格（认购、分红、跨链）现已纳入价格附录，从当前零默认值起算。旧模板信封在签署时也会自动恢复，不再走入死胡同。
+## v2.290 · 4 个版本 - 2026年11月15日
+### v2.290
+**变更**
+- 当有效价差低于对冲覆盖下限时，BTC 兑换现以 503 `coverage_unavailable` 明确失败（公司绝不亏本报价）。
+### v2.289
+**新增**
+- RWA 版税代币（ledger 优先）：通过 `GET /v1/rwa/projects` 浏览项目，用 USDT 认购（`POST /v1/rwa/subscriptions`）、按平价赎回（`POST /v1/rwa/redemptions`）、跟踪持仓和季度 USDT 分红、在组织内账户间转移代币，并下载签名 PDF 回单。新增 webhook `rwa_subscription_completed`、`rwa_distribution_credited` 和 `rwa_redeem_completed`。
+### v2.288
+**新增**
+- 门户账单文档：通过 `GET /v1/me/billing/docs` 和 `.../docs/{docID}` 列出并查看向你的账户开具的智利税务文档（DTE），包括已签名的 DTE XML。
+### v2.287
+**已更改**
+- 对账单产品明细现包括兑换、卡交易、银行操作和收款退款，金额按摘要资产计价（此前某些视图仅计数）。银行操作仅计数从不加总（在各自的 BANK_* 资产部分核对）。
 ## v2.286 · 4 个版本 - 2026年11月14日
 ### v2.286
 **已更改**

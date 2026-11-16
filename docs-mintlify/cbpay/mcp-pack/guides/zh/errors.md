@@ -147,6 +147,8 @@ source_url: https://docs.cbpayapp.com/zh/errors
 | `invalid_settlement_hours` | `settlement_hours` 仅支持 `payin_card` 费用服务，且必须是非负整数（`0` = 立即入账）— 参见[费用](https://docs.cbpayapp.com/zh/concepts/fees) |
 | `invalid_country` | 国家/地区代码格式错误或缺失——ISO 3166-1 alpha-2（例如 `GET /v1/aml/catalogs/cities?country=`）；也用于有效但不支持的国家/地区过滤条件（例如在银行目录查询中传入非 `US` 的 `country`） |
 | `invalid_expand` | `GET /v1/contacts` 的 `?expand=` 取值未知（仅支持 `destinations`）；`dest_type`/`dest_country` 同样需要 `expand=destinations` |
+| `invalid_flag` | 未知的 `flag_key`（封闭式 feature flag 注册表） |
+| `account_without_org` | 账号范围需要 `org_id` |
 
 ### QR payin 幂等性
 
@@ -197,6 +199,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `no_banking_customer` | 传统 Banking 操作没有通用 banking profile（先调用 `POST /v1/banking/customer`）；EUR Banking 走直接虚拟 IBAN 流程 |
 | 400 | `banking_eur_requires_viban` | EUR Banking 账户通过虚拟 IBAN 开立。请在 Operar EUR 中请求 `purpose: "banking_eur"`，不要创建通用 banking customer |
 | 409 | `banking_customer_exists` | 该账户已有银行账户资料（每个账户仅限一个） |
+| 409 | `resubmit_rejected_duplicate` | 被拒绝的银行客户与一个有效客户重复（同一身份证件）——请重新提交存续客户，或经人工审核后使用显式的 `acknowledge_duplicate` 重试 |
 | 409 | `idempotency_conflict` | 同一 banking profile claim 仍为 pending 或 payload 已变化——保持相同请求并等待核对 |
 | 503 | `banking_recovery_pending` | customer 创建结果不明确——运营人员必须先核对持久 claim，再使用新密钥重试 |
 | 409 | `bank_ref_conflict` | 该银行参考号已被另一笔操作认领（属于你租户时，响应会用 `claimed_by`/`claimed_kind` 指明）——请修正证据，不要换参考号重试 |
@@ -769,3 +772,41 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 400 | `invalid_batch` | 批量操作的 ID 少于 1 个或超过 100 个 | 发送 1–100 个费用 UUID |
 | 400 | `invalid_horizon` | horizon 不是 3、6 或 12 个月 | 使用 `horizon=3`、`6` 或 `12` |
 | 400 | `invalid_icon` | 自定义图标格式或长度超出限制 | 使用不超过 40 个字母、数字、`_` 或 `-` |
+
+## RWA 版税错误
+
+| HTTP | `error` | 含义 | 处理 |
+|---|---|---|---|
+| 404 | `rwa_project_not_found` | 你所在组织无此资产代码的 RWA 项目（transfers 接口；认购/查询用 `not_found`） | 调用 `GET /v1/rwa/projects` 使用有效代码 |
+| 422 | `rwa_transfers_disabled` | 项目禁用了内部转账 | 仅 funding/active/distributing 且开关开启时可转 |
+| 422 | `project_not_subscribable` | 项目不在 funding 状态 | 在 funding 期间认购 |
+| 422 | `window_closed` | 不在认购窗口内 | 查看 `subscription_opens_at` / `subscription_closes_at` |
+| 422 | `cap_exceeded` | 将超出账户或募资上限 | 降低金额或等待额度 |
+| 422 | `amount_below_minimum` | 低于项目最低额（或扣费后为粉尘） | 提高金额至最低额以上 |
+| 422 | `fee_exceeds_amount` | 配置手续费超过操作金额 | 提高金额或请组织检查费率 |
+| 422 | `invalid_transition` | 状态流转不允许 | 遵循 draft → funding → active → distributing，或先暂停/违约 |
+| 422 | `attestation_math_mismatch` | 版税不等于 floor（净额 × pct / 100） | 精确重算版税 |
+| 422 | `quorum_not_met` | 有效审计师签名不足 quorum | 收集所需的不同签名 |
+| 422 | `escrow_missing` | 项目没有托管账户 | funding 前先设置 `escrow_account_id` |
+| 422 | `escrow_insufficient` | 托管余额不足以支付总额 | 注资托管后重新提议 |
+| 422 | `nothing_to_distribute` | 本周期版税为零 | 零季度不分红 |
+| 422 | `no_holders` | 快照无持有人；已标记失败 | 有持有人后再提议 |
+| 422 | `redeem_disabled` | 项目禁用赎回 | 需在 funding/active/distributing 开启开关 |
+| 400 | `invalid_date` | 日期字段不是 RFC3339 | 发送 RFC3339 时间戳 |
+| 409 | `project_exists` | 创建时代码重复 | 换一个 `RWA-*` 代码 |
+| 400 | `invalid_terms` | 项目条款校验失败 | 修正标记字段（范围、枚举、日期、JSON） |
+| 400 | `invalid_attestation` | Attestation 内容校验失败 | 修正周期、金额、费率、证据或签名 |
+| 422 | `attestation_project_mismatch` | 该 attestation 属于另一项目 | 配对同一项目的资源 |
+| 422 | `attestation_not_approved` | Attestation 尚未批准 | 先由第二位 admin 批准 |
+| 422 | `project_not_distributable` | 项目未处于可分红激活状态 | 在 active/distributing 状态下操作 |
+| 422 | `royalty_pct_mismatch` | 费率与项目条款不一致 | 使用项目精确的 `royalty_pct` |
+| 422 | `royalty_cap_exceeded` | 分红将超过 cap × 募资额 | 降低总额或等待更多认购 |
+| 422 | `escrow_blocked` | 托管账户未激活 | 先解封托管账户 |
+| 422 | `project_not_bridgeable` | 项目不可跨链（状态或开关） | 在 funding/active/distributing 且开关开启时跨链 |
+| 400 | `invalid_to_address` | 目标不是有效的非零 0x 地址 | 发送有效的持有人钱包 |
+| 422 | `fee_misconfigured` | rwa_bridge 费用必须纯固定 | 请组织将百分比部分置零 |
+| 409 | `already_reconciled` | 跨链记录已终态 | 读取记录而非重试 |
+| 409 | `not_parked` | 仅可处理 parked 的转入 burns | 仅处理 parked 记录 |
+| 422 | `burn_code_mismatch` | 项目与 burn 快照不符 | 处理至被 burn 的项目 |
+| 422 | `amount_too_large` | 金额超账本精度 | 拆分至 38 位份额以内 |
+| 422 | `burner_blocked` | Burner 未通过制裁筛查 | 该 burn 保持 parked 待合规处理 |
