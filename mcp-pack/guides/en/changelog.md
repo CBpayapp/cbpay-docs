@@ -5,6 +5,12 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.291 · 1 version - November 16, 2026
+### v2.291
+**Added**
+- RWA bridge-out now supports the lock/mint/burn/unlock lifecycle for
+  allowlisted wallets, with idempotent replay, OTP, limits, travel-rule and
+  KYT checks, plus completion or failure webhooks.
 ## v2.290 · 4 versions - November 15, 2026
 ### v2.290
 **Changed**

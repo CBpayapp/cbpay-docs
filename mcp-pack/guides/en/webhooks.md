@@ -106,6 +106,9 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `rwa_subscription_completed` | Royalty tokens were subscribed with USDT (net + fee debited, tokens credited) |
 | `rwa_distribution_credited` | A royalty distribution credited USDT pro-rata on the snapshot balance |
 | `rwa_redeem_completed` | Royalty tokens were redeemed for USDT at the project subscription price |
+| `rwa_bridge_out_completed` | Title burned in the ledger was minted on-chain to the holder wallet |
+| `rwa_bridge_out_failed` | The on-chain mint failed; the title was refunded automatically |
+| `rwa_bridge_in_credited` | An on-chain burn was detected confirmed and the title was credited back |
 
 RWA payloads use exact decimal strings and include the operation identifier:
 

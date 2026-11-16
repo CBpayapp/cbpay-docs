@@ -1,5 +1,5 @@
 {
-  "count": 460,
+  "count": 468,
   "errors": [
     {
       "category": {
@@ -6397,6 +6397,118 @@
         "en": "The escrow account is not active — Fix: Unblock the escrow account first",
         "es": "La cuenta escrow no está activa — Fix: Desbloquea la cuenta escrow antes",
         "zh": "托管账户未激活 — Fix: 先解封托管账户"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "project_not_bridgeable",
+      "http": 422,
+      "meaning": {
+        "en": "The project is not bridgeable (status or bridge switch) — Fix: Bridge in funding/active/distributing with the switch on",
+        "es": "El proyecto no es bridgeable (estado o switch) — Fix: Puentea en funding/active/distributing con el switch on",
+        "zh": "项目不可跨链（状态或开关） — Fix: 在 funding/active/distributing 且开关开启时跨链"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_to_address",
+      "http": 400,
+      "meaning": {
+        "en": "The destination is not a non-zero 0x address — Fix: Send a valid holder wallet",
+        "es": "El destino no es una dirección 0x válida no-cero — Fix: Envía una wallet holder válida",
+        "zh": "目标不是有效的非零 0x 地址 — Fix: 发送有效的持有人钱包"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "fee_misconfigured",
+      "http": 422,
+      "meaning": {
+        "en": "The rwa_bridge fee must be fixed-only — Fix: Ask your org to zero the percent leg",
+        "es": "El fee rwa_bridge debe ser solo fijo — Fix: Pide a tu org que ponga el tramo procentual en cero",
+        "zh": "rwa_bridge 费用必须纯固定 — Fix: 请组织将百分比部分置零"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "already_reconciled",
+      "http": 409,
+      "meaning": {
+        "en": "The bridge move is already terminal — Fix: Read the move instead of retrying",
+        "es": "El movimiento ya está terminal — Fix: Lee el movimiento en vez de reintentar",
+        "zh": "跨链记录已终态 — Fix: 读取记录而非重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "not_parked",
+      "http": 409,
+      "meaning": {
+        "en": "Only parked bridge-in moves can be resolved — Fix: Resolve parked moves only",
+        "es": "Solo se resuelven burns parkeados — Fix: Resuelve parkeados solamente",
+        "zh": "仅可处理 parked 的转入 burns — Fix: 仅处理 parked 记录"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "burn_code_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "The resolve project does not match the burn snapshot — Fix: Resolve to the burned project",
+        "es": "El proyecto no calza con el snapshot del burn — Fix: Resuelve al proyecto quemado",
+        "zh": "项目与 burn 快照不符 — Fix: 处理至被 burn 的项目"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "amount_too_large",
+      "http": 422,
+      "meaning": {
+        "en": "The amount exceeds ledger precision — Fix: Split below 38 digits of title units",
+        "es": "El monto excede la precisión del ledger — Fix: Fracciona bajo 38 dígitos de título",
+        "zh": "金额超账本精度 — Fix: 拆分至 38 位份额以内"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "burner_blocked",
+      "http": 422,
+      "meaning": {
+        "en": "The burner failed sanctions screening — Fix: The burn stays parked for compliance",
+        "es": "El burner falló el screening de sanciones — Fix: El burn queda parkeado para compliance",
+        "zh": "Burner 未通过制裁筛查 — Fix: 该 burn 保持 parked 待合规处理"
       }
     }
   ]

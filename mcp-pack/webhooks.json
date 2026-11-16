@@ -1,5 +1,5 @@
 {
-  "count": 57,
+  "count": 60,
   "events": [
     {
       "description": {
@@ -937,6 +937,66 @@
         "en": "Qscore score changed",
         "es": "Cambió el score Qscore",
         "zh": "Qscore 评分已变更"
+      }
+    },
+    {
+      "description": {
+        "en": "An on-chain burn was detected confirmed and the title was credited back to the ledger.",
+        "es": "An on-chain burn was detected confirmed and the title was credited back to the ledger.",
+        "zh": "An on-chain burn was detected confirmed and the title was credited back to the ledger."
+      },
+      "event": "rwa_bridge_in_credited",
+      "payload_example": {
+        "amount": "50.000000",
+        "burn_tx_id": "0xburn1234567890burn1234567890burn1234567890burn1234567890burn12",
+        "move_id": "66666666-6666-4666-8666-666666666666",
+        "project_code": "RWA-MIN01",
+        "wallet_address": "0x1234567890abcdef1234567890abcdef12345678"
+      },
+      "summary": {
+        "en": "RWA bridge-in credited",
+        "es": "RWA bridge-in credited",
+        "zh": "RWA bridge-in credited"
+      }
+    },
+    {
+      "description": {
+        "en": "Title burned in the ledger was minted on-chain to the holder wallet.",
+        "es": "Title burned in the ledger was minted on-chain to the holder wallet.",
+        "zh": "Title burned in the ledger was minted on-chain to the holder wallet."
+      },
+      "event": "rwa_bridge_out_completed",
+      "payload_example": {
+        "amount": "100.000000",
+        "core_tx_id": "0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890",
+        "move_id": "55555555-5555-4555-8555-555555555555",
+        "project_code": "RWA-MIN01",
+        "wallet_address": "0x1234567890abcdef1234567890abcdef12345678"
+      },
+      "summary": {
+        "en": "RWA bridge-out completed",
+        "es": "RWA bridge-out completed",
+        "zh": "RWA bridge-out completed"
+      }
+    },
+    {
+      "description": {
+        "en": "The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held).",
+        "es": "The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held).",
+        "zh": "The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held)."
+      },
+      "event": "rwa_bridge_out_failed",
+      "payload_example": {
+        "amount": "100.000000",
+        "move_id": "55555555-5555-4555-8555-555555555555",
+        "project_code": "RWA-MIN01",
+        "reason": "core:broadcast_failed",
+        "wallet_address": "0x1234567890abcdef1234567890abcdef12345678"
+      },
+      "summary": {
+        "en": "RWA bridge-out failed",
+        "es": "RWA bridge-out failed",
+        "zh": "RWA bridge-out failed"
       }
     },
     {

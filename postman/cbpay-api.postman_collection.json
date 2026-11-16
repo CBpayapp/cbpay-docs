@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-15 19:21 UTC",
-    "_content_sha256": "6626ffda80bd6d5ec0e035950e339410953a64af06bee6b3b4148e38872e1548"
+    "_generated_at": "2026-11-16 05:45 UTC",
+    "_content_sha256": "499f4ff976628ab532d196ec7802d719edeeacd220f21f69ceec82b6d6ad0858"
   },
   "auth": {
     "type": "bearer",
@@ -10675,6 +10675,34 @@
             "auth": {
               "type": "noauth"
             }
+          }
+        },
+        {
+          "name": "Download the bridge move receipt (PDF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/bridge/moves/:moveID/receipt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "bridge",
+                "moves",
+                ":moveID",
+                "receipt"
+              ],
+              "variable": [
+                {
+                  "key": "moveID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Branded PDF receipt of one bridge move with title amount, wallet, chain tx hash and the signed verification QR."
           }
         },
         {
@@ -28395,6 +28423,143 @@
     {
       "name": "RWA",
       "item": [
+        {
+          "name": "List your bridge moves",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/bridge/moves",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "bridge",
+                "moves"
+              ],
+              "query": [
+                {
+                  "key": "direction",
+                  "value": "",
+                  "disabled": true,
+                  "description": "in or out (empty = both)."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by move status."
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Paginated bridge-out and bridge-in moves of the authenticated account."
+          }
+        },
+        {
+          "name": "Retrieve one bridge move",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/bridge/moves/:moveID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "bridge",
+                "moves",
+                ":moveID"
+              ],
+              "variable": [
+                {
+                  "key": "moveID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Detail of one bridge move of the authenticated account."
+          }
+        },
+        {
+          "name": "Bridge RWA tokens out to your wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/bridge/withdrawals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "bridge",
+                "withdrawals"
+              ]
+            },
+            "description": "Burns title in your ledger and mints the same amount on-chain to your allowlisted wallet (Polygon). Runs OTP, money-out limits, Travel Rule attestation (always required when enabled for your org: RWA is unpriced), KYT preflight and beneficiary screening before debiting. Returns 202 while the mint confirms; finality arrives via the rwa_bridge_out_completed / rwa_bridge_out_failed webhooks and email receipt. Same-key replays report the existing move; a failed move refunds the title automatically and retries use a fresh key.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_code\": \"RWA-MIN01\",\n  \"amount\": \"100.000000\",\n  \"to_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n  \"wallet_type\": \"self_hosted\",\n  \"beneficiary_name\": \"Jane Doe\",\n  \"idempotency_key\": \"bridge-out-min01-0001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "202 Bridge move accepted (lock debited, mint dispatched or pendi",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/rwa/bridge/withdrawals",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "rwa",
+                    "bridge",
+                    "withdrawals"
+                  ]
+                }
+              },
+              "status": "Bridge move accepted (lock debited, mint dispatched or pendi",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"move_id\": \"55555555-5555-4555-8555-555555555555\",\n  \"account_id\": \"33333333-3333-4333-8333-333333333333\",\n  \"project_code\": \"RWA-MIN01\",\n  \"direction\": \"out\",\n  \"amount\": \"100.000000\",\n  \"amount_raw\": \"100000000\",\n  \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n  \"status\": \"dispatched\",\n  \"core_tx_id\": \"0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890\",\n  \"fee_usdt\": \"2.500000\",\n  \"fee_usdt_raw\": \"2500000\",\n  \"fail_reason\": \"\",\n  \"created_at\": \"2026-11-16T01:00:00Z\",\n  \"updated_at\": \"2026-11-16T01:00:05Z\",\n  \"confirmed_at\": null\n}"
+            }
+          ]
+        },
         {
           "name": "List your RWA distribution credits",
           "request": {

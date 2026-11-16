@@ -105,6 +105,9 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `rwa_subscription_completed` | Se suscribieron tokens de regalía con USDT (débito neto + comisión, tokens acreditados) |
 | `rwa_distribution_credited` | Una distribución de regalías acreditó USDT pro-rata sobre el saldo del snapshot |
 | `rwa_redeem_completed` | Se rescataron tokens de regalía por USDT al precio de suscripción del proyecto |
+| `rwa_bridge_out_completed` | El título quemado en el ledger se minteó on-chain a la wallet del holder |
+| `rwa_bridge_out_failed` | El mint on-chain falló; el título se refundeó automáticamente |
+| `rwa_bridge_in_credited` | Un burn on-chain confirmado se detectó y el título volvió al ledger |
 
 Los payloads RWA usan cadenas decimales exactas e incluyen el identificador de la operación:
 

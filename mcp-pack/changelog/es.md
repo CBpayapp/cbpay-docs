@@ -5,6 +5,12 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.291 · 1 versión - 16 de noviembre de 2026
+### v2.291
+**Agregado**
+- El bridge-out de RWA ahora soporta el ciclo lock/mint/burn/unlock para
+  billeteras autorizadas, con replay idempotente, validaciones OTP, límites,
+  Travel Rule y KYT, más webhooks de éxito o falla.
 ## v2.290 · 4 versiones - 15 de noviembre de 2026
 ### v2.290
 **Cambiado**

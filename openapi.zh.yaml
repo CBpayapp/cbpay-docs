@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.290'
+  version: '2.291'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -23507,6 +23507,156 @@ paths:
           description: 无匹配账户(`not_found`)。
         '429':
           description: 查询次数过多(`too_many_attempts`)。
+  /v1/rwa/bridge/moves:
+    get:
+      tags:
+      - RWA
+      operationId: listRWABridgeMoves
+      summary: 列出你的跨链记录
+      description: 当前账户的跨链转出/转入记录（分页）。
+      parameters:
+      - name: direction
+        in: query
+        description: in 或 out（空 = 全部）。
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: 按状态过滤。
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: 跨链记录（分页）。
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/moves/{moveID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWABridgeMove
+      summary: 查询单条跨链记录
+      description: 当前账户单条跨链记录的详情。
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 跨链记录详情。
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/moves/{moveID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWABridgeMoveReceipt
+      summary: 下载跨链回单（PDF）
+      description: 品牌跨链回单 PDF，含代币金额、钱包、链上交易哈希和签名验证二维码。
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/withdrawals:
+    post:
+      tags:
+      - RWA
+      operationId: createRWABridgeOut
+      summary: 将 RWA 代币跨链转出到你的钱包
+      description: 销毁账本中的份额，并在 allowlisted 钱包中链上铸造等量代币（Polygon）。扣款前执行 OTP、出金限额、旅行规则证明（你所在 org 启用时始终要求：RWA 无价格）、KYT 预检和受益人筛查。铸造确认期间返回 202；最终状态通过 rwa_bridge_out_completed / rwa_bridge_out_failed webhook 和邮件回单送达。相同 key 重放返回已有记录；失败自动退回份额，重试请用新 key。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - amount
+              - to_address
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                amount:
+                  type: string
+                  description: 代币金额（最多 6 位小数）。
+                to_address:
+                  type: string
+                  description: 你的 allowlisted 0x 钱包。
+                wallet_type:
+                  type: string
+                  description: self_hosted（需 beneficiary_name）或 vasp。
+                beneficiary_name:
+                  type: string
+                travel_address:
+                  type: string
+                  description: VASP 旅行规则地址（TRP）。
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              to_address: '0x1234567890abcdef1234567890abcdef12345678'
+              wallet_type: self_hosted
+              beneficiary_name: Jane Doe
+              idempotency_key: bridge-out-min01-0001
+      responses:
+        '202':
+          description: 跨链已受理（已锁定，铸造已发送或待发送）。
+          content:
+            application/json:
+              example:
+                move_id: 55555555-5555-4555-8555-555555555555
+                account_id: 33333333-3333-4333-8333-333333333333
+                project_code: RWA-MIN01
+                direction: out
+                amount: '100.000000'
+                amount_raw: '100000000'
+                wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+                status: dispatched
+                core_tx_id: '0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890'
+                fee_usdt: '2.500000'
+                fee_usdt_raw: '2500000'
+                fail_reason: ''
+                created_at: '2026-11-16T01:00:00Z'
+                updated_at: '2026-11-16T01:00:05Z'
+                confirmed_at: null
+        '200':
+          description: 已有记录的幂等重放。
+        '400':
+          description: 金额或地址无效，或缺少 idempotency key。
+        '403':
+          description: 服务未启用、需要验证或 OTP，或合规冻结。
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: 项目不可跨链、超限、缺少旅行规则信息、费用配置错误或余额不足。
   /v1/rwa/distributions:
     get:
       tags:
@@ -33195,6 +33345,57 @@ webhooks:
               tokens: '100.000000'
               usdt_credited: '100.000000'
               price_usdt: '1.000000'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_out_completed:
+    post:
+      summary: RWA bridge-out completed
+      description: Title burned in the ledger was minted on-chain to the holder wallet.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 55555555-5555-4555-8555-555555555555
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              core_tx_id: '0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_out_failed:
+    post:
+      summary: RWA bridge-out failed
+      description: The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 55555555-5555-4555-8555-555555555555
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              reason: core:broadcast_failed
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_in_credited:
+    post:
+      summary: RWA bridge-in credited
+      description: An on-chain burn was detected confirmed and the title was credited back to the ledger.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 66666666-6666-4666-8666-666666666666
+              project_code: RWA-MIN01
+              amount: '50.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              burn_tx_id: 0xburn1234567890burn1234567890burn1234567890burn1234567890burn12
       responses:
         '200':
           description: Return any 2xx to acknowledge delivery.
