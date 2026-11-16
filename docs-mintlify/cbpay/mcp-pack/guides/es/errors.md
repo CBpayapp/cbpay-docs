@@ -145,6 +145,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_settlement_hours` | `settlement_hours` solo se acepta en el servicio de comisión `payin_card` y debe ser un entero no negativo (`0` = acreditación inmediata) — ver [comisiones](https://docs.cbpayapp.com/es/concepts/fees) |
 | `invalid_country` | Código de país mal formado o ausente — ISO 3166-1 alpha-2 (ej. `GET /v1/aml/catalogs/cities?country=`); también un filtro de país válido pero no soportado (ej. un `country` distinto de `US` en el lookup del directorio bancario) |
 | `invalid_expand` | Valor desconocido en `?expand=` de `GET /v1/contacts` (solo se soporta `destinations`); `dest_type`/`dest_country` también exigen `expand=destinations` |
+| `invalid_flag` | `flag_key` desconocido (registro cerrado de feature flags) |
+| `account_without_org` | El scope de cuenta exige `org_id` |
 
 ### Idempotencia de payins QR
 
@@ -199,6 +201,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 409 | `no_banking_customer` | Operación Banking clásica sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
 | 400 | `banking_eur_requires_viban` | Las cuentas Banking EUR se abren como vIBAN. Solicita `purpose: "banking_eur"` desde Operar EUR en vez de crear un customer Banking genérico |
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
+| 409 | `resubmit_rejected_duplicate` | El cliente banking rechazado duplica a uno vivo (mismo documento de identidad) — reenvía el cliente sobreviviente o reintenta con `acknowledge_duplicate` explícito tras revisión humana |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 409 | `bank_ref_conflict` | La referencia bancaria ya fue reclamada por otra operación (la respuesta la nombra con `claimed_by`/`claimed_kind` cuando pertenece a tu tenant) — corrige la evidencia en vez de reintentar con otra referencia |
@@ -791,3 +794,41 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 400 | `invalid_batch` | Una operación masiva tiene menos de 1 o más de 100 IDs | Envía UUIDs de gastos, entre 1 y 100 |
 | 400 | `invalid_horizon` | El horizonte no es 3, 6 ni 12 meses | Usa `horizon=3`, `6` o `12` |
 | 400 | `invalid_icon` | El icono supera el formato o largo permitido | Usa hasta 40 letras, dígitos, `_` o `-` |
+
+## Errores RWA de regalías
+
+| HTTP | `error` | Significado | Solución |
+|---|---|---|---|
+| 404 | `rwa_project_not_found` | Ningún proyecto RWA calza con ese código en tu org (superficie transfers; suscribir/consultar usan `not_found`) | Lista `GET /v1/rwa/projects` y usa un código vivo |
+| 422 | `rwa_transfers_disabled` | El proyecto deshabilitó transfers internas | Solo se mueven en funding/active/distributing con el switch on |
+| 422 | `project_not_subscribable` | El proyecto no está en funding | Suscribe mientras el proyecto esté en funding |
+| 422 | `window_closed` | Fuera de la ventana de suscripción | Revisa `subscription_opens_at` / `subscription_closes_at` |
+| 422 | `cap_exceeded` | Se excedería el tope por cuenta o de levantamiento | Baja el monto o espera capacidad |
+| 422 | `amount_below_minimum` | Bajo el mínimo del proyecto (o polvo tras comisiones) | Sube el monto sobre el mínimo |
+| 422 | `fee_exceeds_amount` | La comisión configurada excede el monto | Sube el monto o pide a tu org revisar comisiones |
+| 422 | `invalid_transition` | Transición de estado no permitida | Sigue draft → funding → active → distributing, o pausa/default antes |
+| 422 | `attestation_math_mismatch` | La regalía no cuadra floor(neto × pct / 100) | Recomputa la matemática exacta |
+| 422 | `quorum_not_met` | Firmas válidas bajo el quorum | Reúne las firmas distintas requeridas |
+| 422 | `escrow_missing` | El proyecto no tiene cuenta escrow | Fija `escrow_account_id` antes de funding |
+| 422 | `escrow_insufficient` | El escrow no cubre el total a distribuir | Fondea el escrow y re-propón |
+| 422 | `nothing_to_distribute` | La regalía del período es cero | Un trimestre cero no paga |
+| 422 | `no_holders` | Sin holders en el snapshot; marcada fallida | Re-propón cuando haya tokens en manos |
+| 422 | `redeem_disabled` | Rescates deshabilitados para el proyecto | Requieren switch on en funding/active/distributing |
+| 400 | `invalid_date` | Un campo fecha no es RFC3339 | Envía timestamps RFC3339 |
+| 409 | `project_exists` | Código duplicado al crear | Elige otro código `RWA-*` |
+| 400 | `invalid_terms` | Los términos del proyecto fallaron validación | Corrige el campo marcado (rangos, enums, fechas, JSON) |
+| 400 | `invalid_attestation` | El payload de attestation falló validación | Corrige período, montos, tasa, evidencia o firmas |
+| 422 | `attestation_project_mismatch` | La attestation es de otro proyecto | Empareja recursos del mismo proyecto |
+| 422 | `attestation_not_approved` | La attestation no está aprobada | Apruébala con un segundo admin antes |
+| 422 | `project_not_distributable` | El proyecto no está activo para attestations/distribuciones | Opera en active/distributing |
+| 422 | `royalty_pct_mismatch` | La tasa difiere de los términos del proyecto | Usa el `royalty_pct` exacto del proyecto |
+| 422 | `royalty_cap_exceeded` | La distribución excedería cap × levantado | Baja el total o espera más suscripciones |
+| 422 | `escrow_blocked` | La cuenta escrow no está activa | Desbloquea la cuenta escrow antes |
+| 422 | `project_not_bridgeable` | El proyecto no es bridgeable (estado o switch) | Puentea en funding/active/distributing con el switch on |
+| 400 | `invalid_to_address` | El destino no es una dirección 0x válida no-cero | Envía una wallet holder válida |
+| 422 | `fee_misconfigured` | El fee rwa_bridge debe ser solo fijo | Pide a tu org que ponga el tramo procentual en cero |
+| 409 | `already_reconciled` | El movimiento ya está terminal | Lee el movimiento en vez de reintentar |
+| 409 | `not_parked` | Solo se resuelven burns parkeados | Resuelve parkeados solamente |
+| 422 | `burn_code_mismatch` | El proyecto no calza con el snapshot del burn | Resuelve al proyecto quemado |
+| 422 | `amount_too_large` | El monto excede la precisión del ledger | Fracciona bajo 38 dígitos de título |
+| 422 | `burner_blocked` | El burner falló el screening de sanciones | El burn queda parkeado para compliance |

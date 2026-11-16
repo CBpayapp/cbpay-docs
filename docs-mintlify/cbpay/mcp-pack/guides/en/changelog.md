@@ -5,6 +5,29 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.292 · 2 versions - November 16, 2026
+### v2.292
+**Added**
+- RWA bridge-out now supports the lock/mint/burn/unlock lifecycle for
+  allowlisted wallets, with idempotent replay, OTP, limits, travel-rule and
+  KYT checks, plus completion or failure webhooks.
+### v2.291
+**Fixed**
+
+- Framework agreement issuance works again for company accounts: the RWA product's pricing (subscription, distribution, bridge) is now part of the pricing schedule, starting from the current zero defaults. Envelopes issued on older templates also recover automatically at signing again instead of dead-ending.
+## v2.290 · 4 versions - November 15, 2026
+### v2.290
+**Changed**
+- BTC swaps now fail closed with 503 `coverage_unavailable` when the effective spread drops below the hedge coverage floor (the house never quotes at a loss).
+### v2.289
+**Added**
+- RWA royalty tokens (ledger-first): browse projects via `GET /v1/rwa/projects`, subscribe with USDT (`POST /v1/rwa/subscriptions`), redeem at par (`POST /v1/rwa/redemptions`), track holdings and quarterly USDT distributions, move tokens between accounts of your org, and download signed PDF receipts. Webhooks `rwa_subscription_completed`, `rwa_distribution_credited` and `rwa_redeem_completed`.
+### v2.288
+**Added**
+- Portal billing documents: list and retrieve the Chilean tax documents (DTE) billed to your account via `GET /v1/me/billing/docs` and `.../docs/{docID}`, including the signed DTE XML.
+### v2.287
+**Changed**
+- The statement product breakdown now includes swaps, card transactions, banking operations and payin refunds with amounts in the summary asset (previously only counts in some views). Banking operations are counted but never summed here (they reconcile in their BANK_* asset sections).
 ## v2.286 · 4 versions - November 14, 2026
 ### v2.286
 **Changed**

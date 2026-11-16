@@ -4,12 +4,16 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="16 de noviembre de 2026" description="v2.291 · 1 versión">
-### v2.291
+<Update label="16 de noviembre de 2026" description="v2.292 · 2 versiones">
+### v2.292
 **Agregado**
 - El bridge-out de RWA ahora soporta el ciclo lock/mint/burn/unlock para
   billeteras autorizadas, con replay idempotente, validaciones OTP, límites,
   Travel Rule y KYT, más webhooks de éxito o falla.
+### v2.291
+**Corregido**
+
+- La emisión del contrato marco vuelve a funcionar para empresas: los precios RWA (suscripción, distribución, puente) ahora son parte del apéndice de precios, partiendo de los ceros actuales. Los sobres de plantillas viejas también vuelven a recuperarse solos al firmar en vez de quedar sin salida.
 </Update>
 <Update label="15 de noviembre de 2026" description="v2.290 · 4 versiones">
 ### v2.290

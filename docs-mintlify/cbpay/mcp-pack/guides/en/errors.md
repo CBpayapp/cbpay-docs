@@ -162,6 +162,8 @@ These codes come from **organization administration surfaces** (the [CBPay Admin
 | `invalid_settlement_hours` | `settlement_hours` is only accepted on the `payin_card` fee service and must be a non-negative integer (`0` = immediate credit) — see [fees](https://docs.cbpayapp.com/en/concepts/fees) |
 | `invalid_country` | Malformed or missing country code — ISO 3166-1 alpha-2 (e.g. `GET /v1/aml/catalogs/cities?country=`); also a valid but unsupported country filter (e.g. a non-`US` `country` on the bank directory lookup) |
 | `invalid_expand` | Unknown `?expand=` value on `GET /v1/contacts` (only `destinations` is supported); `dest_type`/`dest_country` also require `expand=destinations` |
+| `invalid_flag` | Unknown `flag_key` (closed feature-flag registry) |
+| `account_without_org` | Account scope requires `org_id` |
 
 ### QR payin idempotency
 
@@ -216,6 +218,7 @@ part of the replay identity. Read the live status with
 | 409 | `no_banking_customer` | Classic Banking operation without a generic banking profile (`POST /v1/banking/customer` first); EUR Banking uses the direct virtual-IBAN flow |
 | 400 | `banking_eur_requires_viban` | EUR Banking accounts are opened as virtual IBANs. Request `purpose: "banking_eur"` from Operar EUR instead of creating a generic banking customer |
 | 409 | `banking_customer_exists` | The account already has a banking profile (one per account) |
+| 409 | `resubmit_rejected_duplicate` | The rejected banking customer duplicates a live one (same identity document) — resubmit the surviving customer instead, or retry with explicit `acknowledge_duplicate` after human review |
 | 409 | `idempotency_conflict` | The same banking profile claim is still pending or the payload changed — keep the same request data and wait for reconciliation |
 | 503 | `banking_recovery_pending` | The customer creation outcome is ambiguous — operations must reconcile the durable claim before retrying with a new key |
 | 409 | `bank_ref_conflict` | The bank reference is already claimed by another operation (the response names it with `claimed_by`/`claimed_kind` when it belongs to your tenant) — fix the evidence instead of retrying with a different reference |
@@ -798,3 +801,41 @@ These codes are used by organization payroll and recurring-expense series operat
 | 400 | `invalid_batch` | A bulk expense operation has fewer than 1 or more than 100 IDs | Send 1–100 expense UUIDs |
 | 400 | `invalid_horizon` | The forecast horizon is not 3, 6 or 12 months | Use `horizon=3`, `6` or `12` |
 | 400 | `invalid_icon` | A custom expense icon exceeds the allowed format or length | Use up to 40 letters, digits, `_` or `-` |
+
+## RWA royalty errors
+
+| HTTP | `error` | Meaning | Fix |
+|---|---|---|---|
+| 404 | `rwa_project_not_found` | No RWA project matches that asset code in your org (transfers surface; subscribe/get use `not_found`) | List `GET /v1/rwa/projects` and use a live code |
+| 422 | `rwa_transfers_disabled` | The project disabled internal transfers | Transfers only move in funding/active/distributing with the switch on |
+| 422 | `project_not_subscribable` | The project is not in funding status | Subscribe while the project is funding |
+| 422 | `window_closed` | Outside the subscription window | Check `subscription_opens_at` / `subscription_closes_at` |
+| 422 | `cap_exceeded` | Per-account or raise cap would be exceeded | Lower the amount or wait for capacity |
+| 422 | `amount_below_minimum` | Below the project minimum (or dust after fees) | Raise the amount above the minimum |
+| 422 | `fee_exceeds_amount` | The configured fee exceeds the operation amount | Raise the amount or ask your org to review fees |
+| 422 | `invalid_transition` | Status transition not allowed | Follow draft → funding → active → distributing, or pause/default first |
+| 422 | `attestation_math_mismatch` | Royalty due does not equal floor(net × pct / 100) | Recompute the royalty math exactly |
+| 422 | `quorum_not_met` | Valid auditor signatures are below quorum | Collect the required distinct auditor signatures |
+| 422 | `escrow_missing` | The project has no escrow account | Set `escrow_account_id` before funding |
+| 422 | `escrow_insufficient` | Escrow balance is below the distribution total | Fund the escrow and re-propose |
+| 422 | `nothing_to_distribute` | The attestation royalty due is zero | No payout for a zero quarter |
+| 422 | `no_holders` | No holders at snapshot; marked failed | Re-propose once tokens are held |
+| 422 | `redeem_disabled` | Redemptions disabled for the project | Redemptions need the switch on in funding/active/distributing |
+| 400 | `invalid_date` | A date field is not RFC3339 | Send RFC3339 timestamps |
+| 409 | `project_exists` | Duplicate project code on create | Pick another `RWA-*` code |
+| 400 | `invalid_terms` | Project terms failed validation | Correct the flagged field (ranges, enums, dates, JSON) |
+| 400 | `invalid_attestation` | Attestation payload failed validation | Correct period, amounts, rate, evidence or signatures |
+| 422 | `attestation_project_mismatch` | The attestation belongs to another project | Pair resources of the same project |
+| 422 | `attestation_not_approved` | The attestation is not approved | Approve it with a second admin first |
+| 422 | `project_not_distributable` | The project is not active for attestations/distributions | Operate in active/distributing status |
+| 422 | `royalty_pct_mismatch` | The attestation rate differs from project terms | Use the exact project `royalty_pct` |
+| 422 | `royalty_cap_exceeded` | The distribution would exceed cap × raised | Lower the total or wait for more subscriptions |
+| 422 | `escrow_blocked` | The escrow account is not active | Unblock the escrow account first |
+| 422 | `project_not_bridgeable` | The project is not bridgeable (status or bridge switch) | Bridge in funding/active/distributing with the switch on |
+| 400 | `invalid_to_address` | The destination is not a non-zero 0x address | Send a valid holder wallet |
+| 422 | `fee_misconfigured` | The rwa_bridge fee must be fixed-only | Ask your org to zero the percent leg |
+| 409 | `already_reconciled` | The bridge move is already terminal | Read the move instead of retrying |
+| 409 | `not_parked` | Only parked bridge-in moves can be resolved | Resolve parked moves only |
+| 422 | `burn_code_mismatch` | The resolve project does not match the burn snapshot | Resolve to the burned project |
+| 422 | `amount_too_large` | The amount exceeds ledger precision | Split below 38 digits of title units |
+| 422 | `burner_blocked` | The burner failed sanctions screening | The burn stays parked for compliance |

@@ -103,6 +103,29 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `payroll_credited` | The organization credited a salary to the account balance (direct treasury credit) |
 | `org_expense_credited` | The organization paid an operating expense to the account balance (direct treasury credit) |
 | `referral_credited` | The organization paid a referrer closing to the payout account balance (referral commission for the period) |
+| `rwa_subscription_completed` | Royalty tokens were subscribed with USDT (net + fee debited, tokens credited) |
+| `rwa_distribution_credited` | A royalty distribution credited USDT pro-rata on the snapshot balance |
+| `rwa_redeem_completed` | Royalty tokens were redeemed for USDT at the project subscription price |
+| `rwa_bridge_out_completed` | Title burned in the ledger was minted on-chain to the holder wallet |
+| `rwa_bridge_out_failed` | The on-chain mint failed; the title was refunded automatically |
+| `rwa_bridge_in_credited` | An on-chain burn was detected confirmed and the title was credited back |
+
+RWA payloads use exact decimal strings and include the operation identifier:
+
+```json
+{
+  "event_type": "rwa_distribution_credited",
+  "distribution_id": "66666666-6666-4666-8666-666666666666",
+  "project_code": "RWA-MIN01",
+  "period": "2026-Q4",
+  "tokens": "890.000000",
+  "share_usdt": "12.500000",
+  "fee_usdt": "0.125000",
+  "status": "completed"
+}
+```
+
+Verify the signature and deduplicate by `X-Webhook-Event-ID`. A delivery is a notification, not a command: use the corresponding `GET` endpoint to reconcile.
 | `crypto_deposit_credited` | An on-chain deposit was confirmed and credited |
 | `crypto_deposit_held` | An incoming deposit was held due to sender risk ([screening](https://docs.cbpayapp.com/en/guides/screenings)) |
 | `crypto_deposit_alert` | A deposit was credited but the sender shows high risk (informational) |
