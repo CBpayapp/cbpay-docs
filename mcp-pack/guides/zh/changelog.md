@@ -5,6 +5,12 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.291 · 1 个版本 - 2026年11月16日
+### v2.291
+**新增**
+- RWA 跨链转出现在支持 allowlist 钱包的 lock/mint/burn/unlock 生命周期，
+  并提供幂等重放、OTP、限额、Travel Rule 和 KYT 检查，以及成功或失败
+  webhook。
 ## v2.290 · 4 个版本 - 2026年11月15日
 ### v2.290
 **变更**

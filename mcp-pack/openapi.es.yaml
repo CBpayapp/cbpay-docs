@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.290'
+  version: '2.291'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -23664,6 +23664,156 @@ paths:
           description: Ninguna cuenta coincide (`not_found`).
         '429':
           description: Demasiadas consultas (`too_many_attempts`).
+  /v1/rwa/bridge/moves:
+    get:
+      tags:
+      - RWA
+      operationId: listRWABridgeMoves
+      summary: Listar tus movimientos del puente
+      description: Movimientos de salida y entrada del puente de la cuenta autenticada, paginados.
+      parameters:
+      - name: direction
+        in: query
+        description: in o out (vacío = ambos).
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filtrar por estado del movimiento.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Movimientos paginados.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/moves/{moveID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWABridgeMove
+      summary: Consultar un movimiento del puente
+      description: Detalle de un movimiento del puente de la cuenta autenticada.
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Detalle del movimiento.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/moves/{moveID}/receipt:
+    get:
+      tags:
+      - Receipts
+      operationId: getRWABridgeMoveReceipt
+      summary: Descargar el comprobante del movimiento (PDF)
+      description: Comprobante PDF brandeado de un movimiento del puente con monto del título, wallet, hash on-chain y QR de verificación firmado.
+      parameters:
+      - name: moveID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/receiptLang'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReceiptPDF'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/bridge/withdrawals:
+    post:
+      tags:
+      - RWA
+      operationId: createRWABridgeOut
+      summary: Llevar tokens RWA a tu wallet (puente de salida)
+      description: 'Quema el título en tu ledger y mintea el mismo monto on-chain en tu wallet allowlisted (Polygon). Corre OTP, límites money-out, atestación Travel Rule (siempre requerida cuando está habilitada para tu org: RWA no tiene precio), preflight KYT y screening del beneficiario antes de debitar. Devuelve 202 mientras el mint confirma; la finalidad llega por los webhooks rwa_bridge_out_completed / rwa_bridge_out_failed y el comprobante por email. Los replays con la misma key reportan el movimiento existente; un movimiento fallido refundea el título automáticamente y los reintentos usan una key fresca.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - amount
+              - to_address
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                amount:
+                  type: string
+                  description: Monto del título en tokens (hasta 6 decimales).
+                to_address:
+                  type: string
+                  description: Tu wallet 0x allowlisted.
+                wallet_type:
+                  type: string
+                  description: self_hosted (con beneficiary_name) o vasp.
+                beneficiary_name:
+                  type: string
+                travel_address:
+                  type: string
+                  description: Dirección Travel Rule del VASP (intercambio TRP).
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              to_address: '0x1234567890abcdef1234567890abcdef12345678'
+              wallet_type: self_hosted
+              beneficiary_name: Jane Doe
+              idempotency_key: bridge-out-min01-0001
+      responses:
+        '202':
+          description: Movimiento aceptado (lock debitado, mint despachado o pendiente).
+          content:
+            application/json:
+              example:
+                move_id: 55555555-5555-4555-8555-555555555555
+                account_id: 33333333-3333-4333-8333-333333333333
+                project_code: RWA-MIN01
+                direction: out
+                amount: '100.000000'
+                amount_raw: '100000000'
+                wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+                status: dispatched
+                core_tx_id: '0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890'
+                fee_usdt: '2.500000'
+                fee_usdt_raw: '2500000'
+                fail_reason: ''
+                created_at: '2026-11-16T01:00:00Z'
+                updated_at: '2026-11-16T01:00:05Z'
+                confirmed_at: null
+        '200':
+          description: Replay idempotente de un movimiento existente.
+        '400':
+          description: Monto o dirección inválidos, o falta la idempotency key.
+        '403':
+          description: Servicio deshabilitado, verificación u OTP requeridos, o hold de compliance.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Proyecto no bridgeable, límites excedidos, falta dato Travel Rule, fee mal configurado o fondos insuficientes.
   /v1/rwa/distributions:
     get:
       tags:
@@ -33363,6 +33513,57 @@ webhooks:
               tokens: '100.000000'
               usdt_credited: '100.000000'
               price_usdt: '1.000000'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_out_completed:
+    post:
+      summary: RWA bridge-out completed
+      description: Title burned in the ledger was minted on-chain to the holder wallet.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 55555555-5555-4555-8555-555555555555
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              core_tx_id: '0xabc123def4567890abc123def4567890abc123def4567890abc123def4567890'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_out_failed:
+    post:
+      summary: RWA bridge-out failed
+      description: The on-chain mint failed; the title was refunded automatically (fee refunded unless the destination was AML/CFT-held).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 55555555-5555-4555-8555-555555555555
+              project_code: RWA-MIN01
+              amount: '100.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              reason: core:broadcast_failed
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_bridge_in_credited:
+    post:
+      summary: RWA bridge-in credited
+      description: An on-chain burn was detected confirmed and the title was credited back to the ledger.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              move_id: 66666666-6666-4666-8666-666666666666
+              project_code: RWA-MIN01
+              amount: '50.000000'
+              wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
+              burn_tx_id: 0xburn1234567890burn1234567890burn1234567890burn1234567890burn12
       responses:
         '200':
           description: Return any 2xx to acknowledge delivery.

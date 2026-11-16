@@ -831,3 +831,11 @@ These codes are used by organization payroll and recurring-expense series operat
 | 422 | `royalty_pct_mismatch` | The attestation rate differs from project terms | Use the exact project `royalty_pct` |
 | 422 | `royalty_cap_exceeded` | The distribution would exceed cap × raised | Lower the total or wait for more subscriptions |
 | 422 | `escrow_blocked` | The escrow account is not active | Unblock the escrow account first |
+| 422 | `project_not_bridgeable` | The project is not bridgeable (status or bridge switch) | Bridge in funding/active/distributing with the switch on |
+| 400 | `invalid_to_address` | The destination is not a non-zero 0x address | Send a valid holder wallet |
+| 422 | `fee_misconfigured` | The rwa_bridge fee must be fixed-only | Ask your org to zero the percent leg |
+| 409 | `already_reconciled` | The bridge move is already terminal | Read the move instead of retrying |
+| 409 | `not_parked` | Only parked bridge-in moves can be resolved | Resolve parked moves only |
+| 422 | `burn_code_mismatch` | The resolve project does not match the burn snapshot | Resolve to the burned project |
+| 422 | `amount_too_large` | The amount exceeds ledger precision | Split below 38 digits of title units |
+| 422 | `burner_blocked` | The burner failed sanctions screening | The burn stays parked for compliance |

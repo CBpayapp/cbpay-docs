@@ -802,3 +802,11 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 422 | `royalty_pct_mismatch` | 费率与项目条款不一致 | 使用项目精确的 `royalty_pct` |
 | 422 | `royalty_cap_exceeded` | 分红将超过 cap × 募资额 | 降低总额或等待更多认购 |
 | 422 | `escrow_blocked` | 托管账户未激活 | 先解封托管账户 |
+| 422 | `project_not_bridgeable` | 项目不可跨链（状态或开关） | 在 funding/active/distributing 且开关开启时跨链 |
+| 400 | `invalid_to_address` | 目标不是有效的非零 0x 地址 | 发送有效的持有人钱包 |
+| 422 | `fee_misconfigured` | rwa_bridge 费用必须纯固定 | 请组织将百分比部分置零 |
+| 409 | `already_reconciled` | 跨链记录已终态 | 读取记录而非重试 |
+| 409 | `not_parked` | 仅可处理 parked 的转入 burns | 仅处理 parked 记录 |
+| 422 | `burn_code_mismatch` | 项目与 burn 快照不符 | 处理至被 burn 的项目 |
+| 422 | `amount_too_large` | 金额超账本精度 | 拆分至 38 位份额以内 |
+| 422 | `burner_blocked` | Burner 未通过制裁筛查 | 该 burn 保持 parked 待合规处理 |

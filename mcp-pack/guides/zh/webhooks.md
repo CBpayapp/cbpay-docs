@@ -115,6 +115,9 @@ curl -X PATCH https://api.qbank.cl/platform/v1/webhooks/subscriptions/5f3a… \
 | `rwa_subscription_completed` | 已用 USDT 认购版税代币（扣除净额+手续费，记入代币）|
 | `rwa_distribution_credited` | 版税分红已按快照余额比例记入 USDT |
 | `rwa_redeem_completed` | 已按项目认购价将版税代币赎回为 USDT |
+| `rwa_bridge_out_completed` | 账本中销毁的份额已在持有人钱包链上铸造 |
+| `rwa_bridge_out_failed` | 链上铸造失败；份额已自动退回 |
+| `rwa_bridge_in_credited` | 已确认的链上销毁被检测到，份额已记回账本 |
 
 RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Event-ID` 去重。Webhook 只是通知，不是命令；请使用对应的 `GET` 接口对账。
 | `crypto_deposit_credited` | 一笔链上充值已确认并入账 |

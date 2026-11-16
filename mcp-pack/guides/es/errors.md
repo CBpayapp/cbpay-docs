@@ -824,3 +824,11 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 422 | `royalty_pct_mismatch` | La tasa difiere de los términos del proyecto | Usa el `royalty_pct` exacto del proyecto |
 | 422 | `royalty_cap_exceeded` | La distribución excedería cap × levantado | Baja el total o espera más suscripciones |
 | 422 | `escrow_blocked` | La cuenta escrow no está activa | Desbloquea la cuenta escrow antes |
+| 422 | `project_not_bridgeable` | El proyecto no es bridgeable (estado o switch) | Puentea en funding/active/distributing con el switch on |
+| 400 | `invalid_to_address` | El destino no es una dirección 0x válida no-cero | Envía una wallet holder válida |
+| 422 | `fee_misconfigured` | El fee rwa_bridge debe ser solo fijo | Pide a tu org que ponga el tramo procentual en cero |
+| 409 | `already_reconciled` | El movimiento ya está terminal | Lee el movimiento en vez de reintentar |
+| 409 | `not_parked` | Solo se resuelven burns parkeados | Resuelve parkeados solamente |
+| 422 | `burn_code_mismatch` | El proyecto no calza con el snapshot del burn | Resuelve al proyecto quemado |
+| 422 | `amount_too_large` | El monto excede la precisión del ledger | Fracciona bajo 38 dígitos de título |
+| 422 | `burner_blocked` | El burner falló el screening de sanciones | El burn queda parkeado para compliance |
