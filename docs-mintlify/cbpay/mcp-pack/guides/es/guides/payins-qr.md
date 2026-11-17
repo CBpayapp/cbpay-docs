@@ -294,8 +294,12 @@ responde `409 idempotency_conflict`:
 }
 ```
 
-Un cobro expirado o pagado se reproduce tal cual. La respuesta conserva el
-objeto original; usa `GET /v1/payins/{payinID}` para consultar su estado vivo.
+Un cobro pagado se reproduce tal cual. Si el cobro asociado a la clave está
+`failed`, `expired` o `cancelled`, la API responde `422
+previous_attempt_failed` con el mensaje generalizado `request could not be
+processed`; guíate por el código, no por el mensaje. Rota la clave de
+idempotencia y envía nuevamente la solicitud para recibir un QR fresco. El
+replay fallido no crea un cobro de reemplazo.
 
 El core y la plataforma responden `400 invalid_idempotency_key` cuando la clave
 del integrador supera 256 caracteres o contiene retornos de carro/saltos de
@@ -309,6 +313,7 @@ Ese namespace es invisible para el integrador: envía la clave sin modificar.
 | --- | --- | --- |
 | 400 | `invalid_idempotency_key` | Reduce la clave a 256 caracteres o menos y elimina caracteres de control. |
 | 409 | `idempotency_conflict` | Repite el payload original o genera una clave nueva para un cobro nuevo. |
+| 422 | `previous_attempt_failed` | El cobro anterior terminó fallido, expiró o fue cancelado. Usa el código, rota la clave de idempotencia y crea un QR fresco. |
 
 ## Preguntas frecuentes
 

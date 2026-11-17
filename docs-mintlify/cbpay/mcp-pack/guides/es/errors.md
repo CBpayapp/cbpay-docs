@@ -156,6 +156,11 @@ gana la del body. La clave admite hasta 256 caracteres y no puede contener
 CR/LF. La plataforma la scopea por cuenta del lado servidor; el integrador
 envía su clave sin modificarla.
 
+- `422 previous_attempt_failed`: el cobro asociado a esta clave ya está
+  `failed`, `expired` o `cancelled`. El `message` es deliberadamente genérico
+  (`request could not be processed`); guíate por el código estable `error`, no
+  por el mensaje. Rota la clave de idempotencia y envía nuevamente la solicitud
+  para obtener un QR fresco. Esta respuesta no crea un cobro nuevo.
 - `400 invalid_idempotency_key`: la clave supera 256 caracteres o contiene
   CR/LF. Acórtala o elimina esos caracteres y reintenta el mismo request
   corregido.

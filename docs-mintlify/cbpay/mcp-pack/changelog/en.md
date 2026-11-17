@@ -5,7 +5,21 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.294 · 4 versions - November 16, 2026
+## v2.297 · 2 versions - November 17, 2026
+### v2.297
+**Added**
+
+- New `is_remittance` payout option (US/USD wire and SWIFT only): set it to the string `"true"` when the transfer goes on behalf of a third party. The operator picks the Ultimate Debtor from the live bank list before release; without a debtor the payout returns to the queue instead of releasing blind. Rejected on ACH.
+### v2.296
+**Fixed**
+- QR payin replays now return `422 previous_attempt_failed` when the
+  idempotency key points to a failed, expired or cancelled charge. The message
+  is generalized; use the code, rotate the key and create a fresh QR.
+## v2.295 · 5 versions - November 16, 2026
+### v2.295
+#### Added
+- Internal RWA secondary RFQ offers with title locks, single-winner settlement, exact taker fees, expiry, and replay-safe idempotency.
+- Approved monthly reports, automatic default pre-alerts, cure, and final redemption with exact remainder settlement.
 ### v2.294
 **Added**
 - RWA bridge-out now supports the lock/mint/burn/unlock lifecycle for

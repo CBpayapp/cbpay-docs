@@ -5,7 +5,21 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.294 · 4 个版本 - 2026年11月16日
+## v2.297 · 2 个版本 - 2026年11月17日
+### v2.297
+**新增**
+
+- Payout 新增 `is_remittance` 选项（仅 US/USD wire 与 SWIFT）：第三方代付时传字符串 `"true"`。操作员在放行前从银行实时名单选择 Ultimate Debtor；无 debtor 时 payout 退回队列而非盲目放行。ACH 会拒绝该选项。
+### v2.296
+**修复**
+- 当幂等 key 指向已失败、已过期或已取消的 charge 时，QR payin replay 现在
+  返回 `422 previous_attempt_failed`。消息会被泛化；请使用 code、轮换 key
+  并创建新的 QR。
+## v2.295 · 5 个版本 - 2026年11月16日
+### v2.295
+#### 新增
+- 内部 RWA 二级 RFQ 报价，包含代币锁定、单一赢家结算、精确手续费、过期和幂等重放。
+- 已批准月度报告、自动违约预警与修复，以及按精确余额结算的最终赎回。
 ### v2.294
 **新增**
 - RWA 跨链转出现在支持 allowlist 钱包的 lock/mint/burn/unlock 生命周期，

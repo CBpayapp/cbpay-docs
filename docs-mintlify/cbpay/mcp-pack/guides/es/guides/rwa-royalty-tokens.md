@@ -99,7 +99,56 @@ curl -X POST https://api.qbank.cl/platform/v1/rwa/subscriptions \
 
 Comprar exige identidad verificada, OTP si la sesión humana lo requiere, USDT disponible y una clave de idempotencia. Reutilizar la misma clave devuelve la operación original.
 
-## 3. Revisar saldos y distribuciones
+## 3. Vender un título en el mercado secundario interno
+
+El mercado secundario es un RFQ entre dos cuentas verificadas de la misma
+organización. Crear una oferta bloquea la cantidad exacta de títulos. El
+bloqueo se libera al cancelar o vencer, y solo un comprador puede aceptarla.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/rwa/secondary/offers \
+  -H "Authorization: Bearer $CBPAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"project_code":"RWA-MIN01","quantity":"10.000000","total_usdt":"21.000000","ttl_minutes":60,"idempotency_key":"sec-min01-0001"}'
+```
+
+La oferta emite `rwa_secondary_offer_open`. El comprador acepta con
+`POST /platform/v1/rwa/secondary/offers/{offerID}/accept` y una clave de
+idempotencia. La liquidación es atómica: el título pasa al comprador, el
+USDT acordado al vendedor y la comisión `rwa_secondary` (porcentaje más fijo)
+se cobra al comprador. Las entradas de cartola son
+`secondary_hold`, `secondary_release`, `secondary_fill`,
+`secondary_proceeds` y `secondary_charge`. Cancelar o vencer emite
+`rwa_secondary_offer_closed`; liquidar emite `rwa_secondary_filled`.
+
+No reintentes con una clave nueva después de un timeout. Crear con un TTL fuera
+de 15–1440 minutos devuelve `400 invalid_ttl`; aceptar una oferta ya vencida
+devuelve `410 offer_expired`. Self-trade devuelve `400` y un segundo comprador
+devuelve `409`.
+
+## 4. Reportes, default y rescate final
+
+Los holders solo pueden listar y consultar reportes aprobados. El período usa
+`YYYY-MM` y la aprobación congela NAV y yield. El servidor verifica
+`gross_sales = units_sold × realized_price` y
+`royalty_due = floor(net_payable × royalty_pct / 100)` con aritmética exacta.
+El maker propone y otro administrador identificado aprueba o rechaza.
+
+El default automático usa `cure_days` en el barrido diario. Si es `NULL`, el
+modo seguro exige acción manual. La prealerta es única y usa
+`rwa_default_declared` con `stage=prealert`; la declaración usa
+`stage=declared`. Un administrador de plataforma puede curar mediante PATCH,
+incluso después del plazo si la transición sigue siendo válida. La evidencia
+se retiene 90 días.
+
+El rescate final usa una distribución maker-checker con `is_final=true`.
+Exige que la attestation declare el remanente exacto al cap, incluso cero;
+escrow debe cubrirlo (`>=`), con cola limpia y ninguna oferta abierta. El
+proyecto se pausa, las ofertas se cancelan y las propuestas finales anteriores
+se superseden; la aprobación paga el remanente, quema los títulos y marca `redeemed`. Las
+quemas posteriores al cierre quedan estacionadas para revisión.
+
+## 5. Revisar saldos y distribuciones
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/rwa/holdings" -H "Authorization: Bearer $CBPAY_TOKEN"
@@ -124,7 +173,7 @@ Las distribuciones usan el saldo del snapshot de ex-date:
 
 Los listados de suscripciones, rescates y distribuciones aceptan `from`, `to` y `page`; cada recurso tiene consulta individual y comprobante PDF.
 
-## 4. Rescatar
+## 6. Rescatar
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/rwa/redemptions \
@@ -154,7 +203,9 @@ El rescate devuelve USDT al precio de suscripción del proyecto y descuenta los 
 
 Consulta [Errores](https://docs.cbpayapp.com/es/errors) para `rwa_window_closed`, `rwa_cap_exceeded`, `rwa_fee_exceeds_amount`, `rwa_redeem_disabled` y `rwa_escrow_insufficient`. Ante timeout o 5xx, consulta el recurso con la misma clave antes de actuar.
 
-Verifica la firma de `rwa_subscription_completed`, `rwa_distribution_credited` y `rwa_redeem_completed`. Revisa [Webhooks](https://docs.cbpayapp.com/es/webhooks).
+Verifica la firma de `rwa_subscription_completed`, `rwa_distribution_credited`,
+`rwa_redeem_completed`, `rwa_secondary_offer_open`,
+`rwa_secondary_offer_closed` y `rwa_secondary_filled`. Revisa [Webhooks](https://docs.cbpayapp.com/es/webhooks).
 
 ## Preguntas frecuentes
 

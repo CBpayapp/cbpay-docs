@@ -157,6 +157,11 @@ source_url: https://docs.cbpayapp.com/zh/errors
 body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台会在服务
 端按账户对 key 做命名空间隔离；集成方发送的 key 不会被改写。
 
+- `422 previous_attempt_failed`：与此 key 关联的 charge 已经是
+  `failed`、`expired` 或 `cancelled`。`message` 会被有意泛化为
+  `request could not be processed`；业务逻辑必须使用稳定的 `error` code，
+  不要解析 message。轮换幂等 key 后重新提交请求，以获取新的 QR。此响应
+  不会创建新的 charge。
 - `400 invalid_idempotency_key`：key 超过 256 个字符或包含 CR/LF。修正
   key 后，用修正后的请求重试。
 - `409 idempotency_conflict`：相同 key 被用于不同国家、币种、方式或数值
