@@ -68,7 +68,50 @@ curl -X POST https://api.qbank.cl/platform/v1/rwa/subscriptions \
 
 认购需要完成身份验证、必要的人类会话 OTP、足够的 USDT 和幂等键。重复使用同一幂等键会返回原始认购，不会重复扣款。
 
-## 3. 查看持仓和分配
+## 3. 在内部二级市场交易
+
+二级市场是同一组织内两个已验证账户之间的 RFQ。创建报价会锁定精确
+的代币数量；取消或过期会释放锁定，并且一份报价只能由一个买方成交。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/rwa/secondary/offers \
+  -H "Authorization: Bearer $CBPAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"project_code":"RWA-MIN01","quantity":"10.000000","total_usdt":"21.000000","ttl_minutes":60,"idempotency_key":"sec-min01-0001"}'
+```
+
+报价会发出 `rwa_secondary_offer_open`。买方使用
+`POST /platform/v1/rwa/secondary/offers/{offerID}/accept` 和幂等键接受。
+结算是原子的：代币转给买方，约定的 USDT 收益转给卖方，配置的
+`rwa_secondary` 百分比加固定手续费由买方承担。账本条目为
+`secondary_hold`、`secondary_release`、`secondary_fill`、
+`secondary_proceeds` 和 `secondary_charge`。取消或过期发出
+`rwa_secondary_offer_closed`，成交发出 `rwa_secondary_filled`。
+
+超时后不要使用新幂等键重试。创建时 TTL 不在 15–1440 分钟范围返回
+`400 invalid_ttl`；接受已过期报价返回 `410 offer_expired`。自成交返回
+`400`，第二个买方返回 `409`。
+
+## 4. 报告、违约和最终赎回
+
+持有人只能查看已批准的月度报告。期间格式为 `YYYY-MM`，批准后 NAV
+和收益率被冻结。服务器使用精确算术验证
+`gross_sales = units_sold × realized_price` 以及
+`royalty_due = floor(net_payable × royalty_pct / 100)`。maker 提交，
+另一名已命名管理员批准或拒绝。
+
+自动违约每天使用 `cure_days` 扫描；`NULL` 表示安全的手动模式。只发送
+一次预警，使用 `rwa_default_declared` 的 `stage=prealert`，正式声明使用
+`stage=declared`。平台管理员可用 PATCH 修复；如果状态转换仍有效，即使
+超过期限也可以修复。证据保留 90 天。
+
+最终赎回使用 `is_final=true` 的 maker-checker 分配。它要求精确的剩余
+精确的 cap 剩余金额（包括精确零），escrow 足以覆盖该金额（`>=`），队列清空
+且没有未处理报价。项目暂停，未关闭报价被取消，之前的最终提案被 supersede；
+批准后支付余额、销毁全部剩余代币并标记
+为 `redeemed`。关闭后的销毁会停放等待复核，不会静默入账。
+
+## 5. 查看持仓和分配
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/rwa/holdings" -H "Authorization: Bearer $CBPAY_TOKEN"
@@ -93,7 +136,7 @@ curl "https://api.qbank.cl/platform/v1/rwa/distributions?from=2026-01-01T00:00:0
 
 认购、赎回和分配列表支持 `from`、`to` 和 `page`；每个资源都有详情和 PDF 收据接口。
 
-## 4. 赎回
+## 6. 赎回
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/rwa/redemptions \
@@ -123,7 +166,9 @@ curl -X POST https://api.qbank.cl/platform/v1/rwa/redemptions \
 
 请查看[错误](/zh/errors)中的 `rwa_window_closed`、`rwa_cap_exceeded`、`rwa_fee_exceeds_amount`、`rwa_redeem_disabled` 和 `rwa_escrow_insufficient`。遇到 timeout 或 5xx 时，先用同一幂等键查询原始资源。
 
-验证 `rwa_subscription_completed`、`rwa_distribution_credited` 和 `rwa_redeem_completed` 的签名。详见 [Webhook](/zh/webhooks)。
+验证 `rwa_subscription_completed`、`rwa_distribution_credited`、
+`rwa_redeem_completed`、`rwa_secondary_offer_open`、
+`rwa_secondary_offer_closed` 和 `rwa_secondary_filled` 的签名。详见 [Webhook](/zh/webhooks)。
 
 ## 常见问题
 
