@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.292'
+  version: '2.294'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -968,6 +968,12 @@ paths:
                 website: www.acme.example
                 footer_address: ''
                 support_email: support@acme.example
+                issuer:
+                  legal_name: ''
+                  tax_id: ''
+                  address: ''
+                  email: ''
+                  file_number: ''
                 colors:
                   primary: '#1A2B3C'
                   header: '#2E2E2E'
@@ -1031,6 +1037,12 @@ paths:
                 website: www.acme.example
                 footer_address: ''
                 support_email: support@acme.example
+                issuer:
+                  legal_name: ''
+                  tax_id: ''
+                  address: ''
+                  email: ''
+                  file_number: ''
                 colors:
                   primary: '#1A2B3C'
                   header: '#2E2E2E'
@@ -6011,8 +6023,14 @@ paths:
               example:
                 brand_name: CBPay
                 website: www.cbpayapp.com
-                footer_address: 'Miami: 25 SW 9th STREET, Suite 406, Miami, FL 33130'
+                footer_address: 7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA
                 support_email: ''
+                issuer:
+                  legal_name: GRUPO CB LLC
+                  tax_id: 61-2219200
+                  address: 7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA
+                  email: hola@cbpayapp.com
+                  file_number: '5541381'
                 colors:
                   primary: '#FBC140'
                   header: '#2E2E2E'
@@ -24002,6 +24020,196 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/reports:
+    get:
+      tags:
+      - RWA
+      operationId: listRWAReports
+      summary: 列出已批准的月度报告
+      description: 组织项目的月度产量、实现价格、每代币 NAV 与收益率。持有人仅可见已批准报告。
+      parameters:
+      - name: project_id
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: 分页报告。
+  /v1/rwa/reports/{reportID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWAReport
+      summary: 查看单个已批准报告
+      description: 含数字、证据哈希与 PDF 引用的完整月度报告。
+      parameters:
+      - name: reportID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 报告详情。
+        '404':
+          description: 报告不存在或未批准。
+  /v1/rwa/secondary/offers:
+    post:
+      tags:
+      - RWA
+      operationId: createRWASecondaryOffer
+      summary: 发布内部出售要约（做市方）
+      description: 为向同一组织另一已验证账户的双边 RFQ 出售锁定份额。需要 OTP、KYC 和幂等键；重放返回原始要约。份额锁定至接受、取消或过期（15 分钟至 24 小时）。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - quantity
+              - total_usdt
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                quantity:
+                  type: string
+                  description: 份额数量（代币，最多 6 位小数）。
+                total_usdt:
+                  type: string
+                  description: USDT 要价总额（自由 RFQ 价格）。
+                ttl_minutes:
+                  type: integer
+                  description: 要约有效期，15 至 1440 分钟。默认 60。
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              quantity: '10.000000'
+              total_usdt: '21.000000'
+              ttl_minutes: 60
+              idempotency_key: sec-min01-0001
+      responses:
+        '201':
+          description: 要约已发布，份额已锁定。
+        '400':
+          description: 条款、金额或 OTP 无效。
+        '422':
+          description: 份额不足或项目不可转让。
+    get:
+      tags:
+      - RWA
+      operationId: listRWASecondaryOffers
+      summary: 列出内部二级要约
+      description: 按项目的公开簿记及你自己的要约。分页，最新在前。
+      parameters:
+      - name: project_code
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: 按状态过滤（open、accepted、settled、cancelled、expired）。
+        schema:
+          type: string
+      - name: maker_account_id
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: 分页要约。
+  /v1/rwa/secondary/offers/{offerID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWASecondaryOffer
+      summary: 查看单个二级要约
+      description: 含做市方、价格、费用与状态的完整详情。
+      parameters:
+      - name: offerID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 要约详情。
+        '404':
+          description: 要约不存在。
+  /v1/rwa/secondary/offers/{offerID}/accept:
+    post:
+      tags:
+      - RWA
+      operationId: acceptRWASecondaryOffer
+      summary: 接受要约（受让方）
+      description: 抢单（唯一获胜者）并原子结算：份额归你（成本为约定价），USDT 归做市方，收取受让方费用。需要 OTP、KYC 和幂等键；重放返回已成交交易。拒绝自我交易。
+      parameters:
+      - name: offerID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - idempotency_key
+              properties:
+                idempotency_key:
+                  type: string
+            example:
+              idempotency_key: sec-min01-accept-0001
+      responses:
+        '200':
+          description: 交易已结算。
+        '400':
+          description: 自我交易或请求无效。
+        '409':
+          description: 要约已被接受、取消或过期。
+  /v1/rwa/secondary/offers/{offerID}/cancel:
+    post:
+      tags:
+      - RWA
+      operationId: cancelRWASecondaryOffer
+      summary: 取消你的要约（做市方）
+      description: 在接受前取消未成交要约；锁定份额按相同 FIFO 批次返还。幂等。
+      parameters:
+      - name: offerID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 要约已取消。
+        '409':
+          description: 要约已不在开放状态。
   /v1/rwa/subscriptions:
     post:
       tags:
@@ -29304,6 +29512,14 @@ paths:
                 kind: invoice
                 invoice_number: INV-2026-0001
                 brand: CBPay
+                issuer:
+                  legal_name: GRUPO CB LLC
+                  tax_id: 61-2219200
+                  address: 7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA
+                  email: hola@cbpayapp.com
+                  file_number: '5541381'
+                  brand_name: CBPay
+                  website: www.cbpayapp.com
                 status: sent
                 status_word: Sent
                 currency: USD
@@ -33396,6 +33612,57 @@ webhooks:
               amount: '50.000000'
               wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
               burn_tx_id: 0xburn1234567890burn1234567890burn1234567890burn1234567890burn12
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_secondary_offer_open:
+    post:
+      summary: RWA secondary offer opened
+      description: A maker locked title for an internal bilateral RFQ sale.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              offer_id: 77777777-7777-4777-8777-777777777777
+              project_code: RWA-MIN01
+              quantity: '10.000000'
+              total_usdt: '21.000000'
+              expires_at: '2026-11-16T13:00:00Z'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_secondary_offer_closed:
+    post:
+      summary: RWA secondary offer closed
+      description: An offer was cancelled or expired; the locked title returned to the maker.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              offer_id: 77777777-7777-4777-8777-777777777777
+              project_code: RWA-MIN01
+              status: cancelled
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_secondary_filled:
+    post:
+      summary: RWA secondary trade filled
+      description: A taker accepted an offer; title and USDT crossed atomically with the taker fee.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              offer_id: 77777777-7777-4777-8777-777777777777
+              project_code: RWA-MIN01
+              quantity: '10.000000'
+              total_usdt: '21.000000'
+              fee_usdt: '0.210000'
+              maker_account_id: 88888888-8888-4888-8888-888888888888
+              taker_account_id: 99999999-9999-4999-8999-999999999999
       responses:
         '200':
           description: Return any 2xx to acknowledge delivery.
