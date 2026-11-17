@@ -17917,6 +17917,9 @@ paths:
                       type: string
                       maxLength: 140
                       description: Obligatorio solo cuando purpose es Other; se rechaza con cualquier otro propósito.
+                    is_remittance:
+                      type: string
+                      description: Opcional, solo US/USD wire y swift (se rechaza en ach; se ignora en otros rieles). Poner el string "true" cuando la transferencia va a nombre de un tercero; el operador elige el Ultimate Debtor de la lista viva antes de liberar. "false" u omitido es pago propio.
                     destination_retry_ack:
                       type: string
                       format: uuid
