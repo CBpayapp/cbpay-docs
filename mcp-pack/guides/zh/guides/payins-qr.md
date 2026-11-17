@@ -273,8 +273,11 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 }
 ```
 
-已过期或已支付的 charge 仍会按原对象 replay。响应保留原始对象；使用
-`GET /v1/payins/{payinID}` 查询实时状态。
+已支付的 charge 仍会按原对象 replay。如果与 key 关联的 charge 已为
+`failed`、`expired` 或 `cancelled`，API 会返回 `422
+previous_attempt_failed`，并使用泛化消息 `request could not be processed`；
+请使用 code 而不要解析 message。轮换幂等 key 后重新提交请求，以获得新的
+QR。失败 replay 不会创建替代 charge。
 
 核心和平台都会在集成方 key 超过 256 个字符或包含回车/换行时返回
 `400 invalid_idempotency_key`。如果平台在服务端添加的账户 namespace
@@ -287,6 +290,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
 | --- | --- | --- |
 | 400 | `invalid_idempotency_key` | 将 key 缩短到 256 个字符以内，并移除控制字符。 |
 | 409 | `idempotency_conflict` | 重试原始 payload，或为新的 charge 生成新 key。 |
+| 422 | `previous_attempt_failed` | 原 charge 已失败、过期或取消。请使用 code，轮换幂等 key 并创建新的 QR。 |
 
 ## 常见问题
 

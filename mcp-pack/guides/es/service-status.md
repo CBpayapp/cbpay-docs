@@ -1,209 +1,224 @@
 ---
 title: "Estado del servicio y disponibilidad de corredores"
-description: "Monitorea la salud de corredores, incidentes agrupados y avisos de status brandeados"
+description: "Conoce en tiempo real si cada corredor de pago está operativo: availability en los catálogos de métodos, el webhook corridor_status_changed y la página de status pública"
 slug: es/service-status
 lang: es
 source_url: https://docs.cbpayapp.com/es/service-status
 ---
 > **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-La superficie pública de status reúne en un solo lugar la disponibilidad de
-pagos. Muestra el estado de los corredores habilitados, un heatmap de 90 días,
-historial de incidentes agrupados y avisos opcionales por correo. Es agnóstica
-al proveedor: las respuestas públicas solo identifican flujo, país, moneda y
-método.
+Los rieles de pago pueden degradarse o caerse — una caída de la red bancaria,
+una ventana de mantenimiento del canal, un incidente aguas arriba. La
+plataforma monitorea la salud de cada corredor (país / moneda / método) **en
+tiempo real**, combinando el resultado del tráfico vivo con chequeos activos
+de salud, y te expone ese estado por tres superficies para que tu producto
+reaccione antes que tus usuarios:
+
+1. **`availability` en los catálogos de métodos** — decide al renderizar si
+   mostrar, advertir u ocultar un corredor.
+2. **Webhook `corridor_status_changed`** — recibe el push en el momento en
+   que un corredor cambia de estado, sin polling.
+3. **Página de status pública** — una página hosteada y brandeada
+   (HTML + JSON) que puedes linkear desde tu app o tu propio tooling de
+   status.
 
 ```mermaid
 flowchart LR
-    monitor["Monitor de salud"] --> api["JSON de status"]
-    monitor --> page["SPA de status"]
-    page --> incidents["Incidentes agrupados"]
-    page --> alerts["Avisos con doble opt-in"]
+    monitor["Monitor de salud<br/>(tráfico vivo + chequeos activos)"] --> state["Estado del corredor<br/>operational / degraded / down"]
+    state --> catalog["availability en<br/>GET /v1/payouts/methods<br/>GET /v1/payins/methods"]
+    state --> hook["Webhook<br/>corridor_status_changed"]
+    state --> page["Página de status pública<br/>HTML + JSON"]
 ```
 
-## Página pública de status
+> **Nota**
+El monitor es **observabilidad, no un gate**: un corredor `down` NO bloquea
+tus requests. Tú mantienes el control — puedes seguir enviando (los requests
+fallarán con los códigos de error de siempre y los refunds aplican como
+siempre) o pausar ese corredor en tu UI hasta que se recupere.
+## Estados de un corredor
 
-- `GET /status/{orgToken}` entrega la SPA top-tier por defecto. Incluye estado
-general, uptime, MTTR, cantidad de incidentes, heatmap diario de 90 días,
-grupos de payouts y payins, filtros, buscador y modal de suscripción.
-- La SPA soporta inglés, español y chino; usa nombre, colores y logo de tu
-organización; y permite abrir un incidente con `?incident=<id>`. También
-puedes acotar la vista con `flow`, `country`, `currency` y `method`.
-- `?ui=legacy` conserva la página antigua renderizada en el servidor como ruta
-de compatibilidad. No es la experiencia por defecto.
-- La SPA usa assets `/_next/*` self-hosted del mismo origen. No carga recursos
-desde CDN externos; todo recurso del navegador se sirve desde el mismo origen.
-Cada respuesta HTML
-recibe un nonce CSP por request; los assets son inmutables y tienen cache largo.
+| Estado | Significado | Qué hacer |
+|---|---|---|
+| `operational` | El corredor procesa con normalidad. | Nada — operación normal. |
+| `degraded` | Se detectó una tasa elevada de errores de infraestructura en la ventana reciente. Algunas operaciones pueden fallar o demorar más. | Considera mostrar una advertencia en tu UI; reintentar con la misma `idempotency_key` es seguro. |
+| `down` | Fallas de infraestructura consecutivas o chequeos de salud fallando. Es muy probable que los despachos nuevos fallen. | Prefiere ocultar o deshabilitar el corredor en tu UI hasta que se recupere; lo que igual envíes resolverá a los estados finales de siempre (las operaciones fallidas se reembolsan como siempre). |
 
-Solo aparecen corredores habilitados para la organización. Un corredor
-habilitado pero caído sigue visible y afecta el estado general; uno desactivado
-por el operador no aparece en las filas ni en el historial.
+Las transiciones tienen histéresis: un timeout aislado jamás declara una
+caída, y la recuperación exige una ventana estable sostenida — el estado que
+lees es significativo, no ruido.
 
-## JSON de status
+## 1. Availability en los catálogos de métodos
+
+`GET /v1/payouts/methods` y `GET /v1/payins/methods` ahora incluyen el campo
+ADITIVO `availability` por corredor. El resto del shape no cambia.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/payouts/methods" \
+  -H "Authorization: Bearer pk_..."
+```
+
+```json
+{
+  "items": [
+    {
+      "country": "VE",
+      "currency": "VES",
+      "method": "bank_transfer",
+      "availability": "down"
+    },
+    {
+      "country": "MX",
+      "currency": "MXN",
+      "method": "bank_transfer",
+      "availability": "operational"
+    }
+  ]
+}
+```
+
+Un corredor sin incidentes registrados es siempre `operational` — el monitor
+solo persiste lo que ha observado.
+
+## 2. El webhook `corridor_status_changed`
+
+Suscribe tu endpoint al evento `corridor_status_changed`
+([guía de webhooks](https://docs.cbpayapp.com/es/webhooks)) y recibirás cada transición en el momento
+en que ocurre — caída **y** recuperación:
+
+```json
+{
+  "event_type": "corridor_status_changed",
+  "data": {
+    "flow": "payout",
+    "country": "VE",
+    "currency": "VES",
+    "method": "bank_transfer",
+    "status": "down",
+    "previous_status": "operational",
+    "since": "2026-07-24T22:10:00Z",
+    "reason": "consecutive infrastructure failures"
+  }
+}
+```
+
+| Campo | Descripción |
+|---|---|
+| `flow` | `payout` o `payin` — la dirección del corredor afectado. |
+| `country` / `currency` / `method` | La clave del corredor, igual que en los catálogos de métodos. |
+| `status` | Estado nuevo: `operational`, `degraded` o `down`. |
+| `previous_status` | Estado previo a la transición. |
+| `since` | Cuándo comenzó el estado nuevo (RFC 3339, UTC). |
+| `reason` | Causa corta legible (jamás incluye identidades de canales internos). |
+
+El evento es un **broadcast**: no está ligado a una operación tuya, así que
+no lleva `account_id`. El consumo idempotente aplica como en todo webhook
+(dedupe por id de entrega).
+
+## 3. Página de status pública
+
+Tu organización tiene una página de status hosteada con el estado vivo de
+cada corredor, el uptime de los últimos 90 días y el historial de
+incidentes. Es pública (sin auth), brandeada con la identidad de tu
+organización y apta para compartir con tus propios clientes.
+
+- **HTML**: `GET /status/{orgToken}` — página self-contained que puedes
+  linkear o embeber.
+- **JSON**: `GET /v1/status/{orgToken}` — la misma data para tu propio
+  tooling de status o monitores.
+
+La página muestra el logo, los colores y el sitio web de tu organización, y
+para cada corredor la bandera del país, un ícono del método de pago, una
+barra de disponibilidad día a día de los últimos 90 días y el estado actual.
+Arriba hay una tarjeta de resumen (estado general, corredores operativos,
+degradados, con interrupción y uptime promedio) y abajo la línea de tiempo de
+incidentes con los motivos redactados en lenguaje claro. El HTML no carga
+JavaScript ni recursos externos, así que se puede embeber en un iframe sin
+riesgos.
+
+La página pública solo lista los corredores habilitados para tu organización:
+los desactivados por el operador no aparecen en las filas ni en el historial de
+incidentes, mientras que un corredor habilitado pero caído sí aparece en rojo
+y afecta el estado general.
+
+El `orgToken` es un token opaco que tu operador te comparte (los org admins
+pueden leerlo como `status_page_url` en `GET /v1/org/branding`).
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
 ```
 
-El campo plano `incidents` se mantiene por compatibilidad y está **deprecated**;
-para el historial nuevo usa el endpoint agrupado de abajo. Los campos aditivos
-para la SPA son:
-
 ```json
 {
-  "brand": {"name":"CBPay","website":"https://cbpayapp.com","primary_hex":"FBC140","header_hex":"2E2E2E","accent_hex":"","grey_hex":"","logo_url":"","symbol_url":""},
   "status": "degraded",
-  "generated_at": "2026-11-17T15:00:00Z",
-  "corridors": [],
-  "incidents": [],
-  "incidents_total_90d": 2,
-  "mttr_mins_90d": 45,
-  "incidents_daily": [
-    {"date":"2026-11-16","degraded":1,"down":0},
-    {"date":"2026-11-17","degraded":0,"down":1}
+  "generated_at": "2026-07-24T22:15:00Z",
+  "corridors": [
+    {
+      "flow": "payout",
+      "country": "VE",
+      "currency": "VES",
+      "method": "bank_transfer",
+      "status": "down",
+      "since": "2026-07-24T22:10:00Z",
+      "uptime_90d_pct": 99.62
+    }
+  ],
+  "incidents": [
+    {
+      "flow": "payout",
+      "country": "VE",
+      "currency": "VES",
+      "method": "bank_transfer",
+      "from_status": "operational",
+      "to_status": "down",
+      "reason": "consecutive infrastructure failures",
+      "at": "2026-07-24T22:10:00Z"
+    }
   ]
 }
 ```
 
-`logo_data_uri` y `symbol_data_uri` se agregan solo si solicitas
-`?brand_assets=1` y la organización tiene esos assets. Pídelos solo cuando la
-UI necesite una marca autocontenida y no los guardes en logs ni analytics.
+| Campo | Descripción |
+|---|---|
+| `status` | Estado global de la página: el peor estado entre todos los corredores. |
+| `corridors[]` | Estado actual por corredor más `uptime_90d_pct` (porcentaje de los últimos 90 días en `operational`). |
+| `incidents[]` | Transiciones más recientes (caídas y recuperaciones), la más nueva primero. |
 
-## Historial de incidentes agrupados
+Un token desconocido o mal formado responde `404` — el token no revela si
+una organización existe. El endpoint tiene rate limit por IP.
 
-```bash
-curl "https://api.qbank.cl/platform/v1/status/{orgToken}/incidents?page=1&page_size=50&from=2026-11-01T00:00:00Z&to=2026-11-17T23:59:59Z&flow=payout&country=US&currency=USD&method=bank_transfer&severity=down&status=resolved"
-```
+## FAQ
 
-Cada ventana no operativa se agrupa desde su primera transición a `degraded` o
-`down` hasta la recuperación. Ventanas que comienzan con una diferencia de
-hasta cinco minutos se juntan en un incidente. El test del código cubre tres
-corredores US/USD que comienzan el `2026-11-14T11:10:00Z` y se recuperan cinco
-minutos después: el resultado es un incidente resuelto, con tres elementos en
-`affected` y `duration_mins: 5`.
-
-```json
-{
-  "page": 1,
-  "page_size": 50,
-  "total": 1,
-  "incidents": [{
-    "id": "<id-estable-del-incidente>",
-    "title": "<la UI lo localiza>",
-    "severity": "down",
-    "status": "resolved",
-    "started_at": "2026-11-14T11:10:00Z",
-    "resolved_at": "2026-11-14T11:15:00Z",
-    "duration_mins": 5,
-    "affected": [
-      {"flow":"payout","country":"US","currency":"USD","method":"bank_transfer","worst":"down"},
-      {"flow":"payout","country":"US","currency":"USD","method":"wire","worst":"down"},
-      {"flow":"payin","country":"US","currency":"USD","method":"bank_transfer","worst":"down"}
-    ],
-    "updates": [
-      {"at":"2026-11-14T11:15:00Z","status":"operational","message":"<mensaje humano de recuperación>"},
-      {"at":"2026-11-14T11:10:00Z","status":"down","message":"<mensaje humano de investigación>"}
-    ]
-  }]
-}
-```
-
-Los filtros opcionales son `flow` (`payout` o `payin`), `country`, `currency`,
-`method`, `severity` (`degraded` o `down`), `status` (`open` o `resolved`) y
-`from`/`to`. `page` parte en 1; `page_size` parte en 50 y llega hasta 200.
-Filtro inválido responde `invalid_filter`; rango inválido o invertido,
-`invalid_range`. Un token desconocido o mal formado responde `404` sin revelar
-si existe una organización.
-
-## Suscribirse a avisos
-
-El flujo usa doble opt-in. La solicitud inicial es neutra para no revelar si un
-correo ya está suscrito.
-
-```bash
-curl -X POST "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"ops@example.com","flows":"all","lang":"es"}'
-```
-
-```json
-{"ok": true}
-```
-
-`flows` acepta `all`, `payout` o `payin` y por defecto es `all`; `lang` acepta
-`en`, `es` o `zh`. Un correo inválido responde `invalid_email` y un flujo
-inválido, `invalid_filter`. El honeypot `company_website`, si viene lleno, se
-acepta en silencio y se descarta.
-
-El link de confirmación dura 24 horas y es de un solo uso:
-
-```bash
-curl -H "Accept: application/json" \
-  "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions/confirm?token=<token-hex-minusculas-de-64-caracteres>"
-```
-
-```json
-{"ok": true, "confirmed": true}
-```
-
-Confirmación, gestión y baja también pueden responder HTML brandeado cuando
-usas `Accept: text/html`. Esas páginas no tienen JavaScript y usan CSP estricta.
-La gestión muestra el email enmascarado y el filtro vigente:
-
-```bash
-curl -X POST "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions/preferences" \
-  -H "Content-Type: application/json" \
-  -d '{"token":"<token-de-baja>","flows":"payin"}'
-```
-
-```json
-{"ok": true, "flows": "payin"}
-```
-
-La baja acepta `GET` o `POST` y es idempotente:
-
-```bash
-curl -X POST "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions/unsubscribe" \
-  -H "Content-Type: application/json" \
-  -d '{"token":"<token-de-baja>"}'
-```
-
-```json
-{"ok": true, "unsubscribed": true}
-```
-
-Los límites son 10 solicitudes por IP por hora, 3 por email por hora y 60
-operaciones con token por IP por hora. El límite responde `rate_limited`. Los
-tokens son capacidades aleatorias de 256 bits; solo se guardan sus hashes. Los
-emails se cifran en reposo y nunca se escriben en logs. Los avisos se envían de
-forma individual y se deduplican por suscriptor y ventana del incidente.
-
-## Estados de un corredor
-
-| Estado | Significado | Acción sugerida |
-|---|---|---|
-| `operational` | Procesa normalmente. | Sigue operando. |
-| `degraded` | Se observaron errores de infraestructura elevados. | Muestra una advertencia y sigue el feed de incidentes. |
-| `down` | Fallas consecutivas o chequeos fallidos. | Considera ocultarlo hasta que se recupere. |
-
-La página es observabilidad, no un gate de despacho. Nunca reenvíes una
-operación financiera porque el corredor esté degradado o caído; usa su estado
-normal y, cuando el contrato lo permita, reintenta solo con la misma
-`idempotency_key`.
-
-## Preguntas frecuentes
-
-#### ¿Un corredor down rechaza todos mis requests?
-    No. El monitor no bloquea despachos. Las operaciones nuevas pueden fallar
-por el flujo normal de la API; usa availability y el feed de incidentes para
-lo que muestras.
-#### ¿El ID del incidente sirve para un deep link estable?
-    Sí. El ID es determinista para la hora de inicio y los corredores afectados,
-y la SPA puede abrirlo con `?incident=<id>`.
-#### ¿Puedo saber qué proveedor está detrás?
-    No. El status público es agnóstico al proveedor y solo expone dimensiones
-del corredor y mensajes humanos normalizados.
-#### ¿Por qué no recibí el correo de confirmación?
-    La respuesta POST es neutra por diseño. Revisa la dirección y solicita una
-nueva suscripción; no uses la respuesta para inferir si ya existía una.
+#### ¿Un corredor down rechaza mis requests?
+    No. El monitor jamás bloquea despachos. Un corredor `down` significa que
+    las operaciones nuevas muy probablemente fallarán con los códigos de
+    error de siempre (`channel_unavailable`, rechazo del canal, estados por
+    timeout) — las operaciones fallidas se reembolsan exactamente como
+    siempre. Usa `availability` para decidir qué mostrar en tu UI.
+#### ¿Qué tan rápido se detecta una caída?
+    El monitor evalúa continuamente, combinando cada despacho real con
+    chequeos activos de salud periódicos, así que las caídas se detectan
+    típicamente en pocos minutos incluso en corredores con poco tráfico. La
+    histéresis evita que un timeout aislado haga parpadear el estado.
+#### ¿Necesito hacer polling a los catálogos para seguir la disponibilidad?
+    No — suscríbete a `corridor_status_changed` y recibirás cada transición
+    por push. Los catálogos son un snapshot conveniente para el momento de
+    renderizar; el webhook es el feed de cambios.
+#### ¿Qué pasa con las operaciones en vuelo cuando un corredor cae?
+    Se resuelven solas: cada operación llega a su estado final (`completed`
+    o `failed` con refund) por la maquinaria de webhooks y conciliación de
+    siempre. Nunca necesitas re-enviar — reintentar con la misma
+    `idempotency_key` es siempre seguro.
+#### ¿Puedo white-labelear la página de status?
+    Sí. La página usa el branding de tu organización (logo, colores, nombre)
+    automáticamente — la misma configuración que usan los comprobantes y las
+    páginas hosteadas. Pide a tu operador la URL de la página de status de
+    tu organización, o léela desde <code>GET /v1/org/branding</code> si eres
+    org admin.
+#### ¿Por qué no aparece un corredor en la página de status?
+    Si tu operador lo desactivó mediante controles administrativos, no se
+    lista. Si está habilitado pero caído, sigue apareciendo en rojo y afecta
+    el estado general.
+#### ¿Por qué no veo qué proveedor está detrás de un incidente?
+    Por diseño la plataforma es agnóstica al proveedor: los corredores se
+    identifican solo por país, moneda y método. Las causas de los incidentes
+    están normalizadas y jamás incluyen identidades de canales internos.

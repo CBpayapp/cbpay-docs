@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.296'
+  version: '2.297'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -15135,7 +15135,7 @@ paths:
                   type: string
                   maxLength: 256
                   pattern: ^[^\r\n]{1,256}$
-                  description: 'For `method: "card"`, this key is required; send it in the body or as the `Idempotency-Key` header. It is optional for `qr`, `bank_transfer`, `fintoc`, `pix` and `checkout` methods. A retry with the same key returns the original payin with HTTP 200 and `idempotency_hit: true` — the same `payment_url`/`checkout_url` for hosted methods, or the SAME `reference` for an announced bank transfer — instead of opening a second charge. On announced transfers this decides whether the money can be credited: two live announcements with the same amount and no payer identity are indistinguishable, so the arriving deposit would stay `unassigned`. If you omit the key we still collapse an identical retry (same account, currency, amount and payer document) into the original announcement; send a distinct key when you really need two separate charges for the same amount and payer.'
+                  description: 'For `method: "card"`, this key is required; send it in the body or as the `Idempotency-Key` header. It is optional for `qr`, `bank_transfer`, `fintoc`, `pix` and `checkout` methods. A retry with the same key returns the original payin with HTTP 200 and `idempotency_hit: true` — the same `payment_url`/`checkout_url` for hosted methods, or the SAME `reference` for an announced bank transfer — instead of opening a second charge. If the key points to a `failed`, `expired` or `cancelled` QR charge, the API returns HTTP 422 `previous_attempt_failed` with the generalized message `request could not be processed`; use the code, rotate the key and submit again for a fresh QR. On announced transfers this decides whether the money can be credited: two live announcements with the same amount and no payer identity are indistinguishable, so the arriving deposit would stay `unassigned`. If you omit the key we still collapse an identical retry (same account, currency, amount and payer document) into the original announcement; send a distinct key when you really need two separate charges for the same amount and payer.'
                 customer:
                   type: object
                   description: Optional billing prefill for the card checkout (`card` method). The payer can complete or correct it on the page.
@@ -15752,7 +15752,7 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: The core rejected the charge (`core_rejected` — including decimal violations such as a CLP amount with decimals or a UF amount with more than two), the announced bank-transfer amount is below the account-specific fee minimum (`amount_below_minimum`), or the announced-transfer corridor requires a registered destination account and your organization has not configured one yet (`deposit_instructions_unavailable` — today CL, PY and US).
+          description: The core rejected the charge (`core_rejected` — including decimal violations such as a CLP amount with decimals or a UF amount with more than two), a QR key points to a terminally failed, expired or cancelled charge (`previous_attempt_failed`), the announced bank-transfer amount is below the account-specific fee minimum (`amount_below_minimum`), or the announced-transfer corridor requires a registered destination account and your organization has not configured one yet (`deposit_instructions_unavailable` — today CL, PY and US).
           content:
             application/json:
               schema:
@@ -15782,6 +15782,11 @@ paths:
                   value:
                     error: deposit_instructions_unavailable
                     message: no deposit instructions configured for this corridor; contact your organization admin
+                previous_attempt_failed:
+                  summary: Previous QR attempt is terminal
+                  value:
+                    error: previous_attempt_failed
+                    message: request could not be processed
         '502':
           description: Core unavailable (`core_unavailable`).
           content:
@@ -17797,7 +17802,7 @@ paths:
                   type: string
                 options:
                   type: object
-                  description: Optional rail-specific options. For a deliberate retry after a recent bank rejection, set destination_retry_ack to the most recent prior case ID. For US/USD `ach`, `wire` and `swift`, `purpose` is required and accepts one of the 21 payment-purpose labels or codes case-insensitively. `purpose_detail` is required only for `Other` and has a maximum length of 140.
+                  description: Optional rail-specific options. For a deliberate retry after a recent bank rejection, set destination_retry_ack to the most recent prior case ID. For US/USD `ach`, `wire` and `swift`, `purpose` is required and accepts one of the 21 payment-purpose labels or codes case-insensitively. `purpose_detail` is required only for `Other` and has a maximum length of 140. Set `is_remittance` to the string "true" for `wire`/`swift` transfers made on behalf of a third party (rejected on `ach`); the operator picks the Ultimate Debtor from the live bank list before release.
                   additionalProperties:
                     type: string
                   properties:
@@ -17809,6 +17814,9 @@ paths:
                       type: string
                       maxLength: 140
                       description: Required only when purpose is Other; rejected for every other purpose.
+                    is_remittance:
+                      type: string
+                      description: Optional, US/USD wire and swift only (rejected on ach; ignored on other rails). Set to the string "true" when the transfer goes on behalf of a third party; the operator picks the Ultimate Debtor from the live bank list before release. "false" or omitted means an own transfer.
                     destination_retry_ack:
                       type: string
                       format: uuid

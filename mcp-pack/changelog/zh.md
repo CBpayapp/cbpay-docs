@@ -5,16 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.296 · 1 个版本 - 2026年11月17日
-### v2.296
-#### 新增
+## v2.297 · 2 个版本 - 2026年11月17日
+### v2.297
+**新增**
 
-- 公开状态页现在提供 top-tier SPA，包括通道筛选、聚合事件历史、90 天事件
-  指标、稳定事件深链接以及机构白标品牌。
-- 新增公开聚合事件历史，支持分页以及按流程、通道、严重程度、状态和日期
-  筛选。
-- 新增状态邮件提醒双重选择加入流程、流程偏好、品牌化确认与管理页面、
-  一键退订以及开始 / 恢复通知。
+- Payout 新增 `is_remittance` 选项（仅 US/USD wire 与 SWIFT）：第三方代付时传字符串 `"true"`。操作员在放行前从银行实时名单选择 Ultimate Debtor；无 debtor 时 payout 退回队列而非盲目放行。ACH 会拒绝该选项。
+### v2.296
+**修复**
+- 当幂等 key 指向已失败、已过期或已取消的 charge 时，QR payin replay 现在
+  返回 `422 previous_attempt_failed`。消息会被泛化；请使用 code、轮换 key
+  并创建新的 QR。
 ## v2.295 · 5 个版本 - 2026年11月16日
 ### v2.295
 #### 新增

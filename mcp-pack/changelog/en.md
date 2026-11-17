@@ -5,18 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.296 · 1 version - November 17, 2026
-### v2.296
-#### Added
+## v2.297 · 2 versions - November 17, 2026
+### v2.297
+**Added**
 
-- The public service-status page now includes the top-tier SPA with corridor
-  filters, grouped incident history, 90-day incident metrics, stable incident
-  deep links and organization white-label branding.
-- Added public grouped incident history with pagination and flow, corridor,
-  severity, status and date filters.
-- Added double opt-in status email alerts with flow preferences, branded
-  confirmation and management pages, one-click unsubscribe, and opened /
-  resolved notifications.
+- New `is_remittance` payout option (US/USD wire and SWIFT only): set it to the string `"true"` when the transfer goes on behalf of a third party. The operator picks the Ultimate Debtor from the live bank list before release; without a debtor the payout returns to the queue instead of releasing blind. Rejected on ACH.
+### v2.296
+**Fixed**
+- QR payin replays now return `422 previous_attempt_failed` when the
+  idempotency key points to a failed, expired or cancelled charge. The message
+  is generalized; use the code, rotate the key and create a fresh QR.
 ## v2.295 · 5 versions - November 16, 2026
 ### v2.295
 #### Added

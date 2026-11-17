@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.296'
+  version: '2.297'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -15120,7 +15120,7 @@ paths:
                   type: string
                   maxLength: 256
                   pattern: ^[^\r\n]{1,256}$
-                  description: '对于 `method: "card"`，该键为必填：在 body 中发送，或使用 `Idempotency-Key` 请求头。`qr`、`bank_transfer`、`fintoc`、`pix` 与 `checkout` 可选。使用相同键重试会返回原始 payin、HTTP 200 和 `idempotency_hit: true` —— 托管方式返回同一个 `payment_url`/`checkout_url`，预告银行转账返回同一个 `reference` —— 而不会开启第二笔收款。对预告转账而言，这直接决定 资金能否入账：两笔金额相同且没有付款人身份的存活预告无法区分， 到账存款会停留在 `unassigned`。若省略该键，我们仍会把完全相同的 重试（同一账户、货币、金额与付款人证件号）合并到原始预告；当您确实 需要针对同一金额与同一付款人创建两笔独立收款时，请发送不同的键。'
+                  description: '对于 `method: "card"`，该键为必填：在 body 中发送，或使用 `Idempotency-Key` 请求头。`qr`、`bank_transfer`、`fintoc`、`pix` 与 `checkout` 可选。使用相同键重试会返回原始 payin、HTTP 200 和 `idempotency_hit: true` —— 托管方式返回同一个 `payment_url`/`checkout_url`，预告银行转账返回同一个 `reference` —— 而不会开启第二笔收款。如果该 key 指向的 QR charge 已为 `failed`、`expired` 或 `cancelled`，API 会返回 HTTP 422 `previous_attempt_failed`，消息泛化为 `request could not be processed`；请使用 code、轮换 key 并重新提交以获取新的 QR。对预告转账而言，这直接决定 资金能否入账：两笔金额相同且没有付款人身份的存活预告无法区分， 到账存款会停留在 `unassigned`。若省略该键，我们仍会把完全相同的 重试（同一账户、货币、金额与付款人证件号）合并到原始预告；当您确实 需要针对同一金额与同一付款人创建两笔独立收款时，请发送不同的键。'
                 customer:
                   type: object
                   description: 银行卡收银台的可选账单预填(`card` 方式)。付款人可在页面上补充或更正。
@@ -15745,7 +15745,7 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: 核心拒绝了该收款(`core_rejected` —— 包括小数位数违规,例如带小数的 CLP 金额或超过两位的 UF 金额),预告转账金额低于账户手续费最低值(`amount_below_minimum`),或预告转账通道要求登记收款账户而您的组织尚未配置(`deposit_instructions_unavailable` —— 目前为 CL、PY、US)。
+          description: 核心拒绝了该收款(`core_rejected` —— 包括小数位数违规,例如带小数的 CLP 金额或超过两位的 UF 金额),QR key 指向已失败、已过期或已取消的 charge (`previous_attempt_failed`),预告转账金额低于账户手续费最低值(`amount_below_minimum`),或预告转账通道要求登记收款账户而您的组织尚未配置(`deposit_instructions_unavailable` —— 目前为 CL、PY、US)。
           content:
             application/json:
               schema:
@@ -15775,6 +15775,11 @@ paths:
                   value:
                     error: deposit_instructions_unavailable
                     message: no deposit instructions configured for this corridor; contact your organization admin
+                previous_attempt_failed:
+                  summary: 之前的 QR 尝试已终止
+                  value:
+                    error: previous_attempt_failed
+                    message: request could not be processed
         '502':
           description: 核心不可用(`core_unavailable`)。
           content:
@@ -17864,6 +17869,9 @@ paths:
                       type: string
                       maxLength: 140
                       description: 仅当 purpose 为 Other 时必填；其他用途提供该字段会被拒绝。
+                    is_remittance:
+                      type: string
+                      description: 可选，仅 US/USD wire 与 swift（ach 会被拒绝，其他通道忽略）。第三方代付时设为字符串 "true"；操作员在放行前从银行实时名单选择 Ultimate Debtor。"false" 或省略表示自有转账。
                     destination_retry_ack:
                       type: string
                       format: uuid
