@@ -1,221 +1,228 @@
 ---
 title: "Service status & corridor availability"
-description: "Know in real time whether each payment corridor is operational: availability in the method catalogs, the corridor_status_changed webhook and the public status page"
+description: "Monitor corridor health, grouped incidents and branded status alerts"
 slug: en/service-status
 lang: en
 source_url: https://docs.cbpayapp.com/en/service-status
 ---
 > **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
 
-Payment rails can degrade or go down — a banking network outage, a channel
-maintenance window, an upstream incident. The platform monitors the health of
-every corridor (country / currency / method) **in real time**, combining the
-outcome of live traffic with active health checks, and exposes that state to
-you through three surfaces so your product can react before your users do:
-
-1. **`availability` in the method catalogs** — decide at render time whether
-   to show, warn about or hide a corridor.
-2. **`corridor_status_changed` webhook** — get pushed the moment a corridor
-   changes state, without polling.
-3. **Public status page** — a hosted, branded page (HTML + JSON) you can link
-   from your app or your own status tooling.
+The public status surface gives your team and your customers one place to
+understand payment availability. It combines the current state of enabled
+corridors, a 90-day heatmap, grouped incident history and optional email
+alerts. It is provider-agnostic: public responses identify only flow, country,
+currency and method.
 
 ```mermaid
 flowchart LR
-    monitor["Health monitor<br/>(live traffic + active checks)"] --> state["Corridor state<br/>operational / degraded / down"]
-    state --> catalog["availability in<br/>GET /v1/payouts/methods<br/>GET /v1/payins/methods"]
-    state --> hook["Webhook<br/>corridor_status_changed"]
-    state --> page["Public status page<br/>HTML + JSON"]
+    monitor["Health monitor"] --> api["Status JSON"]
+    monitor --> page["Status SPA"]
+    page --> incidents["Grouped incidents"]
+    page --> alerts["Double opt-in alerts"]
 ```
 
-> **Note**
-The monitor is **observability, not a gate**: a `down` corridor does not
-block your requests. You stay in control — you can keep sending (requests
-will fail with the usual error codes and refunds apply as always) or pause
-that corridor in your UI until it recovers.
-## Corridor states
+## Public status page
 
-| State | Meaning | What to do |
-|---|---|---|
-| `operational` | The corridor is processing normally. | Nothing — business as usual. |
-| `degraded` | An elevated infrastructure error rate was detected in the recent window. Some operations may fail or take longer. | Consider showing a warning in your UI; retries with the same `idempotency_key` are safe. |
-| `down` | Consecutive infrastructure failures or failing health checks. New dispatches are very likely to fail. | Prefer hiding or disabling the corridor in your UI until it recovers; anything you do send will resolve to the usual final states (failed operations are refunded as always). |
+- `GET /status/{orgToken}` serves the top-tier SPA by default. The page shows
+  an overall state, uptime and MTTR metrics, incident count, 90-day daily
+  heatmap, corridor groups for payouts and payins, filters, search and a
+  subscription modal.
+- The SPA supports English, Spanish and Chinese, uses your organization’s
+  white-label name, colors and logo, and can deep-link to an incident with
+  `?incident=<id>`. A corridor selection can also be narrowed with `flow`,
+  `country`, `currency` and `method` query parameters.
+- `?ui=legacy` keeps the server-rendered legacy page available as a
+  compatibility path. It is not the default experience.
+- The SPA uses same-origin, self-hosted `/_next/*` assets. It does not load
+  JavaScript, fonts or other resources from an external CDN. Each HTML
+  response receives a per-request CSP nonce; assets are immutable and carry
+  long-lived caching headers.
 
-Transitions are governed by hysteresis: a single timeout never declares an
-outage, and recovery requires a sustained stable window — the state you read
-is meaningful, not noisy.
+Only corridors enabled for the organization appear. An enabled corridor that
+is down remains visible and affects the overall state; an operator-disabled
+corridor is omitted from rows and incident history.
 
-## 1. Availability in the method catalogs
-
-`GET /v1/payouts/methods` and `GET /v1/payins/methods` now include an
-additive `availability` field per corridor. The rest of the shape is
-unchanged.
-
-```bash
-curl "https://api.qbank.cl/platform/v1/payouts/methods" \
-  -H "Authorization: Bearer pk_..."
-```
-
-```json
-{
-  "items": [
-    {
-      "country": "VE",
-      "currency": "VES",
-      "method": "bank_transfer",
-      "availability": "down"
-    },
-    {
-      "country": "MX",
-      "currency": "MXN",
-      "method": "bank_transfer",
-      "availability": "operational"
-    }
-  ]
-}
-```
-
-A corridor with no recorded incident is always `operational` — the monitor
-only persists what it has observed.
-
-## 2. The `corridor_status_changed` webhook
-
-Subscribe your endpoint to the `corridor_status_changed` event
-([webhooks guide](https://docs.cbpayapp.com/en/webhooks)) and you will receive every transition the
-moment it happens — outage **and** recovery:
-
-```json
-{
-  "event_type": "corridor_status_changed",
-  "data": {
-    "flow": "payout",
-    "country": "VE",
-    "currency": "VES",
-    "method": "bank_transfer",
-    "status": "down",
-    "previous_status": "operational",
-    "since": "2026-07-24T22:10:00Z",
-    "reason": "consecutive infrastructure failures"
-  }
-}
-```
-
-| Field | Description |
-|---|---|
-| `flow` | `payout` or `payin` — the direction of the affected corridor. |
-| `country` / `currency` / `method` | The corridor key, exactly as in the method catalogs. |
-| `status` | New state: `operational`, `degraded` or `down`. |
-| `previous_status` | State before the transition. |
-| `since` | When the new state started (RFC 3339, UTC). |
-| `reason` | Short human-readable cause (never includes internal channel identities). |
-
-The event is a **broadcast**: it is not tied to one of your operations, so it
-carries no `account_id`. Idempotent consumption applies as with every webhook
-(dedupe by delivery id).
-
-## 3. Public status page
-
-Your organization has a hosted status page with the live state of every
-corridor, the uptime of the last 90 days and the incident history. It is
-public (no auth), branded with your organization's identity and safe to
-share with your own customers.
-
-- **HTML**: `GET /status/{orgToken}` — a self-contained page you can link or
-  embed.
-- **JSON**: `GET /v1/status/{orgToken}` — the same data for your own status
-  tooling or monitors.
-
-The page picks up your organization's logo, colors and website, and shows for
-every corridor the country flag, a payment-method icon, a day-by-day
-availability bar for the last 90 days and the current state. A summary card at
-the top reports the overall state, how many corridors are operational,
-degraded or down, and the average uptime; the incident timeline at the bottom
-spells out each reason in plain language. The HTML loads no JavaScript and no
-external resources, so you can safely embed it in an iframe.
-
-The public page lists only corridors enabled for your organization: corridors
-disabled by the operator do not appear in rows or incident history, while an
-enabled corridor that is down remains visible and contributes to the overall
-state.
-
-The `orgToken` is an opaque token your operator shares with you (org admins
-can read it as `status_page_url` in `GET /v1/org/branding`).
+## Status JSON
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
 ```
 
+The existing flat `incidents` field remains for compatibility and is
+**deprecated** in favor of the grouped endpoint below. The additive fields
+used by the SPA are:
+
 ```json
 {
+  "brand": {
+    "name": "CBPay",
+    "website": "https://cbpayapp.com",
+    "primary_hex": "FBC140",
+    "header_hex": "2E2E2E",
+    "accent_hex": "",
+    "grey_hex": "",
+    "logo_url": "",
+    "symbol_url": ""
+  },
   "status": "degraded",
-  "generated_at": "2026-07-24T22:15:00Z",
-  "corridors": [
-    {
-      "flow": "payout",
-      "country": "VE",
-      "currency": "VES",
-      "method": "bank_transfer",
-      "status": "down",
-      "since": "2026-07-24T22:10:00Z",
-      "uptime_90d_pct": 99.62
-    }
-  ],
+  "generated_at": "2026-11-17T15:00:00Z",
+  "corridors": [],
+  "incidents": [],
+  "incidents_total_90d": 2,
+  "mttr_mins_90d": 45,
+  "incidents_daily": [
+    {"date": "2026-11-16", "degraded": 1, "down": 0},
+    {"date": "2026-11-17", "degraded": 0, "down": 1}
+  ]
+}
+```
+
+The server includes `logo_data_uri` and `symbol_data_uri` only when
+`?brand_assets=1` is requested and the organization has those assets. Keep
+these data URIs out of logs and analytics; request them only when the UI needs
+to render a self-contained brand.
+
+## Grouped incident history
+
+```bash
+curl "https://api.qbank.cl/platform/v1/status/{orgToken}/incidents?page=1&page_size=50&from=2026-11-01T00:00:00Z&to=2026-11-17T23:59:59Z&flow=payout&country=US&currency=USD&method=bank_transfer&severity=down&status=resolved"
+```
+
+The endpoint groups each corridor’s non-operational window from its first
+`degraded`/`down` transition until recovery. Windows that start within five
+minutes of one another are coalesced into one incident. For example, the
+implementation test covers three US/USD corridors starting at
+`2026-11-14T11:10:00Z` and recovering five minutes later; the result is one
+resolved incident with three `affected` entries and `duration_mins: 5`.
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "total": 1,
   "incidents": [
     {
-      "flow": "payout",
-      "country": "VE",
-      "currency": "VES",
-      "method": "bank_transfer",
-      "from_status": "operational",
-      "to_status": "down",
-      "reason": "consecutive infrastructure failures",
-      "at": "2026-07-24T22:10:00Z"
+      "id": "<stable-incident-id>",
+      "title": "<localized by the UI>",
+      "severity": "down",
+      "status": "resolved",
+      "started_at": "2026-11-14T11:10:00Z",
+      "resolved_at": "2026-11-14T11:15:00Z",
+      "duration_mins": 5,
+      "affected": [
+        {"flow": "payout", "country": "US", "currency": "USD", "method": "bank_transfer", "worst": "down"},
+        {"flow": "payout", "country": "US", "currency": "USD", "method": "wire", "worst": "down"},
+        {"flow": "payin", "country": "US", "currency": "USD", "method": "bank_transfer", "worst": "down"}
+      ],
+      "updates": [
+        {"at": "2026-11-14T11:15:00Z", "status": "operational", "message": "<human-readable resolved message>"},
+        {"at": "2026-11-14T11:10:00Z", "status": "down", "message": "<human-readable investigating message>"}
+      ]
     }
   ]
 }
 ```
 
-| Field | Description |
-|---|---|
-| `status` | Overall page state: the worst state among all corridors. |
-| `corridors[]` | Current state per corridor plus `uptime_90d_pct` (percentage of the last 90 days spent `operational`). |
-| `incidents[]` | Most recent transitions (both outages and recoveries), newest first. |
+Supported optional filters are `flow` (`payout` or `payin`), `country`,
+`currency`, `method`, `severity` (`degraded` or `down`), `status` (`open` or
+`resolved`) and `from`/`to`. `page` defaults to 1; `page_size` defaults to 50
+and is capped at 200. Invalid filters return `invalid_filter`; an invalid or
+reversed date range returns `invalid_range`. Unknown or malformed organization
+tokens return `404` without revealing whether an organization exists.
 
-An unknown or malformed token returns `404` — the token does not reveal
-whether an organization exists. The endpoint is rate-limited per IP.
+## Subscribe to status alerts
+
+The subscription flow is double opt-in. The initial request is intentionally
+neutral so it does not reveal whether an email is already subscribed.
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"ops@example.com","flows":"all","lang":"en"}'
+```
+
+```json
+{"ok": true}
+```
+
+`flows` is `all`, `payout` or `payin`; it defaults to `all`. `lang` accepts
+`en`, `es` or `zh`. An invalid email returns `invalid_email`; an invalid flow
+returns `invalid_filter`. The service accepts a honeypot field named
+`company_website` and silently drops bot submissions when it is non-empty.
+
+The confirmation link is valid for 24 hours and single-use:
+
+```bash
+curl -H "Accept: application/json" \
+  "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions/confirm?token=<64-lowercase-hex-token>"
+```
+
+```json
+{"ok": true, "confirmed": true}
+```
+
+Confirmation, management and unsubscribe links also support branded HTML when
+`Accept: text/html` is sent. Those pages contain no JavaScript and use a strict
+CSP. The management endpoint shows a masked email and current flow filter;
+update it with JSON or the no-JS form:
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions/preferences" \
+  -H "Content-Type: application/json" \
+  -d '{"token":"<unsubscribe-token>","flows":"payin"}'
+```
+
+```json
+{"ok": true, "flows": "payin"}
+```
+
+`GET` or `POST` unsubscribe is idempotent and accepts the token in the query,
+JSON body or form body:
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/status/{orgToken}/subscriptions/unsubscribe" \
+  -H "Content-Type: application/json" \
+  -d '{"token":"<unsubscribe-token>"}'
+```
+
+```json
+{"ok": true, "unsubscribed": true}
+```
+
+The service throttles subscription requests to 10 per IP per hour and 3 per
+email per hour. Token operations are limited to 60 per IP per hour. A limit
+returns `rate_limited`. Tokens are random 256-bit capabilities; only hashes
+are stored. Email addresses are encrypted at rest and never written to logs.
+Alerts are sent individually, never with unrelated recipients in a shared
+`To` header. Opened and resolved notices are deduplicated per subscription
+and incident window.
+
+## Corridor states
+
+| State | Meaning | Recommended action |
+|---|---|---|
+| `operational` | Processing normally. | Continue normally. |
+| `degraded` | Elevated infrastructure errors were observed. | Show a warning and monitor the incident feed. |
+| `down` | Consecutive failures or failed health checks. | Consider hiding the corridor until it recovers. |
+
+A status page is observability, not a dispatch gate. Never resend a financial
+operation because a corridor is degraded or down; resolve the operation using
+its normal status and retry only with the same idempotency key when the API
+contract allows it.
 
 ## FAQ
 
-#### Does a down corridor reject my requests?
-    No. The monitor never blocks dispatches. A `down` corridor means new
-    operations are very likely to fail with the usual error codes
-    (`channel_unavailable`, provider rejection, timeout states) — failed
-    operations are refunded exactly as always. Use `availability` to decide
-    what to show in your UI.
-#### How fast is an outage detected?
-    The monitor evaluates continuously, combining every real dispatch with
-    periodic active health checks, so outages are typically detected within
-    a few minutes even on corridors with little traffic. Hysteresis prevents
-    a single timeout from flapping the state.
-#### Do I need to poll the catalogs to track availability?
-    No — subscribe to `corridor_status_changed` and you will be pushed every
-    transition. The catalogs are a convenient snapshot for render time; the
-    webhook is the change feed.
-#### What happens to operations in flight when a corridor goes down?
-    They resolve on their own: each operation reaches a final state
-    (`completed` or `failed` with refund) through the usual webhook and
-    reconciliation machinery. You never need to re-send — retrying with the
-    same `idempotency_key` is always safe.
-#### Can I white-label the status page?
-    Yes. The page uses your organization's branding (logo, colors, name)
-    automatically — the same configuration used by receipts and hosted pages.
-    Ask your operator for your organization's status page URL, or read it
-    from <code>GET /v1/org/branding</code> if you are an org admin.
-#### Why doesn't a corridor appear on the status page?
-    Your operator may have disabled it through administrative controls, in
-    which case it is omitted. If it is enabled but currently down, it remains
-    listed in red and contributes to the overall state.
-#### Why don't I see which provider is behind an incident?
-    By design the platform is provider-agnostic: corridors are identified by
-    country, currency and method only. Incident reasons are normalized and
-    never include internal channel identities.
+#### Does a down corridor reject every request?
+    No. The monitor does not block dispatches. New operations are more likely
+to fail through the normal API path; use the availability signal and incident
+feed to decide what to show.
+#### Can I use an incident ID as a stable deep link?
+    Yes. The grouped incident ID is deterministic for its start time and
+    affected corridors, so the SPA can open it with `?incident=<id>`.
+#### Can I identify the underlying provider?
+    No. Public status data is provider-agnostic and exposes only corridor
+    dimensions plus normalized human-readable messages.
+#### Why did I receive no confirmation email?
+    The POST response is neutral by design. Check the address and request a
+    new subscription; do not use the response to infer whether an existing
+    subscription exists.

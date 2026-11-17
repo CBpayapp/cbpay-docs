@@ -5,6 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.296 · 1 versión - 17 de noviembre de 2026
+### v2.296
+#### Agregado
+
+- La página pública de estado ahora incluye la SPA top-tier con filtros de
+  corredores, historial de incidentes agrupados, métricas de 90 días, deep
+  links estables y branding white-label de la organización.
+- Se agregó el historial público de incidentes agrupados con paginación y
+  filtros por flujo, corredor, severidad, estado y fecha.
+- Se agregaron avisos de status por email con doble opt-in, preferencias por
+  flujo, páginas brandeadas de confirmación y gestión, baja one-click y
+  notificaciones de apertura / recuperación.
 ## v2.295 · 5 versiones - 16 de noviembre de 2026
 ### v2.295
 #### Agregado

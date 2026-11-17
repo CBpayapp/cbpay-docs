@@ -5,6 +5,18 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.296 · 1 version - November 17, 2026
+### v2.296
+#### Added
+
+- The public service-status page now includes the top-tier SPA with corridor
+  filters, grouped incident history, 90-day incident metrics, stable incident
+  deep links and organization white-label branding.
+- Added public grouped incident history with pagination and flow, corridor,
+  severity, status and date filters.
+- Added double opt-in status email alerts with flow preferences, branded
+  confirmation and management pages, one-click unsubscribe, and opened /
+  resolved notifications.
 ## v2.295 · 5 versions - November 16, 2026
 ### v2.295
 #### Added

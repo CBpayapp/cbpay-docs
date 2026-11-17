@@ -6,10 +6,16 @@ description: "History of API and documentation changes"
 
 <Update label="November 17, 2026" description="v2.296 · 1 version">
 ### v2.296
-**Fixed**
-- QR payin replays now return `422 previous_attempt_failed` when the
-  idempotency key points to a failed, expired or cancelled charge. The message
-  is generalized; use the code, rotate the key and create a fresh QR.
+#### Added
+
+- The public service-status page now includes the top-tier SPA with corridor
+  filters, grouped incident history, 90-day incident metrics, stable incident
+  deep links and organization white-label branding.
+- Added public grouped incident history with pagination and flow, corridor,
+  severity, status and date filters.
+- Added double opt-in status email alerts with flow preferences, branded
+  confirmation and management pages, one-click unsubscribe, and opened /
+  resolved notifications.
 </Update>
 <Update label="November 16, 2026" description="v2.295 · 5 versions">
 ### v2.295

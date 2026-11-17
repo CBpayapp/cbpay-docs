@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-16 20:33 UTC",
-    "_content_sha256": "cfc67e713c2ebb986e8d6eca71fdc0bd5759d7f1f9f50ef2c72a2f261703f798"
+    "_generated_at": "2026-11-17 17:06 UTC",
+    "_content_sha256": "6642569d67024610c9beaf551d46975ca19039fb22bce2442e471041c5525964"
   },
   "auth": {
     "type": "bearer",
@@ -433,6 +433,671 @@
                 }
               ],
               "body": "{\n  \"brand\": {\n    \"name\": \"CBPay\"\n  },\n  \"status\": \"degraded\",\n  \"generated_at\": \"2026-07-24T22:15:00Z\",\n  \"corridors\": [\n    {\n      \"flow\": \"payout\",\n      \"country\": \"VE\",\n      \"currency\": \"VES\",\n      \"method\": \"bank_transfer\",\n      \"status\": \"down\",\n      \"since\": \"2026-07-24T22:10:00Z\",\n      \"uptime_90d_pct\": 99.62\n    },\n    {\n      \"flow\": \"payout\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"status\": \"operational\",\n      \"since\": \"2026-05-02T00:00:00Z\",\n      \"uptime_90d_pct\": 100\n    }\n  ],\n  \"incidents\": [\n    {\n      \"flow\": \"payout\",\n      \"country\": \"VE\",\n      \"currency\": \"VES\",\n      \"method\": \"bank_transfer\",\n      \"from_status\": \"operational\",\n      \"to_status\": \"down\",\n      \"reason\": \"consecutive infrastructure failures\",\n      \"at\": \"2026-07-24T22:10:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Grouped incident history (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/:orgToken/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                ":orgToken",
+                "incidents"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Page number (starts at 1)."
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Items per page (max 200)."
+                },
+                {
+                  "key": "flow",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by flow (an incident matches if any affected corridor matches)."
+                },
+                {
+                  "key": "country",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by country code (for example CL)."
+                },
+                {
+                  "key": "currency",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by currency code (for example CLP)."
+                },
+                {
+                  "key": "method",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by method (for example bank_transfer)."
+                },
+                {
+                  "key": "severity",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by worst severity of the incident."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by incident status."
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Incidents overlapping this day onwards (YYYY-MM-DD, UTC, inclusive)."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Incidents overlapping up to this day (YYYY-MM-DD, UTC, inclusive)."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "orgToken",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Incident history grouped from raw state transitions: one incident per non-operational window (first degraded/down until recovery), with human title, severity, start/end/duration and timeline. Simultaneous multi-corridor windows collapse into one incident. Paginated and filterable. Public, rate limited per IP.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Grouped incidents, most recent first.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/:orgToken/incidents",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    ":orgToken",
+                    "incidents"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Page number (starts at 1)."
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Items per page (max 200)."
+                    },
+                    {
+                      "key": "flow",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by flow (an incident matches if any affected corridor matches)."
+                    },
+                    {
+                      "key": "country",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by country code (for example CL)."
+                    },
+                    {
+                      "key": "currency",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by currency code (for example CLP)."
+                    },
+                    {
+                      "key": "method",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by method (for example bank_transfer)."
+                    },
+                    {
+                      "key": "severity",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by worst severity of the incident."
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by incident status."
+                    },
+                    {
+                      "key": "from",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Incidents overlapping this day onwards (YYYY-MM-DD, UTC, inclusive)."
+                    },
+                    {
+                      "key": "to",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Incidents overlapping up to this day (YYYY-MM-DD, UTC, inclusive)."
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgToken",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Grouped incidents, most recent first.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 1,\n  \"incidents\": [\n    {\n      \"id\": \"a1b2c3d4e5f60718\",\n      \"title\": \"Service disruption — CL · CLP · Bank transfer (outgoing payments)\",\n      \"severity\": \"down\",\n      \"status\": \"resolved\",\n      \"started_at\": \"2026-11-17T03:53:00Z\",\n      \"resolved_at\": \"2026-11-17T04:06:00Z\",\n      \"duration_mins\": 13,\n      \"affected\": [\n        {\n          \"flow\": \"payout\",\n          \"country\": \"CL\",\n          \"currency\": \"CLP\",\n          \"method\": \"bank_transfer\",\n          \"worst\": \"down\"\n        }\n      ],\n      \"updates\": [\n        {\n          \"at\": \"2026-11-17T04:06:00Z\",\n          \"status\": \"operational\",\n          \"message\": \"Resolved — Outgoing CL · CLP · Bank transfer is operational again\"\n        },\n        {\n          \"at\": \"2026-11-17T03:53:00Z\",\n          \"status\": \"down\",\n          \"message\": \"Investigating — Outgoing CL · CLP · Bank transfer is experiencing a service disruption\",\n          \"detail\": \"3 consecutive infrastructure failures (threshold 3)\"\n        }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Request a status alerts subscription (double opt-in)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                ":orgToken",
+                "subscriptions"
+              ],
+              "variable": [
+                {
+                  "key": "orgToken",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Starts an email subscription to incident alerts (corridor down + recovered). Always responds 200 neutral (anti-enumeration); a confirmation email with a 24h single-use link completes the opt-in. Public, strictly rate limited.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ops@example.com\",\n  \"flows\": \"all\",\n  \"lang\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Accepted (neutral — the confirmation email only goes out for",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    ":orgToken",
+                    "subscriptions"
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgToken",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Accepted (neutral — the confirmation email only goes out for",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ok\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm a subscription (24h link)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                ":orgToken",
+                "subscriptions",
+                "confirm"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Confirmation token from the email link."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "orgToken",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Redeems the single-use confirmation token from the opt-in email. Serves JSON for API clients and a branded no-JS page for browsers. Expired and unknown tokens respond identically (anti-enumeration).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Subscription confirmed.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    ":orgToken",
+                    "subscriptions",
+                    "confirm"
+                  ],
+                  "query": [
+                    {
+                      "key": "token",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Confirmation token from the email link."
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgToken",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Subscription confirmed.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ok\": true,\n  \"confirmed\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "View subscription preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/manage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                ":orgToken",
+                "subscriptions",
+                "manage"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Manage token from any alert email."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "orgToken",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Shows the subscription behind a manage token (masked email, flow filter, status). Serves JSON for API clients and a branded no-JS form for browsers.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Current subscription.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/manage",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    ":orgToken",
+                    "subscriptions",
+                    "manage"
+                  ],
+                  "query": [
+                    {
+                      "key": "token",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Manage token from any alert email."
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgToken",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Current subscription.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"email\": \"o***@example.com\",\n  \"flows\": \"all\",\n  \"status\": \"confirmed\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update the alert flow filter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/preferences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                ":orgToken",
+                "subscriptions",
+                "preferences"
+              ],
+              "variable": [
+                {
+                  "key": "orgToken",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Changes which flows trigger alerts (all, payout or payin). Accepts JSON (API clients) or the no-JS HTML form (browsers).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90\",\n  \"flows\": \"payout\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Preferences saved.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/preferences",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    ":orgToken",
+                    "subscriptions",
+                    "preferences"
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgToken",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Preferences saved.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ok\": true,\n  \"flows\": \"payout\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unsubscribe (one-click link)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/unsubscribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                ":orgToken",
+                "subscriptions",
+                "unsubscribe"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Unsubscribe token from any alert email."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "orgToken",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "One-click unsubscribe via the link in any alert email. Idempotent. Serves JSON for API clients and a branded no-JS page for browsers.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Unsubscribed.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/unsubscribe",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    ":orgToken",
+                    "subscriptions",
+                    "unsubscribe"
+                  ],
+                  "query": [
+                    {
+                      "key": "token",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Unsubscribe token from any alert email."
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgToken",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Unsubscribed.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ok\": true,\n  \"unsubscribed\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unsubscribe via POST (email clients)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/unsubscribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "status",
+                ":orgToken",
+                "subscriptions",
+                "unsubscribe"
+              ],
+              "variable": [
+                {
+                  "key": "orgToken",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Same one-click unsubscribe as GET, for email clients that prefer POST. Accepts the token in query, JSON body or form.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "200 Unsubscribed.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/status/:orgToken/subscriptions/unsubscribe",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "status",
+                    ":orgToken",
+                    "subscriptions",
+                    "unsubscribe"
+                  ],
+                  "variable": [
+                    {
+                      "key": "orgToken",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Unsubscribed.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ok\": true,\n  \"unsubscribed\": true\n}"
             }
           ]
         }
