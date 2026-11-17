@@ -28,8 +28,8 @@ MTTR、事件数量、90 天每日 heatmap、payout 和 payin 通道分组、筛
 `?incident=<id>` 深链接打开事件。也可以用 `flow`、`country`、`currency`
 和 `method` 缩小视图。
 - `?ui=legacy` 保留旧的服务端渲染页面，作为兼容路径；默认不是旧页面。
-- SPA 只使用同源、自托管的 `/_next/*` 资源，不加载外部 CDN 的 JavaScript、
-字体或其他资源。每个 HTML 响应使用请求级 CSP nonce；资源不可变并使用
+- SPA 只使用同源、自托管的 `/_next/*` 资源，不加载外部 CDN 的任何资源；
+浏览器所需资源都来自同一来源。每个 HTML 响应使用请求级 CSP nonce；资源不可变并使用
 长期缓存。
 
 页面只列出机构已启用的通道。已启用但中断的通道仍会显示并影响总体状态；

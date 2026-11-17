@@ -34,7 +34,8 @@ flowchart LR
 - `?ui=legacy` keeps the server-rendered legacy page available as a
   compatibility path. It is not the default experience.
 - The SPA uses same-origin, self-hosted `/_next/*` assets. It does not load
-  JavaScript, fonts or other resources from an external CDN. Each HTML
+  JavaScript, fonts or other resources from an external CDN; all browser
+  resources are self-hosted. Each HTML
   response receives a per-request CSP nonce; assets are immutable and carry
   long-lived caching headers.
 
