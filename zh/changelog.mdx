@@ -4,6 +4,13 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年11月17日" description="v2.296 · 1 个版本">
+### v2.296
+**修复**
+- 当幂等 key 指向已失败、已过期或已取消的 charge 时，QR payin replay 现在
+  返回 `422 previous_attempt_failed`。消息会被泛化；请使用 code、轮换 key
+  并创建新的 QR。
+</Update>
 <Update label="2026年11月16日" description="v2.295 · 5 个版本">
 ### v2.295
 #### 新增

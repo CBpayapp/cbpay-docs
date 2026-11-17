@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.295'
+  version: '2.296'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -15142,7 +15142,7 @@ paths:
                   type: string
                   maxLength: 256
                   pattern: ^[^\r\n]{1,256}$
-                  description: 'Para `method: "card"`, esta clave es obligatoria: envíala en el body o como header `Idempotency-Key`. Es opcional para `qr`, `bank_transfer`, `fintoc`, `pix` y `checkout`. Un retry con la misma clave devuelve el payin original con HTTP 200 e `idempotency_hit: true` — la misma `payment_url`/`checkout_url` en los métodos hosted, o la MISMA `reference` en una transferencia anunciada — en vez de abrir un segundo cobro. En las transferencias anunciadas esto define si la plata se puede acreditar: dos anuncios vivos con el mismo monto y sin identidad del pagador son indistinguibles, así que el depósito que llegue quedaría `unassigned`. Si omites la clave igual colapsamos un retry idéntico (misma cuenta, moneda, monto y documento del pagador) en el anuncio original; manda una clave distinta cuando de verdad necesites dos cobros separados del mismo monto y pagador.'
+                  description: 'Para `method: "card"`, esta clave es obligatoria: envíala en el body o como header `Idempotency-Key`. Es opcional para `qr`, `bank_transfer`, `fintoc`, `pix` y `checkout`. Un retry con la misma clave devuelve el payin original con HTTP 200 e `idempotency_hit: true` — la misma `payment_url`/`checkout_url` en los métodos hosted, o la MISMA `reference` en una transferencia anunciada — en vez de abrir un segundo cobro. Si la clave apunta a un cobro QR `failed`, `expired` o `cancelled`, la API responde HTTP 422 `previous_attempt_failed` con el mensaje generalizado `request could not be processed`; guíate por el código, rota la clave y vuelve a enviar para obtener un QR fresco. En las transferencias anunciadas esto define si la plata se puede acreditar: dos anuncios vivos con el mismo monto y sin identidad del pagador son indistinguibles, así que el depósito que llegue quedaría `unassigned`. Si omites la clave igual colapsamos un retry idéntico (misma cuenta, moneda, monto y documento del pagador) en el anuncio original; manda una clave distinta cuando de verdad necesites dos cobros separados del mismo monto y pagador.'
                 customer:
                   type: object
                   description: Prefill opcional de facturación para el checkout de tarjeta (método `card`). El pagador puede completarlo o corregirlo en la página.
@@ -15765,7 +15765,7 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: El core rechazó el cobro (`core_rejected` — incluye violaciones de decimales como un monto CLP con decimales o un monto UF con más de dos), el monto del anuncio está bajo el mínimo de comisión de la cuenta (`amount_below_minimum`), o el corredor de transferencia anunciada exige una cuenta de destino registrada y tu organización aún no la configura (`deposit_instructions_unavailable` — hoy CL, PY y US).
+          description: El core rechazó el cobro (`core_rejected` — incluye violaciones de decimales como un monto CLP con decimales o un monto UF con más de dos), una clave QR apunta a un cobro terminado como fallido, expirado o cancelado (`previous_attempt_failed`), el monto del anuncio está bajo el mínimo de comisión de la cuenta (`amount_below_minimum`), o el corredor de transferencia anunciada exige una cuenta de destino registrada y tu organización aún no la configura (`deposit_instructions_unavailable` — hoy CL, PY y US).
           content:
             application/json:
               schema:
@@ -15795,6 +15795,11 @@ paths:
                   value:
                     error: deposit_instructions_unavailable
                     message: no deposit instructions configured for this corridor; contact your organization admin
+                previous_attempt_failed:
+                  summary: Intento QR anterior terminado
+                  value:
+                    error: previous_attempt_failed
+                    message: request could not be processed
         '502':
           description: Core no disponible (`core_unavailable`).
           content:
@@ -26152,6 +26157,414 @@ paths:
                 message: status page not found
         '429':
           description: Demasiadas solicitudes desde esta IP.
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/incidents:
+    get:
+      security: []
+      tags:
+      - Estado
+      operationId: statusIncidents
+      summary: Historial de incidentes agrupado (JSON)
+      description: 'Historial agrupado desde transiciones crudas: un incidente por ventana no-operativa (primera degradación/caída hasta la recuperación), con título humano, severidad, inicio/fin/duración y timeline. Ventanas simultáneas multi-corredor colapsan en un incidente. Paginado y filtrable. Público, con rate limit por IP.'
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Token opaco de la página de status de la organización.
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+        description: Número de página (parte en 1).
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+        description: Ítems por página (máximo 200).
+      - name: flow
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - payout
+          - payin
+        description: Filtra por flujo (el incidente calza si algún corredor afectado calza).
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filtra por código de país (por ejemplo CL).
+      - name: currency
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filtra por código de moneda (por ejemplo CLP).
+      - name: method
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filtra por método (por ejemplo bank_transfer).
+      - name: severity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - degraded
+          - down
+        description: Filtra por peor severidad del incidente.
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - open
+          - resolved
+        description: Filtra por estado del incidente.
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Incidentes traslapados desde este día (YYYY-MM-DD, UTC, inclusivo).
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Incidentes traslapados hasta este día (YYYY-MM-DD, UTC, inclusivo).
+      responses:
+        '200':
+          description: Incidentes agrupados, recientes primero.
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                total: 1
+                incidents:
+                - id: a1b2c3d4e5f60718
+                  title: Service disruption — CL · CLP · Bank transfer (outgoing payments)
+                  severity: down
+                  status: resolved
+                  started_at: '2026-11-17T03:53:00Z'
+                  resolved_at: '2026-11-17T04:06:00Z'
+                  duration_mins: 13
+                  affected:
+                  - flow: payout
+                    country: CL
+                    currency: CLP
+                    method: bank_transfer
+                    worst: down
+                  updates:
+                  - at: '2026-11-17T04:06:00Z'
+                    status: operational
+                    message: Resolved — Outgoing CL · CLP · Bank transfer is operational again
+                  - at: '2026-11-17T03:53:00Z'
+                    status: down
+                    message: Investigating — Outgoing CL · CLP · Bank transfer is experiencing a service disruption
+                    detail: 3 consecutive infrastructure failures (threshold 3)
+        '400':
+          description: Filtro o rango de fechas inválido.
+          content:
+            application/json:
+              example:
+                error: invalid_filter
+                message: severity must be degraded or down
+        '404':
+          description: Token inválido o desconocido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: status page not found
+        '429':
+          description: Demasiados requests desde esta IP.
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions:
+    post:
+      security: []
+      tags:
+      - Estado
+      operationId: statusSubscribe
+      summary: Pedir suscripción a avisos (doble opt-in)
+      description: Inicia una suscripción por email a avisos de incidentes (caída + recuperación de corredor). Responde siempre 200 neutro (anti-enumeración); un email de confirmación con link single-use de 24h completa el opt-in. Público, con rate limit estricto.
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Token opaco de la página de status de la organización.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              email: ops@example.com
+              flows: all
+              lang: en
+      responses:
+        '200':
+          description: Aceptado (neutro — el email de confirmación solo sale para pedidos nuevos válidos).
+          content:
+            application/json:
+              example:
+                ok: true
+        '400':
+          description: Email o filtro inválido.
+          content:
+            application/json:
+              example:
+                error: invalid_email
+                message: provide a valid email address
+        '404':
+          description: Token inválido o desconocido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: status page not found
+        '429':
+          description: Demasiados requests.
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/confirm:
+    get:
+      security: []
+      tags:
+      - Estado
+      operationId: statusConfirmSubscription
+      summary: Confirmar suscripción (link 24h)
+      description: Canjea el token single-use de confirmación del email de opt-in. Sirve JSON para APIs y página brandeada sin JS para navegadores. Tokens vencidos y desconocidos responden idéntico (anti-enumeración).
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Token opaco de la página de status de la organización.
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Token de confirmación del link del email.
+      responses:
+        '200':
+          description: Suscripción confirmada.
+          content:
+            application/json:
+              example:
+                ok: true
+                confirmed: true
+        '404':
+          description: Link inválido o vencido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this confirmation link is invalid or expired
+        '429':
+          description: Demasiados requests.
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/manage:
+    get:
+      security: []
+      tags:
+      - Estado
+      operationId: statusManageSubscription
+      summary: Ver preferencias de suscripción
+      description: Muestra la suscripción tras un token manage (email enmascarado, filtro de flujos, estado). Sirve JSON para APIs y formulario brandeado sin JS para navegadores.
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Token opaco de la página de status de la organización.
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Token manage de cualquier email de aviso.
+      responses:
+        '200':
+          description: Suscripción actual.
+          content:
+            application/json:
+              example:
+                email: o***@example.com
+                flows: all
+                status: confirmed
+        '404':
+          description: Link inválido o suscripción desconocida.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: subscription not found
+        '429':
+          description: Demasiados requests.
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/preferences:
+    post:
+      security: []
+      tags:
+      - Estado
+      operationId: statusUpdatePreferences
+      summary: Cambiar el filtro de flujos de avisos
+      description: Cambia qué flujos disparan avisos (all, payout o payin). Acepta JSON (APIs) o el formulario HTML sin JS (navegadores).
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Token opaco de la página de status de la organización.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              token: a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90
+              flows: payout
+      responses:
+        '200':
+          description: Preferencias guardadas.
+          content:
+            application/json:
+              example:
+                ok: true
+                flows: payout
+        '400':
+          description: Filtro inválido.
+          content:
+            application/json:
+              example:
+                error: invalid_filter
+                message: flows must be all, payout or payin
+        '404':
+          description: Link inválido o suscripción desconocida.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: subscription not found
+        '429':
+          description: Demasiados requests.
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/unsubscribe:
+    get:
+      security: []
+      tags:
+      - Estado
+      operationId: statusUnsubscribe
+      summary: Baja (link one-click)
+      description: Baja one-click vía el link de cualquier email de aviso. Idempotente. Sirve JSON para APIs y página brandeada sin JS para navegadores.
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Token opaco de la página de status de la organización.
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Token de baja de cualquier email de aviso.
+      responses:
+        '200':
+          description: Baja lista.
+          content:
+            application/json:
+              example:
+                ok: true
+                unsubscribed: true
+        '404':
+          description: Link inválido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this unsubscribe link is invalid or expired
+        '429':
+          description: Demasiados requests.
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+    post:
+      security: []
+      tags:
+      - Estado
+      operationId: statusUnsubscribePost
+      summary: Baja vía POST (clientes de email)
+      description: La misma baja one-click del GET, para clientes de email que prefieren POST. Acepta el token en query, body JSON o form.
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Token opaco de la página de status de la organización.
+      responses:
+        '200':
+          description: Baja lista.
+          content:
+            application/json:
+              example:
+                ok: true
+                unsubscribed: true
+        '404':
+          description: Link inválido.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this unsubscribe link is invalid or expired
+        '429':
+          description: Demasiados requests.
           content:
             application/json:
               example:

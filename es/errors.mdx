@@ -146,6 +146,8 @@ Estos códigos provienen de **superficies de administración de organización** 
 | `invalid_settlement_hours` | `settlement_hours` solo se acepta en el servicio de comisión `payin_card` y debe ser un entero no negativo (`0` = acreditación inmediata) — ver [comisiones](/es/concepts/fees) |
 | `invalid_country` | Código de país mal formado o ausente — ISO 3166-1 alpha-2 (ej. `GET /v1/aml/catalogs/cities?country=`); también un filtro de país válido pero no soportado (ej. un `country` distinto de `US` en el lookup del directorio bancario) |
 | `invalid_expand` | Valor desconocido en `?expand=` de `GET /v1/contacts` (solo se soporta `destinations`); `dest_type`/`dest_country` también exigen `expand=destinations` |
+| `invalid_flag` | `flag_key` desconocido (registro cerrado de feature flags) |
+| `account_without_org` | El scope de cuenta exige `org_id` |
 
 ### Idempotencia de payins QR
 
@@ -155,6 +157,11 @@ gana la del body. La clave admite hasta 256 caracteres y no puede contener
 CR/LF. La plataforma la scopea por cuenta del lado servidor; el integrador
 envía su clave sin modificarla.
 
+- `422 previous_attempt_failed`: el cobro asociado a esta clave ya está
+  `failed`, `expired` o `cancelled`. El `message` es deliberadamente genérico
+  (`request could not be processed`); guíate por el código estable `error`, no
+  por el mensaje. Rota la clave de idempotencia y envía nuevamente la solicitud
+  para obtener un QR fresco. Esta respuesta no crea un cobro nuevo.
 - `400 invalid_idempotency_key`: la clave supera 256 caracteres o contiene
   CR/LF. Acórtala o elimina esos caracteres y reintenta el mismo request
   corregido.
@@ -201,6 +208,7 @@ de la identidad del replay. Consulta el estado vivo con
 | 409 | `no_banking_customer` | Operación Banking clásica sin perfil bancario genérico (`POST /v1/banking/customer` primero); EUR Banking usa un vIBAN directo |
 | 400 | `banking_eur_requires_viban` | Las cuentas Banking EUR se abren como vIBAN. Solicita `purpose: "banking_eur"` desde Operar EUR en vez de crear un customer Banking genérico |
 | 409 | `banking_customer_exists` | La cuenta ya tiene perfil bancario (es uno por cuenta) |
+| 409 | `resubmit_rejected_duplicate` | El cliente banking rechazado duplica a uno vivo (mismo documento de identidad) — reenvía el cliente sobreviviente o reintenta con `acknowledge_duplicate` explícito tras revisión humana |
 | 409 | `idempotency_conflict` | El claim del mismo perfil banking sigue pendiente o cambió el payload — conserva la misma solicitud y espera la reconciliación |
 | 503 | `banking_recovery_pending` | El resultado del alta es ambiguo — operaciones debe reconciliar el claim durable antes de reintentar con una clave nueva |
 | 409 | `bank_ref_conflict` | La referencia bancaria ya fue reclamada por otra operación (la respuesta la nombra con `claimed_by`/`claimed_kind` cuando pertenece a tu tenant) — corrige la evidencia en vez de reintentar con otra referencia |
@@ -419,6 +427,8 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 409 | `corridor_disabled` | El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización. |
 | 409 | `banking_corridor_disabled` | El país o riel banking seleccionado está deshabilitado administrativamente. Usa otro riel habilitado o contacta al operador de la organización. |
 | 409 | `crypto_disabled` | La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización. |
+| 400 | `same_chain` | Un cambio de red necesita dos cadenas distintas para el mismo activo. Envía un `to_chain` distinto de `from_chain`. |
+| 409 | `move_conflict` | El `idempotency_key` ya existe con otro payload (activo, cadenas, monto o dirección explícita comparados por valor). Repite solo con el payload idéntico. |
 | 400 | `invalid_crypto_control` | El toggle de red crypto es inválido (red/activo desconocido, scope o motivo faltante). Corrige el request. |
 | 409 | `rail_not_registered` | El riel seleccionado no está configurado en este ambiente. Elige un riel registrado (ver pantalla de corredores del admin). |
 | 503 | `crypto_controls_unavailable` | No se pudo leer el estado de controles crypto antes de la operación. Repite el mismo request idempotente cuando se recupere el storage de controles. |
@@ -714,26 +724,6 @@ Estos errores se devuelven antes del débito en payouts `ach`, `wire` y `swift`:
 | 503 | `passkeys_unavailable` | Usa TOTP; la organización no configuró WebAuthn. |
 | 403 | `enrollment_required` | Completa el enrolamiento antes del handoff. |
 
-## Liberación automática de payouts manuales de Ecuador
-
-Estos códigos aplican cuando un operador autorizado libera un payout existente
-`EC/USD/bank_transfer`. Los errores deterministas devuelven HTTP `422` y la
-fila vuelve a `manual_dispatch`; los ambiguos devuelven HTTP `502` y dejan
-`release_in_flight`. Verifica la referencia original y nunca crees otro payout.
-
-| HTTP | `error` | Significado y solución |
-|---:|---|---|
-| 409 | `auto_release_disabled` | El flag EC está apagado; mantén la fila manual o sigue el enablement operativo aprobado. |
-| 422 | `bank_unmapped` / `bank_ambiguous` | El banco destino falta o no tiene mapeo único; corrige catálogo o beneficiario. |
-| 422 | `beneficiary_rejected` / `beneficiary_mismatch` | El banco rechazó la cuenta o el titular; corrige el beneficiario existente tras revisar. |
-| 422 | `joint_signatures` / `amount_out_of_limits` | La liberación automática no cumple la regla de cuenta o monto; usa el flujo manual aprobado. |
-| 422 | `order_rejected` / `approve_rejected` / `portal_rejected` | Falló un paso bancario determinista; corrige el motivo y libera el mismo payout. |
-| 422 | `order_not_found` / `order_unverified` / `order_state_unclear` | No se puede verificar la orden; no crees otra. |
-| 422 | `otp_not_issued` | No se emitió el código; verifica el buzón y el portal. |
-| 502 | `portal_lookup_failed` / `portal_unavailable` | La lectura del portal no estuvo disponible; verifica antes de reintentar. |
-| 502 | `perform_ambiguous` / `release_ambiguous` | El banco pudo recibir la acción; verifica la referencia original y espera la conciliación. |
-| 404 | `movement_not_found` | Todavía no aparece el movimiento coincidente; mantén el procesamiento y espera el poller. |
-
 ## Descarte de Client Journey
 
 | HTTP | `error` | Causa y acción |
@@ -748,7 +738,7 @@ fila vuelve a `manual_dispatch`; los ambiguos devuelven HTTP `502` y dejan
 | 400 | Errores `invalid_*` de ticket | Usa el vocabulario cerrado y sus límites. |
 | 404 | `not_found` | Confirma el ownership del ticket o transacción. |
 | 409 | `ticket_already_open` | Continúa el ticket existente de la respuesta. |
-| 409 | `ticket_closed` / `already_rated` | Abre otro ticket o conserva la calificación. |
+| 409 | `ticket_closed` / `ticket_resolved` / `already_rated` | Abre otro ticket o conserva la calificación. Los tickets resueltos y cerrados no aceptan más respuestas del cliente. |
 | 409 | `not_quarantined` | El reveal solo funciona en tickets en cuarentena; lee el hilo normal. |
 | 503 | `storage_unavailable` | Espera y sube una vez; no dupliques. |
 
@@ -756,7 +746,8 @@ fila vuelve a `manual_dispatch`; los ambiguos devuelven HTTP `502` y dejan
 
 | HTTP | `error` | Solución |
 |---:|---|---|
-| 409 | `liveness_required` | El perfil no se puede aprobar con liveness pendiente; complétala primero (override solo god con motivo auditado). |
+| 409 | `liveness_required` | El perfil no se puede aprobar con liveness pendiente; complétala primero (un oficial de cumplimiento, admin owner o god puede saltarla con motivo auditado). |
+| 403 | `liveness_override_forbidden` | Saltarse el liveness exige un oficial de cumplimiento, admin owner o god con motivo auditado; el resto de roles solo puede pedir un link de re-captura. |
 
 
 ## Errores de liquidaciones
@@ -815,3 +806,52 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 400 | `invalid_batch` | Una operación masiva tiene menos de 1 o más de 100 IDs | Envía UUIDs de gastos, entre 1 y 100 |
 | 400 | `invalid_horizon` | El horizonte no es 3, 6 ni 12 meses | Usa `horizon=3`, `6` o `12` |
 | 400 | `invalid_icon` | El icono supera el formato o largo permitido | Usa hasta 40 letras, dígitos, `_` o `-` |
+
+## Errores RWA de regalías
+
+| HTTP | `error` | Significado | Solución |
+|---|---|---|---|
+| 404 | `rwa_project_not_found` | Ningún proyecto RWA calza con ese código en tu org (superficie transfers; suscribir/consultar usan `not_found`) | Lista `GET /v1/rwa/projects` y usa un código vivo |
+| 422 | `rwa_transfers_disabled` | El proyecto deshabilitó transfers internas | Solo se mueven en funding/active/distributing con el switch on |
+| 422 | `project_not_subscribable` | El proyecto no está en funding | Suscribe mientras el proyecto esté en funding |
+| 422 | `window_closed` | Fuera de la ventana de suscripción | Revisa `subscription_opens_at` / `subscription_closes_at` |
+| 422 | `cap_exceeded` | Se excedería el tope por cuenta o de levantamiento | Baja el monto o espera capacidad |
+| 422 | `amount_below_minimum` | Bajo el mínimo del proyecto (o polvo tras comisiones) | Sube el monto sobre el mínimo |
+| 422 | `fee_exceeds_amount` | La comisión configurada excede el monto | Sube el monto o pide a tu org revisar comisiones |
+| 422 | `invalid_transition` | Transición de estado no permitida | Sigue draft → funding → active → distributing, o pausa/default antes |
+| 422 | `attestation_math_mismatch` | La regalía no cuadra floor(neto × pct / 100) | Recomputa la matemática exacta |
+| 422 | `quorum_not_met` | Firmas válidas bajo el quorum | Reúne las firmas distintas requeridas |
+| 422 | `escrow_missing` | El proyecto no tiene cuenta escrow | Fija `escrow_account_id` antes de funding |
+| 422 | `escrow_insufficient` | El escrow no cubre el total a distribuir | Fondea el escrow y re-propón |
+| 422 | `nothing_to_distribute` | La regalía del período es cero | Un trimestre cero no paga |
+| 422 | `no_holders` | Sin holders en el snapshot; marcada fallida | Re-propón cuando haya tokens en manos |
+| 422 | `redeem_disabled` | Rescates deshabilitados para el proyecto | Requieren switch on en funding/active/distributing |
+| 400 | `invalid_date` | Un campo fecha no es RFC3339 | Envía timestamps RFC3339 |
+| 409 | `project_exists` | Código duplicado al crear | Elige otro código `RWA-*` |
+| 400 | `invalid_terms` | Los términos del proyecto fallaron validación | Corrige el campo marcado (rangos, enums, fechas, JSON) |
+| 400 | `invalid_attestation` | El payload de attestation falló validación | Corrige período, montos, tasa, evidencia o firmas |
+| 422 | `attestation_project_mismatch` | La attestation es de otro proyecto | Empareja recursos del mismo proyecto |
+| 422 | `attestation_not_approved` | La attestation no está aprobada | Apruébala con un segundo admin antes |
+| 422 | `project_not_distributable` | El proyecto no está activo para attestations/distribuciones | Opera en active/distributing |
+| 422 | `royalty_pct_mismatch` | La tasa difiere de los términos del proyecto | Usa el `royalty_pct` exacto del proyecto |
+| 422 | `royalty_cap_exceeded` | La distribución excedería cap × levantado | Baja el total o espera más suscripciones |
+| 422 | `escrow_blocked` | La cuenta escrow no está activa | Desbloquea la cuenta escrow antes |
+| 422 | `project_not_bridgeable` | El proyecto no es bridgeable (estado o switch) | Puentea en funding/active/distributing con el switch on |
+| 400 | `invalid_to_address` | El destino no es una dirección 0x válida no-cero | Envía una wallet holder válida |
+| 422 | `fee_misconfigured` | El fee rwa_bridge debe ser solo fijo | Pide a tu org que ponga el tramo procentual en cero |
+| 409 | `already_reconciled` | El movimiento ya está terminal | Lee el movimiento en vez de reintentar |
+| 409 | `not_parked` | Solo se resuelven burns parkeados | Resuelve parkeados solamente |
+| 422 | `burn_code_mismatch` | El proyecto no calza con el snapshot del burn | Resuelve al proyecto quemado |
+| 422 | `amount_too_large` | El monto excede la precisión del ledger | Fracciona bajo 38 dígitos de título |
+| 400 | `self_trade` | Maker y taker deben ser cuentas distintas | Acepta con otra cuenta verificada |
+| 409 | `offer_not_open` | La oferta ya no está abierta | Lee la oferta en vez de reintentar |
+| 410 | `offer_expired` | La oferta expiró; el lock del maker se liberó | Pide al maker re-ofertar |
+| 400 | `invalid_ttl` | TTL de oferta fuera de rango | Usa 15 minutos a 24 horas |
+| 400 | `invalid_offer` | El id de oferta es requerido | Manda un UUID de oferta válido |
+| 400 | `invalid_report` | El payload del reporte es inválido | Revisa período, cifras y matemática |
+| 422 | `report_math_mismatch` | Regalía o cifras realizadas no cuadran | Iguala due a floor(net × pct) y gross a units × price |
+| 422 | `project_redeemed` | El proyecto está redimido; sin crédito ledger | Triage manual (burn post-cierre) |
+| 422 | `final_not_ready` | La attestation de cierre debe declarar el remanente exacto al cap | Propón con el remanente exacto |
+| 409 | `final_blocked` | Liquida la actividad pendiente antes del rescate final | Limpia distribuciones, moves, parked y ofertas |
+| 409 | `final_not_frozen` | El proyecto debe estar congelado por el propose final | Propón final primero, luego aprueba |
+| 422 | `burner_blocked` | El burner falló el screening de sanciones | El burn queda parkeado para compliance |
