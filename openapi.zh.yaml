@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.295'
+  version: '2.296'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -15120,7 +15120,7 @@ paths:
                   type: string
                   maxLength: 256
                   pattern: ^[^\r\n]{1,256}$
-                  description: '对于 `method: "card"`，该键为必填：在 body 中发送，或使用 `Idempotency-Key` 请求头。`qr`、`bank_transfer`、`fintoc`、`pix` 与 `checkout` 可选。使用相同键重试会返回原始 payin、HTTP 200 和 `idempotency_hit: true` —— 托管方式返回同一个 `payment_url`/`checkout_url`，预告银行转账返回同一个 `reference` —— 而不会开启第二笔收款。对预告转账而言，这直接决定 资金能否入账：两笔金额相同且没有付款人身份的存活预告无法区分， 到账存款会停留在 `unassigned`。若省略该键，我们仍会把完全相同的 重试（同一账户、货币、金额与付款人证件号）合并到原始预告；当您确实 需要针对同一金额与同一付款人创建两笔独立收款时，请发送不同的键。'
+                  description: '对于 `method: "card"`，该键为必填：在 body 中发送，或使用 `Idempotency-Key` 请求头。`qr`、`bank_transfer`、`fintoc`、`pix` 与 `checkout` 可选。使用相同键重试会返回原始 payin、HTTP 200 和 `idempotency_hit: true` —— 托管方式返回同一个 `payment_url`/`checkout_url`，预告银行转账返回同一个 `reference` —— 而不会开启第二笔收款。如果该 key 指向的 QR charge 已为 `failed`、`expired` 或 `cancelled`，API 会返回 HTTP 422 `previous_attempt_failed`，消息泛化为 `request could not be processed`；请使用 code、轮换 key 并重新提交以获取新的 QR。对预告转账而言，这直接决定 资金能否入账：两笔金额相同且没有付款人身份的存活预告无法区分， 到账存款会停留在 `unassigned`。若省略该键，我们仍会把完全相同的 重试（同一账户、货币、金额与付款人证件号）合并到原始预告；当您确实 需要针对同一金额与同一付款人创建两笔独立收款时，请发送不同的键。'
                 customer:
                   type: object
                   description: 银行卡收银台的可选账单预填(`card` 方式)。付款人可在页面上补充或更正。
@@ -15745,7 +15745,7 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: 核心拒绝了该收款(`core_rejected` —— 包括小数位数违规,例如带小数的 CLP 金额或超过两位的 UF 金额),预告转账金额低于账户手续费最低值(`amount_below_minimum`),或预告转账通道要求登记收款账户而您的组织尚未配置(`deposit_instructions_unavailable` —— 目前为 CL、PY、US)。
+          description: 核心拒绝了该收款(`core_rejected` —— 包括小数位数违规,例如带小数的 CLP 金额或超过两位的 UF 金额),QR key 指向已失败、已过期或已取消的 charge (`previous_attempt_failed`),预告转账金额低于账户手续费最低值(`amount_below_minimum`),或预告转账通道要求登记收款账户而您的组织尚未配置(`deposit_instructions_unavailable` —— 目前为 CL、PY、US)。
           content:
             application/json:
               schema:
@@ -15775,6 +15775,11 @@ paths:
                   value:
                     error: deposit_instructions_unavailable
                     message: no deposit instructions configured for this corridor; contact your organization admin
+                previous_attempt_failed:
+                  summary: 之前的 QR 尝试已终止
+                  value:
+                    error: previous_attempt_failed
+                    message: request could not be processed
         '502':
           description: 核心不可用(`core_unavailable`)。
           content:
@@ -26012,6 +26017,414 @@ paths:
                 message: status page not found
         '429':
           description: 来自该 IP 的请求过多。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/incidents:
+    get:
+      security: []
+      tags:
+      - 状态
+      operationId: statusIncidents
+      summary: 分组事件历史(JSON)
+      description: 由原始状态迁移分组的事件历史:每个非运行窗口一个事件(首次降级/中断至恢复),含人类可读标题、严重级别、开始/结束/时长与时间线。同时发生的多通道窗口合并为一个事件。分页可筛选。公开访问,按 IP 限流。
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 组织状态页的不透明令牌。
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+        description: 页码(从 1 开始)。
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+        description: 每页条数(最大 200)。
+      - name: flow
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - payout
+          - payin
+        description: 按资金流向筛选(任一受影响通道匹配即命中)。
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 按国家代码筛选(例如 CL)。
+      - name: currency
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 按币种代码筛选(例如 CLP)。
+      - name: method
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 按方式筛选(例如 bank_transfer)。
+      - name: severity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - degraded
+          - down
+        description: 按事件最高严重级别筛选。
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - open
+          - resolved
+        description: 按事件状态筛选。
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: 与该日起重叠的事件(YYYY-MM-DD,UTC,含首尾)。
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: 与该日止重叠的事件(YYYY-MM-DD,UTC,含首尾)。
+      responses:
+        '200':
+          description: 分组事件,最新在前。
+          content:
+            application/json:
+              example:
+                page: 1
+                page_size: 50
+                total: 1
+                incidents:
+                - id: a1b2c3d4e5f60718
+                  title: Service disruption — CL · CLP · Bank transfer (outgoing payments)
+                  severity: down
+                  status: resolved
+                  started_at: '2026-11-17T03:53:00Z'
+                  resolved_at: '2026-11-17T04:06:00Z'
+                  duration_mins: 13
+                  affected:
+                  - flow: payout
+                    country: CL
+                    currency: CLP
+                    method: bank_transfer
+                    worst: down
+                  updates:
+                  - at: '2026-11-17T04:06:00Z'
+                    status: operational
+                    message: Resolved — Outgoing CL · CLP · Bank transfer is operational again
+                  - at: '2026-11-17T03:53:00Z'
+                    status: down
+                    message: Investigating — Outgoing CL · CLP · Bank transfer is experiencing a service disruption
+                    detail: 3 consecutive infrastructure failures (threshold 3)
+        '400':
+          description: 筛选条件或日期范围无效。
+          content:
+            application/json:
+              example:
+                error: invalid_filter
+                message: severity must be degraded or down
+        '404':
+          description: 令牌无效或未知。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: status page not found
+        '429':
+          description: 该 IP 请求过于频繁。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions:
+    post:
+      security: []
+      tags:
+      - 状态
+      operationId: statusSubscribe
+      summary: 请求状态提醒订阅(双重确认)
+      description: 开始邮件事件提醒订阅(通道故障+恢复)。恒返回 200 中性响应(防枚举);确认邮件中的 24 小时一次性链接完成确认。公开访问,严格限流。
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 组织状态页的不透明令牌。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              email: ops@example.com
+              flows: all
+              lang: en
+      responses:
+        '200':
+          description: 已接受(中性——仅对有效的新请求发送确认邮件)。
+          content:
+            application/json:
+              example:
+                ok: true
+        '400':
+          description: 邮箱或筛选条件无效。
+          content:
+            application/json:
+              example:
+                error: invalid_email
+                message: provide a valid email address
+        '404':
+          description: 令牌无效或未知。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: status page not found
+        '429':
+          description: 请求过于频繁。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/confirm:
+    get:
+      security: []
+      tags:
+      - 状态
+      operationId: statusConfirmSubscription
+      summary: 确认订阅(24 小时链接)
+      description: 兑换确认邮件中的一次性令牌。API 返回 JSON,浏览器返回无 JS 品牌页面。过期与未知令牌响应一致(防枚举)。
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 组织状态页的不透明令牌。
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: 邮件链接中的确认令牌。
+      responses:
+        '200':
+          description: 订阅已确认。
+          content:
+            application/json:
+              example:
+                ok: true
+                confirmed: true
+        '404':
+          description: 链接无效或已过期。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this confirmation link is invalid or expired
+        '429':
+          description: 请求过于频繁。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/manage:
+    get:
+      security: []
+      tags:
+      - 状态
+      operationId: statusManageSubscription
+      summary: 查看订阅偏好
+      description: 展示管理令牌背后的订阅(脱敏邮箱、资金流向筛选、状态)。API 返回 JSON,浏览器返回无 JS 品牌表单。
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 组织状态页的不透明令牌。
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: 任一提醒邮件中的管理令牌。
+      responses:
+        '200':
+          description: 当前订阅。
+          content:
+            application/json:
+              example:
+                email: o***@example.com
+                flows: all
+                status: confirmed
+        '404':
+          description: 链接无效或订阅未知。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: subscription not found
+        '429':
+          description: 请求过于频繁。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/preferences:
+    post:
+      security: []
+      tags:
+      - 状态
+      operationId: statusUpdatePreferences
+      summary: 更新提醒资金流向筛选
+      description: 更改哪些资金流向触发提醒(all、payout 或 payin)。接受 JSON(API)或无 JS 的 HTML 表单(浏览器)。
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 组织状态页的不透明令牌。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              token: a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90
+              flows: payout
+      responses:
+        '200':
+          description: 偏好已保存。
+          content:
+            application/json:
+              example:
+                ok: true
+                flows: payout
+        '400':
+          description: 筛选条件无效。
+          content:
+            application/json:
+              example:
+                error: invalid_filter
+                message: flows must be all, payout or payin
+        '404':
+          description: 链接无效或订阅未知。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: subscription not found
+        '429':
+          description: 请求过于频繁。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+  /v1/status/{orgToken}/subscriptions/unsubscribe:
+    get:
+      security: []
+      tags:
+      - 状态
+      operationId: statusUnsubscribe
+      summary: 退订(一键链接)
+      description: 通过任一提醒邮件中的链接一键退订。幂等。API 返回 JSON,浏览器返回无 JS 品牌页面。
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 组织状态页的不透明令牌。
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: 任一提醒邮件中的退订令牌。
+      responses:
+        '200':
+          description: 已退订。
+          content:
+            application/json:
+              example:
+                ok: true
+                unsubscribed: true
+        '404':
+          description: 链接无效。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this unsubscribe link is invalid or expired
+        '429':
+          description: 请求过于频繁。
+          content:
+            application/json:
+              example:
+                error: rate_limited
+                message: too many requests
+    post:
+      security: []
+      tags:
+      - 状态
+      operationId: statusUnsubscribePost
+      summary: 经 POST 退订(邮件客户端)
+      description: 与 GET 相同的一键退订,供偏好 POST 的邮件客户端使用。令牌可放 query、JSON body 或 form。
+      parameters:
+      - name: orgToken
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 组织状态页的不透明令牌。
+      responses:
+        '200':
+          description: 已退订。
+          content:
+            application/json:
+              example:
+                ok: true
+                unsubscribed: true
+        '404':
+          description: 链接无效。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: this unsubscribe link is invalid or expired
+        '429':
+          description: 请求过于频繁。
           content:
             application/json:
               example:

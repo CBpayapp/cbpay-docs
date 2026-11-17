@@ -409,8 +409,12 @@ the API returns `409 idempotency_conflict`:
 }
 ```
 
-An expired or paid charge is replayed as-is. The replay response preserves the
-original object; use `GET /v1/payins/{payinID}` to read its live status.
+A paid charge is replayed as-is. If the charge linked to the key is
+`failed`, `expired` or `cancelled`, the API returns `422
+previous_attempt_failed` with the generalized message `request could not be
+processed`; use the code, not the message. Rotate the idempotency key and
+submit the request again to receive a fresh QR. No replacement charge is
+created with the failed replay.
 
 Both the core and the platform return `400 invalid_idempotency_key` when the
 integrator key is longer than 256 characters or contains carriage-return/
@@ -425,6 +429,7 @@ unchanged.
 | --- | --- | --- |
 | 400 | `invalid_idempotency_key` | Trim the key to 256 characters or fewer and remove control characters. |
 | 409 | `idempotency_conflict` | Reuse the original payload, or generate a new key for a new charge. |
+| 422 | `previous_attempt_failed` | The previous charge is terminally failed, expired or cancelled. Use the code, rotate the idempotency key and create a fresh QR. |
 
 ## FAQ
 
