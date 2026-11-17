@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.296'
+  version: '2.297'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -15142,7 +15142,7 @@ paths:
                   type: string
                   maxLength: 256
                   pattern: ^[^\r\n]{1,256}$
-                  description: 'Para `method: "card"`, esta clave es obligatoria: envíala en el body o como header `Idempotency-Key`. Es opcional para `qr`, `bank_transfer`, `fintoc`, `pix` y `checkout`. Un retry con la misma clave devuelve el payin original con HTTP 200 e `idempotency_hit: true` — la misma `payment_url`/`checkout_url` en los métodos hosted, o la MISMA `reference` en una transferencia anunciada — en vez de abrir un segundo cobro. En las transferencias anunciadas esto define si la plata se puede acreditar: dos anuncios vivos con el mismo monto y sin identidad del pagador son indistinguibles, así que el depósito que llegue quedaría `unassigned`. Si omites la clave igual colapsamos un retry idéntico (misma cuenta, moneda, monto y documento del pagador) en el anuncio original; manda una clave distinta cuando de verdad necesites dos cobros separados del mismo monto y pagador.'
+                  description: 'Para `method: "card"`, esta clave es obligatoria: envíala en el body o como header `Idempotency-Key`. Es opcional para `qr`, `bank_transfer`, `fintoc`, `pix` y `checkout`. Un retry con la misma clave devuelve el payin original con HTTP 200 e `idempotency_hit: true` — la misma `payment_url`/`checkout_url` en los métodos hosted, o la MISMA `reference` en una transferencia anunciada — en vez de abrir un segundo cobro. Si la clave apunta a un cobro QR `failed`, `expired` o `cancelled`, la API responde HTTP 422 `previous_attempt_failed` con el mensaje generalizado `request could not be processed`; guíate por el código, rota la clave y vuelve a enviar para obtener un QR fresco. En las transferencias anunciadas esto define si la plata se puede acreditar: dos anuncios vivos con el mismo monto y sin identidad del pagador son indistinguibles, así que el depósito que llegue quedaría `unassigned`. Si omites la clave igual colapsamos un retry idéntico (misma cuenta, moneda, monto y documento del pagador) en el anuncio original; manda una clave distinta cuando de verdad necesites dos cobros separados del mismo monto y pagador.'
                 customer:
                   type: object
                   description: Prefill opcional de facturación para el checkout de tarjeta (método `card`). El pagador puede completarlo o corregirlo en la página.
@@ -15765,7 +15765,7 @@ paths:
                     error: account_required
                     message: this endpoint requires an account credential
         '422':
-          description: El core rechazó el cobro (`core_rejected` — incluye violaciones de decimales como un monto CLP con decimales o un monto UF con más de dos), el monto del anuncio está bajo el mínimo de comisión de la cuenta (`amount_below_minimum`), o el corredor de transferencia anunciada exige una cuenta de destino registrada y tu organización aún no la configura (`deposit_instructions_unavailable` — hoy CL, PY y US).
+          description: El core rechazó el cobro (`core_rejected` — incluye violaciones de decimales como un monto CLP con decimales o un monto UF con más de dos), una clave QR apunta a un cobro terminado como fallido, expirado o cancelado (`previous_attempt_failed`), el monto del anuncio está bajo el mínimo de comisión de la cuenta (`amount_below_minimum`), o el corredor de transferencia anunciada exige una cuenta de destino registrada y tu organización aún no la configura (`deposit_instructions_unavailable` — hoy CL, PY y US).
           content:
             application/json:
               schema:
@@ -15795,6 +15795,11 @@ paths:
                   value:
                     error: deposit_instructions_unavailable
                     message: no deposit instructions configured for this corridor; contact your organization admin
+                previous_attempt_failed:
+                  summary: Intento QR anterior terminado
+                  value:
+                    error: previous_attempt_failed
+                    message: request could not be processed
         '502':
           description: Core no disponible (`core_unavailable`).
           content:
@@ -17912,6 +17917,9 @@ paths:
                       type: string
                       maxLength: 140
                       description: Obligatorio solo cuando purpose es Other; se rechaza con cualquier otro propósito.
+                    is_remittance:
+                      type: string
+                      description: Opcional, solo US/USD wire y swift (se rechaza en ach; se ignora en otros rieles). Poner el string "true" cuando la transferencia va a nombre de un tercero; el operador elige el Ultimate Debtor de la lista viva antes de liberar. "false" u omitido es pago propio.
                     destination_retry_ack:
                       type: string
                       format: uuid
