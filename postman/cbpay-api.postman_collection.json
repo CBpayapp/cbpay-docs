@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-16 05:45 UTC",
-    "_content_sha256": "499f4ff976628ab532d196ec7802d719edeeacd220f21f69ceec82b6d6ad0858"
+    "_generated_at": "2026-11-16 20:33 UTC",
+    "_content_sha256": "cfc67e713c2ebb986e8d6eca71fdc0bd5759d7f1f9f50ef2c72a2f261703f798"
   },
   "auth": {
     "type": "bearer",
@@ -916,7 +916,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"brand_name\": \"ACME Corp\",\n  \"website\": \"www.acme.example\",\n  \"footer_address\": \"\",\n  \"support_email\": \"support@acme.example\",\n  \"colors\": {\n    \"primary\": \"#1A2B3C\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png\",\n  \"symbol_url\": \"\",\n  \"custom\": true\n}"
+              "body": "{\n  \"brand_name\": \"ACME Corp\",\n  \"website\": \"www.acme.example\",\n  \"footer_address\": \"\",\n  \"support_email\": \"support@acme.example\",\n  \"issuer\": {\n    \"legal_name\": \"\",\n    \"tax_id\": \"\",\n    \"address\": \"\",\n    \"email\": \"\",\n    \"file_number\": \"\"\n  },\n  \"colors\": {\n    \"primary\": \"#1A2B3C\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png\",\n  \"symbol_url\": \"\",\n  \"custom\": true\n}"
             }
           ]
         },
@@ -978,7 +978,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"brand_name\": \"ACME Corp\",\n  \"website\": \"www.acme.example\",\n  \"footer_address\": \"\",\n  \"support_email\": \"support@acme.example\",\n  \"colors\": {\n    \"primary\": \"#1A2B3C\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png\",\n  \"symbol_url\": \"\",\n  \"custom\": true\n}"
+              "body": "{\n  \"brand_name\": \"ACME Corp\",\n  \"website\": \"www.acme.example\",\n  \"footer_address\": \"\",\n  \"support_email\": \"support@acme.example\",\n  \"issuer\": {\n    \"legal_name\": \"\",\n    \"tax_id\": \"\",\n    \"address\": \"\",\n    \"email\": \"\",\n    \"file_number\": \"\"\n  },\n  \"colors\": {\n    \"primary\": \"#1A2B3C\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/org123/accounts/acc456/logo.png\",\n  \"symbol_url\": \"\",\n  \"custom\": true\n}"
             }
           ]
         },
@@ -1157,7 +1157,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"brand_name\": \"CBPay\",\n  \"website\": \"www.cbpayapp.com\",\n  \"footer_address\": \"Miami: 25 SW 9th STREET, Suite 406, Miami, FL 33130\",\n  \"support_email\": \"\",\n  \"colors\": {\n    \"primary\": \"#FBC140\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"symbol_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/default/logo.png\",\n  \"symbol_url\": \"https://cdn.cbpayapp.com/public/branding/default/symbol.png\",\n  \"timezone\": \"America/New_York\"\n}"
+              "body": "{\n  \"brand_name\": \"CBPay\",\n  \"website\": \"www.cbpayapp.com\",\n  \"footer_address\": \"7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA\",\n  \"support_email\": \"\",\n  \"issuer\": {\n    \"legal_name\": \"GRUPO CB LLC\",\n    \"tax_id\": \"61-2219200\",\n    \"address\": \"7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA\",\n    \"email\": \"hola@cbpayapp.com\",\n    \"file_number\": \"5541381\"\n  },\n  \"colors\": {\n    \"primary\": \"#FBC140\",\n    \"header\": \"#2E2E2E\",\n    \"accent\": \"#A16207\"\n  },\n  \"logo_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"symbol_png_base64\": \"iVBORw0KGgoAAAANSUhEUg...\",\n  \"logo_url\": \"https://cdn.cbpayapp.com/public/branding/default/logo.png\",\n  \"symbol_url\": \"https://cdn.cbpayapp.com/public/branding/default/symbol.png\",\n  \"timezone\": \"America/New_York\"\n}"
             }
           ]
         },
@@ -29000,6 +29000,254 @@
           }
         },
         {
+          "name": "List approved monthly reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "offset",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Monthly production, realized price, NAV per token and yields of your organization projects. Only approved reports are visible to holders."
+          }
+        },
+        {
+          "name": "Retrieve one approved report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/reports/:reportID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "reports",
+                ":reportID"
+              ],
+              "variable": [
+                {
+                  "key": "reportID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Full monthly report with figures, evidence hashes and PDF reference."
+          }
+        },
+        {
+          "name": "List internal secondary offers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/secondary/offers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "secondary",
+                "offers"
+              ],
+              "query": [
+                {
+                  "key": "project_code",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by status (open, accepted, settled, cancelled, expired)."
+                },
+                {
+                  "key": "maker_account_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "offset",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Open book per project plus your own offers. Paginated, newest first."
+          }
+        },
+        {
+          "name": "Offer title for internal sale (maker)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/secondary/offers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "secondary",
+                "offers"
+              ]
+            },
+            "description": "Lock title for a bilateral RFQ sale to another verified account of your org. Requires OTP, KYC and an idempotency key; replays return the original offer. The title is locked until accept, cancel or expiry (15 min to 24 h).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_code\": \"RWA-MIN01\",\n  \"quantity\": \"10.000000\",\n  \"total_usdt\": \"21.000000\",\n  \"ttl_minutes\": 60,\n  \"idempotency_key\": \"sec-min01-0001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Retrieve one secondary offer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/secondary/offers/:offerID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "secondary",
+                "offers",
+                ":offerID"
+              ],
+              "variable": [
+                {
+                  "key": "offerID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Full offer detail with maker, price, fee quote and status."
+          }
+        },
+        {
+          "name": "Accept an offer (taker)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/secondary/offers/:offerID/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "secondary",
+                "offers",
+                ":offerID",
+                "accept"
+              ],
+              "variable": [
+                {
+                  "key": "offerID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Claim the offer (single winner) and settle atomically: title to you with cost basis at the agreed price, USDT to the maker, taker fee split. Requires OTP, KYC and an idempotency key; replays return the settled trade. Self-trade is rejected.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idempotency_key\": \"sec-min01-accept-0001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancel your offer (maker)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/rwa/secondary/offers/:offerID/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "rwa",
+                "secondary",
+                "offers",
+                ":offerID",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "offerID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Cancel an open offer before accept; the locked title returns with the same FIFO tranches. Idempotent."
+          }
+        },
+        {
           "name": "List your RWA subscriptions",
           "request": {
             "method": "GET",
@@ -34757,7 +35005,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"valid\": true,\n  \"kind\": \"invoice\",\n  \"invoice_number\": \"INV-2026-0001\",\n  \"brand\": \"CBPay\",\n  \"status\": \"sent\",\n  \"status_word\": \"Sent\",\n  \"currency\": \"USD\",\n  \"total\": \"1250.00\",\n  \"amount_paid\": \"500.00\",\n  \"balance\": \"750.00\",\n  \"issue_date\": \"2026-11-11\",\n  \"due_date\": \"2026-12-11\",\n  \"overdue\": false,\n  \"bill_to\": \"Andes Logistics SpA\",\n  \"pay_url\": \"https://pay.example/checkout/token\",\n  \"wire_instructions\": {\n    \"bank_name\": \"Domestic Receiving Bank\",\n    \"account_number\": \"000123456789\",\n    \"routing_number\": \"021000021\",\n    \"reference_required\": true,\n    \"qr_payload\": \"Bank: Domestic Receiving Bank\\\\nAccount: 000123456789\\\\nReference: INV-2026-0001\"\n  },\n  \"wire_instructions_swift\": {\n    \"bank_name\": \"International Receiving Bank\",\n    \"account_number\": \"9870001234\",\n    \"swift\": \"FVBAUS33\",\n    \"reference_required\": true,\n    \"qr_payload\": \"Bank: International Receiving Bank\\\\nAccount: 9870001234\\\\nSWIFT: FVBAUS33\\\\nReference: INV-2026-0001\"\n  },\n  \"wire_reference\": \"INV-2026-0001\"\n}"
+              "body": "{\n  \"valid\": true,\n  \"kind\": \"invoice\",\n  \"invoice_number\": \"INV-2026-0001\",\n  \"brand\": \"CBPay\",\n  \"issuer\": {\n    \"legal_name\": \"GRUPO CB LLC\",\n    \"tax_id\": \"61-2219200\",\n    \"address\": \"7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA\",\n    \"email\": \"hola@cbpayapp.com\",\n    \"file_number\": \"5541381\",\n    \"brand_name\": \"CBPay\",\n    \"website\": \"www.cbpayapp.com\"\n  },\n  \"status\": \"sent\",\n  \"status_word\": \"Sent\",\n  \"currency\": \"USD\",\n  \"total\": \"1250.00\",\n  \"amount_paid\": \"500.00\",\n  \"balance\": \"750.00\",\n  \"issue_date\": \"2026-11-11\",\n  \"due_date\": \"2026-12-11\",\n  \"overdue\": false,\n  \"bill_to\": \"Andes Logistics SpA\",\n  \"pay_url\": \"https://pay.example/checkout/token\",\n  \"wire_instructions\": {\n    \"bank_name\": \"Domestic Receiving Bank\",\n    \"account_number\": \"000123456789\",\n    \"routing_number\": \"021000021\",\n    \"reference_required\": true,\n    \"qr_payload\": \"Bank: Domestic Receiving Bank\\\\nAccount: 000123456789\\\\nReference: INV-2026-0001\"\n  },\n  \"wire_instructions_swift\": {\n    \"bank_name\": \"International Receiving Bank\",\n    \"account_number\": \"9870001234\",\n    \"swift\": \"FVBAUS33\",\n    \"reference_required\": true,\n    \"qr_payload\": \"Bank: International Receiving Bank\\\\nAccount: 9870001234\\\\nSWIFT: FVBAUS33\\\\nReference: INV-2026-0001\"\n  },\n  \"wire_reference\": \"INV-2026-0001\"\n}"
             }
           ]
         },
