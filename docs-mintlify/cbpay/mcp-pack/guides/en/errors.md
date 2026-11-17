@@ -173,6 +173,12 @@ body value wins. A key can be up to 256 characters and cannot contain CR/LF.
 The platform scopes the key to the account server-side; the integrator sends
 the key unchanged.
 
+- `422 previous_attempt_failed`: the charge linked to this key is already
+  `failed`, `expired` or `cancelled`. The `message` is intentionally generic
+  (`request could not be processed`); use the stable `error` code, not the
+  message, to decide what happened. Rotate the idempotency key and submit the
+  request again to obtain a fresh QR. No new charge is created by this
+  response.
 - `400 invalid_idempotency_key`: the key is longer than 256 characters or
   contains CR/LF. Shorten it or remove those characters, then retry with the
   same corrected request.

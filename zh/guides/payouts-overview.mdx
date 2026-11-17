@@ -165,6 +165,73 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 此时您的余额已反映该笔扣款：`total_debit` 已从 `available` 转入
 `held`（在 `settlement_asset` 对应的余额上）。
 
+### US/USD 汇款 payout
+
+对于发送至美国的 USD `wire` 或 `swift` payout，如果代表第三方付款，
+请将 `options.is_remittance` 设置为字符串 `"true"`。此选项仅支持
+US/USD `wire` 和 `swift`；在 `ach` 上会被拒绝，在其他通道上会被忽略。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "wire",
+    "amount": "1000.00",
+    "beneficiary": {
+      "name": "John Carter",
+      "email": "john.carter@example.com",
+      "account_number": "123456789012",
+      "country_code": "US",
+      "address": "1200 Brickell Ave",
+      "city": "Miami",
+      "state": "FL",
+      "postal_code": "33131",
+      "bank_name": "Example Bank",
+      "bank_code": "021000089",
+      "bank_address": "500 Main Street",
+      "bank_city": "New York",
+      "bank_state": "NY",
+      "bank_postal_code": "10001",
+      "bank_country": "US",
+      "bank_phone": "+12125550100"
+    },
+    "description": "家庭支持",
+    "options": {
+      "purpose": "Remittance",
+      "is_remittance": "true"
+    },
+    "idempotency_key": "us-remittance-2211"
+  }'
+```
+
+响应 `202 Accepted`：
+
+```json
+{
+  "payout_id": "7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f",
+  "country": "US",
+  "currency": "USD",
+  "method": "wire",
+  "local_amount": "1000.00",
+  "status": "processing",
+  "bank_reference": "CBF-20261117-2211"
+}
+```
+
+操作员会在放行前从银行实时名单选择 Ultimate Debtor。如果没有选择
+debtor，payout 会退回队列，而不会在缺少该信息时放行。Debtor 由操作员
+选择，集成方不发送该字段。不要为了修改它而重新发送 payout：读取现有
+资源并保留相同的幂等键。
+
+<Warning>
+不要将 `is_remittance` 作为 JSON 布尔值发送。接受的值是字符串 `"true"`。
+带有此选项的 `ach` payout 会返回 `400`；在 US/USD `wire` 和 `swift`
+以外的通道上，该选项会被忽略。
+</Warning>
+
 <Note>
 **`bank_reference` —— 银行为该笔转账分配的交易编号。** US ACH/wire/SWIFT 在创建时**立即**返回 CBF（payout 保持 `processing` 直至银行确认）；其他通道在完成前为空（`""`）；
 当出金状态变为 `completed` 时，它会带上目的地银行/通道分配的交易编号。收款人可使用该编号
