@@ -31,8 +31,9 @@ organización; y permite abrir un incidente con `?incident=<id>`. También
 puedes acotar la vista con `flow`, `country`, `currency` y `method`.
 - `?ui=legacy` conserva la página antigua renderizada en el servidor como ruta
 de compatibilidad. No es la experiencia por defecto.
-- La SPA usa assets `/_next/*` self-hosted del mismo origen. No carga
-JavaScript, fuentes ni otros recursos desde CDN externos. Cada respuesta HTML
+- La SPA usa assets `/_next/*` self-hosted del mismo origen. No carga recursos
+desde CDN externos; todo recurso del navegador se sirve desde el mismo origen.
+Cada respuesta HTML
 recibe un nonce CSP por request; los assets son inmutables y tienen cache largo.
 
 Solo aparecen corredores habilitados para la organización. Un corredor
