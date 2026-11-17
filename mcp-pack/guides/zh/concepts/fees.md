@@ -220,6 +220,7 @@ usdt_credited = 99.70 USDT
 | `rwa_subscription` | 按认购 USDT 收取百分比+固定费用（额外收取，按净额计算代币） |
 | `rwa_distribution` | 按每笔记入 USDT 分红收取百分比+固定费用（不超过份额） |
 | `rwa_bridge` | 每次链上桥接的固定费用（锁定+铸造，或销毁+解锁）*(F2 —— 桥接流程待开发)* |
+| `rwa_secondary` | 每次内部二级成交按受让方总额的百分比+固定费用（不超过总额） |
 
 ## EUR banking fee services
 

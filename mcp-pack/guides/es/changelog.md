@@ -5,12 +5,41 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.291 · 1 versión - 16 de noviembre de 2026
-### v2.291
+## v2.295 · 5 versiones - 16 de noviembre de 2026
+### v2.295
+#### Agregado
+- Ofertas RFQ secundarias internas de RWA con bloqueo de títulos, liquidación de un solo ganador, comisiones exactas, vencimiento e idempotencia.
+- Reportes mensuales aprobados, prealertas de default, cura y rescate final con remanente exacto.
+### v2.294
 **Agregado**
 - El bridge-out de RWA ahora soporta el ciclo lock/mint/burn/unlock para
   billeteras autorizadas, con replay idempotente, validaciones OTP, límites,
   Travel Rule y KYT, más webhooks de éxito o falla.
+### v2.293
+**Agregado**
+
+- La verificación pública (`GET /verify/invoices/{code}`) ahora devuelve
+  el emisor legal (objeto `issuer`) junto a la marca, y la página brandeada
+  muestra el bloque emisor. `GET /v1/branding` y `GET /v1/org/branding`
+  exponen el mismo objeto `issuer`.
+
+**Cambiado**
+
+- El pie default de documentos CBPay ahora es la dirección fiscal de
+  Orlando (GRUPO CB LLC, 7345 West Sand Lake Road STE 210 Office 1784,
+  Orlando, FL 32819, USA).
+### v2.292
+**Mejorado**
+
+- Los comprobantes de payout US/USD ahora imprimen los datos de ruteo
+  bancario cuando el banco los reporta: número de ruta ABA (wire/ACH)
+  o BIC SWIFT, el propósito declarado, las referencias bancarias
+  IMAD/UETR y — para transferencias que el operador marcó a nombre de
+  terceros — la marca remittance con el nombre del ordenante final.
+### v2.291
+**Corregido**
+
+- La emisión del contrato marco vuelve a funcionar para empresas: los precios RWA (suscripción, distribución, puente) ahora son parte del apéndice de precios, partiendo de los ceros actuales. Los sobres de plantillas viejas también vuelven a recuperarse solos al firmar en vez de quedar sin salida.
 ## v2.290 · 4 versiones - 15 de noviembre de 2026
 ### v2.290
 **Cambiado**

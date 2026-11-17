@@ -242,6 +242,7 @@ equivalente a tu `payin_rate` menos el fijo.
 | `rwa_subscription` | Porcentaje + fijo sobre el USDT suscrito (se cobra encima, los tokens se calculan del neto) |
 | `rwa_distribution` | Porcentaje + fijo sobre cada distribución USDT acreditada (topeado a la participación) |
 | `rwa_bridge` | Fee fijo por movimiento bridge on-chain (bloqueo + mint, o burn + desbloqueo) *(F2 — flujo bridge pendiente)* |
+| `rwa_secondary` | Porcentaje + fijo sobre el total del taker por cada fill secundario interno (capado al total) |
 
 ## EUR banking fee services
 

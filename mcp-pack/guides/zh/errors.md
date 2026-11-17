@@ -809,4 +809,15 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `not_parked` | 仅可处理 parked 的转入 burns | 仅处理 parked 记录 |
 | 422 | `burn_code_mismatch` | 项目与 burn 快照不符 | 处理至被 burn 的项目 |
 | 422 | `amount_too_large` | 金额超账本精度 | 拆分至 38 位份额以内 |
+| 400 | `self_trade` | 做市方与受让方须为不同账户 | 用另一已验证账户接受 |
+| 409 | `offer_not_open` | 要约已不在开放状态 | 读取要约而非重试 |
+| 410 | `offer_expired` | 要约已过期；做市方锁定已释放 | 请做市方重新发布 |
+| 400 | `invalid_ttl` | 要约 TTL 超范围 | 使用 15 分钟至 24 小时 |
+| 400 | `invalid_offer` | 需要要约 id | 发送有效要约 UUID |
+| 400 | `invalid_report` | 报告载荷无效 | 检查期间、数字与数学关系 |
+| 422 | `report_math_mismatch` | 特许权或实现数字不平 | 使 due 等于 floor(net × pct)、gross 等于 units × price |
+| 422 | `project_redeemed` | 项目已赎回；不记账 | 人工分诊（关闭后销毁） |
+| 422 | `final_not_ready` | 关闭证明须声明至上限的准确余款 | 用准确余款提议 |
+| 409 | `final_blocked` | 最终赎回前先结清待处理活动 | 清理分红、桥接、parked 与要约 |
+| 409 | `final_not_frozen` | 项目须经最终提议冻结 | 先提议最终赎回再批准 |
 | 422 | `burner_blocked` | Burner 未通过制裁筛查 | 该 burn 保持 parked 待合规处理 |
