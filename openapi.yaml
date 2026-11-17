@@ -17802,7 +17802,7 @@ paths:
                   type: string
                 options:
                   type: object
-                  description: Optional rail-specific options. For a deliberate retry after a recent bank rejection, set destination_retry_ack to the most recent prior case ID. For US/USD `ach`, `wire` and `swift`, `purpose` is required and accepts one of the 21 payment-purpose labels or codes case-insensitively. `purpose_detail` is required only for `Other` and has a maximum length of 140.
+                  description: Optional rail-specific options. For a deliberate retry after a recent bank rejection, set destination_retry_ack to the most recent prior case ID. For US/USD `ach`, `wire` and `swift`, `purpose` is required and accepts one of the 21 payment-purpose labels or codes case-insensitively. `purpose_detail` is required only for `Other` and has a maximum length of 140. Set `is_remittance` to the string "true" for `wire`/`swift` transfers made on behalf of a third party (rejected on `ach`); the operator picks the Ultimate Debtor from the live bank list before release.
                   additionalProperties:
                     type: string
                   properties:
@@ -17814,6 +17814,9 @@ paths:
                       type: string
                       maxLength: 140
                       description: Required only when purpose is Other; rejected for every other purpose.
+                    is_remittance:
+                      type: string
+                      description: Optional, US/USD wire and swift only (rejected on ach; ignored on other rails). Set to the string "true" when the transfer goes on behalf of a third party; the operator picks the Ultimate Debtor from the live bank list before release. "false" or omitted means an own transfer.
                     destination_retry_ack:
                       type: string
                       format: uuid

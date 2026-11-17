@@ -17869,6 +17869,9 @@ paths:
                       type: string
                       maxLength: 140
                       description: 仅当 purpose 为 Other 时必填；其他用途提供该字段会被拒绝。
+                    is_remittance:
+                      type: string
+                      description: 可选，仅 US/USD wire 与 swift（ach 会被拒绝，其他通道忽略）。第三方代付时设为字符串 "true"；操作员在放行前从银行实时名单选择 Ultimate Debtor。"false" 或省略表示自有转账。
                     destination_retry_ack:
                       type: string
                       format: uuid
