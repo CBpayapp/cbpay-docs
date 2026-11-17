@@ -1,5 +1,5 @@
 {
-  "count": 60,
+  "count": 63,
   "events": [
     {
       "description": {
@@ -1038,6 +1038,66 @@
         "en": "RWA redemption completed",
         "es": "RWA redemption completed",
         "zh": "RWA redemption completed"
+      }
+    },
+    {
+      "description": {
+        "en": "A taker accepted an offer; title and USDT crossed atomically with the taker fee.",
+        "es": "A taker accepted an offer; title and USDT crossed atomically with the taker fee.",
+        "zh": "A taker accepted an offer; title and USDT crossed atomically with the taker fee."
+      },
+      "event": "rwa_secondary_filled",
+      "payload_example": {
+        "fee_usdt": "0.210000",
+        "maker_account_id": "88888888-8888-4888-8888-888888888888",
+        "offer_id": "77777777-7777-4777-8777-777777777777",
+        "project_code": "RWA-MIN01",
+        "quantity": "10.000000",
+        "taker_account_id": "99999999-9999-4999-8999-999999999999",
+        "total_usdt": "21.000000"
+      },
+      "summary": {
+        "en": "RWA secondary trade filled",
+        "es": "RWA secondary trade filled",
+        "zh": "RWA secondary trade filled"
+      }
+    },
+    {
+      "description": {
+        "en": "An offer was cancelled or expired; the locked title returned to the maker.",
+        "es": "An offer was cancelled or expired; the locked title returned to the maker.",
+        "zh": "An offer was cancelled or expired; the locked title returned to the maker."
+      },
+      "event": "rwa_secondary_offer_closed",
+      "payload_example": {
+        "offer_id": "77777777-7777-4777-8777-777777777777",
+        "project_code": "RWA-MIN01",
+        "status": "cancelled"
+      },
+      "summary": {
+        "en": "RWA secondary offer closed",
+        "es": "RWA secondary offer closed",
+        "zh": "RWA secondary offer closed"
+      }
+    },
+    {
+      "description": {
+        "en": "A maker locked title for an internal bilateral RFQ sale.",
+        "es": "A maker locked title for an internal bilateral RFQ sale.",
+        "zh": "A maker locked title for an internal bilateral RFQ sale."
+      },
+      "event": "rwa_secondary_offer_open",
+      "payload_example": {
+        "expires_at": "2026-11-16T13:00:00Z",
+        "offer_id": "77777777-7777-4777-8777-777777777777",
+        "project_code": "RWA-MIN01",
+        "quantity": "10.000000",
+        "total_usdt": "21.000000"
+      },
+      "summary": {
+        "en": "RWA secondary offer opened",
+        "es": "RWA secondary offer opened",
+        "zh": "RWA secondary offer opened"
       }
     },
     {

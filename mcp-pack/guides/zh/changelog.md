@@ -5,12 +5,38 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.291 · 1 个版本 - 2026年11月16日
-### v2.291
+## v2.295 · 5 个版本 - 2026年11月16日
+### v2.295
+#### 新增
+- 内部 RWA 二级 RFQ 报价，包含代币锁定、单一赢家结算、精确手续费、过期和幂等重放。
+- 已批准月度报告、自动违约预警与修复，以及按精确余额结算的最终赎回。
+### v2.294
 **新增**
 - RWA 跨链转出现在支持 allowlist 钱包的 lock/mint/burn/unlock 生命周期，
   并提供幂等重放、OTP、限额、Travel Rule 和 KYT 检查，以及成功或失败
   webhook。
+### v2.293
+**新增**
+
+- 公开核验（`GET /verify/invoices/{code}`）现在随品牌一并返回法定开票方
+  （`issuer` 对象），品牌核验页显示开票方区块。`GET /v1/branding` 与
+  `GET /v1/org/branding` 返回相同的 `issuer` 对象。
+
+**变更**
+
+- CBPay 文档默认页脚改为奥兰多税务地址（GRUPO CB LLC，7345 West Sand
+  Lake Road STE 210 Office 1784, Orlando, FL 32819, USA）。
+### v2.292
+**改进**
+
+- US/USD payout 回单现会在银行返回时打印银行路由信息：ABA 路由号
+  （wire/ACH）或 SWIFT BIC、申报付款用途、IMAD/UETR 银行跟踪号，
+  以及——对于操作员标记为第三方代付的转账——remittance 标记与最终
+  付款人名称。
+### v2.291
+**修复**
+
+- 企业框架协议签发已恢复：RWA 价格（认购、分红、跨链）现已纳入价格附录，从当前零默认值起算。旧模板信封在签署时也会自动恢复，不再走入死胡同。
 ## v2.290 · 4 个版本 - 2026年11月15日
 ### v2.290
 **变更**

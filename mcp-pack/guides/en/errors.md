@@ -838,4 +838,15 @@ These codes are used by organization payroll and recurring-expense series operat
 | 409 | `not_parked` | Only parked bridge-in moves can be resolved | Resolve parked moves only |
 | 422 | `burn_code_mismatch` | The resolve project does not match the burn snapshot | Resolve to the burned project |
 | 422 | `amount_too_large` | The amount exceeds ledger precision | Split below 38 digits of title units |
+| 400 | `self_trade` | Maker and taker must be different accounts | Accept with another verified account |
+| 409 | `offer_not_open` | The offer is no longer open | Read the offer instead of retrying |
+| 410 | `offer_expired` | The offer expired; the maker lock was released | Ask the maker to re-offer |
+| 400 | `invalid_ttl` | Offer TTL out of bounds | Use 15 minutes to 24 hours |
+| 400 | `invalid_offer` | The offer id is required | Send a valid offer UUID |
+| 400 | `invalid_report` | The report payload is invalid | Check period, figures and math |
+| 422 | `report_math_mismatch` | Royalty or realized figures do not reconcile | Match due to floor(net × pct) and gross to units × price |
+| 422 | `project_redeemed` | The project is redeemed; no ledger credit | Triage manually (post-close burn) |
+| 422 | `final_not_ready` | The closing attestation must declare the exact cap remainder | Propose with the exact remainder |
+| 409 | `final_blocked` | Settle pending activity before the final redemption | Clear distributions, moves, parked burns and offers |
+| 409 | `final_not_frozen` | The project must be frozen by the final propose | Propose final first, then approve |
 | 422 | `burner_blocked` | The burner failed sanctions screening | The burn stays parked for compliance |

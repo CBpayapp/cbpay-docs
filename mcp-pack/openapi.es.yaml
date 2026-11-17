@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.291'
+  version: '2.295'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -984,6 +984,12 @@ paths:
                 website: www.acme.example
                 footer_address: ''
                 support_email: soporte@acme.example
+                issuer:
+                  legal_name: ''
+                  tax_id: ''
+                  address: ''
+                  email: ''
+                  file_number: ''
                 colors:
                   primary: '#1A2B3C'
                   header: '#2E2E2E'
@@ -1047,6 +1053,12 @@ paths:
                 website: www.acme.example
                 footer_address: ''
                 support_email: soporte@acme.example
+                issuer:
+                  legal_name: ''
+                  tax_id: ''
+                  address: ''
+                  email: ''
+                  file_number: ''
                 colors:
                   primary: '#1A2B3C'
                   header: '#2E2E2E'
@@ -6033,8 +6045,14 @@ paths:
               example:
                 brand_name: CBPay
                 website: www.cbpayapp.com
-                footer_address: 'Miami: 25 SW 9th STREET, Suite 406, Miami, FL 33130'
+                footer_address: 7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA
                 support_email: ''
+                issuer:
+                  legal_name: GRUPO CB LLC
+                  tax_id: 61-2219200
+                  address: 7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA
+                  email: hola@cbpayapp.com
+                  file_number: '5541381'
                 colors:
                   primary: '#FBC140'
                   header: '#2E2E2E'
@@ -24159,6 +24177,196 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/rwa/reports:
+    get:
+      tags:
+      - RWA
+      operationId: listRWAReports
+      summary: Listar reportes mensuales aprobados
+      description: Producción mensual, precio realizado, NAV por token y yields de los proyectos de tu organización. Los holders solo ven aprobados.
+      parameters:
+      - name: project_id
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Reportes paginados.
+  /v1/rwa/reports/{reportID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWAReport
+      summary: Ver un reporte aprobado
+      description: Reporte mensual completo con cifras, hashes de evidencia y referencia PDF.
+      parameters:
+      - name: reportID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Detalle del reporte.
+        '404':
+          description: Reporte no encontrado o no aprobado.
+  /v1/rwa/secondary/offers:
+    post:
+      tags:
+      - RWA
+      operationId: createRWASecondaryOffer
+      summary: Ofrecer títulos a la venta interna (maker)
+      description: Bloquea títulos para una venta RFQ bilateral a otra cuenta verificada de tu org. Exige OTP, KYC e idempotency key; los replays devuelven la oferta original. El título queda bloqueado hasta accept, cancel o expiración (15 min a 24 h).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - project_code
+              - quantity
+              - total_usdt
+              - idempotency_key
+              properties:
+                project_code:
+                  type: string
+                quantity:
+                  type: string
+                  description: Monto de títulos en tokens (hasta 6 decimales).
+                total_usdt:
+                  type: string
+                  description: Total pedido en USDT (precio RFQ libre).
+                ttl_minutes:
+                  type: integer
+                  description: Vida de la oferta, 15 a 1440. Por defecto 60.
+                idempotency_key:
+                  type: string
+            example:
+              project_code: RWA-MIN01
+              quantity: '10.000000'
+              total_usdt: '21.000000'
+              ttl_minutes: 60
+              idempotency_key: sec-min01-0001
+      responses:
+        '201':
+          description: Oferta abierta con título bloqueado.
+        '400':
+          description: Términos, montos u OTP inválidos.
+        '422':
+          description: Título insuficiente o proyecto no transferible.
+    get:
+      tags:
+      - RWA
+      operationId: listRWASecondaryOffers
+      summary: Listar ofertas secundarias internas
+      description: Libro abierto por proyecto más tus propias ofertas. Paginado, recientes primero.
+      parameters:
+      - name: project_code
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filtrar por estado (open, accepted, settled, cancelled, expired).
+        schema:
+          type: string
+      - name: maker_account_id
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Ofertas paginadas.
+  /v1/rwa/secondary/offers/{offerID}:
+    get:
+      tags:
+      - RWA
+      operationId: getRWASecondaryOffer
+      summary: Ver una oferta secundaria
+      description: Detalle completo con maker, precio, fee y estado.
+      parameters:
+      - name: offerID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Detalle de la oferta.
+        '404':
+          description: Oferta no encontrada.
+  /v1/rwa/secondary/offers/{offerID}/accept:
+    post:
+      tags:
+      - RWA
+      operationId: acceptRWASecondaryOffer
+      summary: Aceptar una oferta (taker)
+      description: 'Reclama la oferta (un solo ganador) y liquida atómico: título para ti con costo base al precio pactado, USDT al maker, fee del taker. Exige OTP, KYC e idempotency key; los replays devuelven el trade. La auto-venta se rechaza.'
+      parameters:
+      - name: offerID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - idempotency_key
+              properties:
+                idempotency_key:
+                  type: string
+            example:
+              idempotency_key: sec-min01-accept-0001
+      responses:
+        '200':
+          description: Trade liquidado.
+        '400':
+          description: Auto-venta o request inválido.
+        '409':
+          description: Oferta tomada, cancelada o expirada.
+  /v1/rwa/secondary/offers/{offerID}/cancel:
+    post:
+      tags:
+      - RWA
+      operationId: cancelRWASecondaryOffer
+      summary: Cancelar tu oferta (maker)
+      description: Cancela una oferta abierta antes del accept; el título bloqueado vuelve con las mismas tranchas FIFO. Idempotente.
+      parameters:
+      - name: offerID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Oferta cancelada.
+        '409':
+          description: La oferta ya no está abierta.
   /v1/rwa/subscriptions:
     post:
       tags:
@@ -29444,6 +29652,14 @@ paths:
                 kind: invoice
                 invoice_number: INV-2026-0001
                 brand: CBPay
+                issuer:
+                  legal_name: GRUPO CB LLC
+                  tax_id: 61-2219200
+                  address: 7345 West Sand Lake Road STE 210 Office 1784, Orlando, FL 32819, USA
+                  email: hola@cbpayapp.com
+                  file_number: '5541381'
+                  brand_name: CBPay
+                  website: www.cbpayapp.com
                 status: sent
                 status_word: Sent
                 currency: USD
@@ -33564,6 +33780,57 @@ webhooks:
               amount: '50.000000'
               wallet_address: '0x1234567890abcdef1234567890abcdef12345678'
               burn_tx_id: 0xburn1234567890burn1234567890burn1234567890burn1234567890burn12
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_secondary_offer_open:
+    post:
+      summary: RWA secondary offer opened
+      description: A maker locked title for an internal bilateral RFQ sale.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              offer_id: 77777777-7777-4777-8777-777777777777
+              project_code: RWA-MIN01
+              quantity: '10.000000'
+              total_usdt: '21.000000'
+              expires_at: '2026-11-16T13:00:00Z'
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_secondary_offer_closed:
+    post:
+      summary: RWA secondary offer closed
+      description: An offer was cancelled or expired; the locked title returned to the maker.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              offer_id: 77777777-7777-4777-8777-777777777777
+              project_code: RWA-MIN01
+              status: cancelled
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge delivery.
+  rwa_secondary_filled:
+    post:
+      summary: RWA secondary trade filled
+      description: A taker accepted an offer; title and USDT crossed atomically with the taker fee.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              offer_id: 77777777-7777-4777-8777-777777777777
+              project_code: RWA-MIN01
+              quantity: '10.000000'
+              total_usdt: '21.000000'
+              fee_usdt: '0.210000'
+              maker_account_id: 88888888-8888-4888-8888-888888888888
+              taker_account_id: 99999999-9999-4999-8999-999999999999
       responses:
         '200':
           description: Return any 2xx to acknowledge delivery.

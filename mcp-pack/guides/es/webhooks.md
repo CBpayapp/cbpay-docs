@@ -108,6 +108,9 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `rwa_bridge_out_completed` | El título quemado en el ledger se minteó on-chain a la wallet del holder |
 | `rwa_bridge_out_failed` | El mint on-chain falló; el título se refundeó automáticamente |
 | `rwa_bridge_in_credited` | Un burn on-chain confirmado se detectó y el título volvió al ledger |
+| `rwa_secondary_offer_open` | Título bloqueado para una venta RFQ bilateral interna |
+| `rwa_secondary_offer_closed` | Una oferta se canceló o expiró; el título bloqueado volvió al maker |
+| `rwa_secondary_filled` | Un taker aceptó una oferta; título y USDT cruzaron atómicos |
 
 Los payloads RWA usan cadenas decimales exactas e incluyen el identificador de la operación:
 

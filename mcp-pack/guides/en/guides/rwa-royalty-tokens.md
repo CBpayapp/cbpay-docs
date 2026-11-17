@@ -103,7 +103,65 @@ curl -X POST https://api.qbank.cl/platform/v1/rwa/subscriptions \
 
 Buying requires verified identity, any required human-session OTP, available USDT, and an idempotency key. Reusing the same key returns the original operation; the server never creates a second subscription.
 
-## 3. Monitor holdings and distributions
+## 3. Trade a title on the internal secondary book
+
+Secondary trading is an internal RFQ between two verified accounts in the
+same organization. Creating an offer locks the exact title quantity. The
+lock is released by cancellation or expiry, and an offer can be claimed by
+only one taker.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/rwa/secondary/offers \
+  -H "Authorization: Bearer $CBPAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_code": "RWA-MIN01",
+    "quantity": "10.000000",
+    "total_usdt": "21.000000",
+    "ttl_minutes": 60,
+    "idempotency_key": "sec-min01-0001"
+  }'
+```
+
+The maker receives `rwa_secondary_offer_open`. The taker accepts with
+`POST /platform/v1/rwa/secondary/offers/{offerID}/accept` and an
+`idempotency_key`. Settlement is atomic: the title moves to the taker, the
+agreed USDT proceeds go to the maker, and the configured
+`rwa_secondary` percent-plus-fixed fee is charged to the taker. The ledger
+entries are `secondary_hold`, `secondary_release`, `secondary_fill`,
+`secondary_proceeds` and `secondary_charge`. A closed offer emits
+`rwa_secondary_offer_closed`; a settled offer emits
+`rwa_secondary_filled`.
+
+Do not retry with a new key after a timeout. Reusing the maker or taker key
+replays the stored result. Creating an offer with a TTL outside 15–1440
+minutes returns `400 invalid_ttl`; accepting an already expired offer returns
+`410 offer_expired`. Self-trade returns `400`; a second winner returns `409`.
+
+## 4. Reports, default and final redemption
+
+Holders can list and retrieve only approved monthly reports. A report period
+is `YYYY-MM`, and approval freezes NAV and yield values. The server checks
+`gross_sales = units_sold × realized_price` and
+`royalty_due = floor(net_payable × royalty_pct / 100)` using exact decimal
+arithmetic. The maker proposes; a different named admin approves or rejects.
+
+If a project opts into automatic default, the daily sweep uses `cure_days`.
+Missing (`NULL`) cure configuration is fail-safe manual. One pre-alert is
+emitted before `rwa_default_declared` with `stage=prealert`; declaration
+uses `stage=declared`. A platform admin can cure with the project PATCH,
+including after the deadline when the transition is valid. Default evidence
+is retained for 90 days.
+
+Final redemption is an admin maker-checker distribution with `is_final=true`.
+It requires the attestation to declare the exact cap remainder, including an
+exact zero; escrow must cover that amount (`>=`), and the queue must be clean
+with no unresolved offers. The project is paused, open offers are cancelled,
+and prior final proposals are superseded. Checker approval pays the remainder,
+burns all remaining titles and marks the project `redeemed`. Post-close burns
+are parked for review; they are never silently credited.
+
+## 5. Monitor holdings and distributions
 
 ```bash
 curl "https://api.qbank.cl/platform/v1/rwa/holdings" \
@@ -130,7 +188,7 @@ Distribution credits use the ex-date snapshot balance. A sample credit is:
 
 List subscriptions, redemptions, and distributions with `from`, `to`, and `page`; retrieve an individual resource with its ID. Every subscription, redemption, and distribution has a PDF receipt endpoint.
 
-## 4. Redeem
+## 6. Redeem
 
 Redemption returns USDT at the project subscription price (par) and atomically debits the RWA token balance.
 
@@ -172,7 +230,11 @@ Common RWA errors are documented in [Errors](https://docs.cbpayapp.com/en/errors
 
 ## Webhooks
 
-Subscribe to `rwa_subscription_completed`, `rwa_distribution_credited`, and `rwa_redeem_completed`. Verify the webhook signature and return a 2xx only after durable processing. Payloads contain the operation ID, project code, exact decimal amounts, and status. See [Webhooks](https://docs.cbpayapp.com/en/webhooks).
+Subscribe to `rwa_subscription_completed`, `rwa_distribution_credited`,
+`rwa_redeem_completed`, `rwa_secondary_offer_open`,
+`rwa_secondary_offer_closed`, and `rwa_secondary_filled`. Verify the webhook
+signature and return a 2xx only after durable processing. Payloads contain the
+operation ID, project code, exact decimal amounts, and status. See [Webhooks](https://docs.cbpayapp.com/en/webhooks).
 
 ## FAQ
 
