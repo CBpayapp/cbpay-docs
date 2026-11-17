@@ -238,6 +238,7 @@ equivalent at your `payin_rate` minus the fixed fee.
 | `rwa_subscription` | Percent + fixed over the USDT subscribed (charged on top, tokens computed from the net) |
 | `rwa_distribution` | Percent + fixed over each USDT distribution credited (capped at the share) |
 | `rwa_bridge` | Fixed-only fee per on-chain bridge move (ledger lock + mint, or burn + unlock) *(F2 — bridge flow pending)* |
+| `rwa_secondary` | Percent + fixed over the taker total of each internal secondary fill (capped at the total) |
 
 ## EUR banking fee services
 

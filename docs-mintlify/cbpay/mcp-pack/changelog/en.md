@@ -5,12 +5,33 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.292 · 2 versions - November 16, 2026
-### v2.292
+## v2.294 · 4 versions - November 16, 2026
+### v2.294
 **Added**
 - RWA bridge-out now supports the lock/mint/burn/unlock lifecycle for
   allowlisted wallets, with idempotent replay, OTP, limits, travel-rule and
   KYT checks, plus completion or failure webhooks.
+### v2.293
+**Added**
+
+- Public invoice verification (`GET /verify/invoices/{code}`) now returns
+  the legal issuer (`issuer` object) alongside the brand, and the branded
+  verification page shows the issuer block. `GET /v1/branding` and
+  `GET /v1/org/branding` expose the same `issuer` object.
+
+**Changed**
+
+- The default CBPay document footer is now the Orlando fiscal address
+  (GRUPO CB LLC, 7345 West Sand Lake Road STE 210 Office 1784, Orlando,
+  FL 32819, USA).
+### v2.292
+**Improved**
+
+- US/USD payout receipts now print the bank routing data when the bank
+  reports it: ABA routing number (wire/ACH) or SWIFT BIC, the declared
+  payment purpose, the IMAD/UETR bank tracking references, and — for
+  transfers the operator marked as third-party — the remittance flag
+  with the ultimate debtor name.
 ### v2.291
 **Fixed**
 

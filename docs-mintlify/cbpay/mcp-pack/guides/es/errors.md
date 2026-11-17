@@ -831,4 +831,15 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 409 | `not_parked` | Solo se resuelven burns parkeados | Resuelve parkeados solamente |
 | 422 | `burn_code_mismatch` | El proyecto no calza con el snapshot del burn | Resuelve al proyecto quemado |
 | 422 | `amount_too_large` | El monto excede la precisión del ledger | Fracciona bajo 38 dígitos de título |
+| 400 | `self_trade` | Maker y taker deben ser cuentas distintas | Acepta con otra cuenta verificada |
+| 409 | `offer_not_open` | La oferta ya no está abierta | Lee la oferta en vez de reintentar |
+| 410 | `offer_expired` | La oferta expiró; el lock del maker se liberó | Pide al maker re-ofertar |
+| 400 | `invalid_ttl` | TTL de oferta fuera de rango | Usa 15 minutos a 24 horas |
+| 400 | `invalid_offer` | El id de oferta es requerido | Manda un UUID de oferta válido |
+| 400 | `invalid_report` | El payload del reporte es inválido | Revisa período, cifras y matemática |
+| 422 | `report_math_mismatch` | Regalía o cifras realizadas no cuadran | Iguala due a floor(net × pct) y gross a units × price |
+| 422 | `project_redeemed` | El proyecto está redimido; sin crédito ledger | Triage manual (burn post-cierre) |
+| 422 | `final_not_ready` | La attestation de cierre debe declarar el remanente exacto al cap | Propón con el remanente exacto |
+| 409 | `final_blocked` | Liquida la actividad pendiente antes del rescate final | Limpia distribuciones, moves, parked y ofertas |
+| 409 | `final_not_frozen` | El proyecto debe estar congelado por el propose final | Propón final primero, luego aprueba |
 | 422 | `burner_blocked` | El burner falló el screening de sanciones | El burn queda parkeado para compliance |

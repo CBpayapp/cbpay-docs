@@ -109,6 +109,9 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `rwa_bridge_out_completed` | Title burned in the ledger was minted on-chain to the holder wallet |
 | `rwa_bridge_out_failed` | The on-chain mint failed; the title was refunded automatically |
 | `rwa_bridge_in_credited` | An on-chain burn was detected confirmed and the title was credited back |
+| `rwa_secondary_offer_open` | Title was locked for an internal bilateral RFQ sale |
+| `rwa_secondary_offer_closed` | An offer was cancelled or expired; the locked title returned to the maker |
+| `rwa_secondary_filled` | A taker accepted an offer; title and USDT crossed atomically |
 
 RWA payloads use exact decimal strings and include the operation identifier:
 
