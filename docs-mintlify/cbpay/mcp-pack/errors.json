@@ -1,5 +1,5 @@
 {
-  "count": 468,
+  "count": 479,
   "errors": [
     {
       "category": {
@@ -6495,6 +6495,160 @@
         "en": "The amount exceeds ledger precision — Fix: Split below 38 digits of title units",
         "es": "El monto excede la precisión del ledger — Fix: Fracciona bajo 38 dígitos de título",
         "zh": "金额超账本精度 — Fix: 拆分至 38 位份额以内"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "self_trade",
+      "http": 400,
+      "meaning": {
+        "en": "Maker and taker must be different accounts — Fix: Accept with another verified account",
+        "es": "Maker y taker deben ser cuentas distintas — Fix: Acepta con otra cuenta verificada",
+        "zh": "做市方与受让方须为不同账户 — Fix: 用另一已验证账户接受"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "offer_not_open",
+      "http": 409,
+      "meaning": {
+        "en": "The offer is no longer open — Fix: Read the offer instead of retrying",
+        "es": "La oferta ya no está abierta — Fix: Lee la oferta en vez de reintentar",
+        "zh": "要约已不在开放状态 — Fix: 读取要约而非重试"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "offer_expired",
+      "http": 410,
+      "meaning": {
+        "en": "The offer expired; the maker lock was released — Fix: Ask the maker to re-offer",
+        "es": "La oferta expiró; el lock del maker se liberó — Fix: Pide al maker re-ofertar",
+        "zh": "要约已过期；做市方锁定已释放 — Fix: 请做市方重新发布"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_ttl",
+      "http": 400,
+      "meaning": {
+        "en": "Offer TTL out of bounds — Fix: Use 15 minutes to 24 hours",
+        "es": "TTL de oferta fuera de rango — Fix: Usa 15 minutos a 24 horas",
+        "zh": "要约 TTL 超范围 — Fix: 使用 15 分钟至 24 小时"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_offer",
+      "http": 400,
+      "meaning": {
+        "en": "The offer id is required — Fix: Send a valid offer UUID",
+        "es": "El id de oferta es requerido — Fix: Manda un UUID de oferta válido",
+        "zh": "需要要约 id — Fix: 发送有效要约 UUID"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_report",
+      "http": 400,
+      "meaning": {
+        "en": "The report payload is invalid — Fix: Check period, figures and math",
+        "es": "El payload del reporte es inválido — Fix: Revisa período, cifras y matemática",
+        "zh": "报告载荷无效 — Fix: 检查期间、数字与数学关系"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "report_math_mismatch",
+      "http": 422,
+      "meaning": {
+        "en": "Royalty or realized figures do not reconcile — Fix: Match due to floor(net × pct) and gross to units × price",
+        "es": "Regalía o cifras realizadas no cuadran — Fix: Iguala due a floor(net × pct) y gross a units × price",
+        "zh": "特许权或实现数字不平 — Fix: 使 due 等于 floor(net × pct)、gross 等于 units × price"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "project_redeemed",
+      "http": 422,
+      "meaning": {
+        "en": "The project is redeemed; no ledger credit — Fix: Triage manually (post-close burn)",
+        "es": "El proyecto está redimido; sin crédito ledger — Fix: Triage manual (burn post-cierre)",
+        "zh": "项目已赎回；不记账 — Fix: 人工分诊（关闭后销毁）"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "final_not_ready",
+      "http": 422,
+      "meaning": {
+        "en": "The closing attestation must declare the exact cap remainder — Fix: Propose with the exact remainder",
+        "es": "La attestation de cierre debe declarar el remanente exacto al cap — Fix: Propón con el remanente exacto",
+        "zh": "关闭证明须声明至上限的准确余款 — Fix: 用准确余款提议"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "final_blocked",
+      "http": 409,
+      "meaning": {
+        "en": "Settle pending activity before the final redemption — Fix: Clear distributions, moves, parked burns and offers",
+        "es": "Liquida la actividad pendiente antes del rescate final — Fix: Limpia distribuciones, moves, parked y ofertas",
+        "zh": "最终赎回前先结清待处理活动 — Fix: 清理分红、桥接、parked 与要约"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "final_not_frozen",
+      "http": 409,
+      "meaning": {
+        "en": "The project must be frozen by the final propose — Fix: Propose final first, then approve",
+        "es": "El proyecto debe estar congelado por el propose final — Fix: Propón final primero, luego aprueba",
+        "zh": "项目须经最终提议冻结 — Fix: 先提议最终赎回再批准"
       }
     },
     {

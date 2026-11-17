@@ -4,12 +4,30 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月16日" description="v2.292 · 2 个版本">
-### v2.292
+<Update label="2026年11月16日" description="v2.294 · 4 个版本">
+### v2.294
 **新增**
 - RWA 跨链转出现在支持 allowlist 钱包的 lock/mint/burn/unlock 生命周期，
   并提供幂等重放、OTP、限额、Travel Rule 和 KYT 检查，以及成功或失败
   webhook。
+### v2.293
+**新增**
+
+- 公开核验（`GET /verify/invoices/{code}`）现在随品牌一并返回法定开票方
+  （`issuer` 对象），品牌核验页显示开票方区块。`GET /v1/branding` 与
+  `GET /v1/org/branding` 返回相同的 `issuer` 对象。
+
+**变更**
+
+- CBPay 文档默认页脚改为奥兰多税务地址（GRUPO CB LLC，7345 West Sand
+  Lake Road STE 210 Office 1784, Orlando, FL 32819, USA）。
+### v2.292
+**改进**
+
+- US/USD payout 回单现会在银行返回时打印银行路由信息：ABA 路由号
+  （wire/ACH）或 SWIFT BIC、申报付款用途、IMAD/UETR 银行跟踪号，
+  以及——对于操作员标记为第三方代付的转账——remittance 标记与最终
+  付款人名称。
 ### v2.291
 **修复**
 
