@@ -5,7 +5,10 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.302 · 2 versiones - 19 de noviembre de 2026
+## v2.303 · 3 versiones - 19 de noviembre de 2026
+### v2.303
+**Cambiado**
+- Los webhooks de depósitos crypto ahora identifican cada transferencia de un lote con `tx_id` más `event_index` e incluyen remitente, depósito acreditado, comprobante y vínculo al hold para conciliar. Usa el filtro exacto `tx_id` en el historial on-chain; los depósitos retenidos se recuperan con `GET /v1/events/history`.
 ### v2.302
 **Agregado**
 - Los payins con tarjeta pueden enviar su neto a una wallet segregada propia, existente, reutilizable o nueva por payin, con estado de fondeo on-chain y evidencia de transacción.

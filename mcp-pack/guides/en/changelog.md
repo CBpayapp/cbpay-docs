@@ -5,7 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.302 · 2 versions - November 19, 2026
+## v2.303 · 3 versions - November 19, 2026
+### v2.303
+**Changed**
+- Crypto deposit webhooks now identify each transfer in a batch with `tx_id` plus `event_index`, and include the sender, credited deposit, receipt URL and hold linkage needed for reconciliation. Use the exact `tx_id` filter for on-chain history; held deposits are recoverable through `GET /v1/events/history`.
 ### v2.302
 **Added**
 - Card payins can direct their net amount to an owned, existing, reusable, or per-payin segregated wallet, with on-chain funding status and transaction evidence.

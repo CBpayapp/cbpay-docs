@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.302'
+  version: '2.303'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -7827,7 +7827,7 @@ paths:
       - Crypto
       operationId: listCryptoTransactions
       summary: List on-chain activity
-      description: Funding credits and withdrawals of the calling account.
+      description: Funding credits and withdrawals of the calling account. Held (uncredited) deposits are not listed; track them via the crypto_deposit_held webhook and GET /v1/events/history.
       parameters:
       - $ref: '#/components/parameters/page'
       - $ref: '#/components/parameters/pageSize'
@@ -7843,6 +7843,11 @@ paths:
           type: string
           format: date
         description: Filter up to this date (YYYY-MM-DD, organization timezone, inclusive).
+      - name: tx_id
+        in: query
+        schema:
+          type: string
+        description: Filter by on-chain transaction hash (exact match for withdrawals; deposits match tx or tx:event references, so a batch returns one row per transfer).
       responses:
         '200':
           description: Deposits and withdrawals.
@@ -11581,7 +11586,7 @@ paths:
       - Contracts
       operationId: signMyContractEnvelope
       summary: Sign my contract envelope
-      description: Requires a human owner/operator session, consent and a fresh OTP in `X-OTP-Token`.
+      description: Requires a human owner/operator session, signer name, consent and signature. No OTP (simple signing).
       parameters:
       - name: envelopeID
         in: path
@@ -11589,11 +11594,6 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: X-OTP-Token
-        in: header
-        required: true
-        schema:
-          type: string
       requestBody:
         required: true
         content:
@@ -11602,7 +11602,6 @@ paths:
               type: object
               required:
               - signer_name
-              - signer_title
               - consent
               - signature_png
               properties:
@@ -11612,8 +11611,8 @@ paths:
                   maxLength: 120
                 signer_title:
                   type: string
-                  minLength: 1
                   maxLength: 120
+                  description: Optional legacy; when omitted it autofills with the role (owner/operator).
                 consent:
                   type: boolean
                   const: true
@@ -11635,7 +11634,6 @@ paths:
                   description: Required with signature_mode typed; must match signer_name.
             example:
               signer_name: Jordan Lee
-              signer_title: Chief Executive Officer
               consent: true
               signature_png: <PNG_BASE64_SIGNATURE>
       responses:
@@ -11649,12 +11647,12 @@ paths:
                 final_hash: sha256-of-the-final-pdf
                 signed_at: '2026-10-01T14:03:12Z'
         '401':
-          description: The OTP is invalid or expired.
+          description: Authentication required.
           content:
             application/json:
               example:
-                error: invalid_otp
-                message: the verification code is invalid or expired
+                error: unauthorized
+                message: authentication required
         '409':
           description: The envelope is no longer signable, or it was replaced by a fresh one.
           headers:
@@ -33362,7 +33360,7 @@ webhooks:
   crypto_deposit_credited:
     post:
       summary: Crypto deposit credited
-      description: "An on-chain deposit was confirmed and credited (net of the funding fee) to the balance of the wallet's asset (`USDT` or `USDC`).\n\nEvery delivery includes `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` and `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`. Respond 2xx; up to 5 attempts with incremental backoff."
+      description: "An on-chain deposit was confirmed and credited (net of the funding fee) to the balance of the wallet's asset (`USDT` or `USDC`). One event per transfer: a batch transaction emits one event per transfer, all sharing `tx_id`, distinguished by `event_index` (ERC-20 log index on EVM chains). `hold_id` is present only when the credit releases a compliance hold.\n\nEvery delivery includes `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` and `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`. Respond 2xx; up to 5 attempts with incremental backoff."
       requestBody:
         content:
           application/json:
@@ -33373,22 +33371,35 @@ webhooks:
                 chain: *id015
                 asset: *id015
                 tx_id: *id015
+                event_index:
+                  type: integer
+                  description: Index of the transfer within the transaction (ERC-20 log index on EVM). Together with tx_id it identifies the deposit.
                 amount: *id015
                 fee: *id015
+                from_address: *id015
+                deposit_id: *id015
+                receipt_url: *id015
+                hold_id:
+                  type: string
+                  description: Present only when this credit releases a compliance hold; links back to the crypto_deposit_held event.
             example:
               account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
               chain: tron
               asset: USDT
               tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
+              event_index: 0
               amount: '499.000000'
               fee: '1.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
+              deposit_id: a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+              receipt_url: https://api.qbank.cl/platform/v1/crypto/deposits/a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d/receipt
       responses:
         '200':
           description: Return any 2xx to acknowledge the delivery.
   crypto_deposit_held:
     post:
       summary: Crypto deposit held for compliance review
-      description: "An incoming on-chain deposit was NOT credited because the sender address shows severe risk (sanctions / direct illicit funds). The operator's compliance team reviews the hold and releases (credits) or rejects it."
+      description: "An incoming on-chain deposit was NOT credited because the sender address shows severe risk (sanctions / direct illicit funds). The operator's compliance team reviews the hold and releases (credits) or rejects it. `event_index` identifies which transfer of the transaction is held; on release the crypto_deposit_credited event carries the same `hold_id`."
       requestBody:
         content:
           application/json:
@@ -33398,6 +33409,9 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1
+              event_index: 1
+              amount: '250.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
               risk: Severe
               status: held
       responses:
@@ -33406,7 +33420,7 @@ webhooks:
   crypto_deposit_alert:
     post:
       summary: Crypto deposit credited with a risk alert
-      description: An incoming deposit was credited normally, but the sender address shows high risk. Informational — no action is required on the funds.
+      description: An incoming deposit was credited normally, but the sender address shows high risk. Informational — no action is required on the funds. `event_index` identifies which transfer of the transaction the alert refers to; the paired crypto_deposit_credited event carries the amount.
       requestBody:
         content:
           application/json:
@@ -33415,6 +33429,7 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 9c6d4e92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b2
+              event_index: 0
               risk: High
               status: credited
       responses:

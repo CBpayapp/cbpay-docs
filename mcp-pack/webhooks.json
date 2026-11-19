@@ -252,15 +252,16 @@
     },
     {
       "description": {
-        "en": "An incoming deposit was credited normally, but the sender address shows high risk. Informational — no action is required on the funds.",
-        "es": "Un depósito entrante se acreditó normal, pero la dirección remitente presenta riesgo alto. Informativo — no requiere acción sobre los fondos.",
-        "zh": "一笔入账充值已正常入账,但发送方地址显示高风险。仅供参考——无需对资金采取任何操作。"
+        "en": "An incoming deposit was credited normally, but the sender address shows high risk. Informational — no action is required on the funds. `event_index` identifies which transfer of the transaction the alert refers to; the paired crypto_deposit_credited event carries the amount.",
+        "es": "Un depósito entrante se acreditó normal, pero la dirección remitente presenta riesgo alto. Informativo — no requiere acción sobre los fondos. `event_index` identifica a cuál transferencia de la transacción refiere la alerta; el evento crypto_deposit_credited pareado trae el monto.",
+        "zh": "一笔入账充值已正常入账,但发送方地址显示高风险。仅供参考——无需对资金采取任何操作。`event_index` 标识警示所指的交易中的哪笔转账;配对的 crypto_deposit_credited 事件携带金额。"
       },
       "event": "crypto_deposit_alert",
       "payload_example": {
         "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
         "asset": "usdt",
         "chain": "tron",
+        "event_index": 0,
         "risk": "High",
         "status": "credited",
         "tx_id": "9c6d4e92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b2"
@@ -273,9 +274,9 @@
     },
     {
       "description": {
-        "en": "An on-chain deposit was confirmed and credited (net of the funding fee) to the balance of the wallet's asset (`USDT` or `USDC`).\n\nEvery delivery includes `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` and `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`. Respond 2xx; up to 5 attempts with incremental backoff.",
-        "es": "Un depósito on-chain fue confirmado y acreditado (neto de la comisión de fondeo) al saldo del activo de la wallet (`USDT` o `USDC`).\n\nCada entrega incluye `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` y `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`. Responde 2xx; hasta 5 intentos con backoff incremental.",
-        "zh": "一笔链上充值已确认并入账(扣除充值手续费后)到钱包资产(`USDT` 或 `USDC`)对应的余额。\n\n每次投递均包含 `X-Webhook-Event`、`X-Webhook-Event-ID`、`X-Webhook-Delivery-ID`、`X-Webhook-Timestamp` 和 `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`。请返回 2xx;最多重试 5 次,间隔递增。"
+        "en": "An on-chain deposit was confirmed and credited (net of the funding fee) to the balance of the wallet's asset (`USDT` or `USDC`). One event per transfer: a batch transaction emits one event per transfer, all sharing `tx_id`, distinguished by `event_index` (ERC-20 log index on EVM chains). `hold_id` is present only when the credit releases a compliance hold.\n\nEvery delivery includes `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` and `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`. Respond 2xx; up to 5 attempts with incremental backoff.",
+        "es": "Un depósito on-chain fue confirmado y acreditado (neto de la comisión de fondeo) al saldo del activo de la wallet (`USDT` o `USDC`). Un evento por transferencia: una transacción en lote emite un evento por transferencia, todos con el mismo `tx_id`, distinguidos por `event_index` (log index ERC-20 en cadenas EVM). `hold_id` solo está presente cuando el crédito libera un hold de compliance.\n\nCada entrega incluye `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` y `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`. Responde 2xx; hasta 5 intentos con backoff incremental.",
+        "zh": "一笔链上充值已确认并入账(扣除充值手续费后)到钱包资产(`USDT` 或 `USDC`)对应的余额。每次转账一个事件:批量交易中每次转账都会触发一个事件,共享同一 `tx_id`,以 `event_index`(EVM 链上为 ERC-20 日志索引)区分。`hold_id` 仅在本次入账为合规冻结放行时出现。\n\n每次投递均包含 `X-Webhook-Event`、`X-Webhook-Event-ID`、`X-Webhook-Delivery-ID`、`X-Webhook-Timestamp` 和 `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + \".\" + body))`。请返回 2xx;最多重试 5 次,间隔递增。"
       },
       "event": "crypto_deposit_credited",
       "payload_example": {
@@ -283,7 +284,11 @@
         "amount": "499.000000",
         "asset": "USDT",
         "chain": "tron",
+        "deposit_id": "a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+        "event_index": 0,
         "fee": "1.000000",
+        "from_address": "TXYZabc123def456ghi789jkl012mno345pqr",
+        "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d/receipt",
         "tx_id": "b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b"
       },
       "summary": {
@@ -294,15 +299,18 @@
     },
     {
       "description": {
-        "en": "An incoming on-chain deposit was NOT credited because the sender address shows severe risk (sanctions / direct illicit funds). The operator's compliance team reviews the hold and releases (credits) or rejects it.",
-        "es": "Un depósito on-chain entrante NO se acreditó porque la dirección remitente presenta riesgo severo (sanciones / fondos ilícitos directos). El equipo de compliance del operador revisa el hold y lo libera (acredita) o lo rechaza.",
-        "zh": "一笔链上入账充值因发送方地址显示严重风险(制裁/直接非法资金)而未入账。运营方合规团队会审核该冻结并放行(入账)或拒绝。"
+        "en": "An incoming on-chain deposit was NOT credited because the sender address shows severe risk (sanctions / direct illicit funds). The operator's compliance team reviews the hold and releases (credits) or rejects it. `event_index` identifies which transfer of the transaction is held; on release the crypto_deposit_credited event carries the same `hold_id`.",
+        "es": "Un depósito on-chain entrante NO se acreditó porque la dirección remitente presenta riesgo severo (sanciones / fondos ilícitos directos). El equipo de compliance del operador revisa el hold y lo libera (acredita) o lo rechaza. `event_index` identifica cuál transferencia de la transacción quedó retenida; al liberarse, el evento crypto_deposit_credited trae el mismo `hold_id`.",
+        "zh": "一笔链上入账充值因发送方地址显示严重风险(制裁/直接非法资金)而未入账。运营方合规团队会审核该冻结并放行(入账)或拒绝。`event_index` 标识交易中被冻结的是哪笔转账;放行后 crypto_deposit_credited 事件会携带同一 `hold_id`。"
       },
       "event": "crypto_deposit_held",
       "payload_example": {
         "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "amount": "250.000000",
         "asset": "usdt",
         "chain": "tron",
+        "event_index": 1,
+        "from_address": "TXYZabc123def456ghi789jkl012mno345pqr",
         "hold_id": "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
         "risk": "Severe",
         "status": "held",

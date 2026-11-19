@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-19 04:38 UTC",
-    "_content_sha256": "d60f0cf7051709e9d615c5d89bff089a163f0e1e00bcb1dae545ba4520c461fa"
+    "_generated_at": "2026-11-19 12:50 UTC",
+    "_content_sha256": "2646954247abdbe70f54e6b3cdda43c76a7c7c4c988989c9b9c23c66d76de6bc"
   },
   "auth": {
     "type": "bearer",
@@ -14294,10 +14294,16 @@
                   "value": "",
                   "disabled": true,
                   "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                },
+                {
+                  "key": "tx_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by on-chain transaction hash (exact match for withdrawals; deposits match tx or tx:event references, so a batch returns one row per transfer)."
                 }
               ]
             },
-            "description": "Funding credits and withdrawals of the calling account."
+            "description": "Funding credits and withdrawals of the calling account. Held (uncredited) deposits are not listed; track them via the crypto_deposit_held webhook and GET /v1/events/history."
           },
           "response": [
             {
@@ -14336,6 +14342,12 @@
                       "value": "",
                       "disabled": true,
                       "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                    },
+                    {
+                      "key": "tx_id",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by on-chain transaction hash (exact match for withdrawals; deposits match tx or tx:event references, so a batch returns one row per transfer)."
                     }
                   ]
                 }
@@ -18898,11 +18910,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "X-OTP-Token",
-                "value": "",
-                "disabled": false
               }
             ],
             "url": {
@@ -18925,10 +18932,10 @@
                 }
               ]
             },
-            "description": "Requires a human owner/operator session, consent and a fresh OTP in `X-OTP-Token`.",
+            "description": "Requires a human owner/operator session, signer name, consent and signature. No OTP (simple signing).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"consent\": true,\n  \"signature_png\": \"<PNG_BASE64_SIGNATURE>\"\n}",
+              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"consent\": true,\n  \"signature_png\": \"<PNG_BASE64_SIGNATURE>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

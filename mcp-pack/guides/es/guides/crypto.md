@@ -240,11 +240,28 @@ se emite el webhook `crypto_deposit_credited`:
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TX9a…",
+  "deposit_id": "dep_8813…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt"
 }
 ```
 
+`tx_id` identifica la transacción on-chain. Una transacción por lotes puede
+contener varias transferencias, por lo que la identidad completa del depósito
+es `tx_id:event_index`; cada transferencia emite su propio webhook y asiento
+de ledger. `event_index` es el índice de la transferencia (el índice del log
+ERC-20 en redes EVM). `from_address` identifica al remitente, `deposit_id`
+identifica el asiento acreditado y `receipt_url` es el comprobante brandeado
+de ese depósito.
+
+> **Importante**
+No concilies un lote solo por `tx_id`: dos transferencias de una misma
+transacción pueden pertenecer a cuentas distintas o tener montos distintos.
+Persiste el par `tx_id` + `event_index` y deduplica el webhook con
+`X-Webhook-Event-ID`.
 > **Importante**
 Envía **solo el activo de la wallet y por su red** (USDT a una wallet
 USDT, USDC a una wallet USDC, USDC.e a una wallet USDC.e, BTC a la wallet
@@ -508,9 +525,11 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
       "chain": "tron",
       "asset": "USDT",
       "tx_id": "b1946ac9…",
+      "reference": "b1946ac9…:0",
       "from_address": "TX9a…",
       "amount": "499.000000",
-      "reference": "dep_8813…",
+      "deposit_id": "dep_8813…",
+      "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt",
       "created_at": "2026-07-07T12:10:00Z"
     }
   ],
@@ -530,6 +549,32 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
   ]
 }
 ```
+
+Para conciliar todas las transferencias de una misma transacción on-chain,
+filtra por su hash exacto. Los depósitos calzan tanto con el hash simple como
+con la referencia `tx_id:event_index`, por lo que un lote devuelve una fila
+por transferencia:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=2026-07-08&tx_id=b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+Los depósitos retenidos están intencionalmente ausentes de
+`GET /v1/crypto/transactions` porque todavía no fueron acreditados. Recupera
+su notificación desde el log durable:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-08&event_type=crypto_deposit_held&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+El evento held contiene el mismo `tx_id` y `event_index` para identificar la
+transferencia. Si compliance la libera, el evento posterior
+`crypto_deposit_credited` lleva el mismo `hold_id`; si la rechaza, no se crea
+una fila de crédito. El log de eventos se conserva 90 días: después de un
+crédito, usa como fuente financiera los movimientos inmutables y el
+comprobante.
 
 ```bash
 # Saldo actual (available + held)

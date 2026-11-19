@@ -12,7 +12,7 @@ respuesta guardada por operación.
 
 - **CBPay API — Colección Postman** - Descargar `cbpay-api.postman_collection.json` (v2.1)
 
-> **Colección actualizada:** 2026-11-19 04:38 UTC · 529 requests · versión `d60f0cf70517`
+> **Colección actualizada:** 2026-11-19 12:50 UTC · 529 requests · versión `2646954247ab`
 
 ## Cómo usarla
 

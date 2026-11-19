@@ -303,8 +303,12 @@ RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Even
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TDonor…",
+  "deposit_id": "a1b2…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/a1b2…/receipt"
 }
 ```
 
@@ -315,6 +319,9 @@ RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Even
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
@@ -326,6 +333,7 @@ RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Even
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "9c6d4e…",
+  "event_index": 0,
   "risk": "High",
   "status": "credited"
 }
