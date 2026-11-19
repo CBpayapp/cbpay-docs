@@ -279,7 +279,8 @@ crypto automáticamente y gratis**:
 Un depósito retenido NO está perdido: el equipo de compliance de tu
 operador lo revisa y decide liberarlo (se acredita con su comisión normal
 de funding) o rechazarlo. Si recibes un `crypto_deposit_held`, contacta a
-tu operador con el `tx_id`.
+tu operador con el `tx_id` y `event_index`. Juntos identifican la
+transferencia aunque varias compartan una misma transacción.
 ## Webhooks
 
 | Evento | Cuándo |
@@ -294,12 +295,20 @@ tu operador con el `tx_id`.
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
 ```
 
 Suscríbete igual que al resto de eventos (ver [Webhooks](https://docs.cbpayapp.com/es/webhooks)).
+Los depósitos retenidos no aparecen en `GET /v1/crypto/transactions`.
+Usa `GET /v1/events/history?from=…&to=…&event_type=crypto_deposit_held`
+para recuperar la notificación. Si se libera el hold, el evento emparejado
+`crypto_deposit_credited` lleva el mismo `hold_id` e incluye el
+`deposit_id` y `receipt_url` del depósito acreditado.
 
 ## Errores
 

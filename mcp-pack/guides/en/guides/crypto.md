@@ -245,11 +245,27 @@ automatically (net of the `funding` fee if CBPay configured one) and the
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TX9a…",
+  "deposit_id": "dep_8813…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt"
 }
 ```
 
+`tx_id` identifies the on-chain transaction. A batch transaction can contain
+more than one transfer, so the complete deposit identity is
+`tx_id:event_index`; each transfer emits its own webhook and ledger entry.
+`event_index` is the transfer index (the ERC-20 log index on EVM chains).
+`from_address` identifies the sender, `deposit_id` identifies the credited
+ledger entry, and `receipt_url` is the branded receipt for that deposit.
+
+> **Important**
+Do not reconcile a batch only by `tx_id`: two transfers in the same
+transaction can belong to different accounts or have different amounts.
+Persist the pair `tx_id` + `event_index` and deduplicate the webhook with
+`X-Webhook-Event-ID`.
 > **Important**
 Send **only the wallet's asset over its network** (USDT to a USDT wallet,
 USDC to a USDC wallet, USDC.e to a USDC.e wallet, BTC to the Bitcoin wallet).
@@ -514,9 +530,11 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
       "chain": "tron",
       "asset": "USDT",
       "tx_id": "b1946ac9…",
+      "reference": "b1946ac9…:0",
       "from_address": "TX9a…",
       "amount": "499.000000",
-      "reference": "dep_8813…",
+      "deposit_id": "dep_8813…",
+      "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt",
       "created_at": "2026-07-07T12:10:00Z"
     }
   ],
@@ -536,6 +554,31 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
   ]
 }
 ```
+
+To reconcile every transfer in one on-chain transaction, filter by its exact
+hash. Deposits match both the bare transaction hash and the
+`tx_id:event_index` reference, so a batch returns one row per transfer:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=2026-07-08&tx_id=b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+Held deposits are intentionally absent from `GET /v1/crypto/transactions`
+because they have not been credited. Recover their notification with the
+durable event log:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-08&event_type=crypto_deposit_held&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+The held event contains the same `tx_id` and `event_index` needed to match
+the transfer. If compliance releases it, the later
+`crypto_deposit_credited` event carries the same `hold_id`; if it is
+rejected, no credit row is created. The event log is retained for 90 days,
+so use the immutable movement and receipt resources as the financial source
+of truth after a credit.
 
 ```bash
 # Current balance (available + held)

@@ -5,7 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.302 · 2 个版本 - 2026年11月19日
+## v2.303 · 3 个版本 - 2026年11月19日
+### v2.303
+**变更**
+- 加密充值 webhook 现在使用 `tx_id` 加 `event_index` 标识批量交易中的每笔转账，并提供发送方、已入账充值、回单和 hold 关联信息以便对账。链上历史使用精确的 `tx_id` 筛选；被冻结的充值可通过 `GET /v1/events/history` 恢复。
 ### v2.302
 **新增**
 - 银行卡 payin 可以将净额发送到自有、现有、可复用或每笔新建的隔离钱包，并提供链上资金状态和交易证据。

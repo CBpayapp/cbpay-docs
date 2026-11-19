@@ -270,8 +270,9 @@ curl https://api.qbank.cl/platform/v1/screenings/addresses/7a2c4e6f-8b1d-4c3a-9e
 > **重要**
 被冻结的充值不会丢失：你运营方的合规团队会审核它，
 并决定放行（按正常的充值费用入账）或
-拒绝。如果你收到 `crypto_deposit_held`，请携带 `tx_id`
-联系你的运营方。
+拒绝。如果你收到 `crypto_deposit_held`，请联系你的运营方，并提供
+`tx_id` 和 `event_index`。即使一笔交易包含多笔
+转账，这两个字段也能唯一定位该转账。
 ## Webhooks
 
 | 事件 | 触发时机 |
@@ -286,12 +287,19 @@ curl https://api.qbank.cl/platform/v1/screenings/addresses/7a2c4e6f-8b1d-4c3a-9e
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
 ```
 
 订阅方式与其他事件相同（见 [Webhooks](https://docs.cbpayapp.com/zh/webhooks)）。
+被冻结的充值不会出现在 `GET /v1/crypto/transactions`。请使用
+`GET /v1/events/history?from=…&to=…&event_type=crypto_deposit_held`
+恢复通知。若该 hold 被放行，配对的 `crypto_deposit_credited` 事件会携带
+相同的 `hold_id`，并包含已入账充值的 `deposit_id` 和 `receipt_url`。
 
 ## 错误
 

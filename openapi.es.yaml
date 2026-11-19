@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.302'
+  version: '2.303'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -7854,7 +7854,7 @@ paths:
       - Crypto
       operationId: listCryptoTransactions
       summary: Listar actividad on-chain
-      description: Créditos de fondeo y retiros de la cuenta que llama.
+      description: Créditos de fondeo y retiros de la cuenta que llama. Los depósitos retenidos (no acreditados) no se listan; se siguen vía el webhook crypto_deposit_held y GET /v1/events/history.
       parameters:
       - $ref: '#/components/parameters/page'
       - $ref: '#/components/parameters/pageSize'
@@ -7870,6 +7870,11 @@ paths:
           type: string
           format: date
         description: Filtra hasta esta fecha (YYYY-MM-DD, zona horaria de la organización, inclusive).
+      - name: tx_id
+        in: query
+        schema:
+          type: string
+        description: Filtra por hash de transacción on-chain (calce exacto en retiros; en depósitos calza tx o referencias tx:event, así un lote devuelve una fila por transferencia).
       responses:
         '200':
           description: Depósitos y retiros.
@@ -11588,7 +11593,7 @@ paths:
       - Contratos
       operationId: signMyContractEnvelope
       summary: Firma mi sobre de contrato
-      description: Requiere sesión humana owner/operator, consentimiento y OTP fresco en `X-OTP-Token`.
+      description: Requiere sesión humana owner/operator, nombre, consentimiento y rúbrica. Sin OTP (firma simple).
       parameters:
       - name: envelopeID
         in: path
@@ -11596,11 +11601,6 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: X-OTP-Token
-        in: header
-        required: true
-        schema:
-          type: string
       requestBody:
         required: true
         content:
@@ -11609,7 +11609,6 @@ paths:
               type: object
               required:
               - signer_name
-              - signer_title
               - consent
               - signature_png
               properties:
@@ -11619,8 +11618,8 @@ paths:
                   maxLength: 120
                 signer_title:
                   type: string
-                  minLength: 1
                   maxLength: 120
+                  description: Opcional legacy; si se omite se autofillea con el rol (owner/operator).
                 consent:
                   type: boolean
                   const: true
@@ -11642,7 +11641,6 @@ paths:
                   description: Requerido con signature_mode typed; debe coincidir con signer_name.
             example:
               signer_name: Jordan Lee
-              signer_title: Chief Executive Officer
               consent: true
               signature_png: <PNG_BASE64_SIGNATURE>
       responses:
@@ -11656,12 +11654,12 @@ paths:
                 final_hash: sha256-of-the-final-pdf
                 signed_at: '2026-10-01T14:03:12Z'
         '401':
-          description: OTP inválido o vencido.
+          description: Se requiere autenticación.
           content:
             application/json:
               example:
-                error: invalid_otp
-                message: the verification code is invalid or expired
+                error: unauthorized
+                message: authentication required
         '409':
           description: El sobre ya no se puede firmar, o fue reemplazado por uno nuevo.
           headers:
@@ -33247,7 +33245,7 @@ webhooks:
   crypto_deposit_credited:
     post:
       summary: Depósito crypto acreditado
-      description: 'Un depósito on-chain fue confirmado y acreditado (neto de la comisión de fondeo) al saldo del activo de la wallet (`USDT` o `USDC`).
+      description: 'Un depósito on-chain fue confirmado y acreditado (neto de la comisión de fondeo) al saldo del activo de la wallet (`USDT` o `USDC`). Un evento por transferencia: una transacción en lote emite un evento por transferencia, todos con el mismo `tx_id`, distinguidos por `event_index` (log index ERC-20 en cadenas EVM). `hold_id` solo está presente cuando el crédito libera un hold de compliance.
 
 
         Cada entrega incluye `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` y `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`. Responde 2xx; hasta 5 intentos con backoff incremental.'
@@ -33261,22 +33259,35 @@ webhooks:
                 chain: *id015
                 asset: *id015
                 tx_id: *id015
+                event_index:
+                  type: integer
+                  description: Índice de la transferencia dentro de la transacción (log index ERC-20 en EVM). Junto con tx_id identifica el depósito.
                 amount: *id015
                 fee: *id015
+                from_address: *id015
+                deposit_id: *id015
+                receipt_url: *id015
+                hold_id:
+                  type: string
+                  description: Presente solo cuando este crédito libera un hold de compliance; enlaza con el evento crypto_deposit_held.
             example:
               account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
               chain: tron
               asset: USDT
               tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
+              event_index: 0
               amount: '499.000000'
               fee: '1.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
+              deposit_id: a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+              receipt_url: https://api.qbank.cl/platform/v1/crypto/deposits/a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d/receipt
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.
   crypto_deposit_held:
     post:
       summary: Depósito crypto retenido por revisión de compliance
-      description: Un depósito on-chain entrante NO se acreditó porque la dirección remitente presenta riesgo severo (sanciones / fondos ilícitos directos). El equipo de compliance del operador revisa el hold y lo libera (acredita) o lo rechaza.
+      description: Un depósito on-chain entrante NO se acreditó porque la dirección remitente presenta riesgo severo (sanciones / fondos ilícitos directos). El equipo de compliance del operador revisa el hold y lo libera (acredita) o lo rechaza. `event_index` identifica cuál transferencia de la transacción quedó retenida; al liberarse, el evento crypto_deposit_credited trae el mismo `hold_id`.
       requestBody:
         content:
           application/json:
@@ -33286,6 +33297,9 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1
+              event_index: 1
+              amount: '250.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
               risk: Severe
               status: held
       responses:
@@ -33294,7 +33308,7 @@ webhooks:
   crypto_deposit_alert:
     post:
       summary: Depósito crypto acreditado con alerta de riesgo
-      description: Un depósito entrante se acreditó normal, pero la dirección remitente presenta riesgo alto. Informativo — no requiere acción sobre los fondos.
+      description: Un depósito entrante se acreditó normal, pero la dirección remitente presenta riesgo alto. Informativo — no requiere acción sobre los fondos. `event_index` identifica a cuál transferencia de la transacción refiere la alerta; el evento crypto_deposit_credited pareado trae el monto.
       requestBody:
         content:
           application/json:
@@ -33303,6 +33317,7 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 9c6d4e92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b2
+              event_index: 0
               risk: High
               status: credited
       responses:

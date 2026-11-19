@@ -292,7 +292,8 @@ automatically and for free**:
 A held deposit is NOT lost: your operator's compliance team reviews it and
 decides to release it (it is credited with its normal funding fee) or
 reject it. If you receive a `crypto_deposit_held`, contact your operator
-with the `tx_id`.
+with the `tx_id` and `event_index`. Together they identify the transfer even
+when several transfers share one transaction.
 </Warning>
 
 ## Webhooks
@@ -309,12 +310,20 @@ with the `tx_id`.
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
 ```
 
 Subscribe just like the rest of the events (see [Webhooks](/en/webhooks)).
+Held deposits are not returned by `GET /v1/crypto/transactions`. Use
+`GET /v1/events/history?from=…&to=…&event_type=crypto_deposit_held` to
+recover the notification. If the hold is released, the paired
+`crypto_deposit_credited` event has the same `hold_id` and includes the
+credited deposit's `deposit_id` and `receipt_url`.
 
 ## Errors
 
