@@ -4,6 +4,11 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="19 de noviembre de 2026" description="v2.301 · 1 versión">
+### v2.301
+**Corregido**
+- Las organizaciones ahora pueden recuperar claims atorados de cuentas de depósito `BO/BOB/bank_transfer` vía `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile`: el core busca la cuenta del comercio por referencia en vez de fallar con `422 deposit_account_not_recoverable`. Los estados ambiguos siguen cerrados — reintenta con la misma key solo cuando la recuperación termine.
+</Update>
 <Update label="18 de noviembre de 2026" description="v2.300 · 3 versiones">
 ### v2.300
 **Agregado**
