@@ -4,19 +4,22 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 19, 2026" description="v2.304 · 4 versions">
-### v2.304
+<Update label="November 19, 2026" description="v2.305 · 5 versions">
+### v2.305
 **Changed**
 - Crypto deposit webhooks now identify each transfer in a batch with `tx_id` plus `event_index`, and include the sender, credited deposit, receipt URL and hold linkage needed for reconciliation. Use the exact `tx_id` filter for on-chain history; held deposits are recoverable through `GET /v1/events/history`.
-### v2.303
+### v2.304
 **Changed**
 - The segregated card payin wallet-provisioning limit is 50 wallets per account per day by default and can be raised for an organization by its operator. Requests over the configured limit return `too_many_segregated_wallets`.
-### v2.302
+### v2.303
 **Added**
 - Card payins can direct their net amount to an owned, existing, reusable, or per-payin segregated wallet, with on-chain funding status and transaction evidence.
-### v2.301
+### v2.302
 **Fixed**
 - Organization admins can now recover stuck `BO/BOB/bank_transfer` deposit-account claims via `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile`: the core looks the merchant account up by reference instead of failing with `422 deposit_account_not_recoverable`. Ambiguous states still fail closed — retry with the same key only after the recovery completes.
+### v2.301
+**Changed**
+- AML and verification reports now explain model-only risk decisions with the `model_breakdown` JSON key and the Risk model breakdown PDF section; legacy overall-only mirrors remain compatible.
 </Update>
 <Update label="November 18, 2026" description="v2.300 · 3 versions">
 ### v2.300

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.304'
+  version: '2.305'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -9661,6 +9661,29 @@ paths:
                 generated_by: CBPay
                 language: en
                 aml_detail: true
+                model_breakdown:
+                - category: COUNTRY
+                  level: prohibited
+                  score: 1140
+                  weight: 5
+                  attributes:
+                  - name: nationality
+                    parameter: RU
+                    score: 100
+                  - name: personalIdentificationIssuingCountry
+                    parameter: RU
+                    score: 520
+                  - name: residentialInformation.countryOfResidence
+                    parameter: RU
+                    score: 520
+                - category: BASIC_INFORMATION
+                  level: low
+                  score: 10
+                  weight: 5
+                  attributes:
+                  - name: age
+                    parameter: '40'
+                    score: 10
                 submission_id: 9b2c41a0-d3e5-4f6a-8b7c-1d2e3f4a5b6c
                 status: approved
                 risk_band: low
@@ -10819,6 +10842,29 @@ paths:
                 generated_by: CBPay
                 language: en
                 aml_detail: true
+                model_breakdown:
+                - category: COUNTRY
+                  level: prohibited
+                  score: 1140
+                  weight: 5
+                  attributes:
+                  - name: nationality
+                    parameter: RU
+                    score: 100
+                  - name: personalIdentificationIssuingCountry
+                    parameter: RU
+                    score: 520
+                  - name: residentialInformation.countryOfResidence
+                    parameter: RU
+                    score: 520
+                - category: BASIC_INFORMATION
+                  level: low
+                  score: 10
+                  weight: 5
+                  attributes:
+                  - name: age
+                    parameter: '40'
+                    score: 10
                 submission_id: 3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f
                 external_customer_id: customer-1042
                 status: approved

@@ -4,19 +4,22 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月19日" description="v2.304 · 4 个版本">
-### v2.304
+<Update label="2026年11月19日" description="v2.305 · 5 个版本">
+### v2.305
 **变更**
 - 加密充值 webhook 现在使用 `tx_id` 加 `event_index` 标识批量交易中的每笔转账，并提供发送方、已入账充值、回单和 hold 关联信息以便对账。链上历史使用精确的 `tx_id` 筛选；被冻结的充值可通过 `GET /v1/events/history` 恢复。
-### v2.303
+### v2.304
 **变更**
 - 隔离银行卡 payin 的钱包创建上限默认为每个账户每天 50 个，运营方可以为组织提高上限。超过配置上限的请求返回 `too_many_segregated_wallets`。
-### v2.302
+### v2.303
 **新增**
 - 银行卡 payin 可以将净额发送到自有、现有、可复用或每笔新建的隔离钱包，并提供链上资金状态和交易证据。
-### v2.301
+### v2.302
 **修复**
 - 组织管理员现在可以通过 `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile` 恢复卡住的 `BO/BOB/bank_transfer` 存款账户 claim：core 按 reference 查找商户账户，而不再返回 `422 deposit_account_not_recoverable`。模糊状态仍然 fail-closed——仅在恢复完成后用相同的 key 重试。
+### v2.301
+**变更**
+- AML 和验证报告现在通过 JSON 键 `model_breakdown` 与 PDF 风险模型明细解释仅由模型产生的风险决定；只有 overall 的 legacy 镜像继续兼容。
 </Update>
 <Update label="2026年11月18日" description="v2.300 · 3 个版本">
 ### v2.300

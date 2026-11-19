@@ -411,3 +411,30 @@ evidencia persistida, por lo que no aparecen en `GET /v1/aml/screenings` ni
 pueden descargar informe. Si necesitas el documento, ejecuta un screening
 nuevo de la misma identidad (si los datos son idénticos, reutiliza el
 resultado sin cobrar de nuevo) y descarga su informe.
+## Desglose del modelo de riesgo
+
+El PDF de screening incluye **Desglose del modelo de riesgo** cuando existe evidencia por categoría. Explica decisiones solo del modelo aunque haya cero matches. La forma del proveedor es `risk_score.data` / `provider_model_score` full: `overall_result` conserva el nivel en mayúsculas y el score del proveedor, mientras `category_results` contiene los atributos evaluados. `model_breakdown` normaliza los niveles a minúsculas y aplana los list fields. Los espejos legacy solo overall se renderizan sin categorías.
+
+```json
+{
+  "provider_model_score": {
+    "overall_result": { "level": "PROHIBITED", "score": 5750 },
+    "category_results": [
+      { "category": "COUNTRY", "level": "PROHIBITED", "score": 1140, "weight": 5, "attribute_results": [
+        { "attribute_name": "nationality", "evaluated_parameter": "RU", "score": 100, "type": "value_field" },
+        { "attribute_name": "personalIdentificationIssuingCountry", "evaluated_parameter": "RU", "score": 520, "type": "value_field" },
+        { "attribute_name": "residentialInformation", "score": 520, "type": "list_field", "attribute_results": [{ "attribute_name": "countryOfResidence", "evaluated_parameter": "RU", "score": 520, "type": "value_field" }] }
+      ] },
+      { "category": "BASIC_INFORMATION", "level": "LOW", "score": 10, "weight": 5, "attribute_results": [{ "attribute_name": "age", "evaluated_parameter": "40", "score": 10, "type": "value_field" }] }
+    ]
+  },
+  "model_breakdown": [
+    { "category": "COUNTRY", "level": "prohibited", "score": 1140, "weight": 5, "attributes": [
+      { "name": "nationality", "parameter": "RU", "score": 100 },
+      { "name": "personalIdentificationIssuingCountry", "parameter": "RU", "score": 520 },
+      { "name": "residentialInformation.countryOfResidence", "parameter": "RU", "score": 520 } ] },
+    { "category": "BASIC_INFORMATION", "level": "low", "score": 10, "weight": 5, "attributes": [{ "name": "age", "parameter": "40", "score": 10 }] }
+  ]
+}
+```
+In the real RU evaluation, the overall score is `5750`; the country attributes score `100`, `520`, and `520`, and age scores `10`. This is model evidence, not a sanctions-list match.

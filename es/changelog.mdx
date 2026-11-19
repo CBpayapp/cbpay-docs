@@ -4,19 +4,22 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="19 de noviembre de 2026" description="v2.304 · 4 versiones">
-### v2.304
+<Update label="19 de noviembre de 2026" description="v2.305 · 5 versiones">
+### v2.305
 **Cambiado**
 - Los webhooks de depósitos crypto ahora identifican cada transferencia de un lote con `tx_id` más `event_index` e incluyen remitente, depósito acreditado, comprobante y vínculo al hold para conciliar. Usa el filtro exacto `tx_id` en el historial on-chain; los depósitos retenidos se recuperan con `GET /v1/events/history`.
-### v2.303
+### v2.304
 **Cambiado**
 - El límite de creación de wallets para payins con tarjeta segregados es de 50 wallets por cuenta al día por defecto y el operador puede subirlo para una organización. Las requests que superan el límite configurado devuelven `too_many_segregated_wallets`.
-### v2.302
+### v2.303
 **Agregado**
 - Los payins con tarjeta pueden enviar su neto a una wallet segregada propia, existente, reutilizable o nueva por payin, con estado de fondeo on-chain y evidencia de transacción.
-### v2.301
+### v2.302
 **Corregido**
 - Las organizaciones ahora pueden recuperar claims atorados de cuentas de depósito `BO/BOB/bank_transfer` vía `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile`: el core busca la cuenta del comercio por referencia en vez de fallar con `422 deposit_account_not_recoverable`. Los estados ambiguos siguen cerrados — reintenta con la misma key solo cuando la recuperación termine.
+### v2.301
+**Cambiado**
+- Los informes AML y de verificación ahora explican decisiones de riesgo del modelo con la llave JSON `model_breakdown` y la sección PDF Desglose del modelo; los espejos legacy de solo overall siguen siendo compatibles.
 </Update>
 <Update label="18 de noviembre de 2026" description="v2.300 · 3 versiones">
 ### v2.300

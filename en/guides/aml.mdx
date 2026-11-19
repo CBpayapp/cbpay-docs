@@ -444,3 +444,31 @@ same identity (identical data reuses the previous result without a new
 charge) and download its report.
 </Accordion>
 </AccordionGroup>
+
+## Risk model breakdown
+
+The screening PDF includes a **Risk model breakdown** when category evidence is available. It explains model-only decisions even with zero list matches. The provider shape is `risk_score.data` / full `provider_model_score`: `overall_result` keeps the provider's uppercase level and score, while `category_results` contains the exact evaluated attributes. The normalized `model_breakdown` uses lowercase levels and flattens list fields. Legacy overall-only mirrors render without categories.
+
+```json
+{
+  "provider_model_score": {
+    "overall_result": { "level": "PROHIBITED", "score": 5750 },
+    "category_results": [
+      { "category": "COUNTRY", "level": "PROHIBITED", "score": 1140, "weight": 5, "attribute_results": [
+        { "attribute_name": "nationality", "evaluated_parameter": "RU", "score": 100, "type": "value_field" },
+        { "attribute_name": "personalIdentificationIssuingCountry", "evaluated_parameter": "RU", "score": 520, "type": "value_field" },
+        { "attribute_name": "residentialInformation", "score": 520, "type": "list_field", "attribute_results": [{ "attribute_name": "countryOfResidence", "evaluated_parameter": "RU", "score": 520, "type": "value_field" }] }
+      ] },
+      { "category": "BASIC_INFORMATION", "level": "LOW", "score": 10, "weight": 5, "attribute_results": [{ "attribute_name": "age", "evaluated_parameter": "40", "score": 10, "type": "value_field" }] }
+    ]
+  },
+  "model_breakdown": [
+    { "category": "COUNTRY", "level": "prohibited", "score": 1140, "weight": 5, "attributes": [
+      { "name": "nationality", "parameter": "RU", "score": 100 },
+      { "name": "personalIdentificationIssuingCountry", "parameter": "RU", "score": 520 },
+      { "name": "residentialInformation.countryOfResidence", "parameter": "RU", "score": 520 } ] },
+    { "category": "BASIC_INFORMATION", "level": "low", "score": 10, "weight": 5, "attributes": [{ "name": "age", "parameter": "40", "score": 10 }] }
+  ]
+}
+```
+In the real RU evaluation, the overall score is `5750`; the country attributes score `100`, `520`, and `520`, and age scores `10`. This is model evidence, not a sanctions-list match.
