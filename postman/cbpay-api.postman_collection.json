@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-19 00:27 UTC",
-    "_content_sha256": "b29a532feeb7221f217f4c2ae5581f9154fff880e3e0ab12049199426b9165a7"
+    "_generated_at": "2026-11-19 02:42 UTC",
+    "_content_sha256": "2f19e58825fda68507e374807b3c8ecaddd9966f2a36c8b27095b4bb287fd0b4"
   },
   "auth": {
     "type": "bearer",
@@ -15916,7 +15916,7 @@
                 "links"
               ]
             },
-            "description": "Company accounts only: generates a hosted KYB link for one of YOUR end customers (businesses). Bills the fixed `kyb_verification` fee when configured (refunded if creation fails); `idempotency_key` is required. `country` picks the wizard corridor: us, cl, ve, br, mx, co, pe, bo, py, ar, uk, es, vg or generic (send `generic_country` ISO alpha-2, optional `currency`).",
+            "description": "Company accounts only: generates a hosted KYB link for one of YOUR end customers (businesses). Bills the fixed `kyb_verification` fee when configured (refunded if creation fails); `idempotency_key` is required. `country` picks the wizard corridor: us, cl, ve, br, mx, co, pe, bo, py, ar, uk, es, vg or generic (send `generic_country` ISO alpha-2, optional `currency`). Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_456\",\n  \"country\": \"cl\",\n  \"label\": \"Comercial Andina SpA\",\n  \"expires_in_days\": 14,\n  \"idempotency_key\": \"kyb-link-cust-456-1\"\n}",
@@ -16148,7 +16148,7 @@
                 "submissions"
               ]
             },
-            "description": "Company accounts only: verifies one of YOUR end customers (a business) sending the data directly. Body: external_customer_id, country?, business (the company fields), ubos?, directors?, signers?, bank_info?, metadata?. KYB requires a complete legal name and registration number; KYC requires names, date of birth, ISO alpha-3 nationality, document and ISO alpha-3 country. An unknown KYB country uses the generic wizard/profile with that ISO country; `country: generic` requires `generic_country`. Bills the fixed `kyb_verification` fee; `idempotency_key` required. Re-sending while open updates the same submission without charging again.",
+            "description": "Company accounts only: verifies one of YOUR end customers (a business) sending the data directly. Body: external_customer_id, country?, business (the company fields), ubos?, directors?, signers?, bank_info?, metadata?. KYB requires a complete legal name and registration number; KYC requires names, date of birth, ISO alpha-3 nationality, document and ISO alpha-3 country. An unknown KYB country uses the generic wizard/profile with that ISO country; `country: generic` requires `generic_country`. Bills the fixed `kyb_verification` fee; `idempotency_key` required. Re-sending while open updates the same submission without charging again. Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_456\",\n  \"idempotency_key\": \"kyb-sub-cust-456-1\",\n  \"country\": \"cl\",\n  \"business\": {\n    \"legal_name\": \"Comercial Andina SpA\",\n    \"tax_id\": \"76.543.210-3\"\n  },\n  \"ubos\": [\n    {\n      \"first_name\": \"Carlos\",\n      \"last_name\": \"Soto\",\n      \"ownership_percent\": 60\n    }\n  ]\n}",
@@ -16803,7 +16803,7 @@
                 "links"
               ]
             },
-            "description": "Company accounts only: generates a hosted KYC link for one of YOUR end customers. The wizard covers form, documents and video liveness. Bills the fixed `kyc_verification` fee when configured (refunded if creation fails); `idempotency_key` is required — a retry with the same key returns the original link and never double-charges.",
+            "description": "Company accounts only: generates a hosted KYC link for one of YOUR end customers. The wizard covers form, documents and video liveness. Bills the fixed `kyc_verification` fee when configured (refunded if creation fails); `idempotency_key` is required — a retry with the same key returns the original link and never double-charges. Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_123\",\n  \"label\": \"Ana Perez\",\n  \"expires_in_days\": 90,\n  \"idempotency_key\": \"kyc-link-cust-123-1\"\n}",
@@ -17035,7 +17035,7 @@
                 "submissions"
               ]
             },
-            "description": "Company accounts only: verifies one of YOUR end customers sending the data directly (no wizard). Countries in ISO alpha-3, dates YYYY-MM-DD, id_type passport | id_card | drivers_license. Documents are optional at creation (upload them via the presign flow); no liveness is required at creation — the submission carries liveness_pending: true, close it with a liveness link. Re-sending with the same external_customer_id while the submission is open updates it without charging again. Bills the fixed `kyc_verification` fee; `idempotency_key` required.",
+            "description": "Company accounts only: verifies one of YOUR end customers sending the data directly (no wizard). Countries in ISO alpha-3, dates YYYY-MM-DD, id_type passport | id_card | drivers_license. Documents are optional at creation (upload them via the presign flow); no liveness is required at creation — the submission carries liveness_pending: true, close it with a liveness link. Re-sending with the same external_customer_id while the submission is open updates it without charging again. Bills the fixed `kyc_verification` fee; `idempotency_key` required. Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_789\",\n  \"idempotency_key\": \"kyc-sub-cust-789-1\",\n  \"person\": {\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Perez\",\n    \"email\": \"ana@example.com\",\n    \"phone\": \"+56912345678\",\n    \"nationality\": \"CHL\",\n    \"date_of_birth\": \"1990-04-12\",\n    \"tax_id\": \"12.345.678-5\",\n    \"id_type\": \"id_card\",\n    \"id_number\": \"12345678\",\n    \"address\": {\n      \"line1\": \"Av. Siempre Viva 123\",\n      \"city\": \"Santiago\",\n      \"state\": \"RM\",\n      \"postal_code\": \"8320000\",\n      \"country\": \"CHL\"\n    },\n    \"primary_purpose\": \"personal_or_living_expenses\",\n    \"most_recent_occupation\": \"Engineer\",\n    \"source_of_funds\": \"salary\"\n  }\n}",
