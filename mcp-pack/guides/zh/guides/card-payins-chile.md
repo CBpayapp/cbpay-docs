@@ -311,7 +311,9 @@ TRON/USDT、ETH/USDT、ETH/USDC、Polygon/USDT、Polygon/USDC 和 Base/USDC。
 银行卡隔离 payin v1 只接受 USDT 和 USDC 资金目标；BTC/BTC 虽然是钱包组合，
 但不适用于此 payin 流程。在配置费用时，创建钱包会从普通余额收取
 `wallet_creation` 费用；如果核心
-拒绝创建，费用会退回。每个账户每天最多创建 50 个钱包。
+拒绝创建，费用会退回。默认上限为每个账户每天 50 个钱包；您的运营方
+可以为您的组织提高该上限。达到上限时，接口返回
+`429 too_many_segregated_wallets`；请勿使用新幂等键创建第二笔 payin。
 
 付款获批后，读取 payin 直到 `funding_status` 为 `completed`。最终对象
 包含 `funding_tx_id` 和 `funded_at`；`payin_credited` webhook 包含
@@ -324,7 +326,7 @@ payin，也不要使用新 key 重新发送资金转移。
 | 404 | `not_found` | 确认 `segregated_wallet_id` 属于当前账户。 |
 | 402 | `insufficient_funds` | 为钱包创建费用补充普通余额，然后创建新的操作。 |
 | 400 | `invalid_asset` | 选择受支持的网络/资产组合和 USDT 或 USDC 目标。 |
-| 429 | `too_many_segregated_wallets` | 等待账户滚动 24 小时限制重置。 |
+| 429 | `too_many_segregated_wallets` | 等待账户滚动 24 小时限制重置，或请运营方检查您组织配置的上限。 |
 
 #### 隔离银行卡 payin 会入普通余额吗？
 不会。银行卡金额仍遵循正常结算流程，但净额会转入所选隔离钱包。适用

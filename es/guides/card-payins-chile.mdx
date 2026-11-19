@@ -354,8 +354,11 @@ TRON/USDT, ETH/USDT, ETH/USDC, Polygon/USDT, Polygon/USDC
 y Base/USDC. El payin segregado v1 acepta solo destinos USDT y USDC;
 BTC/BTC sigue siendo un par de wallet, pero no está disponible en este flujo.
 Cuando está configurado, crear una wallet cobra la comisión estándar
-`wallet_creation` al saldo general y la devuelve si el core rechaza la creación. Hay un máximo de 50
-wallets creadas por cuenta al día.
+`wallet_creation` al saldo general y la devuelve si el core rechaza la creación.
+El límite predeterminado es de 50 wallets por cuenta al día; tu operador puede
+subirlo para tu organización. Si se alcanza el límite, la request devuelve
+`429 too_many_segregated_wallets`; no crees otro payin con una clave de
+idempotencia nueva.
 
 Después de la aprobación, lee el payin hasta que `funding_status` sea
 `completed`. El objeto final incluye `funding_tx_id` y `funded_at`; el webhook
@@ -369,7 +372,7 @@ ni reenvíes el fondeo con una clave nueva.
 | 404 | `not_found` | Verifica que `segregated_wallet_id` pertenezca a la cuenta llamante. |
 | 402 | `insufficient_funds` | Fondea el saldo general para la comisión de creación y crea una operación nueva. |
 | 400 | `invalid_asset` | Selecciona un par soportado y un destino USDT o USDC. |
-| 429 | `too_many_segregated_wallets` | Espera el reinicio de la ventana móvil de 24 horas. |
+| 429 | `too_many_segregated_wallets` | Espera el reinicio de la ventana móvil de 24 horas o pide a tu operador revisar el límite configurado para tu organización. |
 
 <Accordion title="¿Un payin segregado acredita el saldo general?">
 No. El monto de tarjeta sigue el ciclo normal de liquidación, pero el neto se
