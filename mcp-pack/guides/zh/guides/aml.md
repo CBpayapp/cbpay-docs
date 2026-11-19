@@ -388,3 +388,30 @@ KYC/KYB 身份验证（你的入驻验证）管理。筛查只评估
 也无法下载报告。如需该文件，请对同一身份重新执行一次筛查
 （身份数据完全相同时会复用之前的结果，不重复收费），
 然后下载其报告。
+## 风险模型明细
+
+当存在分类证据时，screening PDF 会显示**风险模型明细**。即使名单匹配为零，它也解释纯模型决定。供应商形式是 `risk_score.data` / full `provider_model_score`：`overall_result` 保留供应商的大写等级和分数，`category_results` 包含精确评估属性。标准化 `model_breakdown` 将等级转为小写并展开 list field。只有 overall 的 legacy 镜像不会显示分类。
+
+```json
+{
+  "provider_model_score": {
+    "overall_result": { "level": "PROHIBITED", "score": 5750 },
+    "category_results": [
+      { "category": "COUNTRY", "level": "PROHIBITED", "score": 1140, "weight": 5, "attribute_results": [
+        { "attribute_name": "nationality", "evaluated_parameter": "RU", "score": 100, "type": "value_field" },
+        { "attribute_name": "personalIdentificationIssuingCountry", "evaluated_parameter": "RU", "score": 520, "type": "value_field" },
+        { "attribute_name": "residentialInformation", "score": 520, "type": "list_field", "attribute_results": [{ "attribute_name": "countryOfResidence", "evaluated_parameter": "RU", "score": 520, "type": "value_field" }] }
+      ] },
+      { "category": "BASIC_INFORMATION", "level": "LOW", "score": 10, "weight": 5, "attribute_results": [{ "attribute_name": "age", "evaluated_parameter": "40", "score": 10, "type": "value_field" }] }
+    ]
+  },
+  "model_breakdown": [
+    { "category": "COUNTRY", "level": "prohibited", "score": 1140, "weight": 5, "attributes": [
+      { "name": "nationality", "parameter": "RU", "score": 100 },
+      { "name": "personalIdentificationIssuingCountry", "parameter": "RU", "score": 520 },
+      { "name": "residentialInformation.countryOfResidence", "parameter": "RU", "score": 520 } ] },
+    { "category": "BASIC_INFORMATION", "level": "low", "score": 10, "weight": 5, "attributes": [{ "name": "age", "parameter": "40", "score": 10 }] }
+  ]
+}
+```
+In the real RU evaluation, the overall score is `5750`; the country attributes score `100`, `520`, and `520`, and age scores `10`. This is model evidence, not a sanctions-list match.
