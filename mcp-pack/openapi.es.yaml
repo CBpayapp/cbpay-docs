@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.299'
+  version: '2.300'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -9005,7 +9005,7 @@ paths:
       - KYC / KYB
       operationId: createKybLink
       summary: Crear un link KYB para un cliente
-      description: 'Solo cuentas empresa: genera un link KYB hosteado para uno de TUS clientes finales (empresas). Cobra el fee fijo `kyb_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` obligatoria. `country` elige el corredor del wizard: us, cl, ve, br, mx, co, pe, bo, py, ar o generic (con `generic_country` ISO alpha-2 y `currency` opcional).'
+      description: 'Solo cuentas empresa: genera un link KYB hosteado para uno de TUS clientes finales (empresas). Cobra el fee fijo `kyb_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` obligatoria. `country` elige el corredor del wizard: us, cl, ve, br, mx, co, pe, bo, py, ar o generic (con `generic_country` ISO alpha-2 y `currency` opcional). Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:
@@ -9158,7 +9158,7 @@ paths:
       - KYC / KYB
       operationId: createKybSubmission
       summary: Crear una submission KYB con datos por API
-      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales (una empresa) enviando los datos directo. Body: external_customer_id, country?, business (los campos de la empresa), ubos?, directors?, signers?, bank_info?, metadata?. KYB exige nombre legal y número de registro completos; KYC exige nombres, fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Un país KYB desconocido usa el perfil genérico con ese ISO; `country: generic` exige `generic_country`. Cobra el fee fijo `kyb_verification`; `idempotency_key` obligatoria. Re-enviar mientras siga abierta actualiza la misma submission sin cobrar de nuevo.'
+      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales (una empresa) enviando los datos directo. Body: external_customer_id, country?, business (los campos de la empresa), ubos?, directors?, signers?, bank_info?, metadata?. KYB exige nombre legal y número de registro completos; KYC exige nombres, fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Un país KYB desconocido usa el perfil genérico con ese ISO; `country: generic` exige `generic_country`. Cobra el fee fijo `kyb_verification`; `idempotency_key` obligatoria. Re-enviar mientras siga abierta actualiza la misma submission sin cobrar de nuevo. Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:
@@ -10059,7 +10059,7 @@ paths:
       - KYC / KYB
       operationId: createKycLink
       summary: Crear un link KYC para un cliente
-      description: 'Solo cuentas empresa: genera un link KYC hosteado para uno de TUS clientes finales. El wizard cubre formulario, documentos y prueba de vida en video. Cobra el fee fijo `kyc_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` es obligatoria — un retry con la misma clave devuelve el link original y nunca cobra dos veces.'
+      description: 'Solo cuentas empresa: genera un link KYC hosteado para uno de TUS clientes finales. El wizard cubre formulario, documentos y prueba de vida en video. Cobra el fee fijo `kyc_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` es obligatoria — un retry con la misma clave devuelve el link original y nunca cobra dos veces. Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:
@@ -10211,7 +10211,7 @@ paths:
       - KYC / KYB
       operationId: createKycSubmission
       summary: Crear una submission KYC con datos por API
-      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales enviando los datos directo (sin wizard). Países en ISO alpha-3, fechas YYYY-MM-DD, id_type passport | id_card | drivers_license. Los documentos son opcionales al crear (súbelos con el flujo presign); no se exige prueba de vida al crear — la submission queda con liveness_pending: true y se cierra con un liveness link. Re-enviar con el mismo external_customer_id mientras la submission siga abierta la actualiza sin cobrar de nuevo. Cobra el fee fijo `kyc_verification`; `idempotency_key` obligatoria.'
+      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales enviando los datos directo (sin wizard). Países en ISO alpha-3, fechas YYYY-MM-DD, id_type passport | id_card | drivers_license. Los documentos son opcionales al crear (súbelos con el flujo presign); no se exige prueba de vida al crear — la submission queda con liveness_pending: true y se cierra con un liveness link. Re-enviar con el mismo external_customer_id mientras la submission siga abierta la actualiza sin cobrar de nuevo. Cobra el fee fijo `kyc_verification`; `idempotency_key` obligatoria. Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:

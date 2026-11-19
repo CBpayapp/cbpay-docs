@@ -5,16 +5,19 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.299 · 2 个版本 - 2026年11月18日
-### v2.299
+## v2.300 · 3 个版本 - 2026年11月18日
+### v2.300
 **新增**
 
 - 新增三语钱包筛查详情指南：风险结论、触发器区间、直接与间接参考敞口、
   标准化链上风险类别，以及 Low、Medium、High、Severe 和 Unknown 结果的
   建议处理方式。
-### v2.298
+### v2.299
 **变更**
 - 交易审核门户现在在审核列表和详情中通过 RFC 3339 字段 `info_requested_at` 显示信息请求日期。门户显示 24 小时补正倒计时，并在期限后标记请求已过期；没有有效请求时省略该字段。
+### v2.298
+**变更**
+- merchant 验证请求现在拒绝以区分大小写的 `self:` 前缀开头的 `idempotency_key`，该前缀保留给管理员自助链接。API 返回 `400 invalid_payload`，消息为 `reserved namespace`；`SELF:` 和其他前缀仍然有效。
 ## v2.297 · 2 个版本 - 2026年11月17日
 ### v2.297
 **新增**

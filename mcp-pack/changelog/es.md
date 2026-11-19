@@ -5,17 +5,20 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.299 · 2 versiones - 18 de noviembre de 2026
-### v2.299
+## v2.300 · 3 versiones - 18 de noviembre de 2026
+### v2.300
 **Agregado**
 
 - Se agregó la guía trilingüe del detalle de screening de billeteras:
   veredictos, rangos de triggers, exposiciones referenciales directas e
   indirectas, categorías de riesgo on-chain normalizadas y acción recomendada
   para resultados Low, Medium, High, Severe y Unknown.
-### v2.298
+### v2.299
 **Cambiado**
 - El portal de revisiones ahora expone la fecha del pedido de información como el campo RFC 3339 `info_requested_at` tanto en la bandeja como en el detalle. El portal muestra la cuenta regresiva de 24 horas para subsanar y marca el pedido como vencido después del plazo; el campo se omite cuando no existe un pedido activo.
+### v2.298
+**Cambiado**
+- Las solicitudes merchant de verificación ahora rechazan los valores de `idempotency_key` con el prefijo sensible a mayúsculas `self:`, reservado para self-links de admin. La API devuelve `400 invalid_payload` con el mensaje `reserved namespace`; `SELF:` y los demás prefijos siguen siendo válidos.
 ## v2.297 · 2 versiones - 17 de noviembre de 2026
 ### v2.297
 **Agregado**

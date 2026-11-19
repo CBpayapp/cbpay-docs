@@ -5,17 +5,20 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.299 · 2 versions - November 18, 2026
-### v2.299
+## v2.300 · 3 versions - November 18, 2026
+### v2.300
 **Added**
 
 - Added the trilingual wallet-screening detail guidance: risk verdicts,
   trigger ranges, direct and indirect reference exposures, normalized
   on-chain risk categories, and the recommended response for Low, Medium,
   High, Severe and Unknown results.
-### v2.298
+### v2.299
 **Changed**
 - The transaction-review portal now exposes the information-request date as the RFC 3339 `info_requested_at` field in both the review list and detail. The portal shows the 24-hour remediation countdown and marks the request as expired after the deadline; the field is omitted when there is no active request.
+### v2.298
+**Changed**
+- Merchant verification requests now reject `idempotency_key` values with the case-sensitive `self:` prefix, reserved for admin self-links. The API returns `400 invalid_payload` with the message `reserved namespace`; `SELF:` and other prefixes remain valid.
 ## v2.297 · 2 versions - November 17, 2026
 ### v2.297
 **Added**
