@@ -7815,11 +7815,6 @@ paths:
                     enabled: true
                   - asset: usdce
                     enabled: false
-                - chain: base
-                  enabled: true
-                  pairs:
-                  - asset: usdc
-                    enabled: true
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -7946,7 +7941,6 @@ paths:
                   - tron
                   - eth
                   - polygon
-                  - base
                   - btc
                 asset:
                   type: string
@@ -7975,11 +7969,6 @@ paths:
                 value:
                   chain: polygon
                   asset: usdce
-              base_usdc_wallet:
-                summary: 补齐 Base 原生 USDC 组合
-                value:
-                  chain: base
-                  asset: usdc
               btc_wallet:
                 summary: 补齐 Bitcoin 组合
                 value:
@@ -8089,7 +8078,7 @@ paths:
       - 加密货币
       operationId: createCryptoWithdrawal
       summary: 创建链上提现
-      description: 从其自身余额链上发送 USDT、USDC、USDC.e 或 BTC。支持的组合:`tron`/`USDT`、`eth`/`USDT`、`eth`/`USDC`、`polygon`/`USDT`、`polygon`/`USDC`、`polygon`/`USDC.e`、`base`/`USDC`、`btc`/`BTC`(GOLD 无链上通道)。Base USDC 使用六位小数，充值需要 600 次确认，提现在 60 次确认后对账。`amount + 提现费` 原子扣除并冻结;最终状态通过 `crypto_withdrawal_status_changed` webhook 送达。`failed` 会全额退款。
+      description: 从其自身余额链上发送 USDT、USDC、USDC.e 或 BTC。支持的组合:`tron`/`USDT`、`eth`/`USDT`、`eth`/`USDC`、`polygon`/`USDT`、`polygon`/`USDC`、`polygon`/`USDC.e`、`btc`/`BTC`(GOLD 无链上通道)。`amount + 提现费` 原子扣除并冻结;最终状态通过 `crypto_withdrawal_status_changed` webhook 送达。`failed` 会全额退款。
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -8107,7 +8096,6 @@ paths:
                   - tron
                   - eth
                   - polygon
-                  - base
                   - btc
                   default: tron
                 asset:
@@ -8171,14 +8159,6 @@ paths:
                   to_address: bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
                   amount: '0.00050000'
                   idempotency_key: withdrawal-btc-2026-07-15-a
-              usdc_base:
-                summary: Base 上的 USDC
-                value:
-                  chain: base
-                  asset: USDC
-                  to_address: '0x8f3Ba1b2c3d4e5F60718293a4B5c6D7e8f90A1b2'
-                  amount: '50.000000'
-                  idempotency_key: withdrawal-base-usdc-2026-11-19-a
               travel_rule_self_hosted:
                 summary: 超过 Travel Rule 阈值,转往自托管钱包
                 value:
@@ -15244,6 +15224,78 @@ paths:
                   type: string
                   maxLength: 40
                   description: 仅预告转账 — 付款人的银行账号（至少 5 个字符）。可选；当通道上报付款账户时， 这是额外的匹配信号。
+                segregated_mode:
+                  type: string
+                  enum:
+                  - account
+                  - existing
+                  - get_or_create
+                  - new_per_payin
+                  default: account
+                  description: 仅 card 方法 — 净额结算去向。`account`（默认）照常入账到通用余额。`existing` 注入已创建的隔离钱包（`segregated_wallet_id` 必填）。`get_or_create` 复用绑定到 `segregated_key` 的钱包，不存在则即时创建（`segregated_chain` 与 `segregated_key` 必填，`segregated_asset` 默认为该链资产）。`new_per_payin` 每笔 payin 创建新钱包（`segregated_chain` 必填）。隔离模式下净额将链上注入钱包地址并带有可追踪交易号；注资前仍适用卡结算小时数。创建钱包按标准 wallet_creation 费用从通用余额扣费（核心拒绝则退款）；个人账户每网络/资产对限一个钱包。卡会话复用按目标钱包隔离，每个账户每天最多创建 50 个钱包。
+                segregated_wallet_id:
+                  type: string
+                  format: uuid
+                  description: '仅 card 方法 — `segregated_mode: existing` 的隔离钱包 id。必须属于调用账户（非本账户或未知 id 返回 404）。链与资产继承自该钱包。'
+                segregated_chain:
+                  type: string
+                  description: 仅 card 方法 — `get_or_create` 与 `new_per_payin` 的钱包网络（tron、eth、polygon、base、btc 之一）。
+                segregated_asset:
+                  type: string
+                  description: 仅 card 方法 — `get_or_create` 与 `new_per_payin` 的钱包资产。省略时使用该链默认资产（例如 tron 用 USDT）。支持的交易对：tron/usdt、eth/usdt、eth/usdc、polygon/usdt、polygon/usdc、polygon/usdce、base/usdc、btc/btc。v1 链上注资仅支持 USDT/USDC 目标；其他资产返回 `invalid_asset`。
+                segregated_key:
+                  type: string
+                  maxLength: 120
+                  description: 仅 card 方法 — `get_or_create` 的稳定键（最多 120 字符，例如 kontigo:user:123）。相同键复用同一钱包；新键即时创建新钱包。
+                segregated_label:
+                  type: string
+                  maxLength: 120
+                  description: 仅 card 方法 — 隔离钱包的可选展示标签（纯文本，最多 120 字符）。
+                segregated_owner:
+                  type: object
+                  description: 仅 card 方法 — 隔离钱包最终持有人的可选身份（争议证据标准）。每个字段均为可选；有用的最小集合为姓名加证件加国家加邮箱。
+                  properties:
+                    external_id:
+                      type: string
+                      maxLength: 120
+                    name:
+                      type: string
+                      maxLength: 140
+                    document_type:
+                      type: string
+                      maxLength: 50
+                    document_number:
+                      type: string
+                      maxLength: 50
+                    country:
+                      type: string
+                      maxLength: 120
+                    email:
+                      type: string
+                      maxLength: 120
+                    phone:
+                      type: string
+                      maxLength: 40
+                    kyc_level:
+                      type: string
+                      maxLength: 40
+                      description: 持有人在你方的验证等级（例如 L1、L2、L3）。
+                    kyc_verified_at:
+                      type: string
+                      format: date-time
+                      description: 持有人完成验证的 RFC3339 时间。
+                    is_company:
+                      type: boolean
+                    company_name:
+                      type: string
+                      maxLength: 140
+                    company_tax_id:
+                      type: string
+                      maxLength: 50
+                    order_id:
+                      type: string
+                      maxLength: 120
+                      description: 你方的订单号，用于交付证据。
             examples:
               bo_qr:
                 summary: 玻利维亚 — QR 收款(BOB)
@@ -15346,6 +15398,37 @@ paths:
                   save_card: true
                   payer_reference: customer-7719
                   idempotency_key: pro-plan-7719
+              us_card_segregated:
+                summary: 国际卡 — 结算到隔离钱包(US/USD)
+                value:
+                  country: US
+                  currency: USD
+                  method: card
+                  amount: '100.00'
+                  description: 用户钱包充值
+                  customer:
+                    email: payer@example.com
+                    first_name: Juan
+                    last_name: Perez
+                  payer_reference: customer-123
+                  segregated_mode: get_or_create
+                  segregated_chain: tron
+                  segregated_asset: USDT
+                  segregated_key: kontigo:user:123
+                  segregated_label: Billetera Juan
+                  segregated_owner:
+                    external_id: user-123
+                    name: Juan Perez
+                    document_type: CI
+                    document_number: '12345678'
+                    country: CL
+                    email: payer@example.com
+                    kyc_level: intermediate
+                    kyc_verified_at: '2026-11-18T15:04:05Z'
+                    order_id: kontigo-order-789
+                  success_url: https://your-app.com/payment/ok
+                  failure_url: https://your-app.com/payment/error
+                  idempotency_key: kontigo-pay-001
               checkout_usdt:
                 summary: 通用收款链接 — 50 USDT(多国,预选智利)
                 value:
@@ -15620,6 +15703,19 @@ paths:
                     payment_url: https://api.qbank.cl/pay/cards/Kt9XmQ7p…
                     expires_at: '2026-07-26T18:30:00Z'
                     note: share the payment_url with the payer; the balance is credited automatically once the card payment is approved
+                card_segregated:
+                  summary: 结算到隔离钱包的银行卡支付页(方式:card,segregated_mode)
+                  value:
+                    payin_id: 7d2e9f41-2222-3333-4444-555566667777
+                    status: pending
+                    reference: 7d2e9f41-2222-3333-4444-555566667777
+                    payment_url: https://api.qbank.cl/pay/cards/Qt8WnR4s…
+                    expires_at: '2026-11-26T18:30:00Z'
+                    segregated_wallet_id: 9e3f8a52-3333-4444-5555-666677778888
+                    segregated_mode: get_or_create
+                    segregated_address: TEvJ9y4qW8xN2mK6pR5sT7uV3wX1yZ4aB6c
+                    funding_status: pending
+                    note: 将 payment_url 分享给付款人；批准后净额将链上注入隔离钱包
                 checkout:
                   summary: 通用收款链接(方式:checkout)
                   value:
@@ -15734,7 +15830,7 @@ paths:
                     error: card_reuse_unavailable
                     message: could not verify an existing card payment
         '429':
-          description: 账户已有 50 个开放银行卡会话，且无法驱逐零尝试的 `pending` 会话（`too_many_open_card_sessions`）。
+          description: 账户已有 50 个开放银行卡会话，且无法驱逐零尝试的 `pending` 会话（`too_many_open_card_sessions`）。每日创建超过 50 个钱包的隔离 payin 返回 `too_many_segregated_wallets`。
           content:
             application/json:
               schema:
@@ -15743,7 +15839,7 @@ paths:
                 error: too_many_open_card_sessions
                 message: too many open card payment sessions
         '409':
-          description: '`idempotency_conflict` — 该幂等键已用于不同的 payload。幂等键在账户内 唯一：每个逻辑操作使用一个键。对于 QR，比较国家、币种、方法和数值金额； 展示描述不参与身份判断。'
+          description: '`idempotency_conflict` — 该幂等键已用于不同的 payload。幂等键在账户内 唯一：每个逻辑操作使用一个键。对于 QR，比较国家、币种、方法和数值金额； 展示描述不参与身份判断。键已绑定其他链/资产对的隔离 `get_or_create` 返回 `segregated_key_conflict`。'
           content:
             application/json:
               schema:
@@ -31403,6 +31499,21 @@ components:
               updated_at:
                 type: string
                 format: date-time
+        segregated:
+          type: array
+          description: 每个钱包的隔离 staging 子余额（等待链上注资的隔离卡 payin）。为空时省略。
+          items:
+            type: object
+            properties:
+              wallet_id:
+                type: string
+                format: uuid
+              asset:
+                type: string
+                example: USDT
+              available:
+                type: string
+                example: '99.000000'
     MovementsResponse:
       type: object
       properties:
@@ -31813,6 +31924,26 @@ components:
           type: string
           format: date-time
           description: 该已确认收款的余额实际进入您账本的时间 —— 无结算延迟的收款在确认时即为 此时间;延迟结算的银行卡收款则在计划结算执行时(或机构管理员手动提前释放时)。
+        segregated_wallet_id:
+          type: string
+          format: uuid
+          description: 仅隔离卡 payin —— 接收净额的 sweep-exempt 钱包（而非通用余额）。
+        segregated_mode:
+          type: string
+          description: 仅隔离卡 payin —— existing、get_or_create 或 new_per_payin。
+        segregated_key:
+          type: string
+          description: 仅隔离卡 payin —— get_or_create 钱包的稳定键。
+        funding_status:
+          type: string
+          description: 仅隔离卡 payin —— none、pending、processing、completed 或 failed。
+        funding_tx_id:
+          type: string
+          description: 仅隔离卡 payin —— 完成后注资的链上交易。
+        funded_at:
+          type: string
+          format: date-time
+          description: 仅隔离卡 payin —— 注资交易链上确认的时间。
         fx_rate:
           type: string
           description: 入账时你的 payin 汇率(付款被接收并转换后出现)。
@@ -31964,6 +32095,10 @@ components:
         balance_after:
           type: string
           description: 出现在 `payin_refunded` webhook 中 —— 扣款后余额（该收款的入账资产；拒付时可能为负）。
+        debited_wallet_id:
+          type: string
+          format: uuid
+          description: 仅隔离 payin 的冲正 —— 被扣款的 staging 钱包（扣通用余额时省略）。
         receipt_url:
           type: string
         created_at:
@@ -32129,6 +32264,46 @@ components:
         exported_at:
           type: string
           format: date-time
+        wallet_key:
+          type: string
+          description: get_or_create 钱包的稳定键（手动或按 payin 钱包省略）。
+        owner:
+          type: object
+          description: 创建时提供的最终持有人身份（争议证据标准）。每个字段均为可选。
+          properties:
+            external_id:
+              type: string
+            name:
+              type: string
+            document_type:
+              type: string
+            document_number:
+              type: string
+            country:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+            kyc_level:
+              type: string
+            kyc_verified_at:
+              type: string
+              format: date-time
+            is_company:
+              type: boolean
+            company_name:
+              type: string
+            company_tax_id:
+              type: string
+            order_id:
+              type: string
+        staging_usd:
+          type: string
+          description: 等待链上注资的 staging USD（为零时省略）。
+        staging_usdt:
+          type: string
+          description: 等待链上注资的 staging USDT（为零时省略）。
         created_at:
           type: string
           format: date-time
@@ -32439,6 +32614,19 @@ webhooks:
                       type: string
                     account:
                       type: string
+                segregated_wallet_id:
+                  type: string
+                  format: uuid
+                  description: 仅隔离卡 payin —— 接收净额的 sweep-exempt 钱包（而非通用余额）。
+                segregated_mode:
+                  type: string
+                  description: 仅隔离卡 payin —— existing、get_or_create 或 new_per_payin。
+                funding_status:
+                  type: string
+                  description: 仅隔离卡 payin —— pending、processing、completed 或 failed。
+                funding_tx_id:
+                  type: string
+                  description: 仅隔离卡 payin —— 完成后注资的链上交易。
                 idempotency_key: *id015
             example:
               payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b

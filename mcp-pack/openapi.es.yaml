@@ -7837,11 +7837,6 @@ paths:
                     enabled: true
                   - asset: usdce
                     enabled: false
-                - chain: base
-                  enabled: true
-                  pairs:
-                  - asset: usdc
-                    enabled: true
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -7949,7 +7944,7 @@ paths:
       - Crypto
       operationId: createCryptoWallet
       summary: Reponer una wallet de depósito faltante
-      description: 'Toda cuenta — persona y empresa — tiene exactamente **una wallet de depósito por par soportado** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc`), aprovisionadas automáticamente y gratis al registrarse. Base USDC usa el contrato `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` y seis decimales. Las wallets de depósito solo **reciben** crypto que se abona al saldo virtual de la cuenta: no envían, y no se exportan ni importan (para eso están las wallets segregadas). Este endpoint existe solo para reponer un par faltante (caso excepcional): con el par ya aprovisionado responde `422 wallet_limit_reached` para todo tipo de cuenta.
+      description: 'Toda cuenta — persona y empresa — tiene exactamente **una wallet de depósito por par soportado** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`), aprovisionadas automáticamente y gratis al registrarse. Las wallets de depósito solo **reciben** crypto que se abona al saldo virtual de la cuenta: no envían, y no se exportan ni importan (para eso están las wallets segregadas). Este endpoint existe solo para reponer un par faltante (caso excepcional): con el par ya aprovisionado responde `422 wallet_limit_reached` para todo tipo de cuenta.
 
 
         Una reposición manual cobra la comisión `wallet_creation` cuando CBPay la tiene configurada (fija por wallet; 0 = gratis, el valor por defecto); las wallets de nacimiento son siempre gratis. El cargo se reembolsa automáticamente si la creación falla.'
@@ -7968,7 +7963,6 @@ paths:
                   - tron
                   - eth
                   - polygon
-                  - base
                   - btc
                 asset:
                   type: string
@@ -7997,11 +7991,6 @@ paths:
                 value:
                   chain: polygon
                   asset: usdce
-              base_usdc_wallet:
-                summary: Reponer el par USDC nativo en Base
-                value:
-                  chain: base
-                  asset: usdc
               btc_wallet:
                 summary: Reponer el par Bitcoin
                 value:
@@ -8111,7 +8100,7 @@ paths:
       - Crypto
       operationId: createCryptoWithdrawal
       summary: Crear un retiro on-chain
-      description: 'Envía USDT, USDC, USDC.e o BTC on-chain desde su propio saldo. Pares soportados: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD no tiene riel on-chain). Base USDC usa seis decimales; los depósitos requieren 600 confirmaciones y los retiros se concilian tras 60. `amount + comisión de retiro` se debita atómicamente y queda retenido; el estado final llega vía el webhook `crypto_withdrawal_status_changed`. `failed` reembolsa el débito completo.'
+      description: 'Envía USDT, USDC, USDC.e o BTC on-chain desde su propio saldo. Pares soportados: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD no tiene riel on-chain). `amount + comisión de retiro` se debita atómicamente y queda retenido; el estado final llega vía el webhook `crypto_withdrawal_status_changed`. `failed` reembolsa el débito completo.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -8129,7 +8118,6 @@ paths:
                   - tron
                   - eth
                   - polygon
-                  - base
                   - btc
                   default: tron
                 asset:
@@ -8193,14 +8181,6 @@ paths:
                   to_address: bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
                   amount: '0.00050000'
                   idempotency_key: withdrawal-btc-2026-07-15-a
-              usdc_base:
-                summary: USDC por Base
-                value:
-                  chain: base
-                  asset: USDC
-                  to_address: '0x8f3Ba1b2c3d4e5F60718293a4B5c6D7e8f90A1b2'
-                  amount: '50.000000'
-                  idempotency_key: withdrawal-base-usdc-2026-11-19-a
               travel_rule_self_hosted:
                 summary: Sobre el umbral Travel Rule a wallet propia (self-hosted)
                 value:
@@ -15266,6 +15246,78 @@ paths:
                   type: string
                   maxLength: 40
                   description: Solo transferencia anunciada — número de cuenta bancaria del pagador (al menos 5 caracteres). Opcional; es una señal extra de conciliación cuando el corredor informa la cuenta de origen.
+                segregated_mode:
+                  type: string
+                  enum:
+                  - account
+                  - existing
+                  - get_or_create
+                  - new_per_payin
+                  default: account
+                  description: Solo método tarjeta — dónde liquida el neto. `account` (default) acredita tu saldo general como siempre. `existing` fondea una wallet segregada ya creada (`segregated_wallet_id` obligatoria). `get_or_create` reusa la wallet ligada a `segregated_key` o la crea en el momento (`segregated_chain` y `segregated_key` obligatorias, `segregated_asset` usa el asset de la chain). `new_per_payin` crea una wallet nueva por cada payin (`segregated_chain` obligatoria). En modos segregados el neto se fondea on-chain a la dirección de la wallet con transacción trazable; las horas de settlement de tarjeta aplican antes del fondeo. Crear una wallet cobra el fee estándar wallet_creation a tu saldo general (reembolsado si el core la rechaza); las cuentas persona tienen una wallet por par red/asset. El reuso de sesión de tarjeta queda aislado por wallet destino, y cada cuenta puede crear como máximo 50 wallets al día.
+                segregated_wallet_id:
+                  type: string
+                  format: uuid
+                  description: 'Solo método tarjeta — id de la wallet segregada para `segregated_mode: existing`. Debe pertenecer a la cuenta llamante (un id ajeno o desconocido responde 404). Chain y asset se heredan de la wallet.'
+                segregated_chain:
+                  type: string
+                  description: Solo método tarjeta — red de la wallet para `get_or_create` y `new_per_payin` (una de tron, eth, polygon, base, btc).
+                segregated_asset:
+                  type: string
+                  description: 'Solo método tarjeta — asset de la wallet para `get_or_create` y `new_per_payin`. Si se omite usa el asset de la chain (por ejemplo USDT en tron). Pares soportados: tron/usdt, eth/usdt, eth/usdc, polygon/usdt, polygon/usdc, polygon/usdce, base/usdc, btc/btc. El fondeo on-chain v1 soporta destinos USDT/USDC; otros assets devuelven `invalid_asset`.'
+                segregated_key:
+                  type: string
+                  maxLength: 120
+                  description: Solo método tarjeta — tu clave estable para `get_or_create` (máx 120 caracteres, por ejemplo kontigo:user:123). La misma clave reusa la misma wallet; una clave nueva crea una wallet en el momento.
+                segregated_label:
+                  type: string
+                  maxLength: 120
+                  description: Solo método tarjeta — etiqueta opcional para mostrar la wallet segregada (texto plano, máx 120 caracteres).
+                segregated_owner:
+                  type: object
+                  description: Solo método tarjeta — identidad opcional del dueño final de la wallet segregada (estándar de evidencia en disputas). Cada campo es opcional; el mínimo útil es nombre más documento más país más email.
+                  properties:
+                    external_id:
+                      type: string
+                      maxLength: 120
+                    name:
+                      type: string
+                      maxLength: 140
+                    document_type:
+                      type: string
+                      maxLength: 50
+                    document_number:
+                      type: string
+                      maxLength: 50
+                    country:
+                      type: string
+                      maxLength: 120
+                    email:
+                      type: string
+                      maxLength: 120
+                    phone:
+                      type: string
+                      maxLength: 40
+                    kyc_level:
+                      type: string
+                      maxLength: 40
+                      description: Tu nivel de verificación del dueño (por ejemplo L1, L2, L3).
+                    kyc_verified_at:
+                      type: string
+                      format: date-time
+                      description: Fecha RFC3339 en que el dueño completó la verificación.
+                    is_company:
+                      type: boolean
+                    company_name:
+                      type: string
+                      maxLength: 140
+                    company_tax_id:
+                      type: string
+                      maxLength: 50
+                    order_id:
+                      type: string
+                      maxLength: 120
+                      description: Tu id de orden para la evidencia de entrega.
             examples:
               bo_qr:
                 summary: Bolivia — cobro QR (BOB)
@@ -15365,6 +15417,37 @@ paths:
                   save_card: true
                   payer_reference: cliente-7719
                   idempotency_key: plan-pro-7719
+              us_card_segregated:
+                summary: Tarjetas internacionales — checkout que liquida a wallet segregada (US/USD)
+                value:
+                  country: US
+                  currency: USD
+                  method: card
+                  amount: '100.00'
+                  description: Recarga billetera usuario
+                  customer:
+                    email: pagador@ejemplo.com
+                    first_name: Juan
+                    last_name: Perez
+                  payer_reference: cliente-123
+                  segregated_mode: get_or_create
+                  segregated_chain: tron
+                  segregated_asset: USDT
+                  segregated_key: kontigo:user:123
+                  segregated_label: Billetera Juan
+                  segregated_owner:
+                    external_id: user-123
+                    name: Juan Perez
+                    document_type: CI
+                    document_number: '12345678'
+                    country: CL
+                    email: pagador@ejemplo.com
+                    kyc_level: intermediate
+                    kyc_verified_at: '2026-11-18T15:04:05Z'
+                    order_id: kontigo-order-789
+                  success_url: https://tu-app.com/pago/ok
+                  failure_url: https://tu-app.com/pago/error
+                  idempotency_key: kontigo-pay-001
               checkout_usdt:
                 summary: Link de cobro universal — 50 USDT (multi-país, CL preseleccionado)
                 value:
@@ -15639,6 +15722,19 @@ paths:
                     payment_url: https://api.qbank.cl/pay/cards/Kt9XmQ7p…
                     expires_at: '2026-07-26T18:30:00Z'
                     note: share the payment_url with the payer; the balance is credited automatically once the card payment is approved
+                card_segregated:
+                  summary: 'Página de pago con tarjeta que liquida a wallet segregada (method: card, segregated_mode)'
+                  value:
+                    payin_id: 7d2e9f41-2222-3333-4444-555566667777
+                    status: pending
+                    reference: 7d2e9f41-2222-3333-4444-555566667777
+                    payment_url: https://api.qbank.cl/pay/cards/Qt8WnR4s…
+                    expires_at: '2026-11-26T18:30:00Z'
+                    segregated_wallet_id: 9e3f8a52-3333-4444-5555-666677778888
+                    segregated_mode: get_or_create
+                    segregated_address: TEvJ9y4qW8xN2mK6pR5sT7uV3wX1yZ4aB6c
+                    funding_status: pending
+                    note: comparte el payment_url con el pagador; al aprobarse, el neto se fondea on-chain a la wallet segregada
                 checkout:
                   summary: 'Link de cobro universal (method: checkout)'
                   value:
@@ -15754,7 +15850,7 @@ paths:
                     error: card_reuse_unavailable
                     message: could not verify an existing card payment
         '429':
-          description: La cuenta tiene 50 sesiones de tarjeta abiertas y no se pudo desalojar una sesión `pending` sin intentos (`too_many_open_card_sessions`).
+          description: La cuenta tiene 50 sesiones de tarjeta abiertas y no se pudo desalojar una sesión `pending` sin intentos (`too_many_open_card_sessions`). Los payins segregados que crearían más de 50 wallets por cuenta al día devuelven `too_many_segregated_wallets`.
           content:
             application/json:
               schema:
@@ -15763,7 +15859,7 @@ paths:
                 error: too_many_open_card_sessions
                 message: too many open card payment sessions
         '409':
-          description: '`idempotency_conflict` — esta clave de idempotencia ya se usó con otro payload. Las claves son únicas por cuenta: usa una clave por operación lógica. Para QR, la comparación usa país, moneda, método y monto numérico; la descripción no forma parte de la identidad.'
+          description: '`idempotency_conflict` — esta clave de idempotencia ya se usó con otro payload. Las claves son únicas por cuenta: usa una clave por operación lógica. Para QR, la comparación usa país, moneda, método y monto numérico; la descripción no forma parte de la identidad. Un `get_or_create` segregado con una clave ya ligada a otro par chain/asset devuelve `segregated_key_conflict`.'
           content:
             application/json:
               schema:
@@ -31364,6 +31460,21 @@ components:
               updated_at:
                 type: string
                 format: date-time
+        segregated:
+          type: array
+          description: Sub-balances del staging segregado por wallet (payins con tarjeta segregados esperando fondeo on-chain). Se omite cuando está vacío.
+          items:
+            type: object
+            properties:
+              wallet_id:
+                type: string
+                format: uuid
+              asset:
+                type: string
+                example: USDT
+              available:
+                type: string
+                example: '99.000000'
     MovementsResponse:
       type: object
       properties:
@@ -31774,6 +31885,26 @@ components:
           type: string
           format: date-time
           description: Cuándo cayó realmente en tu ledger el saldo de este payin acreditado — al confirmarse para payins sin demora de settlement, o cuando corrió el settlement programado (o un org-admin lo liberó antes) para payins con tarjeta diferidos.
+        segregated_wallet_id:
+          type: string
+          format: uuid
+          description: Solo payins segregados con tarjeta — la wallet sweep-exempt que recibe el neto en vez del saldo general.
+        segregated_mode:
+          type: string
+          description: Solo payins segregados con tarjeta — existing, get_or_create o new_per_payin.
+        segregated_key:
+          type: string
+          description: Solo payins segregados con tarjeta — tu clave estable para wallets get_or_create.
+        funding_status:
+          type: string
+          description: Solo payins segregados con tarjeta — none, pending, processing, completed o failed.
+        funding_tx_id:
+          type: string
+          description: Solo payins segregados con tarjeta — transacción on-chain del fondeo al completarse.
+        funded_at:
+          type: string
+          format: date-time
+          description: Solo payins segregados con tarjeta — cuándo confirmó en cadena la transacción de fondeo.
         fx_rate:
           type: string
           description: Tu tasa de payin al momento del abono (presente una vez que el pago fue recibido y convertido).
@@ -31925,6 +32056,10 @@ components:
         balance_after:
           type: string
           description: Presente en el webhook `payin_refunded` — el saldo debitado después del movimiento (el asset de crédito del payin; puede ser negativo en un contracargo).
+        debited_wallet_id:
+          type: string
+          format: uuid
+          description: Solo reversas de payins segregados — la wallet de staging debitada (se omite cuando se debitó el general).
         receipt_url:
           type: string
         created_at:
@@ -32090,6 +32225,46 @@ components:
         exported_at:
           type: string
           format: date-time
+        wallet_key:
+          type: string
+          description: Clave estable para wallets get_or_create (se omite en manuales o por payin).
+        owner:
+          type: object
+          description: Identidad del dueño final aportada al crear (estándar de evidencia en disputas). Cada campo es opcional.
+          properties:
+            external_id:
+              type: string
+            name:
+              type: string
+            document_type:
+              type: string
+            document_number:
+              type: string
+            country:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+            kyc_level:
+              type: string
+            kyc_verified_at:
+              type: string
+              format: date-time
+            is_company:
+              type: boolean
+            company_name:
+              type: string
+            company_tax_id:
+              type: string
+            order_id:
+              type: string
+        staging_usd:
+          type: string
+          description: USD del staging esperando fondeo on-chain (se omite en cero).
+        staging_usdt:
+          type: string
+          description: USDT del staging esperando fondeo on-chain (se omite en cero).
         created_at:
           type: string
           format: date-time
@@ -32607,6 +32782,19 @@ webhooks:
                       type: string
                     account:
                       type: string
+                segregated_wallet_id:
+                  type: string
+                  format: uuid
+                  description: Solo payins segregados con tarjeta — la wallet sweep-exempt que recibe el neto en vez del saldo general.
+                segregated_mode:
+                  type: string
+                  description: Solo payins segregados con tarjeta — existing, get_or_create o new_per_payin.
+                funding_status:
+                  type: string
+                  description: Solo payins segregados con tarjeta — pending, processing, completed o failed.
+                funding_tx_id:
+                  type: string
+                  description: Solo payins segregados con tarjeta — transacción on-chain del fondeo al completarse.
                 idempotency_key: *id015
             example:
               payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b

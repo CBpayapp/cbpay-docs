@@ -306,3 +306,79 @@ documented future phase.
 #### Can I combine a hold with installments or a stored card?
 No: pre-authorization requires a new card paid in full on the hosted page.
 Stored cards charge immediately and installments settle at once.
+## Card payins to a segregated wallet
+
+For a card payin, you can send the net amount to a segregated on-chain wallet
+instead of the account's general balance. The card checkout and settlement
+timing stay unchanged; funding starts only after the card payin is credited.
+The destination wallet and its owner metadata remain attached to the payin
+for reconciliation and dispute evidence.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: us-card-segregated-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "card",
+    "amount": "49.90",
+    "description": "Order 8841",
+    "segregated_mode": "get_or_create",
+    "segregated_chain": "tron",
+    "segregated_asset": "USDT",
+    "segregated_key": "merchant:user:123",
+    "segregated_label": "Customer wallet",
+    "segregated_owner": {
+      "name": "Ana Rojas",
+      "document_type": "customer_id",
+      "document_number": "customer-123",
+      "country": "US",
+      "email": "payer@example.com"
+    },
+    "idempotency_key": "us-card-segregated-001"
+  }'
+```
+
+The response includes the destination and funding lifecycle:
+
+```json
+{
+  "payin_id": "7a2b…",
+  "status": "pending",
+  "segregated_wallet_id": "9e3f8a52-3333-4444-5555-666677778888",
+  "segregated_mode": "get_or_create",
+  "segregated_address": "TEvJ9y4qW8xN2mK6pR5sT7uV3wX1yZ4aB6c",
+  "funding_status": "pending"
+}
+```
+
+Supported modes are `existing` (requires `segregated_wallet_id`),
+`get_or_create` (requires `segregated_chain` and `segregated_key`) and
+`new_per_payin` (requires `segregated_chain`). Supported target pairs include
+TRON/USDT, ETH/USDT, ETH/USDC, Polygon/USDT, Polygon/USDC
+and Base/USDC. Payin segregated v1 accepts only USDT and USDC funding targets;
+BTC/BTC remains a wallet pair but is not available for this payin flow.
+When configured, wallet creation charges the standard `wallet_creation` fee to
+the general balance and refunds it if the core rejects creation. A maximum of 50 wallets
+per account per day applies.
+
+After approval, read the payin until `funding_status` is `completed`. The
+completed object includes `funding_tx_id` and `funded_at`; the
+`payin_credited` webhook carries `funding_tx_id`, while `funded_at` is read
+from the payin. A timeout or 5xx is ambiguous:
+read the payin and preserve its idempotency context. Never create another
+payin or resend the funding operation with a new key.
+
+| HTTP | Code | Solution |
+|---:|---|---|
+| 404 | `not_found` | Check that `segregated_wallet_id` belongs to the calling account. |
+| 402 | `insufficient_funds` | Fund the general balance for the wallet-creation fee, then create a new operation. |
+| 400 | `invalid_asset` | Select a supported chain/asset pair and a USDT or USDC funding target. |
+| 429 | `too_many_segregated_wallets` | Wait for the rolling 24-hour account limit to reset. |
+
+#### Does a segregated card payin credit the general balance?
+No. The card amount is settled through the normal card lifecycle, but the net
+is funded to the selected segregated wallet. Wallet-creation fees, when
+applicable, are charged to the general balance.
