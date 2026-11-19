@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-19 05:53 UTC",
-    "_content_sha256": "1fd4c9318ffbdfc06eda2dd1eaa228e618689d6dc6fde27a4fba10616951cc84"
+    "_generated_at": "2026-11-19 04:38 UTC",
+    "_content_sha256": "d60f0cf7051709e9d615c5d89bff089a163f0e1e00bcb1dae545ba4520c461fa"
   },
   "auth": {
     "type": "bearer",
@@ -14253,7 +14253,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"chains\": [\n    {\n      \"chain\": \"polygon\",\n      \"enabled\": true,\n      \"pairs\": [\n        {\n          \"asset\": \"usdt\",\n          \"enabled\": true\n        },\n        {\n          \"asset\": \"usdc\",\n          \"enabled\": true\n        },\n        {\n          \"asset\": \"usdce\",\n          \"enabled\": false\n        }\n      ]\n    },\n    {\n      \"chain\": \"base\",\n      \"enabled\": true,\n      \"pairs\": [\n        {\n          \"asset\": \"usdc\",\n          \"enabled\": true\n        }\n      ]\n    }\n  ]\n}"
+              "body": "{\n  \"chains\": [\n    {\n      \"chain\": \"polygon\",\n      \"enabled\": true,\n      \"pairs\": [\n        {\n          \"asset\": \"usdt\",\n          \"enabled\": true\n        },\n        {\n          \"asset\": \"usdc\",\n          \"enabled\": true\n        },\n        {\n          \"asset\": \"usdce\",\n          \"enabled\": false\n        }\n      ]\n    }\n  ]\n}"
             }
           ]
         },
@@ -14422,7 +14422,7 @@
                 "wallets"
               ]
             },
-            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc`), provisioned automatically and free of charge on registration. Base USDC uses contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` and six decimals. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
+            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`), provisioned automatically and free of charge on registration. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"tron\"\n}",
@@ -14484,7 +14484,7 @@
                 "wallets"
               ]
             },
-            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc`), provisioned automatically and free of charge on registration. Base USDC uses contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` and six decimals. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
+            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`), provisioned automatically and free of charge on registration. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"eth\",\n  \"asset\": \"usdc\"\n}",
@@ -14546,72 +14546,10 @@
                 "wallets"
               ]
             },
-            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc`), provisioned automatically and free of charge on registration. Base USDC uses contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` and six decimals. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
+            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`), provisioned automatically and free of charge on registration. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"polygon\",\n  \"asset\": \"usdce\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "201 Wallet created.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/crypto/wallets",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "crypto",
-                    "wallets"
-                  ]
-                }
-              },
-              "status": "Wallet created.",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"wallet_id\": \"b7e3a940-6f1d-4c2b-9a8e-5d4c3b2a1f0e\",\n  \"chain\": \"tron\",\n  \"asset\": \"USDT\",\n  \"address\": \"TQmZ1kfWzcmRDYkqLnybXnbWzPMYNvbYqT\",\n  \"label\": \"Main treasury\",\n  \"type\": \"deposit\",\n  \"receive_only\": true,\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"creation_fee\": \"1.000000\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Restore a missing deposit wallet — Restore the native USDC pair on Base",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/crypto/wallets",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "crypto",
-                "wallets"
-              ]
-            },
-            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc`), provisioned automatically and free of charge on registration. Base USDC uses contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` and six decimals. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"chain\": \"base\",\n  \"asset\": \"usdc\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -14670,7 +14608,7 @@
                 "wallets"
               ]
             },
-            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc`), provisioned automatically and free of charge on registration. Base USDC uses contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` and six decimals. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
+            "description": "Every account — person and company — holds exactly **one deposit wallet per supported pair** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`), provisioned automatically and free of charge on registration. Deposit wallets only **receive** crypto that credits the account's virtual balance: they cannot send, and cannot be exported or imported (use segregated wallets for that). This endpoint exists only to restore a missing pair (an exceptional case): with the pair already provisioned it responds `422 wallet_limit_reached` for every account type.\n\nA manual restoration bills the `wallet_creation` fee when configured by CBPay (fixed per wallet; 0 = free, the default); birth wallets are always free. The charge is refunded automatically if creation fails.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"btc\"\n}",
@@ -14737,7 +14675,7 @@
                 "withdrawals"
               ]
             },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
+            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD has no on-chain rail). `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"tron\",\n  \"to_address\": \"TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk\",\n  \"amount\": \"100.000000\",\n  \"idempotency_key\": \"withdrawal-2026-07-07-a\"\n}",
@@ -14804,7 +14742,7 @@
                 "withdrawals"
               ]
             },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
+            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD has no on-chain rail). `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"eth\",\n  \"asset\": \"USDC\",\n  \"to_address\": \"0x8f3Ba1c2De4567890aBcDeF1234567890aBcDeF1\",\n  \"amount\": \"50.000000\",\n  \"idempotency_key\": \"withdrawal-usdc-2026-07-09-a\"\n}",
@@ -14871,7 +14809,7 @@
                 "withdrawals"
               ]
             },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
+            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD has no on-chain rail). `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"polygon\",\n  \"asset\": \"USDC\",\n  \"to_address\": \"0x8f3Ba1b2c3d4e5F60718293a4B5c6D7e8f90A1b2\",\n  \"amount\": \"50.000000\",\n  \"idempotency_key\": \"withdrawal-usdc-polygon-2026-11-06-a\"\n}",
@@ -14938,77 +14876,10 @@
                 "withdrawals"
               ]
             },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
+            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD has no on-chain rail). `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"polygon\",\n  \"asset\": \"USDCE\",\n  \"to_address\": \"0x8f3Ba1b2c3d4e5F60718293a4B5c6D7e8f90A1b2\",\n  \"amount\": \"50.000000\",\n  \"idempotency_key\": \"withdrawal-usdce-2026-11-06-a\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [
-            {
-              "name": "200 Idempotency replay.",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/v1/crypto/withdrawals",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "v1",
-                    "crypto",
-                    "withdrawals"
-                  ]
-                }
-              },
-              "status": "Idempotency replay.",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"withdrawal_id\": \"6c5d4e3f-2a1b-0c9d-8e7f-6a5b4c3d2e1f\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"idempotency_key\": \"withdrawal-2026-07-07-a\",\n  \"chain\": \"tron\",\n  \"asset\": \"USDT\",\n  \"to_address\": \"TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk\",\n  \"amount\": \"100.000000\",\n  \"fee\": \"1.000000\",\n  \"total_debit\": \"101.000000\",\n  \"status\": \"processing\",\n  \"status_code\": \"\",\n  \"status_message\": \"broadcasted\",\n  \"tx_id\": \"b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b\",\n  \"created_at\": \"2026-07-07T12:00:00Z\",\n  \"updated_at\": \"2026-07-07T12:00:00Z\",\n  \"idempotency_hit\": true\n}"
-            }
-          ]
-        },
-        {
-          "name": "Create an on-chain withdrawal — USDC over Base",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/crypto/withdrawals",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "crypto",
-                "withdrawals"
-              ]
-            },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"chain\": \"base\",\n  \"asset\": \"USDC\",\n  \"to_address\": \"0x8f3Ba1b2c3d4e5F60718293a4B5c6D7e8f90A1b2\",\n  \"amount\": \"50.000000\",\n  \"idempotency_key\": \"withdrawal-base-usdc-2026-11-19-a\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -15072,7 +14943,7 @@
                 "withdrawals"
               ]
             },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
+            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD has no on-chain rail). `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"btc\",\n  \"to_address\": \"bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4\",\n  \"amount\": \"0.00050000\",\n  \"idempotency_key\": \"withdrawal-btc-2026-07-15-a\"\n}",
@@ -15139,7 +15010,7 @@
                 "withdrawals"
               ]
             },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
+            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD has no on-chain rail). `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"tron\",\n  \"to_address\": \"TVJ6njG5Fyrq6XwYok3xPQx8kR7HQx6vXk\",\n  \"amount\": \"1500.000000\",\n  \"wallet_type\": \"self_hosted\",\n  \"beneficiary_name\": \"Maria Perez\",\n  \"idempotency_key\": \"withdrawal-2026-07-12-a\"\n}",
@@ -15206,7 +15077,7 @@
                 "withdrawals"
               ]
             },
-            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD has no on-chain rail). Base USDC uses six decimals; deposits require 600 confirmations and withdrawals reconcile after 60. `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
+            "description": "Sends USDT, USDC, USDC.e or BTC on-chain from its own balance. Supported pairs: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD has no on-chain rail). `amount + withdrawal fee` is debited atomically and held; final state arrives via the `crypto_withdrawal_status_changed` webhook. `failed` refunds the full debit.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"chain\": \"tron\",\n  \"amount\": \"1500.000000\",\n  \"travel_address\": \"ta2AQSjBotWQf38c8sxYYK2KfisPoMsTPiYkviErEcoSn1uK\",\n  \"beneficiary_name\": \"Maria Perez\",\n  \"idempotency_key\": \"withdrawal-2026-07-12-b\"\n}",
@@ -20883,6 +20754,71 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"card\",\n  \"amount\": \"49.90\",\n  \"description\": \"Pro plan\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\",\n    \"country\": \"CL\",\n    \"document_type\": \"RUT\",\n    \"document_number\": \"11.111.111-1\"\n  },\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"save_card\": true,\n  \"payer_reference\": \"customer-7719\",\n  \"idempotency_key\": \"pro-plan-7719\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payins",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payins"
+                  ]
+                }
+              },
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payin_id\": \"4f81c1d0-aaaa-bbbb-cccc-ddddeeeeffff\",\n  \"status\": \"pending\",\n  \"reference\": \"CBJ6T3W9M2K5\",\n  \"note\": \"include the reference in the transfer description so the deposit is credited automatically\",\n  \"payer_source\": \"declared\",\n  \"payer_document\": \"17438319-7\",\n  \"idempotency_hit\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create a payin (top-up charge) — International cards — checkout settling to a segregated wallet (US/USD)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payins"
+              ]
+            },
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS/CLP/UF are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"card\",\n  \"amount\": \"100.00\",\n  \"description\": \"User wallet top-up\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Juan\",\n    \"last_name\": \"Perez\"\n  },\n  \"payer_reference\": \"customer-123\",\n  \"segregated_mode\": \"get_or_create\",\n  \"segregated_chain\": \"tron\",\n  \"segregated_asset\": \"USDT\",\n  \"segregated_key\": \"kontigo:user:123\",\n  \"segregated_label\": \"Billetera Juan\",\n  \"segregated_owner\": {\n    \"external_id\": \"user-123\",\n    \"name\": \"Juan Perez\",\n    \"document_type\": \"CI\",\n    \"document_number\": \"12345678\",\n    \"country\": \"CL\",\n    \"email\": \"payer@example.com\",\n    \"kyc_level\": \"intermediate\",\n    \"kyc_verified_at\": \"2026-11-18T15:04:05Z\",\n    \"order_id\": \"kontigo-order-789\"\n  },\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"idempotency_key\": \"kontigo-pay-001\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

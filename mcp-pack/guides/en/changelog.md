@@ -7,17 +7,11 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ---
 ## v2.302 · 2 versions - November 19, 2026
 ### v2.302
+**Added**
+- Card payins can direct their net amount to an owned, existing, reusable, or per-payin segregated wallet, with on-chain funding status and transaction evidence.
+### v2.301
 **Fixed**
 - Organization admins can now recover stuck `BO/BOB/bank_transfer` deposit-account claims via `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile`: the core looks the merchant account up by reference instead of failing with `422 deposit_account_not_recoverable`. Ambiguous states still fail closed — retry with the same key only after the recovery completes.
-### v2.301
-**Added**
-- Added the native `base:usdc` crypto rail for wallets, deposits and
-  withdrawals. Base uses the USDC contract
-  `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, six decimals, 600 deposit
-  confirmations and 60 withdrawal reconciliation confirmations.
-- Base and Ethereum use separate networks but credit the same USDC balance.
-  ETH gas is handled internally; the default withdrawal fee is 0 USDC and a
-  configured 4 USDC default is shown in the withdrawal response.
 ## v2.300 · 3 versions - November 18, 2026
 ### v2.300
 **Added**

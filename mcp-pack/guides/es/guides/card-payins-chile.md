@@ -288,3 +288,79 @@ es una fase futura documentada.
 #### ¿Puedo combinar hold con cuotas o tarjeta guardada?
 No: la pre-autorización exige tarjeta nueva pagada completa en la página.
 Las guardadas cobran de inmediato y las cuotas liquidan al tiro.
+## Payins con tarjeta a una wallet segregada
+
+En un payin con tarjeta puedes enviar el neto a una wallet on-chain
+segregada en vez del saldo general de la cuenta. El checkout y los tiempos de
+liquidación de la tarjeta no cambian; el fondeo comienza después de acreditar
+el payin. La wallet de destino y sus datos de dueño quedan asociados al payin
+para conciliación y evidencia de disputas.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: us-card-segregated-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "currency": "USD",
+    "method": "card",
+    "amount": "49.90",
+    "description": "Pedido 8841",
+    "segregated_mode": "get_or_create",
+    "segregated_chain": "tron",
+    "segregated_asset": "USDT",
+    "segregated_key": "merchant:user:123",
+    "segregated_label": "Wallet cliente",
+    "segregated_owner": {
+      "name": "Ana Rojas",
+      "document_type": "customer_id",
+      "document_number": "customer-123",
+      "country": "US",
+      "email": "payer@example.com"
+    },
+    "idempotency_key": "us-card-segregated-001"
+  }'
+```
+
+La respuesta incluye el destino y el ciclo de fondeo:
+
+```json
+{
+  "payin_id": "7a2b…",
+  "status": "pending",
+  "segregated_wallet_id": "9e3f8a52-3333-4444-5555-666677778888",
+  "segregated_mode": "get_or_create",
+  "segregated_address": "TEvJ9y4qW8xN2mK6pR5sT7uV3wX1yZ4aB6c",
+  "funding_status": "pending"
+}
+```
+
+Los modos disponibles son `existing` (requiere `segregated_wallet_id`),
+`get_or_create` (requiere `segregated_chain` y `segregated_key`) y
+`new_per_payin` (requiere `segregated_chain`). Los pares incluyen
+TRON/USDT, ETH/USDT, ETH/USDC, Polygon/USDT, Polygon/USDC
+y Base/USDC. El payin segregado v1 acepta solo destinos USDT y USDC;
+BTC/BTC sigue siendo un par de wallet, pero no está disponible en este flujo.
+Cuando está configurado, crear una wallet cobra la comisión estándar
+`wallet_creation` al saldo general y la devuelve si el core rechaza la creación. Hay un máximo de 50
+wallets creadas por cuenta al día.
+
+Después de la aprobación, lee el payin hasta que `funding_status` sea
+`completed`. El objeto final incluye `funding_tx_id` y `funded_at`; el webhook
+`payin_credited` lleva `funding_tx_id` y `funded_at` se obtiene leyendo el
+payin. Un timeout o 5xx es ambiguo:
+lee el payin y conserva su contexto de idempotencia. Nunca crees otro payin
+ni reenvíes el fondeo con una clave nueva.
+
+| HTTP | Código | Solución |
+|---:|---|---|
+| 404 | `not_found` | Verifica que `segregated_wallet_id` pertenezca a la cuenta llamante. |
+| 402 | `insufficient_funds` | Fondea el saldo general para la comisión de creación y crea una operación nueva. |
+| 400 | `invalid_asset` | Selecciona un par soportado y un destino USDT o USDC. |
+| 429 | `too_many_segregated_wallets` | Espera el reinicio de la ventana móvil de 24 horas. |
+
+#### ¿Un payin segregado acredita el saldo general?
+No. El monto de tarjeta sigue el ciclo normal de liquidación, pero el neto se
+fondea en la wallet segregada. La comisión de creación, si corresponde, se
+cobra al saldo general.
