@@ -18,7 +18,6 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 | `polygon` | `usdt` | USDT |
 | `polygon` | `usdc` | USDC |
 | `polygon` | `usdce` | **USDC.e**（桥接 USDC） |
-| `base` | `usdc` | USDC |
 | `btc` | `btc` | BTC |
 
 每笔充值都会计入**其对应资产的余额**（USDC 钱包的充值计入您的
@@ -235,10 +234,25 @@ Bitcoin 地址为**原生 bech32** 格式（`bc1q…`）：任何现代钱包或
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TX9a…",
+  "deposit_id": "dep_8813…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt"
 }
 ```
+
+`tx_id` 标识链上交易。一笔批量交易可能包含多笔转账，因此充值的完整
+身份是 `tx_id:event_index`；每笔转账都会产生自己的 webhook 和账本分录。
+`event_index` 是转账在交易中的索引（EVM 网络上的 ERC-20 log index）。
+`from_address` 标识发送方，`deposit_id` 标识已入账的账本分录，
+`receipt_url` 是该充值的品牌化回单。
+
+<Warning>
+不要只按 `tx_id` 对账：同一交易中的两笔转账可能属于不同账户或金额不同。
+请持久化 `tx_id` + `event_index`，并使用 `X-Webhook-Event-ID` 对 webhook 去重。
+</Warning>
 
 <Warning>
 **只能通过钱包所属网络发送该钱包的资产**（USDT 发到 USDT 钱包，
@@ -507,9 +521,11 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
       "chain": "tron",
       "asset": "USDT",
       "tx_id": "b1946ac9…",
+      "reference": "b1946ac9…:0",
       "from_address": "TX9a…",
       "amount": "499.000000",
-      "reference": "dep_8813…",
+      "deposit_id": "dep_8813…",
+      "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt",
       "created_at": "2026-07-07T12:10:00Z"
     }
   ],
@@ -530,6 +546,28 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
 }
 ```
 
+如需对账同一链上交易中的每笔转账，请使用完整交易哈希进行精确筛选。
+充值同时匹配裸交易哈希和 `tx_id:event_index` 引用，因此批量交易会按每笔
+转账返回一行：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=2026-07-08&tx_id=b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+被冻结的充值不会出现在 `GET /v1/crypto/transactions` 中，因为它尚未入账。
+请从持久化事件日志恢复通知：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-08&event_type=crypto_deposit_held&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+held 事件包含相同的 `tx_id` 和 `event_index`，用于定位具体转账。若合规团队
+放行，后续 `crypto_deposit_credited` 事件会携带相同的 `hold_id`；若拒绝，
+则不会创建入账记录。事件日志保留 90 天；充值入账后，财务对账应以不可变
+的 movement 和回单资源为准。
+
 ```bash
 # 当前余额（可用 + 冻结）
 curl https://api.qbank.cl/platform/v1/balances \
@@ -543,109 +581,12 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 每笔充值都计入**其钱包对应资产的余额**（USDT、USDC、USDC.e 或 BTC）；钱包是
 入金入口，每种货币只有一个余额。
 
-### Base 上的 USDC（`base:usdc`）
-
-Base USDC 是 Base 网络上的原生 USDC。它和 Ethereum 一样使用 EVM
-`0x` 地址，但属于不同网络：必须明确选择 `base`，不要把 Base USDC
-发送到 Ethereum 或其他网络。合约地址是
-`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`，金额使用六位小数。
-Base 和 Ethereum 共用 USDC 余额，但钱包、网络、合约和交易历史分别记录。
-
-```mermaid
-sequenceDiagram
-  participant W as Base 钱包
-  participant I as Base 索引器
-  participant L as USDC 账本
-  participant C as CBPay API
-  W->>I: 向充值地址发送 USDC
-  I->>I: 等待 600 次确认
-  I->>L: 只记账一次到 USDC 余额
-  L-->>C: crypto_deposit_credited
-  C->>W: 合规检查后处理提现
-  W-->>C: 60 次确认后按 tx_id 对账
-```
-
-Base 充值在 **600 次确认**后入账，提现在 **60 次确认**后对账。ETH
-gas 由平台内部处理，不作为额外 USDC 费用扣除。提现默认费用为
-**0 USDC**；组织或账户配置为 4 USDC 时，费用为 **4 USDC**。合规
-hold 使用双人控制，交易防火墙可在广播前拦截提现。
-
-```bash
-curl https://api.qbank.cl/platform/v1/crypto/wallets \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "wallets": [
-    {
-      "wallet_id": "base-usdc-wallet-…",
-      "chain": "base",
-      "asset": "USDC",
-      "address": "0x8f3B…",
-      "type": "deposit",
-      "receive_only": true
-    }
-  ]
-}
-```
-
-只向该地址发送 Base 原生 USDC，并在 `https://basescan.org` 使用返回的
-`tx_id` 验证交易。
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chain": "base",
-    "asset": "USDC",
-    "to_address": "0x8f3B…",
-    "amount": "50.000000",
-    "idempotency_key": "withdrawal-base-usdc-2026-11-19-a"
-  }'
-```
-
-```json
-{
-  "withdrawal_id": "base-withdrawal-…",
-  "chain": "base",
-  "asset": "USDC",
-  "amount": "50.000000",
-  "fee": "0.000000",
-  "total_debit": "50.000000",
-  "status": "processing",
-  "tx_id": ""
-}
-```
-
-使用提现 GET 和 `crypto_withdrawal_status_changed` webhook 查询到最终状态。
-结果不明确时使用相同的 `idempotency_key` 读取原操作，不能创建替代提现。
-
-<AccordionGroup>
-<Accordion title="Base 和 Ethereum 是同一个网络吗？">
-不是。两者都使用 `0x` 地址，但 Base 是独立网络。发送前确认
-`chain: "base"` 和区块浏览器网络。
-</Accordion>
-<Accordion title="Base 和 Ethereum 的 USDC 余额分开吗？">
-不分开。两者记入同一个 USDC 余额，但网络和交易历史不同。
-</Accordion>
-<Accordion title="合规 hold 期间会发生什么？">
-提现会保持 hold，直到完成所需审批；防火墙可能在广播前拦截。不要创建
-替代操作，应继续读取原提现状态。
-</Accordion>
-<Accordion title="为什么费用可能是 4 USDC？">
-Base 默认提现费用是 0 USDC。组织或账户启用 4 USDC 配置时才会收取，
-响应会返回准确费用和总扣款。
-</Accordion>
-</AccordionGroup>
-
 ## 错误
 
 | HTTP | `error` | 原因 |
 |---|---|---|
-| 400 | `invalid_chain` | 不支持的网络（请使用 `tron`、`eth`、`polygon`、`base` 或 `btc`） |
-| 400 | `invalid_asset` | 该网络/资产组合没有链上通道（支持：`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`base`/`usdc`、`btc`/`btc` —— `GOLD` 不支持链上操作） |
+| 400 | `invalid_chain` | 不支持的网络（请使用 `tron`、`eth`、`polygon` 或 `btc`） |
+| 400 | `invalid_asset` | 该网络/资产组合没有链上通道（支持：`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`btc`/`btc` —— `GOLD` 不支持链上操作） |
 | 400 | `to_address_required` | 缺少提现目标地址 |
 | 402 | `insufficient_funds` | 该资产余额不足（不足以支付提现或创建费用） |
 | 409 | `crypto_disabled` | 所选加密网络或组合已全局或由管理员停用；不要创建替代操作 |
