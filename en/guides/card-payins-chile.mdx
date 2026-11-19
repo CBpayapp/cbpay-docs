@@ -372,8 +372,11 @@ TRON/USDT, ETH/USDT, ETH/USDC, Polygon/USDT, Polygon/USDC
 and Base/USDC. Payin segregated v1 accepts only USDT and USDC funding targets;
 BTC/BTC remains a wallet pair but is not available for this payin flow.
 When configured, wallet creation charges the standard `wallet_creation` fee to
-the general balance and refunds it if the core rejects creation. A maximum of 50 wallets
-per account per day applies.
+the general balance and refunds it if the core rejects creation. The default
+limit is 50 wallets per account per day; your operator can raise the limit for
+your organization. If the limit is reached, the request returns
+`429 too_many_segregated_wallets`; do not create a second payin with a new
+idempotency key.
 
 After approval, read the payin until `funding_status` is `completed`. The
 completed object includes `funding_tx_id` and `funded_at`; the
@@ -387,7 +390,7 @@ payin or resend the funding operation with a new key.
 | 404 | `not_found` | Check that `segregated_wallet_id` belongs to the calling account. |
 | 402 | `insufficient_funds` | Fund the general balance for the wallet-creation fee, then create a new operation. |
 | 400 | `invalid_asset` | Select a supported chain/asset pair and a USDT or USDC funding target. |
-| 429 | `too_many_segregated_wallets` | Wait for the rolling 24-hour account limit to reset. |
+| 429 | `too_many_segregated_wallets` | Wait for the rolling 24-hour account limit to reset or ask your operator to review your organization's configured limit. |
 
 <Accordion title="Does a segregated card payin credit the general balance?">
 No. The card amount is settled through the normal card lifecycle, but the net

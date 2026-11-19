@@ -15245,7 +15245,7 @@ paths:
                   - get_or_create
                   - new_per_payin
                   default: account
-                  description: Card method only — where the net settles. `account` (default) credits your general balance as always. `existing` funds an already-provisioned segregated wallet (`segregated_wallet_id` required). `get_or_create` reuses the wallet bound to `segregated_key` or provisions it on the fly (`segregated_chain` and `segregated_key` required, `segregated_asset` defaults to the chain asset). `new_per_payin` provisions a fresh wallet per payin (`segregated_chain` required). In segregated modes the net is funded on-chain to the wallet address with a traceable transaction id; card settlement hours still apply before funding. Provisioning a wallet charges the standard wallet_creation fee to your general balance (refunded if the core rejects it); person accounts hold one wallet per network/asset pair. Card session reuse is scoped per destination wallet, and at most 50 wallets can be provisioned per account per day.
+                  description: Card method only — where the net settles. `account` (default) credits your general balance as always. `existing` funds an already-provisioned segregated wallet (`segregated_wallet_id` required). `get_or_create` reuses the wallet bound to `segregated_key` or provisions it on the fly (`segregated_chain` and `segregated_key` required, `segregated_asset` defaults to the chain asset). `new_per_payin` provisions a fresh wallet per payin (`segregated_chain` required). In segregated modes the net is funded on-chain to the wallet address with a traceable transaction id; card settlement hours still apply before funding. Provisioning a wallet charges the standard wallet_creation fee to your general balance (refunded if the core rejects it); person accounts hold one wallet per network/asset pair. Card session reuse is scoped per destination wallet, and by default at most 50 wallets can be provisioned per account per day (your operator can raise the limit for your organization).
                 segregated_wallet_id:
                   type: string
                   format: uuid
@@ -15835,7 +15835,7 @@ paths:
                     error: card_reuse_unavailable
                     message: could not verify an existing card payment
         '429':
-          description: The account has 50 open card sessions and no unused, zero-attempt pending session could be evicted (`too_many_open_card_sessions`). Segregated card payins that would provision more than 50 wallets per account per day return `too_many_segregated_wallets`.
+          description: The account has 50 open card sessions and no unused, zero-attempt pending session could be evicted (`too_many_open_card_sessions`). Segregated card payins that would provision beyond the daily wallet limit (default 50 per account per day, raisable per organization) return `too_many_segregated_wallets`.
           content:
             application/json:
               schema:

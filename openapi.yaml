@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.303'
+  version: '2.304'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -15245,7 +15245,7 @@ paths:
                   - get_or_create
                   - new_per_payin
                   default: account
-                  description: Card method only — where the net settles. `account` (default) credits your general balance as always. `existing` funds an already-provisioned segregated wallet (`segregated_wallet_id` required). `get_or_create` reuses the wallet bound to `segregated_key` or provisions it on the fly (`segregated_chain` and `segregated_key` required, `segregated_asset` defaults to the chain asset). `new_per_payin` provisions a fresh wallet per payin (`segregated_chain` required). In segregated modes the net is funded on-chain to the wallet address with a traceable transaction id; card settlement hours still apply before funding. Provisioning a wallet charges the standard wallet_creation fee to your general balance (refunded if the core rejects it); person accounts hold one wallet per network/asset pair. Card session reuse is scoped per destination wallet, and at most 50 wallets can be provisioned per account per day.
+                  description: Card method only — where the net settles. `account` (default) credits your general balance as always. `existing` funds an already-provisioned segregated wallet (`segregated_wallet_id` required). `get_or_create` reuses the wallet bound to `segregated_key` or provisions it on the fly (`segregated_chain` and `segregated_key` required, `segregated_asset` defaults to the chain asset). `new_per_payin` provisions a fresh wallet per payin (`segregated_chain` required). In segregated modes the net is funded on-chain to the wallet address with a traceable transaction id; card settlement hours still apply before funding. Provisioning a wallet charges the standard wallet_creation fee to your general balance (refunded if the core rejects it); person accounts hold one wallet per network/asset pair. Card session reuse is scoped per destination wallet, and by default at most 50 wallets can be provisioned per account per day (your operator can raise the limit for your organization).
                 segregated_wallet_id:
                   type: string
                   format: uuid
@@ -15835,7 +15835,7 @@ paths:
                     error: card_reuse_unavailable
                     message: could not verify an existing card payment
         '429':
-          description: The account has 50 open card sessions and no unused, zero-attempt pending session could be evicted (`too_many_open_card_sessions`). Segregated card payins that would provision more than 50 wallets per account per day return `too_many_segregated_wallets`.
+          description: The account has 50 open card sessions and no unused, zero-attempt pending session could be evicted (`too_many_open_card_sessions`). Segregated card payins that would provision beyond the daily wallet limit (default 50 per account per day, raisable per organization) return `too_many_segregated_wallets`.
           content:
             application/json:
               schema:

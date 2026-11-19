@@ -15230,7 +15230,7 @@ paths:
                   - get_or_create
                   - new_per_payin
                   default: account
-                  description: 仅 card 方法 — 净额结算去向。`account`（默认）照常入账到通用余额。`existing` 注入已创建的隔离钱包（`segregated_wallet_id` 必填）。`get_or_create` 复用绑定到 `segregated_key` 的钱包，不存在则即时创建（`segregated_chain` 与 `segregated_key` 必填，`segregated_asset` 默认为该链资产）。`new_per_payin` 每笔 payin 创建新钱包（`segregated_chain` 必填）。隔离模式下净额将链上注入钱包地址并带有可追踪交易号；注资前仍适用卡结算小时数。创建钱包按标准 wallet_creation 费用从通用余额扣费（核心拒绝则退款）；个人账户每网络/资产对限一个钱包。卡会话复用按目标钱包隔离，每个账户每天最多创建 50 个钱包。
+                  description: 仅 card 方法 — 净额结算去向。`account`（默认）照常入账到通用余额。`existing` 注入已创建的隔离钱包（`segregated_wallet_id` 必填）。`get_or_create` 复用绑定到 `segregated_key` 的钱包，不存在则即时创建（`segregated_chain` 与 `segregated_key` 必填，`segregated_asset` 默认为该链资产）。`new_per_payin` 每笔 payin 创建新钱包（`segregated_chain` 必填）。隔离模式下净额将链上注入钱包地址并带有可追踪交易号；注资前仍适用卡结算小时数。创建钱包按标准 wallet_creation 费用从通用余额扣费（核心拒绝则退款）；个人账户每网络/资产对限一个钱包。卡会话复用按目标钱包隔离，每个账户默认每天最多创建 50 个钱包（运营方可按组织提高上限）。
                 segregated_wallet_id:
                   type: string
                   format: uuid
@@ -15828,7 +15828,7 @@ paths:
                     error: card_reuse_unavailable
                     message: could not verify an existing card payment
         '429':
-          description: 账户已有 50 个开放银行卡会话，且无法驱逐零尝试的 `pending` 会话（`too_many_open_card_sessions`）。每日创建超过 50 个钱包的隔离 payin 返回 `too_many_segregated_wallets`。
+          description: 账户已有 50 个开放银行卡会话，且无法驱逐零尝试的 `pending` 会话（`too_many_open_card_sessions`）。超出每日钱包上限（默认每个账户每天 50 个，可按组织提高）的隔离 payin 返回 `too_many_segregated_wallets`。
           content:
             application/json:
               schema:

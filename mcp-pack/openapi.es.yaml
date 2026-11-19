@@ -15252,7 +15252,7 @@ paths:
                   - get_or_create
                   - new_per_payin
                   default: account
-                  description: Solo método tarjeta — dónde liquida el neto. `account` (default) acredita tu saldo general como siempre. `existing` fondea una wallet segregada ya creada (`segregated_wallet_id` obligatoria). `get_or_create` reusa la wallet ligada a `segregated_key` o la crea en el momento (`segregated_chain` y `segregated_key` obligatorias, `segregated_asset` usa el asset de la chain). `new_per_payin` crea una wallet nueva por cada payin (`segregated_chain` obligatoria). En modos segregados el neto se fondea on-chain a la dirección de la wallet con transacción trazable; las horas de settlement de tarjeta aplican antes del fondeo. Crear una wallet cobra el fee estándar wallet_creation a tu saldo general (reembolsado si el core la rechaza); las cuentas persona tienen una wallet por par red/asset. El reuso de sesión de tarjeta queda aislado por wallet destino, y cada cuenta puede crear como máximo 50 wallets al día.
+                  description: Solo método tarjeta — dónde liquida el neto. `account` (default) acredita tu saldo general como siempre. `existing` fondea una wallet segregada ya creada (`segregated_wallet_id` obligatoria). `get_or_create` reusa la wallet ligada a `segregated_key` o la crea en el momento (`segregated_chain` y `segregated_key` obligatorias, `segregated_asset` usa el asset de la chain). `new_per_payin` crea una wallet nueva por cada payin (`segregated_chain` obligatoria). En modos segregados el neto se fondea on-chain a la dirección de la wallet con transacción trazable; las horas de settlement de tarjeta aplican antes del fondeo. Crear una wallet cobra el fee estándar wallet_creation a tu saldo general (reembolsado si el core la rechaza); las cuentas persona tienen una wallet por par red/asset. El reuso de sesión de tarjeta queda aislado por wallet destino, y por defecto cada cuenta puede crear como máximo 50 wallets al día (tu operador puede subir el tope por organización).
                 segregated_wallet_id:
                   type: string
                   format: uuid
@@ -15848,7 +15848,7 @@ paths:
                     error: card_reuse_unavailable
                     message: could not verify an existing card payment
         '429':
-          description: La cuenta tiene 50 sesiones de tarjeta abiertas y no se pudo desalojar una sesión `pending` sin intentos (`too_many_open_card_sessions`). Los payins segregados que crearían más de 50 wallets por cuenta al día devuelven `too_many_segregated_wallets`.
+          description: La cuenta tiene 50 sesiones de tarjeta abiertas y no se pudo desalojar una sesión `pending` sin intentos (`too_many_open_card_sessions`). Los payins segregados que superarían el tope diario de wallets (default 50 por cuenta al día, ampliable por organización) devuelven `too_many_segregated_wallets`.
           content:
             application/json:
               schema:
