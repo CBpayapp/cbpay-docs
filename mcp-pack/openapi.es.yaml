@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.300'
+  version: '2.302'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -7837,6 +7837,11 @@ paths:
                     enabled: true
                   - asset: usdce
                     enabled: false
+                - chain: base
+                  enabled: true
+                  pairs:
+                  - asset: usdc
+                    enabled: true
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -7944,7 +7949,7 @@ paths:
       - Crypto
       operationId: createCryptoWallet
       summary: Reponer una wallet de depósito faltante
-      description: 'Toda cuenta — persona y empresa — tiene exactamente **una wallet de depósito por par soportado** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc`), aprovisionadas automáticamente y gratis al registrarse. Las wallets de depósito solo **reciben** crypto que se abona al saldo virtual de la cuenta: no envían, y no se exportan ni importan (para eso están las wallets segregadas). Este endpoint existe solo para reponer un par faltante (caso excepcional): con el par ya aprovisionado responde `422 wallet_limit_reached` para todo tipo de cuenta.
+      description: 'Toda cuenta — persona y empresa — tiene exactamente **una wallet de depósito por par soportado** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc`), aprovisionadas automáticamente y gratis al registrarse. Base USDC usa el contrato `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` y seis decimales. Las wallets de depósito solo **reciben** crypto que se abona al saldo virtual de la cuenta: no envían, y no se exportan ni importan (para eso están las wallets segregadas). Este endpoint existe solo para reponer un par faltante (caso excepcional): con el par ya aprovisionado responde `422 wallet_limit_reached` para todo tipo de cuenta.
 
 
         Una reposición manual cobra la comisión `wallet_creation` cuando CBPay la tiene configurada (fija por wallet; 0 = gratis, el valor por defecto); las wallets de nacimiento son siempre gratis. El cargo se reembolsa automáticamente si la creación falla.'
@@ -7963,6 +7968,7 @@ paths:
                   - tron
                   - eth
                   - polygon
+                  - base
                   - btc
                 asset:
                   type: string
@@ -7991,6 +7997,11 @@ paths:
                 value:
                   chain: polygon
                   asset: usdce
+              base_usdc_wallet:
+                summary: Reponer el par USDC nativo en Base
+                value:
+                  chain: base
+                  asset: usdc
               btc_wallet:
                 summary: Reponer el par Bitcoin
                 value:
@@ -8100,7 +8111,7 @@ paths:
       - Crypto
       operationId: createCryptoWithdrawal
       summary: Crear un retiro on-chain
-      description: 'Envía USDT, USDC, USDC.e o BTC on-chain desde su propio saldo. Pares soportados: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `btc`/`BTC` (GOLD no tiene riel on-chain). `amount + comisión de retiro` se debita atómicamente y queda retenido; el estado final llega vía el webhook `crypto_withdrawal_status_changed`. `failed` reembolsa el débito completo.'
+      description: 'Envía USDT, USDC, USDC.e o BTC on-chain desde su propio saldo. Pares soportados: `tron`/`USDT`, `eth`/`USDT`, `eth`/`USDC`, `polygon`/`USDT`, `polygon`/`USDC`, `polygon`/`USDC.e`, `base`/`USDC`, `btc`/`BTC` (GOLD no tiene riel on-chain). Base USDC usa seis decimales; los depósitos requieren 600 confirmaciones y los retiros se concilian tras 60. `amount + comisión de retiro` se debita atómicamente y queda retenido; el estado final llega vía el webhook `crypto_withdrawal_status_changed`. `failed` reembolsa el débito completo.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -8118,6 +8129,7 @@ paths:
                   - tron
                   - eth
                   - polygon
+                  - base
                   - btc
                   default: tron
                 asset:
@@ -8181,6 +8193,14 @@ paths:
                   to_address: bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
                   amount: '0.00050000'
                   idempotency_key: withdrawal-btc-2026-07-15-a
+              usdc_base:
+                summary: USDC por Base
+                value:
+                  chain: base
+                  asset: USDC
+                  to_address: '0x8f3Ba1b2c3d4e5F60718293a4B5c6D7e8f90A1b2'
+                  amount: '50.000000'
+                  idempotency_key: withdrawal-base-usdc-2026-11-19-a
               travel_rule_self_hosted:
                 summary: Sobre el umbral Travel Rule a wallet propia (self-hosted)
                 value:

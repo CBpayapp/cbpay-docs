@@ -5,6 +5,19 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.302 · 2 versiones - 19 de noviembre de 2026
+### v2.302
+**Corregido**
+- Las organizaciones ahora pueden recuperar claims atorados de cuentas de depósito `BO/BOB/bank_transfer` vía `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile`: el core busca la cuenta del comercio por referencia en vez de fallar con `422 deposit_account_not_recoverable`. Los estados ambiguos siguen cerrados — reintenta con la misma key solo cuando la recuperación termine.
+### v2.301
+**Agregado**
+- Se agregó el riel crypto nativo `base:usdc` para wallets, depósitos y
+  retiros. Base usa el contrato USDC
+  `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, seis decimales, 600
+  confirmaciones para depósitos y 60 para conciliar retiros.
+- Base y Ethereum son redes separadas, pero acreditan el mismo saldo USDC.
+  El gas ETH se gestiona internamente; la comisión predeterminada es 0 USDC
+  y una configuración de 4 USDC aparece en la respuesta del retiro.
 ## v2.300 · 3 versiones - 18 de noviembre de 2026
 ### v2.300
 **Agregado**

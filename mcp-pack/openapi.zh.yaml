@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.300'
+  version: '2.302'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -7815,6 +7815,11 @@ paths:
                     enabled: true
                   - asset: usdce
                     enabled: false
+                - chain: base
+                  enabled: true
+                  pairs:
+                  - asset: usdc
+                    enabled: true
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -7941,6 +7946,7 @@ paths:
                   - tron
                   - eth
                   - polygon
+                  - base
                   - btc
                 asset:
                   type: string
@@ -7969,6 +7975,11 @@ paths:
                 value:
                   chain: polygon
                   asset: usdce
+              base_usdc_wallet:
+                summary: 补齐 Base 原生 USDC 组合
+                value:
+                  chain: base
+                  asset: usdc
               btc_wallet:
                 summary: 补齐 Bitcoin 组合
                 value:
@@ -8078,7 +8089,7 @@ paths:
       - 加密货币
       operationId: createCryptoWithdrawal
       summary: 创建链上提现
-      description: 从其自身余额链上发送 USDT、USDC、USDC.e 或 BTC。支持的组合:`tron`/`USDT`、`eth`/`USDT`、`eth`/`USDC`、`polygon`/`USDT`、`polygon`/`USDC`、`polygon`/`USDC.e`、`btc`/`BTC`(GOLD 无链上通道)。`amount + 提现费` 原子扣除并冻结;最终状态通过 `crypto_withdrawal_status_changed` webhook 送达。`failed` 会全额退款。
+      description: 从其自身余额链上发送 USDT、USDC、USDC.e 或 BTC。支持的组合:`tron`/`USDT`、`eth`/`USDT`、`eth`/`USDC`、`polygon`/`USDT`、`polygon`/`USDC`、`polygon`/`USDC.e`、`base`/`USDC`、`btc`/`BTC`(GOLD 无链上通道)。Base USDC 使用六位小数，充值需要 600 次确认，提现在 60 次确认后对账。`amount + 提现费` 原子扣除并冻结;最终状态通过 `crypto_withdrawal_status_changed` webhook 送达。`failed` 会全额退款。
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
@@ -8096,6 +8107,7 @@ paths:
                   - tron
                   - eth
                   - polygon
+                  - base
                   - btc
                   default: tron
                 asset:
@@ -8159,6 +8171,14 @@ paths:
                   to_address: bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
                   amount: '0.00050000'
                   idempotency_key: withdrawal-btc-2026-07-15-a
+              usdc_base:
+                summary: Base 上的 USDC
+                value:
+                  chain: base
+                  asset: USDC
+                  to_address: '0x8f3Ba1b2c3d4e5F60718293a4B5c6D7e8f90A1b2'
+                  amount: '50.000000'
+                  idempotency_key: withdrawal-base-usdc-2026-11-19-a
               travel_rule_self_hosted:
                 summary: 超过 Travel Rule 阈值,转往自托管钱包
                 value:

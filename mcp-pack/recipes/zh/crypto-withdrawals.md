@@ -17,6 +17,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/crypto
 | `polygon` | `usdt` | USDT |
 | `polygon` | `usdc` | USDC |
 | `polygon` | `usdce` | **USDC.e**（桥接 USDC） |
+| `base` | `usdc` | USDC |
 | `btc` | `btc` | BTC |
 
 每笔充值都会计入**其对应资产的余额**（USDC 钱包的充值计入您的
@@ -511,12 +512,102 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 每笔充值都计入**其钱包对应资产的余额**（USDT、USDC、USDC.e 或 BTC）；钱包是
 入金入口，每种货币只有一个余额。
 
+### Base 上的 USDC（`base:usdc`）
+
+Base USDC 是 Base 网络上的原生 USDC。它和 Ethereum 一样使用 EVM
+`0x` 地址，但属于不同网络：必须明确选择 `base`，不要把 Base USDC
+发送到 Ethereum 或其他网络。合约地址是
+`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`，金额使用六位小数。
+Base 和 Ethereum 共用 USDC 余额，但钱包、网络、合约和交易历史分别记录。
+
+```mermaid
+sequenceDiagram
+  participant W as Base 钱包
+  participant I as Base 索引器
+  participant L as USDC 账本
+  participant C as CBPay API
+  W->>I: 向充值地址发送 USDC
+  I->>I: 等待 600 次确认
+  I->>L: 只记账一次到 USDC 余额
+  L-->>C: crypto_deposit_credited
+  C->>W: 合规检查后处理提现
+  W-->>C: 60 次确认后按 tx_id 对账
+```
+
+Base 充值在 **600 次确认**后入账，提现在 **60 次确认**后对账。ETH
+gas 由平台内部处理，不作为额外 USDC 费用扣除。提现默认费用为
+**0 USDC**；组织或账户配置为 4 USDC 时，费用为 **4 USDC**。合规
+hold 使用双人控制，交易防火墙可在广播前拦截提现。
+
+```bash
+curl https://api.qbank.cl/platform/v1/crypto/wallets \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "wallets": [
+    {
+      "wallet_id": "base-usdc-wallet-…",
+      "chain": "base",
+      "asset": "USDC",
+      "address": "0x8f3B…",
+      "type": "deposit",
+      "receive_only": true
+    }
+  ]
+}
+```
+
+只向该地址发送 Base 原生 USDC，并在 `https://basescan.org` 使用返回的
+`tx_id` 验证交易。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "asset": "USDC",
+    "to_address": "0x8f3B…",
+    "amount": "50.000000",
+    "idempotency_key": "withdrawal-base-usdc-2026-11-19-a"
+  }'
+```
+
+```json
+{
+  "withdrawal_id": "base-withdrawal-…",
+  "chain": "base",
+  "asset": "USDC",
+  "amount": "50.000000",
+  "fee": "0.000000",
+  "total_debit": "50.000000",
+  "status": "processing",
+  "tx_id": ""
+}
+```
+
+使用提现 GET 和 `crypto_withdrawal_status_changed` webhook 查询到最终状态。
+结果不明确时使用相同的 `idempotency_key` 读取原操作，不能创建替代提现。
+
+#### Base 和 Ethereum 是同一个网络吗？
+不是。两者都使用 `0x` 地址，但 Base 是独立网络。发送前确认
+`chain: "base"` 和区块浏览器网络。
+#### Base 和 Ethereum 的 USDC 余额分开吗？
+不分开。两者记入同一个 USDC 余额，但网络和交易历史不同。
+#### 合规 hold 期间会发生什么？
+提现会保持 hold，直到完成所需审批；防火墙可能在广播前拦截。不要创建
+替代操作，应继续读取原提现状态。
+#### 为什么费用可能是 4 USDC？
+Base 默认提现费用是 0 USDC。组织或账户启用 4 USDC 配置时才会收取，
+响应会返回准确费用和总扣款。
 ## 错误
 
 | HTTP | `error` | 原因 |
 |---|---|---|
-| 400 | `invalid_chain` | 不支持的网络（请使用 `tron`、`eth`、`polygon` 或 `btc`） |
-| 400 | `invalid_asset` | 该网络/资产组合没有链上通道（支持：`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`btc`/`btc` —— `GOLD` 不支持链上操作） |
+| 400 | `invalid_chain` | 不支持的网络（请使用 `tron`、`eth`、`polygon`、`base` 或 `btc`） |
+| 400 | `invalid_asset` | 该网络/资产组合没有链上通道（支持：`tron`/`usdt`、`eth`/`usdt`、`eth`/`usdc`、`polygon`/`usdt`、`polygon`/`usdc`、`polygon`/`usdce`、`base`/`usdc`、`btc`/`btc` —— `GOLD` 不支持链上操作） |
 | 400 | `to_address_required` | 缺少提现目标地址 |
 | 402 | `insufficient_funds` | 该资产余额不足（不足以支付提现或创建费用） |
 | 409 | `crypto_disabled` | 所选加密网络或组合已全局或由管理员停用；不要创建替代操作 |
