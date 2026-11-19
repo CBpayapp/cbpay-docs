@@ -1,0 +1,143 @@
+{
+  "environments": {
+    "live": {
+      "api_key_prefix": "pk_",
+      "base_url": "https://api.qbank.cl/platform",
+      "money": "real",
+      "response_header": "CBPay-Environment: live"
+    },
+    "test": {
+      "api_key_prefix": "pk_test_",
+      "base_url": "https://cryptobank.qbank.cl/platform",
+      "money": "simulated",
+      "response_header": "CBPay-Environment: test"
+    }
+  },
+  "magic_values": [
+    {
+      "outcome": "Fails after the settle delay (`failed`, balance refunded)",
+      "product": "Payouts",
+      "value": "Amount ending in `.99` (e.g. `100.99`)"
+    },
+    {
+      "outcome": "Stays `processing` forever (test your timeout handling)",
+      "product": "Payouts",
+      "value": "Amount ending in `.77`"
+    },
+    {
+      "outcome": "Rejected immediately",
+      "product": "Payouts",
+      "value": "Beneficiary name containing `REJECT`"
+    },
+    {
+      "outcome": "The confirm fails (`failed`, automatic refund)",
+      "product": "QR payout (BO and BR/PIX)",
+      "value": "Amount (or the QR's fixed amount) ending in `.99`"
+    },
+    {
+      "outcome": "`400` on scan (invalid CRC/format, same as production)",
+      "product": "Brazil QR payout (PIX)",
+      "value": "A `qr_payload` that is not a valid BR Code"
+    },
+    {
+      "outcome": "The charge expires unpaid",
+      "product": "Payins (QR / payment page)",
+      "value": "Amount ending in `.99`"
+    },
+    {
+      "outcome": "Stays `pending` forever",
+      "product": "Payins (QR / payment page)",
+      "value": "Amount ending in `.77`"
+    },
+    {
+      "outcome": "Pays itself after the settle delay and credits your balance",
+      "product": "Payins (QR / payment page)",
+      "value": "Any other amount"
+    },
+    {
+      "outcome": "The issuer declines the charge (the page lets the payer retry with another card)",
+      "product": "Card checkout (card)",
+      "value": "Amount ending in `.99`"
+    },
+    {
+      "outcome": "Ambiguous failure after the charge was sent — the session is held for review (never retried automatically)",
+      "product": "Card checkout (card)",
+      "value": "Amount ending in `.77`"
+    },
+    {
+      "outcome": "3-D Secure authentication with a challenge (simulated step-up on the page)",
+      "product": "Card checkout (card)",
+      "value": "Amount ending in `.55`"
+    },
+    {
+      "outcome": "3-D Secure authentication ends without an eligible ECI — the pre-capture filter rejects the attempt",
+      "product": "Card checkout (card)",
+      "value": "Amount ending in `.44`"
+    },
+    {
+      "outcome": "3-D Secure authentication fails",
+      "product": "Card checkout (card)",
+      "value": "Cardholder name containing `REJECT`"
+    },
+    {
+      "outcome": "Approves the charge; any other OTP fails",
+      "product": "Collect (pull charges)",
+      "value": "OTP `000000`"
+    },
+    {
+      "outcome": "Valid on every channel (SMS, WhatsApp, email) — no message is actually sent",
+      "product": "Login / 2FA codes",
+      "value": "`000000`"
+    },
+    {
+      "outcome": "Verification ends `rejected`",
+      "product": "Identity verification (KYC/KYB)",
+      "value": "Name or external id containing `REJECT`"
+    },
+    {
+      "outcome": "The risk band comes back `medium` — a grey zone the auto-decision engine routes to the human review queue instead of auto-approving",
+      "product": "Identity verification (KYC/KYB)",
+      "value": "Name or external id containing `HOLDREVIEW`"
+    },
+    {
+      "outcome": "Every signal stays clean, but the verification never settles on its own — it stays `pending_review` until the auto-decision engine (or a human) decides. Use it to exercise the engine's automatic approve/reject paths",
+      "product": "Identity verification (KYC/KYB)",
+      "value": "Name or external id containing `MANUALREVIEW`"
+    },
+    {
+      "outcome": "Auto-approves after the settle delay (documents always pass OCR)",
+      "product": "Identity verification (KYC/KYB)",
+      "value": "Anything else"
+    },
+    {
+      "outcome": "Screens with hits, risk `prohibited`",
+      "product": "AML/CFT screening",
+      "value": "Name containing `SANCTION`"
+    },
+    {
+      "outcome": "Screens with hits, risk `high`",
+      "product": "AML/CFT screening",
+      "value": "Name containing `PEP`"
+    },
+    {
+      "outcome": "Blocked by the sanctions gate",
+      "product": "Crypto withdrawal address",
+      "value": "Ending in `SANC`"
+    },
+    {
+      "outcome": "Screens as high / medium risk",
+      "product": "Crypto withdrawal address",
+      "value": "Ending in `HIGH` / `MED`"
+    },
+    {
+      "outcome": "Confirms with a `SIMTX...` transaction id after the delay",
+      "product": "Crypto withdrawals",
+      "value": "Any address (not magic)"
+    }
+  ],
+  "pages": {
+    "en": "en/environment-testing",
+    "es": "es/environment-testing",
+    "zh": "zh/environment-testing"
+  }
+}

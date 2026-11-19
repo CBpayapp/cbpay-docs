@@ -1,0 +1,466 @@
+---
+title: "Your account summary (analytics)"
+description: "One endpoint with every series and statistic of your account to build your dashboard: volume, transactions, users, per-service sections, countries, spending and balances"
+slug: en/guides/analytics
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/analytics
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+`GET /v1/analytics/summary` returns in **a single call** everything the
+summary page of your account (person or company) needs: chart-ready time
+series, the detail of every service with all its dimensions (country,
+currency, method, status, chain, merchant), what you spent on services and
+your balances valued in USD.
+
+CLP ledger balances and volumes are included in their native whole-peso unit.
+USD valuation uses the organization feed; when the feed has no valid CLP
+price, the asset remains visible in `unpriced_assets` and is excluded from
+USD totals. This is an explicit unpriced state, never a guessed FX rate.
+
+```mermaid
+flowchart LR
+    front["Your dashboard"] --> ep["GET /v1/analytics/summary"]
+    ep --> g1["Gross volume<br/>(in/out per period)"]
+    ep --> g2["Transactions"]
+    ep --> g3["New users<br/>(banking)"]
+    ep --> g4["Per-service sections<br/>payouts, payins, cards, crypto..."]
+    ep --> g5["Service spending<br/>+ valued balances"]
+```
+
+## Request
+
+```bash
+curl "https://api.qbank.cl/platform/v1/analytics/summary?from=2026-07-01&to=2026-07-10&granularity=day" \
+  -H "Authorization: Bearer <token>"
+```
+
+| Parameter | Required | Description |
+|---|---|---|
+| `from` / `to` | Yes | `YYYY-MM-DD` range in your organization's timezone, both inclusive; 366 days max |
+| `granularity` | No | `day` (default), `week` (Monday-Sunday) or `month` |
+
+You only see **your own account's** data. All amounts are USD decimal
+strings; buckets without activity come **zero-filled** so you can chart
+directly.
+
+## Global blocks (header KPIs and the 3 main charts)
+
+```json
+{
+  "gross_volume": {
+    "in": "636936.87",
+    "out": "270118.87",
+    "total": "907055.74",
+    "series": [
+      { "date": "2026-07-01", "in": "51023.10", "out": "31210.44", "total": "82233.54" }
+    ],
+    "previous_period": { "in": "512300.00", "out": "241000.10", "total": "753300.10" },
+    "change_pct": "20.41",
+    "unpriced_assets": []
+  },
+  "transactions": {
+    "total": 92,
+    "series": [ { "date": "2026-07-01", "in": 3, "out": 5, "total": 8 } ],
+    "previous_period": { "total": 71 },
+    "change_pct": "29.58"
+  },
+  "new_users": {
+    "total": 11,
+    "series": [ { "date": "2026-07-01", "count": 1 } ],
+    "previous_period": { "total": 6 },
+    "change_pct": "83.33"
+  }
+}
+```
+
+- **`gross_volume`**: USD value of everything that came IN (payins, crypto
+  deposits, received transfers) and went OUT (payouts, withdrawals, sent
+  transfers, card purchases). Refunds are netted against their service —
+  they never inflate volume. Swaps are internal conversion and have their
+  own section.
+- **`transactions`**: operation count (fees and refunds excluded).
+- **`new_users`**: third-party banking users your company registered (zero
+  series for person accounts).
+- **`change_pct`**: variation vs the immediately previous period of the
+  same length — for the ▲▼ deltas (`null` when the previous period was 0).
+- `BTC`/`GOLD` are valued at the current reference price; if a price is
+  unavailable the asset is listed in `unpriced_assets` and its amounts stay
+  out of the USD totals (we never invent a price).
+
+## `by_country` — global view per country
+
+Payouts and payins combined, ordered by volume — for the map or per-country
+bars:
+
+```json
+"by_country": [
+  {
+    "country": "BR",
+    "payouts": { "count": 18, "volume_usd": "3410.20" },
+    "payins":  { "count": 4,  "volume_usd": "820.00" },
+    "total_usd": "4230.20"
+  }
+]
+```
+
+## `sections` — the detail of EVERY service
+
+Each section carries totals, its per-bucket series and its own dimensions:
+
+#### payouts — fiat sends
+
+```json
+"payouts": {
+  "count": 24, "volume_usd": "5120.40", "fees_usd": "7.20",
+  "series": [ { "date": "2026-07-01", "count": 3 } ],
+  "by_status": [ { "key": "completed", "count": 21, "volume_usd": "4980.10" } ],
+  "by_country": [
+    { "country": "BR", "count": 18, "volume_usd": "3410.20", "local_volume": { "BRL": "17550" } }
+  ],
+  "by_method": [ { "key": "pix", "count": 18, "volume_usd": "3410.20" } ]
+}
+```
+
+`by_status` gives you the success rate; `by_country` includes local
+currency volume per currency; `by_method` splits pix, bank_transfer, yape,
+etc. Failed payouts are excluded from volume (they were refunded).
+
+#### payins — fiat collections
+
+```json
+"payins": {
+  "count": 9, "volume_usd": "2210.00", "fees_usd": "0.00",
+  "series": [ { "date": "2026-07-02", "count": 2 } ],
+  "by_country": [ { "key": "BO", "count": 5, "volume_usd": "1400.00" } ],
+  "by_method": [ { "key": "qr", "count": 5, "volume_usd": "1400.00" } ],
+  "by_kind":   [ { "key": "qr", "count": 5, "volume_usd": "1400.00" } ]
+}
+```
+
+Only **credited** payins count.
+
+#### deposits / withdrawals — on-chain crypto
+
+```json
+"deposits": {
+  "count": 3, "volume_usd": "1500.00",
+  "series": [ { "date": "2026-07-03", "count": 1 } ],
+  "by_chain": [ { "chain": "tron", "asset": "USDT", "count": 2, "amount": "1000.000000" } ]
+},
+"withdrawals": {
+  "count": 2, "volume_usd": "600.00",
+  "series": [ { "date": "2026-07-04", "count": 1 } ],
+  "by_chain": [ { "chain": "eth", "asset": "USDC", "count": 1, "status": "completed", "amount": "500.000000", "fees": "1.000000" } ]
+}
+```
+
+#### transfers, swaps and cards
+
+```json
+"transfers": {
+  "in":  { "count": 4, "volume_usd": "300.00" },
+  "out": { "count": 2, "volume_usd": "120.00" },
+  "series": [ { "date": "2026-07-01", "count": 1 } ]
+},
+"swaps": {
+  "count": 5, "volume_usd": "890.00",
+  "series": [ { "date": "2026-07-05", "count": 2 } ],
+  "by_pair": [ { "pair": "USDT/BTC", "count": 3, "volume_usd": "600.00" } ]
+},
+"cards": {
+  "count": 12, "volume_usd": "230.50", "fees_usd": "5.00", "active_cards": 1,
+  "series": [ { "date": "2026-07-06", "count": 4 } ],
+  "by_status": [ { "status": "settled", "count": 10, "volume_usd": "205.00" } ],
+  "top_merchants": [ { "merchant": "AMAZON", "count": 4, "volume_usd": "98.20" } ]
+}
+```
+
+#### banking, verifications (KYC/KYB), aml and contacts
+
+```json
+"banking": {
+  "new_third_parties": 11,
+  "third_parties_series": [ { "date": "2026-07-01", "count": 1 } ],
+  "new_accounts": 14,
+  "accounts_series": [ { "date": "2026-07-01", "count": 2 } ],
+  "operations": 6,
+  "volume": {
+    "in":  { "count": 4, "volume_usd": "1200.00" },
+    "out": { "count": 9, "volume_usd": "3450.00" },
+    "series": [ { "date": "2026-07-01", "count": 2 } ],
+    "volume_usd": "4650.00"
+  },
+  "fees_usd": "18.00",
+  "fees_by_service": { "banking_customer": { "count": 11, "fees_usd": "11.00" } }
+},
+"verifications": {
+  "submissions": [ { "kind": "kyc", "status": "approved", "count": 3 } ],
+  "links":       [ { "kind": "kyb", "status": "pending", "count": 1 } ],
+  "fees_usd": "9.00",
+  "fees_by_kind": {
+    "kyc_verification": { "count": 3, "fees_usd": "6.00" },
+    "kyb_verification": { "count": 1, "fees_usd": "3.00" }
+  }
+},
+"aml": { "screenings": 4, "fees_usd": "2.00", "by_service": { "compliance_screening": { "count": 4, "fees_usd": "2.00" } } },
+"contacts": { "new_contacts": 7, "series": [ { "date": "2026-07-02", "count": 2 } ] },
+"adjustments": { "count": 2, "volume_usd": "2000.00", "series": [ { "date": "2026-03-14", "count": 1 } ] }
+```
+
+The `deposits` section also includes `wallet_fees_usd` (the wallet creation
+fees of the crypto product), and inside `balances.items` the banking mirror
+balances carry `custody: "banking"` (the authoritative balance lives at the
+bank).
+
+`new_third_parties` is the same metric as the "new users" chart: the
+banking users your company registered.
+
+`banking.volume` is the money moved through your bank accounts (inbound and
+outbound, valued in USD): it also adds to the account's global
+`gross_volume`, and its detail reconciles in the `BANK_USD`/`BANK_EUR`
+sections of the [statement](https://docs.cbpayapp.com/en/guides/statement).
+
+## `spending` — what you consumed in services
+
+Every explicit fee you paid in the period, with how many times each service
+was billed:
+
+```json
+"spending": {
+  "total_usd": "34.50",
+  "by_service": {
+    "banking_customer": { "count": 11, "fees_usd": "11.00" },
+    "wallet_creation":  { "count": 2,  "fees_usd": "1.00" },
+    "verification_kyc": { "count": 3,  "fees_usd": "9.00" }
+  }
+}
+```
+
+## `balances` — your balances valued
+
+```json
+"balances": {
+  "items": [
+    { "asset": "USDT", "available": "1520.250000", "held": "0.000000", "usd_estimate": "1520.25" },
+    { "asset": "BTC",  "available": "0.00500000",  "held": "0.00000000", "usd_estimate": "313.68" }
+  ],
+  "net_worth_usd_estimate": "1833.93"
+}
+```
+
+## Balance evolution — `GET /v1/balances/history`
+
+For the balance card with a chart (the "last 30 days balance" with its ▲▼):
+a **daily** series per asset with each day's closing balance, plus the
+aggregated USD series and the period's inflows/outflows.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/balances/history?from=2026-06-12&to=2026-07-11" \
+  -H "Authorization: Bearer <token>"
+```
+
+| Parameter | Required | Description |
+|---|---|---|
+| `from` / `to` | Yes | `YYYY-MM-DD` range in your organization's timezone, both inclusive; max 366 days |
+
+```json
+{
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "from": "2026-06-12",
+  "to": "2026-07-11",
+  "granularity": "day",
+  "timezone": "America/New_York",
+  "assets": {
+    "USDT": {
+      "series": [
+        { "date": "2026-06-12", "balance": "100.000000" },
+        { "date": "2026-06-13", "balance": "100.000000" },
+        { "date": "2026-07-11", "balance": "125.430000" }
+      ],
+      "first": "100.000000",
+      "last": "125.430000",
+      "change_pct": "25.43"
+    },
+    "BTC": {
+      "series": [
+        { "date": "2026-06-12", "balance": "0.00060000" },
+        { "date": "2026-07-11", "balance": "0.00060000" }
+      ],
+      "first": "0.00060000",
+      "last": "0.00060000",
+      "change_pct": "0.00"
+    },
+    "BANK_USD": {
+      "series": [
+        { "date": "2026-06-12", "balance": "1500.00" },
+        { "date": "2026-07-11", "balance": "1725.50" }
+      ],
+      "first": "1500.00",
+      "last": "1725.50",
+      "change_pct": "15.03"
+    }
+  },
+  "total_usd": {
+    "series": [
+      { "date": "2026-06-12", "balance_usd": "163.73" },
+      { "date": "2026-07-11", "balance_usd": "191.34" }
+    ],
+    "first": "163.73",
+    "last": "191.34",
+    "change_pct": "16.86",
+    "spot_priced_dates": [],
+    "unpriced_assets": []
+  },
+  "period": { "in_usd": "280.20", "out_usd": "254.77", "net_usd": "25.43" },
+  "current": {
+    "items": [
+      { "asset": "USDT", "available": "125.430000", "held": "10.000000", "usd_estimate": "135.43" },
+      { "asset": "BTC", "available": "0.00060000", "held": "0.00000000", "usd_estimate": "65.91" }
+    ],
+    "net_worth_usd_estimate": "201.34"
+  }
+}
+```
+
+- Each point is the **available balance at that day's close** (in your organization's timezone); days
+  without movements carry the previous day's balance forward, so the
+  series has no gaps and charts directly.
+- `assets` also includes the banking account mirrors (`BANK_USD`,
+  `BANK_EUR`) as their own series in their own currency (2 decimals) —
+  handy for a "Bank USD"/"Bank EUR" chip on the chart. They are **not**
+  part of the `total_usd` aggregate, which covers the twelve ledger balances only.
+- `total_usd` values BTC/GOLD/SILVER/PLATINUM at **each day's historical price**. When a
+  day has no historical price yet, today's spot is used and that day is
+  disclosed in `spot_priced_dates` (values are never invented).
+- `period.in_usd`/`out_usd` are the range's total inflows and outflows
+  (same classification as `gross_volume`) — the "↗ $280.2K ↘ −$254.8K" of
+  the card.
+- `current` is today's snapshot with both `available` **and** `held` (the
+  historical series only tracks the available balance: holds have no
+  history).
+
+## Your rates over time — `GET /v1/rates/history`
+
+The time series of **your account's** FX rates (the same rates as
+`GET /v1/rates`, with your configuration already applied), for the rate
+evolution chart with its "+3.4% / −3.0%" badge:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/rates/history?from=2026-06-12&to=2026-07-11&granularity=day" \
+  -H "Authorization: Bearer <token>"
+```
+
+| Parameter | Required | Description |
+|---|---|---|
+| `from` / `to` | Yes | `YYYY-MM-DD` range in your organization's timezone, both inclusive |
+| `granularity` | No | `day` (default, max 366 days) or `hour` (max 31 days) |
+| `currency` | No | Filter one currency (e.g. `CLP`) |
+
+```json
+{
+  "base": "USD",
+  "from": "2026-06-12",
+  "to": "2026-07-11",
+  "granularity": "day",
+  "rates": {
+    "chile": {
+      "currency": "CLP",
+      "series": [
+        { "date": "2026-06-12", "rate": "939.068965", "payin_rate": "967.452325" },
+        { "date": "2026-07-11", "rate": "910.896551", "payin_rate": "938.428400" }
+      ],
+      "first": "939.068965",
+      "last": "910.896551",
+      "change_pct": "-3.00"
+    }
+  },
+  "asset_prices": {
+    "BTC": {
+      "currency": "USD",
+      "unit": "btc",
+      "series": [
+        { "date": "2026-06-12", "price": "106214.55" },
+        { "date": "2026-07-11", "price": "109853.24" }
+      ],
+      "first": "106214.55",
+      "last": "109853.24",
+      "change_pct": "3.43"
+    }
+  },
+  "retrieved_at": "2026-07-11T15:00:00Z"
+}
+```
+
+- `rate` is the payout side and `payin_rate` the deposit side — the same
+  two rates as the current snapshot, point by point.
+- `change_pct` comes signed (`"3.43"` up, `"-3.00"` down): use it directly
+  to color the badge green/red.
+- Buckets without data carry the last known value forward; days before
+  history started are simply absent.
+
+## Errors
+
+| HTTP | `error` | What to do |
+|---|---|---|
+| 400 | `invalid_range` | `from`/`to` are required (`YYYY-MM-DD`) and the range max is 366 days |
+| 400 | `invalid_granularity` | Use `day`, `week` or `month` (histories: `day` or `hour`) |
+| 403 | `account_required` | The endpoint requires an account credential |
+| 502 | `rates_unavailable` | Rate history temporarily unavailable; retry in a few seconds |
+
+## FAQ
+
+#### Which timezone are buckets in?
+Your organization's timezone (IANA name, default `America/New_York`),
+same as the `from`/`to` filters across the whole platform API. The
+response echoes it in the `timezone` field. A platform admin changes it
+with `PUT /v1/admin/orgs/{orgID}/settings` (key `timezone`).
+#### What counts as volume and what does not?
+Everything that moved money to/from your account: payins, crypto deposits
+and received transfers (in); payouts, withdrawals, sent transfers and card
+purchases (out). Refunds are netted, fees are reported separately in
+`spending`, and swaps (conversion between your own balances) have their own
+section.
+#### How are BTC and GOLD valued?
+At the reference price in force at query time (the same as
+`GET /v1/rates`). It is a display valuation: if a price is unavailable, the
+asset appears in `unpriced_assets` and is not added to the USD totals.
+#### Do totals match the account statement?
+Yes: both come from the same ledger. The statement
+(`GET /v1/reports/statement`) is the line-by-line accounting document; the
+analytics endpoint is the aggregated view for charts.
+#### How fresh is the data?
+Real time: every credited operation appears in the next call.
+#### Since when is rate history available?
+Rate history is recorded continuously (every time the rate changes) and
+includes an initial backfill of ~90 days of daily rates. If you request a
+range before history started, those days are simply absent from the
+series — values are never invented.
+#### Does the balance history include holds?
+No: the series tracks the available balance at each day's close. Holds
+(in-flight payouts, card holds) have no history; today's `held` comes in
+the `current` block.
+#### Why would my rate's change differ from the market's?
+It doesn't: your rate derives from the market rate through your commercial
+configuration, which is a constant factor — the percentage change is the
+same. What you see charted is exactly what you would have gotten operating
+each day.
+## `disputes`
+
+The summary contains a `disputes` section with case volume and current
+preventive retention:
+
+```json
+{
+  "count": 3,
+  "disputed_usd": "300.000000",
+  "held_usd": "200.000000",
+  "open": 2,
+  "won": 1,
+  "lost": 0,
+  "by_kind": [{ "key": "dispute", "count": 3, "disputed_usd": "300.000000" }],
+  "by_status": [{ "key": "open", "count": 2, "disputed_usd": "200.000000" }]
+}
+```
+
+Preventive holds do not count as a second payin volume.

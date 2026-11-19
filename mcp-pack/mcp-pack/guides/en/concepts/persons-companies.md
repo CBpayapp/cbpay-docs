@@ -1,0 +1,79 @@
+---
+title: "Persons and companies"
+description: "The differences between the two account types, product by product, on a single page"
+slug: en/concepts/persons-companies
+lang: en
+source_url: https://docs.cbpayapp.com/en/concepts/persons-companies
+---
+CBPay has two account types — **person** (`type: "person"`) and **company**
+(`type: "company"`) — that use **the same API** with the same endpoints.
+This page gathers ALL the differences in one place, so you never have to
+guess which one applies.
+
+The type is set at account creation and does not change. You see it in
+`GET /v1/me` → `type`.
+
+## Complete differences table
+
+| Capability | Person | Company |
+|---|---|---|
+| USDT balance, payouts, payins, transfers, banking, statement | Same | Same |
+| **Deposit wallets** ([crypto](https://docs.cbpayapp.com/en/guides/crypto)) per network+asset | **1** (born with the account; receive only) | **1** (born with the account; receive only) |
+| **Segregated wallets** ([own on-chain balance](https://docs.cbpayapp.com/en/guides/segregated-wallets)) | **1 per network+asset pair** | **Unlimited** (use `label` to tell them apart) |
+| **Cards** | **1 virtual + 1 physical**, for itself only | **Unlimited**, for the company or for **designated persons** (employees) |
+| **Members with login** (`POST /v1/members`) | No (`403 company_only`) | Yes — `owner` / `operator` / `viewer` roles |
+| **Identity verification** (`/v1/me/verification`) | **KYC** onboarding (wizard with documents + liveness) | **KYB** onboarding (wizard with corporate documents) |
+| **Verify third parties** (`/v1/{kyc,kyb}/links` and submissions) | No (`403 company_account_required`) | Yes — hosted links or API data, bills `kyc_verification`/`kyb_verification` |
+| **AML/CFT screening** (`POST /v1/aml/screenings`) | **Person** screening (`customer.person`), bills `compliance_person` | **Company** screening (`customer.company`), bills `compliance_company` |
+| Card holder (first issuance) | Personal data + identity documents | Corporate data + corporate documents (or the designated person's) |
+| Registration | `type: "person"` | `type: "company"` (+ `tax_id` recommended) |
+
+Everything else — authentication, idempotency, webhooks, statuses, errors,
+per-card spending limits, enabled services — works identically.
+
+## What it looks like in practice
+
+#### Person account
+
+- Registration: `POST /v1/auth/register` with `type: "person"` (or your
+  operator creates it).
+- Verification: request your KYC link with `POST /v1/me/verification/link`
+  and complete the wizard — until approved you can only fund
+  ([guide](https://docs.cbpayapp.com/en/guides/kyc)).
+- Crypto: your **deposit wallets are born with the account** (one per
+  network+asset pair; receive only). Need a wallet with its own balance?
+  You can hold **1 segregated wallet per network+asset pair**.
+- Cards: up to **1 virtual + 1 physical**; the first issuance carries your
+  data and documents — [guide](https://docs.cbpayapp.com/en/guides/cards).
+- No members: your login and your API keys operate the account.
+
+#### Company account
+
+- Registration: `type: "company"`, ideally with `tax_id`.
+- Verification: request your KYB link with `POST /v1/me/verification/link`
+  and complete the wizard with the corporate data; once approved you can
+  also verify your own customers ([guide](https://docs.cbpayapp.com/en/guides/kyc)).
+- Crypto: your **deposit wallets are born with the account** (one per
+  network+asset pair; receive only). For separate on-chain balances create
+  **unlimited segregated wallets** (one per branch, per product, per
+  vendor…), with a descriptive `label`.
+- Cards: **unlimited** — corporate (holder = the company, with corporate
+  documents on the first one) or for **employees** (designated person with
+  their data on every designation) — [guide](https://docs.cbpayapp.com/en/guides/cards).
+- Members: add users with their own login and permissions
+  (`owner`/`operator`/`viewer`) — [guide](https://docs.cbpayapp.com/en/authentication#company-members).
+
+## Errors that reveal the account type
+
+| `error` | What it means |
+|---|---|
+| `403 company_only` | You tried a company feature (members) from a person account |
+| `422 wallet_limit_reached` | The account already holds its wallet for that pair (deposit: everyone; segregated: persons) |
+| `409 card_limit_reached` | A person account already has one live card or one open card application |
+| `400 physical_temporarily_unavailable` | New physical issuance is temporarily paused; existing physical cards continue operating |
+
+> **Note**
+Did your operation outgrow a person account? The account type cannot be
+changed through the API: ask your CBPay administrator to create the company
+account and migrate the balance with an internal transfer (free and
+instant).

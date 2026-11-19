@@ -1,0 +1,328 @@
+---
+recipe: stored-cards-subscriptions
+title: "Stored cards & subscriptions"
+slug: en/guides/stored-cards-subscriptions
+lang: en
+source_url: https://docs.cbpayapp.com/en/guides/stored-cards-subscriptions
+---
+> **Environments:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+> **Important**
+The account must have approved identity before creating the seed `card` payin,
+charging a stored card through `POST /v1/stored-cards/{storedCardID}/charges`,
+or creating a subscription. Person accounts require approved KYC and company
+accounts require approved KYB. Without approval, the authenticated request
+returns HTTP `403 verification_required`.
+> **Note**
+This account gate does not block the payer's public hosted payment page, and
+it does not invalidate a payment link that was already created.
+The `card` method supports **stored credentials** (the card brands' COF
+mandate): your payer saves their card with explicit consent on the first
+payment, and afterwards you can offer one-click payment without re-typing
+the number — or charge subscriptions and unscheduled amounts yourself
+without the payer present. The card number **never exists** in your
+integration or on the platform: only an opaque processor reference plus
+display data (brand, last 4 digits, expiry) is stored.
+
+**Account-scoped COF.** A stored credential belongs to the CBPay account
+that created it. `payer_reference` is an account-local customer reference,
+not a global identity: the same email or reference in another account
+cannot discover, list or charge this credential. Using a `stored_card_id`
+from another account returns the same generic `404 not_found` as any
+unknown credential.
+
+### Seed: offer to save the card on the first payment
+
+Create the `card` payin with `save_card: true` and your payer reference:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BO",
+    "currency": "BOB",
+    "method": "card",
+    "amount": "700.00",
+    "save_card": true,
+    "payer_reference": "customer-1042",
+    "idempotency_key": "topup-7720"
+  }'
+```
+
+The hosted page shows a **"Save this card for future payments"** checkbox.
+The credential is stored ONLY if the payer ticks it and the 3-D Secure
+payment is approved. On credit you receive the `card_stored` webhook and
+the card appears in your list.
+### List the payer's cards
+
+```bash
+curl "https://api.qbank.cl/platform/v1/stored-cards?from=2026-07-01&to=2026-07-20&payer_reference=customer-1042" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "page": 1,
+  "page_size": 50,
+  "stored_cards": [{
+    "stored_card_id": "5f0f2c9e-…",
+    "payer_reference": "customer-1042",
+    "country": "BO",
+    "currency": "BOB",
+    "brand": "visa",
+    "last4": "2701",
+    "expiry_month": "12",
+    "expiry_year": "2028",
+    "status": "active",
+    "created_at": "2026-07-20T18:00:00Z"
+  }]
+}
+```
+### Pay with a saved card (payer present)
+
+Create the `card` payin with `stored_card_id`: the page skips card entry,
+shows the saved card (`VISA •••• 2701`) and 3-D Secure still runs — the
+payer only confirms with their bank. The **billing details** the payer
+entered when saving the card are also kept on file: the page applies them
+automatically and shows only a masked summary (name, partial email, city)
+with a "use different details" link in case they want to change them —
+nothing is retyped. This server-to-server path needs no extra verification:
+you already know your customer.
+
+Don't know which card they have saved (or whether they have one)? Don't
+pass `stored_card_id`: the payment page lets the payer discover their cards
+by verifying their email with a code — see
+[the payer discovers their cards](#the-payer-discovers-their-cards-on-the-payment-page).
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payins \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "BO",
+    "currency": "BOB",
+    "method": "card",
+    "amount": "350.00",
+    "stored_card_id": "5f0f2c9e-…",
+    "idempotency_key": "topup-7721"
+  }'
+```
+### Recurring / unscheduled charge (payer not present)
+
+Charge the card directly — subscriptions (`recurring: true`) or
+unscheduled amounts your customer agreed to:
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/stored-cards/5f0f2c9e-…/charges \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": "45.00",
+    "description": "Monthly subscription",
+    "recurring": true,
+    "idempotency_key": "sub-2026-07-cust1042"
+  }'
+```
+
+Response `201` — an approved charge credits your balance automatically
+(`payin_credited` webhook, same path as any card payin):
+
+```json
+{
+  "payin_id": "3c5b002c-…",
+  "status": "pending",
+  "reference": "3c5b002c-…",
+  "transaction_id": "7846012604…",
+  "note": "charge approved; the balance is credited automatically (payin_credited webhook)"
+}
+```
+
+An issuer decline responds `422` with the payin in `failed` and a
+`failure_reason`. A retry with the same `idempotency_key` returns the
+original payin and **never charges twice**.
+
+If the provider call or the local persistence has an ambiguous outcome,
+the platform keeps the payin in `pending`/review and answers with a
+reconciliation response. This is fail-closed: retry with the **same**
+`idempotency_key` so the existing claim can be recovered; never create a
+new key or send a second MIT charge.
+
+#### Billing address on file (required for capture)
+
+The processor requires a **complete billing address** to capture a
+merchant-initiated charge. The platform stores the billing details the
+payer entered when saving the card and merges them into every MIT charge
+automatically — cards saved with a complete address keep working with no
+change on your side.
+
+If the stored credential has **no usable billing address** (older cards
+saved before this requirement), the charge is rejected **before any money
+moves** with `422 core_rejected` and a message telling you the billing
+address is incomplete. The fix is to have the payer save the card again
+(a fresh consented payment with `save_card: true` captures the full
+billing address, including the state/region when the country requires
+one — see [Billing address: state/region required by country](https://docs.cbpayapp.com/en/guides/payins#billing-address-stateregion-required-by-country)).
+To revoke a saved card (at the payer's request or on suspicion):
+`DELETE /v1/stored-cards/{stored_card_id}` — charges stop working
+immediately and you receive `stored_card_revoked`
+(`422 stored_card_revoked` if you try to charge it afterwards).
+
+> **Important**
+Charges without the payer present travel **without 3-D Secure** by
+definition of the mandate: the chargeback risk is yours. Charge only what
+your customer explicitly agreed to — the platform persists the seed's
+consent evidence (checkbox, IP and timestamp) for disputes.
+## The payer discovers their cards on the payment page
+
+Every card payment page — the `payment_url` of a `card` payin and the card
+option of the universal checkout — asks for the **payer's email as the
+first field**. If that email has saved cards with you, the page sends a
+**verification code** (branded with your organization's identity) and only
+once they enter it correctly does it reveal their cards: brand, last 4
+digits and expiry, never the full number. Picking one pays with 3-D Secure
+without re-typing it; they can also choose "use another card" and pay with
+a new one.
+
+### The payer types their email
+
+If you already sent it in `customer.email` (or a `payer_reference` holding
+an email), the page shows it pre-filled. If the email has no saved cards,
+the new-card form carries on — nothing is revealed.
+### They verify it with the code (once per device)
+
+When cards are found, the page emails a code and asks for it. The
+**"Remember this device"** checkbox (checked by default) trusts the device
+for **30 days**: later payments with that email in that browser show the
+cards without asking for a code.
+### They pick the card and pay
+
+With the email verified, the payer sees their masked cards, picks one and
+only completes 3-D Secure. The **verified** email becomes the payer
+identity of the charge — it wins over any email typed into the form.
+> **Note**
+Trust is per device and lasts 30 days; each payer can have up to 10
+remembered devices (the oldest is forgotten past the cap). If a payer loses
+a device, support can revoke their remembered devices and they will get a
+code again on their next payment.
+## Subscriptions (scheduled recurring charges)
+
+Instead of charging manually every month, let **the platform run the
+schedule**: create a subscription on the saved card — the first period is
+charged on creation (unless `start_at` is in the future) and the rest fire
+automatically per `interval`.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/subscriptions \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stored_card_id": "5f0f2c9e-…",
+    "amount": "45.00",
+    "interval": "monthly",
+    "description": "Monthly plan",
+    "idempotency_key": "plan-cust1042-monthly"
+  }'
+```
+
+Response `201` (`first_charge` is present when the first period was charged
+on creation):
+
+```json
+{
+  "subscription_id": "7a1c9e2d-…",
+  "stored_card_id": "5f0f2c9e-…",
+  "amount": "45.00",
+  "currency": "BOB",
+  "interval": "monthly",
+  "status": "active",
+  "period": 1,
+  "next_charge_at": "2026-08-20T18:00:00Z",
+  "first_charge": { "outcome": "approved", "payin_id": "3c5b002c-…" }
+}
+```
+
+- `interval`: `daily`, `weekly`, `monthly` or `yearly`. The day of month is
+  kept and clamped to the last day in short months (a plan on the 31st
+  charges on Feb 28/29 and returns to the 31st in March).
+- `start_at` (optional, future RFC3339): defers the first charge (trial /
+  start date); without it, it charges on creation.
+- **Dunning**: on an issuer decline the platform retries every 24h up to 3
+  times; exhausted, the subscription becomes `past_due` and you get the
+  `subscription_status_changed` webhook. `resume` reactivates it with a
+  fresh attempt.
+- Each successful charge credits your balance like any card payin
+  (`payin_credited` webhook, carrying `subscription_id` to link it to the
+  plan).
+
+Lifecycle management:
+
+```bash
+# Pause (stops charging; resuming does NOT catch up missed periods)
+curl -X POST https://api.qbank.cl/platform/v1/subscriptions/7a1c9e2d-…/pause -H "Authorization: Bearer <token>"
+# Resume
+curl -X POST https://api.qbank.cl/platform/v1/subscriptions/7a1c9e2d-…/resume -H "Authorization: Bearer <token>"
+# Cancel (terminal)
+curl -X POST https://api.qbank.cl/platform/v1/subscriptions/7a1c9e2d-…/cancel -H "Authorization: Bearer <token>"
+# List / read
+curl "https://api.qbank.cl/platform/v1/subscriptions?from=2026-07-01&to=2026-07-31&status=active" -H "Authorization: Bearer <token>"
+```
+
+Revoking the saved card (`DELETE /v1/stored-cards/{id}`) automatically
+cancels its subscriptions (`cancel_reason: card_revoked`).
+## Subscription states
+
+| Status | Meaning | What to do |
+|---|---|---|
+| `active` | Charges every period on `next_charge_at` | Nothing — the scheduler runs it |
+| `paused` | Frozen; missed periods are **not** charged retroactively | `POST .../resume` when ready |
+| `past_due` | 3 dunning retries (24 h apart) failed | Fix the card/balance and `resume` to reactivate |
+| `canceled` | Terminal — by `cancel` or because the stored card was revoked | Create a new subscription if needed |
+
+## Errors
+
+| HTTP | Code | What to do |
+|---|---|---|
+| 400 | `idempotency_key_required` | Send `idempotency_key` (body or `Idempotency-Key` header) |
+| 400 | `invalid_amount` | `amount` must be a positive decimal string |
+| 400 | `invalid_interval` | Use `daily`, `weekly`, `monthly` or `yearly` |
+| 400 | `invalid_request` | The currency must match the stored card corridor |
+| 404 | `not_found` | The stored card / subscription does not exist or is not yours |
+| 409 | `idempotency_conflict` | Same key with a different payload — use a new key |
+| 409 | `subscription_state` | The current state does not allow that action (e.g. resuming a canceled plan) |
+| 422 | `stored_card_revoked` | The card credential was revoked; ask the payer to save it again |
+| 422 | `core_rejected` | The charge was declined by the rail — the message carries the reason. When it reports an **incomplete billing address** (or a missing state/region), the stored card has no usable billing address on file: have the payer save the card again with `save_card: true` |
+
+The general error catalog lives in [Errors](https://docs.cbpayapp.com/en/errors).
+
+## FAQ
+
+#### Do you store the card number (PAN)?
+Never. Saving a card stores an opaque network token — the PAN never touches
+the platform. Revoking the credential invalidates the token.
+#### Why don't recurring charges ask for 3-D Secure?
+Merchant-initiated transactions (MIT) run without 3DS by card-network
+mandate: the payer authenticated with 3DS on the initial consented payment,
+and every MIT references that transaction.
+#### What happens to subscriptions if the card is revoked?
+They are canceled automatically (`card_revoked`). The payer must save the
+card again and you create a new subscription.
+#### Does pausing accumulate charges?
+No — there is no catch-up: periods elapsed while paused advance the counter
+without charging. Resuming charges from the next due period only.
+#### How does dunning work when a charge declines?
+The scheduler retries up to 3 times, 24 h apart. If all fail the plan moves
+to `past_due` and you receive `subscription_status_changed` — no more
+charges until you `resume`.
+#### When is the first charge collected?
+Synchronously at creation, unless you pass a future `start_at` (trial):
+then the first charge waits for that date.
+#### Why does the payment page ask for a code sent to the payer's email?
+To show their saved cards without letting anyone who knows their email see
+them: the list is only revealed after the email is verified with the code
+(or on an already remembered device). If the email has no cards, the page
+carries straight on to the new-card form.
+#### Must the payer verify their email on every payment?
+No: with "Remember this device" (checked by default) the browser stays
+trusted for 30 days and later payments with that email show the cards
+without a code. After that — or on another device — they verify again.

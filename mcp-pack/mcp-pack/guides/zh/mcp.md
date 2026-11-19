@@ -1,0 +1,146 @@
+---
+title: "MCP 服务器"
+description: "一键将你的 AI 编辑器或助手连接到 CBPay 文档"
+slug: zh/mcp
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/mcp
+---
+CBPay 在 `https://mcp.cbpayapp.com` 提供官方
+[MCP（Model Context Protocol）](https://modelcontextprotocol.io)服务器。将它添加到
+Cursor、VS Code、Claude 或任何兼容 MCP 的客户端后，你的 AI 助手即可搜索本文档、
+阅读每个端点及其真实的请求/响应示例、查询错误码——无需离开编辑器。
+
+它**只提供文档且只读**：永远不会调用线上 API，不需要 API key，也**不需要任何
+身份验证**。传输方式为 streamable HTTP。
+
+## 一键安装
+
+<a href="cursor://anysphere.cursor-deeplink/mcp/install?name=cbpay-docs&config=eyJ1cmwiOiJodHRwczovL21jcC5jYnBheWFwcC5jb20ifQ%3D%3D">
+</a>
+
+<a href="vscode:mcp/install?%7B%22name%22%3A%22cbpay-docs%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.cbpayapp.com%22%7D">
+</a>
+
+<a href="vscode-insiders:mcp/install?%7B%22name%22%3A%22cbpay-docs%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.cbpayapp.com%22%7D">
+</a>
+
+## 按客户端配置
+
+#### Cursor
+    点击上方的 **Add to Cursor** 按钮并确认安装，或手动将服务器添加到
+    `~/.cursor/mcp.json`（全局）或项目内的 `.cursor/mcp.json`：
+
+    ```json mcp.json
+    {
+      "mcpServers": {
+        "cbpay-docs": {
+          "url": "https://mcp.cbpayapp.com"
+        }
+      }
+    }
+    ```
+
+    服务器会出现在 **Settings → MCP** 中，其工具即刻可用。
+#### Claude Code
+    在终端里只需一条命令：
+
+    ```bash
+    claude mcp add --transport http cbpay-docs https://mcp.cbpayapp.com
+    ```
+
+    用 `claude mcp list` 验证——`cbpay-docs` 应显示为已连接。
+#### Claude（网页版与桌面版）
+    在 [claude.ai](https://claude.ai) 或 Claude Desktop 中：
+
+    1. 打开 **Settings → Connectors**。
+    2. 点击 **Add custom connector**。
+    3. 命名为 `cbpay-docs`，粘贴 URL `https://mcp.cbpayapp.com`。
+    4. 保存——无需任何身份验证步骤。
+#### VS Code
+    点击上方的 **VS Code** 按钮，或手动将服务器添加到你的用户级
+    `mcp.json`（**Command Palette → MCP: Open User Configuration**）：
+
+    ```json mcp.json
+    {
+      "servers": {
+        "cbpay-docs": {
+          "type": "http",
+          "url": "https://mcp.cbpayapp.com"
+        }
+      }
+    }
+    ```
+
+    GitHub Copilot Chat（agent 模式）会自动加载这些工具。
+#### ChatGPT
+    在 ChatGPT 中（付费计划，需启用 developer mode）：
+
+    1. 打开 **Settings → Connectors → Advanced → Developer mode**。
+    2. 点击 **Create**，将 `https://mcp.cbpayapp.com` 粘贴为 MCP 服务器 URL。
+    3. 身份验证选择 **None** 并保存。
+#### 其他客户端
+    任何支持通过 streamable HTTP 连接远程服务器的 MCP 客户端都可以使用。
+    通用配置如下：
+
+    ```json
+    {
+      "mcpServers": {
+        "cbpay-docs": {
+          "url": "https://mcp.cbpayapp.com"
+        }
+      }
+    }
+    ```
+
+    无 API key、无 headers、无 OAuth——只需这个 URL。
+## 可用工具
+
+| 工具 | 功能 |
+|---|---|
+| `search_docs` | 搜索文档（章节与端点），按相关性排序返回结果 |
+| `list_sections` | 列出文档目录，含每个章节的 id 与分组 |
+| `get_section` | 返回某章节的完整 markdown（含其子章节） |
+| `list_endpoints` | 列出已收录的端点，可按分组和/或 HTTP 方法过滤 |
+| `get_endpoint` | 返回单个端点的文档，含 curl、请求与响应示例 |
+| `list_groups` | 列出产品/分组（payouts、payins、banking、crypto 等）及各自的端点数量 |
+| `get_errors_catalog` | 返回 API 错误目录（HTTP 状态码、`error` 码、含义与类别），可按文本过滤 |
+| `get_quickstart` | 返回端到端集成快速入门指南 |
+| `list_recipes` | 列出可用的集成配方 |
+| `get_recipe` | 返回一个完整的集成配方 |
+| `list_webhook_events` | 列出已文档化的 webhook 事件类型及摘要 |
+| `get_webhook_event` | 返回一个 webhook 事件的描述和 payload 示例 |
+| `get_testing_guide` | 返回测试/正式环境、key 前缀和模拟器魔术值 |
+| `whats_new` | 返回文档最新发布的变更 |
+
+## 试试这些提示词
+
+连接后，可以让你的助手做这些事：
+
+- "根据 CBPay 文档，用 curl 演示如何创建一笔到智利的 payout。"
+- "`idempotency_key_required` 这个错误是什么意思？怎么解决？"
+- "列出所有 payins 端点，并讲解玻利维亚的二维码收款流程。"
+- "如何验证 CBPay webhook 的签名？"
+
+## 常见问题
+
+#### 需要 API key 或账户吗？
+    不需要。MCP 服务器是公开的，只提供文档内容。你的 CBPay API key
+    完全不参与——请把它留给你的集成代码。
+#### 它能对我的账户执行操作吗？
+    不能。该服务器严格只读文档内容：无法创建 payout、移动余额，
+    也无法以任何方式触碰线上 API。
+#### 它使用什么传输方式？
+    在 `https://mcp.cbpayapp.com` 上的 streamable HTTP。仅支持 stdio
+    本地服务器的客户端可以通过 `mcp-remote` 之类的代理来桥接。
+#### 它与 Postman 或站内搜索有什么区别？
+    内容相同，使用者不同：[Postman 集合](https://docs.cbpayapp.com/zh/postman)供人工测试请求，
+    站内搜索供人工阅读——MCP 服务器则供你的 AI 助手使用，让它基于真实
+    的文档行为回答集成问题，而不是靠猜。
+#### 内容始终是最新的吗？
+    是的——它由你正在阅读的这份文档生成，[更新日志](https://docs.cbpayapp.com/zh/changelog)中列出的
+    每个版本都会同步反映到 MCP 内容中。
+#### 有组织管理文档的 MCP 服务器吗？
+    有——一个面向**组织管理**文档的专用 MCP 服务器已在
+    [`mcp-admin.cbpayapp.com`](https://mcp-admin.cbpayapp.com) 上线。
+    它回答关于 org-admin API（账户、费率、资金库、合规）的问题，
+    面向组织管理员——而这里的这个服务器继续覆盖你的客户所集成的账户级 API。

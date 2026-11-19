@@ -1,0 +1,324 @@
+---
+title: "Grupo CB 主协议"
+description: "为已验证的企业账户签发、查看并完成 Grupo CB 主协议签署"
+slug: zh/guides/contract-agreement
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/guides/contract-agreement
+---
+Grupo CB 主协议是 CBPay 为已验证企业账户生成的预填充文件。创建信封前，
+CBPay 会解析企业法定身份、已验证地址、已启用服务、费率以及当前 CBPay
+签名。如果必填数据没有可信来源，系统不会创建信封。
+
+签署仪式必须由企业账户的 owner 或 operator 人工完成，并要求明确同意和
+一次性新 OTP。API key 不能用于签署。
+
+测试请求请使用 `https://cryptobank.qbank.cl/platform`；只有生产环境使用
+`https://api.qbank.cl/platform`。
+
+```mermaid
+sequenceDiagram
+  participant A as 组织管理员
+  participant C as 企业账户
+  participant P as CBPay
+  participant W as Webhook 订阅者
+  A->>P: POST /v1/org/contracts/envelopes
+  P-->>A: pending_client 信封
+  C->>P: GET 信封和 PDF
+  C->>P: POST /sign + X-OTP-Token
+  P-->>C: completed 信封和最终 PDF
+  P-->>W: contract_envelope_completed
+```
+
+## 资格与状态
+
+账户必须是已激活且 KYB 已批准的企业账户。信封按组织和账户隔离；访问
+其他账户的 ID 会返回 `404 not_found`。
+
+| 状态 | 含义 | 下一步 |
+|---|---|---|
+| `pending_client` | CBPay 已冻结预签署文件，客户尚未完成仪式。 | 查看并签署，或让组织管理员 void/reissue。 |
+| `completed` | 签名、同意和 OTP claim 成功，最终 PDF 已生成。 | 查看或下载最终文件；不可 void。 |
+| `voided` | 组织管理员为待签署信封记录原因并取消。 | 需要修正时签发新信封。 |
+
+系统不存在 `draft` 或通用的 `pending` 状态。
+
+当 `lang=en` 时，组织必须设置 `contract_counsel_approved_en=true`。西班牙语
+签发不需要该英文 counsel gate。模板版本为 `v13.3`，模板哈希和 CBPay
+签名版本会冻结在信封快照中。
+
+## 价格覆盖与显示金额
+
+组织签发 endpoint 会在创建信封前检查价格覆盖。如果已启用的服务没有
+effective fee row，系统返回 HTTP 422 `contract_unfillable`，并在
+`missing` 数组中使用 `pricing:<flag>` 形式的值。明确的零百分比、零固定
+费用表示有效的免费配置；没有 row 不满足覆盖。`transfers` 和 `swaps`
+豁免此 fee-row gate。
+
+在运营上，v13.3 正文不再嵌入固定价格表。附录 A 指向客户当前有效的佣金
+计划，并按照与门户/管理员定价面板一致的本地化类别对适用条目分组，例如
+法币支付、合规、卡片、银行业务、钱包和其他。签发时以 effective 配置为
+准；组织管理员应修复缺少的价格覆盖后重新签发信封。
+
+内部 margin `fx_spread`、`settlement_spread` 和 `swap_spread` 不会出现在
+账户侧 `fill_snapshot` 或 PDF 价格附录中。org-admin 视图仍保留完整价格
+snapshot 供审计。
+
+## 签署仪式
+
+### 列出并打开信封
+
+调用 `GET /v1/me/contracts/envelopes`，再调用
+    `GET /v1/me/contracts/envelopes/{envelopeID}`。列表支持 `page` 和
+    `page_size`（默认 50，最大 200）。列表响应使用 `items`；详情包含只
+    追加的 `events`，每条事件的名称位于 `event`。
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/contracts/envelopes?page=1&page_size=50" \
+  -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+### 签署前下载文件
+
+`GET /v1/me/contracts/{envelopeID}/pdf` 返回 PDF 二进制。保存并检查
+    法定名称、地址、服务和费率。文件已由 CBPay 预签名，但在仪式完成前
+    仍然是 `pending_client`。
+
+```bash
+curl -o contrato-marco.pdf \
+  "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/pdf" \
+  -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+### 提交签署人身份和同意
+
+签署人姓名和职务放在 JSON 中。`consent` 必须是 JSON 布尔值 `true`。
+    客户的手写签名放在 `signature_png` 中，内容为 Base64 编码的 PNG。
+    可选的 `data:image/png;base64,` 前缀也会被接受。OTP **不是** JSON
+    中的 `code` 字段；请将新的一次性 token 放在 `X-OTP-Token` header 中。
+
+```bash
+curl -X POST \
+  "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/sign" \
+  -H "Authorization: Bearer <CBPAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -H "X-OTP-Token: <FRESH_SINGLE_USE_OTP_TOKEN>" \
+  -d '{
+    "signer_name": "Jordan Lee",
+    "signer_title": "Chief Executive Officer",
+    "consent": true,
+    "signature_png": "<PNG_BASE64_SIGNATURE>"
+  }'
+```
+
+### 确认完成
+
+成功响应会将信封返回为 `completed`。再次读取资源并下载 PDF，保存
+`final_hash`。`contract_envelope_completed` 事件发送给 org-admin
+audience。客户 claim 成功后，平台还会自动记录 Client Journey
+milestone `contract_signed`，actor 为 `system:contract-ceremony`；
+这不是管理员手工 milestone。
+## 客户签名图片
+
+每次客户签署都必须提供 `signature_png`。API 接受带或不带
+`data:image/png;base64,` 前缀的 Base64 PNG。claim 信封前，系统会解码并
+验证图片：Base64 最多 700,000 个字符，解码后最多 512 KiB，最小尺寸
+64×16 像素，并且至少包含 200 个有墨迹的像素。验证失败返回 HTTP 422
+`invalid_signature_image`；message 会说明验证原因。
+
+签署成功后，PNG 会嵌入最终 PDF 的客户签名区块。列表和详情响应只返回
+布尔值 `has_client_signature`，不会返回签名字节或存储 key。没有图片的
+早期信封继续按原有方式渲染文字签名区块。
+
+## 签署通知
+
+签发或重新签发信封时，账户会收到通知邮件，邮件附带预签署 PDF。配置门户
+URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and sign”（英语）** 按钮，并在纯文本中包含相同的
+`/contracts/{id}` deep-link。邮件发送是 best-effort；请以信封资源和事件
+作为事实来源。
+
+## 响应示例
+
+列表响应：
+
+```json
+{
+  "items": [
+    {
+      "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+      "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
+      "template_version": "v13.3",
+      "lang": "zh",
+      "status": "pending_client",
+      "has_client_signature": false,
+      "doc_hash": "sha256-of-the-presigned-pdf",
+      "cb_signature_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "created_at": "2026-10-01T14:00:00Z",
+      "updated_at": "2026-10-01T14:00:00Z"
+    }
+  ],
+  "page": 1,
+  "page_size": 50
+}
+```
+
+完成响应：
+
+```json
+{
+  "id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+  "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
+  "template_version": "v13.3",
+  "lang": "zh",
+  "status": "completed",
+  "has_client_signature": true,
+  "doc_hash": "sha256-of-the-presigned-pdf",
+  "final_hash": "sha256-of-the-final-pdf",
+  "signer_name": "Jordan Lee",
+  "signer_title": "Chief Executive Officer",
+  "signer_email": "jordan@example.com",
+  "signed_at": "2026-10-01T14:03:12Z",
+  "otp_channel": "otp",
+  "created_at": "2026-10-01T14:00:00Z",
+  "updated_at": "2026-10-01T14:03:12Z"
+}
+```
+
+## 完成事件
+
+订阅 `contract_envelope_completed` 来更新组织管理员的信封队列。该事件
+只发送给 org-admin；账户会通过 email 收到最终 PDF，并可以通过自己的
+信封 endpoint 读取。
+
+```json
+{
+  "event_type": "contract_envelope_completed",
+  "account_id": "8d0f1a2b-3c4d-4e5f-9012-6a7b8c9d0e1f",
+  "payload": {
+    "envelope_id": "7c9e2f1a-4b3c-4d5e-8f60-1a2b3c4d5e6f",
+    "final_hash": "sha256-of-the-final-pdf",
+    "signer": "Jordan Lee"
+  }
+}
+```
+
+签署时间和语言仍可从信封详情读取。不要用 email 到达作为完成判据；应
+使用事件和资源状态。
+
+## 错误与解决方案
+
+| HTTP | Code | 原因与解决方案 |
+|---|---|---|
+| 400 | `idempotency_key_required` | body 或 `Idempotency-Key` header 缺少 key；发送稳定的 key。 |
+| 400 | `invalid_idempotency_key` | key 超过 256 个字符；缩短后重试。 |
+| 403 | `contract_counsel_required` | 缺少英文 counsel 批准；批准英文模板或使用 `lang=es`。 |
+| 403 | `human_session_required` | API key 不能签署；改用人工 member session。 |
+| 403 | `account_blocked` | 账户未激活；请组织管理员处理账户状态。 |
+| 401 | `invalid_otp` | OTP 缺失、过期或已使用；申请新的 token 并放入 `X-OTP-Token`。 |
+| 404 | `not_found` | 信封不存在或属于其他账户；使用自己列表中的 ID。 |
+| 409 | `contract_invalid_state` | 信封已完成或已 void；不要重复仪式。 |
+| 422 | `invalid_lang` | 只使用 `es` 或 `en`。 |
+| 422 | `contract_account_ineligible` | 账户不是 KYB 已批准的活动企业账户。 |
+| 422 | `contract_unfillable` | 缺少可信数据或价格覆盖；检查 `missing` 中的 `pricing:<flag>`，修正资料后签发新信封。 |
+| 422 | `invalid_consent` | body 必须包含 `"consent": true`。 |
+| 422 | `invalid_signer` | 姓名和职务不能为空，且每项最多 120 个字符。 |
+| 422 | `invalid_signature_image` | `signature_png` 不是有效或有墨迹的 PNG，超过编码/解码大小限制，或未达到最小尺寸；发送有效签名图片并使用新 OTP 重试。 |
+| 502 | `storage_failed` | 私有存储失败；先读取并对账信封，再创建新的 key。 |
+| 503 | `storage_unavailable` | 私有存储不可用；恢复后再重试。 |
+
+## 合同公开验证
+
+每份最终 PDF 都在签署页带有验证区块：含公开 oracle URL 的二维码，外加
+同一 URL 和 12 位短文档哈希的说明。任何持有该代码的人都可以确认文件真伪，
+无需账户或 API key。
+
+`verify_code` 随附在信封详情（`GET
+/v1/me/contracts/envelopes/{envelopeID}`）和 organization-admin
+信封详情中，因此客户随时可以找回链接。代码以 `K` 开头，后接信封标识和
+截断的 HMAC（`1+32+20` 个字符）；无法伪造或枚举。
+
+浏览器收到品牌 HTML 卡片；API 客户端发送
+`Accept: application/json`（或不带 `Accept` 头）并收到 JSON：
+
+```bash
+curl -H "Accept: application/json" \
+  "https://api.qbank.cl/platform/verify/contracts/K3f9a2b7c4d1e5f60817293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c"
+```
+
+```json
+{
+  "valid": true,
+  "type": "contract",
+  "status": "ok",
+  "raw_status": "completed",
+  "org": "CBPay",
+  "client": "Acme SpA",
+  "template_version": "v13.3",
+  "lang": "es",
+  "envelope": "7c9e2f1a",
+  "doc_hash": "9d4e6f1a8b3c2d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e",
+  "final_hash": "c1d2e3f4a5b60718293a4b5c6d7e8f90a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "created_at": "2026-10-05T14:20:00Z",
+  "signed_at": "2026-10-05T15:02:11Z",
+  "has_cb_signature": true,
+  "has_client_signature": true,
+  "issued_by": "CBPay"
+}
+```
+
+该 oracle 仅公开验证事实：有效性、类别、信封状态、签发方、客户法定名称、
+模板版本、语言、信封短 ID、两个哈希、时间戳以及双方签署情况。条款、
+价格、地址、邮箱及任何其他运营数据绝不离开服务器。被篡改或虚构的代码
+返回 HTTP 404 及通用消息 `this verification code does not correspond to
+any contract issued by this platform`；请求按 IP 限流（`429
+too_many_attempts`）。
+
+| `status` | `raw_status` | 徽章（EN / ES / 中文） | 含义 |
+|---|---|---|---|
+| `ok` | `completed` | Signed / Firmado / 已签署 | 协议已签署并生效；`final_hash` 覆盖该 PDF。 |
+| `pending` | `pending_client` | Pending signature / Pendiente de firma / 待签署 | 信封存在，等待客户签署。 |
+| `failed` | `voided` | Voided / Anulado / 已作废 | 信封已附原因作废；保留用于审计。 |
+
+## 常见问题
+
+#### 个人账户可以签署吗？
+    不可以。必须是已激活且 KYB 已批准的企业账户，签署人必须是 owner
+    或 operator member。
+#### 可以把 OTP 放在 JSON 中吗？
+    不可以。当前 handler 从 `X-OTP-Token` header 读取新的一次性 token。
+    JSON `code` 不是当前签署合同的一部分。
+#### 如果 PDF 有空白字段怎么办？
+    信封返回 `contract_unfillable`；CBPay 不会发出必填字段未解析的签名 PDF。
+#### 已完成的信封可以 void 吗？
+    不可以。`completed` 是终态。只有 `pending_client` 可以带原因 void，
+    然后重新签发。
+#### 可以重试签署吗？
+    可以使用同一信封和新的 OTP。原子 claim 会阻止第二次签署；完成的信封
+    返回 `contract_invalid_state`。
+#### 验证链接返回 404，我的合同丢了吗？
+    没有。HTTP 404 及 `this verification code does not correspond to any
+    contract issued by this platform` 表示代码复制错误或属于另一个信封。
+    请从信封详情重新读取 `verify_code`，或扫描签署页上打印的二维码；该
+    oracle 从不确认或否认其他信封的存在。
+#### 验证码会过期吗？
+    不会。代码在信封的整个生命周期内有效。如果信封被作废，同一代码将返回
+    `failed` 而不是 `ok`。
+## 双语下载 / Download in both languages
+
+`available_langs` 是门户按钮的权威来源；以签发语言开头——西语签发的信封为 `["es"]` 或 `["es", "en"]`（英语签发则镜像）。英文需要 counsel 批准和当前模板。
+
+```bash
+curl -o master-agreement.pdf "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/pdf?lang=en" -H "Authorization: Bearer <CBPAY_TOKEN>"
+```
+
+请求另一语言时，PDF 从冻结快照渲染，不会单独存储或计算哈希。封面说明签署 PDF、哈希、§11 的西班牙语优先规则和 oracle URL。它不是第二份签署文件。
+
+| HTTP | Code | 处理 |
+|---:|---|---|
+| 422 | `invalid_lang` | 使用 `lang=es` 或 `lang=en`。 |
+| 403 | `contract_counsel_required` | 请先批准 counsel。 |
+| 422 | `contract_template_superseded` | 只下载签发语言，然后重新签发。 |
+| 502 | `storage_failed` | 对账信封后重试，不要创建新流程。 |
+| 503 | `storage_unavailable` | 恢复私有存储后重试。 |
+
+### FAQ / 常见问题
+#### 翻译 PDF 是否等同于已签署合同？不是。签发语言 PDF 才是签署文件。#### 为什么看不到英文？英文需要 counsel 和当前模板；请检查 `available_langs`。

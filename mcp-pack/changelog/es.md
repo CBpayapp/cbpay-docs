@@ -5,6 +5,17 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.299 · 2 versiones - 18 de noviembre de 2026
+### v2.299
+**Agregado**
+
+- Se agregó la guía trilingüe del detalle de screening de billeteras:
+  veredictos, rangos de triggers, exposiciones referenciales directas e
+  indirectas, categorías de riesgo on-chain normalizadas y acción recomendada
+  para resultados Low, Medium, High, Severe y Unknown.
+### v2.298
+**Cambiado**
+- El portal de revisiones ahora expone la fecha del pedido de información como el campo RFC 3339 `info_requested_at` tanto en la bandeja como en el detalle. El portal muestra la cuenta regresiva de 24 horas para subsanar y marca el pedido como vencido después del plazo; el campo se omite cuando no existe un pedido activo.
 ## v2.297 · 2 versiones - 17 de noviembre de 2026
 ### v2.297
 **Agregado**

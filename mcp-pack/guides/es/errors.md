@@ -398,6 +398,8 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 | 503 | `channel_unavailable` | El canal de payout está temporalmente no disponible; reintenta más tarde con la **misma** clave de idempotencia |
 | 503 | `webhook_processing_pending` | Un evento webhook entrante ya está siendo procesado; reintenta la misma entrega después de un backoff corto y no crees una operación nueva |
 | 503 | `export_unavailable` | El export de llaves privadas de wallets segregadas no está habilitado en este entorno |
+| 503 | `effects_pending` | El retiro se liquidó pero sus efectos finales aún los concilia el barrido automático; consulta el retiro, no repitas el barrido |
+| 503 | `sweep_unavailable` | El barrido manual de conciliación no pudo contactar al core; nada cambió — reintenta cuando el core esté disponible |
 
 ## Cómo manejarlos
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.297'
+  version: '2.298'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -13187,9 +13187,8 @@ paths:
                   country: MX
                   method: spei
                   counterparty: Juan Pérez
-                  info_request:
-                    message: Please upload the invoice that justifies this payment
-                    requested_at: '2026-08-06T15:20:00Z'
+                  info_request: Please upload the invoice that justifies this payment
+                  info_requested_at: '2026-08-06T15:20:00Z'
                   created_at: '2026-08-06T14:32:00Z'
                   updated_at: '2026-08-06T15:20:00Z'
                   dispatch_failed: false
@@ -13246,9 +13245,8 @@ paths:
                   country: MX
                   method: spei
                   counterparty: Juan Pérez
-                  info_request:
-                    message: Please upload the invoice that justifies this payment
-                    requested_at: '2026-08-06T15:20:00Z'
+                  info_request: Please upload the invoice that justifies this payment
+                  info_requested_at: '2026-08-06T15:20:00Z'
                   requested_documents:
                   - bankStatement
                   - sourceOfWealth
@@ -14548,6 +14546,8 @@ paths:
                   - transfer
                   - banking_operation
                   - card_reveal
+                  - card_freeze
+                  - card_cancel
                   - api_key_create
                   - member_add
                   - phone_change
@@ -14826,6 +14826,8 @@ paths:
                   - transfer
                   - banking_operation
                   - card_reveal
+                  - card_freeze
+                  - card_cancel
                   - api_key_create
                   - member_add
                   - phone_change
@@ -30751,6 +30753,8 @@ components:
           - transfer
           - banking_operation
           - card_reveal
+          - card_freeze
+          - card_cancel
           - api_key_create
           - member_add
           - phone_change

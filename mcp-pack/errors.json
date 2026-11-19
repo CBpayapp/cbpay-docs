@@ -1,5 +1,5 @@
 {
-  "count": 479,
+  "count": 481,
   "errors": [
     {
       "category": {
@@ -3891,6 +3891,34 @@
         "en": "Segregated wallet private key export is not enabled on this environment",
         "es": "El export de llaves privadas de wallets segregadas no está habilitado en este entorno",
         "zh": "当前环境未启用独立钱包私钥导出"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "effects_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The withdrawal settled but its final effects are still being reconciled by the automatic sweep; poll the withdrawal, do not re-sweep",
+        "es": "El retiro se liquidó pero sus efectos finales aún los concilia el barrido automático; consulta el retiro, no repitas el barrido",
+        "zh": "提现已结算，但最终效果仍由自动对账处理；请查询提现，不要重复触发"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "sweep_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The manual reconciliation sweep could not reach the core; nothing was mutated — retry once the core is reachable",
+        "es": "El barrido manual de conciliación no pudo contactar al core; nada cambió — reintenta cuando el core esté disponible",
+        "zh": "手动对账无法连接核心；未发生变更 — 核心恢复后重试"
       }
     },
     {

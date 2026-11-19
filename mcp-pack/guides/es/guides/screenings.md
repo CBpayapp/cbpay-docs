@@ -170,6 +170,83 @@ curl https://api.qbank.cl/platform/v1/screenings/addresses/7a2c4e6f-8b1d-4c3a-9e
   -H "Authorization: Bearer <token>"
 ```
 
+## Leer el detalle de la billetera en el portal
+
+Cuando termina un escaneo, abre **Screening de billetera** desde la actividad
+de compliance de la cuenta y selecciona el escaneo. El detalle presenta el
+`assessment` guardado de forma legible; no ejecuta un segundo screening ni
+expone la marca del proveedor de inteligencia.
+
+Las secciones del panel son:
+
+- **Nivel de riesgo y veredicto**: `Low`, `Medium`, `High`, `Severe` o
+  `Unknown`. `Unknown` es fail-safe: trátalo como alto hasta que compliance
+  lo revise.
+- **Qué significa**: explica el nivel en lenguaje simple. Un resultado limpio
+  es una foto del momento, no una garantía permanente.
+- **Acción recomendada**: operación normal para Low; controles reforzados para
+  Medium; pausa y revisión de compliance para High; bloqueo de la contraparte
+  y escalada inmediata para Severe o Unknown.
+- **Triggers de riesgo**: cada regla muestra su porcentaje (`Participación`),
+  su rango configurado (`Rango de la regla`) y el riesgo de la regla. Un
+  trigger puede activarse aunque la exposición referencial sea pequeña.
+- **Exposiciones principales**: montos referenciales en USD, separados en
+  vínculos `Directos` e `Indirectos`. No son saldos exactos.
+- **Entidad conocida e identificaciones**: categoría, referencia, cluster e
+  identificaciones de la dirección cuando estén disponibles.
+
+### Principales categorías de riesgo on-chain
+
+Las etiquetas están normalizadas para el portal. Describen riesgo on-chain o
+una clasificación de lista de sanciones, nunca una marca de proveedor.
+
+| Categoría | Qué significa |
+|---|---|
+| Entidad sancionada / sanciones | Entidad o actividad asociada a una lista de sanciones |
+| Jurisdicción sancionada / paquete 20 de sanciones de la UE | Exposición a una jurisdicción o paquete sancionatorio |
+| Medidas especiales | Actividad sujeta a una medida restrictiva específica |
+| Financiamiento del terrorismo | Señales asociadas a financiamiento terrorista |
+| Mercado / servicio darknet | Exposición a un mercado o servicio darknet |
+| Ransomware | Exposición a fondos o infraestructura de ransomware |
+| Fondos robados | Fondos asociados a robo o compromiso |
+| Estafa / tienda de fraude | Actividad de estafa o servicio facilitador de fraude |
+| Material de abuso infantil | Exposición a actividad prohibida de abuso infantil |
+| Organización ilícita | Organización asociada a actividad ilícita |
+| Grupo de hackers / malware | Exposición a infraestructura de hacking o malware |
+| Narcotráfico / trata de personas | Exposición a fondos o actividad de trata |
+| Servicio de mezclado / CoinJoin | Agrupación que dificulta seguir el flujo de fondos |
+| Billetera de privacidad | Billetera diseñada para reducir la trazabilidad |
+| Exchange de alto riesgo / exchange P2P | Actividad de exchange con señales elevadas |
+| Jurisdicción de alto riesgo | Actividad vinculada a una jurisdicción de mayor riesgo |
+| Servicio sin identificar | Servicio sin un nombre público estable |
+| Apuestas | Actividad relacionada con apuestas |
+| Transmisor de dinero sin licencia | Transmisión de dinero sin licencia identificada |
+| Exchange / exchange descentralizado | Actividad de exchange centralizado o descentralizado |
+| DeFi / préstamos | Actividad de finanzas descentralizadas o préstamos |
+| Puente cross-chain | Actividad de puente o transferencia entre cadenas |
+| Minería | Actividad relacionada con minería |
+| Servicios de comercio / procesador de pagos | Actividad comercial o de procesamiento de pagos |
+| Marketplace NFT | Actividad de marketplace de NFT |
+| Emisor de stablecoin / contrato de token | Actividad de emisor o contrato de token |
+| Cajero cripto | Actividad de cajero de criptomonedas |
+| Billetera custodiada | Actividad de billetera alojada o custodiada |
+| Activos incautados | Activos identificados como incautados |
+| Infraestructura de hosting | Actividad de hosting o infraestructura |
+
+### Por qué una exposición mínima puede ser Severe
+
+El nivel no es un porcentaje del monto escaneado. Refleja la clasificación y
+la fuerza de la señal. Una identificación directa de entidad sancionada o un
+trigger duro puede producir **Severe** incluso con una exposición referencial
+de USD 0,001. No rebajes el resultado por ser un monto pequeño: detén la
+operación, conserva el `screening_id` y escala a compliance.
+
+Si el resultado es **High**, pausa envíos y recepciones y entrega el reporte a
+compliance para una revisión reforzada. Si es **Severe**, no operes con la
+dirección, bloquéala según tu proceso aprobado y escala de inmediato. Para
+**Unknown**, usa el mismo camino fail-safe que para High hasta completar la
+revisión.
+
 ## Niveles de riesgo
 
 | `risk` | Qué significa | Qué hacer |

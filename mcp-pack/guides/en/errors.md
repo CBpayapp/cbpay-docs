@@ -415,6 +415,8 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the **same** idempotency key |
 | 503 | `webhook_processing_pending` | An inbound webhook event is already being processed; retry the same delivery after a short backoff and do not create a new operation |
 | 503 | `export_unavailable` | Segregated wallet private key export is not enabled on this environment |
+| 503 | `effects_pending` | The withdrawal settled but its final effects are still being reconciled by the automatic sweep; poll the withdrawal, do not re-sweep |
+| 503 | `sweep_unavailable` | The manual reconciliation sweep could not reach the core; nothing was mutated — retry once the core is reachable |
 
 ## How to handle them
 

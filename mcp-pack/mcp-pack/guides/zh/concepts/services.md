@@ -1,0 +1,93 @@
+---
+title: "已启用的服务"
+description: "您的账户启用了哪些产品，以及如何应对 service_disabled"
+slug: zh/concepts/services
+lang: zh
+source_url: https://docs.cbpayapp.com/zh/concepts/services
+---
+每个账户都根据其与 CBPay 的商业协议拥有一组**已启用的服务**。
+在您的界面中展示某个产品（或尝试使用它）之前，请先查询生效的
+服务映射：
+
+```bash
+curl https://api.qbank.cl/platform/v1/services \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "services": {
+    "payouts": true,
+    "payins": true,
+    "transfers": true,
+    "crypto": true,
+    "banking": false,
+    "kyc": true,
+    "cards": false
+  }
+}
+```
+
+## 服务目录
+
+| 服务 | 启用的功能 |
+|---|---|
+| `payouts` | 法币付款分发（`POST /v1/payouts`、QR scan/confirm） |
+| `payins` | 法币收款（QR、转账、支付页面、collect、CLABE） |
+| `transfers` | CBPay 账户之间的内部转账 |
+| `crypto` | 链上钱包与 USDT 提现 |
+| `banking` | 国际银行账户（档案、账户、付款） |
+| `kyc` | 第三方 KYC/KYB 身份验证（链接、提交、文件、活体检测） |
+| `aml` | AML/CFT 名单筛查、重新筛查与监控 |
+| `cards` | 卡片发行与运营 |
+| `swaps` | 余额之间的兑换（USDT/USDC/BTC/GOLD/SILVER/PLATINUM） |
+| `wallets` | 拥有独立链上余额的[隔离钱包](https://docs.cbpayapp.com/zh/guides/segregated-wallets)（仅限企业） |
+
+## 服务被关闭时会发生什么
+
+该产品的**操作类接口**将返回 `403 service_disabled`：
+
+```json
+{
+  "error": "service_disabled",
+  "message": "this service is not enabled for your account"
+}
+```
+
+重要规则：
+
+- **读取永不被阻断**：您始终可以列出并查询您的历史操作、余额和
+  账目变动。
+- **进行中的资金会走完其周期**：一笔处于 `processing` 的出款会正常
+  完成（或退款），即使该服务随后被停用。
+- 关闭 `cards` 后，卡片消费会立即停止授权，且不再产生月费。
+
+## 推荐的集成模式
+
+```mermaid
+flowchart LR
+    inicio["登录时 /<br/>加载仪表盘时"] --> get["GET /v1/services"]
+    get --> ui{"services.X"}
+    ui -->|"true"| muestra["展示该产品"]
+    ui -->|"false"| oculta["隐藏或禁用<br/>该产品"]
+    muestra --> accion["用户进行操作"]
+    accion --> err{"403 service_disabled?"}
+    err -->|"是"| refresca["重新请求 GET /v1/services<br/>并更新界面"]
+```
+
+1. 在应用加载时查询 `GET /v1/services`（并缓存几分钟）。
+2. 只展示值为 `true` 的产品。
+3. 仍需在所有操作上处理 `403 service_disabled`：配置可能在您的缓存
+   与实际操作之间发生变化。
+
+> **注**
+服务由您的组织根据商业协议启用。如果您需要开通某个产品（例如
+`banking` 或 `cards`），请联系您的 CBPay 管理员 — 变更即时生效，
+无需重新部署。
+## EUR banking service flags
+
+The platform exposes `eur_funding` for EUR-to-USDT funding and
+`virtual_iban` for optional EUR banking balances and SEPA Instant. Both are
+separate from the general banking capability and must be enabled explicitly
+when the organization uses them.
