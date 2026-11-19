@@ -43,10 +43,8 @@ curl "https://api.qbank.cl/platform/v1/me/txn-reviews?from=2026-07-01&to=2026-08
       "country": "MX",
       "method": "spei",
       "counterparty": "Juan Pérez",
-      "info_request": {
-        "message": "Please upload the invoice that justifies this payment",
-        "requested_at": "2026-08-06T15:20:00Z"
-      },
+      "info_request": "Please upload the invoice that justifies this payment",
+      "info_requested_at": "2026-08-06T15:20:00Z",
       "created_at": "2026-08-06T14:32:00Z",
       "updated_at": "2026-08-06T15:20:00Z"
     }
@@ -56,6 +54,11 @@ curl "https://api.qbank.cl/platform/v1/me/txn-reviews?from=2026-07-01&to=2026-08
   "total": 1
 }
 ```
+
+当 `status` 为 `info_requested` 时，门户会在审核卡片中显示
+`info_requested_at` 的请求日期。补正期限从该时间开始计算 24 小时：
+期限内卡片显示剩余时间，超过期限后标记为已过期。如果没有有效的信息
+请求，则省略 `info_requested_at`，不会伪造日期。
 
 ### 过滤条件
 
@@ -84,10 +87,8 @@ curl https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000
     "country": "MX",
     "method": "spei",
     "counterparty": "Juan Pérez",
-    "info_request": {
-      "message": "Please upload the invoice that justifies this payment",
-      "requested_at": "2026-08-06T15:20:00Z"
-    },
+    "info_request": "Please upload the invoice that justifies this payment",
+    "info_requested_at": "2026-08-06T15:20:00Z",
     "files": [
       {
         "id": "f1e2d3c4-0000-4000-8000-0000000000aa",
@@ -104,6 +105,10 @@ curl https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000
   }
 }
 ```
+
+详情使用与审核列表相同的 `info_requested_at` 时间戳。它是最新信息请求的
+RFC 3339 时间；没有有效请求时不会返回。新的请求会重置 24 小时补正期限；
+上传证据后，审核会回到 `in_review`。
 
 属于其他账户的审核将返回 `404 not_found`（绝不返回 `403`，以避免泄露存在性）。审核被拒绝时，详情会包含 `decision_note`（与拒绝邮件相同的文本）和 `decided_at`。
 

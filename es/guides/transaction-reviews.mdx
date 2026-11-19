@@ -46,10 +46,8 @@ Respuesta:
       "country": "MX",
       "method": "spei",
       "counterparty": "Juan Pérez",
-      "info_request": {
-        "message": "Please upload the invoice that justifies this payment",
-        "requested_at": "2026-08-06T15:20:00Z"
-      },
+      "info_request": "Please upload the invoice that justifies this payment",
+      "info_requested_at": "2026-08-06T15:20:00Z",
       "created_at": "2026-08-06T14:32:00Z",
       "updated_at": "2026-08-06T15:20:00Z"
     }
@@ -59,6 +57,13 @@ Respuesta:
   "total": 1
 }
 ```
+
+Cuando `status` es `info_requested`, el portal muestra en la tarjeta de la
+revisión la fecha del pedido tomada de `info_requested_at`. El plazo para
+subsanar es de 24 horas desde ese momento: la tarjeta muestra el tiempo
+restante mientras está vigente y marca el pedido como vencido después del
+plazo. Si no hay un pedido activo, `info_requested_at` se omite; nunca se
+inventa una fecha.
 
 ### Filtros
 
@@ -87,10 +92,8 @@ Respuesta:
     "country": "MX",
     "method": "spei",
     "counterparty": "Juan Pérez",
-    "info_request": {
-      "message": "Please upload the invoice that justifies this payment",
-      "requested_at": "2026-08-06T15:20:00Z"
-    },
+    "info_request": "Please upload the invoice that justifies this payment",
+    "info_requested_at": "2026-08-06T15:20:00Z",
     "files": [
       {
         "id": "f1e2d3c4-0000-4000-8000-0000000000aa",
@@ -107,6 +110,12 @@ Respuesta:
   }
 }
 ```
+
+El detalle usa el mismo timestamp `info_requested_at` que aparece en la
+lista. Es una fecha RFC 3339 del último pedido de información y se omite
+cuando no existe un pedido activo. Un nuevo pedido reinicia el plazo de
+subsanación de 24 horas; al subir evidencia, la revisión vuelve a
+`in_review`.
 
 Una revisión de otra cuenta responde `404 not_found` (nunca `403`, para no filtrar existencia). Cuando la revisión fue rechazada, el detalle incluye `decision_note` (el mismo texto del email de rechazo) y `decided_at`.
 

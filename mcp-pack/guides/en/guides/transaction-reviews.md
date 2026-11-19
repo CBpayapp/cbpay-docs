@@ -43,10 +43,8 @@ Response:
       "country": "MX",
       "method": "spei",
       "counterparty": "Juan Pérez",
-      "info_request": {
-        "message": "Please upload the invoice that justifies this payment",
-        "requested_at": "2026-08-06T15:20:00Z"
-      },
+      "info_request": "Please upload the invoice that justifies this payment",
+      "info_requested_at": "2026-08-06T15:20:00Z",
       "created_at": "2026-08-06T14:32:00Z",
       "updated_at": "2026-08-06T15:20:00Z"
     }
@@ -56,6 +54,12 @@ Response:
   "total": 1
 }
 ```
+
+When `status` is `info_requested`, the portal shows the request date from
+`info_requested_at` in the review card. The remediation window is 24 hours
+from that timestamp: the card shows the remaining time while it is open and
+marks it as expired after the deadline. If no information request is active,
+`info_requested_at` is omitted rather than reported with a fabricated date.
 
 ### Filters
 
@@ -84,10 +88,8 @@ Response:
     "country": "MX",
     "method": "spei",
     "counterparty": "Juan Pérez",
-    "info_request": {
-      "message": "Please upload the invoice that justifies this payment",
-      "requested_at": "2026-08-06T15:20:00Z"
-    },
+    "info_request": "Please upload the invoice that justifies this payment",
+    "info_requested_at": "2026-08-06T15:20:00Z",
     "files": [
       {
         "id": "f1e2d3c4-0000-4000-8000-0000000000aa",
@@ -104,6 +106,11 @@ Response:
   }
 }
 ```
+
+The detail uses the same `info_requested_at` timestamp shown in the review
+list. It is an RFC 3339 timestamp for the latest information request and is
+absent when there is no active request. A new request resets the 24-hour
+remediation window; uploading evidence returns the review to `in_review`.
 
 A review belonging to another account answers `404 not_found` (never `403`, so existence is not leaked). When the review was rejected, the detail includes `decision_note` (the same text as the rejection email) and `decided_at`.
 

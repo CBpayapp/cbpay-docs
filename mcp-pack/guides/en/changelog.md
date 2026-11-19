@@ -5,6 +5,17 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.299 · 2 versions - November 18, 2026
+### v2.299
+**Added**
+
+- Added the trilingual wallet-screening detail guidance: risk verdicts,
+  trigger ranges, direct and indirect reference exposures, normalized
+  on-chain risk categories, and the recommended response for Low, Medium,
+  High, Severe and Unknown results.
+### v2.298
+**Changed**
+- The transaction-review portal now exposes the information-request date as the RFC 3339 `info_requested_at` field in both the review list and detail. The portal shows the 24-hour remediation countdown and marks the request as expired after the deadline; the field is omitted when there is no active request.
 ## v2.297 · 2 versions - November 17, 2026
 ### v2.297
 **Added**

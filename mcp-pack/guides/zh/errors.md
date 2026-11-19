@@ -391,6 +391,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的**幂等键重试 |
 | 503 | `webhook_processing_pending` | 入站 webhook 事件正在处理中；短暂退避后重试同一条投递，不要创建新的操作 |
 | 503 | `export_unavailable` | 当前环境未启用独立钱包私钥导出 |
+| 503 | `effects_pending` | 提现已结算，但最终效果仍由自动对账处理；请查询提现，不要重复触发 |
+| 503 | `sweep_unavailable` | 手动对账无法连接核心；未发生变更 — 核心恢复后重试 |
 
 ## 如何处理
 
