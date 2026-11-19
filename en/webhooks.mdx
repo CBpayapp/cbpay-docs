@@ -104,6 +104,12 @@ To reactivate it, same call with `{ "status": "active" }`.
 | `rwa_subscription_completed` | Royalty tokens were subscribed with USDT (net + fee debited, tokens credited) |
 | `rwa_distribution_credited` | A royalty distribution credited USDT pro-rata on the snapshot balance |
 | `rwa_redeem_completed` | Royalty tokens were redeemed for USDT at the project subscription price |
+| `rwa_bridge_out_completed` | Title burned in the ledger was minted on-chain to the holder wallet |
+| `rwa_bridge_out_failed` | The on-chain mint failed; the title was refunded automatically |
+| `rwa_bridge_in_credited` | An on-chain burn was detected confirmed and the title was credited back |
+| `rwa_secondary_offer_open` | Title was locked for an internal bilateral RFQ sale |
+| `rwa_secondary_offer_closed` | An offer was cancelled or expired; the locked title returned to the maker |
+| `rwa_secondary_filled` | A taker accepted an offer; title and USDT crossed atomically |
 
 RWA payloads use exact decimal strings and include the operation identifier:
 
@@ -292,8 +298,12 @@ receipt fields; a failed payout refunds the exact debit.
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TDonor…",
+  "deposit_id": "a1b2…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/a1b2…/receipt"
 }
 ```
 ```json crypto_deposit_held
@@ -303,6 +313,9 @@ receipt fields; a failed payout refunds the exact debit.
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
@@ -313,6 +326,7 @@ receipt fields; a failed payout refunds the exact debit.
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "9c6d4e…",
+  "event_index": 0,
   "risk": "High",
   "status": "credited"
 }

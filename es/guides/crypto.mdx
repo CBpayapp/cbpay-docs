@@ -19,7 +19,6 @@ soportadas:
 | `polygon` | `usdt` | USDT |
 | `polygon` | `usdc` | USDC |
 | `polygon` | `usdce` | **USDC.e** (USDC bridged) |
-| `base` | `usdc` | USDC |
 | `btc` | `btc` | BTC |
 
 Cada depósito acredita el **saldo de su propio activo** (una wallet USDC
@@ -255,10 +254,29 @@ se emite el webhook `crypto_deposit_credited`:
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TX9a…",
+  "deposit_id": "dep_8813…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt"
 }
 ```
+
+`tx_id` identifica la transacción on-chain. Una transacción por lotes puede
+contener varias transferencias, por lo que la identidad completa del depósito
+es `tx_id:event_index`; cada transferencia emite su propio webhook y asiento
+de ledger. `event_index` es el índice de la transferencia (el índice del log
+ERC-20 en redes EVM). `from_address` identifica al remitente, `deposit_id`
+identifica el asiento acreditado y `receipt_url` es el comprobante brandeado
+de ese depósito.
+
+<Warning>
+No concilies un lote solo por `tx_id`: dos transferencias de una misma
+transacción pueden pertenecer a cuentas distintas o tener montos distintos.
+Persiste el par `tx_id` + `event_index` y deduplica el webhook con
+`X-Webhook-Event-ID`.
+</Warning>
 
 <Warning>
 Envía **solo el activo de la wallet y por su red** (USDT a una wallet
@@ -540,9 +558,11 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
       "chain": "tron",
       "asset": "USDT",
       "tx_id": "b1946ac9…",
+      "reference": "b1946ac9…:0",
       "from_address": "TX9a…",
       "amount": "499.000000",
-      "reference": "dep_8813…",
+      "deposit_id": "dep_8813…",
+      "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt",
       "created_at": "2026-07-07T12:10:00Z"
     }
   ],
@@ -563,6 +583,32 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
 }
 ```
 
+Para conciliar todas las transferencias de una misma transacción on-chain,
+filtra por su hash exacto. Los depósitos calzan tanto con el hash simple como
+con la referencia `tx_id:event_index`, por lo que un lote devuelve una fila
+por transferencia:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=2026-07-08&tx_id=b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+Los depósitos retenidos están intencionalmente ausentes de
+`GET /v1/crypto/transactions` porque todavía no fueron acreditados. Recupera
+su notificación desde el log durable:
+
+```bash
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-08&event_type=crypto_deposit_held&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+El evento held contiene el mismo `tx_id` y `event_index` para identificar la
+transferencia. Si compliance la libera, el evento posterior
+`crypto_deposit_credited` lleva el mismo `hold_id`; si la rechaza, no se crea
+una fila de crédito. El log de eventos se conserva 90 días: después de un
+crédito, usa como fuente financiera los movimientos inmutables y el
+comprobante.
+
 ```bash
 # Saldo actual (available + held)
 curl https://api.qbank.cl/platform/v1/balances \
@@ -576,111 +622,12 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 Cada depósito acredita el **saldo del activo de su wallet** (USDT, USDC o
 BTC); las wallets son puertas de entrada, el saldo por moneda es uno solo.
 
-### USDC sobre Base (`base:usdc`)
-
-Base USDC es el USDC nativo de Base. Usa direcciones EVM como Ethereum, pero
-es otra red: selecciona `base` explícitamente. El contrato es
-`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` y los montos usan seis
-decimales. Base y Ethereum comparten el saldo USDC, pero mantienen separadas
-la red, la dirección, el contrato y la historia.
-
-```mermaid
-sequenceDiagram
-  participant W as Wallet Base
-  participant I as Indexador Base
-  participant L as Ledger USDC
-  participant C as API CBPay
-  W->>I: Depósito USDC en la dirección
-  I->>I: Espera 600 confirmaciones
-  I->>L: Acredita una sola vez
-  L-->>C: crypto_deposit_credited
-  C->>W: Retiro después del compliance
-  W-->>C: Concilia por tx_id tras 60 confirmaciones
-```
-
-Los depósitos se acreditan tras **600 confirmaciones** y los retiros se
-concilian tras **60**. El gas ETH se gestiona internamente. La comisión
-predeterminada de retiro es **0 USDC**; puede ser **4 USDC** si así está
-configurada para la organización o cuenta. Los holds de compliance tienen
-doble control y el firewall puede detener el retiro antes del broadcast.
-
-```bash
-curl https://api.qbank.cl/platform/v1/crypto/wallets \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "wallets": [
-    {
-      "wallet_id": "base-usdc-wallet-…",
-      "chain": "base",
-      "asset": "USDC",
-      "address": "0x8f3B…",
-      "type": "deposit",
-      "receive_only": true
-    }
-  ]
-}
-```
-
-Envía solo USDC nativo de Base a la dirección. Verifica el `tx_id` en
-`https://basescan.org`.
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chain": "base",
-    "asset": "USDC",
-    "to_address": "0x8f3B…",
-    "amount": "50.000000",
-    "idempotency_key": "withdrawal-base-usdc-2026-11-19-a"
-  }'
-```
-
-```json
-{
-  "withdrawal_id": "base-withdrawal-…",
-  "chain": "base",
-  "asset": "USDC",
-  "amount": "50.000000",
-  "fee": "0.000000",
-  "total_debit": "50.000000",
-  "status": "processing",
-  "tx_id": ""
-}
-```
-
-Consulta el GET del retiro y el webhook
-`crypto_withdrawal_status_changed` hasta un estado final. Si el resultado es
-ambiguo, usa la misma `idempotency_key`; nunca crees un reemplazo.
-
-<AccordionGroup>
-<Accordion title="¿Base es lo mismo que Ethereum?">
-No. Ambas usan direcciones `0x`, pero Base es una red separada. Verifica
-`chain: "base"` y el explorer antes de enviar.
-</Accordion>
-<Accordion title="¿Usan saldos USDC separados?">
-No. Acreditan el mismo saldo USDC, aunque la red y el historial son distintos.
-</Accordion>
-<Accordion title="¿Qué ocurre durante un hold de compliance?">
-El retiro queda retenido hasta las aprobaciones requeridas. No crees un
-reemplazo: sigue el estado de la operación existente.
-</Accordion>
-<Accordion title="¿Por qué la comisión puede ser 4 USDC?">
-La comisión predeterminada es 0 USDC. Se aplican 4 USDC cuando esa
-configuración está activa; la respuesta muestra el débito total exacto.
-</Accordion>
-</AccordionGroup>
-
 ## Errores
 
 | HTTP | `error` | Causa |
 |---|---|---|
-| 400 | `invalid_chain` | Red no soportada (usa `tron`, `eth`, `polygon`, `base` o `btc`) |
-| 400 | `invalid_asset` | Combinación red/activo sin riel on-chain (soportadas: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc` — `GOLD` no opera on-chain) |
+| 400 | `invalid_chain` | Red no soportada (usa `tron`, `eth`, `polygon` o `btc`) |
+| 400 | `invalid_asset` | Combinación red/activo sin riel on-chain (soportadas: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc` — `GOLD` no opera on-chain) |
 | 400 | `to_address_required` | Falta la dirección destino del retiro |
 | 402 | `insufficient_funds` | Saldo insuficiente en ese activo (para el retiro o la comisión de creación) |
 | 409 | `crypto_disabled` | La red o el par crypto está deshabilitado global o administrativamente; no crees una operación de reemplazo |

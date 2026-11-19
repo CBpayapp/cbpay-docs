@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.302'
+  version: '2.303'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -7832,7 +7832,7 @@ paths:
       - 加密货币
       operationId: listCryptoTransactions
       summary: 列出链上活动
-      description: 调用账户的充值入账与提现。
+      description: 调用账户的充值入账与提现。被冻结(未入账)的充值不在此列出;请通过 crypto_deposit_held webhook 与 GET /v1/events/history 跟踪。
       parameters:
       - $ref: '#/components/parameters/page'
       - $ref: '#/components/parameters/pageSize'
@@ -7848,6 +7848,11 @@ paths:
           type: string
           format: date
         description: 过滤至此日期(YYYY-MM-DD,组织时区,含当日)。
+      - name: tx_id
+        in: query
+        schema:
+          type: string
+        description: 按链上交易哈希过滤(提现为精确匹配;充值匹配 tx 或 tx:event 引用,因此批量交易每个转账返回一行)。
       responses:
         '200':
           description: 充值与提现。
@@ -11566,7 +11571,7 @@ paths:
       - 合同
       operationId: signMyContractEnvelope
       summary: 签署我的合同信封
-      description: 需要 owner/operator 人工会话、明确同意以及 `X-OTP-Token` 中的新 OTP。
+      description: 需要 owner/operator 人工会话、签署人姓名、明确同意和签名。无 OTP（简化签署）。
       parameters:
       - name: envelopeID
         in: path
@@ -11574,11 +11579,6 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: X-OTP-Token
-        in: header
-        required: true
-        schema:
-          type: string
       requestBody:
         required: true
         content:
@@ -11587,7 +11587,6 @@ paths:
               type: object
               required:
               - signer_name
-              - signer_title
               - consent
               - signature_png
               properties:
@@ -11597,8 +11596,8 @@ paths:
                   maxLength: 120
                 signer_title:
                   type: string
-                  minLength: 1
                   maxLength: 120
+                  description: 可选遗留字段；省略时自动填充角色（owner/operator）。
                 consent:
                   type: boolean
                   const: true
@@ -11620,7 +11619,6 @@ paths:
                   description: signature_mode 为 typed 时必填；必须与 signer_name 一致。
             example:
               signer_name: Jordan Lee
-              signer_title: Chief Executive Officer
               consent: true
               signature_png: <PNG_BASE64_SIGNATURE>
       responses:
@@ -11634,12 +11632,12 @@ paths:
                 final_hash: sha256-of-the-final-pdf
                 signed_at: '2026-10-01T14:03:12Z'
         '401':
-          description: OTP 无效或已过期。
+          description: 需要身份验证。
           content:
             application/json:
               example:
-                error: invalid_otp
-                message: the verification code is invalid or expired
+                error: unauthorized
+                message: authentication required
         '409':
           description: 信封已不可签署，或已被新信封取代。
           headers:
@@ -33079,7 +33077,7 @@ webhooks:
   crypto_deposit_credited:
     post:
       summary: 加密充值已入账
-      description: '一笔链上充值已确认并入账(扣除充值手续费后)到钱包资产(`USDT` 或 `USDC`)对应的余额。
+      description: '一笔链上充值已确认并入账(扣除充值手续费后)到钱包资产(`USDT` 或 `USDC`)对应的余额。每次转账一个事件:批量交易中每次转账都会触发一个事件,共享同一 `tx_id`,以 `event_index`(EVM 链上为 ERC-20 日志索引)区分。`hold_id` 仅在本次入账为合规冻结放行时出现。
 
 
         每次投递均包含 `X-Webhook-Event`、`X-Webhook-Event-ID`、`X-Webhook-Delivery-ID`、`X-Webhook-Timestamp` 和 `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`。请返回 2xx;最多重试 5 次,间隔递增。'
@@ -33093,22 +33091,35 @@ webhooks:
                 chain: *id015
                 asset: *id015
                 tx_id: *id015
+                event_index:
+                  type: integer
+                  description: 交易内转账的索引(EVM 上为 ERC-20 日志索引)。与 tx_id 共同唯一标识一笔充值。
                 amount: *id015
                 fee: *id015
+                from_address: *id015
+                deposit_id: *id015
+                receipt_url: *id015
+                hold_id:
+                  type: string
+                  description: 仅当本次入账为合规冻结放行时出现;回链到 crypto_deposit_held 事件。
             example:
               account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
               chain: tron
               asset: USDT
               tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
+              event_index: 0
               amount: '499.000000'
               fee: '1.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
+              deposit_id: a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+              receipt_url: https://api.qbank.cl/platform/v1/crypto/deposits/a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d/receipt
       responses:
         '200':
           description: 返回任意 2xx 以确认投递。
   crypto_deposit_held:
     post:
       summary: 加密充值因合规审核被冻结
-      description: 一笔链上入账充值因发送方地址显示严重风险(制裁/直接非法资金)而未入账。运营方合规团队会审核该冻结并放行(入账)或拒绝。
+      description: 一笔链上入账充值因发送方地址显示严重风险(制裁/直接非法资金)而未入账。运营方合规团队会审核该冻结并放行(入账)或拒绝。`event_index` 标识交易中被冻结的是哪笔转账;放行后 crypto_deposit_credited 事件会携带同一 `hold_id`。
       requestBody:
         content:
           application/json:
@@ -33118,6 +33129,9 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1
+              event_index: 1
+              amount: '250.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
               risk: Severe
               status: held
       responses:
@@ -33126,7 +33140,7 @@ webhooks:
   crypto_deposit_alert:
     post:
       summary: 加密充值已入账并带风险警示
-      description: 一笔入账充值已正常入账,但发送方地址显示高风险。仅供参考——无需对资金采取任何操作。
+      description: 一笔入账充值已正常入账,但发送方地址显示高风险。仅供参考——无需对资金采取任何操作。`event_index` 标识警示所指的交易中的哪笔转账;配对的 crypto_deposit_credited 事件携带金额。
       requestBody:
         content:
           application/json:
@@ -33135,6 +33149,7 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 9c6d4e92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b2
+              event_index: 0
               risk: High
               status: credited
       responses:

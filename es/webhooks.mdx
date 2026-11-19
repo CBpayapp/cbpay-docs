@@ -103,6 +103,12 @@ Para reactivarla, el mismo llamado con `{ "status": "active" }`.
 | `rwa_subscription_completed` | Se suscribieron tokens de regalía con USDT (débito neto + comisión, tokens acreditados) |
 | `rwa_distribution_credited` | Una distribución de regalías acreditó USDT pro-rata sobre el saldo del snapshot |
 | `rwa_redeem_completed` | Se rescataron tokens de regalía por USDT al precio de suscripción del proyecto |
+| `rwa_bridge_out_completed` | El título quemado en el ledger se minteó on-chain a la wallet del holder |
+| `rwa_bridge_out_failed` | El mint on-chain falló; el título se refundeó automáticamente |
+| `rwa_bridge_in_credited` | Un burn on-chain confirmado se detectó y el título volvió al ledger |
+| `rwa_secondary_offer_open` | Título bloqueado para una venta RFQ bilateral interna |
+| `rwa_secondary_offer_closed` | Una oferta se canceló o expiró; el título bloqueado volvió al maker |
+| `rwa_secondary_filled` | Un taker aceptó una oferta; título y USDT cruzaron atómicos |
 
 Los payloads RWA usan cadenas decimales exactas e incluyen el identificador de la operación:
 
@@ -294,8 +300,12 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TDonor…",
+  "deposit_id": "a1b2…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/a1b2…/receipt"
 }
 ```
 ```json crypto_deposit_held
@@ -305,6 +315,9 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
@@ -315,6 +328,7 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "9c6d4e…",
+  "event_index": 0,
   "risk": "High",
   "status": "credited"
 }
