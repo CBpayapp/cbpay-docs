@@ -4,10 +4,17 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月19日" description="v2.301 · 1 个版本">
-### v2.301
+<Update label="2026年11月19日" description="v2.302 · 2 个版本">
+### v2.302
 **修复**
 - 组织管理员现在可以通过 `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile` 恢复卡住的 `BO/BOB/bank_transfer` 存款账户 claim：core 按 reference 查找商户账户，而不再返回 `422 deposit_account_not_recoverable`。模糊状态仍然 fail-closed——仅在恢复完成后用相同的 key 重试。
+### v2.301
+**新增**
+- 新增原生 `base:usdc` 加密通道，支持钱包、充值和提现。Base 使用 USDC
+  合约 `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`、六位小数，充值需
+  600 次确认，提现需 60 次确认后对账。
+- Base 与 Ethereum 是不同网络，但记入同一个 USDC 余额。ETH gas 由平台
+  内部处理；默认提现费用为 0 USDC，启用 4 USDC 配置时会在响应中显示。
 </Update>
 <Update label="2026年11月18日" description="v2.300 · 3 个版本">
 ### v2.300

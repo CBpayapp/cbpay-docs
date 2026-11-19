@@ -19,6 +19,7 @@ combinations:
 | `polygon` | `usdt` | USDT |
 | `polygon` | `usdc` | USDC |
 | `polygon` | `usdce` | **USDC.e** (bridged USDC) |
+| `base` | `usdc` | USDC |
 | `btc` | `btc` | BTC |
 
 Every deposit credits the **balance of its own asset** (a USDC wallet
@@ -47,7 +48,8 @@ flowchart LR
 
 Every account — person and company — is created with **one deposit wallet
 per supported combination** (`tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`,
-`polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce` and `btc`/`btc`),
+`polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc` and
+`btc`/`btc`),
 **free of charge** and automatically: as soon as you register, your seven
 addresses are ready to receive funds.
 
@@ -581,12 +583,118 @@ curl "https://api.qbank.cl/platform/v1/movements?type=funding&from=2026-07-01&to
 Every deposit credits the **balance of its wallet's asset** (USDT, USDC,
 USDC.e or BTC); wallets are entry points, each asset has a single balance.
 
+### USDC over Base (`base:usdc`)
+
+Base USDC is the native USDC rail on Base. It uses the same EVM address
+format as Ethereum, but it is a different network: select `base` explicitly
+and never send Base USDC through Ethereum or another chain. The token contract
+is `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` and amounts use six decimals.
+Your USDC balance is shared by USDC rails; the network remains part of each
+wallet, movement and withdrawal record.
+
+```mermaid
+sequenceDiagram
+  participant W as Base wallet
+  participant I as Base indexer
+  participant L as USDC ledger
+  participant C as CBPay API
+  W->>I: USDC transfer to the deposit address
+  I->>I: Wait for 600 confirmations
+  I->>L: Credit the same USDC balance once
+  L-->>C: crypto_deposit_credited
+  C->>W: Withdrawal after compliance checks
+  W-->>C: Reconcile by tx_id after 60 confirmations
+```
+
+Base deposits are credited after **600 confirmations**. Base withdrawals
+reconcile after **60 confirmations**. ETH gas is handled internally; it is not
+deducted as a separate customer USDC fee. The default withdrawal fee is
+**0 USDC**, with a **4 USDC** default applied when the organization or
+account configuration selects it. Compliance holds are dual-controlled and
+the transaction firewall can stop a withdrawal before broadcast.
+
+```bash
+# List wallets and find the Base USDC deposit address
+curl https://api.qbank.cl/platform/v1/crypto/wallets \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "wallets": [
+    {
+      "wallet_id": "base-usdc-wallet-…",
+      "chain": "base",
+      "asset": "USDC",
+      "address": "0x8f3B…",
+      "type": "deposit",
+      "receive_only": true
+    }
+  ]
+}
+```
+
+Send only native USDC on Base to this address. Verify the transaction at
+`https://basescan.org` using the returned `tx_id`.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/crypto/withdrawals \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chain": "base",
+    "asset": "USDC",
+    "to_address": "0x8f3B…",
+    "amount": "50.000000",
+    "idempotency_key": "withdrawal-base-usdc-2026-11-19-a"
+  }'
+```
+
+```json
+{
+  "withdrawal_id": "base-withdrawal-…",
+  "chain": "base",
+  "asset": "USDC",
+  "amount": "50.000000",
+  "fee": "0.000000",
+  "total_debit": "50.000000",
+  "status": "processing",
+  "tx_id": ""
+}
+```
+
+Use `GET /v1/crypto/withdrawals/{withdrawalID}` and the
+`crypto_withdrawal_status_changed` webhook until the status is final. If the
+result is ambiguous, read the existing operation with the same
+`idempotency_key`; never create a replacement withdrawal.
+
+<AccordionGroup>
+<Accordion title="Is Base the same as Ethereum?">
+No. Both use `0x` addresses, but Base is a separate network. Select
+`chain: "base"` and verify the destination and explorer before sending.
+</Accordion>
+<Accordion title="Do Base and Ethereum use separate USDC balances?">
+No. Base USDC and Ethereum USDC credit the same USDC balance. Their chain,
+contract and transaction history remain distinct.
+</Accordion>
+<Accordion title="What happens during a compliance hold?">
+The withdrawal remains held until the required compliance approvals finish.
+The firewall may block it before broadcast. Do not create a replacement;
+follow the existing withdrawal status and reference.
+</Accordion>
+<Accordion title="Why can the fee be 4 USDC?">
+The default Base withdrawal fee is 0 USDC. A 4 USDC fee applies when that
+default is configured for the organization or account; the response shows
+the exact fee and total debit.
+</Accordion>
+</AccordionGroup>
+
 ## Errors
 
 | HTTP | `error` | Cause |
 |---|---|---|
-| 400 | `invalid_chain` | Unsupported network (use `tron`, `eth`, `polygon` or `btc`) |
-| 400 | `invalid_asset` | Network/asset pair without an on-chain rail (supported: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `btc`/`btc` — `GOLD` does not operate on-chain) |
+| 400 | `invalid_chain` | Unsupported network (use `tron`, `eth`, `polygon`, `base` or `btc`) |
+| 400 | `invalid_asset` | Network/asset pair without an on-chain rail (supported: `tron`/`usdt`, `eth`/`usdt`, `eth`/`usdc`, `polygon`/`usdt`, `polygon`/`usdc`, `polygon`/`usdce`, `base`/`usdc`, `btc`/`btc` — `GOLD` does not operate on-chain) |
 | 400 | `to_address_required` | Missing withdrawal destination address |
 | 402 | `insufficient_funds` | Not enough balance in that asset (for the withdrawal or the creation fee) |
 | 409 | `crypto_disabled` | The selected crypto network or pair is globally or administratively disabled; do not create a replacement operation |
@@ -600,7 +708,7 @@ USDC.e or BTC); wallets are entry points, each asset has a single balance.
 <Accordion title="Do I need to create deposit wallets?">
 No. Every account is born with its deposit wallets for all supported pairs
 (`tron:usdt`, `eth:usdt`, `eth:usdc`, `polygon:usdt`, `polygon:usdc`,
-`polygon:usdce`, `btc:btc`), free of charge. The
+`polygon:usdce`, `base:usdc`, `btc:btc`), free of charge. The
 create endpoint only self-heals a missing pair — a second wallet for the
 same pair answers `wallet_limit_reached` (422).
 </Accordion>
