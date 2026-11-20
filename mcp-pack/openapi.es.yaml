@@ -33369,6 +33369,44 @@ webhooks:
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.
+  crypto_deposit_under_review:
+    post:
+      summary: Depósito crypto en revisión de compliance
+      description: 'Un depósito entrante entró a revisión de compliance. Espejo redactado de crypto_deposit_held (status held, trae hold_id) y crypto_deposit_alert (status credited): jamás trae el veredicto de riesgo. Suscríbelo para operar depósitos retenidos desde la cuenta.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id: *id015
+                hold_id:
+                  type: string
+                  description: Presente solo cuando el depósito está retenido; referéncialo con soporte.
+                chain: *id015
+                asset: *id015
+                tx_id: *id015
+                event_index:
+                  type: integer
+                  description: Índice de la transferencia dentro de la transacción.
+                amount: *id015
+                from_address: *id015
+                status:
+                  type: string
+                  description: held (no acreditado, espera decisión) o credited (marcado pero acreditado normal).
+            example:
+              account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+              hold_id: c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f
+              chain: tron
+              asset: usdt
+              tx_id: 8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1
+              event_index: 1
+              amount: '250.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
+              status: held
+      responses:
+        '200':
+          description: Devuelve cualquier 2xx para confirmar la entrega.
   crypto_withdrawal_status_changed:
     post:
       summary: Estado de retiro crypto cambiado
