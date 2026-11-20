@@ -33481,6 +33481,44 @@ webhooks:
       responses:
         '200':
           description: Return any 2xx to acknowledge the delivery.
+  crypto_deposit_under_review:
+    post:
+      summary: Crypto deposit under compliance review
+      description: 'An incoming deposit entered compliance review. A redacted mirror of crypto_deposit_held (status held, carries hold_id) and crypto_deposit_alert (status credited): it never carries the risk verdict. Subscribe to operate held deposits from the account.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id: *id015
+                hold_id:
+                  type: string
+                  description: Present only when the deposit is held; reference it with support.
+                chain: *id015
+                asset: *id015
+                tx_id: *id015
+                event_index:
+                  type: integer
+                  description: Index of the transfer within the transaction.
+                amount: *id015
+                from_address: *id015
+                status:
+                  type: string
+                  description: held (not credited, awaiting decision) or credited (flagged but credited normally).
+            example:
+              account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+              hold_id: c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f
+              chain: tron
+              asset: usdt
+              tx_id: 8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1
+              event_index: 1
+              amount: '250.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
+              status: held
+      responses:
+        '200':
+          description: Return any 2xx to acknowledge the delivery.
   crypto_withdrawal_status_changed:
     post:
       summary: Crypto withdrawal status changed

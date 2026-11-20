@@ -5,6 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.306 · 1 个版本 - 2026年11月20日
+### v2.306
+**新增**
+- 新增 `crypto_deposit_under_review` webhook 事件。当加密充值进入合规审核时，该事件向账户发送经过脱敏且不包含风险结论的供应商中立通知。订阅此事件即可根据已验证的事件契约处理被冻结的充值。
 ## v2.305 · 5 个版本 - 2026年11月19日
 ### v2.305
 **变更**

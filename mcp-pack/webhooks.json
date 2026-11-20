@@ -1,5 +1,5 @@
 {
-  "count": 63,
+  "count": 64,
   "events": [
     {
       "description": {
@@ -320,6 +320,30 @@
         "en": "Crypto deposit held for compliance review",
         "es": "Depósito crypto retenido por revisión de compliance",
         "zh": "加密充值因合规审核被冻结"
+      }
+    },
+    {
+      "description": {
+        "en": "An incoming deposit entered compliance review. A redacted mirror of crypto_deposit_held (status held, carries hold_id) and crypto_deposit_alert (status credited): it never carries the risk verdict. Subscribe to operate held deposits from the account.",
+        "es": "Un depósito entrante entró a revisión de compliance. Espejo redactado de crypto_deposit_held (status held, trae hold_id) y crypto_deposit_alert (status credited): jamás trae el veredicto de riesgo. Suscríbelo para operar depósitos retenidos desde la cuenta.",
+        "zh": "一笔入账充值进入合规审核。crypto_deposit_held（status held，携带 hold_id）与 crypto_deposit_alert（status credited）的精简镜像：绝不携带风险结论。订阅它以便从账户侧处理被冻结的充值。"
+      },
+      "event": "crypto_deposit_under_review",
+      "payload_example": {
+        "account_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "amount": "250.000000",
+        "asset": "usdt",
+        "chain": "tron",
+        "event_index": 1,
+        "from_address": "TXYZabc123def456ghi789jkl012mno345pqr",
+        "hold_id": "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+        "status": "held",
+        "tx_id": "8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1"
+      },
+      "summary": {
+        "en": "Crypto deposit under compliance review",
+        "es": "Depósito crypto en revisión de compliance",
+        "zh": "加密充值合规审核中"
       }
     },
     {

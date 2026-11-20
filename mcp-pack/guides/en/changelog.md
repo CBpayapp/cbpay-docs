@@ -5,6 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.306 · 1 version - November 20, 2026
+### v2.306
+**Added**
+- Added the `crypto_deposit_under_review` webhook event. It gives the account a redacted, provider-neutral notification when a crypto deposit enters compliance review, without exposing the risk verdict. Subscribe to it to react to held deposits while keeping account-facing data limited to the verified event contract.
 ## v2.305 · 5 versions - November 19, 2026
 ### v2.305
 **Changed**
