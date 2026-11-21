@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.305'
+  version: '2.307'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -18967,7 +18967,7 @@ paths:
       - Payouts
       operationId: getPayoutBanks
       summary: Listar bancos de destino
-      description: Catálogo de bancos para los payouts de un país. Sin `method` devuelve la unión de los bancos de todos los métodos del país (deduplicada por código); con `method` acota al catálogo de ese canal. Algunos métodos no tienen catálogo de bancos (ej. QR) y no aportan entradas. Envía `include_variants=true` (también `1` o `yes`) para sumar los catálogos de las variantes internas y resolver solo para display códigos guardados desde un riel no predeterminado. El catálogo predeterminado permanece primero, por lo que en códigos duplicados gana su nombre; sin el flag, la conducta no cambia. Este flag no es para los selectores de creación, que deben seguir validando contra el riel predeterminado.
+      description: Catálogo de bancos para los payouts de un país. Sin `method` devuelve la unión de los bancos de todos los métodos del país (deduplicada por código); con `method` acota al catálogo de ese canal. Algunos métodos no tienen catálogo de bancos (ej. QR) y no aportan entradas. Envía `variant` junto con un `method` explícito para recibir solo el catálogo de esa variante; es seguro para creación y nunca une catálogos. Sin `variant`, la conducta no cambia. Usa `include_variants=true` (también `1` o `yes`) solo para resolver en display códigos guardados desde un riel no predeterminado.
       parameters:
       - name: country
         in: query
@@ -18980,6 +18980,12 @@ paths:
           type: string
           example: bank_transfer
         description: Método de payout opcional para acotar el catálogo (ver GET /v1/payouts/methods).
+      - name: variant
+        in: query
+        schema:
+          type: string
+          example: <variant-supported>
+        description: Variante de ruteo opcional. Exige un método explícito y devuelve solo el catálogo de esa variante; está destinada a selectores seguros para creación.
       - name: include_variants
         in: query
         schema:
@@ -19000,16 +19006,19 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                items:
-                - code: '0001'
-                  name: Banco de Chile
-                - code: '0012'
-                  name: BancoEstado
-                - code: '0037'
-                  name: Santander
-                - code: '0051'
-                  name: Banco Falabella
+              examples:
+                catalogo_predeterminado:
+                  value:
+                    items:
+                    - code: '0001'
+                      name: Banco de ejemplo
+                    - code: '0012'
+                      name: Otro banco de ejemplo
+                catalogo_variante:
+                  value:
+                    items:
+                    - code: 0028
+                      name: Banco de ejemplo
         '403':
           $ref: '#/components/responses/Forbidden'
         '401':

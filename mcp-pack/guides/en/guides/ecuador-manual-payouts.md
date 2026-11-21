@@ -219,6 +219,23 @@ the default catalog remains first and wins duplicate codes, and payout
 creation selectors must continue using the default catalog. Omitting the flag
 preserves the historical catalog.
 
+For a creation-safe selector backed by a specific route variant, pass the
+variant together with the explicit method:
+
+```http
+GET /v1/payouts/banks?country=EC&method=bank_transfer&variant=<supported-variant>
+Authorization: Bearer <API_KEY>
+```
+
+The response contains only that variant's catalog; it never combines it with
+the default catalog. Without `variant`, the historical catalog is unchanged.
+The platform or administrator supplies the supported opaque variant value.
+The admin payout-account dialog uses this same contract: in Ecuador
+`bank_transfer`, its **Automatic | Manual** toggle selects the corresponding
+catalog, defaults to Automatic, and fails closed if the route is unavailable.
+Changing the route clears the previously selected `bank_code`. The customer
+portal keeps the default route.
+
 ## Operational rules
 
 - The operator pays in the bank portal and records the bank reference.

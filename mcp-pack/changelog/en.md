@@ -5,9 +5,15 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.307 · 1 version - November 21, 2026
+### v2.307
+**Added**
+
+- Added the optional `variant` query parameter to `GET /v1/payouts/banks`. It requires an explicit `method` and returns only the selected route variant's catalog, so creation selectors never combine incompatible catalogs. Requests without `variant` keep the historical response.
 ## v2.306 · 1 version - November 20, 2026
 ### v2.306
 **Added**
+
 - Added the `crypto_deposit_under_review` webhook event. It gives the account a redacted, provider-neutral notification when a crypto deposit enters compliance review, without exposing the risk verdict. Subscribe to it to react to held deposits while keeping account-facing data limited to the verified event contract.
 ## v2.305 · 5 versions - November 19, 2026
 ### v2.305

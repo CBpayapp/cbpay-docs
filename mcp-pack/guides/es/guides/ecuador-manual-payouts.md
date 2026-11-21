@@ -221,6 +221,23 @@ para display: el catálogo predeterminado queda primero y gana los códigos
 duplicados, y los selectores de creación deben seguir usando el catálogo
 predeterminado. Omitir el flag conserva el catálogo histórico.
 
+Para un selector seguro para creación respaldado por una variante de ruteo
+específica, envía la variante junto con el método explícito:
+
+```http
+GET /v1/payouts/banks?country=EC&method=bank_transfer&variant=<variant-supported>
+Authorization: Bearer <API_KEY>
+```
+
+La respuesta contiene solo el catálogo de esa variante; nunca lo combina con
+el catálogo predeterminado. Sin `variant`, el catálogo histórico no cambia. La
+plataforma o el administrador entrega el valor opaco de la variante soportada.
+El diálogo admin de cuentas payout usa este mismo contrato: en Ecuador
+`bank_transfer`, el toggle **Automático | Manual** selecciona el catálogo
+correspondiente, parte en Automático y falla cerrado si la ruta no está
+disponible. Al cambiar de ruta, limpia el `bank_code` seleccionado. El portal
+de clientes mantiene el riel predeterminado.
+
 ## Reglas operativas
 
 - El operador paga en el portal bancario y registra la referencia bancaria.
