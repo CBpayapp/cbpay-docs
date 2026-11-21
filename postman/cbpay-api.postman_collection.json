@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-19 22:39 UTC",
-    "_content_sha256": "34fc29584013d2d0d4d4b99a0ea77785a0343fcb54561fa5f1588812621ebad0"
+    "_generated_at": "2026-11-21 02:00 UTC",
+    "_content_sha256": "510d9319e34142d5f85d309b712821b8d74c52c12f1f9ce9b6381a8f66eac9f0"
   },
   "auth": {
     "type": "bearer",
@@ -24386,6 +24386,12 @@
                   "description": "Optional payout method to scope the catalog (see GET /v1/payouts/methods)."
                 },
                 {
+                  "key": "variant",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional route variant. Requires an explicit method and returns only that variant's catalog; it is intended for creation-safe selectors."
+                },
+                {
                   "key": "include_variants",
                   "value": "",
                   "disabled": true,
@@ -24393,7 +24399,7 @@
                 }
               ]
             },
-            "description": "Bank catalog for a country's payouts. Without `method` it returns the union of every payout method's banks for the country (deduplicated by code); pass `method` to get a single channel's catalog. Some methods have no bank catalog (e.g. QR) and contribute no entries. Pass `include_variants=true` (also `1` or `yes`) to add the internal variants' bank catalogs for display-only resolution of codes saved from a non-default rail. The default catalog remains first, so duplicate codes keep the default's name; without the flag, behavior is unchanged. This flag is not for payout creation selectors, which must continue validating against the default rail."
+            "description": "Bank catalog for a country's payouts. Without `method` it returns the union of every payout method's banks for the country (deduplicated by code); pass `method` to get a single channel's catalog. Some methods have no bank catalog (e.g. QR) and contribute no entries. Pass `variant` together with an explicit `method` to receive only that route variant's catalog; this is creation-safe and never unions catalogs. Without `variant`, behavior is unchanged. Pass `include_variants=true` (also `1` or `yes`) only for display-only resolution of codes saved from a non-default rail."
           },
           "response": [
             {
@@ -24424,6 +24430,12 @@
                       "description": "Optional payout method to scope the catalog (see GET /v1/payouts/methods)."
                     },
                     {
+                      "key": "variant",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Optional route variant. Requires an explicit method and returns only that variant's catalog; it is intended for creation-safe selectors."
+                    },
+                    {
                       "key": "include_variants",
                       "value": "",
                       "disabled": true,
@@ -24441,7 +24453,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"code\": \"0001\",\n      \"name\": \"Banco de Chile\"\n    },\n    {\n      \"code\": \"0012\",\n      \"name\": \"BancoEstado\"\n    },\n    {\n      \"code\": \"0037\",\n      \"name\": \"Santander\"\n    },\n    {\n      \"code\": \"0051\",\n      \"name\": \"Banco Falabella\"\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"code\": \"0001\",\n      \"name\": \"Example Bank\"\n    },\n    {\n      \"code\": \"0012\",\n      \"name\": \"Another Example Bank\"\n    }\n  ]\n}"
             }
           ]
         },

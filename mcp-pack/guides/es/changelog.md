@@ -5,9 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.307 · 1 versión - 21 de noviembre de 2026
+### v2.307
+**Agregado**
+
+- Se agregó el parámetro de consulta opcional `variant` a `GET /v1/payouts/banks`. Exige un `method` explícito y devuelve solo el catálogo de la variante seleccionada, para que los selectores de creación nunca mezclen catálogos incompatibles. Las solicitudes sin `variant` mantienen la respuesta histórica.
 ## v2.306 · 1 versión - 20 de noviembre de 2026
 ### v2.306
 **Agregado**
+
 - Se agregó el evento webhook `crypto_deposit_under_review`. Entrega a la cuenta una notificación redactada y neutral frente a proveedores cuando un depósito crypto entra a revisión de compliance, sin exponer el veredicto de riesgo. Suscríbete para reaccionar a depósitos retenidos usando solo los datos del contrato verificado.
 ## v2.305 · 5 versiones - 19 de noviembre de 2026
 ### v2.305

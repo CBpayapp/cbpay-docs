@@ -205,6 +205,20 @@ Authorization: Bearer <API_KEY>
 `&include_variants=true`（也接受 `1` 或 `yes`）。这仅用于显示：默认目录仍排在
 前面并覆盖重复代码，创建选择器仍必须使用默认目录。不传该参数可保持历史目录。
 
+如果要使用特定路由变体支持的创建安全选择器，请同时传入明确的
+`method` 和该变体：
+
+```http
+GET /v1/payouts/banks?country=EC&method=bank_transfer&variant=<supported-variant>
+Authorization: Bearer <API_KEY>
+```
+
+响应只包含该变体的目录，不会与默认目录合并。不传 `variant` 时，历史目录
+保持不变。平台或管理员会提供受支持的不透明变体值。管理员 payout 账户
+对话框使用同一合同：在厄瓜多尔 `bank_transfer` 中，**自动 | 手动**
+切换会选择对应目录，默认使用自动；路由不可用时会 fail closed。切换路由
+时会清除已选的 `bank_code`。客户门户始终使用默认轨道。
+
 ## 运营规则
 
 - 运营人员在银行门户付款，并记录银行参考号。
