@@ -12,7 +12,8 @@ creating the envelope. If a required value has no verified source, the
 envelope is not created.
 
 The ceremony is completed by a human owner or operator of the company account.
-It requires explicit consent and a fresh, single-use OTP. API keys cannot sign.
+It requires the signer name, explicit consent and a handwritten mark, with no
+one-time codes: since v2.309 signing no longer asks for OTP. API keys cannot sign.
 
 For test requests, use `https://cryptobank.qbank.cl/platform`; use
 `https://api.qbank.cl/platform` only for production.
@@ -26,7 +27,7 @@ sequenceDiagram
   A->>P: POST /v1/org/contracts/envelopes
   P-->>A: pending_client envelope
   C->>P: GET envelope and PDF
-  C->>P: POST /sign + X-OTP-Token
+  C->>P: POST /sign (name + consent + signature)
   P-->>C: completed envelope and final PDF
   P-->>W: contract_envelope_completed
 ```
@@ -40,7 +41,7 @@ is scoped to the organization and the account; a foreign ID returns
 | State | Meaning | Next action |
 |---|---|---|
 | `pending_client` | CBPay has pre-signed the frozen document and the client has not completed the ceremony. | Review and sign, or ask the organization admin to void/reissue it. |
-| `completed` | The client signature, consent and OTP claim succeeded; the final PDF was generated. | Read or download the final document. It cannot be voided. |
+| `completed` | The name, signature, consent and handwritten mark succeeded; the final PDF was generated. | Read or download the final document. It cannot be voided. |
 | `voided` | An organization admin cancelled the pending envelope with a reason. | Issue a new envelope if the agreement must be corrected. |
 
 There is no `draft` or generic `pending` state.
@@ -100,21 +101,20 @@ curl -o contrato-marco.pdf \
 
 ### Provide signer identity and consent
 
-Send the signer's name and title in the JSON body. Consent must be the
-    JSON boolean `true`. Include the client's handwritten signature as
-    `signature_png`, a Base64-encoded PNG. The optional
-    `data:image/png;base64,` prefix is accepted. The OTP is **not** a JSON
-    `code` field: send the fresh single-use token in the `X-OTP-Token` header.
+Send the signer name (`signer_name`, 1-120 characters) in the JSON body;
+    the title (`signer_title`) is optional and the backend fills it with your
+    role when omitted. Consent must be the JSON boolean `true`. Include the
+    client's handwritten signature as `signature_png`, a Base64-encoded PNG.
+    The optional `data:image/png;base64,` prefix is accepted. Signing asks for
+    no code at all: there is no OTP header and no JSON `code` field.
 
 ```bash
 curl -X POST \
   "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/sign" \
   -H "Authorization: Bearer <CBPAY_TOKEN>" \
   -H "Content-Type: application/json" \
-  -H "X-OTP-Token: <FRESH_SINGLE_USE_OTP_TOKEN>" \
   -d '{
     "signer_name": "Jordan Lee",
-    "signer_title": "Chief Executive Officer",
     "consent": true,
     "signature_png": "<PNG_BASE64_SIGNATURE>"
   }'
@@ -189,10 +189,10 @@ Completed response:
   "doc_hash": "sha256-of-the-presigned-pdf",
   "final_hash": "sha256-of-the-final-pdf",
   "signer_name": "Jordan Lee",
-  "signer_title": "Chief Executive Officer",
+  "signer_title": "owner",
   "signer_email": "jordan@example.com",
   "signed_at": "2026-10-01T14:03:12Z",
-  "otp_channel": "otp",
+  "otp_channel": "",
   "created_at": "2026-10-01T14:00:00Z",
   "updated_at": "2026-10-01T14:03:12Z",
   "events": [
@@ -207,6 +207,10 @@ Completed response:
   ]
 }
 ```
+
+New signatures return an empty `otp_channel` and the role-filled
+`signer_title`; envelopes signed before v2.309 keep their original channel
+and title.
 
 ## Completion event
 
@@ -241,15 +245,14 @@ state.
 | 403 | `contract_counsel_required` | English counsel approval is absent; approve the English template or issue `lang=es`. |
 | 403 | `human_session_required` | Signing with an API key is not allowed; use a human member session. |
 | 403 | `account_blocked` | The account is not active; resolve the account status with an organization admin. |
-| 401 | `invalid_otp` | The OTP is missing, expired or already consumed; request a fresh token and send it in `X-OTP-Token`. |
 | 404 | `not_found` | The envelope is unknown or belongs to another account; use the account's own list and ID. |
 | 409 | `contract_invalid_state` | The envelope is already completed or voided; do not retry the ceremony. |
 | 422 | `invalid_lang` | Use `es` or `en` exactly. |
 | 422 | `contract_account_ineligible` | The account is not an active company with approved KYB. |
 | 422 | `contract_unfillable` | A verified identity, address, signature or pricing value is missing; inspect `missing` for `pricing:<flag>`, fix the source data and issue a new envelope. |
 | 422 | `invalid_consent` | The JSON body must contain `"consent": true`. |
-| 422 | `invalid_signer` | Send a non-empty signer name and title, each no longer than 120 characters. |
-| 422 | `invalid_signature_image` | `signature_png` is not a valid non-blank PNG, exceeds the encoded or decoded size limit, or is below the minimum dimensions; send a valid signature image and retry with a fresh OTP. |
+| 422 | `invalid_signer` | `signer_name` is required (1-120 characters); `signer_title` is optional and is filled with your role. |
+| 422 | `invalid_signature_image` | `signature_png` is not a valid non-blank PNG, exceeds the encoded or decoded size limit, or is below the minimum dimensions; send a valid signature image and retry. |
 | 502 | `storage_failed` | Private document storage failed; do not create a new ceremony key until the envelope is read and reconciled. |
 | 503 | `storage_unavailable` | Private storage is not configured or reachable; retry after operations restores it. |
 
@@ -347,9 +350,10 @@ Issuance and signature emails mention the other portal language only when it is 
 #### Can a person account sign the agreement?
     No. The account must be an active company account with approved KYB, and
     the signer must be an owner or operator member.
-#### Can I submit an OTP code in the JSON body?
-    No. The current handler consumes a fresh single-use token from the
-    `X-OTP-Token` header. A JSON `code` property is not the signing contract.
+#### Does signing ask for an OTP code?
+    No. Since v2.309 the ceremony is name + consent + handwritten mark, with
+    no TOTP, SMS, WhatsApp or email step. If an older client still sends
+    `X-OTP-Token`, the backend ignores it.
 #### What happens if the PDF has a blank field?
     The envelope is rejected with `contract_unfillable`; CBPay never issues a
     signed PDF with an unresolved required field.
@@ -357,8 +361,9 @@ Issuance and signature emails mention the other portal language only when it is 
     No. `completed` is terminal. Void only while the envelope is
     `pending_client`, with a reason; then issue a new envelope if needed.
 #### Can I retry the sign request?
-    Yes, but use the same envelope and a fresh OTP. The atomic claim prevents
-    a second signature; a completed envelope returns `contract_invalid_state`.
+    Yes, with the same envelope and nothing new to fetch. The atomic claim
+    prevents a second signature; a completed envelope returns
+    `contract_invalid_state`.
 #### The verification link answers 404. Is my contract lost?
     No. HTTP 404 with `this verification code does not correspond to any
     contract issued by this platform` means the code was typed or copied

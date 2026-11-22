@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.307'
+  version: '2.309'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -18507,7 +18507,7 @@ paths:
                 updated_at: '2026-07-07T12:00:00Z'
                 idempotency_hit: true
         '400':
-          description: Invalid request (`idempotency_key_required`, `invalid_options`, `purpose_required`, `invalid_payload`, or `invalid_amount`). For US/USD bank-rail payouts, known beneficiary, amount, purpose and supporting-document failures use stable field-specific codes. For CL/CLP bank-transfer payouts, a non-whole amount is rejected before any debit, hold, payout resource creation, or dispatch.
+          description: Invalid request (`idempotency_key_required`, `invalid_beneficiary`, `invalid_options`, `purpose_required`, `invalid_payload`, `invalid_amount`, or `invalid_currency`). Payout adapter validation returns the specific code and a neutral message naming the field or option to correct. For CL/CLP bank-transfer payouts, a non-whole amount is rejected before any debit, hold, payout resource creation, or dispatch.
           content:
             application/json:
               schema:
@@ -18518,6 +18518,16 @@ paths:
                   value:
                     error: invalid_amount
                     message: amount must be a whole number of CLP (this currency has no minor unit)
+                invalid_beneficiary:
+                  summary: Missing beneficiary field
+                  value:
+                    error: invalid_beneficiary
+                    message: beneficiary.account_number is required
+                invalid_options:
+                  summary: Invalid rail option
+                  value:
+                    error: invalid_options
+                    message: options contains an unsupported value
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':
@@ -18579,6 +18589,16 @@ paths:
                   value:
                     error: destination_recently_rejected
                     message: destination was rejected by the bank on 2026-01-15 (prior case <prior_case_id>, code <prior_code>); retry with a new idempotency_key and options.destination_retry_ack=<prior_case_id> to confirm
+                amount_below_minimum:
+                  summary: Amount below corridor minimum
+                  value:
+                    error: amount_below_minimum
+                    message: amount must be at least 1 USD for this corridor
+                amount_above_maximum:
+                  summary: Amount above corridor maximum
+                  value:
+                    error: amount_above_maximum
+                    message: amount must be at most 100000 USD for this corridor
           x-money-out-errors:
           - amount_below_minimum
           - amount_above_maximum

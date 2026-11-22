@@ -11,7 +11,8 @@ verificada, servicios activos, comisiones y firma vigente de CBPay antes de
 crear el sobre. Si falta un dato obligatorio verificable, el sobre no se crea.
 
 La ceremonia la completa una persona humana con rol owner u operator de la
-cuenta empresa. Exige consentimiento explícito y un OTP fresco de un solo uso.
+cuenta empresa. Exige nombre del firmante, consentimiento explícito y rúbrica,
+sin códigos de un solo uso: desde la v2.309 la firma ya no pide OTP.
 Las API keys no pueden firmar.
 
 Para solicitudes de prueba usa `https://cryptobank.qbank.cl/platform`;
@@ -26,7 +27,7 @@ sequenceDiagram
   A->>P: POST /v1/org/contracts/envelopes
   P-->>A: sobre pending_client
   C->>P: GET sobre y PDF
-  C->>P: POST /sign + X-OTP-Token
+  C->>P: POST /sign (nombre + consentimiento + rubrica)
   P-->>C: sobre completed y PDF final
   P-->>W: contract_envelope_completed
 ```
@@ -39,7 +40,7 @@ organización y cuenta; un ID ajeno responde `404 not_found`.
 | Estado | Significado | Próxima acción |
 |---|---|---|
 | `pending_client` | CBPay congeló el documento prefirmado y el cliente aún no completa la ceremonia. | Revisar y firmar, o pedir al admin emitir void/reissue. |
-| `completed` | Firma, consentimiento y claim OTP exitosos; el PDF final quedó generado. | Leer o descargar el documento final. No se puede voidar. |
+| `completed` | Nombre, firma, consentimiento y rúbrica exitosos; el PDF final quedó generado. | Leer o descargar el documento final. No se puede voidar. |
 | `voided` | Un admin voidó el sobre pendiente con motivo. | Emitir un sobre nuevo si hay que corregirlo. |
 
 No existen los estados `draft` ni `pending`.
@@ -100,21 +101,20 @@ curl -o contrato-marco.pdf \
 
 ### Declara identidad y consentimiento
 
-Envía nombre y cargo del firmante en JSON. El consentimiento debe ser el
-    booleano JSON `true`. Incluye la firma manuscrita del cliente en
-    `signature_png`, como PNG codificado en Base64. Se acepta opcionalmente el
-    prefijo `data:image/png;base64,`. El OTP **no** es un campo JSON `code`:
-    envía el token fresco de un solo uso en el header `X-OTP-Token`.
+Envía el nombre del firmante (`signer_name`, 1-120 caracteres) en JSON; el
+    cargo (`signer_title`) es opcional y si se omite el backend lo completa con
+    tu rol. El consentimiento debe ser el booleano JSON `true`. Incluye la
+    firma manuscrita del cliente en `signature_png`, como PNG codificado en
+    Base64. Se acepta opcionalmente el prefijo `data:image/png;base64,`.
+    La firma no pide ningún código: no hay header OTP ni campo JSON `code`.
 
 ```bash
 curl -X POST \
   "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/sign" \
   -H "Authorization: Bearer <CBPAY_TOKEN>" \
   -H "Content-Type: application/json" \
-  -H "X-OTP-Token: <FRESH_SINGLE_USE_OTP_TOKEN>" \
   -d '{
     "signer_name": "Jordan Lee",
-    "signer_title": "Chief Executive Officer",
     "consent": true,
     "signature_png": "<PNG_BASE64_SIGNATURE>"
   }'
@@ -188,14 +188,18 @@ Respuesta completada:
   "doc_hash": "sha256-of-the-presigned-pdf",
   "final_hash": "sha256-of-the-final-pdf",
   "signer_name": "Jordan Lee",
-  "signer_title": "Chief Executive Officer",
+  "signer_title": "owner",
   "signer_email": "jordan@example.com",
   "signed_at": "2026-10-01T14:03:12Z",
-  "otp_channel": "otp",
+  "otp_channel": "",
   "created_at": "2026-10-01T14:00:00Z",
   "updated_at": "2026-10-01T14:03:12Z"
 }
 ```
+
+En firmas nuevas `otp_channel` va vacío y `signer_title` trae el rol
+autofilleado; los sobres firmados antes de la v2.309 conservan su canal y
+cargo originales.
 
 ## Evento de finalización
 
@@ -227,15 +231,14 @@ No infieras la finalización desde el email: usa el evento y el estado.
 | 403 | `contract_counsel_required` | Falta aprobación de counsel para inglés; aprueba la plantilla o emite `lang=es`. |
 | 403 | `human_session_required` | Una API key no puede firmar; usa una sesión humana. |
 | 403 | `account_blocked` | La cuenta no está activa; resuelve su estado con un admin. |
-| 401 | `invalid_otp` | OTP ausente, vencido o consumido; solicita otro y envíalo en `X-OTP-Token`. |
 | 404 | `not_found` | El sobre no existe o pertenece a otra cuenta; usa un ID de tu lista. |
 | 409 | `contract_invalid_state` | Ya está completado o voided; no repitas la ceremonia. |
 | 422 | `invalid_lang` | Usa exactamente `es` o `en`. |
 | 422 | `contract_account_ineligible` | La cuenta no es empresa activa con KYB aprobado. |
 | 422 | `contract_unfillable` | Falta un dato verificable o una cobertura de precios; revisa `missing` para `pricing:<flag>`, corrige la fuente y emite un sobre nuevo. |
 | 422 | `invalid_consent` | El body debe incluir `"consent": true`. |
-| 422 | `invalid_signer` | Nombre y cargo deben ser no vacíos y de máximo 120 caracteres. |
-| 422 | `invalid_signature_image` | `signature_png` no es un PNG válido o no está entintado, supera el límite de tamaño codificado/decodificado o no alcanza las dimensiones mínimas; envía una imagen válida y reintenta con un OTP nuevo. |
+| 422 | `invalid_signer` | `signer_name` es obligatorio (1-120 caracteres); `signer_title` es opcional y se autofillea con tu rol. |
+| 422 | `invalid_signature_image` | `signature_png` no es un PNG válido o no está entintado, supera el límite de tamaño codificado/decodificado o no alcanza las dimensiones mínimas; envía una imagen válida y reintenta. |
 | 502 | `storage_failed` | Falló el almacenamiento privado; lee y reconcilia el sobre antes de crear otra key. |
 | 503 | `storage_unavailable` | Storage privado no disponible; reintenta cuando operaciones lo restaure. |
 
@@ -301,9 +304,10 @@ contract issued by this platform`; las peticiones tienen rate-limit por IP
 #### ¿Puede firmar una cuenta persona?
     No. Debe ser una cuenta empresa activa con KYB aprobado y el firmante debe
     ser miembro owner u operator.
-#### ¿Puedo mandar el OTP en el JSON?
-    No. El handler consume un token fresco de un solo uso en `X-OTP-Token`.
-    Un campo JSON `code` no forma parte del contrato vigente.
+#### ¿La firma pide algún código OTP?
+    No. Desde la v2.309 la ceremonia es nombre + consentimiento + rúbrica, sin
+    TOTP, SMS, WhatsApp ni email. Si tu cliente viejo manda `X-OTP-Token`, el
+    backend lo ignora.
 #### ¿Qué pasa si el PDF tiene un campo vacío?
     El sobre responde `contract_unfillable`; CBPay nunca emite un PDF firmado
     con un dato obligatorio sin resolver.
@@ -311,8 +315,8 @@ contract issued by this platform`; las peticiones tienen rate-limit por IP
     No. `completed` es terminal. Solo se puede voidar `pending_client` con un
     motivo y luego emitir otro sobre.
 #### ¿Puedo reintentar la firma?
-    Sí, con el mismo sobre y un OTP nuevo. El claim atómico impide una segunda
-    firma; un sobre completado responde `contract_invalid_state`.
+    Sí, con el mismo sobre, sin pedir nada nuevo. El claim atómico impide una
+    segunda firma; un sobre completado responde `contract_invalid_state`.
 #### El link de verificación responde 404. ¿Se perdió mi contrato?
     No. HTTP 404 con `this verification code does not correspond to any
     contract issued by this platform` significa que el código se copió mal o

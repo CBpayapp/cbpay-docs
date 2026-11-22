@@ -5,7 +5,16 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.307 · 1 version - November 21, 2026
+## v2.309 · 1 version - November 22, 2026
+### v2.309
+**Changed**
+
+- Payout pre-insert validation now returns specific, provider-neutral errors across all supported payout corridors instead of opaque `400 invalid_payload`. Malformed beneficiary data returns `400 invalid_beneficiary` with the field to correct, while an amount outside a corridor limit returns `422 amount_below_minimum` or `422 amount_above_maximum`. Invalid currency and rail options return `400 invalid_currency` and `400 invalid_options`; acceptance decisions are unchanged.
+- A server configuration failure is fail-closed as `500 internal_error` with a generic message. Do not retry a corrected request unchanged; after an ambiguous transport failure, retry with the same idempotency key.
+## v2.308 · 2 versions - November 21, 2026
+### v2.308
+**Changed**
+- Branded receipts for completed EC/USD manual payouts now include the bank order, bank approval, bank reference and settlement date when those real bank values are available. Payout rows without those values keep the existing receipt layout.
 ### v2.307
 **Added**
 

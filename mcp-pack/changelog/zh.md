@@ -5,7 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.307 · 1 个版本 - 2026年11月21日
+## v2.309 · 1 个版本 - 2026年11月22日
+### v2.309
+**变更**
+
+- 现在所有受支持的 payout 通道在创建前校验时都会返回具体且不暴露提供商的错误，而不是不透明的 `400 invalid_payload`。例如，收款人数据无效时返回 `400 invalid_beneficiary` 并指出要修正的字段；金额超出通道限制时返回 `422 amount_below_minimum` 或 `422 amount_above_maximum`。无效货币或通道选项分别返回 `400 invalid_currency` 和 `400 invalid_options`；接受或拒绝的决定不变。
+- 服务器配置失败会安全地返回 `500 internal_error` 和通用消息。不要原样重复已修正的请求；遇到不明确的传输失败时，请使用相同的幂等键重试。
+## v2.308 · 2 个版本 - 2026年11月21日
+### v2.308
+**变更**
+- 已完成的 EC/USD 人工 payout 品牌回执现在会在真实银行数据可用时包含银行订单、银行批准、银行参考号和结算日期。没有这些数据的 payout 行保持原有回执布局。
 ### v2.307
 **新增**
 
