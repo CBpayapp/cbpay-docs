@@ -18609,7 +18609,7 @@ paths:
                 updated_at: '2026-07-07T12:00:00Z'
                 idempotency_hit: true
         '400':
-          description: Solicitud inválida (`idempotency_key_required`, `invalid_payload` o `invalid_amount`). Para payouts por transferencia bancaria CL/CLP, un monto no entero se rechaza antes de cualquier débito, retención, creación del recurso payout o despacho.
+          description: Solicitud inválida (`idempotency_key_required`, `invalid_beneficiary`, `invalid_options`, `invalid_payload`, `invalid_amount` o `invalid_currency`). La validación del adapter devuelve el código específico y un mensaje neutro con el campo u opción que debes corregir. Para payouts por transferencia bancaria CL/CLP, un monto no entero se rechaza antes de cualquier débito, retención, creación del recurso payout o despacho.
           content:
             application/json:
               schema:
@@ -18620,6 +18620,16 @@ paths:
                   value:
                     error: invalid_amount
                     message: amount must be a whole number of CLP (this currency has no minor unit)
+                invalid_beneficiary:
+                  summary: Falta un campo del beneficiario
+                  value:
+                    error: invalid_beneficiary
+                    message: beneficiary.account_number is required
+                invalid_options:
+                  summary: Opción de riel inválida
+                  value:
+                    error: invalid_options
+                    message: options contains an unsupported value
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':
@@ -18681,6 +18691,16 @@ paths:
                   value:
                     error: destination_recently_rejected
                     message: destination was rejected by the bank on 2026-01-15 (prior case <prior_case_id>, code <prior_code>); retry with a new idempotency_key and options.destination_retry_ack=<prior_case_id> to confirm
+                amount_below_minimum:
+                  summary: Monto bajo el mínimo del corredor
+                  value:
+                    error: amount_below_minimum
+                    message: amount must be at least 1 USD for this corridor
+                amount_above_maximum:
+                  summary: Monto sobre el máximo del corredor
+                  value:
+                    error: amount_above_maximum
+                    message: amount must be at most 100000 USD for this corridor
           x-money-out-errors:
           - amount_below_minimum
           - amount_above_maximum

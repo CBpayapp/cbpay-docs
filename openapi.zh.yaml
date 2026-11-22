@@ -18561,7 +18561,7 @@ paths:
                 updated_at: '2026-07-07T12:00:00Z'
                 idempotency_hit: true
         '400':
-          description: 请求无效（`idempotency_key_required`、`invalid_payload` 或 `invalid_amount`）。对于 CL/CLP 银行转账 payout，非整数金额会在 任何扣款、冻结、payout 资源创建或派发之前被拒绝。
+          description: 请求无效（`idempotency_key_required`、`invalid_beneficiary`、`invalid_options`、`invalid_payload`、`invalid_amount` 或 `invalid_currency`）。adapter 校验会返回具体代码以及指出需修正字段或选项的中性消息。对于 CL/CLP 银行转账 payout，非整数金额会在任何扣款、冻结、payout 资源创建或派发之前被拒绝。
           content:
             application/json:
               schema:
@@ -18572,6 +18572,16 @@ paths:
                   value:
                     error: invalid_amount
                     message: amount must be a whole number of CLP (this currency has no minor unit)
+                invalid_beneficiary:
+                  summary: 缺少收款人字段
+                  value:
+                    error: invalid_beneficiary
+                    message: beneficiary.account_number is required
+                invalid_options:
+                  summary: 通道选项无效
+                  value:
+                    error: invalid_options
+                    message: options contains an unsupported value
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':
@@ -18629,6 +18639,16 @@ paths:
                   value:
                     error: destination_recently_rejected
                     message: destination was rejected by the bank on 2026-01-15 (prior case <prior_case_id>, code <prior_code>); retry with a new idempotency_key and options.destination_retry_ack=<prior_case_id> to confirm
+                amount_below_minimum:
+                  summary: 金额低于通道最低值
+                  value:
+                    error: amount_below_minimum
+                    message: amount must be at least 1 USD for this corridor
+                amount_above_maximum:
+                  summary: 金额超过通道最高值
+                  value:
+                    error: amount_above_maximum
+                    message: amount must be at most 100000 USD for this corridor
           x-money-out-errors:
           - amount_below_minimum
           - amount_above_maximum

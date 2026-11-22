@@ -9,8 +9,9 @@ Grupo CB 主协议是 CBPay 为已验证企业账户生成的预填充文件。�
 CBPay 会解析企业法定身份、已验证地址、已启用服务、费率以及当前 CBPay
 签名。如果必填数据没有可信来源，系统不会创建信封。
 
-签署仪式必须由企业账户的 owner 或 operator 人工完成，并要求明确同意和
-一次性新 OTP。API key 不能用于签署。
+签署仪式必须由企业账户的 owner 或 operator 人工完成，并要求签署人姓名、
+明确同意和手写签名，无需一次性验证码：自 v2.309 起签署不再要求 OTP。
+API key 不能用于签署。
 
 测试请求请使用 `https://cryptobank.qbank.cl/platform`；只有生产环境使用
 `https://api.qbank.cl/platform`。
@@ -24,7 +25,7 @@ sequenceDiagram
   A->>P: POST /v1/org/contracts/envelopes
   P-->>A: pending_client 信封
   C->>P: GET 信封和 PDF
-  C->>P: POST /sign + X-OTP-Token
+  C->>P: POST /sign（姓名 + 同意 + 签名）
   P-->>C: completed 信封和最终 PDF
   P-->>W: contract_envelope_completed
 ```
@@ -37,7 +38,7 @@ sequenceDiagram
 | 状态 | 含义 | 下一步 |
 |---|---|---|
 | `pending_client` | CBPay 已冻结预签署文件，客户尚未完成仪式。 | 查看并签署，或让组织管理员 void/reissue。 |
-| `completed` | 签名、同意和 OTP claim 成功，最终 PDF 已生成。 | 查看或下载最终文件；不可 void。 |
+| `completed` | 姓名、签名、同意和手写签名成功，最终 PDF 已生成。 | 查看或下载最终文件；不可 void。 |
 | `voided` | 组织管理员为待签署信封记录原因并取消。 | 需要修正时签发新信封。 |
 
 系统不存在 `draft` 或通用的 `pending` 状态。
@@ -91,20 +92,19 @@ curl -o contrato-marco.pdf \
 
 ### 提交签署人身份和同意
 
-签署人姓名和职务放在 JSON 中。`consent` 必须是 JSON 布尔值 `true`。
-    客户的手写签名放在 `signature_png` 中，内容为 Base64 编码的 PNG。
-    可选的 `data:image/png;base64,` 前缀也会被接受。OTP **不是** JSON
-    中的 `code` 字段；请将新的一次性 token 放在 `X-OTP-Token` header 中。
+签署人姓名（`signer_name`，1-120 个字符）放在 JSON 中；职务
+    （`signer_title`）可选，省略时后端会自动填入你的角色。`consent`
+    必须是 JSON 布尔值 `true`。客户的手写签名放在 `signature_png` 中，
+    内容为 Base64 编码的 PNG。可选的 `data:image/png;base64,` 前缀也会
+    被接受。签署不需要任何验证码：没有 OTP header，也没有 JSON `code` 字段。
 
 ```bash
 curl -X POST \
   "https://api.qbank.cl/platform/v1/me/contracts/envelopes/<ENVELOPE_ID>/sign" \
   -H "Authorization: Bearer <CBPAY_TOKEN>" \
   -H "Content-Type: application/json" \
-  -H "X-OTP-Token: <FRESH_SINGLE_USE_OTP_TOKEN>" \
   -d '{
     "signer_name": "Jordan Lee",
-    "signer_title": "Chief Executive Officer",
     "consent": true,
     "signature_png": "<PNG_BASE64_SIGNATURE>"
   }'
@@ -174,14 +174,17 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
   "doc_hash": "sha256-of-the-presigned-pdf",
   "final_hash": "sha256-of-the-final-pdf",
   "signer_name": "Jordan Lee",
-  "signer_title": "Chief Executive Officer",
+  "signer_title": "owner",
   "signer_email": "jordan@example.com",
   "signed_at": "2026-10-01T14:03:12Z",
-  "otp_channel": "otp",
+  "otp_channel": "",
   "created_at": "2026-10-01T14:00:00Z",
   "updated_at": "2026-10-01T14:03:12Z"
 }
 ```
+
+新的签署返回空 `otp_channel`，`signer_title` 为自动填入的角色；
+v2.309 之前签署的信封保留原始 channel 和职务。
 
 ## 完成事件
 
@@ -213,15 +216,14 @@ URL 后，邮件会显示 **“Ir a firmar”（西班牙语）/“Review and si
 | 403 | `contract_counsel_required` | 缺少英文 counsel 批准；批准英文模板或使用 `lang=es`。 |
 | 403 | `human_session_required` | API key 不能签署；改用人工 member session。 |
 | 403 | `account_blocked` | 账户未激活；请组织管理员处理账户状态。 |
-| 401 | `invalid_otp` | OTP 缺失、过期或已使用；申请新的 token 并放入 `X-OTP-Token`。 |
 | 404 | `not_found` | 信封不存在或属于其他账户；使用自己列表中的 ID。 |
 | 409 | `contract_invalid_state` | 信封已完成或已 void；不要重复仪式。 |
 | 422 | `invalid_lang` | 只使用 `es` 或 `en`。 |
 | 422 | `contract_account_ineligible` | 账户不是 KYB 已批准的活动企业账户。 |
 | 422 | `contract_unfillable` | 缺少可信数据或价格覆盖；检查 `missing` 中的 `pricing:<flag>`，修正资料后签发新信封。 |
 | 422 | `invalid_consent` | body 必须包含 `"consent": true`。 |
-| 422 | `invalid_signer` | 姓名和职务不能为空，且每项最多 120 个字符。 |
-| 422 | `invalid_signature_image` | `signature_png` 不是有效或有墨迹的 PNG，超过编码/解码大小限制，或未达到最小尺寸；发送有效签名图片并使用新 OTP 重试。 |
+| 422 | `invalid_signer` | `signer_name` 必填（1-120 个字符）；`signer_title` 可选，省略时自动填入你的角色。 |
+| 422 | `invalid_signature_image` | `signature_png` 不是有效或有墨迹的 PNG，超过编码/解码大小限制，或未达到最小尺寸；发送有效签名图片后重试。 |
 | 502 | `storage_failed` | 私有存储失败；先读取并对账信封，再创建新的 key。 |
 | 503 | `storage_unavailable` | 私有存储不可用；恢复后再重试。 |
 
@@ -283,17 +285,17 @@ too_many_attempts`）。
 #### 个人账户可以签署吗？
     不可以。必须是已激活且 KYB 已批准的企业账户，签署人必须是 owner
     或 operator member。
-#### 可以把 OTP 放在 JSON 中吗？
-    不可以。当前 handler 从 `X-OTP-Token` header 读取新的一次性 token。
-    JSON `code` 不是当前签署合同的一部分。
+#### 签署需要 OTP 验证码吗？
+    不需要。自 v2.309 起，仪式只需姓名 + 同意 + 手写签名，没有 TOTP、
+    SMS、WhatsApp 或邮件步骤。旧客户端发送的 `X-OTP-Token` 会被后端忽略。
 #### 如果 PDF 有空白字段怎么办？
     信封返回 `contract_unfillable`；CBPay 不会发出必填字段未解析的签名 PDF。
 #### 已完成的信封可以 void 吗？
     不可以。`completed` 是终态。只有 `pending_client` 可以带原因 void，
     然后重新签发。
 #### 可以重试签署吗？
-    可以使用同一信封和新的 OTP。原子 claim 会阻止第二次签署；完成的信封
-    返回 `contract_invalid_state`。
+    可以使用同一信封直接重试，无需获取新的凭证。原子 claim 会阻止第二
+    次签署；完成的信封返回 `contract_invalid_state`。
 #### 验证链接返回 404，我的合同丢了吗？
     没有。HTTP 404 及 `this verification code does not correspond to any
     contract issued by this platform` 表示代码复制错误或属于另一个信封。
