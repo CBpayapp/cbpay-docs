@@ -84,6 +84,11 @@ Availability may vary; the catalog (`GET /v1/payouts/methods`) is always
 the source of truth. If a country has a single method, `method` is
 optional. Every method is charged the same way: your rate + fixed fee.
 
+After the user chooses a country and method, call the
+[beneficiary schema endpoint](/en/guides/beneficiary-schema) to render the
+current `beneficiary` fields and their conditions. Do not hardcode a
+country-specific form.
+
 For bank transfers you also need the banks catalog (that is where the
 beneficiary's `bank_code` comes from):
 

@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-21 02:00 UTC",
-    "_content_sha256": "510d9319e34142d5f85d309b712821b8d74c52c12f1f9ce9b6381a8f66eac9f0"
+    "_generated_at": "2026-11-22 21:15 UTC",
+    "_content_sha256": "dd94efd5f6a66d31571ac289877b1f74d49771a6e1e21dba9fa7b32cfd75612f"
   },
   "auth": {
     "type": "bearer",
@@ -24454,6 +24454,94 @@
                 }
               ],
               "body": "{\n  \"items\": [\n    {\n      \"code\": \"0001\",\n      \"name\": \"Example Bank\"\n    },\n    {\n      \"code\": \"0012\",\n      \"name\": \"Another Example Bank\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Beneficiary form schema for a payout corridor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payouts/beneficiary-schema",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payouts",
+                "beneficiary-schema"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Destination country (ISO alpha-2)."
+                },
+                {
+                  "key": "method",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Rail method (bank_transfer, yape, pix, swift, sepa...)."
+                },
+                {
+                  "key": "lang",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Locale for labels, placeholders, hints and errors."
+                }
+              ]
+            },
+            "description": "Data-only field descriptors for the beneficiary form of one corridor (country + method), in render order. Labels, placeholders, hints and error texts are served in the requested locale (?lang=en|es|zh, default en). `validator` / `validator_with_values` name the closed client-side validator set each frontend implements — the backend never ships executable validation, and conditional fields (show_if, required_if, validate_fn_when) are evaluated against the live form. Static catalog proxied from the processing core. Global methods (swift/sepa) resolve for any country via wildcard; the requested country is echoed back."
+          },
+          "response": [
+            {
+              "name": "200 Field descriptors.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payouts/beneficiary-schema",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payouts",
+                    "beneficiary-schema"
+                  ],
+                  "query": [
+                    {
+                      "key": "country",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Destination country (ISO alpha-2)."
+                    },
+                    {
+                      "key": "method",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Rail method (bank_transfer, yape, pix, swift, sepa...)."
+                    },
+                    {
+                      "key": "lang",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Locale for labels, placeholders, hints and errors."
+                    }
+                  ]
+                }
+              },
+              "status": "Field descriptors.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"country\": \"CL\",\n  \"method\": \"fintoc\",\n  \"lang\": \"en\",\n  \"fields\": [\n    {\n      \"key\": \"name\",\n      \"label\": \"Beneficiary name\",\n      \"kind\": \"text\",\n      \"placeholder\": \"Pedro Soto Fuentes\"\n    },\n    {\n      \"key\": \"tax_id\",\n      \"label\": \"RUT\",\n      \"kind\": \"text\",\n      \"placeholder\": \"12.345.678-5\",\n      \"hint\": \"The check digit is validated\",\n      \"validator\": \"chilean_rut\",\n      \"error\": \"Invalid RUT: check the verification digit\"\n    },\n    {\n      \"key\": \"bank_code\",\n      \"label\": \"Bank\",\n      \"kind\": \"bank\"\n    },\n    {\n      \"key\": \"account_type\",\n      \"label\": \"Account type\",\n      \"kind\": \"select\",\n      \"hint\": \"Cuenta RUT counts as a sight account\",\n      \"options\": [\n        {\n          \"value\": \"checking\",\n          \"label\": \"Checking account\"\n        },\n        {\n          \"value\": \"vista\",\n          \"label\": \"Sight account\"\n        }\n      ]\n    },\n    {\n      \"key\": \"account_number\",\n      \"label\": \"Account number\",\n      \"kind\": \"text\",\n      \"hint\": \"Digits only\",\n      \"validator\": \"cl_account_number\",\n      \"error\": \"Invalid account number: digits only (max 20)\"\n    }\n  ]\n}"
             }
           ]
         },

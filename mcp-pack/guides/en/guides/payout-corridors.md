@@ -16,6 +16,11 @@ the fixed fee (when configured; `0.30` here).
 
 ### Beneficiary fields per corridor
 
+For a dynamic form, call the
+[beneficiary schema endpoint](https://docs.cbpayapp.com/en/guides/beneficiary-schema) after selecting
+the corridor. Its response is the render-order source of truth; this table
+remains the business reference for the same fields.
+
 | Country | Method | `beneficiary` fields |
 |---|---|---|
 | CL | `bank_transfer` | `name`, `tax_id` (RUT), `bank_code`, `account_type`, `account_number` |

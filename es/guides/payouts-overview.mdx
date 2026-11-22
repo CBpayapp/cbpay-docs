@@ -83,6 +83,11 @@ La disponibilidad puede variar; el catálogo (`GET /v1/payouts/methods`) es
 siempre la fuente de verdad. Si un país tiene un solo método, `method` es
 opcional. Todos los métodos se cobran igual: tu tasa + fijo.
 
+Después de elegir país y método, llama al
+[endpoint de schema del beneficiario](/es/guides/beneficiary-schema) para
+renderizar los campos `beneficiary` y sus condiciones actuales. No mantengas
+un formulario hardcodeado por país.
+
 Para transferencias bancarias necesitas además el catálogo de bancos (de
 ahí sale el `bank_code` del beneficiario):
 

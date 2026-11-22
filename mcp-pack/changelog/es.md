@@ -5,12 +5,13 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.309 · 1 versión - 22 de noviembre de 2026
+## v2.310 · 2 versiones - 22 de noviembre de 2026
+### v2.310
+**Agregado**
+- Nuevo `GET /v1/payouts/beneficiary-schema?country=&method=&lang=`: descriptores de campos solo-datos para el formulario de beneficiario de cualquier corredor de payout (20 corredores más wildcards globales swift/sepa), en orden de render, con labels, placeholders, hints y errores en `en`/`es`/`zh`. Los campos condicionales (`show_if`, `required_if`, `validate_fn_when`) se evalúan contra el formulario vivo; `validator` nombra el set cerrado de validadores client-side.
 ### v2.309
 **Cambiado**
-
-- La validación previa a crear un payout ahora devuelve errores específicos y neutros para el proveedor en todos los corredores soportados, en vez del opaco `400 invalid_payload`. Por ejemplo, los datos inválidos del beneficiario devuelven `400 invalid_beneficiary` con el campo que debes corregir, mientras que un monto fuera del límite devuelve `422 amount_below_minimum` o `422 amount_above_maximum`. Una moneda o una opción de riel inválida devuelve `400 invalid_currency` o `400 invalid_options`; las decisiones de aceptación no cambian.
-- Una falla de configuración del servidor se rechaza de forma segura como `500 internal_error` con un mensaje genérico. No repitas una solicitud corregida sin cambios; ante una falla de transporte ambigua, reintenta con la misma idempotency key.
+- Firmar el Contrato Marco Grupo CB ya no pide código de un solo uso: `POST /v1/me/contracts/envelopes/{envelopeID}/sign` recibe nombre del firmante, consentimiento explícito y rúbrica, sin header `X-OTP-Token`. El cargo es opcional y se completa con el rol del miembro; las firmas nuevas devuelven `otp_channel` vacío. Los sobres firmados antes conservan su canal y cargo originales.
 ## v2.308 · 2 versiones - 21 de noviembre de 2026
 ### v2.308
 **Cambiado**

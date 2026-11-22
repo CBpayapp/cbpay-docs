@@ -15,6 +15,10 @@ source_url: https://docs.cbpayapp.com/zh/guides/payout-corridors
 
 ### 各通道的收款人字段
 
+要动态渲染表单，请在选择通道后调用
+[收款人 schema 接口](https://docs.cbpayapp.com/zh/guides/beneficiary-schema)。其响应是字段渲染
+顺序的唯一来源；下表继续作为业务字段参考。
+
 | 国家 | 方式 | `beneficiary` 字段 |
 |---|---|---|
 | CL | `bank_transfer` | `name`、`tax_id`（RUT）、`bank_code`、`account_type`、`account_number` |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.309'
+  version: '2.310'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -19039,6 +19039,86 @@ paths:
                     items:
                     - code: 0028
                       name: Banco de ejemplo
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/payouts/beneficiary-schema:
+    get:
+      tags:
+      - Payouts
+      operationId: getPayoutBeneficiarySchema
+      summary: Esquema del formulario de beneficiario de un corredor
+      description: Descriptores de campos solo-datos para el formulario de beneficiario de un corredor (país + método), en orden de render. Labels, placeholders, hints y textos de error se sirven en el locale pedido (?lang=en|es|zh, default en). `validator` / `validator_with_values` nombran el set cerrado de validadores client-side que cada frontend implementa — el backend jamás envía validación ejecutable, y los campos condicionales (show_if, required_if, validate_fn_when) se evalúan contra el formulario vivo. Catálogo estático proxeado desde el core de procesamiento. Los métodos globales (swift/sepa) resuelven para cualquier país vía wildcard; el país pedido se devuelve en eco.
+      parameters:
+      - name: country
+        in: query
+        required: true
+        schema:
+          type: string
+        description: País destino (ISO alpha-2).
+      - name: method
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Método del riel (bank_transfer, yape, pix, swift, sepa...).
+      - name: lang
+        in: query
+        schema:
+          type: string
+          enum:
+          - en
+          - es
+          - zh
+          default: en
+        description: Locale de labels, placeholders, hints y errores.
+      responses:
+        '200':
+          description: Descriptores de campos.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Esquema de beneficiario del corredor.
+              example:
+                country: CL
+                method: fintoc
+                lang: es
+                fields:
+                - key: name
+                  label: Nombre del beneficiario
+                  kind: text
+                  placeholder: Pedro Soto Fuentes
+                - key: tax_id
+                  label: RUT
+                  kind: text
+                  placeholder: 12.345.678-5
+                  hint: Se valida el dígito verificador
+                  validator: chilean_rut
+                  error: 'RUT inválido: revisa el dígito verificador'
+                - key: bank_code
+                  label: Banco
+                  kind: bank
+                - key: account_type
+                  label: Tipo de cuenta
+                  kind: select
+                  hint: La Cuenta RUT es cuenta vista
+                  options:
+                  - value: checking
+                    label: Cuenta corriente
+                  - value: vista
+                    label: Cuenta vista
+                - key: account_number
+                  label: Número de cuenta
+                  kind: text
+                  hint: Solo números
+                  validator: cl_account_number
+                  error: 'Número de cuenta inválido: solo dígitos (máx. 20)'
+        '400':
+          description: Falta country/method (invalid_payload) o lang inválido (invalid_language).
+        '404':
+          description: Sin esquema para el corredor (payout_corridor_unsupported).
         '403':
           $ref: '#/components/responses/Forbidden'
         '401':
