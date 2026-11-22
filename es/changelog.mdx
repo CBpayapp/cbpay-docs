@@ -4,6 +4,11 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="22 de noviembre de 2026" description="v2.309 · 1 versión">
+### v2.309
+**Cambiado**
+- Firmar el Contrato Marco Grupo CB ya no pide código de un solo uso: `POST /v1/me/contracts/envelopes/{envelopeID}/sign` recibe nombre del firmante, consentimiento explícito y rúbrica, sin header `X-OTP-Token`. El cargo es opcional y se completa con el rol del miembro; las firmas nuevas devuelven `otp_channel` vacío. Los sobres firmados antes conservan su canal y cargo originales.
+</Update>
 <Update label="21 de noviembre de 2026" description="v2.308 · 2 versiones">
 ### v2.308
 **Cambiado**
