@@ -16,6 +16,11 @@ las de tu cuenta en `GET /v1/rates`; el débito es el equivalente del saldo pred
 
 ### Campos del beneficiary por corredor
 
+Para un formulario dinámico, llama al
+[endpoint de schema del beneficiario](https://docs.cbpayapp.com/es/guides/beneficiary-schema) después
+de elegir el corredor. Su respuesta es la fuente de verdad del orden de
+render; esta tabla sigue siendo la referencia de negocio.
+
 | País | Método | Campos del `beneficiary` |
 |---|---|---|
 | CL | `bank_transfer` | `name`, `tax_id` (RUT), `bank_code`, `account_type`, `account_number` |

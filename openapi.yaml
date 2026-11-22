@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.309'
+  version: '2.310'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -18937,6 +18937,86 @@ paths:
                     items:
                     - code: 0028
                       name: Example Bank
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/payouts/beneficiary-schema:
+    get:
+      tags:
+      - Payouts
+      operationId: getPayoutBeneficiarySchema
+      summary: Beneficiary form schema for a payout corridor
+      description: Data-only field descriptors for the beneficiary form of one corridor (country + method), in render order. Labels, placeholders, hints and error texts are served in the requested locale (?lang=en|es|zh, default en). `validator` / `validator_with_values` name the closed client-side validator set each frontend implements — the backend never ships executable validation, and conditional fields (show_if, required_if, validate_fn_when) are evaluated against the live form. Static catalog proxied from the processing core. Global methods (swift/sepa) resolve for any country via wildcard; the requested country is echoed back.
+      parameters:
+      - name: country
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Destination country (ISO alpha-2).
+      - name: method
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Rail method (bank_transfer, yape, pix, swift, sepa...).
+      - name: lang
+        in: query
+        schema:
+          type: string
+          enum:
+          - en
+          - es
+          - zh
+          default: en
+        description: Locale for labels, placeholders, hints and errors.
+      responses:
+        '200':
+          description: Field descriptors.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Beneficiary schema for the corridor.
+              example:
+                country: CL
+                method: fintoc
+                lang: en
+                fields:
+                - key: name
+                  label: Beneficiary name
+                  kind: text
+                  placeholder: Pedro Soto Fuentes
+                - key: tax_id
+                  label: RUT
+                  kind: text
+                  placeholder: 12.345.678-5
+                  hint: The check digit is validated
+                  validator: chilean_rut
+                  error: 'Invalid RUT: check the verification digit'
+                - key: bank_code
+                  label: Bank
+                  kind: bank
+                - key: account_type
+                  label: Account type
+                  kind: select
+                  hint: Cuenta RUT counts as a sight account
+                  options:
+                  - value: checking
+                    label: Checking account
+                  - value: vista
+                    label: Sight account
+                - key: account_number
+                  label: Account number
+                  kind: text
+                  hint: Digits only
+                  validator: cl_account_number
+                  error: 'Invalid account number: digits only (max 20)'
+        '400':
+          description: Missing country/method (invalid_payload) or invalid lang (invalid_language).
+        '404':
+          description: No schema for the corridor (payout_corridor_unsupported).
         '403':
           $ref: '#/components/responses/Forbidden'
         '401':

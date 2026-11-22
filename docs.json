@@ -123,6 +123,7 @@
                     "group": "Money out",
                     "pages": [
                       "en/guides/payouts-overview",
+                      "en/guides/beneficiary-schema",
                       "en/guides/payout-corridors",
                       "en/guides/payout-special-cases",
                       "en/guides/payout-errors",
@@ -280,6 +281,7 @@
                     "group": "Pagar (money out)",
                     "pages": [
                       "es/guides/payouts-overview",
+                      "es/guides/beneficiary-schema",
                       "es/guides/payout-corridors",
                       "es/guides/payout-special-cases",
                       "es/guides/payout-errors",
@@ -437,6 +439,7 @@
                     "group": "付款（Money out）",
                     "pages": [
                       "zh/guides/payouts-overview",
+                      "zh/guides/beneficiary-schema",
                       "zh/guides/payout-corridors",
                       "zh/guides/payout-special-cases",
                       "zh/guides/payout-errors",

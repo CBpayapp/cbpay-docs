@@ -78,6 +78,10 @@ curl https://api.qbank.cl/platform/v1/payouts/methods \
 如果某个国家只有一种方式，`method` 为可选。每种方式的计费方式相同：
 您的汇率 + 固定费用。
 
+用户选择国家和方式后，请调用
+[收款人 schema 接口](https://docs.cbpayapp.com/zh/guides/beneficiary-schema)，根据当前的
+`beneficiary` 字段和条件渲染表单。不要按国家硬编码表单。
+
 对于银行转账，您还需要银行目录（收款人的 `bank_code` 即来自这里）：
 
 ```bash

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.309'
+  version: '2.310'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -18987,6 +18987,86 @@ paths:
                     items:
                     - code: 0028
                       name: 示例银行
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/payouts/beneficiary-schema:
+    get:
+      tags:
+      - Payouts
+      operationId: getPayoutBeneficiarySchema
+      summary: 某 payout 通道的受益人表单结构
+      description: 某通道(国家 + 方式)受益人表单的纯数据字段描述,按渲染顺序排列。标签、占位符、提示和错误文本按请求的语言返回(?lang=en|es|zh,默认 en)。`validator` / `validator_with_values` 命名各前端实现的封闭客户端校验集——后端从不下发可执行校验,条件字段(show_if、required_if、validate_fn_when)对照实时表单求值。从处理核心透传的静态目录。全局方式(swift/sepa)通过通配符适配任何国家;请求的国家会原样返回。
+      parameters:
+      - name: country
+        in: query
+        required: true
+        schema:
+          type: string
+        description: 目的地国家(ISO alpha-2)。
+      - name: method
+        in: query
+        required: true
+        schema:
+          type: string
+        description: 通道方式(bank_transfer、yape、pix、swift、sepa...)。
+      - name: lang
+        in: query
+        schema:
+          type: string
+          enum:
+          - en
+          - es
+          - zh
+          default: en
+        description: 标签、占位符、提示和错误的语言。
+      responses:
+        '200':
+          description: 字段描述。
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 该通道的受益人结构。
+              example:
+                country: CL
+                method: fintoc
+                lang: zh
+                fields:
+                - key: name
+                  label: 收款人姓名
+                  kind: text
+                  placeholder: Pedro Soto Fuentes
+                - key: tax_id
+                  label: RUT
+                  kind: text
+                  placeholder: 12.345.678-5
+                  hint: 将验证校验位
+                  validator: chilean_rut
+                  error: RUT 无效：请检查校验位
+                - key: bank_code
+                  label: 银行
+                  kind: bank
+                - key: account_type
+                  label: 账户类型
+                  kind: select
+                  hint: Cuenta RUT 属于活期账户（vista）
+                  options:
+                  - value: checking
+                    label: 活期账户
+                  - value: vista
+                    label: Vista 账户
+                - key: account_number
+                  label: 账号
+                  kind: text
+                  hint: 仅限数字
+                  validator: cl_account_number
+                  error: 账号无效：仅限数字（最多 20 位）
+        '400':
+          description: 缺少 country/method(invalid_payload)或 lang 无效(invalid_language)。
+        '404':
+          description: 该通道无结构(payout_corridor_unsupported)。
         '403':
           $ref: '#/components/responses/Forbidden'
         '401':
