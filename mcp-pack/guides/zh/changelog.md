@@ -5,32 +5,37 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.316 · 4 个版本 - 2026年11月23日
-### v2.316
+## v2.317 · 5 个版本 - 2026年11月23日
+### v2.317
 **变更**
 
 - Nested SEPA 汇款不再需要 funding vIBAN：下单身份改为已验证的 KYC/KYB
   资料，缺少地址时返回 fail-closed `422 registrant_incomplete`。Legacy
   汇款不变。vIBAN 列表新增 `nested_routing`，表示该账户 SEPA 是否走
   nested。
-### v2.315
+### v2.316
 **变更**
 
 - 所有账户的 SEPA 汇款现已走 nested（已验证身份，无需 funding
   vIBAN）。已验证地址不完整的账户将收到明确的 `422
   registrant_incomplete`。
-### v2.314
+### v2.315
 **变更**
 
 - 修复 nested 下单国家规范化：文本（`Chile`）或 alpha-3（`CHL`）地址
   国家现已规范为 alpha-2（含账户回退），不再报
   `cj_ultimate_country must be a ISO alpha-2 country code`。
-### v2.313
+### v2.314
 **变更**
 
 - `GET /v1/payouts/banks` 支持 `currency`，用于完整的国家/货币/方式查询。
   对于已标记的 corridor，平台返回组织有效的创建目录，但不会暴露内部
   路由标识。
+### v2.313
+**变更**
+
+- 已保存的 payout 目的地现在跟随受益人姓名：用不同姓名向已保存的 IBAN 或账户付款时，目的地会移到相符的联系人名下，而不再刷新旧条目。同名重发、无名发送以及重名不明的情况保持原有行为。
+- 合规校验被推迟时创建的 payout 现在会在获批后保存受益人（之前仅同步获批的会保存）。QR payout 依然不会自动保存。
 ## v2.312 · 4 个版本 - 2026年11月22日
 ### v2.312
 **新增**
