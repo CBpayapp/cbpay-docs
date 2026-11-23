@@ -5,13 +5,22 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.310 · 2 versions - November 22, 2026
-### v2.310
+## v2.312 · 4 versions - November 22, 2026
+### v2.312
 **Added**
 - New `GET /v1/payouts/beneficiary-schema?country=&method=&lang=`: data-only field descriptors for the beneficiary form of any payout corridor (20 corridors plus global swift/sepa wildcards), in render order, with labels, placeholders, hints and errors in `en`/`es`/`zh`. Conditional fields (`show_if`, `required_if`, `validate_fn_when`) evaluate against the live form; `validator` names the closed client-side validator set.
-### v2.309
+### v2.311
 **Changed**
 - Signing the Grupo CB framework agreement no longer asks for a one-time code: `POST /v1/me/contracts/envelopes/{envelopeID}/sign` takes the signer name, explicit consent and the handwritten mark, with no `X-OTP-Token` header. The signer title is optional and falls back to the member role; new signatures return an empty `otp_channel`. Envelopes signed earlier keep their original channel and title.
+### v2.310
+**Added**
+
+- Swap quote, detail and list responses now include `coverage_exempt` (true when the conversion quoted or executed under a BTC coverage-floor exemption), and `GET /v1/swaps` accepts a `coverage_exempt` filter. No behavior change for non-exempt accounts.
+### v2.309
+**Changed**
+
+- Payout pre-insert validation now returns specific, provider-neutral errors across all supported payout corridors instead of opaque `400 invalid_payload`. Malformed beneficiary data returns `400 invalid_beneficiary` with the field to correct, while an amount outside a corridor limit returns `422 amount_below_minimum` or `422 amount_above_maximum`. Invalid currency and rail options return `400 invalid_currency` and `400 invalid_options`; acceptance decisions are unchanged.
+- A server configuration failure is fail-closed as `500 internal_error` with a generic message. Do not retry a corrected request unchanged; after an ambiguous transport failure, retry with the same idempotency key.
 ## v2.308 · 2 versions - November 21, 2026
 ### v2.308
 **Changed**

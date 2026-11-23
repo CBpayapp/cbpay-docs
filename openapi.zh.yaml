@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.310'
+  version: '2.312'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -28272,6 +28272,7 @@ paths:
                   percent: '0.15'
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -28298,6 +28299,7 @@ paths:
                   percent: '0.15'
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -28382,6 +28384,11 @@ paths:
           type: string
           format: date
         description: 过滤至此日期(YYYY-MM-DD,组织时区,含当日)。
+      - name: coverage_exempt
+        in: query
+        schema:
+          type: boolean
+        description: 按 BTC 覆盖下限豁免过滤（资金可见性）。
       responses:
         '200':
           description: swaps 分页。
@@ -28409,6 +28416,7 @@ paths:
                   from_amount: '1000.00'
                   to_amount: '0.01568419'
                   rate: '0.00001568'
+                  coverage_exempt: false
                   status: completed
                   idempotency_key: swap-2026-07-10-a
                   created_at: '2026-07-10T15:00:00Z'
@@ -28477,6 +28485,9 @@ paths:
                     description: 每单位源资产可得的目标资产单位数(标记后的执行汇率)。
                   indicative:
                     type: boolean
+                  coverage_exempt:
+                    type: boolean
+                    description: 报价使用了 BTC 覆盖下限豁免时为 true。
                   fees:
                     type: array
                     description: 每一边的有效转换费用。
@@ -28515,6 +28526,7 @@ paths:
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 indicative: true
+                coverage_exempt: false
         '400':
           description: invalid_asset / invalid_pair / invalid_amount / amount_too_small / swap_asset_disabled
           content:
@@ -28563,6 +28575,7 @@ paths:
                 from_amount: '0.01000000'
                 to_amount: '4.900990'
                 rate: '490.09900990'
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-b
                 created_at: '2026-07-10T15:05:00Z'
@@ -31516,6 +31529,9 @@ components:
           type: string
           enum:
           - included_in_rate
+        coverage_exempt:
+          type: boolean
+          description: 在 BTC 覆盖下限豁免下执行时为 true。
         status:
           type: string
           example: completed
