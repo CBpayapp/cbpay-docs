@@ -683,7 +683,7 @@ por la puerta, no por la dirección:
 
 | Puerta | Endpoint | Ordenante | Cuándo usarla |
 |---|---|---|---|
-| Payout | `POST /v1/payouts` (`country` EU, `currency` EUR, `method` SEPA) | El `funding_usdt` activo de la cuenta; usa `source_virtual_iban_id` explícito solo para forzar uno. | Pagar a un beneficiario externo desde tu actividad de fondeo. |
+| Payout | `POST /v1/payouts` (`country` EU, `currency` EUR, `method` SEPA) | En GA nested usa identidad KYC/KYB verificada; el rollback legacy usa el `funding_usdt` activo. | Pagar a un beneficiario externo desde tu actividad de fondeo. |
 | Operación Banking | `POST /v1/banking/operations` (`currency` EUR, `type` WITHDRAW, `paymentType` SEPA_CT) | El `banking_eur` activo de la cuenta (o `source_virtual_iban_id` explícito). | Mover tus propios fondos EUR de Banking. |
 
 Lo que comparten ambas puertas:

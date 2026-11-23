@@ -587,7 +587,7 @@ curl https://api.qbank.cl/platform/v1/banking/virtual-ibans/2f8c1d4e-1111-4b22-8
 
 | 入口 | 端点 | 付款人 | 何时使用 |
 |---|---|---|---|
-| Payout | `POST /v1/payouts`（`country` 为 EU，`currency` 为 EUR，`method` 为 SEPA） | 账户的 active `funding_usdt` 地址；仅在需要强制指定时才传 `source_virtual_iban_id`。 | 从入金业务向外部受益人付款。 |
+| Payout | `POST /v1/payouts`（`country` 为 EU，`currency` 为 EUR，`method` 为 SEPA） | GA nested 使用已验证 KYC/KYB 身份；legacy rollback 才使用账户的 active `funding_usdt` 地址。 | 从入金业务向外部受益人付款。 |
 | Banking 操作 | `POST /v1/banking/operations`（`currency` 为 EUR，`type` 为 WITHDRAW，`paymentType` 为 SEPA_CT） | 账户的 active `banking_eur` 地址（或显式 `source_virtual_iban_id`）。 | 动用自己的 EUR Banking 资金。 |
 
 两个入口的共同机制：

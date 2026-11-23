@@ -149,6 +149,26 @@ specific active `funding_usdt` virtual IBAN:
 - An explicit UUID that is not owned by the account or is not active returns
   `404 not_found` or `422 funding_account_required`.
 
+### Nested routing: no payer-account step
+
+With `PLATFORM_CJ_NESTED_ALL=1`, all SEPA payouts use the nested route. The
+top-level `nested_routing: true` returned by
+`GET /v1/banking/virtual-ibans` exposes that state to the portal. The verified
+KYC/KYB profile supplies the ordering identity, so the payouts portal hides
+the payer-account step and the payout request omits `source_virtual_iban_id`.
+
+The identity is server-side only. Individuals require verified names plus
+`address.country`, `address.city` and `address.street`. Corporate accounts
+require the verified company name and the same address subset. Missing or
+rejected identity fails closed with `422 registrant_incomplete`. Text and
+alpha-3 profile countries normalize to alpha-2, with the account country as
+fallback.
+
+This flag changes only the SEPA payout gate. The `banking_eur` Banking flow
+keeps its existing source-account gate. The active global flag is GA; the
+account allowlist remains only an emergency rollback control. If rollback is
+activated, the legacy source-vIBAN behavior applies explicitly.
+
 The funding purposes, how to request and read virtual IBANs, and how the
 ordering identity is stamped and repaired all live in one place: see
 [Euros: funding direction and EUR banking, in one place](https://docs.cbpayapp.com/en/guides/banking#euros-funding-direction-and-eur-banking-in-one-place). This page keeps only the payout contract above.

@@ -149,6 +149,27 @@ IBAN virtual `funding_usdt` activo específico:
 - Un UUID explícito que no pertenece a la cuenta o no está activo devuelve
   `404 not_found` o `422 funding_account_required`.
 
+### Enrutamiento nested: sin paso de cuenta ordenante
+
+Con `PLATFORM_CJ_NESTED_ALL=1`, todos los payouts SEPA usan la ruta nested.
+El campo superior `nested_routing: true` de
+`GET /v1/banking/virtual-ibans` informa ese estado al portal. El perfil KYC/KYB
+verificado entrega la identidad ordenante, por lo que el portal de payouts
+oculta el paso de cuenta ordenante y el request no incluye
+`source_virtual_iban_id`.
+
+La identidad solo se toma del servidor. Las personas necesitan nombres
+verificados y `address.country`, `address.city` y `address.street`. Las
+empresas necesitan su nombre verificado y el mismo subconjunto de dirección.
+Si la identidad verificada falta o es rechazada, falla de forma cerrada con
+`422 registrant_incomplete`. Los países escritos como texto o alpha-3 se
+normalizan a alpha-2, usando el país de la cuenta como fallback.
+
+Este flag cambia solo la puerta de payouts SEPA. El flujo Banking
+`banking_eur` mantiene su puerta de fuente existente. El flag global activo es
+GA; la allowlist queda solo como control de rollback de emergencia. Si se
+activa el rollback, aplica explícitamente el comportamiento legacy con vIBAN.
+
 Los propósitos de fondeo, cómo solicitar y leer IBAN virtuales, y cómo se
 estampa y repara la identidad ordenante viven en un solo lugar: ver
 [Euros: dirección de fondeo y banca EUR en un solo lugar](/es/guides/banking#euros-dirección-de-fondeo-y-banca-eur-en-un-solo-lugar). Esta página conserva solo el contrato del payout.
