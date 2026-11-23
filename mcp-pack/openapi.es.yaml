@@ -5782,7 +5782,7 @@ paths:
       - Banca
       operationId: listVirtualIBANs
       summary: Listar solicitudes de vIBAN de la cuenta
-      description: Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters.
+      description: "Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters. `nested_routing` is true when the account's SEPA sends route via nested (verified-identity ordering, no funding vIBAN required)."
       parameters:
       - name: page
         in: query
@@ -5830,6 +5830,7 @@ paths:
                   value:
                     page: 1
                     page_size: 50
+                    nested_routing: false
                     virtual_ibans:
                     - id: 2f8c1d4e-1111-4b22-8a33-000000000001
                       owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
