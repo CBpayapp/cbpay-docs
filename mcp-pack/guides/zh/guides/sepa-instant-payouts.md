@@ -143,24 +143,6 @@ Banking 提现使用独立的 `banking_eur` 用途。
 - 明确指定的 UUID 不属于该账户或不是 active 时，返回
   `404 not_found` 或 `422 funding_account_required`。
 
-### Nested 路由：不显示付款账户步骤
-
-当 `PLATFORM_CJ_NESTED_ALL=1` 时，所有 SEPA payout 都使用 nested 路由。
-`GET /v1/banking/virtual-ibans` 返回的顶层字段 `nested_routing: true`
-会将该状态提供给门户。付款人身份来自已验证的 KYC/KYB 资料，因此
-payouts 门户隐藏付款账户步骤，request 不会包含
-`source_virtual_iban_id`。
-
-身份只由服务端提供。个人需要已验证姓名以及
-`address.country`、`address.city` 和 `address.street`。企业需要已验证的
-公司名称以及同一地址子集。已验证身份缺失或被拒绝时 fail-closed 返回
-`422 registrant_incomplete`。文本或 alpha-3 国家会规范为 alpha-2，并以
-账户国家作为回退。
-
-该 flag 只改变 SEPA payout 入口。`banking_eur` Banking 流程继续使用原有
-来源门控。当前全局 flag 是 GA；账户 allowlist 仅作为紧急 rollback 控制。
-启用 rollback 时，才明确恢复使用来源 vIBAN 的 legacy 行为。
-
 入金用途、如何申请和读取虚拟 IBAN，以及付款人身份如何写入与修复，全部
 集中在一处：见[欧元：入金地址与欧元银行，集中在一处](https://docs.cbpayapp.com/zh/guides/banking#欧元入金地址与欧元银行集中在一处)。本页仅保留 payout 合约。
 

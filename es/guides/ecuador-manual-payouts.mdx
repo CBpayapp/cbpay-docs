@@ -205,7 +205,8 @@ Authorization: Bearer <API_KEY>
 La respuesta es provider-clean y solo contiene instrucciones aplicables a la
 cuenta y al corredor. No infieras datos bancarios desde un payout.
 
-Para los códigos bancarios de Ecuador, usa el catálogo vivo:
+Para los códigos bancarios de Ecuador, usa el catálogo vivo. Una solicitud
+solo con el país conserva el catálogo histórico:
 
 ```http
 GET /v1/payouts/banks?country=EC
@@ -216,11 +217,19 @@ Devuelve `{ "items": [{ "code": "...", "name": "..." }], "meta": {
 "retrieved": 1 } }`, donde `retrieved` es el número de elementos devueltos.
 Usa un `code` devuelto por el catálogo como `beneficiary.bank_code`.
 
+Para un selector de payout de una organización, incluye la tupla completa
+`country=EC&currency=USD&method=bank_transfer`. La plataforma resuelve
+server-side el riel efectivo de la organización y devuelve el vocabulario
+seguro para creación. Usa el `code` devuelto como `beneficiary.bank_code`; no
+envíes un identificador interno de riel. Por ejemplo, un riel manual efectivo
+puede devolver un código como `0028`, mientras el catálogo legacy solo por país
+puede contener otro código para el mismo banco. La respuesta sigue siendo
+provider-agnostic.
+
 Si necesitas mostrar el nombre de un código guardado desde un riel interno no
 predeterminado, agrega `&include_variants=true` (también `1` o `yes`). Es solo
 para display: el catálogo predeterminado queda primero y gana los códigos
-duplicados, y los selectores de creación deben seguir usando el catálogo
-predeterminado. Omitir el flag conserva el catálogo histórico.
+duplicados. No uses este flag para poblar selectores de creación.
 
 Para un selector seguro para creación respaldado por una variante de ruteo
 específica, envía la variante junto con el método explícito:
@@ -231,13 +240,16 @@ Authorization: Bearer <API_KEY>
 ```
 
 La respuesta contiene solo el catálogo de esa variante; nunca lo combina con
-el catálogo predeterminado. Sin `variant`, el catálogo histórico no cambia. La
-plataforma o el administrador entrega el valor opaco de la variante soportada.
+el catálogo predeterminado. Sin `variant`, una tupla completa de
+país/moneda/método permite que la plataforma elija server-side el riel
+efectivo; sin esa tupla se conserva la conducta histórica. La plataforma o el
+administrador entrega el valor opaco de la variante soportada.
 El diálogo admin de cuentas payout usa este mismo contrato: en Ecuador
 `bank_transfer`, el toggle **Automático | Manual** selecciona el catálogo
 correspondiente, parte en Automático y falla cerrado si la ruta no está
 disponible. Al cambiar de ruta, limpia el `bank_code` seleccionado. El portal
-de clientes mantiene el riel predeterminado.
+de clientes envía país, moneda y método para que la plataforma devuelva el
+riel efectivo de la organización sin exponer su identificador interno.
 
 ## Reglas operativas
 
