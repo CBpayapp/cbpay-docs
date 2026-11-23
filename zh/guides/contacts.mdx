@@ -33,6 +33,14 @@ flowchart LR
 
 通讯录只属于当前账户。联系人和目的地按所有者隔离，不会跨账户读取。
 
+## 出金目的地跟随受益人姓名
+
+出金使用已保存的银行目的地时，目的地会跟随受益人姓名。如果已保存的 IBAN 或账户属于另一个联系人，而新的受益人姓名能够唯一匹配一个联系人，平台会把出金目的地重新归到该联系人，而不是更新原联系人。同名再次发送时保留现有目的地；姓名存在多个可能的联系人时，不会自动移动。
+
+此行为仅适用于出金目的地。已关联的 CBPay 目的地和加密货币目的地不变。
+
+以 `compliance_pending` 状态创建的出金，在合规审核通过后、且启用 `save_contact` 时会保存到受益人联系人；在此流程中 `save_contact` 默认值为 `true`。QR 出金永远不会自动保存。
+
 ## 门户中的联系人
 
 门户的 `/contacts` 页面提供工具栏，可按搜索词、来源、仅 CBPay、收藏、目的地类型、国家和排序筛选。页面显示服务器返回的 `total`，并支持分页。展开目的地后，搜索也会匹配标签、出金通道字段以及加密货币网络或地址。
@@ -174,4 +182,7 @@ curl -X POST https://api.qbank.cl/platform/v1/contacts/merge \\
 <Accordion title="如何从资料页发送？">在目的地卡片上点击发送。门户会打开 `/payouts/new?contact_id=...&destination_id=...` 并带上目的地上下文。</Accordion>
 <Accordion title="其他账户能读取我的目的地吗？">不能。读取和写入只允许当前已认证账户。</Accordion>
 <Accordion title="删除目的地后会怎样？">只删除该目的地；联系人和其他目的地仍然保留。</Accordion>
+<Accordion title="使用新受益人姓名调用已保存的出金目的地时会怎样？">如果姓名唯一匹配一个联系人，出金目的地会移动到该联系人。同名再次发送会保留现有目的地；重名不明确时不会移动。</Accordion>
+<Accordion title="加密货币或 CBPay 目的地会重新归类吗？">不会。重新归类仅适用于出金目的地。</Accordion>
+<Accordion title="合规审核中的出金何时保存？">启用 `save_contact` 后，在审核通过时保存。默认值为 `true`；QR 出金永远不会自动保存。</Accordion>
 </AccordionGroup>

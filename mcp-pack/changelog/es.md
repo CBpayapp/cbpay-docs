@@ -5,8 +5,8 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.316 · 4 versiones - 23 de noviembre de 2026
-### v2.316
+## v2.317 · 5 versiones - 23 de noviembre de 2026
+### v2.317
 **Cambiado**
 
 - Los envíos SEPA nested ya no exigen vIBAN de fondeo: la identidad
@@ -14,26 +14,31 @@ source_url: https://docs.cbpayapp.com/es/changelog
   registrant_incomplete` fail-closed si falta la dirección. Los envíos
   legacy no cambian. El listado de vIBANes ahora incluye
   `nested_routing`, que indica si los SEPA de la cuenta van por nested.
-### v2.315
+### v2.316
 **Cambiado**
 
 - Los envíos SEPA ahora van por nested para todas las cuentas
   (identidad verificada, sin vIBAN de fondeo). Cuentas sin dirección
   verificada completa reciben `422 registrant_incomplete` honesto.
-### v2.314
+### v2.315
 **Cambiado**
 
 - Corregida la normalización del país nested: perfiles con país en
   texto (`Chile`) o alpha-3 (`CHL`) ahora resuelven a alpha-2 con
   fallback a la cuenta, en vez de fallar con `cj_ultimate_country must
   be a ISO alpha-2 country code`.
-### v2.313
+### v2.314
 **Cambiado**
 
 - `GET /v1/payouts/banks` acepta `currency` para una consulta completa de
   país/moneda/método. En corredores etiquetados, la plataforma devuelve el
   catálogo de creación efectivo de la organización sin exponer un
   identificador interno de riel.
+### v2.313
+**Cambiado**
+
+- Los destinos de payout guardados ahora siguen el nombre del beneficiario: pagar a un IBAN o cuenta guardada con otro nombre mueve el destino al contacto correspondiente en vez de refrescar la entrada vieja. Los reenvíos con el mismo nombre, los envíos sin nombre y los nombres duplicados ambiguos conservan el comportamiento anterior.
+- Los payouts creados mientras la verificación de cumplimiento está diferida ahora guardan el beneficiario al aprobarse (antes solo se guardaban los aprobados en forma sincrónica). Los payouts QR siguen sin guardarse automáticamente.
 ## v2.312 · 4 versiones - 22 de noviembre de 2026
 ### v2.312
 **Agregado**

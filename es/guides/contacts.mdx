@@ -33,6 +33,14 @@ Un contacto puede tener:
 
 La agenda es privada de la cuenta. Los destinos quedan aislados por propietario y nunca se leen desde otra cuenta.
 
+## Los destinos payout siguen el nombre del beneficiario
+
+Cuando un payout usa un destino bancario guardado, el destino sigue el nombre del beneficiario. Si el IBAN o la cuenta guardada aparece bajo otro contacto y el nuevo nombre identifica a un contacto único, la plataforma reubica el destino payout en ese contacto en vez de actualizar el contacto anterior. Un nuevo envío con el mismo nombre conserva el destino existente y los homónimos ambiguos nunca se mueven automáticamente.
+
+Este comportamiento aplica solo a destinos payout. Los destinos CBPay vinculados y los destinos cripto no cambian.
+
+Los payouts que nacen en estado `compliance_pending` se guardan en el contacto del beneficiario después de aprobar el cumplimiento cuando `save_contact` está habilitado; en este flujo, `save_contact` tiene por defecto el valor `true`. Los payouts QR nunca se guardan automáticamente.
+
 ## Agenda en el portal
 
 La pantalla `/contacts` tiene una barra de herramientas con búsqueda, origen, solo CBPay, favoritos, tipo de destino, país y orden. Muestra el total entregado por el servidor y permite paginar. La búsqueda también encuentra datos de destinos cuando la lista se expande: etiquetas, campos del corredor de payout y texto de red o dirección cripto.
@@ -174,4 +182,7 @@ Las mutaciones son sincrónicas: `200` o `201` es final; `4xx` rechaza sin cambi
 <Accordion title="¿Cómo envío desde el perfil?">Selecciona Enviar en la tarjeta del destino. El portal abre `/payouts/new?contact_id=...&destination_id=...` con ese contexto.</Accordion>
 <Accordion title="¿Otra cuenta puede leer mis destinos?">No. Las lecturas y escrituras están limitadas a la cuenta autenticada.</Accordion>
 <Accordion title="¿Qué pasa si elimino un destino?">Se elimina solo ese destino; el contacto y los demás permanecen.</Accordion>
+<Accordion title="¿Qué pasa cuando uso un destino payout guardado con un nombre nuevo?">Si el nombre identifica a un solo contacto, el destino payout se mueve a ese contacto. Los envíos con el mismo nombre conservan el destino y los homónimos ambiguos no se mueven.</Accordion>
+<Accordion title="¿Los destinos cripto o CBPay se reubican?">No. La reubicación aplica solo a destinos payout.</Accordion>
+<Accordion title="¿Cuándo se guarda un payout en revisión de cumplimiento?">Después de aprobarse cuando `save_contact` está habilitado. Su valor predeterminado es `true`; los payouts QR nunca se guardan automáticamente.</Accordion>
 </AccordionGroup>
