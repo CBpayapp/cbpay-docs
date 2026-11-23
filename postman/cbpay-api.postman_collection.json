@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-22 21:15 UTC",
-    "_content_sha256": "dd94efd5f6a66d31571ac289877b1f74d49771a6e1e21dba9fa7b32cfd75612f"
+    "_generated_at": "2026-11-22 23:11 UTC",
+    "_content_sha256": "7336977b31e28773904eb75ee98c77fa3a8ce68472dd3bae7c472af87793e06c"
   },
   "auth": {
     "type": "bearer",
@@ -33516,6 +33516,12 @@
                   "value": "",
                   "disabled": true,
                   "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                },
+                {
+                  "key": "coverage_exempt",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by BTC coverage-floor exemption (treasury visibility)."
                 }
               ]
             },
@@ -33563,6 +33569,12 @@
                       "value": "",
                       "disabled": true,
                       "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                    },
+                    {
+                      "key": "coverage_exempt",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by BTC coverage-floor exemption (treasury visibility)."
                     }
                   ]
                 }
@@ -33576,7 +33588,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"swaps\": [\n    {\n      \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"from_asset\": \"USD\",\n      \"to_asset\": \"BTC\",\n      \"from_amount\": \"1000.00\",\n      \"to_amount\": \"0.01568419\",\n      \"rate\": \"0.00001568\",\n      \"status\": \"completed\",\n      \"idempotency_key\": \"swap-2026-07-10-a\",\n      \"created_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"swaps\": [\n    {\n      \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"from_asset\": \"USD\",\n      \"to_asset\": \"BTC\",\n      \"from_amount\": \"1000.00\",\n      \"to_amount\": \"0.01568419\",\n      \"rate\": \"0.00001568\",\n      \"coverage_exempt\": false,\n      \"status\": \"completed\",\n      \"idempotency_key\": \"swap-2026-07-10-a\",\n      \"created_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -33641,7 +33653,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -33706,7 +33718,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -33771,7 +33783,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -33859,7 +33871,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"indicative\": true\n}"
+              "body": "{\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"indicative\": true,\n  \"coverage_exempt\": false\n}"
             }
           ]
         },
@@ -33919,7 +33931,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"BTC\",\n  \"to_asset\": \"GOLD\",\n  \"from_amount\": \"0.01000000\",\n  \"to_amount\": \"4.900990\",\n  \"rate\": \"490.09900990\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-b\",\n  \"created_at\": \"2026-07-10T15:05:00Z\"\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"BTC\",\n  \"to_asset\": \"GOLD\",\n  \"from_amount\": \"0.01000000\",\n  \"to_amount\": \"4.900990\",\n  \"rate\": \"490.09900990\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-b\",\n  \"created_at\": \"2026-07-10T15:05:00Z\"\n}"
             }
           ]
         }

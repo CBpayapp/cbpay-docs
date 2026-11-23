@@ -5,13 +5,22 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.310 · 2 个版本 - 2026年11月22日
-### v2.310
+## v2.312 · 4 个版本 - 2026年11月22日
+### v2.312
 **新增**
 - 新增 `GET /v1/payouts/beneficiary-schema?country=&method=&lang=`：任一 payout 通道受益人表单的纯数据字段描述（20 个通道，外加全局 swift/sepa 通配符），按渲染顺序排列，标签、占位符、提示和错误支持 `en`/`es`/`zh`。条件字段（`show_if`、`required_if`、`validate_fn_when`）对照实时表单求值；`validator` 命名封闭客户端校验集。
-### v2.309
+### v2.311
 **变更**
 - 签署 Grupo CB 主协议不再需要一次性验证码：`POST /v1/me/contracts/envelopes/{envelopeID}/sign` 只需签署人姓名、明确同意和手写签名，不再使用 `X-OTP-Token` header。职务为可选项，省略时自动填入成员角色；新的签署返回空 `otp_channel`。此前签署的信封保留原始 channel 和职务。
+### v2.310
+**新增**
+
+- 兑换报价、详情和列表响应现包含 `coverage_exempt`（在 BTC 覆盖下限豁免下报价或执行时为 true），`GET /v1/swaps` 接受 `coverage_exempt` 过滤器。非豁免账户行为不变。
+### v2.309
+**变更**
+
+- 现在所有受支持的 payout 通道在创建前校验时都会返回具体且不暴露提供商的错误，而不是不透明的 `400 invalid_payload`。例如，收款人数据无效时返回 `400 invalid_beneficiary` 并指出要修正的字段；金额超出通道限制时返回 `422 amount_below_minimum` 或 `422 amount_above_maximum`。无效货币或通道选项分别返回 `400 invalid_currency` 和 `400 invalid_options`；接受或拒绝的决定不变。
+- 服务器配置失败会安全地返回 `500 internal_error` 和通用消息。不要原样重复已修正的请求；遇到不明确的传输失败时，请使用相同的幂等键重试。
 ## v2.308 · 2 个版本 - 2026年11月21日
 ### v2.308
 **变更**

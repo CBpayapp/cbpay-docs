@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.310'
+  version: '2.312'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -28413,6 +28413,7 @@ paths:
                   percent: '0.15'
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -28439,6 +28440,7 @@ paths:
                   percent: '0.15'
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -28523,6 +28525,11 @@ paths:
           type: string
           format: date
         description: Hasta esta fecha (YYYY-MM-DD, zona horaria de la organización, inclusive).
+      - name: coverage_exempt
+        in: query
+        schema:
+          type: boolean
+        description: Filtrar por exención al piso de cobertura BTC (visibilidad tesorería).
       responses:
         '200':
           description: Swaps paginados.
@@ -28550,6 +28557,7 @@ paths:
                   from_amount: '1000.00'
                   to_amount: '0.01568419'
                   rate: '0.00001568'
+                  coverage_exempt: false
                   status: completed
                   idempotency_key: swap-2026-07-10-a
                   created_at: '2026-07-10T15:00:00Z'
@@ -28618,6 +28626,9 @@ paths:
                     description: Unidades de destino por unidad de origen (tasa de ejecución marcada).
                   indicative:
                     type: boolean
+                  coverage_exempt:
+                    type: boolean
+                    description: True cuando la cotización usó exención al piso de cobertura BTC.
                   fees:
                     type: array
                     description: Comisión efectiva de conversión por punta.
@@ -28656,6 +28667,7 @@ paths:
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 indicative: true
+                coverage_exempt: false
         '400':
           description: invalid_asset / invalid_pair / invalid_amount / amount_too_small / swap_asset_disabled
           content:
@@ -28704,6 +28716,7 @@ paths:
                 from_amount: '0.01000000'
                 to_amount: '4.900990'
                 rate: '490.09900990'
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-b
                 created_at: '2026-07-10T15:05:00Z'
@@ -31477,6 +31490,9 @@ components:
           type: string
           enum:
           - included_in_rate
+        coverage_exempt:
+          type: boolean
+          description: True cuando el swap ejecutó bajo exención al piso de cobertura BTC.
         status:
           type: string
           example: completed
