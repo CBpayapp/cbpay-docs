@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.312'
+  version: '2.316'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -5782,7 +5782,7 @@ paths:
       - Banca
       operationId: listVirtualIBANs
       summary: Listar solicitudes de vIBAN de la cuenta
-      description: Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters.
+      description: "Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters. `nested_routing` is true when the account's SEPA sends route via nested (verified-identity ordering, no funding vIBAN required)."
       parameters:
       - name: page
         in: query
@@ -5830,6 +5830,7 @@ paths:
                   value:
                     page: 1
                     page_size: 50
+                    nested_routing: false
                     virtual_ibans:
                     - id: 2f8c1d4e-1111-4b22-8a33-000000000001
                       owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
@@ -18987,13 +18988,19 @@ paths:
       - Payouts
       operationId: getPayoutBanks
       summary: Listar bancos de destino
-      description: Catálogo de bancos para los payouts de un país. Sin `method` devuelve la unión de los bancos de todos los métodos del país (deduplicada por código); con `method` acota al catálogo de ese canal. Algunos métodos no tienen catálogo de bancos (ej. QR) y no aportan entradas. Envía `variant` junto con un `method` explícito para recibir solo el catálogo de esa variante; es seguro para creación y nunca une catálogos. Sin `variant`, la conducta no cambia. Usa `include_variants=true` (también `1` o `yes`) solo para resolver en display códigos guardados desde un riel no predeterminado.
+      description: Catálogo de bancos para los payouts de un país. Sin `method` devuelve la unión de los bancos de todos los métodos del país (deduplicada por código); con `method` acota al catálogo de ese canal. Algunos métodos no tienen catálogo de bancos (ej. QR) y no aportan entradas. En un corredor etiquetado de país/moneda/método, envía la tupla completa para que la plataforma resuelva server-side el riel efectivo de la organización y devuelva el catálogo de creación correspondiente; el cliente no envía el valor interno del riel. Envía `variant` junto con un `method` explícito para recibir solo el catálogo de esa variante; es seguro para creación y nunca une catálogos. Sin `variant` ni `currency`, se conserva la conducta legacy. Usa `include_variants=true` (también `1` o `yes`) solo para resolver en display códigos guardados desde un riel no predeterminado.
       parameters:
       - name: country
         in: query
         schema:
           type: string
           example: CL
+      - name: currency
+        in: query
+        schema:
+          type: string
+          example: USD
+        description: Moneda ISO opcional que, junto con `country` y `method`, permite resolver server-side el riel efectivo de payout de la organización. Usa los códigos devueltos para selectores de creación; no envíes un identificador interno de riel.
       - name: method
         in: query
         schema:
@@ -29276,6 +29283,13 @@ paths:
               example:
                 error: invalid_contact_email
                 message: contact_email must be a valid email address
+        '409':
+          description: A duplicate insert lost its race; refresh the request list.
+          content:
+            application/json:
+              example:
+                error: idempotency_conflict
+                message: a request for this account is already being processed; refresh your requests
         '503':
           description: counsel_pending or email_unavailable.
           content:

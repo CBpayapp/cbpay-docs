@@ -5,6 +5,35 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.316 · 4 versions - November 23, 2026
+### v2.316
+**Changed**
+
+- Nested SEPA sends no longer require a funding vIBAN: the ordering
+  identity now comes from the verified KYC/KYB profile, with a fail-closed
+  `422 registrant_incomplete` when the address is missing. Legacy sends are
+  unchanged. The virtual-IBAN list now includes `nested_routing`, telling
+  whether the account's SEPA sends route via nested.
+### v2.315
+**Changed**
+
+- SEPA sends now route via nested for all accounts (verified-identity
+  ordering, no funding vIBAN required). Accounts without a complete
+  verified address get an honest `422 registrant_incomplete`.
+### v2.314
+**Changed**
+
+- Fixed nested ordering country handling: text (`Chile`) and alpha-3
+  (`CHL`) profile countries now normalize to alpha-2 with account
+  fallback, instead of failing with `cj_ultimate_country must be a ISO
+  alpha-2 country code`.
+### v2.313
+**Changed**
+
+- `GET /v1/payouts/banks` accepts `currency` for a complete
+  country/currency/method lookup. For labeled corridors, the platform returns
+  the organization’s effective creation catalog without exposing an internal
+  route identifier.
 ## v2.312 · 4 versions - November 22, 2026
 ### v2.312
 **Added**

@@ -202,7 +202,8 @@ Authorization: Bearer <API_KEY>
 The response is provider-clean and contains only the instructions applicable
 to the account and corridor. Do not infer bank details from a payout.
 
-For Ecuador bank codes, use the live catalog:
+For Ecuador bank codes, use the live catalog. A country-only request preserves
+the historical catalog:
 
 ```http
 GET /v1/payouts/banks?country=EC
@@ -213,11 +214,19 @@ It returns `{ "items": [{ "code": "...", "name": "..." }], "meta": {
 "retrieved": 1 } }`, where `retrieved` is the number of items returned. Use a
 returned `code` as `beneficiary.bank_code`.
 
+For an organization payout selector, include the complete
+`country=EC&currency=USD&method=bank_transfer` tuple. The platform resolves the
+organization's effective route server-side and returns the matching
+creation-safe vocabulary. Use the returned `code` as `beneficiary.bank_code`;
+do not send an internal route identifier. For example, an effective manual
+route can return a code such as `0028`, while the legacy country-only catalog
+can contain a different code for the same bank. The response remains
+provider-agnostic.
+
 If you need to display the name for a code saved from an internal non-default
 rail, add `&include_variants=true` (also `1` or `yes`). This is display-only:
-the default catalog remains first and wins duplicate codes, and payout
-creation selectors must continue using the default catalog. Omitting the flag
-preserves the historical catalog.
+the default catalog remains first and wins duplicate codes. Do not use this
+flag to populate payout creation selectors.
 
 For a creation-safe selector backed by a specific route variant, pass the
 variant together with the explicit method:
@@ -228,13 +237,16 @@ Authorization: Bearer <API_KEY>
 ```
 
 The response contains only that variant's catalog; it never combines it with
-the default catalog. Without `variant`, the historical catalog is unchanged.
-The platform or administrator supplies the supported opaque variant value.
+the default catalog. Without `variant`, a complete country/currency/method
+tuple lets the platform choose the effective route server-side; without that
+tuple, the historical behavior is preserved. The platform or administrator
+supplies the supported opaque variant value.
 The admin payout-account dialog uses this same contract: in Ecuador
 `bank_transfer`, its **Automatic | Manual** toggle selects the corresponding
 catalog, defaults to Automatic, and fails closed if the route is unavailable.
 Changing the route clears the previously selected `bank_code`. The customer
-portal keeps the default route.
+portal sends country, currency and method so the platform can return the
+effective organization route without exposing its internal identifier.
 
 ## Operational rules
 

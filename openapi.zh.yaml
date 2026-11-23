@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.312'
+  version: '2.316'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -5760,7 +5760,7 @@ paths:
       - 银行服务
       operationId: listVirtualIBANs
       summary: 列出账户的虚拟 IBAN 申请
-      description: Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters.
+      description: "Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters. `nested_routing` is true when the account's SEPA sends route via nested (verified-identity ordering, no funding vIBAN required)."
       parameters:
       - name: page
         in: query
@@ -5808,6 +5808,7 @@ paths:
                   value:
                     page: 1
                     page_size: 50
+                    nested_routing: false
                     virtual_ibans:
                     - id: 2f8c1d4e-1111-4b22-8a33-000000000001
                       owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
@@ -18935,13 +18936,19 @@ paths:
       - 付款(Payouts)
       operationId: getPayoutBanks
       summary: 列出目标银行
-      description: 某国 payout 的银行目录。不带 `method` 时返回该国所有 payout 方式的银行并集(按代码去重);传入 `method` 可获取单一渠道的目录。部分方式没有银行目录(例如 QR),不贡献任何条目。将 `variant` 与明确的 `method` 一起传入时,仅返回该变体的目录;该结果可安全用于创建,不会合并目录。不传 `variant` 时行为保持历史不变。`include_variants=true`(也接受 `1` 或 `yes`)仅用于显示从非默认轨道保存的代码。
+      description: 某国 payout 的银行目录。不带 `method` 时返回该国所有 payout 方式的银行并集(按代码去重);传入 `method` 可获取单一渠道的目录。部分方式没有银行目录(例如 QR),不贡献任何条目。对于已标记的国家/货币/方式 corridor,请传入完整元组,平台会在 server-side 解析组织的有效路由并返回相应的创建目录;客户端不发送内部路由值。将 `variant` 与明确的 `method` 一起传入时,仅返回该变体的目录;该结果可安全用于创建,不会合并目录。不传 `variant` 或 `currency` 时行为保持历史不变。`include_variants=true`(也接受 `1` 或 `yes`)仅用于显示从非默认轨道保存的代码。
       parameters:
       - name: country
         in: query
         schema:
           type: string
           example: CL
+      - name: currency
+        in: query
+        schema:
+          type: string
+          example: USD
+        description: 可选的 ISO 货币。与 `country` 和 `method` 一起使用时,平台会在 server-side 解析组织的有效 payout 路由。创建选择器应使用返回的代码,不要发送内部路由标识。
       - name: method
         in: query
         schema:
@@ -29135,6 +29142,13 @@ paths:
               example:
                 error: invalid_contact_email
                 message: contact_email must be a valid email address
+        '409':
+          description: A duplicate insert lost its race; refresh the request list.
+          content:
+            application/json:
+              example:
+                error: idempotency_conflict
+                message: a request for this account is already being processed; refresh your requests
         '503':
           description: counsel_pending or email_unavailable.
           content:

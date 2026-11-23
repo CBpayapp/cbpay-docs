@@ -4,6 +4,36 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="23 de noviembre de 2026" description="v2.316 · 4 versiones">
+### v2.316
+**Cambiado**
+
+- Los envíos SEPA nested ya no exigen vIBAN de fondeo: la identidad
+  ordenante sale del perfil verificado KYC/KYB, con `422
+  registrant_incomplete` fail-closed si falta la dirección. Los envíos
+  legacy no cambian. El listado de vIBANes ahora incluye
+  `nested_routing`, que indica si los SEPA de la cuenta van por nested.
+### v2.315
+**Cambiado**
+
+- Los envíos SEPA ahora van por nested para todas las cuentas
+  (identidad verificada, sin vIBAN de fondeo). Cuentas sin dirección
+  verificada completa reciben `422 registrant_incomplete` honesto.
+### v2.314
+**Cambiado**
+
+- Corregida la normalización del país nested: perfiles con país en
+  texto (`Chile`) o alpha-3 (`CHL`) ahora resuelven a alpha-2 con
+  fallback a la cuenta, en vez de fallar con `cj_ultimate_country must
+  be a ISO alpha-2 country code`.
+### v2.313
+**Cambiado**
+
+- `GET /v1/payouts/banks` acepta `currency` para una consulta completa de
+  país/moneda/método. En corredores etiquetados, la plataforma devuelve el
+  catálogo de creación efectivo de la organización sin exponer un
+  identificador interno de riel.
+</Update>
 <Update label="22 de noviembre de 2026" description="v2.312 · 4 versiones">
 ### v2.312
 **Agregado**
