@@ -4,6 +4,22 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="November 24, 2026" description="v2.318 · 1 version">
+### v2.318
+**Changed**
+
+- The public status page now measures daily impact with incident counts,
+  downtime/degraded minutes, affected-corridor count and the worst active
+  severity; resolved periods render green.
+- Platform-disabled corridors stay out of organization mirrors, alerts,
+  announcements and the public page, while retired core rails can be excluded
+  from health probes through the operator skip-list.
+
+**Fixed**
+
+- Open incidents now always expose an `updates` array, including when the
+  incident has no completed recovery yet.
+</Update>
 <Update label="November 23, 2026" description="v2.317 · 5 versions">
 ### v2.317
 **Changed**

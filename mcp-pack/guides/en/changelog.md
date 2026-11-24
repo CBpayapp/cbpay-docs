@@ -5,6 +5,21 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.318 · 1 version - November 24, 2026
+### v2.318
+**Changed**
+
+- The public status page now measures daily impact with incident counts,
+  downtime/degraded minutes, affected-corridor count and the worst active
+  severity; resolved periods render green.
+- Platform-disabled corridors stay out of organization mirrors, alerts,
+  announcements and the public page, while retired core rails can be excluded
+  from health probes through the operator skip-list.
+
+**Fixed**
+
+- Open incidents now always expose an `updates` array, including when the
+  incident has no completed recovery yet.
 ## v2.317 · 5 versions - November 23, 2026
 ### v2.317
 **Changed**

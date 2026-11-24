@@ -103,7 +103,7 @@ curl "https://api.qbank.cl/platform/v1/payouts/methods" \
 
 页面会自动使用你机构的 logo、颜色和网站，并为每条通道展示国家国旗、支付方式图标、最近 90 天的逐日可用性条以及当前状态。顶部的概览卡片显示总体状态、正常/降级/中断的通道数量与平均可用率；底部的事件时间线用通俗语言说明每次变更的原因。该 HTML 不加载 JavaScript，也不引用任何外部资源，可以安全地嵌入 iframe。
 
-公开状态页只列出你机构已启用的通道：由运营方通过管理控制停用的通道不会出现在当前列表或事故历史中；已启用但处于中断状态的通道仍会显示，并计入整体状态。
+公开状态页只列出你机构已启用的通道：由运营方通过管理控制停用的通道不会出现在当前列表或事故历史中；已启用但处于中断状态的通道仍会显示，并计入整体状态。平台级停用会从核心状态镜像静默修复；重新启用前请先确认核心红绿灯，下一次状态转换会重新同步通道。
 
 `orgToken` 是运营方共享给你的不透明令牌（机构管理员可在 `GET /v1/org/branding` 中读取 `status_page_url`）。
 
@@ -137,6 +137,19 @@ curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
       "reason": "consecutive infrastructure failures",
       "at": "2026-07-24T22:10:00Z"
     }
+  ],
+  "incidents_total_90d": 3,
+  "mttr_mins_90d": 18,
+  "incidents_daily": [
+    {
+      "date": "2026-07-24",
+      "degraded": 0,
+      "down": 1,
+      "down_minutes": 13,
+      "degraded_minutes": 0,
+      "corridors_affected": 1,
+      "worst": "down"
+    }
   ]
 }
 ```
@@ -145,7 +158,10 @@ curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
 |---|---|
 | `status` | 页面整体状态：所有通道中最差的状态。 |
 | `corridors[]` | 每条通道的当前状态，附 `uptime_90d_pct`（最近 90 天处于 `operational` 的时间百分比）。 |
-| `incidents[]` | 最近的状态转换（中断与恢复），最新的排在最前。 |
+| `incidents[]` | 最近的状态转换（中断与恢复），最新的排在最前。对于仍在进行的事件，`updates` 始终是数组，绝不会为 `null`。 |
+| `incidents_total_90d` | 最近 90 天的分组事件数量。 |
+| `mttr_mins_90d` | 最近 90 天事件的平均持续分钟数。 |
+| `incidents_daily[]` | 最近 90 天每日热力图点：事件数量、影响分钟数、受影响的不同通道数，以及当天活动的最严重级别（`operational`、`degraded` 或 `down`）。 |
 
 未知或格式错误的令牌返回 `404`——令牌不会泄露机构是否存在。该端点按 IP 限流。
 
