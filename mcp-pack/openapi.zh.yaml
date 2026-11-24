@@ -23132,9 +23132,9 @@ paths:
                     payin_rate: '955.10'
                   venezuela:
                     currency: VES
-                    rate: '962.654000'
+                    rate: '980'
                     rate_source: rail
-                    payin_rate: '1020.604704'
+                    payin_rate: '1002.54'
                     payin_rate_source: rail
                   mexico:
                     currency: MXN
