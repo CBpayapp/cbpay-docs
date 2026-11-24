@@ -4,6 +4,22 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="24 de noviembre de 2026" description="v2.318 · 1 versión">
+### v2.318
+**Cambiado**
+
+- La página pública de status ahora mide el impacto diario con cantidad de
+  incidentes, minutos caídos/degradados, corredores afectados y peor
+  severidad activa; los períodos resueltos se muestran en verde.
+- Los corredores apagados por plataforma quedan fuera de los espejos,
+  alertas, avisos y la página pública, mientras los rieles retirados del core
+  pueden excluirse de las sondas mediante la skip-list operativa.
+
+**Corregido**
+
+- Los incidentes abiertos ahora siempre exponen un arreglo `updates`, incluso
+  cuando todavía no tienen recuperación.
+</Update>
 <Update label="23 de noviembre de 2026" description="v2.317 · 5 versiones">
 ### v2.317
 **Cambiado**

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.316'
+  version: '2.318'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -26429,6 +26429,16 @@ paths:
                   to_status: down
                   reason: consecutive infrastructure failures
                   at: '2026-07-24T22:10:00Z'
+                incidents_total_90d: 3
+                mttr_mins_90d: 18
+                incidents_daily:
+                - date: '2026-07-24'
+                  degraded: 0
+                  down: 1
+                  down_minutes: 13
+                  degraded_minutes: 0
+                  corridors_affected: 1
+                  worst: down
         '404':
           description: Token inválido o desconocido.
           content:

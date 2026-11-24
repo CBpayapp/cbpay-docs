@@ -5,6 +5,21 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.318 · 1 versión - 24 de noviembre de 2026
+### v2.318
+**Cambiado**
+
+- La página pública de status ahora mide el impacto diario con cantidad de
+  incidentes, minutos caídos/degradados, corredores afectados y peor
+  severidad activa; los períodos resueltos se muestran en verde.
+- Los corredores apagados por plataforma quedan fuera de los espejos,
+  alertas, avisos y la página pública, mientras los rieles retirados del core
+  pueden excluirse de las sondas mediante la skip-list operativa.
+
+**Corregido**
+
+- Los incidentes abiertos ahora siempre exponen un arreglo `updates`, incluso
+  cuando todavía no tienen recuperación.
 ## v2.317 · 5 versiones - 23 de noviembre de 2026
 ### v2.317
 **Cambiado**

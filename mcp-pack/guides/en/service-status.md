@@ -136,7 +136,9 @@ external resources, so you can safely embed it in an iframe.
 The public page lists only corridors enabled for your organization: corridors
 disabled by the operator do not appear in rows or incident history, while an
 enabled corridor that is down remains visible and contributes to the overall
-state.
+state. A platform-wide disable is healed silently from the core status mirror;
+when re-enabled, verify the core traffic light first and the next transition
+re-synchronizes the corridor.
 
 The `orgToken` is an opaque token your operator shares with you (org admins
 can read it as `status_page_url` in `GET /v1/org/branding`).
@@ -171,6 +173,19 @@ curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
       "reason": "consecutive infrastructure failures",
       "at": "2026-07-24T22:10:00Z"
     }
+  ],
+  "incidents_total_90d": 3,
+  "mttr_mins_90d": 18,
+  "incidents_daily": [
+    {
+      "date": "2026-07-24",
+      "degraded": 0,
+      "down": 1,
+      "down_minutes": 13,
+      "degraded_minutes": 0,
+      "corridors_affected": 1,
+      "worst": "down"
+    }
   ]
 }
 ```
@@ -179,7 +194,10 @@ curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
 |---|---|
 | `status` | Overall page state: the worst state among all corridors. |
 | `corridors[]` | Current state per corridor plus `uptime_90d_pct` (percentage of the last 90 days spent `operational`). |
-| `incidents[]` | Most recent transitions (both outages and recoveries), newest first. |
+| `incidents[]` | Most recent transitions (both outages and recoveries), newest first. For an open incident, `updates` is always an array, never `null`. |
+| `incidents_total_90d` | Number of grouped incidents in the last 90 days. |
+| `mttr_mins_90d` | Average duration in minutes for incidents in the last 90 days. |
+| `incidents_daily[]` | One daily heatmap point for the last 90 days. It includes incident counts plus impact minutes, distinct affected corridors and the worst active severity (`operational`, `degraded` or `down`). |
 
 An unknown or malformed token returns `404` — the token does not reveal
 whether an organization exists. The endpoint is rate-limited per IP.
