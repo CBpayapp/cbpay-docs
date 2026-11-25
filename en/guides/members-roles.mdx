@@ -142,9 +142,12 @@ curl -X POST "$CBPAY_API/v1/me/invites/$INVITE_ID/decline" \
   -H "Authorization: Bearer $INVITEE_SESSION"
 ```
 
-Acceptance and decline are safe to repeat: the API reports the real state
-when a concurrent decision already won. An expired invitation must be resent
-or replaced by the company owner.
+Declining is safe to repeat: the API reports the real state
+when a concurrent decision already won, without auditing a decision that did
+not happen. Re-accepting a decided invitation returns `409 invalid_state`
+instead — read the current state with `GET /v1/me/invites`. An expired
+invitation cannot be resent (resend requires `pending`); the company owner
+creates a new invitation, which supersedes the expired one.
 
 ## List, resend or revoke as the company
 
@@ -238,7 +241,7 @@ to change a primary-owned credential.
 | `accepted` | A linked company member was created. | Use member management or switch accounts. |
 | `declined` | The invitee rejected it. | Create a new invitation if needed. |
 | `revoked` | The owner cancelled it. | Create a new invitation if needed. |
-| `expired` | Seven-day validity elapsed. | Resend or create a new invitation. |
+| `expired` | Seven-day validity elapsed. | Create a new invitation (resend requires `pending`). |
 
 ## Manage members in the portal
 
@@ -303,12 +306,16 @@ field is omitted:
 curl -X POST "$CBPAY_API/v1/members" \
   -H "Authorization: Bearer $SESSION_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "X-OTP-Token: <member-add-otp>" \
   -d '{
     "email": "ops@example.com",
     "password": "another-secure-pass",
     "role": "operator"
   }'
 ```
+
+(With the default policy the OTP header is not required; accounts that
+protect `member_add` answer `otp_required` until the token is sent.)
 
 The response is the created member:
 
@@ -428,9 +435,10 @@ curl -X POST "$CBPAY_API/v1/members/$MEMBER_ID/reset-password" \
 | 403 | `switch_unavailable` | That account is not available for switching right now. |
 | 400 | `invalid_email` | Send a plain valid email address for an existing account. |
 | 400 | `idempotency_key_required` | Add `Idempotency-Key` to the invitation request. |
-| 400 | `invalid_token` | Use the token from the latest invitation email. |
-| 400 | `invalid_status` | Use `pending`, `accepted`, `declined`, `revoked` or `expired`. |
-| 401 | `not_found` | The invitation is not available in this mailbox or account context. |
+| 400 | `invalid_token` | The token has a bad format; copy it exactly from the email. |
+| 401 | `invalid_token` | Wrong or already-used token; use the token from the latest invitation email. |
+| 400 | `invalid_status` | In invitation filters use `pending`, `accepted`, `declined`, `revoked` or `expired`. |
+| 404 | `not_found` | The invitation is not available in this mailbox or account context. |
 | 409 | `idempotency_conflict` | Reuse the original payload or choose a new key. |
 | 409 | `invalid_state` | The invitation is no longer pending; read its current state. |
 | 429 | `too_many_attempts` | Wait and retry later; do not repeatedly resend invitations. |

@@ -139,9 +139,12 @@ curl -X POST "$CBPAY_API/v1/me/invites/$INVITE_ID/decline" \
   -H "Authorization: Bearer $INVITEE_SESSION"
 ```
 
-Aceptar y rechazar son seguros de repetir: si hubo una decisión concurrente,
-la API devuelve el estado real. Una invitación expirada debe reenviarse o
-reemplazarse por el owner.
+Rechazar es seguro de repetir: si hubo una decisión concurrente, la API
+devuelve el estado real sin auditar una decisión que no ocurrió. Repetir un
+accept sobre una invitación decidida devuelve `409 invalid_state` — consulta
+el estado con `GET /v1/me/invites`. Una invitación expirada no se puede
+reenviar (el resend exige `pending`); el owner crea una invitación nueva,
+que reemplaza a la expirada.
 
 ## Listar, reenviar o revocar
 
@@ -167,7 +170,8 @@ curl -X POST "$CBPAY_API/v1/members/invites/$INVITE_ID/revoke" \
 ```
 
 No existe un webhook público de invitaciones. Consulta el estado en los GET;
-al aceptar, el miembro vinculado aparece en `GET /v1/members`.
+al aceptar, el miembro vinculado aparece en `GET /v1/members`. Se envían
+avisos de seguridad al buzón correspondiente por cada decisión.
 
 ## Accesos vinculados y switcher
 
@@ -179,6 +183,29 @@ primaria: clave, email, 2FA, passkeys y vínculos sociales.
 ```bash
 curl "$CBPAY_API/v1/me/accounts" \
   -H "Authorization: Bearer $INVITEE_SESSION"
+```
+
+```json
+{
+  "accounts": [
+    {
+      "account_id": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e",
+      "type": "person",
+      "display_name": "Taylor Morgan",
+      "member_id": "3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f",
+      "role": "owner",
+      "primary": true
+    },
+    {
+      "account_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "type": "company",
+      "display_name": "Acme SpA",
+      "member_id": "9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d",
+      "role": "operator",
+      "primary": false
+    }
+  ]
+}
 ```
 
 La respuesta lista `account_id`, tipo, nombre, `member_id`, rol y si es
@@ -205,7 +232,7 @@ devuelve `primary_account_required` o `linked_login_managed_by_primary`.
 | `accepted` | Se creó el miembro vinculado. | Gestionar el miembro o cambiar de cuenta. |
 | `declined` | El invitado la rechazó. | Crear otra si aún hace falta. |
 | `revoked` | El owner la canceló. | Crear otra si aún hace falta. |
-| `expired` | Venció el plazo de siete días. | Reenviar o crear otra. |
+| `expired` | Venció el plazo de siete días. | Crear otra (el resend exige `pending`). |
 
 ## Administrar miembros en el portal
 
@@ -269,12 +296,16 @@ valor predeterminado es `operator`:
 curl -X POST "$CBPAY_API/v1/members" \
   -H "Authorization: Bearer $SESSION_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "X-OTP-Token: <member-add-otp>" \
   -d '{
     "email": "ops@example.com",
     "password": "another-secure-pass",
     "role": "operator"
   }'
 ```
+
+(Con la política por defecto el header OTP no es necesario; las cuentas que
+protegen `member_add` responden `otp_required` hasta enviar el token.)
 
 La respuesta es el miembro creado:
 
@@ -394,9 +425,10 @@ curl -X POST "$CBPAY_API/v1/members/$MEMBER_ID/reset-password" \
 | 403 | `switch_unavailable` | Esa cuenta no está disponible para cambiar ahora. |
 | 400 | `invalid_email` | Envía un email válido y simple de una cuenta existente. |
 | 400 | `idempotency_key_required` | Agrega `Idempotency-Key` a la invitación. |
-| 400 | `invalid_token` | Usa el token del email de invitación más reciente. |
-| 400 | `invalid_status` | Usa `pending`, `accepted`, `declined`, `revoked` o `expired`. |
-| 401 | `not_found` | La invitación no está disponible para este buzón o contexto. |
+| 400 | `invalid_token` | El token tiene mal formato; cópialo exacto del email. |
+| 401 | `invalid_token` | Token erróneo o ya usado; usa el del email más reciente. |
+| 400 | `invalid_status` | En filtros de invitación usa `pending`, `accepted`, `declined`, `revoked` o `expired`. |
+| 404 | `not_found` | La invitación no está disponible para este buzón o contexto. |
 | 409 | `idempotency_conflict` | Repite el payload original o elige una clave nueva. |
 | 409 | `invalid_state` | La invitación ya no está pendiente; consulta su estado. |
 | 429 | `too_many_attempts` | Espera y reintenta después; no reenvíes repetidamente. |
@@ -421,6 +453,10 @@ sociales se administran desde la primaria.
 </Accordion>
 <Accordion title="¿Dónde administro la credencial vinculada?">
 Cambia a la cuenta marcada `primary: true` en `GET /v1/me/accounts`.
+</Accordion>
+<Accordion title="¿Un owner puede reenviar o revocar una invitación aceptada?">
+No. Esas acciones solo valen mientras la invitación está `pending`. Administra
+al miembro aceptado; deshabilitarlo revoca sus sesiones.
 </Accordion>
 <Accordion title="¿Dónde llega un pago a un payee por email?">
 Siempre se abona a la cuenta persona del dueño del buzón, nunca a una empresa
