@@ -34,8 +34,6 @@ render; esta tabla sigue siendo la referencia de negocio.
 | CO | `breb` | `name`, `tax_id`/`document_value`, `document_type`, `phone`, `address`, `breb_key`, `breb_key_type` |
 | BR | `pix` | `name`, `tax_id` + (`pix_key` y `pix_key_type`) o (`bank_code` ISPB, `branch_code`, `account_number`) |
 | EC | `bank_transfer` | `name`, `document_value` (cédula), `sender_name`, `account_number` (+ `bank_code` y `account_type` si es a otro banco) |
-| EC | `deuna` | `name`, `document_value`, `sender_name`, `phone` (celular de la billetera) |
-| EC | `cash_pickup` / `cnb` | `name`, `document_value`, `sender_name` — el beneficiario retira con su documento |
 | PY | `bank_transfer` | `name` (≤35), `tax_id`, `bank_code`, `account_number` |
 | AR | `bank_transfer` | `name`, `tax_id` (CUIT/CUIL de 11 dígitos), `account_number` (CBU/CVU de 22 dígitos o alias bancario; USD solo CBU) |
 | US | `ach` / `wire` / `swift` | `name`, `account_number`, `email`, `country_code` (cualquier país), `address`, `city`, `postal_code` (+ `state` si `country_code` es `US`), `bank_name`, `bank_country` (`US` en `ach`/`wire`), `bank_code` (routing ABA para `ach`/`wire`, BIC SWIFT para `swift`; + `account_type` `CHECKING`/`SAVING` para `ach`) |
@@ -289,7 +287,7 @@ primeros 4 dígitos de la cuenta.
 </Tab>
 <Tab title="Bolivia">
 
-Transferencia ACH en BOB o USD (además del
+Transferencia bancaria en BOB (además del
 [payout QR](/es/guides/payout-special-cases#payout-qr)):
 
 ```bash
@@ -307,7 +305,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
       "bank_code": "1016",
       "account_number": "1234567890"
     },
-    "idempotency_key": "bo-ach-2204"
+    "idempotency_key": "bo-bank-2204"
   }'
 ```
 
@@ -330,8 +328,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "bank_reference": ""
 }
 ```
-
-Para USD envía `currency: "USD"` con la misma estructura. La configuración de riel de la organización decide qué versión interna atiende los payouts de Bolivia; la elección se guarda en la operación para que el sondeo posterior siga usando la versión correcta, y respuestas y webhooks se mantienen provider-agnostic.
 
 </Tab>
 <Tab title="Brasil">
@@ -413,12 +409,9 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 Remesas en **USD** (1 a 100.000 por operación, máx. 2 decimales; fuera del rango
 devuelve `amount_below_minimum`/`amount_above_maximum` y los montos mayores se
-dividen) con cuatro
-métodos: transferencia bancaria, billetera **DE UNA** (por celular),
-retiro en **ventanilla** (`cash_pickup`) y retiro en **corresponsal no
-bancario** (`cnb`). Es un corredor de remesas: además del beneficiario, el
-rail exige los datos del **ordenante** (quien envía), que van planos
-dentro del mismo `beneficiary` con prefijo `sender_*`.
+dividen) por transferencia bancaria. Es un corredor de remesas: además del
+beneficiario, el rail exige los datos del **ordenante** (quien envía), que van
+planos dentro del mismo `beneficiary` con prefijo `sender_*`.
 <CodeGroup>
 
 ```bash bank_transfer (a cuenta)
@@ -439,61 +432,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
       "sender_country": "US"
     },
     "idempotency_key": "ec-bank-4471"
-  }'
-```
-
-```bash deuna (billetera)
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "deuna",
-    "amount": "80.00",
-    "beneficiary": {
-      "name": "Lucia Paredes Mora",
-      "document_value": "0923456781",
-      "phone": "0998765432",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-deuna-5520"
-  }'
-```
-
-```bash cash_pickup (ventanilla)
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "cash_pickup",
-    "amount": "120.00",
-    "beneficiary": {
-      "name": "Miguel Zambrano Loor",
-      "document_value": "1309876543",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-cash-6612"
-  }'
-```
-
-```bash cnb (corresponsal)
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "cnb",
-    "amount": "60.00",
-    "beneficiary": {
-      "name": "Rosa Cedeño Vera",
-      "document_value": "0801234567",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-cnb-7703"
   }'
 ```
 

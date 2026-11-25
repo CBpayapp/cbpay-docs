@@ -32,8 +32,6 @@ import { EnvUrls } from "/snippets/env-urls.jsx";
 | CO | `breb` | `name`、`tax_id`/`document_value`、`document_type`、`phone`、`address`、`breb_key`、`breb_key_type` |
 | BR | `pix` | `name`、`tax_id` +（`pix_key` 和 `pix_key_type`）或（`bank_code` ISPB、`branch_code`、`account_number`） |
 | EC | `bank_transfer` | `name`、`document_value`（身份证 cédula）、`sender_name`、`account_number`（转到其他银行还需 `bank_code` 和 `account_type`） |
-| EC | `deuna` | `name`、`document_value`、`sender_name`、`phone`（钱包手机号） |
-| EC | `cash_pickup` / `cnb` | `name`、`document_value`、`sender_name` — 收款人凭证件领取现金 |
 | PY | `bank_transfer` | `name`（最多 35 个字符）、`tax_id`、`bank_code`、`account_number` |
 | AR | `bank_transfer` | `name`、`tax_id`（11 位 CUIT/CUIL）、`account_number`（22 位 CBU/CVU 或银行 alias；USD 仅支持 CBU） |
 | US | `ach` / `wire` / `swift` | `name`、`account_number`、`email`、`country_code`、`address`、`city`、`postal_code`、`bank_name`、`bank_code`（`ach`/`wire` 用 ABA routing，`swift` 用 SWIFT BIC；`ach` 还需 `account_type` `CHECKING`/`SAVING`） |
@@ -291,7 +289,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 </Tab>
 <Tab title="玻利维亚">
 
-以 BOB 或 USD 进行 ACH 转账（此外还有 [QR](/zh/guides/payout-special-cases#qr-出金)）：
+以 BOB 进行银行转账（此外还有 [QR](/zh/guides/payout-special-cases#qr-出金)）：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -308,7 +306,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
       "bank_code": "1016",
       "account_number": "1234567890"
     },
-    "idempotency_key": "bo-ach-2204"
+    "idempotency_key": "bo-bank-2204"
   }'
 ```
 
@@ -331,11 +329,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "bank_reference": ""
 }
 ```
-
-如需 USD，请发送 `currency: "USD"`，结构相同。
-
-组织配置决定内部使用的 rail 版本。该选择不是客户可控制的字段，并会保存在
-操作中，使后续轮询继续使用正确的版本。响应和 webhook 保持 provider-agnostic。
 
 </Tab>
 <Tab title="巴西">
@@ -414,9 +407,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 以 **USD** 汇出汇款（每笔 1 至 100,000，最多 2 位小数）；对于
 `EC/USD/bank_transfer`，低于 USD 1 返回 `amount_below_minimum`，高于
-USD 100,000 返回 `amount_above_maximum`，更大金额应拆分为多笔 payout；支持四种方式：
-银行转账、**DE UNA** 钱包（按手机号）、**柜台取现**（`cash_pickup`）和
-**非银行代理点取现**（`cnb`）。这是一个汇款通道：除收款人外，通道还
+USD 100,000 返回 `amount_above_maximum`，更大金额应拆分为多笔 payout；仅支持
+银行转账。这是一个汇款通道：除收款人外，通道还
 要求提供**汇款人**（付款发起方）的信息，以 `sender_*` 前缀平铺在同一个
 `beneficiary` 对象中。
 <CodeGroup>
@@ -439,61 +431,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
       "sender_country": "US"
     },
     "idempotency_key": "ec-bank-4471"
-  }'
-```
-
-```bash deuna（钱包）
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "deuna",
-    "amount": "80.00",
-    "beneficiary": {
-      "name": "Lucia Paredes Mora",
-      "document_value": "0923456781",
-      "phone": "0998765432",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-deuna-5520"
-  }'
-```
-
-```bash cash_pickup（柜台）
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "cash_pickup",
-    "amount": "120.00",
-    "beneficiary": {
-      "name": "Miguel Zambrano Loor",
-      "document_value": "1309876543",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-cash-6612"
-  }'
-```
-
-```bash cnb（代理点）
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "cnb",
-    "amount": "60.00",
-    "beneficiary": {
-      "name": "Rosa Cedeño Vera",
-      "document_value": "0801234567",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-cnb-7703"
   }'
 ```
 

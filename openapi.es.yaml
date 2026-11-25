@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.318'
+  version: '2.322'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -7534,7 +7534,7 @@ paths:
       - Corridors
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, CL/CLP bank_transfer with direct or batched dispatch, and labeled payout aliases for PY/PYG, EC/USD and BR/BRL. Organization scope receives only neutral `rail_a`, `rail_b` or `rail_c` aliases. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports labeled payout aliases (`rail_a`/`rail_b`) for PY/PYG, EC/USD and BR/BRL. BO/BOB and CL/CLP use fixed rails with no per-org selection. Payin routing uses corridor controls.
       security:
       - bearerAuth: []
       responses:
@@ -7579,11 +7579,11 @@ paths:
               $ref: '#/components/schemas/OrgRailVariantRequest'
             example:
               direction: payout
-              country: CL
-              currency: CLP
+              country: PY
+              currency: PYG
               method: bank_transfer
-              variant: batched
-              reason: Enable grouped payroll dispatch for future Chile payouts
+              variant: rail_b
+              reason: Use the fallback rail for future Paraguay payouts
       responses:
         '200':
           description: Updated variant
@@ -7594,10 +7594,10 @@ paths:
               example:
                 org_id: org_123
                 direction: payout
-                country: CL
-                currency: CLP
+                country: PY
+                currency: PYG
                 method: bank_transfer
-                variant: batched
+                variant: rail_b
         '400':
           description: Invalid variant request
           content:
@@ -7606,7 +7606,7 @@ paths:
                 invalid_variant:
                   value:
                     error: invalid_rail_variant
-                    message: variant must be legacy or v2 for BO/BOB, or direct/batched for CL/CLP
+                    message: variant must be one of the corridor rail aliases (rail_a/rail_b)
         '403':
           description: Source routing requires platform administration
           content:
@@ -7615,18 +7615,12 @@ paths:
                 error: rail_source_admin_required
                 message: source account routing is platform-admin controlled
         '503':
-          description: Routing configuration or selected source account unavailable
+          description: Routing configuration unavailable
           content:
             application/json:
-              examples:
-                variant_unavailable:
-                  value:
-                    error: rail_variants_unavailable
-                    message: rail routing configuration is temporarily unavailable
-                source_unavailable:
-                  value:
-                    error: rail_source_unavailable
-                    message: the selected source account is not configured for this organization
+              example:
+                error: rail_variants_unavailable
+                message: rail routing configuration is temporarily unavailable
   /v1/crypto/deposits/{depositID}/receipt:
     get:
       tags:
@@ -7654,7 +7648,8 @@ paths:
       tags:
       - Crypto
       operationId: createNetworkMove
-      summary: Ejecutar un cambio de red explícito del mismo activo
+      summary: Ejecutar un cambio de red explícito del mismo activo (eliminado 2026-11-25, usar convert)
+      deprecated: true
       description: 'Un cambio de red es siempre un retiro con contexto from_chain: el dinero vive una sola vez en crypto_withdrawals (mismo débito, despacho, cartola y webhooks). Idempotente por cuenta + idempotency_key; exige OTP como los retiros. Si el firewall transaccional lo retiene, la respuesta trae forma de retiro.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
@@ -7695,7 +7690,8 @@ paths:
       tags:
       - Crypto
       operationId: listNetworkMoves
-      summary: Listar cambios de red de la cuenta
+      summary: Listar cambios de red de la cuenta (eliminado 2026-11-25, usar convert)
+      deprecated: true
       parameters:
       - name: page
         in: query
@@ -7731,7 +7727,8 @@ paths:
       tags:
       - Crypto
       operationId: quoteNetworkMove
-      summary: Cotizar un cambio de red explícito del mismo activo
+      summary: Cotizar un cambio de red explícito del mismo activo (eliminado 2026-11-25, usar convert)
+      deprecated: true
       description: 'Vista previa pura (sin efectos): valida el activo y ambas redes, valoriza el fee de retiro e informa si la hot wallet de destino está configurada.'
       requestBody:
         required: true
@@ -7770,7 +7767,8 @@ paths:
       tags:
       - Crypto
       operationId: getNetworkMove
-      summary: Obtener un cambio de red por id
+      summary: Obtener un cambio de red por id (eliminado 2026-11-25, usar convert)
+      deprecated: true
       parameters:
       - name: moveID
         in: path
@@ -11197,6 +11195,43 @@ paths:
           $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/accounts:
+    get:
+      tags:
+      - Cuenta
+      operationId: listMyAccounts
+      summary: Listar mis cuentas accesibles
+      description: Cuentas vivas que el acceso en sesión puede operar (la propia primero, luego las empresas aceptadas). Solo sesiones humanas.
+      responses:
+        '200':
+          description: Cuentas.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LoginAccount'
+              example:
+                accounts:
+                - account_id: 2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e
+                  type: person
+                  display_name: Taylor Morgan
+                  member_id: 3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f
+                  role: owner
+                  primary: true
+                - account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  type: company
+                  display_name: Acme SpA
+                  member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                  role: operator
+                  primary: false
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/alias:
     put:
       tags:
@@ -11989,6 +12024,179 @@ paths:
                 message: cannot unlink the only sign-in method; set a password or link another provider first
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/me/invites:
+    get:
+      tags:
+      - Cuenta
+      operationId: listMyCompanyInvites
+      summary: Listar mis invitaciones de empresa
+      description: Invitaciones de empresa dirigidas al buzón del acceso en sesión. Solo sesiones humanas.
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: Invitaciones.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  company_name: Acme SpA
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/invites/{inviteID}/accept:
+    post:
+      tags:
+      - Cuenta
+      operationId: acceptCompanyInvite
+      summary: Aceptar una invitación de empresa
+      description: Acepta una invitación pendiente con el token del email. El buzón de la sesión debe coincidir exacto con el invitado; al aceptar se crea un acceso vinculado (misma credencial, rol propio de la empresa). Solo sesiones humanas.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              properties:
+                token:
+                  type: string
+            example:
+              token: 7f3a9c1e4b5d4e6f8a9b0c1d2e3f4a5b6c7d8e9f
+      responses:
+        '201':
+          description: Acceso vinculado creado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  account_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                  linked:
+                    type: boolean
+              example:
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                role: operator
+                linked: true
+        '401':
+          description: Token inválido o ya usado (`invalid_token`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_token
+                message: the invitation is invalid or expired
+        '410':
+          description: La invitación expiró (`invite_expired`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invite_expired
+                message: the invitation expired; ask the company to invite you again
+        '409':
+          description: Invitación ya decidida o email ya miembro.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: the invitation was already decided
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+  /v1/me/invites/{inviteID}/decline:
+    post:
+      tags:
+      - Cuenta
+      operationId: declineCompanyInvite
+      summary: Rechazar una invitación de empresa
+      description: Rechaza una invitación pendiente dirigida al acceso en sesión (idempotente, sin token). Solo sesiones humanas.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitación rechazada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: declined
+                changed: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/member:
     get:
       tags:
@@ -13026,6 +13234,81 @@ paths:
           description: Token OTP inválido o usado (`invalid_otp`).
         '403':
           description: Falta la prueba (`otp_required`), canal incorrecto (`phone_proof_required`) o requerido por la org (`policy_locked_by_org`).
+  /v1/me/switch:
+    post:
+      tags:
+      - Cuenta
+      operationId: switchAccount
+      summary: Cambiar a otra de mis cuentas
+      description: Emite una sesión fresca para otra cuenta del mismo acceso (auditado). La sesión actual no se revoca. Solo sesiones humanas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - account_id
+              properties:
+                account_id:
+                  type: string
+                  format: uuid
+            example:
+              account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      responses:
+        '200':
+          description: Sesión fresca para la cuenta destino.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                  refresh_token:
+                    type: string
+                  refresh_expires_at:
+                    type: string
+                    format: date-time
+                  account_id:
+                    type: string
+                    format: uuid
+                  member_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+              example:
+                access_token: eyJhbGciOiJIUzI1NiJ9.example
+                expires_at: '2026-11-26T12:00:00Z'
+                refresh_token: mrt_example
+                refresh_expires_at: '2027-02-23T12:00:00Z'
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                role: operator
+        '404':
+          description: Esa cuenta no es accesible por este acceso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '403':
+          description: Falta credencial de cuenta (`AccountRequired`) o cuenta no disponible para cambiar (`switch_unavailable`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: switch_unavailable
+                message: that account is not available for switching right now
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/totp:
     get:
       tags:
@@ -13173,7 +13456,7 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`).'
+        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
         schema:
           type: string
           enum:
@@ -13238,6 +13521,7 @@ paths:
                   updated_at: '2026-08-06T15:20:00Z'
                   dispatch_failed: false
                   dispatch_error: null
+                  needs_action: false
                 page: 1
                 page_size: 50
                 total: 1
@@ -13308,6 +13592,7 @@ paths:
                   updated_at: '2026-08-06T15:40:00Z'
                   dispatch_failed: false
                   dispatch_error: null
+                  needs_action: false
         '404':
           description: The review does not belong to the account.
           content:
@@ -14185,6 +14470,231 @@ paths:
               example:
                 error: company_only
                 message: members are only available for company accounts
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invite:
+    post:
+      tags:
+      - Cuenta
+      operationId: inviteCompanyMember
+      summary: Invitar una cuenta existente a la empresa
+      description: Invita a una cuenta que ya existe en la organización a operar en esta empresa como operador o lector. Solo owner, solo empresas, protegido con OTP (`member_add`) e idempotente (`Idempotency-Key`). El invitado acepta desde su propia sesión; al aceptar se crea un acceso vinculado (misma credencial, rol propio de la empresa).
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum:
+                  - operator
+                  - viewer
+            example:
+              email: ops@example.com
+              role: operator
+      responses:
+        '201':
+          description: Invitación creada (pendiente).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                invited_by: owner@example.com
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '400':
+          description: Email/rol inválido o falta `Idempotency-Key`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_role
+                message: role must be operator or viewer
+        '404':
+          description: Ninguna cuenta de la organización usa ese email (`invitee_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invitee_not_found
+                message: no account in this organization uses that email; they must create their account first
+        '409':
+          description: Invitado no listo, ya miembro o conflicto de idempotencia.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: already_member
+                message: that email already has access to this company
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites:
+    get:
+      tags:
+      - Cuenta
+      operationId: listCompanyInvites
+      summary: Listar invitaciones de la empresa
+      description: Invitaciones pendientes y decididas de la empresa que llama.
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: Invitaciones.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/resend:
+    post:
+      tags:
+      - Cuenta
+      operationId: resendCompanyInvite
+      summary: Reenviar una invitación pendiente
+      description: Rota el token, renueva la vigencia de 7 días y reenvía el email de una invitación pendiente. Solo owner, protegido con OTP (`member_add`).
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitación reenviada con token nuevo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '409':
+          description: Solo se pueden reenviar pendientes (`invalid_state`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be resent
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/revoke:
+    post:
+      tags:
+      - Cuenta
+      operationId: revokeCompanyInvite
+      summary: Revocar una invitación pendiente
+      description: Revoca una invitación pendiente de la empresa (idempotente). Solo owner, protegido con OTP (`member_add`). Se avisa al invitado.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitación revocada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: revoked
+                changed: true
+        '409':
+          description: Solo se pueden revocar pendientes (`invalid_state`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be revoked
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/members/{memberID}/reset-password:
@@ -30855,10 +31365,8 @@ components:
         variant:
           type: string
           enum:
-          - legacy
-          - v2
-          - direct
-          - batched
+          - rail_a
+          - rail_b
         source_account:
           type: string
     OrgRailVariantRequest:
@@ -30877,20 +31385,18 @@ components:
           - payout
         country:
           type: string
-          example: BO
+          example: PY
         currency:
           type: string
-          example: BOB
+          example: PYG
         method:
           type: string
           example: bank_transfer
         variant:
           type: string
           enum:
-          - legacy
-          - v2
-          - direct
-          - batched
+          - rail_a
+          - rail_b
         source_account:
           type: string
         reason:
@@ -31613,6 +32119,68 @@ components:
         created_at:
           type: string
           format: date-time
+        linked:
+          type: boolean
+          description: Verdadero cuando este acceso viene vinculado de otra cuenta (invitación multicuenta); su credencial se gestiona en la cuenta primaria.
+    CompanyInvite:
+      type: object
+      properties:
+        invite_id:
+          type: string
+          format: uuid
+        company_account_id:
+          type: string
+          format: uuid
+        company_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+          - operator
+          - viewer
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+        invited_by:
+          type: string
+        delivery:
+          type: string
+          enum:
+          - link
+          - inbox
+        expires_at:
+          type: string
+          format: date-time
+        decided_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    LoginAccount:
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        display_name:
+          type: string
+        member_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+        primary:
+          type: boolean
     ApiKeyIssued:
       type: object
       properties:

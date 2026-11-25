@@ -4,6 +4,50 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
+<Update label="25 de noviembre de 2026" description="v2.322 · 4 versiones">
+### v2.322
+**Cambiado**
+
+- Tu lista de revisiones por defecto (`GET /v1/me/txn-reviews` con
+  `status` vacío) ahora incluye también las solicitudes con un fallo de
+  despacho vigente, marcadas con `needs_action: true` y su
+  `dispatch_error`: una tarjeta o cuenta aprobada que no pudo despacharse
+  sigue visible en vez de desaparecer de la lista. Los filtros explícitos
+  conservan su semántica exacta.
+### v2.321
+**Cambiado**
+
+- Los payouts y cobros QR de Bolivia corren en un riel único fijo en BOB.
+  Los payouts y cobros QR en `BO/USD` ya no se ofrecen; usa BOB para
+  Bolivia.
+- Los payouts de Ecuador ofrecen solo `bank_transfer`. Los métodos
+  `deuna`, `cash_pickup` y `cnb` se retiraron con su riel; los contactos
+  guardados siguen funcionando para `bank_transfer`.
+- Los payouts de Chile se lotean automáticamente según el flag global de
+  nómina. Ya no existe modo de despacho por organización.
+- `PUT /v1/corridor-variants` acepta solo los aliases neutros etiquetados
+  `rail_a`/`rail_b` para PY/PYG, EC/USD y BR/BRL. `BO/BOB` y `CL/CLP`
+  se rechazan con `400 invalid_rail_variant`.
+### v2.320
+**Agregado**
+
+- El owner de una empresa ahora puede invitar a una cuenta existente de la
+  organización como operador o lector (`POST /v1/members/invite`, con OTP
+  e idempotente). El invitado revisa sus pendientes en
+  `GET /v1/me/invites` y acepta con el token del email
+  (`POST /v1/me/invites/{inviteID}/accept`); al aceptar se crea un acceso
+  vinculado que entra con la misma credencial y rol propio de la empresa.
+- Switcher de cuentas para accesos multicuenta: `GET /v1/me/accounts`
+  lista las cuentas vivas del acceso y `POST /v1/me/switch` emite una
+  sesión fresca y auditada para otra.
+- Los listados de miembros ahora exponen `linked` en los accesos
+  gestionados por una cuenta primaria; las credenciales (clave, email,
+  2FA, passkeys, vínculos sociales) se gestionan solo desde la primaria.
+### v2.319
+**Cambiado**
+
+- Breaking: los endpoints nativos de cambios de red (`POST/GET /v1/crypto/network-moves*`) se retiran y responden 410 `network_moves_removed`; usar convert. El historial de retiros no cambia (los fondos siempre vivieron ahí) y los cambios pasados se siguen viendo por esa vía.
+</Update>
 <Update label="24 de noviembre de 2026" description="v2.318 · 1 versión">
 ### v2.318
 **Cambiado**
