@@ -96,8 +96,7 @@ API 返回原邀请且不会再次发送邮件；相同 key 配不同数据会�
 
 ## 查看、接受或拒绝
 
-被邀请人使用人类会话查看邀请。支持 `status=pending|accepted|declined|
-revoked|expired`、`page` 和 `page_size`；默认 50，最大 200。
+被邀请人使用人类会话查看邀请。支持 `status=pending|accepted|declined|revoked|expired`、`page` 和 `page_size`；默认 50，最大 200。
 
 ```bash
 curl "$CBPAY_API/v1/me/invites?status=pending&page=1&page_size=50" \
@@ -129,8 +128,11 @@ curl -X POST "$CBPAY_API/v1/me/invites/$INVITE_ID/decline" \
   -H "Authorization: Bearer $INVITEE_SESSION"
 ```
 
-接受和拒绝可以安全重复；如果并发决定已经生效，API 返回真实状态。
-过期邀请必须由企业 owner 重新发送或创建。
+拒绝可以安全重复；如果并发决定已经生效，API 返回真实状态，
+且不会审计未发生的决定。重复接受已决定的邀请会返回
+`409 invalid_state`——先用 `GET /v1/me/invites` 读取当前状态。
+过期邀请无法重新发送（resend 要求 `pending`）；企业 owner 应创建
+新邀请，它会取代过期邀请。
 
 ## 企业端列出、重新发送或撤销
 
@@ -155,7 +157,8 @@ curl -X POST "$CBPAY_API/v1/members/invites/$INVITE_ID/revoke" \
 ```
 
 邀请没有公开 webhook。使用两个 GET endpoint 读取状态；接受后，关联
-成员会出现在 `GET /v1/members`。
+成员会出现在 `GET /v1/members`。每次邀请决定都会向相关邮箱发送
+安全通知。
 
 ## 关联账户与账户切换器
 
@@ -166,6 +169,29 @@ curl -X POST "$CBPAY_API/v1/members/invites/$INVITE_ID/revoke" \
 ```bash
 curl "$CBPAY_API/v1/me/accounts" \
   -H "Authorization: Bearer $INVITEE_SESSION"
+```
+
+```json
+{
+  "accounts": [
+    {
+      "account_id": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e",
+      "type": "person",
+      "display_name": "Taylor Morgan",
+      "member_id": "3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f",
+      "role": "owner",
+      "primary": true
+    },
+    {
+      "account_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "type": "company",
+      "display_name": "Acme SpA",
+      "member_id": "9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d",
+      "role": "operator",
+      "primary": false
+    }
+  ]
+}
 ```
 
 响应列出 `account_id`、类型、名称、`member_id`、角色和 `primary`。
@@ -192,7 +218,7 @@ curl -X POST "$CBPAY_API/v1/me/switch" \
 | `accepted` | 已创建关联企业成员。 | 管理成员或切换账户。 |
 | `declined` | 被邀请人拒绝。 | 需要时创建新邀请。 |
 | `revoked` | owner 已撤销。 | 需要时创建新邀请。 |
-| `expired` | 七天有效期已过。 | 重新发送或创建新邀请。 |
+| `expired` | 七天有效期已过。 | 创建新邀请（resend 要求 `pending`）。 |
 
 ## 在门户中管理成员
 
@@ -249,12 +275,16 @@ API key 会返回 `404 member_not_found`，因为 API key 不是人类成员。
 curl -X POST "$CBPAY_API/v1/members" \
   -H "Authorization: Bearer $SESSION_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "X-OTP-Token: <member-add-otp>" \
   -d '{
     "email": "ops@example.com",
     "password": "another-secure-pass",
     "role": "operator"
   }'
 ```
+
+（默认策略下不需要 OTP header；保护 `member_add` 的账户会返回
+`otp_required`，直到提交令牌。）
 
 响应会返回创建的成员：
 
@@ -373,9 +403,10 @@ curl -X POST "$CBPAY_API/v1/members/$MEMBER_ID/reset-password" \
 | 403 | `switch_unavailable` | 该账户目前无法切换。 |
 | 400 | `invalid_email` | 发送现有账户的有效邮箱地址。 |
 | 400 | `idempotency_key_required` | 在邀请请求中添加 `Idempotency-Key`。 |
-| 400 | `invalid_token` | 使用最新邀请邮件中的令牌。 |
-| 400 | `invalid_status` | 使用 `pending`、`accepted`、`declined`、`revoked` 或 `expired`。 |
-| 401 | `not_found` | 当前邮箱或账户上下文无法访问该邀请。 |
+| 400 | `invalid_token` | 令牌格式错误；请从邮件中原样复制。 |
+| 401 | `invalid_token` | 令牌错误或已使用；请使用最新邮件中的令牌。 |
+| 400 | `invalid_status` | 在邀请筛选中使用 `pending`、`accepted`、`declined`、`revoked` 或 `expired`。 |
+| 404 | `not_found` | 当前邮箱或账户上下文无法访问该邀请。 |
 | 409 | `idempotency_conflict` | 重用原 payload，或选择新的 key。 |
 | 409 | `invalid_state` | 邀请不再是 pending；先读取当前状态。 |
 | 429 | `too_many_attempts` | 稍后再试，不要反复重新发送。 |
@@ -394,5 +425,8 @@ curl -X POST "$CBPAY_API/v1/members/$MEMBER_ID/reset-password" \
 passkey 和社交关联只能在主账户中管理。
 #### 在哪里管理关联凭证？
 在 `GET /v1/me/accounts` 中找到 `primary: true` 的账户并切换过去。
+#### owner 可以重发或撤销已接受的邀请吗？
+不可以。这些操作仅在邀请为 `pending` 时有效。请改为管理已接受成员；
+禁用成员会撤销其会话。
 #### 通过邮箱付款的 payee 收款到哪里？
 始终记入邮箱持有人的个人账户，而不是该用户操作的企业账户。

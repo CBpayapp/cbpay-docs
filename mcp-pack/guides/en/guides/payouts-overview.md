@@ -69,9 +69,9 @@ Available corridors and methods:
 | Peru | PEN | `bank_transfer`, `yape` |
 | Mexico | MXN | `bank_transfer` (SPEI: CLABE or debit card) |
 | Venezuela | VES | `bank_transfer`, `pago_movil` |
-| Bolivia | BOB / USD | `bank_transfer`, `qr` (see [QR payout](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)) |
+| Bolivia | BOB | `bank_transfer`, `qr` (see [QR payout](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)) |
 | Brazil | BRL | `pix` (by key or to account), `qr` (PIX QR — see [QR payout](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)) |
-| Ecuador | USD | `bank_transfer`, `deuna`, `cash_pickup`, `cnb` |
+| Ecuador | USD | `bank_transfer` |
 | Paraguay | PYG | `bank_transfer` |
 | Argentina | ARS / USD | `bank_transfer` (CBU or CVU) |
 | Colombia | COP | `bank_transfer` (integer amounts, no decimals), `breb` |

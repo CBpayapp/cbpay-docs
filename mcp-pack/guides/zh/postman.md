@@ -9,7 +9,7 @@ source_url: https://docs.cbpayapp.com/zh/postman
 
 - **CBPay API — Postman 集合** - 下载 `cbpay-api.postman_collection.json`（v2.1）
 
-> **集合更新时间：** 2026-11-25 12:22 UTC · 539 个请求 · 版本 `73e1f67de43c`
+> **集合更新时间：** 2026-11-25 16:44 UTC · 539 个请求 · 版本 `b5c0c9701f85`
 
 ## 如何使用
 

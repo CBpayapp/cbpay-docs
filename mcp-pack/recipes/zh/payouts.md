@@ -66,9 +66,9 @@ curl https://api.qbank.cl/platform/v1/payouts/methods \
 | 秘鲁 | PEN | `bank_transfer`、`yape` |
 | 墨西哥 | MXN | `bank_transfer`（SPEI：CLABE 或借记卡） |
 | 委内瑞拉 | VES | `bank_transfer`、`pago_movil` |
-| 玻利维亚 | BOB / USD | `bank_transfer`、`qr`（参见 [QR 出金](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)） |
+| 玻利维亚 | BOB | `bank_transfer`、`qr`（参见 [QR 出金](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)） |
 | 巴西 | BRL | `pix`（按密钥或到账户）、`qr`（PIX 二维码 —— 参见 [QR 出金](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)） |
-| 厄瓜多尔 | USD | `bank_transfer`、`deuna`、`cash_pickup`、`cnb` |
+| 厄瓜多尔 | USD | `bank_transfer` |
 | 巴拉圭 | PYG | `bank_transfer` |
 | 阿根廷 | ARS / USD | `bank_transfer`（CBU 或 CVU） |
 | 哥伦比亚 | COP | `bank_transfer`（整数金额，无小数）、`breb` |
