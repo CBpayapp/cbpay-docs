@@ -5,6 +5,23 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.320 · 2 个版本 - 2026年11月25日
+### v2.320
+**变更**
+
+- Breaking：原生跨链转账端点（`POST/GET /v1/crypto/network-moves*`）已下线，统一返回 410 `network_moves_removed`；请改用 convert。提现历史不受影响（资金始终记在提现下），历史跨链记录仍可通过该途径查看。
+### v2.319
+**新增**
+
+- 企业所有者现在可以邀请组织中的现有账户担任操作员或只读成员
+  （`POST /v1/members/invite`，OTP 保护且幂等）。被邀请人在
+  `GET /v1/me/invites` 中查看待处理邀请，并用邮件令牌接受
+  （`POST /v1/me/invites/{inviteID}/accept`）；接受后创建关联登录，
+  使用同一凭据登录并拥有企业级角色。
+- 多账户登录的账户切换器：`GET /v1/me/accounts` 列出该登录的有效账户，
+  `POST /v1/me/switch` 为另一个账户签发全新且已审计的会话。
+- 成员列表现在对由主账户管理的登录返回 `linked`；凭据（密码、邮箱、
+  双重认证、通行密钥、社交关联）只能在主账户中管理。
 ## v2.318 · 1 个版本 - 2026年11月24日
 ### v2.318
 **变更**

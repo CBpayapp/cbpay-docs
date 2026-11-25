@@ -5,6 +5,27 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.320 · 2 versions - November 25, 2026
+### v2.320
+**Changed**
+
+- Breaking: the native network-moves endpoints (`POST/GET /v1/crypto/network-moves*`) are retired and answer 410 `network_moves_removed`; use convert instead. Withdrawal history is untouched (funds always lived in withdrawals) and past moves keep working through it.
+### v2.319
+**Added**
+
+- Company owners can now invite an existing account of the organization as
+  operator or viewer (`POST /v1/members/invite`, OTP-protected and
+  idempotent). The invitee reviews pending invitations at
+  `GET /v1/me/invites` and accepts with the email token
+  (`POST /v1/me/invites/{inviteID}/accept`); on accept a linked login is
+  created that signs in with the same credential and holds a
+  company-scoped role.
+- Account switcher for multi-account logins: `GET /v1/me/accounts` lists
+  the live accounts of the login and `POST /v1/me/switch` issues a fresh
+  audited session for another one.
+- Member listings now expose `linked` for logins managed by a primary
+  account; credentials (password, email, 2FA, passkeys, social links) are
+  managed from the primary account only.
 ## v2.318 · 1 version - November 24, 2026
 ### v2.318
 **Changed**

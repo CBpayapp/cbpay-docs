@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.318'
+  version: '2.320'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -7632,7 +7632,8 @@ paths:
       tags:
       - Crypto
       operationId: createNetworkMove
-      summary: 执行同资产跨链转账
+      summary: 执行同资产跨链转账(已于 2026-11-25 下线:请用 convert)
+      deprecated: true
       description: 跨链转账恒为一次带 from_chain 上下文的提现：资金只在 crypto_withdrawals 中记一次（相同的扣款、广播、对账单与 webhook）。按账户 + idempotency_key 幂等；与提现一样需要 OTP。若被交易防火墙拦截，响应为提现形态。
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
@@ -7673,7 +7674,8 @@ paths:
       tags:
       - Crypto
       operationId: listNetworkMoves
-      summary: 列出账户的跨链转账
+      summary: 列出账户的跨链转账(已于 2026-11-25 下线:请用 convert)
+      deprecated: true
       parameters:
       - name: page
         in: query
@@ -7709,7 +7711,8 @@ paths:
       tags:
       - Crypto
       operationId: quoteNetworkMove
-      summary: 为同资产跨链转账获取报价
+      summary: 为同资产跨链转账获取报价(已于 2026-11-25 下线:请用 convert)
+      deprecated: true
       description: 纯预览（无副作用）：校验资产与两条链，计算提现手续费，并报告目标热钱包是否已配置。
       requestBody:
         required: true
@@ -7748,7 +7751,8 @@ paths:
       tags:
       - Crypto
       operationId: getNetworkMove
-      summary: 按 id 获取跨链转账
+      summary: 按 id 获取跨链转账(已于 2026-11-25 下线:请用 convert)
+      deprecated: true
       parameters:
       - name: moveID
         in: path
@@ -11175,6 +11179,43 @@ paths:
           $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/accounts:
+    get:
+      tags:
+      - 账户
+      operationId: listMyAccounts
+      summary: 列出我可访问的账户
+      description: 当前登录可运营的有效账户（自己的账户在前，其次是已接受的企业）。仅限人工会话。
+      responses:
+        '200':
+          description: 账户列表。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LoginAccount'
+              example:
+                accounts:
+                - account_id: 2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e
+                  type: person
+                  display_name: Taylor Morgan
+                  member_id: 3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f
+                  role: owner
+                  primary: true
+                - account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f-2a3b4c5d6e7f
+                  type: company
+                  display_name: Acme SpA
+                  member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                  role: operator
+                  primary: false
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/alias:
     put:
       tags:
@@ -11967,6 +12008,179 @@ paths:
                 message: cannot unlink the only sign-in method; set a password or link another provider first
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/me/invites:
+    get:
+      tags:
+      - 账户
+      operationId: listMyCompanyInvites
+      summary: 列出我的企业邀请
+      description: 发给当前登录邮箱的企业邀请。仅限人工会话。
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: 邀请列表。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  company_name: Acme SpA
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/invites/{inviteID}/accept:
+    post:
+      tags:
+      - 账户
+      operationId: acceptCompanyInvite
+      summary: 接受企业邀请
+      description: 用邮件中的令牌接受待处理邀请。会话邮箱必须与被邀请邮箱完全一致；接受后创建关联登录（同一凭据，企业级角色）。仅限人工会话。
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              properties:
+                token:
+                  type: string
+            example:
+              token: 7f3a9c1e4b5d4e6f8a9b0c1d2e3f4a5b6c7d8e9f
+      responses:
+        '201':
+          description: 关联登录已创建。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  account_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                  linked:
+                    type: boolean
+              example:
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                role: operator
+                linked: true
+        '401':
+          description: 令牌无效或已使用（`invalid_token`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_token
+                message: the invitation is invalid or expired
+        '410':
+          description: 邀请已过期（`invite_expired`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invite_expired
+                message: the invitation expired; ask the company to invite you again
+        '409':
+          description: 邀请已决定或邮箱已是成员。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: the invitation was already decided
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+  /v1/me/invites/{inviteID}/decline:
+    post:
+      tags:
+      - 账户
+      operationId: declineCompanyInvite
+      summary: 拒绝企业邀请
+      description: 拒绝发给当前登录的待处理邀请（幂等，无需令牌）。仅限人工会话。
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 邀请已拒绝。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: declined
+                changed: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/member:
     get:
       tags:
@@ -13004,6 +13218,81 @@ paths:
           description: OTP 令牌无效或已使用(`invalid_otp`)。
         '403':
           description: 缺少证明(`otp_required`)、渠道错误(`phone_proof_required`)或被组织强制要求(`policy_locked_by_org`)。
+  /v1/me/switch:
+    post:
+      tags:
+      - 账户
+      operationId: switchAccount
+      summary: 切换到我的另一个账户
+      description: 为同一登录的另一个账户签发全新会话（已审计）。当前会话不会被撤销。仅限人工会话。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - account_id
+              properties:
+                account_id:
+                  type: string
+                  format: uuid
+            example:
+              account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      responses:
+        '200':
+          description: 目标账户的全新会话。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                  refresh_token:
+                    type: string
+                  refresh_expires_at:
+                    type: string
+                    format: date-time
+                  account_id:
+                    type: string
+                    format: uuid
+                  member_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+              example:
+                access_token: eyJhbGciOiJIUzI1NiJ9.example
+                expires_at: '2026-11-26T12:00:00Z'
+                refresh_token: mrt_example
+                refresh_expires_at: '2027-02-23T12:00:00Z'
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                role: operator
+        '404':
+          description: 此登录无法访问该账户。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '403':
+          description: 缺少账户凭据（`AccountRequired`）或账户目前无法切换（`switch_unavailable`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: switch_unavailable
+                message: that account is not available for switching right now
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/totp:
     get:
       tags:
@@ -14163,6 +14452,231 @@ paths:
               example:
                 error: company_only
                 message: members are only available for company accounts
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invite:
+    post:
+      tags:
+      - 账户
+      operationId: inviteCompanyMember
+      summary: 邀请现有账户加入企业
+      description: 邀请组织中已有的账户以操作员或只读成员身份在企业中运营。仅限所有者、仅限企业账户、OTP 保护（`member_add`）且幂等（`Idempotency-Key`）。被邀请人从自己的会话中接受；接受后创建关联登录（同一凭据，企业级角色）。
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum:
+                  - operator
+                  - viewer
+            example:
+              email: ops@example.com
+              role: operator
+      responses:
+        '201':
+          description: 邀请已创建（待处理）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                invited_by: owner@example.com
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '400':
+          description: 邮箱/角色无效或缺少 `Idempotency-Key`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_role
+                message: role must be operator or viewer
+        '404':
+          description: 组织中没有使用该邮箱的账户（`invitee_not_found`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invitee_not_found
+                message: no account in this organization uses that email; they must create their account first
+        '409':
+          description: 被邀请人尚未就绪、已是成员或幂等冲突。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: already_member
+                message: that email already has access to this company
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites:
+    get:
+      tags:
+      - 账户
+      operationId: listCompanyInvites
+      summary: 列出企业邀请
+      description: 调用方企业的待处理和已决定邀请。
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: 邀请列表。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/resend:
+    post:
+      tags:
+      - 账户
+      operationId: resendCompanyInvite
+      summary: 重发待处理邀请
+      description: 轮换令牌、续期 7 天有效期并重发待处理邀请的邮件。仅限所有者、OTP 保护（`member_add`）。
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 邀请已重发（新令牌）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '409':
+          description: 只能重发待处理邀请（`invalid_state`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be resent
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/revoke:
+    post:
+      tags:
+      - 账户
+      operationId: revokeCompanyInvite
+      summary: 撤销待处理邀请
+      description: 撤销企业的待处理邀请（幂等）。仅限所有者、OTP 保护（`member_add`）。会通知被邀请人。
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 邀请已撤销。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: revoked
+                changed: true
+        '409':
+          description: 只能撤销待处理邀请（`invalid_state`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be revoked
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/members/{memberID}/reset-password:
@@ -31652,6 +32166,68 @@ components:
         created_at:
           type: string
           format: date-time
+        linked:
+          type: boolean
+          description: 当此登录来自其他账户的邀请（多账户邀请）时为 true；其凭据在主账户中管理。
+    CompanyInvite:
+      type: object
+      properties:
+        invite_id:
+          type: string
+          format: uuid
+        company_account_id:
+          type: string
+          format: uuid
+        company_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+          - operator
+          - viewer
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+        invited_by:
+          type: string
+        delivery:
+          type: string
+          enum:
+          - link
+          - inbox
+        expires_at:
+          type: string
+          format: date-time
+        decided_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    LoginAccount:
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        display_name:
+          type: string
+        member_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+        primary:
+          type: boolean
     ApiKeyIssued:
       type: object
       properties:
