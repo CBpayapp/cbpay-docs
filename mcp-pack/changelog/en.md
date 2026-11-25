@@ -5,12 +5,30 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.320 · 2 versions - November 25, 2026
-### v2.320
+## v2.322 · 4 versions - November 25, 2026
+### v2.322
 **Changed**
 
-- Breaking: the native network-moves endpoints (`POST/GET /v1/crypto/network-moves*`) are retired and answer 410 `network_moves_removed`; use convert instead. Withdrawal history is untouched (funds always lived in withdrawals) and past moves keep working through it.
-### v2.319
+- Your default review list (`GET /v1/me/txn-reviews` with empty `status`)
+  now also includes requests with a vigente dispatch failure, flagged
+  `needs_action: true` with their `dispatch_error`: an approved card or
+  banking request that could not be dispatched stays visible instead of
+  disappearing from the list. Explicit filters keep their exact semantics.
+### v2.321
+**Changed**
+
+- Bolivia payouts and QR collections run on a single fixed rail in BOB.
+  `BO/USD` payouts and QR payins are no longer offered; send BOB for
+  Bolivia.
+- Ecuador payouts offer `bank_transfer` only. The `deuna`, `cash_pickup`
+  and `cnb` methods were retired with their rail; stored contacts keep
+  working for `bank_transfer`.
+- Chile payouts batch automatically under the global payroll-batch flag.
+  There is no per-organization dispatch mode anymore.
+- `PUT /v1/corridor-variants` accepts only the neutral labeled aliases
+  `rail_a`/`rail_b` for PY/PYG, EC/USD and BR/BRL. `BO/BOB` and `CL/CLP`
+  are rejected with `400 invalid_rail_variant`.
+### v2.320
 **Added**
 
 - Company owners can now invite an existing account of the organization as
@@ -26,6 +44,10 @@ source_url: https://docs.cbpayapp.com/en/changelog
 - Member listings now expose `linked` for logins managed by a primary
   account; credentials (password, email, 2FA, passkeys, social links) are
   managed from the primary account only.
+### v2.319
+**Changed**
+
+- Breaking: the native network-moves endpoints (`POST/GET /v1/crypto/network-moves*`) are retired and answer 410 `network_moves_removed`; use convert instead. Withdrawal history is untouched (funds always lived in withdrawals) and past moves keep working through it.
 ## v2.318 · 1 version - November 24, 2026
 ### v2.318
 **Changed**

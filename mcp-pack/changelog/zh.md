@@ -5,12 +5,27 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.320 · 2 个版本 - 2026年11月25日
-### v2.320
+## v2.322 · 4 个版本 - 2026年11月25日
+### v2.322
+**已更改**
+
+- 默认审核列表（`status` 为空的 `GET /v1/me/txn-reviews`）现在也会包含存在
+  有效 dispatch 失败的请求，以 `needs_action: true` 及 `dispatch_error`
+  标记：已批准但未能派发的卡或银行申请会继续可见，而不会从列表中消失。
+  显式过滤器保持其精确语义。
+### v2.321
 **变更**
 
-- Breaking：原生跨链转账端点（`POST/GET /v1/crypto/network-moves*`）已下线，统一返回 410 `network_moves_removed`；请改用 convert。提现历史不受影响（资金始终记在提现下），历史跨链记录仍可通过该途径查看。
-### v2.319
+- 玻利维亚 payout 与 QR 收款运行在唯一的 BOB 固定轨道上。
+  不再提供 `BO/USD` payout 与 QR payin；玻利维亚请使用 BOB。
+- 厄瓜多尔 payout 仅提供 `bank_transfer`。`deuna`、`cash_pickup` 和
+  `cnb` 已随其轨道退役；已保存的联系人仍可用于 `bank_transfer`。
+- 智利 payout 根据全局工资单批量 flag 自动成批处理，不再有按组织的
+  派发模式。
+- `PUT /v1/corridor-variants` 仅接受 PY/PYG、EC/USD 和 BR/BRL 的中性
+  标签 alias `rail_a`/`rail_b`。`BO/BOB` 与 `CL/CLP` 会返回
+  `400 invalid_rail_variant`。
+### v2.320
 **新增**
 
 - 企业所有者现在可以邀请组织中的现有账户担任操作员或只读成员
@@ -22,6 +37,10 @@ source_url: https://docs.cbpayapp.com/zh/changelog
   `POST /v1/me/switch` 为另一个账户签发全新且已审计的会话。
 - 成员列表现在对由主账户管理的登录返回 `linked`；凭据（密码、邮箱、
   双重认证、通行密钥、社交关联）只能在主账户中管理。
+### v2.319
+**变更**
+
+- Breaking：原生跨链转账端点（`POST/GET /v1/crypto/network-moves*`）已下线，统一返回 410 `network_moves_removed`；请改用 convert。提现历史不受影响（资金始终记在提现下），历史跨链记录仍可通过该途径查看。
 ## v2.318 · 1 个版本 - 2026年11月24日
 ### v2.318
 **变更**

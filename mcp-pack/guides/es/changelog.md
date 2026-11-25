@@ -5,12 +5,31 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.320 · 2 versiones - 25 de noviembre de 2026
-### v2.320
+## v2.322 · 4 versiones - 25 de noviembre de 2026
+### v2.322
 **Cambiado**
 
-- Breaking: los endpoints nativos de cambios de red (`POST/GET /v1/crypto/network-moves*`) se retiran y responden 410 `network_moves_removed`; usar convert. El historial de retiros no cambia (los fondos siempre vivieron ahí) y los cambios pasados se siguen viendo por esa vía.
-### v2.319
+- Tu lista de revisiones por defecto (`GET /v1/me/txn-reviews` con
+  `status` vacío) ahora incluye también las solicitudes con un fallo de
+  despacho vigente, marcadas con `needs_action: true` y su
+  `dispatch_error`: una tarjeta o cuenta aprobada que no pudo despacharse
+  sigue visible en vez de desaparecer de la lista. Los filtros explícitos
+  conservan su semántica exacta.
+### v2.321
+**Cambiado**
+
+- Los payouts y cobros QR de Bolivia corren en un riel único fijo en BOB.
+  Los payouts y cobros QR en `BO/USD` ya no se ofrecen; usa BOB para
+  Bolivia.
+- Los payouts de Ecuador ofrecen solo `bank_transfer`. Los métodos
+  `deuna`, `cash_pickup` y `cnb` se retiraron con su riel; los contactos
+  guardados siguen funcionando para `bank_transfer`.
+- Los payouts de Chile se lotean automáticamente según el flag global de
+  nómina. Ya no existe modo de despacho por organización.
+- `PUT /v1/corridor-variants` acepta solo los aliases neutros etiquetados
+  `rail_a`/`rail_b` para PY/PYG, EC/USD y BR/BRL. `BO/BOB` y `CL/CLP`
+  se rechazan con `400 invalid_rail_variant`.
+### v2.320
 **Agregado**
 
 - El owner de una empresa ahora puede invitar a una cuenta existente de la
@@ -25,6 +44,10 @@ source_url: https://docs.cbpayapp.com/es/changelog
 - Los listados de miembros ahora exponen `linked` en los accesos
   gestionados por una cuenta primaria; las credenciales (clave, email,
   2FA, passkeys, vínculos sociales) se gestionan solo desde la primaria.
+### v2.319
+**Cambiado**
+
+- Breaking: los endpoints nativos de cambios de red (`POST/GET /v1/crypto/network-moves*`) se retiran y responden 410 `network_moves_removed`; usar convert. El historial de retiros no cambia (los fondos siempre vivieron ahí) y los cambios pasados se siguen viendo por esa vía.
 ## v2.318 · 1 versión - 24 de noviembre de 2026
 ### v2.318
 **Cambiado**

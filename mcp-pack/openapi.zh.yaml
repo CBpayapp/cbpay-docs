@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.320'
+  version: '2.322'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -7512,7 +7512,7 @@ paths:
       - Corridors
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, CL/CLP bank_transfer with direct or batched dispatch, and labeled payout aliases for PY/PYG, EC/USD and BR/BRL. Organization scope receives only neutral `rail_a`, `rail_b` or `rail_c` aliases. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports labeled payout aliases (`rail_a`/`rail_b`) for PY/PYG, EC/USD and BR/BRL. BO/BOB and CL/CLP use fixed rails with no per-org selection. Payin routing uses corridor controls.
       security:
       - bearerAuth: []
       responses:
@@ -7557,11 +7557,11 @@ paths:
               $ref: '#/components/schemas/OrgRailVariantRequest'
             example:
               direction: payout
-              country: CL
-              currency: CLP
+              country: PY
+              currency: PYG
               method: bank_transfer
-              variant: batched
-              reason: Enable grouped payroll dispatch for future Chile payouts
+              variant: rail_b
+              reason: Use the fallback rail for future Paraguay payouts
       responses:
         '200':
           description: Updated variant
@@ -7572,10 +7572,10 @@ paths:
               example:
                 org_id: org_123
                 direction: payout
-                country: CL
-                currency: CLP
+                country: PY
+                currency: PYG
                 method: bank_transfer
-                variant: batched
+                variant: rail_b
         '400':
           description: Invalid variant request
           content:
@@ -7584,7 +7584,7 @@ paths:
                 invalid_variant:
                   value:
                     error: invalid_rail_variant
-                    message: variant must be legacy or v2 for BO/BOB, or direct/batched for CL/CLP
+                    message: variant must be one of the corridor rail aliases (rail_a/rail_b)
         '403':
           description: Source routing requires platform administration
           content:
@@ -7593,18 +7593,12 @@ paths:
                 error: rail_source_admin_required
                 message: source account routing is platform-admin controlled
         '503':
-          description: Routing configuration or selected source account unavailable
+          description: Routing configuration unavailable
           content:
             application/json:
-              examples:
-                variant_unavailable:
-                  value:
-                    error: rail_variants_unavailable
-                    message: rail routing configuration is temporarily unavailable
-                source_unavailable:
-                  value:
-                    error: rail_source_unavailable
-                    message: the selected source account is not configured for this organization
+              example:
+                error: rail_variants_unavailable
+                message: rail routing configuration is temporarily unavailable
   /v1/crypto/deposits/{depositID}/receipt:
     get:
       tags:
@@ -13440,7 +13434,7 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`).'
+        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
         schema:
           type: string
           enum:
@@ -13505,6 +13499,7 @@ paths:
                   updated_at: '2026-08-06T15:20:00Z'
                   dispatch_failed: false
                   dispatch_error: null
+                  needs_action: false
                 page: 1
                 page_size: 50
                 total: 1
@@ -13575,6 +13570,7 @@ paths:
                   updated_at: '2026-08-06T15:40:00Z'
                   dispatch_failed: false
                   dispatch_error: null
+                  needs_action: false
         '404':
           description: The review does not belong to the account.
           content:
@@ -31229,10 +31225,8 @@ components:
         variant:
           type: string
           enum:
-          - legacy
-          - v2
-          - direct
-          - batched
+          - rail_a
+          - rail_b
         source_account:
           type: string
     OrgRailVariantRequest:
@@ -31251,20 +31245,18 @@ components:
           - payout
         country:
           type: string
-          example: BO
+          example: PY
         currency:
           type: string
-          example: BOB
+          example: PYG
         method:
           type: string
           example: bank_transfer
         variant:
           type: string
           enum:
-          - legacy
-          - v2
-          - direct
-          - batched
+          - rail_a
+          - rail_b
         source_account:
           type: string
         reason:
