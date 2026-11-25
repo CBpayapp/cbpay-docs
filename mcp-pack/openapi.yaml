@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.318'
+  version: '2.320'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -7627,7 +7627,8 @@ paths:
       tags:
       - Crypto
       operationId: createNetworkMove
-      summary: Execute an explicit same-asset network move
+      summary: Execute an explicit same-asset network move (removed 2026-11-25, use convert)
+      deprecated: true
       description: 'A network move is always a withdrawal with from_chain context: the money lives once in crypto_withdrawals (same debit, dispatch, statement and webhooks). Idempotent by account + idempotency_key; OTP required like withdrawals. If held by the transaction firewall, the response carries the withdrawal shape.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
@@ -7668,7 +7669,8 @@ paths:
       tags:
       - Crypto
       operationId: listNetworkMoves
-      summary: List account network moves
+      summary: List account network moves (removed 2026-11-25, use convert)
+      deprecated: true
       parameters:
       - name: page
         in: query
@@ -7704,7 +7706,8 @@ paths:
       tags:
       - Crypto
       operationId: quoteNetworkMove
-      summary: Quote an explicit same-asset network move
+      summary: Quote an explicit same-asset network move (removed 2026-11-25, use convert)
+      deprecated: true
       description: 'Pure preview (no side effects): validates the asset and both chains, prices the withdrawal fee and reports whether the destination hot wallet is configured.'
       requestBody:
         required: true
@@ -7743,7 +7746,8 @@ paths:
       tags:
       - Crypto
       operationId: getNetworkMove
-      summary: Get one network move by id
+      summary: Get one network move by id (removed 2026-11-25, use convert)
+      deprecated: true
       parameters:
       - name: moveID
         in: path
@@ -11187,6 +11191,43 @@ paths:
           $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/me/accounts:
+    get:
+      tags:
+      - Account
+      operationId: listMyAccounts
+      summary: List my accessible accounts
+      description: Live accounts the calling login can operate (own account first, then accepted companies). Human sessions only.
+      responses:
+        '200':
+          description: Accounts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LoginAccount'
+              example:
+                accounts:
+                - account_id: 2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e
+                  type: person
+                  display_name: Taylor Morgan
+                  member_id: 3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f
+                  role: owner
+                  primary: true
+                - account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  type: company
+                  display_name: Acme SpA
+                  member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                  role: operator
+                  primary: false
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/alias:
     put:
       tags:
@@ -11982,6 +12023,179 @@ paths:
                 message: cannot unlink the only sign-in method; set a password or link another provider first
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/me/invites:
+    get:
+      tags:
+      - Account
+      operationId: listMyCompanyInvites
+      summary: List my company invitations
+      description: "Company invitations addressed to the calling login's mailbox. Human sessions only."
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: Invitations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  company_name: Acme SpA
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/invites/{inviteID}/accept:
+    post:
+      tags:
+      - Account
+      operationId: acceptCompanyInvite
+      summary: Accept a company invitation
+      description: Accepts a pending invitation with the token from the email. The session mailbox must exactly match the invited email; on success a linked login is created (same credential, company-scoped role). Human sessions only.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              properties:
+                token:
+                  type: string
+            example:
+              token: 7f3a9c1e4b5d4e6f8a9b0c1d2e3f4a5b6c7d8e9f
+      responses:
+        '201':
+          description: Linked login created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  account_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                  linked:
+                    type: boolean
+              example:
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                role: operator
+                linked: true
+        '401':
+          description: Invalid or already-used token (`invalid_token`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_token
+                message: the invitation is invalid or expired
+        '410':
+          description: The invitation expired (`invite_expired`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invite_expired
+                message: the invitation expired; ask the company to invite you again
+        '409':
+          description: Invitation already decided or email already a member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: the invitation was already decided
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+  /v1/me/invites/{inviteID}/decline:
+    post:
+      tags:
+      - Account
+      operationId: declineCompanyInvite
+      summary: Decline a company invitation
+      description: Declines a pending invitation addressed to the calling login (idempotent, no token needed). Human sessions only.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitation declined.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: declined
+                changed: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/member:
     get:
       tags:
@@ -13019,6 +13233,81 @@ paths:
           description: Invalid or used OTP token (`invalid_otp`).
         '403':
           description: Missing proof (`otp_required`), wrong channel (`phone_proof_required`) or required by org (`policy_locked_by_org`).
+  /v1/me/switch:
+    post:
+      tags:
+      - Account
+      operationId: switchAccount
+      summary: Switch to another of my accounts
+      description: Issues a fresh session for another account of the same login (audited). The current session is not revoked. Human sessions only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - account_id
+              properties:
+                account_id:
+                  type: string
+                  format: uuid
+            example:
+              account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      responses:
+        '200':
+          description: Fresh session for the target account.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                  refresh_token:
+                    type: string
+                  refresh_expires_at:
+                    type: string
+                    format: date-time
+                  account_id:
+                    type: string
+                    format: uuid
+                  member_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+              example:
+                access_token: eyJhbGciOiJIUzI1NiJ9.example
+                expires_at: '2026-11-26T12:00:00Z'
+                refresh_token: mrt_example
+                refresh_expires_at: '2027-02-23T12:00:00Z'
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                role: operator
+        '404':
+          description: That account is not accessible by this login.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '403':
+          description: Account credential missing (`AccountRequired`) or account unavailable for switching (`switch_unavailable`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: switch_unavailable
+                message: that account is not available for switching right now
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/totp:
     get:
       tags:
@@ -14178,6 +14467,231 @@ paths:
               example:
                 error: company_only
                 message: members are only available for company accounts
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invite:
+    post:
+      tags:
+      - Account
+      operationId: inviteCompanyMember
+      summary: Invite an existing account to the company
+      description: Invites an account that already exists in the organization to operate in this company as operator or viewer. Owner-only, company accounts only, OTP-protected (`member_add`) and idempotent (`Idempotency-Key`). The invitee accepts from their own session; on accept a linked login is created (same credential, company-scoped role).
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum:
+                  - operator
+                  - viewer
+            example:
+              email: ops@example.com
+              role: operator
+      responses:
+        '201':
+          description: Invitation created (pending).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                invited_by: owner@example.com
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '400':
+          description: Invalid email/role or missing `Idempotency-Key`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_role
+                message: role must be operator or viewer
+        '404':
+          description: No account in the organization uses that email (`invitee_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invitee_not_found
+                message: no account in this organization uses that email; they must create their account first
+        '409':
+          description: Invitee not ready, already a member, or idempotency conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: already_member
+                message: that email already has access to this company
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites:
+    get:
+      tags:
+      - Account
+      operationId: listCompanyInvites
+      summary: List company invitations
+      description: Pending and decided invitations of the calling company account.
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: Invitations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/resend:
+    post:
+      tags:
+      - Account
+      operationId: resendCompanyInvite
+      summary: Resend a pending invitation
+      description: Rotates the token, renews the 7-day validity and re-sends the email of a pending invitation. Owner-only, OTP-protected (`member_add`).
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitation resent with a fresh token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '409':
+          description: Only pending invitations can be resent (`invalid_state`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be resent
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/revoke:
+    post:
+      tags:
+      - Account
+      operationId: revokeCompanyInvite
+      summary: Revoke a pending invitation
+      description: Revokes a pending company invitation (idempotent). Owner-only, OTP-protected (`member_add`). The invitee is notified.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitation revoked.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: revoked
+                changed: true
+        '409':
+          description: Only pending invitations can be revoked (`invalid_state`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be revoked
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/members/{memberID}/reset-password:
@@ -31731,6 +32245,68 @@ components:
         created_at:
           type: string
           format: date-time
+        linked:
+          type: boolean
+          description: True when this login is linked from another account (multi-account invitation); its credential is managed in the primary account.
+    CompanyInvite:
+      type: object
+      properties:
+        invite_id:
+          type: string
+          format: uuid
+        company_account_id:
+          type: string
+          format: uuid
+        company_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+          - operator
+          - viewer
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+        invited_by:
+          type: string
+        delivery:
+          type: string
+          enum:
+          - link
+          - inbox
+        expires_at:
+          type: string
+          format: date-time
+        decided_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    LoginAccount:
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        display_name:
+          type: string
+        member_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+        primary:
+          type: boolean
     ApiKeyIssued:
       type: object
       properties:

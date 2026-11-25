@@ -5,6 +5,26 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.320 · 2 versiones - 25 de noviembre de 2026
+### v2.320
+**Cambiado**
+
+- Breaking: los endpoints nativos de cambios de red (`POST/GET /v1/crypto/network-moves*`) se retiran y responden 410 `network_moves_removed`; usar convert. El historial de retiros no cambia (los fondos siempre vivieron ahí) y los cambios pasados se siguen viendo por esa vía.
+### v2.319
+**Agregado**
+
+- El owner de una empresa ahora puede invitar a una cuenta existente de la
+  organización como operador o lector (`POST /v1/members/invite`, con OTP
+  e idempotente). El invitado revisa sus pendientes en
+  `GET /v1/me/invites` y acepta con el token del email
+  (`POST /v1/me/invites/{inviteID}/accept`); al aceptar se crea un acceso
+  vinculado que entra con la misma credencial y rol propio de la empresa.
+- Switcher de cuentas para accesos multicuenta: `GET /v1/me/accounts`
+  lista las cuentas vivas del acceso y `POST /v1/me/switch` emite una
+  sesión fresca y auditada para otra.
+- Los listados de miembros ahora exponen `linked` en los accesos
+  gestionados por una cuenta primaria; las credenciales (clave, email,
+  2FA, passkeys, vínculos sociales) se gestionan solo desde la primaria.
 ## v2.318 · 1 versión - 24 de noviembre de 2026
 ### v2.318
 **Cambiado**

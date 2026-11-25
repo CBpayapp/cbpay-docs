@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-24 15:35 UTC",
-    "_content_sha256": "83ff302f40c2244cd25b2fbb98dfe5f76167a365e56313b3693e15cf4352b262"
+    "_generated_at": "2026-11-25 12:22 UTC",
+    "_content_sha256": "73e1f67de43c77082e5d9a5f2d25daab94d14ece8c6b4ac141a3d3569a2d9bb0"
   },
   "auth": {
     "type": "bearer",
@@ -1979,6 +1979,54 @@
           ]
         },
         {
+          "name": "List my accessible accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "accounts"
+              ]
+            },
+            "description": "Live accounts the calling login can operate (own account first, then accepted companies). Human sessions only."
+          },
+          "response": [
+            {
+              "name": "200 Accounts.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/accounts",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "accounts"
+                  ]
+                }
+              },
+              "status": "Accounts.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"accounts\": [\n    {\n      \"account_id\": \"2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e\",\n      \"type\": \"person\",\n      \"display_name\": \"Taylor Morgan\",\n      \"member_id\": \"3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f\",\n      \"role\": \"owner\",\n      \"primary\": true\n    },\n    {\n      \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n      \"type\": \"company\",\n      \"display_name\": \"Acme SpA\",\n      \"member_id\": \"9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d\",\n      \"role\": \"operator\",\n      \"primary\": false\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
           "name": "Set the profile alias derived from the verified name — derived_confirmation",
           "request": {
             "method": "PUT",
@@ -2618,6 +2666,232 @@
                 }
               ],
               "body": "{\n  \"status\": \"code_sent\",\n  \"email\": \"t***@***.com\",\n  \"note\": \"confirm with POST /v1/me/email/confirm using the code sent to your email\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List my company invitations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/invites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "invites"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Company invitations addressed to the calling login's mailbox. Human sessions only."
+          },
+          "response": [
+            {
+              "name": "200 Invitations.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/invites",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "invites"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitations.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"invites\": [\n    {\n      \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n      \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n      \"company_name\": \"Acme SpA\",\n      \"email\": \"ops@example.com\",\n      \"role\": \"operator\",\n      \"status\": \"pending\",\n      \"invited_by\": \"owner@example.com\",\n      \"expires_at\": \"2026-12-02T12:00:00Z\",\n      \"created_at\": \"2026-11-25T12:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Accept a company invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/invites/:inviteID/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "invites",
+                ":inviteID",
+                "accept"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Accepts a pending invitation with the token from the email. The session mailbox must exactly match the invited email; on success a linked login is created (same credential, company-scoped role). Human sessions only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"7f3a9c1e4b5d4e6f8a9b0c1d2e3f4a5b6c7d8e9f\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Linked login created.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/invites/:inviteID/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "invites",
+                    ":inviteID",
+                    "accept"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Linked login created.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"member_id\": \"9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"role\": \"operator\",\n  \"linked\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Decline a company invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/invites/:inviteID/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "invites",
+                ":inviteID",
+                "decline"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Declines a pending invitation addressed to the calling login (idempotent, no token needed). Human sessions only."
+          },
+          "response": [
+            {
+              "name": "200 Invitation declined.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/invites/:inviteID/decline",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "invites",
+                    ":inviteID",
+                    "decline"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitation declined.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"status\": \"declined\",\n  \"changed\": true\n}"
             }
           ]
         },
@@ -3679,6 +3953,68 @@
           ]
         },
         {
+          "name": "Switch to another of my accounts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/switch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "switch"
+              ]
+            },
+            "description": "Issues a fresh session for another account of the same login (audited). The current session is not revoked. Human sessions only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Fresh session for the target account.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/switch",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "switch"
+                  ]
+                }
+              },
+              "status": "Fresh session for the target account.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiJ9.example\",\n  \"expires_at\": \"2026-11-26T12:00:00Z\",\n  \"refresh_token\": \"mrt_example\",\n  \"refresh_expires_at\": \"2027-02-23T12:00:00Z\",\n  \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"member_id\": \"9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d\",\n  \"role\": \"operator\"\n}"
+            }
+          ]
+        },
+        {
           "name": "List my transaction reviews",
           "request": {
             "method": "GET",
@@ -4092,6 +4428,285 @@
                 }
               ],
               "body": "{\n  \"id\": \"5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invite an existing account to the company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invite"
+              ]
+            },
+            "description": "Invites an account that already exists in the organization to operate in this company as operator or viewer. Owner-only, company accounts only, OTP-protected (`member_add`) and idempotent (`Idempotency-Key`). The invitee accepts from their own session; on accept a linked login is created (same credential, company-scoped role).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Invitation created (pending).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invite",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invite"
+                  ]
+                }
+              },
+              "status": "Invitation created (pending).",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"company_name\": \"Acme SpA\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"pending\",\n  \"invited_by\": \"owner@example.com\",\n  \"delivery\": \"link\",\n  \"expires_at\": \"2026-12-02T12:00:00Z\",\n  \"created_at\": \"2026-11-25T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List company invitations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invites"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Pending and decided invitations of the calling company account."
+          },
+          "response": [
+            {
+              "name": "200 Invitations.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invites",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invites"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitations.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"invites\": [\n    {\n      \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n      \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n      \"email\": \"ops@example.com\",\n      \"role\": \"operator\",\n      \"status\": \"pending\",\n      \"invited_by\": \"owner@example.com\",\n      \"expires_at\": \"2026-12-02T12:00:00Z\",\n      \"created_at\": \"2026-11-25T12:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Resend a pending invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invites/:inviteID/resend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invites",
+                ":inviteID",
+                "resend"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Rotates the token, renews the 7-day validity and re-sends the email of a pending invitation. Owner-only, OTP-protected (`member_add`)."
+          },
+          "response": [
+            {
+              "name": "200 Invitation resent with a fresh token.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invites/:inviteID/resend",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invites",
+                    ":inviteID",
+                    "resend"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitation resent with a fresh token.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"company_name\": \"Acme SpA\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"pending\",\n  \"delivery\": \"link\",\n  \"expires_at\": \"2026-12-02T12:00:00Z\",\n  \"created_at\": \"2026-11-25T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Revoke a pending invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invites/:inviteID/revoke",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invites",
+                ":inviteID",
+                "revoke"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Revokes a pending company invitation (idempotent). Owner-only, OTP-protected (`member_add`). The invitee is notified."
+          },
+          "response": [
+            {
+              "name": "200 Invitation revoked.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invites/:inviteID/revoke",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invites",
+                    ":inviteID",
+                    "revoke"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitation revoked.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"status\": \"revoked\",\n  \"changed\": true\n}"
             }
           ]
         },
@@ -13917,7 +14532,7 @@
       "name": "Crypto",
       "item": [
         {
-          "name": "List account network moves",
+          "name": "List account network moves (removed 2026-11-25, use convert)",
           "request": {
             "method": "GET",
             "header": [],
@@ -14017,7 +14632,7 @@
           ]
         },
         {
-          "name": "Execute an explicit same-asset network move",
+          "name": "Execute an explicit same-asset network move (removed 2026-11-25, use convert)",
           "request": {
             "method": "POST",
             "header": [
@@ -14084,7 +14699,7 @@
           ]
         },
         {
-          "name": "Quote an explicit same-asset network move",
+          "name": "Quote an explicit same-asset network move (removed 2026-11-25, use convert)",
           "request": {
             "method": "POST",
             "header": [
@@ -14148,7 +14763,7 @@
           ]
         },
         {
-          "name": "Get one network move by id",
+          "name": "Get one network move by id (removed 2026-11-25, use convert)",
           "request": {
             "method": "GET",
             "header": [],
