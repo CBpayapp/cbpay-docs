@@ -163,6 +163,44 @@ and redirects to your `success_url` if you set one.
   the extended QR in `to_qr_token`); the destination is forced to the
   link's account.
 
+## Your company brand on the hosted pages
+
+For company accounts, both the universal checkout page (`/pay/{token}`) and
+the card page (`/pay/cards/{token}`) use the effective brand of the account
+that owns the charge. The company owner configures it in the portal under
+**Settings → Branding**:
+
+1. Enter the display name and, when needed, website and support email.
+2. Set the primary, header and accent colors using valid hexadecimal values.
+3. Upload the PNG logo and square symbol, then save.
+4. Check the checkout preview in the same panel before sharing a link.
+
+The effective brand follows this fallback order: **account → organization →
+CBPay default**. Empty account fields inherit the next level. The
+**Powered by CBPay** pill is always shown as a fixed platform disclosure; it
+cannot be removed or recolored by the company brand. No branding field is
+sent when creating the payin: the page resolves the brand from the account
+that owns the link.
+
+## Card page improvements
+
+The hosted card page now uses the same account brand as the checkout link,
+with a branded header, refreshed iconography, clearer card-network badges,
+and a country selector with flags and search. The card form keeps secure
+hosted fields, saved-card selection when available, billing details and
+3-D Secure; the fixed **Powered by CBPay** pill remains visible.
+
+Address autocomplete is an optional enhancement on the card page. When the
+deployment has `GOOGLE_MAPS_PUBLIC_KEY` configured, the address field can show
+Google Places API (New) suggestions and fill city, region, postal code and
+country. The payer can still edit the fields manually. Without the key, or
+if Places is unavailable, the manual form remains the complete fallback.
+This requires enabling **Places API (New)** in Google Cloud Console and
+restricting the browser key with HTTP referrers for every public checkout
+origin; the key is public by design and must not be treated as a secret.
+The setting is controlled by the platform deployment, not by a checkout API
+field.
+
 ## Automatic conversion to the chosen balance
 
 Every credit in an asset different from the `settlement_asset` is
@@ -301,6 +339,16 @@ JSON of the API stays in English. Details: [Locale and language](https://docs.cb
 
 ## FAQ
 
+#### How does the company brand get selected?
+The hosted page resolves the brand from the account that owns the checkout
+link. It falls back from account to organization to the CBPay default. Open
+**Settings → Branding** as the company owner to configure the account brand.
+The **Powered by CBPay** pill is always retained.
+#### Does checkout still work if Places is not configured?
+Yes. `GOOGLE_MAPS_PUBLIC_KEY` and Places API (New) only add address
+suggestions to the hosted card page. If the key is absent, its referrers are
+not allowed, or Places is unavailable, the payer completes the same fields
+manually.
 #### Can the same link be paid twice?
 No. One link = one charge: the first rail that pays wins (`already_paid`,
 409). A crypto deposit that arrives after the link was settled by another

@@ -146,6 +146,38 @@ curl -X POST https://api.qbank.cl/platform/v1/payins \
   `POST /v1/transfers` 接受可选字段 `checkout_token`（或在
   `to_qr_token` 中使用扩展二维码）；目标账户强制为链接所属账户。
 
+## 企业品牌在托管页面上的显示
+
+对于企业账户，通用 checkout 页面（`/pay/{token}`）和银行卡页面
+（`/pay/cards/{token}`）都会使用收款所属账户的有效品牌。企业 owner
+可以在门户的 **设置 → 品牌** 中配置：
+
+1. 填写显示名称，以及可选的网站和支持邮箱。
+2. 使用有效的十六进制值设置主色、页眉色和强调色。
+3. 上传 PNG 横向 logo 和方形符号，然后保存。
+4. 在同一面板查看 checkout 预览，再分享链接。
+
+有效品牌按以下顺序回退：**账户 → 组织 → CBPay 默认品牌**。账户字段
+为空时继承下一级。固定的 **由 CBPay 提供支持** pill 始终显示，作为
+平台披露信息；企业品牌不能删除或重新着色。创建 payin 时不需要发送
+品牌字段：页面会从链接所属账户解析品牌。
+
+## 银行卡页面改版
+
+托管银行卡页面现在与 checkout 链接使用相同的账户品牌，并提供品牌
+页眉、更新后的图标、更清晰的银行卡网络徽章，以及带国旗和搜索功能的
+国家选择器。表单仍使用安全的托管字段；有可用卡片时支持选择已保存的
+卡片，也保留账单信息和 3-D Secure。固定的 **由 CBPay 提供支持** pill
+仍然可见。
+
+地址自动补全是银行卡页面的可选增强功能。部署配置
+`GOOGLE_MAPS_PUBLIC_KEY` 后，地址字段可以显示 Google Places API (New)
+建议，并填写城市、地区、邮政编码和国家。付款人仍可手动编辑字段。没有
+key 或 Places 不可用时，手动表单会完整保留。启用此功能需要在 Google
+Cloud Console 中启用 **Places API (New)**，并使用 HTTP referrers
+限制浏览器 key，覆盖每个公开 checkout 来源；该 key 按设计是公开的，
+不能当作秘密。此设置由平台部署控制，不是 checkout API 字段。
+
 ## 自动转换到所选余额
 
 任何与 `settlement_asset` 不同资产的入账都会经你账户的转换引擎转换
@@ -267,6 +299,16 @@ API 的 JSON 仍为英语。详见[语言与 locale](/zh/guides/locale)。
 ## 常见问题
 
 <AccordionGroup>
+<Accordion title="企业品牌如何被选择？">
+托管页面会从 checkout 链接所属账户解析品牌，依次回退到账户、组织和
+CBPay 默认品牌。企业 owner 可以在**设置 → 品牌**中配置账户品牌。固定的
+**由 CBPay 提供支持** pill 始终保留。
+</Accordion>
+<Accordion title="未配置 Places 时 checkout 还能使用吗？">
+可以。`GOOGLE_MAPS_PUBLIC_KEY` 和 Places API (New) 只为托管银行卡页面
+增加地址建议。如果缺少 key、HTTP referrer 未获允许或 Places 不可用，付款人
+仍可手动填写相同字段。
+</Accordion>
 <Accordion title="同一个链接可以被支付两次吗？">
 不可以。一个链接 = 一次收款：第一个完成支付的通道胜出（`already_paid`，
 409）。在链接已被其他通道结算之后到达的加密货币入金**不会**入账 ——

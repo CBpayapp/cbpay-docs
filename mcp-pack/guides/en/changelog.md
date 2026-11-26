@@ -5,7 +5,14 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.326 · 1 version - November 26, 2026
+## v2.327 · 2 versions - November 26, 2026
+### v2.327
+**Changed**
+
+- `US/USD/bank_transfer` remains available as an announced-only manual
+  fallback when automatic polling is disabled or in `ManualOnly` mode.
+  Announcements freeze the domestic and SWIFT instructions plus the reference,
+  and receipt confirmation uses maker-checker for both `EC/USD` and `US/USD`.
 ### v2.326
 **Added**
 - Banking funding payins now expose the receiving `virtual_iban_id` in the payin detail response and `payin_credited` webhook for customer-level attribution.

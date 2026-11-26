@@ -164,6 +164,45 @@ y redirige a tu `success_url` si la configuraste.
   /v1/transfers` acepta el campo opcional `checkout_token` (o el QR
   extendido en `to_qr_token`); el destino se fuerza a la cuenta del link.
 
+## La marca de tu empresa en las páginas hosted
+
+En las cuentas empresa, tanto la página de checkout universal
+(`/pay/{token}`) como la página de tarjeta (`/pay/cards/{token}`) usan la
+marca efectiva de la cuenta dueña del cobro. El owner de la empresa la
+configura en el portal, en **Ajustes → Marca**:
+
+1. Ingresa el nombre visible y, si corresponde, el sitio web y el correo de soporte.
+2. Define los colores primario, de encabezado y de acento con valores hexadecimales válidos.
+3. Sube el logo PNG y el símbolo cuadrado, y guarda.
+4. Revisa la vista previa del checkout en el mismo panel antes de compartir un link.
+
+La marca efectiva sigue este fallback: **cuenta → organización → default de
+CBPay**. Los campos vacíos de la cuenta heredan el nivel siguiente. El pill
+fijo **Impulsado por CBPay** siempre se muestra como divulgación de la
+plataforma; la marca de la empresa no puede quitarlo ni cambiarle el color.
+No envías campos de branding al crear el payin: la página resuelve la marca
+desde la cuenta dueña del link.
+
+## Mejoras de la página de tarjeta
+
+La página hosted de tarjeta ahora usa la misma marca de la cuenta que el
+checkout, con encabezado brandeado, iconografía renovada, badges más claros
+de las redes de tarjeta y un selector de país con banderas y buscador. El
+formulario conserva campos hosted seguros, selección de tarjeta guardada
+cuando está disponible, datos de facturación y 3-D Secure; el pill fijo
+**Impulsado por CBPay** sigue visible.
+
+El autocompletado de dirección es una mejora opcional de la página de
+tarjeta. Cuando el despliegue tiene configurada `GOOGLE_MAPS_PUBLIC_KEY`, el
+campo de dirección puede mostrar sugerencias de Google Places API (New) y
+completar ciudad, región, código postal y país. El pagador puede editar los
+campos manualmente. Sin la key, o si Places no está disponible, el formulario
+manual sigue siendo el fallback completo. Requiere habilitar **Places API
+(New)** en Google Cloud Console y restringir la key de navegador mediante
+HTTP referrers para cada origen público de checkout; la key es pública por
+diseño y no debe tratarse como secreto. Esta configuración pertenece al
+despliegue de la plataforma, no a un campo de la API de checkout.
+
 ## Conversión automática al saldo elegido
 
 Todo abono en un asset distinto al `settlement_asset` se convierte con el
@@ -299,6 +338,16 @@ El JSON de la API sigue en inglés. Detalle: [Idioma y locale](https://docs.cbpa
 
 ## FAQ
 
+#### ¿Cómo se selecciona la marca de la empresa?
+La página hosted resuelve la marca desde la cuenta dueña del link. Hace
+fallback desde la cuenta hacia la organización y luego al default de CBPay.
+El owner de la empresa puede configurar la marca en **Ajustes → Marca**. El
+pill **Impulsado por CBPay** siempre se conserva.
+#### ¿Checkout funciona si Places no está configurado?
+Sí. `GOOGLE_MAPS_PUBLIC_KEY` y Places API (New) solo agregan sugerencias de
+dirección a la página hosted de tarjeta. Si falta la key, sus referrers no
+están permitidos o Places no está disponible, el pagador completa los mismos
+campos manualmente.
 #### ¿El mismo link se puede pagar dos veces?
 No. Un link = un cobro: el primer riel que paga gana (`already_paid`, 409).
 Un depósito crypto que llega después de que el link se liquidó por otro riel
