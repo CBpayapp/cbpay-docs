@@ -71,15 +71,13 @@ Receive bolivianos through [deposit accounts](https://docs.cbpayapp.com/en/guide
 asset (USD is the principal balance); `banking` retains BOB for local
 payouts. See [Funding](https://docs.cbpayapp.com/en/guides/funding) for the funding flow.
 
-For BO/BOB payouts, including QR confirmations, send
-`source_instrument_id` to select an active `purpose: "banking"` instrument
-only when the effective settlement is `BOB`. Sending it with `settlement_asset:
-"USD"` (or another non-BOB asset) returns `422 invalid_source_instrument`
-before any debit. If you omit the field with USD settlement, the payout uses
-the mother account's settlement balance even when several BO/BOB banking
-instruments are active; no ambiguity error is returned. See the [QR payout
-guide](https://docs.cbpayapp.com/en/guides/qr-payout#selecting-a-bob-banking-source) for the complete
-request and response.
+For BO/BOB payouts, including QR confirmations, send `source_instrument_id`
+to select an active `purpose: "banking"` instrument only with effective
+`BOB` settlement. With `settlement_asset: "USD"` (or another non-BOB asset),
+the API returns `422 invalid_source_instrument` before any debit. Omit it for
+USD settlement to use the mother account even with several active sources; no
+ambiguity error is returned. See the [QR payout guide](https://docs.cbpayapp.com/en/guides/qr-payout#selecting-a-bob-banking-source)
+for the complete request and response.
 
 ### 🇲🇽 MXN — Mexican peso
 
