@@ -43,10 +43,8 @@ Respuesta:
       "country": "MX",
       "method": "spei",
       "counterparty": "Juan Pérez",
-      "info_request": {
-        "message": "Please upload the invoice that justifies this payment",
-        "requested_at": "2026-08-06T15:20:00Z"
-      },
+      "info_request": "Please upload the invoice that justifies this payment",
+      "info_requested_at": "2026-08-06T15:20:00Z",
       "created_at": "2026-08-06T14:32:00Z",
       "updated_at": "2026-08-06T15:20:00Z"
     }
@@ -56,6 +54,13 @@ Respuesta:
   "total": 1
 }
 ```
+
+Cuando `status` es `info_requested`, el portal muestra en la tarjeta de la
+revisión la fecha del pedido tomada de `info_requested_at`. El plazo para
+subsanar es de 24 horas desde ese momento: la tarjeta muestra el tiempo
+restante mientras está vigente y marca el pedido como vencido después del
+plazo. Si no hay un pedido activo, `info_requested_at` se omite; nunca se
+inventa una fecha.
 
 ### Filtros
 
@@ -84,10 +89,8 @@ Respuesta:
     "country": "MX",
     "method": "spei",
     "counterparty": "Juan Pérez",
-    "info_request": {
-      "message": "Please upload the invoice that justifies this payment",
-      "requested_at": "2026-08-06T15:20:00Z"
-    },
+    "info_request": "Please upload the invoice that justifies this payment",
+    "info_requested_at": "2026-08-06T15:20:00Z",
     "files": [
       {
         "id": "f1e2d3c4-0000-4000-8000-0000000000aa",
@@ -104,6 +107,12 @@ Respuesta:
   }
 }
 ```
+
+El detalle usa el mismo timestamp `info_requested_at` que aparece en la
+lista. Es una fecha RFC 3339 del último pedido de información y se omite
+cuando no existe un pedido activo. Un nuevo pedido reinicia el plazo de
+subsanación de 24 horas; al subir evidencia, la revisión vuelve a
+`in_review`.
 
 Una revisión de otra cuenta responde `404 not_found` (nunca `403`, para no filtrar existencia). Cuando la revisión fue rechazada, el detalle incluye `decision_note` (el mismo texto del email de rechazo) y `decided_at`.
 
@@ -199,6 +208,44 @@ las categorías pedidas ya están cubiertas, se aceptan archivos adicionales
 con cualquier categoría banking válida. `bankStatement` significa estado de
 cuenta (extracto bancario); no se relabela.
 
+## Enviar datos solicitados
+
+Para una solicitud de cuenta bancaria o tarjeta, el administrador puede pedir
+datos tipados además de documentos. El detalle de la revisión entrega la lista
+cerrada `requested_fields`. Completa solo esas claves; el portal valida cada
+valor antes de enviarlo:
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000000000001/fields" \
+  -H "Authorization: Bearer pk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"fields":{"first_name":"Juan","nationality":"CL","address":{"line1":"Avenida Siempre Viva 123","city":"Santiago","country":"CL"}}}'
+```
+
+La respuesta muestra `fields_submitted` y `fields_remaining`:
+
+```json
+{
+  "fields_submitted": ["first_name", "nationality", "address"],
+  "fields_remaining": [],
+  "status": "in_review"
+}
+```
+
+El primer envío devuelve la revisión de `info_requested` a `in_review`; los
+siguientes agregan evidencia. Los valores quedan solo en esta revisión y se
+funden en su checklist y solicitud de aprobación. Nunca modifican el
+expediente KYC/KYB de la cuenta. Una clave fuera de `requested_fields`
+responde `400 field_not_requested`; un valor con tipo incorrecto responde
+`400 invalid_field_value`. Los tipos incluyen texto, email, teléfono, país ISO,
+fecha `YYYY-MM-DD`, monto USD positivo, sí/no, dirección, moneda de tres
+letras, propósito de vIBAN y códigos de catálogo de tarjetas. En tarjetas,
+`occupation` y `kind_of_business` deben ser códigos del catálogo, no etiquetas.
+
+Puedes enviar datos cuando la revisión está en `info_requested` o en
+`in_review` después de un pedido anterior. Si la revisión no pertenece a tu
+cuenta, la API responde `404 not_found`.
+
 ## Descarga tus propios archivos
 
 ```bash
@@ -263,3 +310,12 @@ No directamente. Si necesitas cancelarla, contacta al equipo de compliance de tu
 Por seguridad y para no comprometer investigaciones de compliance, el motivo interno nunca se expone al usuario final. Solo verás el mensaje de información solicitada cuando te pidan documentos.
 #### Creé un perfil banking o una tarjeta y recibí un 202 — ¿qué pasó?
 Tu organización activó la revisión de solicitudes: la llamada quedó retenida antes de procesarse. Todavía no se crea nada — cuando compliance apruebe la revisión, el perfil o la tarjeta se crean automáticamente y recibes el webhook `txn_review_status_changed` con `status: released`. El fee de la solicitud se cobró al retenerla; si la revisión se rechaza, el fee se reembolsa a tu saldo automáticamente.
+#### ¿Por qué recibí un pedido de datos y no solo de documentos?
+En algunas solicitudes de banking y tarjetas, el revisor puede pedir campos
+tipados además de archivos. El detalle lista los `requested_fields` exactos;
+envíalos desde el portal con el formato esperado. Se usan solo para esta
+solicitud y no sobrescriben tu expediente KYC/KYB.
+#### ¿Por qué mi envío volvió a in_review?
+Enviar datos solicitados o subir un archivo pedido devuelve la revisión a
+`in_review` para que el revisor evalúe la evidencia nueva. No crea otra
+solicitud ni vuelve a cobrar la comisión.

@@ -32,6 +32,14 @@ A contact can contain:
 
 The contact book is private to the account. Destination data is scoped to the owner and is never exposed across accounts.
 
+## Payout destinations follow the beneficiary name
+
+When a payout uses a saved bank destination, the destination follows the beneficiary name. If the saved IBAN or account is found under another contact and the new beneficiary name identifies one unambiguous contact, the platform re-homes the payout destination to that contact instead of refreshing the old contact. A resend under the same name keeps the existing destination, and ambiguous homonyms are never moved automatically.
+
+This behavior applies only to payout destinations. CBPay-linked and crypto destinations are unchanged.
+
+Payouts created with `compliance_pending` are saved to the beneficiary contact after compliance approval when `save_contact` is enabled; `save_contact` defaults to `true` for this flow. QR payouts are never auto-saved.
+
 ## Manage contacts in the portal
 
 The portal's `/contacts` screen has a toolbar with search, source, CBPay-only, favorites, destination type, country and sort filters. It shows the server-side total and lets the user page through results. Search also matches destination data when the list is expanded, including labels, payout corridor fields and crypto chain/address text.
@@ -177,4 +185,4 @@ Contact mutations are synchronous: a successful `200` or `201` is final, while `
 
 ## FAQ
 
-#### Does one person need one contact even with several bank accounts?Yes. Keep one contact and attach one payout destination per country, currency and method as needed.#### Why did two people with the same name not merge automatically?Duplicate suggestions are deliberately conservative. If more than one candidate is possible, the platform does not infer identity; use the preview and select the survivor yourself.#### Can I retry a merge after a timeout?No blind retry. The merge is not idempotent. Read the contact and duplicate suggestions first; after success the source IDs no longer exist.#### How do I send from the profile?Select a destination's Send action. The portal opens `/payouts/new?contact_id=...&destination_id=...` and the wizard uses that destination context.#### Can another account read my destinations?No. Contact and destination reads and writes are scoped to the authenticated account.#### What happens if a destination is removed?Only that destination is deleted. The contact and its other destinations remain available.
+#### Does one person need one contact even with several bank accounts?Yes. Keep one contact and attach one payout destination per country, currency and method as needed.#### Why did two people with the same name not merge automatically?Duplicate suggestions are deliberately conservative. If more than one candidate is possible, the platform does not infer identity; use the preview and select the survivor yourself.#### Can I retry a merge after a timeout?No blind retry. The merge is not idempotent. Read the contact and duplicate suggestions first; after success the source IDs no longer exist.#### How do I send from the profile?Select a destination's Send action. The portal opens `/payouts/new?contact_id=...&destination_id=...` and the wizard uses that destination context.#### Can another account read my destinations?No. Contact and destination reads and writes are scoped to the authenticated account.#### What happens if a destination is removed?Only that destination is deleted. The contact and its other destinations remain available.#### What happens when a saved payout destination is used with a new beneficiary name?If the name identifies one contact, the payout destination moves to that contact. Same-name resends keep the existing destination, while ambiguous homonyms are left unchanged.#### Are crypto or CBPay destinations re-homed?No. Re-homing applies only to payout destinations.#### When is a compliance-pending payout saved?After approval when `save_contact` is enabled. It defaults to `true`; QR payouts are never auto-saved.

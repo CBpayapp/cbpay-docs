@@ -5,6 +5,158 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.326 · 1 个版本 - 2026年11月26日
+### v2.326
+**新增**
+- Banking funding payin 现在会在 payin 详情响应和 `payin_credited` webhook 中返回接收方 `virtual_iban_id`，便于按客户归因存款。
+## v2.325 · 6 个版本 - 2026年11月25日
+### v2.325
+**新增**
+
+- 银行与发卡申请的信息补件现以映射字段与文件形式到达，而非自由文本：可用
+  `POST /v1/me/txn-reviews/{reviewID}/fields` 逐项提交（按类型校验）或上传
+  所需文件。通知邮件使用你资料的语言，门户为每项渲染一个输入框。
+### v2.324
+**已更改**
+
+- 非金融行业的企业银行申请不再要求牌照、AML/CFT、Wolfsberg 或 MLRO 证明。
+  个人申请中，银行对账单或财富来源证明任一即可满足同一要求。
+### v2.322
+**已更改**
+
+- 默认审核列表（`status` 为空的 `GET /v1/me/txn-reviews`）现在也会包含存在
+  有效 dispatch 失败的请求，以 `needs_action: true` 及 `dispatch_error`
+  标记：已批准但未能派发的卡或银行申请会继续可见，而不会从列表中消失。
+  显式过滤器保持其精确语义。
+### v2.321
+**变更**
+
+- 玻利维亚 payout 与 QR 收款运行在唯一的 BOB 固定轨道上。
+  不再提供 `BO/USD` payout 与 QR payin；玻利维亚请使用 BOB。
+- 厄瓜多尔 payout 仅提供 `bank_transfer`。`deuna`、`cash_pickup` 和
+  `cnb` 已随其轨道退役；已保存的联系人仍可用于 `bank_transfer`。
+- 智利 payout 根据全局工资单批量 flag 自动成批处理，不再有按组织的
+  派发模式。
+- `PUT /v1/corridor-variants` 仅接受 PY/PYG、EC/USD 和 BR/BRL 的中性
+  标签 alias `rail_a`/`rail_b`。`BO/BOB` 与 `CL/CLP` 会返回
+  `400 invalid_rail_variant`。
+### v2.320
+**新增**
+
+- 企业所有者现在可以邀请组织中的现有账户担任操作员或只读成员
+  （`POST /v1/members/invite`，OTP 保护且幂等）。被邀请人在
+  `GET /v1/me/invites` 中查看待处理邀请，并用邮件令牌接受
+  （`POST /v1/me/invites/{inviteID}/accept`）；接受后创建关联登录，
+  使用同一凭据登录并拥有企业级角色。
+- 多账户登录的账户切换器：`GET /v1/me/accounts` 列出该登录的有效账户，
+  `POST /v1/me/switch` 为另一个账户签发全新且已审计的会话。
+- 成员列表现在对由主账户管理的登录返回 `linked`；凭据（密码、邮箱、
+  双重认证、通行密钥、社交关联）只能在主账户中管理。
+### v2.319
+**变更**
+
+- Breaking：原生跨链转账端点（`POST/GET /v1/crypto/network-moves*`）已下线，统一返回 410 `network_moves_removed`；请改用 convert。提现历史不受影响（资金始终记在提现下），历史跨链记录仍可通过该途径查看。
+## v2.318 · 1 个版本 - 2026年11月24日
+### v2.318
+**变更**
+
+- 公开状态页现在按日显示影响：事件数量、故障/降级分钟数、受影响通道数
+  和当天最严重级别；已恢复时段显示为绿色。
+- 平台停用的通道不会进入组织镜像、警报、公告或公开页面；核心已退役
+  的通道可以通过运营 skip-list 排除健康探测。
+
+**修复**
+
+- 未关闭的事件现在始终返回 `updates` 数组，即使尚未产生恢复记录。
+## v2.317 · 5 个版本 - 2026年11月23日
+### v2.317
+**变更**
+
+- Nested SEPA 汇款不再需要 funding vIBAN：下单身份改为已验证的 KYC/KYB
+  资料，缺少地址时返回 fail-closed `422 registrant_incomplete`。Legacy
+  汇款不变。vIBAN 列表新增 `nested_routing`，表示该账户 SEPA 是否走
+  nested。
+### v2.316
+**变更**
+
+- 所有账户的 SEPA 汇款现已走 nested（已验证身份，无需 funding
+  vIBAN）。已验证地址不完整的账户将收到明确的 `422
+  registrant_incomplete`。
+### v2.315
+**变更**
+
+- 修复 nested 下单国家规范化：文本（`Chile`）或 alpha-3（`CHL`）地址
+  国家现已规范为 alpha-2（含账户回退），不再报
+  `cj_ultimate_country must be a ISO alpha-2 country code`。
+### v2.314
+**变更**
+
+- `GET /v1/payouts/banks` 支持 `currency`，用于完整的国家/货币/方式查询。
+  对于已标记的 corridor，平台返回组织有效的创建目录，但不会暴露内部
+  路由标识。
+### v2.313
+**变更**
+
+- 已保存的 payout 目的地现在跟随受益人姓名：用不同姓名向已保存的 IBAN 或账户付款时，目的地会移到相符的联系人名下，而不再刷新旧条目。同名重发、无名发送以及重名不明的情况保持原有行为。
+- 合规校验被推迟时创建的 payout 现在会在获批后保存受益人（之前仅同步获批的会保存）。QR payout 依然不会自动保存。
+## v2.312 · 4 个版本 - 2026年11月22日
+### v2.312
+**新增**
+- 新增 `GET /v1/payouts/beneficiary-schema?country=&method=&lang=`：任一 payout 通道受益人表单的纯数据字段描述（20 个通道，外加全局 swift/sepa 通配符），按渲染顺序排列，标签、占位符、提示和错误支持 `en`/`es`/`zh`。条件字段（`show_if`、`required_if`、`validate_fn_when`）对照实时表单求值；`validator` 命名封闭客户端校验集。
+### v2.311
+**变更**
+- 签署 Grupo CB 主协议不再需要一次性验证码：`POST /v1/me/contracts/envelopes/{envelopeID}/sign` 只需签署人姓名、明确同意和手写签名，不再使用 `X-OTP-Token` header。职务为可选项，省略时自动填入成员角色；新的签署返回空 `otp_channel`。此前签署的信封保留原始 channel 和职务。
+### v2.310
+**新增**
+
+- 兑换报价、详情和列表响应现包含 `coverage_exempt`（在 BTC 覆盖下限豁免下报价或执行时为 true），`GET /v1/swaps` 接受 `coverage_exempt` 过滤器。非豁免账户行为不变。
+### v2.309
+**变更**
+
+- 现在所有受支持的 payout 通道在创建前校验时都会返回具体且不暴露提供商的错误，而不是不透明的 `400 invalid_payload`。例如，收款人数据无效时返回 `400 invalid_beneficiary` 并指出要修正的字段；金额超出通道限制时返回 `422 amount_below_minimum` 或 `422 amount_above_maximum`。无效货币或通道选项分别返回 `400 invalid_currency` 和 `400 invalid_options`；接受或拒绝的决定不变。
+- 服务器配置失败会安全地返回 `500 internal_error` 和通用消息。不要原样重复已修正的请求；遇到不明确的传输失败时，请使用相同的幂等键重试。
+## v2.308 · 2 个版本 - 2026年11月21日
+### v2.308
+**变更**
+- 已完成的 EC/USD 人工 payout 品牌回执现在会在真实银行数据可用时包含银行订单、银行批准、银行参考号和结算日期。没有这些数据的 payout 行保持原有回执布局。
+### v2.307
+**新增**
+
+- `GET /v1/payouts/banks` 新增可选查询参数 `variant`。该参数要求明确的 `method`，并且只返回所选路由变体的目录，确保创建选择器不会合并不兼容的目录。不传 `variant` 时保持历史响应。
+## v2.306 · 1 个版本 - 2026年11月20日
+### v2.306
+**新增**
+
+- 新增 `crypto_deposit_under_review` webhook 事件。当加密充值进入合规审核时，该事件向账户发送经过脱敏且不包含风险结论的供应商中立通知。订阅此事件即可根据已验证的事件契约处理被冻结的充值。
+## v2.305 · 5 个版本 - 2026年11月19日
+### v2.305
+**变更**
+- 加密充值 webhook 现在使用 `tx_id` 加 `event_index` 标识批量交易中的每笔转账，并提供发送方、已入账充值、回单和 hold 关联信息以便对账。链上历史使用精确的 `tx_id` 筛选；被冻结的充值可通过 `GET /v1/events/history` 恢复。
+### v2.304
+**变更**
+- 隔离银行卡 payin 的钱包创建上限默认为每个账户每天 50 个，运营方可以为组织提高上限。超过配置上限的请求返回 `too_many_segregated_wallets`。
+### v2.303
+**新增**
+- 银行卡 payin 可以将净额发送到自有、现有、可复用或每笔新建的隔离钱包，并提供链上资金状态和交易证据。
+### v2.302
+**修复**
+- 组织管理员现在可以通过 `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile` 恢复卡住的 `BO/BOB/bank_transfer` 存款账户 claim：core 按 reference 查找商户账户，而不再返回 `422 deposit_account_not_recoverable`。模糊状态仍然 fail-closed——仅在恢复完成后用相同的 key 重试。
+### v2.301
+**变更**
+- AML 和验证报告现在通过 JSON 键 `model_breakdown` 与 PDF 风险模型明细解释仅由模型产生的风险决定；只有 overall 的 legacy 镜像继续兼容。
+## v2.300 · 3 个版本 - 2026年11月18日
+### v2.300
+**新增**
+
+- 新增三语钱包筛查详情指南：风险结论、触发器区间、直接与间接参考敞口、
+  标准化链上风险类别，以及 Low、Medium、High、Severe 和 Unknown 结果的
+  建议处理方式。
+### v2.299
+**变更**
+- 交易审核门户现在在审核列表和详情中通过 RFC 3339 字段 `info_requested_at` 显示信息请求日期。门户显示 24 小时补正倒计时，并在期限后标记请求已过期；没有有效请求时省略该字段。
+### v2.298
+**变更**
+- merchant 验证请求现在拒绝以区分大小写的 `self:` 前缀开头的 `idempotency_key`，该前缀保留给管理员自助链接。API 返回 `400 invalid_payload`，消息为 `reserved namespace`；`SELF:` 和其他前缀仍然有效。
 ## v2.297 · 2 个版本 - 2026年11月17日
 ### v2.297
 **新增**

@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 25, 2026" description="v2.325 · 7 versions">
+<Update label="November 26, 2026" description="v2.326 · 1 version">
+### v2.326
+**Added**
+- Banking funding payins now expose the receiving `virtual_iban_id` in the payin detail response and `payin_credited` webhook for customer-level attribution.
+</Update>
+<Update label="November 25, 2026" description="v2.325 · 6 versions">
 ### v2.325
 **Added**
 
@@ -20,13 +25,6 @@ description: "History of API and documentation changes"
   license, AML/CFT, Wolfsberg or MLRO evidence. Person applications accept
   either a bank statement or source-of-wealth evidence for the same
   requirement, so one document is enough.
-### v2.323
-**Added**
-- Added `approved_unfunded` to transaction review status filters and
-  documented that approved crypto withdrawals wait for coverage and release
-  without another approval.
-- Added integrator guidance for `409` coverage responses, polling and
-  same-key idempotent retries.
 ### v2.322
 **Changed**
 

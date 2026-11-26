@@ -126,6 +126,7 @@ RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Even
 | `crypto_deposit_credited` | 一笔链上充值已确认并入账 |
 | `crypto_deposit_held` | 一笔入账充值因发送方风险被暂扣（[筛查](https://docs.cbpayapp.com/zh/guides/screenings)） |
 | `crypto_deposit_alert` | 一笔充值已入账，但发送方显示高风险（仅提示） |
+| `crypto_deposit_under_review` | 一笔充值进入合规审核（`held` 或 `credited`）；不含风险结论的精简镜像——订阅它以便处理被冻结的充值 |
 | `crypto_withdrawal_status_changed` | 一笔链上提现状态发生变化 |
 | `banking_customer_status_changed` | 银行账户资料验证状态发生变化（自己的或已注册第三方的 — 由 `customer_kind` 区分） |
 | `banking_operation_status_changed` | 一笔银行付款状态发生变化 |
@@ -303,8 +304,12 @@ RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Even
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TDonor…",
+  "deposit_id": "a1b2…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/a1b2…/receipt"
 }
 ```
 
@@ -315,6 +320,9 @@ RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Even
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
@@ -326,11 +334,24 @@ RWA 载荷使用精确的小数字符串；请验证签名并按 `X-Webhook-Even
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "9c6d4e…",
+  "event_index": 0,
   "risk": "High",
   "status": "credited"
 }
 ```
-
+```json crypto_deposit_under_review
+{
+  "account_id": "ae8c…",
+  "hold_id": "c1d2e3f4…",
+  "chain": "tron",
+  "asset": "usdt",
+  "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
+  "status": "held"
+}
+```
 ```json crypto_withdrawal_status_changed
 {
   "withdrawal_id": "5e8c…",

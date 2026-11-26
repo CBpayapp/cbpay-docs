@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.297'
+  version: '2.326'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -5782,7 +5782,7 @@ paths:
       - Banca
       operationId: listVirtualIBANs
       summary: Listar solicitudes de vIBAN de la cuenta
-      description: Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters.
+      description: "Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters. `nested_routing` is true when the account's SEPA sends route via nested (verified-identity ordering, no funding vIBAN required)."
       parameters:
       - name: page
         in: query
@@ -5830,6 +5830,7 @@ paths:
                   value:
                     page: 1
                     page_size: 50
+                    nested_routing: false
                     virtual_ibans:
                     - id: 2f8c1d4e-1111-4b22-8a33-000000000001
                       owner_account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
@@ -7533,7 +7534,7 @@ paths:
       - Corridors
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, CL/CLP bank_transfer with direct or batched dispatch, and labeled payout aliases for PY/PYG, EC/USD and BR/BRL. Organization scope receives only neutral `rail_a`, `rail_b` or `rail_c` aliases. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports labeled payout aliases (`rail_a`/`rail_b`) for PY/PYG, EC/USD and BR/BRL. BO/BOB and CL/CLP use fixed rails with no per-org selection. Payin routing uses corridor controls.
       security:
       - bearerAuth: []
       responses:
@@ -7578,11 +7579,11 @@ paths:
               $ref: '#/components/schemas/OrgRailVariantRequest'
             example:
               direction: payout
-              country: CL
-              currency: CLP
+              country: PY
+              currency: PYG
               method: bank_transfer
-              variant: batched
-              reason: Enable grouped payroll dispatch for future Chile payouts
+              variant: rail_b
+              reason: Use the fallback rail for future Paraguay payouts
       responses:
         '200':
           description: Updated variant
@@ -7593,10 +7594,10 @@ paths:
               example:
                 org_id: org_123
                 direction: payout
-                country: CL
-                currency: CLP
+                country: PY
+                currency: PYG
                 method: bank_transfer
-                variant: batched
+                variant: rail_b
         '400':
           description: Invalid variant request
           content:
@@ -7605,7 +7606,7 @@ paths:
                 invalid_variant:
                   value:
                     error: invalid_rail_variant
-                    message: variant must be legacy or v2 for BO/BOB, or direct/batched for CL/CLP
+                    message: variant must be one of the corridor rail aliases (rail_a/rail_b)
         '403':
           description: Source routing requires platform administration
           content:
@@ -7614,18 +7615,12 @@ paths:
                 error: rail_source_admin_required
                 message: source account routing is platform-admin controlled
         '503':
-          description: Routing configuration or selected source account unavailable
+          description: Routing configuration unavailable
           content:
             application/json:
-              examples:
-                variant_unavailable:
-                  value:
-                    error: rail_variants_unavailable
-                    message: rail routing configuration is temporarily unavailable
-                source_unavailable:
-                  value:
-                    error: rail_source_unavailable
-                    message: the selected source account is not configured for this organization
+              example:
+                error: rail_variants_unavailable
+                message: rail routing configuration is temporarily unavailable
   /v1/crypto/deposits/{depositID}/receipt:
     get:
       tags:
@@ -7653,7 +7648,8 @@ paths:
       tags:
       - Crypto
       operationId: createNetworkMove
-      summary: Ejecutar un cambio de red explícito del mismo activo
+      summary: Ejecutar un cambio de red explícito del mismo activo (eliminado 2026-11-25, usar convert)
+      deprecated: true
       description: 'Un cambio de red es siempre un retiro con contexto from_chain: el dinero vive una sola vez en crypto_withdrawals (mismo débito, despacho, cartola y webhooks). Idempotente por cuenta + idempotency_key; exige OTP como los retiros. Si el firewall transaccional lo retiene, la respuesta trae forma de retiro.'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
@@ -7694,7 +7690,8 @@ paths:
       tags:
       - Crypto
       operationId: listNetworkMoves
-      summary: Listar cambios de red de la cuenta
+      summary: Listar cambios de red de la cuenta (eliminado 2026-11-25, usar convert)
+      deprecated: true
       parameters:
       - name: page
         in: query
@@ -7730,7 +7727,8 @@ paths:
       tags:
       - Crypto
       operationId: quoteNetworkMove
-      summary: Cotizar un cambio de red explícito del mismo activo
+      summary: Cotizar un cambio de red explícito del mismo activo (eliminado 2026-11-25, usar convert)
+      deprecated: true
       description: 'Vista previa pura (sin efectos): valida el activo y ambas redes, valoriza el fee de retiro e informa si la hot wallet de destino está configurada.'
       requestBody:
         required: true
@@ -7769,7 +7767,8 @@ paths:
       tags:
       - Crypto
       operationId: getNetworkMove
-      summary: Obtener un cambio de red por id
+      summary: Obtener un cambio de red por id (eliminado 2026-11-25, usar convert)
+      deprecated: true
       parameters:
       - name: moveID
         in: path
@@ -7854,7 +7853,7 @@ paths:
       - Crypto
       operationId: listCryptoTransactions
       summary: Listar actividad on-chain
-      description: Créditos de fondeo y retiros de la cuenta que llama.
+      description: Créditos de fondeo y retiros de la cuenta que llama. Los depósitos retenidos (no acreditados) no se listan; se siguen vía el webhook crypto_deposit_held y GET /v1/events/history.
       parameters:
       - $ref: '#/components/parameters/page'
       - $ref: '#/components/parameters/pageSize'
@@ -7870,6 +7869,11 @@ paths:
           type: string
           format: date
         description: Filtra hasta esta fecha (YYYY-MM-DD, zona horaria de la organización, inclusive).
+      - name: tx_id
+        in: query
+        schema:
+          type: string
+        description: Filtra por hash de transacción on-chain (calce exacto en retiros; en depósitos calza tx o referencias tx:event, así un lote devuelve una fila por transferencia).
       responses:
         '200':
           description: Depósitos y retiros.
@@ -9005,7 +9009,7 @@ paths:
       - KYC / KYB
       operationId: createKybLink
       summary: Crear un link KYB para un cliente
-      description: 'Solo cuentas empresa: genera un link KYB hosteado para uno de TUS clientes finales (empresas). Cobra el fee fijo `kyb_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` obligatoria. `country` elige el corredor del wizard: us, cl, ve, br, mx, co, pe, bo, py, ar o generic (con `generic_country` ISO alpha-2 y `currency` opcional).'
+      description: 'Solo cuentas empresa: genera un link KYB hosteado para uno de TUS clientes finales (empresas). Cobra el fee fijo `kyb_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` obligatoria. `country` elige el corredor del wizard: us, cl, ve, br, mx, co, pe, bo, py, ar o generic (con `generic_country` ISO alpha-2 y `currency` opcional). Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:
@@ -9158,7 +9162,7 @@ paths:
       - KYC / KYB
       operationId: createKybSubmission
       summary: Crear una submission KYB con datos por API
-      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales (una empresa) enviando los datos directo. Body: external_customer_id, country?, business (los campos de la empresa), ubos?, directors?, signers?, bank_info?, metadata?. KYB exige nombre legal y número de registro completos; KYC exige nombres, fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Un país KYB desconocido usa el perfil genérico con ese ISO; `country: generic` exige `generic_country`. Cobra el fee fijo `kyb_verification`; `idempotency_key` obligatoria. Re-enviar mientras siga abierta actualiza la misma submission sin cobrar de nuevo.'
+      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales (una empresa) enviando los datos directo. Body: external_customer_id, country?, business (los campos de la empresa), ubos?, directors?, signers?, bank_info?, metadata?. KYB exige nombre legal y número de registro completos; KYC exige nombres, fecha de nacimiento, nacionalidad ISO alpha-3, documento y país ISO alpha-3. Un país KYB desconocido usa el perfil genérico con ese ISO; `country: generic` exige `generic_country`. Cobra el fee fijo `kyb_verification`; `idempotency_key` obligatoria. Re-enviar mientras siga abierta actualiza la misma submission sin cobrar de nuevo. Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:
@@ -9669,6 +9673,29 @@ paths:
                 generated_by: CBPay
                 language: en
                 aml_detail: true
+                model_breakdown:
+                - category: COUNTRY
+                  level: prohibited
+                  score: 1140
+                  weight: 5
+                  attributes:
+                  - name: nationality
+                    parameter: RU
+                    score: 100
+                  - name: personalIdentificationIssuingCountry
+                    parameter: RU
+                    score: 520
+                  - name: residentialInformation.countryOfResidence
+                    parameter: RU
+                    score: 520
+                - category: BASIC_INFORMATION
+                  level: low
+                  score: 10
+                  weight: 5
+                  attributes:
+                  - name: age
+                    parameter: '40'
+                    score: 10
                 submission_id: 9b2c41a0-d3e5-4f6a-8b7c-1d2e3f4a5b6c
                 status: approved
                 risk_band: low
@@ -10059,7 +10086,7 @@ paths:
       - KYC / KYB
       operationId: createKycLink
       summary: Crear un link KYC para un cliente
-      description: 'Solo cuentas empresa: genera un link KYC hosteado para uno de TUS clientes finales. El wizard cubre formulario, documentos y prueba de vida en video. Cobra el fee fijo `kyc_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` es obligatoria — un retry con la misma clave devuelve el link original y nunca cobra dos veces.'
+      description: 'Solo cuentas empresa: genera un link KYC hosteado para uno de TUS clientes finales. El wizard cubre formulario, documentos y prueba de vida en video. Cobra el fee fijo `kyc_verification` cuando está configurado (se reembolsa si la creación falla); `idempotency_key` es obligatoria — un retry con la misma clave devuelve el link original y nunca cobra dos veces. Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:
@@ -10211,7 +10238,7 @@ paths:
       - KYC / KYB
       operationId: createKycSubmission
       summary: Crear una submission KYC con datos por API
-      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales enviando los datos directo (sin wizard). Países en ISO alpha-3, fechas YYYY-MM-DD, id_type passport | id_card | drivers_license. Los documentos son opcionales al crear (súbelos con el flujo presign); no se exige prueba de vida al crear — la submission queda con liveness_pending: true y se cierra con un liveness link. Re-enviar con el mismo external_customer_id mientras la submission siga abierta la actualiza sin cobrar de nuevo. Cobra el fee fijo `kyc_verification`; `idempotency_key` obligatoria.'
+      description: 'Solo cuentas empresa: verifica a uno de TUS clientes finales enviando los datos directo (sin wizard). Países en ISO alpha-3, fechas YYYY-MM-DD, id_type passport | id_card | drivers_license. Los documentos son opcionales al crear (súbelos con el flujo presign); no se exige prueba de vida al crear — la submission queda con liveness_pending: true y se cierra con un liveness link. Re-enviar con el mismo external_customer_id mientras la submission siga abierta la actualiza sin cobrar de nuevo. Cobra el fee fijo `kyc_verification`; `idempotency_key` obligatoria. Las claves que comienzan con el prefijo sensible a mayúsculas `self:` están reservadas para self-links de admin; las solicitudes merchant que las usan devuelven 400 `invalid_payload` con el mensaje `reserved namespace`.'
       requestBody:
         required: true
         content:
@@ -10824,6 +10851,29 @@ paths:
                 generated_by: CBPay
                 language: en
                 aml_detail: true
+                model_breakdown:
+                - category: COUNTRY
+                  level: prohibited
+                  score: 1140
+                  weight: 5
+                  attributes:
+                  - name: nationality
+                    parameter: RU
+                    score: 100
+                  - name: personalIdentificationIssuingCountry
+                    parameter: RU
+                    score: 520
+                  - name: residentialInformation.countryOfResidence
+                    parameter: RU
+                    score: 520
+                - category: BASIC_INFORMATION
+                  level: low
+                  score: 10
+                  weight: 5
+                  attributes:
+                  - name: age
+                    parameter: '40'
+                    score: 10
                 submission_id: 3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f
                 external_customer_id: customer-1042
                 status: approved
@@ -11141,6 +11191,43 @@ paths:
                   value:
                     error: verification_in_progress
                     message: an identity verification is in progress; finish it before changing country
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/accounts:
+    get:
+      tags:
+      - Cuenta
+      operationId: listMyAccounts
+      summary: Listar mis cuentas accesibles
+      description: Cuentas vivas que el acceso en sesión puede operar (la propia primero, luego las empresas aceptadas). Solo sesiones humanas.
+      responses:
+        '200':
+          description: Cuentas.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LoginAccount'
+              example:
+                accounts:
+                - account_id: 2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e
+                  type: person
+                  display_name: Taylor Morgan
+                  member_id: 3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f
+                  role: owner
+                  primary: true
+                - account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  type: company
+                  display_name: Acme SpA
+                  member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                  role: operator
+                  primary: false
         '403':
           $ref: '#/components/responses/AccountRequired'
         '401':
@@ -11588,7 +11675,7 @@ paths:
       - Contratos
       operationId: signMyContractEnvelope
       summary: Firma mi sobre de contrato
-      description: Requiere sesión humana owner/operator, consentimiento y OTP fresco en `X-OTP-Token`.
+      description: Requiere sesión humana owner/operator, nombre, consentimiento y rúbrica. Sin OTP (firma simple).
       parameters:
       - name: envelopeID
         in: path
@@ -11596,11 +11683,6 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: X-OTP-Token
-        in: header
-        required: true
-        schema:
-          type: string
       requestBody:
         required: true
         content:
@@ -11609,7 +11691,6 @@ paths:
               type: object
               required:
               - signer_name
-              - signer_title
               - consent
               - signature_png
               properties:
@@ -11619,8 +11700,8 @@ paths:
                   maxLength: 120
                 signer_title:
                   type: string
-                  minLength: 1
                   maxLength: 120
+                  description: Opcional legacy; si se omite se autofillea con el rol (owner/operator).
                 consent:
                   type: boolean
                   const: true
@@ -11642,7 +11723,6 @@ paths:
                   description: Requerido con signature_mode typed; debe coincidir con signer_name.
             example:
               signer_name: Jordan Lee
-              signer_title: Chief Executive Officer
               consent: true
               signature_png: <PNG_BASE64_SIGNATURE>
       responses:
@@ -11656,12 +11736,12 @@ paths:
                 final_hash: sha256-of-the-final-pdf
                 signed_at: '2026-10-01T14:03:12Z'
         '401':
-          description: OTP inválido o vencido.
+          description: Se requiere autenticación.
           content:
             application/json:
               example:
-                error: invalid_otp
-                message: the verification code is invalid or expired
+                error: unauthorized
+                message: authentication required
         '409':
           description: El sobre ya no se puede firmar, o fue reemplazado por uno nuevo.
           headers:
@@ -11944,6 +12024,179 @@ paths:
                 message: cannot unlink the only sign-in method; set a password or link another provider first
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/me/invites:
+    get:
+      tags:
+      - Cuenta
+      operationId: listMyCompanyInvites
+      summary: Listar mis invitaciones de empresa
+      description: Invitaciones de empresa dirigidas al buzón del acceso en sesión. Solo sesiones humanas.
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: Invitaciones.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  company_name: Acme SpA
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/invites/{inviteID}/accept:
+    post:
+      tags:
+      - Cuenta
+      operationId: acceptCompanyInvite
+      summary: Aceptar una invitación de empresa
+      description: Acepta una invitación pendiente con el token del email. El buzón de la sesión debe coincidir exacto con el invitado; al aceptar se crea un acceso vinculado (misma credencial, rol propio de la empresa). Solo sesiones humanas.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              properties:
+                token:
+                  type: string
+            example:
+              token: 7f3a9c1e4b5d4e6f8a9b0c1d2e3f4a5b6c7d8e9f
+      responses:
+        '201':
+          description: Acceso vinculado creado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_id:
+                    type: string
+                    format: uuid
+                  account_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                  linked:
+                    type: boolean
+              example:
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                role: operator
+                linked: true
+        '401':
+          description: Token inválido o ya usado (`invalid_token`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_token
+                message: the invitation is invalid or expired
+        '410':
+          description: La invitación expiró (`invite_expired`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invite_expired
+                message: the invitation expired; ask the company to invite you again
+        '409':
+          description: Invitación ya decidida o email ya miembro.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: the invitation was already decided
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+  /v1/me/invites/{inviteID}/decline:
+    post:
+      tags:
+      - Cuenta
+      operationId: declineCompanyInvite
+      summary: Rechazar una invitación de empresa
+      description: Rechaza una invitación pendiente dirigida al acceso en sesión (idempotente, sin token). Solo sesiones humanas.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitación rechazada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: declined
+                changed: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/member:
     get:
       tags:
@@ -12981,6 +13234,81 @@ paths:
           description: Token OTP inválido o usado (`invalid_otp`).
         '403':
           description: Falta la prueba (`otp_required`), canal incorrecto (`phone_proof_required`) o requerido por la org (`policy_locked_by_org`).
+  /v1/me/switch:
+    post:
+      tags:
+      - Cuenta
+      operationId: switchAccount
+      summary: Cambiar a otra de mis cuentas
+      description: Emite una sesión fresca para otra cuenta del mismo acceso (auditado). La sesión actual no se revoca. Solo sesiones humanas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - account_id
+              properties:
+                account_id:
+                  type: string
+                  format: uuid
+            example:
+              account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      responses:
+        '200':
+          description: Sesión fresca para la cuenta destino.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                  refresh_token:
+                    type: string
+                  refresh_expires_at:
+                    type: string
+                    format: date-time
+                  account_id:
+                    type: string
+                    format: uuid
+                  member_id:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+              example:
+                access_token: eyJhbGciOiJIUzI1NiJ9.example
+                expires_at: '2026-11-26T12:00:00Z'
+                refresh_token: mrt_example
+                refresh_expires_at: '2027-02-23T12:00:00Z'
+                account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                member_id: 9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d
+                role: operator
+        '404':
+          description: Esa cuenta no es accesible por este acceso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: not_found
+                message: resource not found
+        '403':
+          description: Falta credencial de cuenta (`AccountRequired`) o cuenta no disponible para cambiar (`switch_unavailable`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: switch_unavailable
+                message: that account is not available for switching right now
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/me/totp:
     get:
       tags:
@@ -13128,7 +13456,7 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`).'
+        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
         schema:
           type: string
           enum:
@@ -13187,13 +13515,13 @@ paths:
                   country: MX
                   method: spei
                   counterparty: Juan Pérez
-                  info_request:
-                    message: Please upload the invoice that justifies this payment
-                    requested_at: '2026-08-06T15:20:00Z'
+                  info_request: Please upload the invoice that justifies this payment
+                  info_requested_at: '2026-08-06T15:20:00Z'
                   created_at: '2026-08-06T14:32:00Z'
                   updated_at: '2026-08-06T15:20:00Z'
                   dispatch_failed: false
                   dispatch_error: null
+                  needs_action: false
                 page: 1
                 page_size: 50
                 total: 1
@@ -13246,9 +13574,8 @@ paths:
                   country: MX
                   method: spei
                   counterparty: Juan Pérez
-                  info_request:
-                    message: Please upload the invoice that justifies this payment
-                    requested_at: '2026-08-06T15:20:00Z'
+                  info_request: Please upload the invoice that justifies this payment
+                  info_requested_at: '2026-08-06T15:20:00Z'
                   requested_documents:
                   - bankStatement
                   - sourceOfWealth
@@ -13265,6 +13592,7 @@ paths:
                   updated_at: '2026-08-06T15:40:00Z'
                   dispatch_failed: false
                   dispatch_error: null
+                  needs_action: false
         '404':
           description: The review does not belong to the account.
           content:
@@ -13272,6 +13600,77 @@ paths:
               example:
                 error: not_found
                 message: review not found
+  /v1/me/txn-reviews/{reviewID}/fields:
+    post:
+      tags:
+      - Account
+      operationId: submitMyTxnReviewFields
+      summary: Enviar los datos solicitados en un pedido de información
+      description: Envía los datos pedidos por un request-info mapeado (`requested_fields`, vocabulario cerrado de claves de requisito) para una solicitud banking o de tarjeta. Solo se aceptan las claves que el equipo pidió — cualquier otra responde `400 field_not_requested`. Cada valor se valida por tipo (texto, email, teléfono, país ISO, fecha `YYYY-MM-DD`, salario USD positivo, sí/no, objeto de dirección, moneda de 3 letras, propósito, códigos de catálogo del emisor, prosa de motivo); un valor con mal tipo responde `400 invalid_field_value` nombrando la clave. Un valor `*_na_reason` (20-500 caracteres explicando por qué el documento no existe) satisface su requisito cuando no se aportó el documento y se reenvía al proveedor como carta de no disponibilidad. Los valores viven solo en la revisión y se fusionan al checklist y al despacho de la aprobación — el expediente KYC/KYB jamás se toca. Como con un archivo, el primer envío devuelve la revisión a `in_review` y avisa al revisor; los siguientes solo agregan evidencia. Acepta `info_requested`, o `in_review` tras un `request-info` previo.
+      parameters:
+      - name: reviewID
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              fields:
+                first_name: Juan
+                nationality: CL
+      responses:
+        '200':
+          description: Datos guardados; incluye las claves pedidas restantes.
+          content:
+            application/json:
+              example:
+                fields_submitted:
+                - first_name
+                - nationality
+                fields_remaining: []
+                status: in_review
+        '400':
+          description: Error de validación.
+          content:
+            application/json:
+              examples:
+                invalid_field:
+                  summary: Campo pedido desconocido
+                  value:
+                    error: invalid_field
+                    message: unknown requested field
+                field_not_requested:
+                  summary: Campo no pedido
+                  value:
+                    error: field_not_requested
+                    message: 'field was not requested for this review: last_name'
+                invalid_field_value:
+                  summary: Valor con mal tipo para el campo
+                  value:
+                    error: invalid_field_value
+                    message: 'field nationality: invalid country'
+                fields_not_supported:
+                  summary: No es una revisión de solicitud
+                  value:
+                    error: fields_not_supported
+                    message: field submission is only supported for banking and card applications
+        '404':
+          description: La revisión no pertenece a la cuenta.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: review not found
+        '409':
+          description: La revisión no está esperando información.
+          content:
+            application/json:
+              example:
+                error: not_awaiting_info
+                message: this review is not waiting for additional information
   /v1/me/txn-reviews/{reviewID}/files:
     post:
       tags:
@@ -13322,6 +13721,18 @@ paths:
           - shareholderRegister
           - directorsRegister
           - swornDeclaration
+          - identity_front
+          - identity_back
+          - ubo_gov_id_front
+          - ubo_gov_id_back
+          - uboIdentityBack
+          - ubo_bank_statement
+          - ubo_proof_of_address
+          - ubo_source_of_wealth
+          - certificateOfGoodStanding
+          - registerShareholder
+          - idShareholders
+          - addressVerificationShareholders
       requestBody:
         required: true
         content:
@@ -14144,6 +14555,231 @@ paths:
                 message: members are only available for company accounts
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/members/invite:
+    post:
+      tags:
+      - Cuenta
+      operationId: inviteCompanyMember
+      summary: Invitar una cuenta existente a la empresa
+      description: Invita a una cuenta que ya existe en la organización a operar en esta empresa como operador o lector. Solo owner, solo empresas, protegido con OTP (`member_add`) e idempotente (`Idempotency-Key`). El invitado acepta desde su propia sesión; al aceptar se crea un acceso vinculado (misma credencial, rol propio de la empresa).
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum:
+                  - operator
+                  - viewer
+            example:
+              email: ops@example.com
+              role: operator
+      responses:
+        '201':
+          description: Invitación creada (pendiente).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                invited_by: owner@example.com
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '400':
+          description: Email/rol inválido o falta `Idempotency-Key`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_role
+                message: role must be operator or viewer
+        '404':
+          description: Ninguna cuenta de la organización usa ese email (`invitee_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invitee_not_found
+                message: no account in this organization uses that email; they must create their account first
+        '409':
+          description: Invitado no listo, ya miembro o conflicto de idempotencia.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: already_member
+                message: that email already has access to this company
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites:
+    get:
+      tags:
+      - Cuenta
+      operationId: listCompanyInvites
+      summary: Listar invitaciones de la empresa
+      description: Invitaciones pendientes y decididas de la empresa que llama.
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+      responses:
+        '200':
+          description: Invitaciones.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyInvite'
+              example:
+                page: 1
+                page_size: 50
+                invites:
+                - invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                  company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  email: ops@example.com
+                  role: operator
+                  status: pending
+                  invited_by: owner@example.com
+                  expires_at: '2026-12-02T12:00:00Z'
+                  created_at: '2026-11-25T12:00:00Z'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/resend:
+    post:
+      tags:
+      - Cuenta
+      operationId: resendCompanyInvite
+      summary: Reenviar una invitación pendiente
+      description: Rota el token, renueva la vigencia de 7 días y reenvía el email de una invitación pendiente. Solo owner, protegido con OTP (`member_add`).
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitación reenviada con token nuevo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInvite'
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                company_account_id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                company_name: Acme SpA
+                email: ops@example.com
+                role: operator
+                status: pending
+                delivery: link
+                expires_at: '2026-12-02T12:00:00Z'
+                created_at: '2026-11-25T12:00:00Z'
+        '409':
+          description: Solo se pueden reenviar pendientes (`invalid_state`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be resent
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/members/invites/{inviteID}/revoke:
+    post:
+      tags:
+      - Cuenta
+      operationId: revokeCompanyInvite
+      summary: Revocar una invitación pendiente
+      description: Revoca una invitación pendiente de la empresa (idempotente). Solo owner, protegido con OTP (`member_add`). Se avisa al invitado.
+      parameters:
+      - name: inviteID
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Invitación revocada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+              example:
+                invite_id: 7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b
+                status: revoked
+                changed: true
+        '409':
+          description: Solo se pueden revocar pendientes (`invalid_state`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_state
+                message: only pending invitations can be revoked
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/AccountRequired'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/members/{memberID}/reset-password:
     post:
       tags:
@@ -14548,6 +15184,8 @@ paths:
                   - transfer
                   - banking_operation
                   - card_reveal
+                  - card_freeze
+                  - card_cancel
                   - api_key_create
                   - member_add
                   - phone_change
@@ -14826,6 +15464,8 @@ paths:
                   - transfer
                   - banking_operation
                   - card_reveal
+                  - card_freeze
+                  - card_cancel
                   - api_key_create
                   - member_add
                   - phone_change
@@ -15244,6 +15884,78 @@ paths:
                   type: string
                   maxLength: 40
                   description: Solo transferencia anunciada — número de cuenta bancaria del pagador (al menos 5 caracteres). Opcional; es una señal extra de conciliación cuando el corredor informa la cuenta de origen.
+                segregated_mode:
+                  type: string
+                  enum:
+                  - account
+                  - existing
+                  - get_or_create
+                  - new_per_payin
+                  default: account
+                  description: Solo método tarjeta — dónde liquida el neto. `account` (default) acredita tu saldo general como siempre. `existing` fondea una wallet segregada ya creada (`segregated_wallet_id` obligatoria). `get_or_create` reusa la wallet ligada a `segregated_key` o la crea en el momento (`segregated_chain` y `segregated_key` obligatorias, `segregated_asset` usa el asset de la chain). `new_per_payin` crea una wallet nueva por cada payin (`segregated_chain` obligatoria). En modos segregados el neto se fondea on-chain a la dirección de la wallet con transacción trazable; las horas de settlement de tarjeta aplican antes del fondeo. Crear una wallet cobra el fee estándar wallet_creation a tu saldo general (reembolsado si el core la rechaza); las cuentas persona tienen una wallet por par red/asset. El reuso de sesión de tarjeta queda aislado por wallet destino, y por defecto cada cuenta puede crear como máximo 50 wallets al día (tu operador puede subir el tope por organización).
+                segregated_wallet_id:
+                  type: string
+                  format: uuid
+                  description: 'Solo método tarjeta — id de la wallet segregada para `segregated_mode: existing`. Debe pertenecer a la cuenta llamante (un id ajeno o desconocido responde 404). Chain y asset se heredan de la wallet.'
+                segregated_chain:
+                  type: string
+                  description: Solo método tarjeta — red de la wallet para `get_or_create` y `new_per_payin` (una de tron, eth, polygon, base, btc).
+                segregated_asset:
+                  type: string
+                  description: 'Solo método tarjeta — asset de la wallet para `get_or_create` y `new_per_payin`. Si se omite usa el asset de la chain (por ejemplo USDT en tron). Pares soportados: tron/usdt, eth/usdt, eth/usdc, polygon/usdt, polygon/usdc, polygon/usdce, base/usdc, btc/btc. El fondeo on-chain v1 soporta destinos USDT/USDC; otros assets devuelven `invalid_asset`.'
+                segregated_key:
+                  type: string
+                  maxLength: 120
+                  description: Solo método tarjeta — tu clave estable para `get_or_create` (máx 120 caracteres, por ejemplo kontigo:user:123). La misma clave reusa la misma wallet; una clave nueva crea una wallet en el momento.
+                segregated_label:
+                  type: string
+                  maxLength: 120
+                  description: Solo método tarjeta — etiqueta opcional para mostrar la wallet segregada (texto plano, máx 120 caracteres).
+                segregated_owner:
+                  type: object
+                  description: Solo método tarjeta — identidad opcional del dueño final de la wallet segregada (estándar de evidencia en disputas). Cada campo es opcional; el mínimo útil es nombre más documento más país más email.
+                  properties:
+                    external_id:
+                      type: string
+                      maxLength: 120
+                    name:
+                      type: string
+                      maxLength: 140
+                    document_type:
+                      type: string
+                      maxLength: 50
+                    document_number:
+                      type: string
+                      maxLength: 50
+                    country:
+                      type: string
+                      maxLength: 120
+                    email:
+                      type: string
+                      maxLength: 120
+                    phone:
+                      type: string
+                      maxLength: 40
+                    kyc_level:
+                      type: string
+                      maxLength: 40
+                      description: Tu nivel de verificación del dueño (por ejemplo L1, L2, L3).
+                    kyc_verified_at:
+                      type: string
+                      format: date-time
+                      description: Fecha RFC3339 en que el dueño completó la verificación.
+                    is_company:
+                      type: boolean
+                    company_name:
+                      type: string
+                      maxLength: 140
+                    company_tax_id:
+                      type: string
+                      maxLength: 50
+                    order_id:
+                      type: string
+                      maxLength: 120
+                      description: Tu id de orden para la evidencia de entrega.
             examples:
               bo_qr:
                 summary: Bolivia — cobro QR (BOB)
@@ -15343,6 +16055,37 @@ paths:
                   save_card: true
                   payer_reference: cliente-7719
                   idempotency_key: plan-pro-7719
+              us_card_segregated:
+                summary: Tarjetas internacionales — checkout que liquida a wallet segregada (US/USD)
+                value:
+                  country: US
+                  currency: USD
+                  method: card
+                  amount: '100.00'
+                  description: Recarga billetera usuario
+                  customer:
+                    email: pagador@ejemplo.com
+                    first_name: Juan
+                    last_name: Perez
+                  payer_reference: cliente-123
+                  segregated_mode: get_or_create
+                  segregated_chain: tron
+                  segregated_asset: USDT
+                  segregated_key: kontigo:user:123
+                  segregated_label: Billetera Juan
+                  segregated_owner:
+                    external_id: user-123
+                    name: Juan Perez
+                    document_type: CI
+                    document_number: '12345678'
+                    country: CL
+                    email: pagador@ejemplo.com
+                    kyc_level: intermediate
+                    kyc_verified_at: '2026-11-18T15:04:05Z'
+                    order_id: kontigo-order-789
+                  success_url: https://tu-app.com/pago/ok
+                  failure_url: https://tu-app.com/pago/error
+                  idempotency_key: kontigo-pay-001
               checkout_usdt:
                 summary: Link de cobro universal — 50 USDT (multi-país, CL preseleccionado)
                 value:
@@ -15617,6 +16360,19 @@ paths:
                     payment_url: https://api.qbank.cl/pay/cards/Kt9XmQ7p…
                     expires_at: '2026-07-26T18:30:00Z'
                     note: share the payment_url with the payer; the balance is credited automatically once the card payment is approved
+                card_segregated:
+                  summary: 'Página de pago con tarjeta que liquida a wallet segregada (method: card, segregated_mode)'
+                  value:
+                    payin_id: 7d2e9f41-2222-3333-4444-555566667777
+                    status: pending
+                    reference: 7d2e9f41-2222-3333-4444-555566667777
+                    payment_url: https://api.qbank.cl/pay/cards/Qt8WnR4s…
+                    expires_at: '2026-11-26T18:30:00Z'
+                    segregated_wallet_id: 9e3f8a52-3333-4444-5555-666677778888
+                    segregated_mode: get_or_create
+                    segregated_address: TEvJ9y4qW8xN2mK6pR5sT7uV3wX1yZ4aB6c
+                    funding_status: pending
+                    note: comparte el payment_url con el pagador; al aprobarse, el neto se fondea on-chain a la wallet segregada
                 checkout:
                   summary: 'Link de cobro universal (method: checkout)'
                   value:
@@ -15732,7 +16488,7 @@ paths:
                     error: card_reuse_unavailable
                     message: could not verify an existing card payment
         '429':
-          description: La cuenta tiene 50 sesiones de tarjeta abiertas y no se pudo desalojar una sesión `pending` sin intentos (`too_many_open_card_sessions`).
+          description: La cuenta tiene 50 sesiones de tarjeta abiertas y no se pudo desalojar una sesión `pending` sin intentos (`too_many_open_card_sessions`). Los payins segregados que superarían el tope diario de wallets (default 50 por cuenta al día, ampliable por organización) devuelven `too_many_segregated_wallets`.
           content:
             application/json:
               schema:
@@ -15741,7 +16497,7 @@ paths:
                 error: too_many_open_card_sessions
                 message: too many open card payment sessions
         '409':
-          description: '`idempotency_conflict` — esta clave de idempotencia ya se usó con otro payload. Las claves son únicas por cuenta: usa una clave por operación lógica. Para QR, la comparación usa país, moneda, método y monto numérico; la descripción no forma parte de la identidad.'
+          description: '`idempotency_conflict` — esta clave de idempotencia ya se usó con otro payload. Las claves son únicas por cuenta: usa una clave por operación lógica. Para QR, la comparación usa país, moneda, método y monto numérico; la descripción no forma parte de la identidad. Un `get_or_create` segregado con una clave ya ligada a otro par chain/asset devuelve `segregated_key_conflict`.'
           content:
             application/json:
               schema:
@@ -18447,7 +19203,7 @@ paths:
                 updated_at: '2026-07-07T12:00:00Z'
                 idempotency_hit: true
         '400':
-          description: Solicitud inválida (`idempotency_key_required`, `invalid_payload` o `invalid_amount`). Para payouts por transferencia bancaria CL/CLP, un monto no entero se rechaza antes de cualquier débito, retención, creación del recurso payout o despacho.
+          description: Solicitud inválida (`idempotency_key_required`, `invalid_beneficiary`, `invalid_options`, `invalid_payload`, `invalid_amount` o `invalid_currency`). La validación del adapter devuelve el código específico y un mensaje neutro con el campo u opción que debes corregir. Para payouts por transferencia bancaria CL/CLP, un monto no entero se rechaza antes de cualquier débito, retención, creación del recurso payout o despacho.
           content:
             application/json:
               schema:
@@ -18458,6 +19214,16 @@ paths:
                   value:
                     error: invalid_amount
                     message: amount must be a whole number of CLP (this currency has no minor unit)
+                invalid_beneficiary:
+                  summary: Falta un campo del beneficiario
+                  value:
+                    error: invalid_beneficiary
+                    message: beneficiary.account_number is required
+                invalid_options:
+                  summary: Opción de riel inválida
+                  value:
+                    error: invalid_options
+                    message: options contains an unsupported value
         '402':
           $ref: '#/components/responses/InsufficientFunds'
         '403':
@@ -18519,6 +19285,16 @@ paths:
                   value:
                     error: destination_recently_rejected
                     message: destination was rejected by the bank on 2026-01-15 (prior case <prior_case_id>, code <prior_code>); retry with a new idempotency_key and options.destination_retry_ack=<prior_case_id> to confirm
+                amount_below_minimum:
+                  summary: Monto bajo el mínimo del corredor
+                  value:
+                    error: amount_below_minimum
+                    message: amount must be at least 1 USD for this corridor
+                amount_above_maximum:
+                  summary: Monto sobre el máximo del corredor
+                  value:
+                    error: amount_above_maximum
+                    message: amount must be at most 100000 USD for this corridor
           x-money-out-errors:
           - amount_below_minimum
           - amount_above_maximum
@@ -18805,19 +19581,31 @@ paths:
       - Payouts
       operationId: getPayoutBanks
       summary: Listar bancos de destino
-      description: Catálogo de bancos para los payouts de un país. Sin `method` devuelve la unión de los bancos de todos los métodos del país (deduplicada por código); con `method` acota al catálogo de ese canal. Algunos métodos no tienen catálogo de bancos (ej. QR) y no aportan entradas. Envía `include_variants=true` (también `1` o `yes`) para sumar los catálogos de las variantes internas y resolver solo para display códigos guardados desde un riel no predeterminado. El catálogo predeterminado permanece primero, por lo que en códigos duplicados gana su nombre; sin el flag, la conducta no cambia. Este flag no es para los selectores de creación, que deben seguir validando contra el riel predeterminado.
+      description: Catálogo de bancos para los payouts de un país. Sin `method` devuelve la unión de los bancos de todos los métodos del país (deduplicada por código); con `method` acota al catálogo de ese canal. Algunos métodos no tienen catálogo de bancos (ej. QR) y no aportan entradas. En un corredor etiquetado de país/moneda/método, envía la tupla completa para que la plataforma resuelva server-side el riel efectivo de la organización y devuelva el catálogo de creación correspondiente; el cliente no envía el valor interno del riel. Envía `variant` junto con un `method` explícito para recibir solo el catálogo de esa variante; es seguro para creación y nunca une catálogos. Sin `variant` ni `currency`, se conserva la conducta legacy. Usa `include_variants=true` (también `1` o `yes`) solo para resolver en display códigos guardados desde un riel no predeterminado.
       parameters:
       - name: country
         in: query
         schema:
           type: string
           example: CL
+      - name: currency
+        in: query
+        schema:
+          type: string
+          example: USD
+        description: Moneda ISO opcional que, junto con `country` y `method`, permite resolver server-side el riel efectivo de payout de la organización. Usa los códigos devueltos para selectores de creación; no envíes un identificador interno de riel.
       - name: method
         in: query
         schema:
           type: string
           example: bank_transfer
         description: Método de payout opcional para acotar el catálogo (ver GET /v1/payouts/methods).
+      - name: variant
+        in: query
+        schema:
+          type: string
+          example: <variant-supported>
+        description: Variante de ruteo opcional. Exige un método explícito y devuelve solo el catálogo de esa variante; está destinada a selectores seguros para creación.
       - name: include_variants
         in: query
         schema:
@@ -18838,16 +19626,99 @@ paths:
             application/json:
               schema:
                 type: object
+              examples:
+                catalogo_predeterminado:
+                  value:
+                    items:
+                    - code: '0001'
+                      name: Banco de ejemplo
+                    - code: '0012'
+                      name: Otro banco de ejemplo
+                catalogo_variante:
+                  value:
+                    items:
+                    - code: 0028
+                      name: Banco de ejemplo
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/payouts/beneficiary-schema:
+    get:
+      tags:
+      - Payouts
+      operationId: getPayoutBeneficiarySchema
+      summary: Esquema del formulario de beneficiario de un corredor
+      description: Descriptores de campos solo-datos para el formulario de beneficiario de un corredor (país + método), en orden de render. Labels, placeholders, hints y textos de error se sirven en el locale pedido (?lang=en|es|zh, default en). `validator` / `validator_with_values` nombran el set cerrado de validadores client-side que cada frontend implementa — el backend jamás envía validación ejecutable, y los campos condicionales (show_if, required_if, validate_fn_when) se evalúan contra el formulario vivo. Catálogo estático proxeado desde el core de procesamiento. Los métodos globales (swift/sepa) resuelven para cualquier país vía wildcard; el país pedido se devuelve en eco.
+      parameters:
+      - name: country
+        in: query
+        required: true
+        schema:
+          type: string
+        description: País destino (ISO alpha-2).
+      - name: method
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Método del riel (bank_transfer, yape, pix, swift, sepa...).
+      - name: lang
+        in: query
+        schema:
+          type: string
+          enum:
+          - en
+          - es
+          - zh
+          default: en
+        description: Locale de labels, placeholders, hints y errores.
+      responses:
+        '200':
+          description: Descriptores de campos.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Esquema de beneficiario del corredor.
               example:
-                items:
-                - code: '0001'
-                  name: Banco de Chile
-                - code: '0012'
-                  name: BancoEstado
-                - code: '0037'
-                  name: Santander
-                - code: '0051'
-                  name: Banco Falabella
+                country: CL
+                method: fintoc
+                lang: es
+                fields:
+                - key: name
+                  label: Nombre del beneficiario
+                  kind: text
+                  placeholder: Pedro Soto Fuentes
+                - key: tax_id
+                  label: RUT
+                  kind: text
+                  placeholder: 12.345.678-5
+                  hint: Se valida el dígito verificador
+                  validator: chilean_rut
+                  error: 'RUT inválido: revisa el dígito verificador'
+                - key: bank_code
+                  label: Banco
+                  kind: bank
+                - key: account_type
+                  label: Tipo de cuenta
+                  kind: select
+                  hint: La Cuenta RUT es cuenta vista
+                  options:
+                  - value: checking
+                    label: Cuenta corriente
+                  - value: vista
+                    label: Cuenta vista
+                - key: account_number
+                  label: Número de cuenta
+                  kind: text
+                  hint: Solo números
+                  validator: cl_account_number
+                  error: 'Número de cuenta inválido: solo dígitos (máx. 20)'
+        '400':
+          description: Falta country/method (invalid_payload) o lang inválido (invalid_language).
+        '404':
+          description: Sin esquema para el corredor (payout_corridor_unsupported).
         '403':
           $ref: '#/components/responses/Forbidden'
         '401':
@@ -23011,9 +23882,9 @@ paths:
                     payin_rate_source: lot
                   venezuela:
                     currency: VES
-                    rate: '962.654000'
+                    rate: '980'
                     rate_source: rail
-                    payin_rate: '1020.604704'
+                    payin_rate: '1002.54'
                     payin_rate_source: rail
                   mexico:
                     currency: MXN
@@ -26151,6 +27022,16 @@ paths:
                   to_status: down
                   reason: consecutive infrastructure failures
                   at: '2026-07-24T22:10:00Z'
+                incidents_total_90d: 3
+                mttr_mins_90d: 18
+                incidents_daily:
+                - date: '2026-07-24'
+                  degraded: 0
+                  down: 1
+                  down_minutes: 13
+                  degraded_minutes: 0
+                  corridors_affected: 1
+                  worst: down
         '404':
           description: Token inválido o desconocido.
           content:
@@ -28142,6 +29023,7 @@ paths:
                   percent: '0.15'
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -28168,6 +29050,7 @@ paths:
                   percent: '0.15'
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-a
                 created_at: '2026-07-10T15:00:00Z'
@@ -28252,6 +29135,11 @@ paths:
           type: string
           format: date
         description: Hasta esta fecha (YYYY-MM-DD, zona horaria de la organización, inclusive).
+      - name: coverage_exempt
+        in: query
+        schema:
+          type: boolean
+        description: Filtrar por exención al piso de cobertura BTC (visibilidad tesorería).
       responses:
         '200':
           description: Swaps paginados.
@@ -28279,6 +29167,7 @@ paths:
                   from_amount: '1000.00'
                   to_amount: '0.01568419'
                   rate: '0.00001568'
+                  coverage_exempt: false
                   status: completed
                   idempotency_key: swap-2026-07-10-a
                   created_at: '2026-07-10T15:00:00Z'
@@ -28347,6 +29236,9 @@ paths:
                     description: Unidades de destino por unidad de origen (tasa de ejecución marcada).
                   indicative:
                     type: boolean
+                  coverage_exempt:
+                    type: boolean
+                    description: True cuando la cotización usó exención al piso de cobertura BTC.
                   fees:
                     type: array
                     description: Comisión efectiva de conversión por punta.
@@ -28385,6 +29277,7 @@ paths:
                 fee_total_pct: '0.3500'
                 fee_note: included_in_rate
                 indicative: true
+                coverage_exempt: false
         '400':
           description: invalid_asset / invalid_pair / invalid_amount / amount_too_small / swap_asset_disabled
           content:
@@ -28433,6 +29326,7 @@ paths:
                 from_amount: '0.01000000'
                 to_amount: '4.900990'
                 rate: '490.09900990'
+                coverage_exempt: false
                 status: completed
                 idempotency_key: swap-2026-07-10-b
                 created_at: '2026-07-10T15:05:00Z'
@@ -28992,6 +29886,13 @@ paths:
               example:
                 error: invalid_contact_email
                 message: contact_email must be a valid email address
+        '409':
+          description: A duplicate insert lost its race; refresh the request list.
+          content:
+            application/json:
+              example:
+                error: idempotency_conflict
+                message: a request for this account is already being processed; refresh your requests
         '503':
           description: counsel_pending or email_unavailable.
           content:
@@ -30547,10 +31448,8 @@ components:
         variant:
           type: string
           enum:
-          - legacy
-          - v2
-          - direct
-          - batched
+          - rail_a
+          - rail_b
         source_account:
           type: string
     OrgRailVariantRequest:
@@ -30569,20 +31468,18 @@ components:
           - payout
         country:
           type: string
-          example: BO
+          example: PY
         currency:
           type: string
-          example: BOB
+          example: PYG
         method:
           type: string
           example: bank_transfer
         variant:
           type: string
           enum:
-          - legacy
-          - v2
-          - direct
-          - batched
+          - rail_a
+          - rail_b
         source_account:
           type: string
         reason:
@@ -30751,6 +31648,8 @@ components:
           - transfer
           - banking_operation
           - card_reveal
+          - card_freeze
+          - card_cancel
           - api_key_create
           - member_add
           - phone_change
@@ -31204,6 +32103,9 @@ components:
           type: string
           enum:
           - included_in_rate
+        coverage_exempt:
+          type: boolean
+          description: True cuando el swap ejecutó bajo exención al piso de cobertura BTC.
         status:
           type: string
           example: completed
@@ -31300,6 +32202,68 @@ components:
         created_at:
           type: string
           format: date-time
+        linked:
+          type: boolean
+          description: Verdadero cuando este acceso viene vinculado de otra cuenta (invitación multicuenta); su credencial se gestiona en la cuenta primaria.
+    CompanyInvite:
+      type: object
+      properties:
+        invite_id:
+          type: string
+          format: uuid
+        company_account_id:
+          type: string
+          format: uuid
+        company_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+          - operator
+          - viewer
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - declined
+          - revoked
+          - expired
+        invited_by:
+          type: string
+        delivery:
+          type: string
+          enum:
+          - link
+          - inbox
+        expires_at:
+          type: string
+          format: date-time
+        decided_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    LoginAccount:
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        display_name:
+          type: string
+        member_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+        primary:
+          type: boolean
     ApiKeyIssued:
       type: object
       properties:
@@ -31340,6 +32304,21 @@ components:
               updated_at:
                 type: string
                 format: date-time
+        segregated:
+          type: array
+          description: Sub-balances del staging segregado por wallet (payins con tarjeta segregados esperando fondeo on-chain). Se omite cuando está vacío.
+          items:
+            type: object
+            properties:
+              wallet_id:
+                type: string
+                format: uuid
+              asset:
+                type: string
+                example: USDT
+              available:
+                type: string
+                example: '99.000000'
     MovementsResponse:
       type: object
       properties:
@@ -31613,6 +32592,10 @@ components:
         instrument:
           $ref: '#/components/schemas/PayinInstrument'
           description: Metadatos del instrumento dedicado, presentes cuando existe la fila del instrumento.
+        virtual_iban_id:
+          type: string
+          format: uuid
+          description: Solo payins banking funding — el IBAN virtual que recibió el depósito; se omite en otros rieles y payins legacy.
         account_id:
           type: string
         kind:
@@ -31750,6 +32733,26 @@ components:
           type: string
           format: date-time
           description: Cuándo cayó realmente en tu ledger el saldo de este payin acreditado — al confirmarse para payins sin demora de settlement, o cuando corrió el settlement programado (o un org-admin lo liberó antes) para payins con tarjeta diferidos.
+        segregated_wallet_id:
+          type: string
+          format: uuid
+          description: Solo payins segregados con tarjeta — la wallet sweep-exempt que recibe el neto en vez del saldo general.
+        segregated_mode:
+          type: string
+          description: Solo payins segregados con tarjeta — existing, get_or_create o new_per_payin.
+        segregated_key:
+          type: string
+          description: Solo payins segregados con tarjeta — tu clave estable para wallets get_or_create.
+        funding_status:
+          type: string
+          description: Solo payins segregados con tarjeta — none, pending, processing, completed o failed.
+        funding_tx_id:
+          type: string
+          description: Solo payins segregados con tarjeta — transacción on-chain del fondeo al completarse.
+        funded_at:
+          type: string
+          format: date-time
+          description: Solo payins segregados con tarjeta — cuándo confirmó en cadena la transacción de fondeo.
         fx_rate:
           type: string
           description: Tu tasa de payin al momento del abono (presente una vez que el pago fue recibido y convertido).
@@ -31901,6 +32904,10 @@ components:
         balance_after:
           type: string
           description: Presente en el webhook `payin_refunded` — el saldo debitado después del movimiento (el asset de crédito del payin; puede ser negativo en un contracargo).
+        debited_wallet_id:
+          type: string
+          format: uuid
+          description: Solo reversas de payins segregados — la wallet de staging debitada (se omite cuando se debitó el general).
         receipt_url:
           type: string
         created_at:
@@ -32066,6 +33073,46 @@ components:
         exported_at:
           type: string
           format: date-time
+        wallet_key:
+          type: string
+          description: Clave estable para wallets get_or_create (se omite en manuales o por payin).
+        owner:
+          type: object
+          description: Identidad del dueño final aportada al crear (estándar de evidencia en disputas). Cada campo es opcional.
+          properties:
+            external_id:
+              type: string
+            name:
+              type: string
+            document_type:
+              type: string
+            document_number:
+              type: string
+            country:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+            kyc_level:
+              type: string
+            kyc_verified_at:
+              type: string
+              format: date-time
+            is_company:
+              type: boolean
+            company_name:
+              type: string
+            company_tax_id:
+              type: string
+            order_id:
+              type: string
+        staging_usd:
+          type: string
+          description: USD del staging esperando fondeo on-chain (se omite en cero).
+        staging_usdt:
+          type: string
+          description: USDT del staging esperando fondeo on-chain (se omite en cero).
         created_at:
           type: string
           format: date-time
@@ -32573,6 +33620,10 @@ webhooks:
                   description: Instrumento de depósito dedicado que recibió el payin; se omite cuando no aplica.
                 instrument:
                   $ref: '#/components/schemas/PayinInstrument'
+                virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: Solo payins banking funding — el IBAN virtual que recibió el depósito; se omite en otros rieles y payins legacy.
                 payer:
                   type: object
                   description: Identidad del pagador reportada por el banco para créditos nuevos, cuando está disponible.
@@ -32583,6 +33634,19 @@ webhooks:
                       type: string
                     account:
                       type: string
+                segregated_wallet_id:
+                  type: string
+                  format: uuid
+                  description: Solo payins segregados con tarjeta — la wallet sweep-exempt que recibe el neto en vez del saldo general.
+                segregated_mode:
+                  type: string
+                  description: Solo payins segregados con tarjeta — existing, get_or_create o new_per_payin.
+                funding_status:
+                  type: string
+                  description: Solo payins segregados con tarjeta — pending, processing, completed o failed.
+                funding_tx_id:
+                  type: string
+                  description: Solo payins segregados con tarjeta — transacción on-chain del fondeo al completarse.
                 idempotency_key: *id015
             example:
               payin_id: 4f8a1b2c-3d4e-5f60-7a8b-9c0d1e2f3a4b
@@ -33035,7 +34099,7 @@ webhooks:
   crypto_deposit_credited:
     post:
       summary: Depósito crypto acreditado
-      description: 'Un depósito on-chain fue confirmado y acreditado (neto de la comisión de fondeo) al saldo del activo de la wallet (`USDT` o `USDC`).
+      description: 'Un depósito on-chain fue confirmado y acreditado (neto de la comisión de fondeo) al saldo del activo de la wallet (`USDT` o `USDC`). Un evento por transferencia: una transacción en lote emite un evento por transferencia, todos con el mismo `tx_id`, distinguidos por `event_index` (log index ERC-20 en cadenas EVM). `hold_id` solo está presente cuando el crédito libera un hold de compliance.
 
 
         Cada entrega incluye `X-Webhook-Event`, `X-Webhook-Event-ID`, `X-Webhook-Delivery-ID`, `X-Webhook-Timestamp` y `X-Webhook-Signature = hex(HMAC-SHA256(secret, timestamp + "." + body))`. Responde 2xx; hasta 5 intentos con backoff incremental.'
@@ -33049,22 +34113,35 @@ webhooks:
                 chain: *id015
                 asset: *id015
                 tx_id: *id015
+                event_index:
+                  type: integer
+                  description: Índice de la transferencia dentro de la transacción (log index ERC-20 en EVM). Junto con tx_id identifica el depósito.
                 amount: *id015
                 fee: *id015
+                from_address: *id015
+                deposit_id: *id015
+                receipt_url: *id015
+                hold_id:
+                  type: string
+                  description: Presente solo cuando este crédito libera un hold de compliance; enlaza con el evento crypto_deposit_held.
             example:
               account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
               chain: tron
               asset: USDT
               tx_id: b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b
+              event_index: 0
               amount: '499.000000'
               fee: '1.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
+              deposit_id: a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+              receipt_url: https://api.qbank.cl/platform/v1/crypto/deposits/a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d/receipt
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.
   crypto_deposit_held:
     post:
       summary: Depósito crypto retenido por revisión de compliance
-      description: Un depósito on-chain entrante NO se acreditó porque la dirección remitente presenta riesgo severo (sanciones / fondos ilícitos directos). El equipo de compliance del operador revisa el hold y lo libera (acredita) o lo rechaza.
+      description: Un depósito on-chain entrante NO se acreditó porque la dirección remitente presenta riesgo severo (sanciones / fondos ilícitos directos). El equipo de compliance del operador revisa el hold y lo libera (acredita) o lo rechaza. `event_index` identifica cuál transferencia de la transacción quedó retenida; al liberarse, el evento crypto_deposit_credited trae el mismo `hold_id`.
       requestBody:
         content:
           application/json:
@@ -33074,6 +34151,9 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1
+              event_index: 1
+              amount: '250.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
               risk: Severe
               status: held
       responses:
@@ -33082,7 +34162,7 @@ webhooks:
   crypto_deposit_alert:
     post:
       summary: Depósito crypto acreditado con alerta de riesgo
-      description: Un depósito entrante se acreditó normal, pero la dirección remitente presenta riesgo alto. Informativo — no requiere acción sobre los fondos.
+      description: Un depósito entrante se acreditó normal, pero la dirección remitente presenta riesgo alto. Informativo — no requiere acción sobre los fondos. `event_index` identifica a cuál transferencia de la transacción refiere la alerta; el evento crypto_deposit_credited pareado trae el monto.
       requestBody:
         content:
           application/json:
@@ -33091,8 +34171,47 @@ webhooks:
               chain: tron
               asset: usdt
               tx_id: 9c6d4e92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b2
+              event_index: 0
               risk: High
               status: credited
+      responses:
+        '200':
+          description: Devuelve cualquier 2xx para confirmar la entrega.
+  crypto_deposit_under_review:
+    post:
+      summary: Depósito crypto en revisión de compliance
+      description: 'Un depósito entrante entró a revisión de compliance. Espejo redactado de crypto_deposit_held (status held, trae hold_id) y crypto_deposit_alert (status credited): jamás trae el veredicto de riesgo. Suscríbelo para operar depósitos retenidos desde la cuenta.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id: *id015
+                hold_id:
+                  type: string
+                  description: Presente solo cuando el depósito está retenido; referéncialo con soporte.
+                chain: *id015
+                asset: *id015
+                tx_id: *id015
+                event_index:
+                  type: integer
+                  description: Índice de la transferencia dentro de la transacción.
+                amount: *id015
+                from_address: *id015
+                status:
+                  type: string
+                  description: held (no acreditado, espera decisión) o credited (marcado pero acreditado normal).
+            example:
+              account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+              hold_id: c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f
+              chain: tron
+              asset: usdt
+              tx_id: 8a5b3c92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b1
+              event_index: 1
+              amount: '250.000000'
+              from_address: TXYZabc123def456ghi789jkl012mno345pqr
+              status: held
       responses:
         '200':
           description: Devuelve cualquier 2xx para confirmar la entrega.

@@ -132,6 +132,7 @@ Verify the signature and deduplicate by `X-Webhook-Event-ID`. A delivery is a no
 | `crypto_deposit_credited` | An on-chain deposit was confirmed and credited |
 | `crypto_deposit_held` | An incoming deposit was held due to sender risk ([screening](https://docs.cbpayapp.com/en/guides/screenings)) |
 | `crypto_deposit_alert` | A deposit was credited but the sender shows high risk (informational) |
+| `crypto_deposit_under_review` | A deposit entered compliance review (`held` or `credited`); redacted mirror without the risk verdict — subscribe to operate held deposits |
 | `crypto_withdrawal_status_changed` | An on-chain withdrawal changed state |
 | `banking_customer_status_changed` | A banking profile verification changed (your own or a registered third party's — `customer_kind` tells them apart) |
 | `banking_operation_status_changed` | A bank payment changed state |
@@ -298,8 +299,12 @@ receipt fields; a failed payout refunds the exact debit.
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TDonor…",
+  "deposit_id": "a1b2…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/a1b2…/receipt"
 }
 ```
 ```json crypto_deposit_held
@@ -309,6 +314,9 @@ receipt fields; a failed payout refunds the exact debit.
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
@@ -319,8 +327,22 @@ receipt fields; a failed payout refunds the exact debit.
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "9c6d4e…",
+  "event_index": 0,
   "risk": "High",
   "status": "credited"
+}
+```
+```json crypto_deposit_under_review
+{
+  "account_id": "ae8c…",
+  "hold_id": "c1d2e3f4…",
+  "chain": "tron",
+  "asset": "usdt",
+  "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
+  "status": "held"
 }
 ```
 ```json crypto_withdrawal_status_changed

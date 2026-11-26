@@ -363,6 +363,10 @@ Errors from the review of operations held by the transactional firewall ([guide]
 | 400 | `invalid_range` | Invalid `from`/`to` dates — `YYYY-MM-DD` format (organization timezone) |
 | 400 | `invalid_name` | Missing filename in the `name` query param (max 200 chars, no path separators) |
 | 400 | `empty_file` | The file body arrived empty |
+| 400 | `fields_not_supported` | Field submission only works on banking and card application reviews |
+| 400 | `invalid_field` | Unknown requested field — use the closed requirement-key vocabulary |
+| 400 | `field_not_requested` | The field was not requested for this review — only `requested_fields` keys are accepted |
+| 400 | `invalid_field_value` | The value does not match the field type — the message names the key |
 | 404 | `not_found` | The review or file does not belong to your account — by design the API never answers 403 |
 | 409 | `not_awaiting_info` | The review is not waiting for information (it already moved back to `in_review` or has a final decision) — check its current state |
 | 413 | `file_too_large` | The file exceeds the 50 MB limit — compress it or split it |
@@ -415,6 +419,8 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 | 503 | `channel_unavailable` | The payout channel is temporarily unavailable; retry later with the **same** idempotency key |
 | 503 | `webhook_processing_pending` | An inbound webhook event is already being processed; retry the same delivery after a short backoff and do not create a new operation |
 | 503 | `export_unavailable` | Segregated wallet private key export is not enabled on this environment |
+| 503 | `effects_pending` | The withdrawal settled but its final effects are still being reconciled by the automatic sweep; poll the withdrawal, do not re-sweep |
+| 503 | `sweep_unavailable` | The manual reconciliation sweep could not reach the core; nothing was mutated — retry once the core is reachable |
 
 ## How to handle them
 

@@ -1107,6 +1107,7 @@ for your organization.
 ## Dedicated-account metadata and payer identity
 
 Pushes credited to a dedicated deposit account expose `instrument_id`, an `instrument` block and the bank-reported `payer` block — full shape in the [Funding guide](https://docs.cbpayapp.com/en/guides/funding#instrument-and-payer-fields-on-credited-pushes). Filter the history with `?instrument_id=<uuid>`.
+For `banking_funding` payins received through a virtual IBAN, `GET /v1/payins/{id}` and `payin_credited` include the receiving `virtual_iban_id` UUID for attribution without another lookup; unresolved vIBANs, other rails and legacy records omit it, and detail plus webhook carry the same value.
 
 ## 3. Receiving the credit
 

@@ -1,5 +1,5 @@
 {
-  "count": 479,
+  "count": 485,
   "errors": [
     {
       "category": {
@@ -3465,6 +3465,62 @@
         "es": "Firewall transaccional",
         "zh": "交易防火墙"
       },
+      "code": "fields_not_supported",
+      "http": 400,
+      "meaning": {
+        "en": "Field submission only works on banking and card application reviews",
+        "es": "El envío de datos solo funciona en revisiones de solicitud banking o de tarjeta",
+        "zh": "数据提交仅适用于银行或卡申请类审核"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "invalid_field",
+      "http": 400,
+      "meaning": {
+        "en": "Unknown requested field — use the closed requirement-key vocabulary",
+        "es": "Campo pedido desconocido — usa el vocabulario cerrado de claves de requisito",
+        "zh": "未知的要求字段——请使用需求键封闭词汇"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "field_not_requested",
+      "http": 400,
+      "meaning": {
+        "en": "The field was not requested for this review — only `requested_fields` keys are accepted",
+        "es": "El campo no fue pedido para esta revisión — solo se aceptan claves de `requested_fields`",
+        "zh": "该字段未被本次审核要求——仅接受 `requested_fields` 中的键"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "invalid_field_value",
+      "http": 400,
+      "meaning": {
+        "en": "The value does not match the field type — the message names the key",
+        "es": "El valor no calza con el tipo del campo — el mensaje nombra la clave",
+        "zh": "值与字段类型不符——消息中会指明键名"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
       "code": "not_awaiting_info",
       "http": 409,
       "meaning": {
@@ -3891,6 +3947,34 @@
         "en": "Segregated wallet private key export is not enabled on this environment",
         "es": "El export de llaves privadas de wallets segregadas no está habilitado en este entorno",
         "zh": "当前环境未启用独立钱包私钥导出"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "effects_pending",
+      "http": 503,
+      "meaning": {
+        "en": "The withdrawal settled but its final effects are still being reconciled by the automatic sweep; poll the withdrawal, do not re-sweep",
+        "es": "El retiro se liquidó pero sus efectos finales aún los concilia el barrido automático; consulta el retiro, no repitas el barrido",
+        "zh": "提现已结算，但最终效果仍由自动对账处理；请查询提现，不要重复触发"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "sweep_unavailable",
+      "http": 503,
+      "meaning": {
+        "en": "The manual reconciliation sweep could not reach the core; nothing was mutated — retry once the core is reachable",
+        "es": "El barrido manual de conciliación no pudo contactar al core; nada cambió — reintenta cuando el core esté disponible",
+        "zh": "手动对账无法连接核心；未发生变更 — 核心恢复后重试"
       }
     },
     {

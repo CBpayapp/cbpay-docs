@@ -339,6 +339,10 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 400 | `invalid_range` | `from`/`to` 日期无效——格式为 `YYYY-MM-DD`（组织时区） |
 | 400 | `invalid_name` | 缺少查询参数 `name` 中的文件名（最多 200 个字符，不含路径分隔符） |
 | 400 | `empty_file` | 文件请求体为空 |
+| 400 | `fields_not_supported` | 数据提交仅适用于银行或卡申请类审核 |
+| 400 | `invalid_field` | 未知的要求字段——请使用需求键封闭词汇 |
+| 400 | `field_not_requested` | 该字段未被本次审核要求——仅接受 `requested_fields` 中的键 |
+| 400 | `invalid_field_value` | 值与字段类型不符——消息中会指明键名 |
 | 404 | `not_found` | 该审核或文件不属于您的账户——设计上绝不返回 403 |
 | 409 | `not_awaiting_info` | 该审核不在等待信息（已回到 `in_review` 或已有最终决定）——请查询其当前状态 |
 | 413 | `file_too_large` | 文件超过 50 MB 上限——请压缩或拆分 |
@@ -391,6 +395,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 503 | `channel_unavailable` | 出金通道暂时不可用；请稍后使用**相同的**幂等键重试 |
 | 503 | `webhook_processing_pending` | 入站 webhook 事件正在处理中；短暂退避后重试同一条投递，不要创建新的操作 |
 | 503 | `export_unavailable` | 当前环境未启用独立钱包私钥导出 |
+| 503 | `effects_pending` | 提现已结算，但最终效果仍由自动对账处理；请查询提现，不要重复触发 |
+| 503 | `sweep_unavailable` | 手动对账无法连接核心；未发生变更 — 核心恢复后重试 |
 
 ## 如何处理
 

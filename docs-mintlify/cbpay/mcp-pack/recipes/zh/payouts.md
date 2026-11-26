@@ -66,9 +66,9 @@ curl https://api.qbank.cl/platform/v1/payouts/methods \
 | 秘鲁 | PEN | `bank_transfer`、`yape` |
 | 墨西哥 | MXN | `bank_transfer`（SPEI：CLABE 或借记卡） |
 | 委内瑞拉 | VES | `bank_transfer`、`pago_movil` |
-| 玻利维亚 | BOB / USD | `bank_transfer`、`qr`（参见 [QR 出金](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)） |
+| 玻利维亚 | BOB | `bank_transfer`、`qr`（参见 [QR 出金](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)） |
 | 巴西 | BRL | `pix`（按密钥或到账户）、`qr`（PIX 二维码 —— 参见 [QR 出金](https://docs.cbpayapp.com/zh/guides/payout-special-cases#qr-出金)） |
-| 厄瓜多尔 | USD | `bank_transfer`、`deuna`、`cash_pickup`、`cnb` |
+| 厄瓜多尔 | USD | `bank_transfer` |
 | 巴拉圭 | PYG | `bank_transfer` |
 | 阿根廷 | ARS / USD | `bank_transfer`（CBU 或 CVU） |
 | 哥伦比亚 | COP | `bank_transfer`（整数金额，无小数）、`breb` |
@@ -77,6 +77,10 @@ curl https://api.qbank.cl/platform/v1/payouts/methods \
 可用性可能变化；目录（`GET /v1/payouts/methods`）始终是唯一可信来源。
 如果某个国家只有一种方式，`method` 为可选。每种方式的计费方式相同：
 您的汇率 + 固定费用。
+
+用户选择国家和方式后，请调用
+[收款人 schema 接口](https://docs.cbpayapp.com/zh/guides/beneficiary-schema)，根据当前的
+`beneficiary` 字段和条件渲染表单。不要按国家硬编码表单。
 
 对于银行转账，您还需要银行目录（收款人的 `bank_code` 即来自这里）：
 
@@ -158,71 +162,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 此时您的余额已反映该笔扣款：`total_debit` 已从 `available` 转入
 `held`（在 `settlement_asset` 对应的余额上）。
 
-### US/USD 汇款 payout
-
-对于发送至美国的 USD `wire` 或 `swift` payout，如果代表第三方付款，
-请将 `options.is_remittance` 设置为字符串 `"true"`。此选项仅支持
-US/USD `wire` 和 `swift`；在 `ach` 上会被拒绝，在其他通道上会被忽略。
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "US",
-    "currency": "USD",
-    "method": "wire",
-    "amount": "1000.00",
-    "beneficiary": {
-      "name": "John Carter",
-      "email": "john.carter@example.com",
-      "account_number": "123456789012",
-      "country_code": "US",
-      "address": "1200 Brickell Ave",
-      "city": "Miami",
-      "state": "FL",
-      "postal_code": "33131",
-      "bank_name": "Example Bank",
-      "bank_code": "021000089",
-      "bank_address": "500 Main Street",
-      "bank_city": "New York",
-      "bank_state": "NY",
-      "bank_postal_code": "10001",
-      "bank_country": "US",
-      "bank_phone": "+12125550100"
-    },
-    "description": "家庭支持",
-    "options": {
-      "purpose": "Remittance",
-      "is_remittance": "true"
-    },
-    "idempotency_key": "us-remittance-2211"
-  }'
-```
-
-响应 `202 Accepted`：
-
-```json
-{
-  "payout_id": "7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f",
-  "country": "US",
-  "currency": "USD",
-  "method": "wire",
-  "local_amount": "1000.00",
-  "status": "processing",
-  "bank_reference": "CBF-20261117-2211"
-}
-```
-
-操作员会在放行前从银行实时名单选择 Ultimate Debtor。如果没有选择
-debtor，payout 会退回队列，而不会在缺少该信息时放行。Debtor 由操作员
-选择，集成方不发送该字段。不要为了修改它而重新发送 payout：读取现有
-资源并保留相同的幂等键。
-
-> **重要**
-不要将 `is_remittance` 作为 JSON 布尔值发送。接受的值是字符串 `"true"`。
-带有此选项的 `ach` payout 会返回 `400`；在 US/USD `wire` 和 `swift`
-以外的通道上，该选项会被忽略。
 > **注**
 **`bank_reference` —— 银行为该笔转账分配的交易编号。** US ACH/wire/SWIFT 在创建时**立即**返回 CBF（payout 保持 `processing` 直至银行确认）；其他通道在完成前为空（`""`）；
 当出金状态变为 `completed` 时，它会带上目的地银行/通道分配的交易编号。收款人可使用该编号

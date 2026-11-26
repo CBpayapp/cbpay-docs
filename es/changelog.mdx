@@ -4,7 +4,12 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="25 de noviembre de 2026" description="v2.325 · 7 versiones">
+<Update label="26 de noviembre de 2026" description="v2.326 · 1 versión">
+### v2.326
+**Agregado**
+- Los payins de fondeo Banking ahora exponen el `virtual_iban_id` receptor en el detalle del payin y en el webhook `payin_credited`, para atribuir el depósito al cliente.
+</Update>
+<Update label="25 de noviembre de 2026" description="v2.325 · 6 versiones">
 ### v2.325
 **Agregado**
 
@@ -20,13 +25,6 @@ description: "Historial de cambios de la API y de esta documentación"
   empresas fuera de rubros financieros. En personas, la cartola o la
   evidencia de origen de fondos cubren el mismo requisito: basta un
   documento.
-### v2.323
-**Agregado**
-- Se agregó `approved_unfunded` a los filtros de revisiones y se documentó que
-  los retiros crypto aprobados esperan cobertura y se liberan sin otra
-  aprobación.
-- Se agregó la guía para respuestas `409`, polling y reintentos idempotentes
-  con la misma key.
 ### v2.322
 **Cambiado**
 

@@ -190,7 +190,7 @@ Authorization: Bearer <API_KEY>
 响应保持 provider-clean，只返回该账户和通道适用的指令。不要从 payout
 推断银行信息。
 
-对于厄瓜多尔银行代码，使用实时目录：
+对于厄瓜多尔银行代码，使用实时目录。只传国家的请求会保留历史目录：
 
 ```http
 GET /v1/payouts/banks?country=EC
@@ -201,9 +201,32 @@ Authorization: Bearer <API_KEY>
 "retrieved": 1 } }`，其中 `retrieved` 是返回的条目数量。将返回的 `code`
 用作 `beneficiary.bank_code`。
 
+对于组织 payout 创建选择器，请传入完整的
+`country=EC&currency=USD&method=bank_transfer` 元组。平台会在 server-side
+解析组织的有效路由，并返回相应的创建目录。请将返回的 `code` 用作
+`beneficiary.bank_code`，不要发送内部路由标识。例如，有效的人工路由可能
+返回 `0028`，而只传国家的 legacy 目录对同一银行可能使用另一个代码。响应
+保持 provider-agnostic。
+
 如果需要显示从内部非默认轨道保存的代码名称，可加入
 `&include_variants=true`（也接受 `1` 或 `yes`）。这仅用于显示：默认目录仍排在
-前面并覆盖重复代码，创建选择器仍必须使用默认目录。不传该参数可保持历史目录。
+前面并覆盖重复代码。不要使用此参数填充 payout 创建选择器。
+
+如果要使用特定路由变体支持的创建安全选择器，请同时传入明确的
+`method` 和该变体：
+
+```http
+GET /v1/payouts/banks?country=EC&method=bank_transfer&variant=<supported-variant>
+Authorization: Bearer <API_KEY>
+```
+
+响应只包含该变体的目录，不会与默认目录合并。不传 `variant` 时，完整的
+国家/货币/方式元组会让平台在 server-side 选择有效路由；缺少该元组时则
+保留历史行为。平台或管理员会提供受支持的不透明变体值。管理员 payout 账户
+对话框使用同一合同：在厄瓜多尔 `bank_transfer` 中，**自动 | 手动**
+切换会选择对应目录，默认使用自动；路由不可用时会 fail closed。切换路由
+时会清除已选的 `bank_code`。客户门户会发送国家、货币和方式，让平台返回
+组织的有效路由，但不会暴露其内部标识。
 
 ## 运营规则
 

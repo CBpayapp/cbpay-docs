@@ -3,8 +3,8 @@
     "name": "CBPay API",
     "description": "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_generated_at": "2026-11-17 17:06 UTC",
-    "_content_sha256": "6642569d67024610c9beaf551d46975ca19039fb22bce2442e471041c5525964"
+    "_generated_at": "2026-11-26 02:01 UTC",
+    "_content_sha256": "95cd62687b6857569f6aec0308d0cf0154d48028e7fbc2d6898cc579444a3075"
   },
   "auth": {
     "type": "bearer",
@@ -432,7 +432,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"brand\": {\n    \"name\": \"CBPay\"\n  },\n  \"status\": \"degraded\",\n  \"generated_at\": \"2026-07-24T22:15:00Z\",\n  \"corridors\": [\n    {\n      \"flow\": \"payout\",\n      \"country\": \"VE\",\n      \"currency\": \"VES\",\n      \"method\": \"bank_transfer\",\n      \"status\": \"down\",\n      \"since\": \"2026-07-24T22:10:00Z\",\n      \"uptime_90d_pct\": 99.62\n    },\n    {\n      \"flow\": \"payout\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"status\": \"operational\",\n      \"since\": \"2026-05-02T00:00:00Z\",\n      \"uptime_90d_pct\": 100\n    }\n  ],\n  \"incidents\": [\n    {\n      \"flow\": \"payout\",\n      \"country\": \"VE\",\n      \"currency\": \"VES\",\n      \"method\": \"bank_transfer\",\n      \"from_status\": \"operational\",\n      \"to_status\": \"down\",\n      \"reason\": \"consecutive infrastructure failures\",\n      \"at\": \"2026-07-24T22:10:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"brand\": {\n    \"name\": \"CBPay\"\n  },\n  \"status\": \"degraded\",\n  \"generated_at\": \"2026-07-24T22:15:00Z\",\n  \"corridors\": [\n    {\n      \"flow\": \"payout\",\n      \"country\": \"VE\",\n      \"currency\": \"VES\",\n      \"method\": \"bank_transfer\",\n      \"status\": \"down\",\n      \"since\": \"2026-07-24T22:10:00Z\",\n      \"uptime_90d_pct\": 99.62\n    },\n    {\n      \"flow\": \"payout\",\n      \"country\": \"MX\",\n      \"currency\": \"MXN\",\n      \"method\": \"bank_transfer\",\n      \"status\": \"operational\",\n      \"since\": \"2026-05-02T00:00:00Z\",\n      \"uptime_90d_pct\": 100\n    }\n  ],\n  \"incidents\": [\n    {\n      \"flow\": \"payout\",\n      \"country\": \"VE\",\n      \"currency\": \"VES\",\n      \"method\": \"bank_transfer\",\n      \"from_status\": \"operational\",\n      \"to_status\": \"down\",\n      \"reason\": \"consecutive infrastructure failures\",\n      \"at\": \"2026-07-24T22:10:00Z\"\n    }\n  ],\n  \"incidents_total_90d\": 3,\n  \"mttr_mins_90d\": 18,\n  \"incidents_daily\": [\n    {\n      \"date\": \"2026-07-24\",\n      \"degraded\": 0,\n      \"down\": 1,\n      \"down_minutes\": 13,\n      \"degraded_minutes\": 0,\n      \"corridors_affected\": 1,\n      \"worst\": \"down\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -1979,6 +1979,54 @@
           ]
         },
         {
+          "name": "List my accessible accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "accounts"
+              ]
+            },
+            "description": "Live accounts the calling login can operate (own account first, then accepted companies). Human sessions only."
+          },
+          "response": [
+            {
+              "name": "200 Accounts.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/accounts",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "accounts"
+                  ]
+                }
+              },
+              "status": "Accounts.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"accounts\": [\n    {\n      \"account_id\": \"2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e\",\n      \"type\": \"person\",\n      \"display_name\": \"Taylor Morgan\",\n      \"member_id\": \"3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f\",\n      \"role\": \"owner\",\n      \"primary\": true\n    },\n    {\n      \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n      \"type\": \"company\",\n      \"display_name\": \"Acme SpA\",\n      \"member_id\": \"9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d\",\n      \"role\": \"operator\",\n      \"primary\": false\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
           "name": "Set the profile alias derived from the verified name — derived_confirmation",
           "request": {
             "method": "PUT",
@@ -2618,6 +2666,232 @@
                 }
               ],
               "body": "{\n  \"status\": \"code_sent\",\n  \"email\": \"t***@***.com\",\n  \"note\": \"confirm with POST /v1/me/email/confirm using the code sent to your email\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List my company invitations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/invites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "invites"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Company invitations addressed to the calling login's mailbox. Human sessions only."
+          },
+          "response": [
+            {
+              "name": "200 Invitations.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/invites",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "invites"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitations.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"invites\": [\n    {\n      \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n      \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n      \"company_name\": \"Acme SpA\",\n      \"email\": \"ops@example.com\",\n      \"role\": \"operator\",\n      \"status\": \"pending\",\n      \"invited_by\": \"owner@example.com\",\n      \"expires_at\": \"2026-12-02T12:00:00Z\",\n      \"created_at\": \"2026-11-25T12:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Accept a company invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/invites/:inviteID/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "invites",
+                ":inviteID",
+                "accept"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Accepts a pending invitation with the token from the email. The session mailbox must exactly match the invited email; on success a linked login is created (same credential, company-scoped role). Human sessions only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"7f3a9c1e4b5d4e6f8a9b0c1d2e3f4a5b6c7d8e9f\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Linked login created.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/invites/:inviteID/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "invites",
+                    ":inviteID",
+                    "accept"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Linked login created.",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"member_id\": \"9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"role\": \"operator\",\n  \"linked\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Decline a company invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/invites/:inviteID/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "invites",
+                ":inviteID",
+                "decline"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Declines a pending invitation addressed to the calling login (idempotent, no token needed). Human sessions only."
+          },
+          "response": [
+            {
+              "name": "200 Invitation declined.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/invites/:inviteID/decline",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "invites",
+                    ":inviteID",
+                    "decline"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitation declined.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"status\": \"declined\",\n  \"changed\": true\n}"
             }
           ]
         },
@@ -3679,6 +3953,68 @@
           ]
         },
         {
+          "name": "Switch to another of my accounts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/switch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "switch"
+              ]
+            },
+            "description": "Issues a fresh session for another account of the same login (audited). The current session is not revoked. Human sessions only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Fresh session for the target account.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/switch",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "switch"
+                  ]
+                }
+              },
+              "status": "Fresh session for the target account.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiJ9.example\",\n  \"expires_at\": \"2026-11-26T12:00:00Z\",\n  \"refresh_token\": \"mrt_example\",\n  \"refresh_expires_at\": \"2027-02-23T12:00:00Z\",\n  \"account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"member_id\": \"9a8b7c6d-5e4f-4a3b-8c9d-0e1f2a3b4c5d\",\n  \"role\": \"operator\"\n}"
+            }
+          ]
+        },
+        {
           "name": "List my transaction reviews",
           "request": {
             "method": "GET",
@@ -3698,7 +4034,7 @@
                   "key": "status",
                   "value": "",
                   "disabled": true,
-                  "description": "`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`)."
+                  "description": "`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`)."
                 },
                 {
                   "key": "kind",
@@ -3754,7 +4090,7 @@
                       "key": "status",
                       "value": "",
                       "disabled": true,
-                      "description": "`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`)."
+                      "description": "`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`)."
                     },
                     {
                       "key": "kind",
@@ -3798,7 +4134,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"reviews\": [\n    {\n      \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n      \"kind\": \"payout\",\n      \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n      \"status\": \"info_requested\",\n      \"amount_label\": \"1500.00\",\n      \"asset\": \"USD\",\n      \"country\": \"MX\",\n      \"method\": \"spei\",\n      \"counterparty\": \"Juan Pérez\",\n      \"info_request\": {\n        \"message\": \"Please upload the invoice that justifies this payment\",\n        \"requested_at\": \"2026-08-06T15:20:00Z\"\n      },\n      \"created_at\": \"2026-08-06T14:32:00Z\",\n      \"updated_at\": \"2026-08-06T15:20:00Z\",\n      \"dispatch_failed\": false,\n      \"dispatch_error\": null\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 1\n}"
+              "body": "{\n  \"reviews\": [\n    {\n      \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n      \"kind\": \"payout\",\n      \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n      \"status\": \"info_requested\",\n      \"amount_label\": \"1500.00\",\n      \"asset\": \"USD\",\n      \"country\": \"MX\",\n      \"method\": \"spei\",\n      \"counterparty\": \"Juan Pérez\",\n      \"info_request\": \"Please upload the invoice that justifies this payment\",\n      \"info_requested_at\": \"2026-08-06T15:20:00Z\",\n      \"created_at\": \"2026-08-06T14:32:00Z\",\n      \"updated_at\": \"2026-08-06T15:20:00Z\",\n      \"dispatch_failed\": false,\n      \"dispatch_error\": null,\n      \"needs_action\": false\n    }\n  ],\n  \"page\": 1,\n  \"page_size\": 50,\n  \"total\": 1\n}"
             }
           ]
         },
@@ -3860,7 +4196,85 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"review\": {\n    \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"kind\": \"payout\",\n    \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n    \"status\": \"info_requested\",\n    \"amount_label\": \"1500.00\",\n    \"asset\": \"USD\",\n    \"country\": \"MX\",\n    \"method\": \"spei\",\n    \"counterparty\": \"Juan Pérez\",\n    \"info_request\": {\n      \"message\": \"Please upload the invoice that justifies this payment\",\n      \"requested_at\": \"2026-08-06T15:20:00Z\"\n    },\n    \"requested_documents\": [\n      \"bankStatement\",\n      \"sourceOfWealth\"\n    ],\n    \"files\": [\n      {\n        \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n        \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n        \"file_name\": \"invoice-221.pdf\",\n        \"content_type\": \"application/pdf\",\n        \"size_bytes\": 482110,\n        \"uploaded_by\": \"account\",\n        \"category\": \"proofOfAddress\",\n        \"created_at\": \"2026-08-06T15:40:00Z\"\n      }\n    ],\n    \"created_at\": \"2026-08-06T14:32:00Z\",\n    \"updated_at\": \"2026-08-06T15:40:00Z\",\n    \"dispatch_failed\": false,\n    \"dispatch_error\": null\n  }\n}"
+              "body": "{\n  \"review\": {\n    \"id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n    \"kind\": \"payout\",\n    \"resource_id\": \"8b4c3d2e-1111-4111-8111-111111111111\",\n    \"status\": \"info_requested\",\n    \"amount_label\": \"1500.00\",\n    \"asset\": \"USD\",\n    \"country\": \"MX\",\n    \"method\": \"spei\",\n    \"counterparty\": \"Juan Pérez\",\n    \"info_request\": \"Please upload the invoice that justifies this payment\",\n    \"info_requested_at\": \"2026-08-06T15:20:00Z\",\n    \"requested_documents\": [\n      \"bankStatement\",\n      \"sourceOfWealth\"\n    ],\n    \"files\": [\n      {\n        \"id\": \"f1e2d3c4-0000-4000-8000-0000000000aa\",\n        \"review_id\": \"7a3f2b1c-0000-4000-8000-000000000001\",\n        \"file_name\": \"invoice-221.pdf\",\n        \"content_type\": \"application/pdf\",\n        \"size_bytes\": 482110,\n        \"uploaded_by\": \"account\",\n        \"category\": \"proofOfAddress\",\n        \"created_at\": \"2026-08-06T15:40:00Z\"\n      }\n    ],\n    \"created_at\": \"2026-08-06T14:32:00Z\",\n    \"updated_at\": \"2026-08-06T15:40:00Z\",\n    \"dispatch_failed\": false,\n    \"dispatch_error\": null,\n    \"needs_action\": false\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit requested data for an information request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/fields",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "me",
+                "txn-reviews",
+                ":reviewID",
+                "fields"
+              ],
+              "variable": [
+                {
+                  "key": "reviewID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits the data asked by a mapped information request (`requested_fields`, closed requirement-key vocabulary) for a banking or card application. Only keys the team requested are accepted — anything else answers `400 field_not_requested`. Each value is validated by type (text, email, phone, ISO country, `YYYY-MM-DD` date, positive USD salary, yes/no, address object, 3-letter currency, purpose, issuer catalog codes, reason prose); a mistyped value answers `400 invalid_field_value` naming the key. A `*_na_reason` value (20-500 characters explaining why the document is unavailable) satisfies its requirement when no document was provided and is forwarded to the provider as an unavailability letter. Values live only on the review and merge into the checklist and the approval dispatch — the KYC/KYB record is never touched. Like a file upload, the first submission moves the review back to `in_review` and notifies the reviewer; later submissions only add evidence. Accepts `info_requested`, or `in_review` after a previous `request-info`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": {\n    \"first_name\": \"Juan\",\n    \"nationality\": \"CL\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Fields saved; remaining requested keys included.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/me/txn-reviews/:reviewID/fields",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "me",
+                    "txn-reviews",
+                    ":reviewID",
+                    "fields"
+                  ],
+                  "variable": [
+                    {
+                      "key": "reviewID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Fields saved; remaining requested keys included.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"fields_submitted\": [\n    \"first_name\",\n    \"nationality\"\n  ],\n  \"fields_remaining\": [],\n  \"status\": \"in_review\"\n}"
             }
           ]
         },
@@ -4092,6 +4506,285 @@
                 }
               ],
               "body": "{\n  \"id\": \"5a4b3c2d-1e0f-9a8b-7c6d-5e4f3a2b1c0d\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"active\",\n  \"created_at\": \"2026-07-07T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invite an existing account to the company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invite"
+              ]
+            },
+            "description": "Invites an account that already exists in the organization to operate in this company as operator or viewer. Owner-only, company accounts only, OTP-protected (`member_add`) and idempotent (`Idempotency-Key`). The invitee accepts from their own session; on accept a linked login is created (same credential, company-scoped role).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Invitation created (pending).",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invite",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invite"
+                  ]
+                }
+              },
+              "status": "Invitation created (pending).",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"company_name\": \"Acme SpA\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"pending\",\n  \"invited_by\": \"owner@example.com\",\n  \"delivery\": \"link\",\n  \"expires_at\": \"2026-12-02T12:00:00Z\",\n  \"created_at\": \"2026-11-25T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List company invitations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invites"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Pending and decided invitations of the calling company account."
+          },
+          "response": [
+            {
+              "name": "200 Invitations.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invites",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invites"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitations.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"invites\": [\n    {\n      \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n      \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n      \"email\": \"ops@example.com\",\n      \"role\": \"operator\",\n      \"status\": \"pending\",\n      \"invited_by\": \"owner@example.com\",\n      \"expires_at\": \"2026-12-02T12:00:00Z\",\n      \"created_at\": \"2026-11-25T12:00:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Resend a pending invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invites/:inviteID/resend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invites",
+                ":inviteID",
+                "resend"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Rotates the token, renews the 7-day validity and re-sends the email of a pending invitation. Owner-only, OTP-protected (`member_add`)."
+          },
+          "response": [
+            {
+              "name": "200 Invitation resent with a fresh token.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invites/:inviteID/resend",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invites",
+                    ":inviteID",
+                    "resend"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitation resent with a fresh token.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"company_account_id\": \"1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n  \"company_name\": \"Acme SpA\",\n  \"email\": \"ops@example.com\",\n  \"role\": \"operator\",\n  \"status\": \"pending\",\n  \"delivery\": \"link\",\n  \"expires_at\": \"2026-12-02T12:00:00Z\",\n  \"created_at\": \"2026-11-25T12:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Revoke a pending invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/members/invites/:inviteID/revoke",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "members",
+                "invites",
+                ":inviteID",
+                "revoke"
+              ],
+              "variable": [
+                {
+                  "key": "inviteID",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Revokes a pending company invitation (idempotent). Owner-only, OTP-protected (`member_add`). The invitee is notified."
+          },
+          "response": [
+            {
+              "name": "200 Invitation revoked.",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/members/invites/:inviteID/revoke",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "members",
+                    "invites",
+                    ":inviteID",
+                    "revoke"
+                  ],
+                  "variable": [
+                    {
+                      "key": "inviteID",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "status": "Invitation revoked.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"invite_id\": \"7f3a9c1e-4b5d-4e6f-8a9b-0c1d2e3f4a5b\",\n  \"status\": \"revoked\",\n  \"changed\": true\n}"
             }
           ]
         },
@@ -8045,7 +8738,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"base\": \"USD\",\n  \"rates\": {\n    \"chile\": {\n      \"currency\": \"CLP\",\n      \"rate\": \"950.25\",\n      \"rate_source\": \"lot\",\n      \"payin_rate\": \"955.10\",\n      \"payin_rate_source\": \"lot\"\n    },\n    \"venezuela\": {\n      \"currency\": \"VES\",\n      \"rate\": \"962.654000\",\n      \"rate_source\": \"rail\",\n      \"payin_rate\": \"1020.604704\",\n      \"payin_rate_source\": \"rail\"\n    },\n    \"mexico\": {\n      \"currency\": \"MXN\",\n      \"rate\": \"17.50\",\n      \"rate_source\": \"spot\",\n      \"payin_rate\": \"17.62\"\n    },\n    \"peru\": {\n      \"currency\": \"PEN\",\n      \"rate\": \"3.72\",\n      \"rate_source\": \"spot\",\n      \"payin_rate\": \"3.75\"\n    }\n  },\n  \"asset_prices\": {\n    \"USDT\": {\n      \"currency\": \"USD\",\n      \"unit\": \"usdt\",\n      \"price\": \"1\"\n    },\n    \"USDC\": {\n      \"currency\": \"USD\",\n      \"unit\": \"usdc\",\n      \"price\": \"1\"\n    },\n    \"BTC\": {\n      \"currency\": \"USD\",\n      \"unit\": \"btc\",\n      \"price\": \"109853.24\",\n      \"updated_at\": \"2026-07-07T11:59:41Z\",\n      \"settlement_grade\": true\n    },\n    \"GOLD\": {\n      \"currency\": \"USD\",\n      \"unit\": \"gram\",\n      \"price\": \"107.5341\",\n      \"updated_at\": \"2026-07-07T09:12:05Z\",\n      \"settlement_grade\": true\n    },\n    \"SILVER\": {\n      \"currency\": \"USD\",\n      \"unit\": \"gram\",\n      \"price\": \"1.0700\",\n      \"updated_at\": \"2026-07-07T09:12:05Z\",\n      \"settlement_grade\": true\n    },\n    \"PLATINUM\": {\n      \"currency\": \"USD\",\n      \"unit\": \"gram\",\n      \"price\": \"35.0000\",\n      \"updated_at\": \"2026-07-07T09:12:05Z\",\n      \"settlement_grade\": true\n    }\n  },\n  \"lot_quote\": {\n    \"currency\": \"CLP\",\n    \"amount\": \"100000.00000000\",\n    \"market_rate\": \"13.42150000\",\n    \"rate_source\": \"blend\",\n    \"marked_rate\": \"13.28728500\",\n    \"indicative\": true\n  },\n  \"settlement\": {\n    \"default_asset\": \"USD\",\n    \"assets\": [\n      {\n        \"asset\": \"USDT\",\n        \"available\": true,\n        \"settlement_rate\": \"1\"\n      },\n      {\n        \"asset\": \"USDC\",\n        \"available\": true,\n        \"settlement_rate\": \"0.99900000\"\n      },\n      {\n        \"asset\": \"BTC\",\n        \"available\": true,\n        \"settlement_rate\": \"109029.34070000\"\n      },\n      {\n        \"asset\": \"GOLD\",\n        \"available\": true,\n        \"settlement_rate\": \"106.99642950\"\n      }\n    ]\n  },\n  \"updated_at\": \"2026-07-07T12:00:00Z\",\n  \"fees\": [\n    {\n      \"id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n      \"org_id\": \"1c9e7a2b-5f6d-4e3a-8c1b-2a9d8e7f6a5b\",\n      \"account_id\": \"\",\n      \"service\": \"payout\",\n      \"country\": \"CL\",\n      \"asset\": \"USD\",\n      \"percent\": \"0\",\n      \"fixed_amount\": \"0.30\",\n      \"status\": \"active\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"base\": \"USD\",\n  \"rates\": {\n    \"chile\": {\n      \"currency\": \"CLP\",\n      \"rate\": \"950.25\",\n      \"rate_source\": \"lot\",\n      \"payin_rate\": \"955.10\",\n      \"payin_rate_source\": \"lot\"\n    },\n    \"venezuela\": {\n      \"currency\": \"VES\",\n      \"rate\": \"980\",\n      \"rate_source\": \"rail\",\n      \"payin_rate\": \"1002.54\",\n      \"payin_rate_source\": \"rail\"\n    },\n    \"mexico\": {\n      \"currency\": \"MXN\",\n      \"rate\": \"17.50\",\n      \"rate_source\": \"spot\",\n      \"payin_rate\": \"17.62\"\n    },\n    \"peru\": {\n      \"currency\": \"PEN\",\n      \"rate\": \"3.72\",\n      \"rate_source\": \"spot\",\n      \"payin_rate\": \"3.75\"\n    }\n  },\n  \"asset_prices\": {\n    \"USDT\": {\n      \"currency\": \"USD\",\n      \"unit\": \"usdt\",\n      \"price\": \"1\"\n    },\n    \"USDC\": {\n      \"currency\": \"USD\",\n      \"unit\": \"usdc\",\n      \"price\": \"1\"\n    },\n    \"BTC\": {\n      \"currency\": \"USD\",\n      \"unit\": \"btc\",\n      \"price\": \"109853.24\",\n      \"updated_at\": \"2026-07-07T11:59:41Z\",\n      \"settlement_grade\": true\n    },\n    \"GOLD\": {\n      \"currency\": \"USD\",\n      \"unit\": \"gram\",\n      \"price\": \"107.5341\",\n      \"updated_at\": \"2026-07-07T09:12:05Z\",\n      \"settlement_grade\": true\n    },\n    \"SILVER\": {\n      \"currency\": \"USD\",\n      \"unit\": \"gram\",\n      \"price\": \"1.0700\",\n      \"updated_at\": \"2026-07-07T09:12:05Z\",\n      \"settlement_grade\": true\n    },\n    \"PLATINUM\": {\n      \"currency\": \"USD\",\n      \"unit\": \"gram\",\n      \"price\": \"35.0000\",\n      \"updated_at\": \"2026-07-07T09:12:05Z\",\n      \"settlement_grade\": true\n    }\n  },\n  \"lot_quote\": {\n    \"currency\": \"CLP\",\n    \"amount\": \"100000.00000000\",\n    \"market_rate\": \"13.42150000\",\n    \"rate_source\": \"blend\",\n    \"marked_rate\": \"13.28728500\",\n    \"indicative\": true\n  },\n  \"settlement\": {\n    \"default_asset\": \"USD\",\n    \"assets\": [\n      {\n        \"asset\": \"USDT\",\n        \"available\": true,\n        \"settlement_rate\": \"1\"\n      },\n      {\n        \"asset\": \"USDC\",\n        \"available\": true,\n        \"settlement_rate\": \"0.99900000\"\n      },\n      {\n        \"asset\": \"BTC\",\n        \"available\": true,\n        \"settlement_rate\": \"109029.34070000\"\n      },\n      {\n        \"asset\": \"GOLD\",\n        \"available\": true,\n        \"settlement_rate\": \"106.99642950\"\n      }\n    ]\n  },\n  \"updated_at\": \"2026-07-07T12:00:00Z\",\n  \"fees\": [\n    {\n      \"id\": \"3c2b1a09-8d7e-6f5a-4b3c-2d1e0f9a8b7c\",\n      \"org_id\": \"1c9e7a2b-5f6d-4e3a-8c1b-2a9d8e7f6a5b\",\n      \"account_id\": \"\",\n      \"service\": \"payout\",\n      \"country\": \"CL\",\n      \"asset\": \"USD\",\n      \"percent\": \"0\",\n      \"fixed_amount\": \"0.30\",\n      \"status\": \"active\",\n      \"updated_at\": \"2026-07-07T12:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -10491,7 +11184,7 @@
                 }
               ]
             },
-            "description": "Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters."
+            "description": "Lists requests with pagination and the organization date window. `purpose` and `status` are optional filters. `nested_routing` is true when the account's SEPA sends route via nested (verified-identity ordering, no funding vIBAN required)."
           },
           "response": [
             {
@@ -10557,7 +11250,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"virtual_ibans\": [\n    {\n      \"id\": \"2f8c1d4e-1111-4b22-8a33-000000000001\",\n      \"owner_account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"manager_account_id\": \"\",\n      \"purpose\": \"funding_usdt\",\n      \"currency\": \"EUR\",\n      \"iban\": \"DE890000000000000000\",\n      \"iban_country\": \"DE\",\n      \"status\": \"active\",\n      \"client_order\": \"platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001\",\n      \"order_reference\": \"provider-order-001\",\n      \"created_at\": \"2026-09-10T12:00:00Z\",\n      \"updated_at\": \"2026-09-10T12:01:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"nested_routing\": false,\n  \"virtual_ibans\": [\n    {\n      \"id\": \"2f8c1d4e-1111-4b22-8a33-000000000001\",\n      \"owner_account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"manager_account_id\": \"\",\n      \"purpose\": \"funding_usdt\",\n      \"currency\": \"EUR\",\n      \"iban\": \"DE890000000000000000\",\n      \"iban_country\": \"DE\",\n      \"status\": \"active\",\n      \"client_order\": \"platform:virtual-iban:org:account:funding_usdt:viban-funding-2026-001\",\n      \"order_reference\": \"provider-order-001\",\n      \"created_at\": \"2026-09-10T12:00:00Z\",\n      \"updated_at\": \"2026-09-10T12:01:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -13820,7 +14513,7 @@
                 "corridor-variants"
               ]
             },
-            "description": "Returns the organization-scoped payout variant configuration. The selector supports BO/BOB bank_transfer with `legacy` or `v2`, CL/CLP bank_transfer with direct or batched dispatch, and labeled payout aliases for PY/PYG, EC/USD and BR/BRL. Organization scope receives only neutral `rail_a`, `rail_b` or `rail_c` aliases. Payin routing uses corridor controls."
+            "description": "Returns the organization-scoped payout variant configuration. The selector supports labeled payout aliases (`rail_a`/`rail_b`) for PY/PYG, EC/USD and BR/BRL. BO/BOB and CL/CLP use fixed rails with no per-org selection. Payin routing uses corridor controls."
           },
           "response": [
             {
@@ -13874,7 +14567,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"direction\": \"payout\",\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"batched\",\n  \"reason\": \"Enable grouped payroll dispatch for future Chile payouts\"\n}",
+              "raw": "{\n  \"direction\": \"payout\",\n  \"country\": \"PY\",\n  \"currency\": \"PYG\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"rail_b\",\n  \"reason\": \"Use the fallback rail for future Paraguay payouts\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -13907,7 +14600,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"org_id\": \"org_123\",\n  \"direction\": \"payout\",\n  \"country\": \"CL\",\n  \"currency\": \"CLP\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"batched\"\n}"
+              "body": "{\n  \"org_id\": \"org_123\",\n  \"direction\": \"payout\",\n  \"country\": \"PY\",\n  \"currency\": \"PYG\",\n  \"method\": \"bank_transfer\",\n  \"variant\": \"rail_b\"\n}"
             }
           ]
         }
@@ -13917,7 +14610,7 @@
       "name": "Crypto",
       "item": [
         {
-          "name": "List account network moves",
+          "name": "List account network moves (removed 2026-11-25, use convert)",
           "request": {
             "method": "GET",
             "header": [],
@@ -14017,7 +14710,7 @@
           ]
         },
         {
-          "name": "Execute an explicit same-asset network move",
+          "name": "Execute an explicit same-asset network move (removed 2026-11-25, use convert)",
           "request": {
             "method": "POST",
             "header": [
@@ -14084,7 +14777,7 @@
           ]
         },
         {
-          "name": "Quote an explicit same-asset network move",
+          "name": "Quote an explicit same-asset network move (removed 2026-11-25, use convert)",
           "request": {
             "method": "POST",
             "header": [
@@ -14148,7 +14841,7 @@
           ]
         },
         {
-          "name": "Get one network move by id",
+          "name": "Get one network move by id (removed 2026-11-25, use convert)",
           "request": {
             "method": "GET",
             "header": [],
@@ -14294,10 +14987,16 @@
                   "value": "",
                   "disabled": true,
                   "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                },
+                {
+                  "key": "tx_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by on-chain transaction hash (exact match for withdrawals; deposits match tx or tx:event references, so a batch returns one row per transfer)."
                 }
               ]
             },
-            "description": "Funding credits and withdrawals of the calling account."
+            "description": "Funding credits and withdrawals of the calling account. Held (uncredited) deposits are not listed; track them via the crypto_deposit_held webhook and GET /v1/events/history."
           },
           "response": [
             {
@@ -14336,6 +15035,12 @@
                       "value": "",
                       "disabled": true,
                       "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                    },
+                    {
+                      "key": "tx_id",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by on-chain transaction hash (exact match for withdrawals; deposits match tx or tx:event references, so a batch returns one row per transfer)."
                     }
                   ]
                 }
@@ -15916,7 +16621,7 @@
                 "links"
               ]
             },
-            "description": "Company accounts only: generates a hosted KYB link for one of YOUR end customers (businesses). Bills the fixed `kyb_verification` fee when configured (refunded if creation fails); `idempotency_key` is required. `country` picks the wizard corridor: us, cl, ve, br, mx, co, pe, bo, py, ar, uk, es, vg or generic (send `generic_country` ISO alpha-2, optional `currency`).",
+            "description": "Company accounts only: generates a hosted KYB link for one of YOUR end customers (businesses). Bills the fixed `kyb_verification` fee when configured (refunded if creation fails); `idempotency_key` is required. `country` picks the wizard corridor: us, cl, ve, br, mx, co, pe, bo, py, ar, uk, es, vg or generic (send `generic_country` ISO alpha-2, optional `currency`). Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_456\",\n  \"country\": \"cl\",\n  \"label\": \"Comercial Andina SpA\",\n  \"expires_in_days\": 14,\n  \"idempotency_key\": \"kyb-link-cust-456-1\"\n}",
@@ -16148,7 +16853,7 @@
                 "submissions"
               ]
             },
-            "description": "Company accounts only: verifies one of YOUR end customers (a business) sending the data directly. Body: external_customer_id, country?, business (the company fields), ubos?, directors?, signers?, bank_info?, metadata?. KYB requires a complete legal name and registration number; KYC requires names, date of birth, ISO alpha-3 nationality, document and ISO alpha-3 country. An unknown KYB country uses the generic wizard/profile with that ISO country; `country: generic` requires `generic_country`. Bills the fixed `kyb_verification` fee; `idempotency_key` required. Re-sending while open updates the same submission without charging again.",
+            "description": "Company accounts only: verifies one of YOUR end customers (a business) sending the data directly. Body: external_customer_id, country?, business (the company fields), ubos?, directors?, signers?, bank_info?, metadata?. KYB requires a complete legal name and registration number; KYC requires names, date of birth, ISO alpha-3 nationality, document and ISO alpha-3 country. An unknown KYB country uses the generic wizard/profile with that ISO country; `country: generic` requires `generic_country`. Bills the fixed `kyb_verification` fee; `idempotency_key` required. Re-sending while open updates the same submission without charging again. Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_456\",\n  \"idempotency_key\": \"kyb-sub-cust-456-1\",\n  \"country\": \"cl\",\n  \"business\": {\n    \"legal_name\": \"Comercial Andina SpA\",\n    \"tax_id\": \"76.543.210-3\"\n  },\n  \"ubos\": [\n    {\n      \"first_name\": \"Carlos\",\n      \"last_name\": \"Soto\",\n      \"ownership_percent\": 60\n    }\n  ]\n}",
@@ -16670,7 +17375,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"report_id\": \"IDR-9B2C41A0D3E5\",\n  \"kind\": \"kyb\",\n  \"scope\": \"third_party\",\n  \"generated_at\": \"2026-07-28T15:04:05Z\",\n  \"generated_by\": \"CBPay\",\n  \"language\": \"en\",\n  \"aml_detail\": true,\n  \"submission_id\": \"9b2c41a0-d3e5-4f6a-8b7c-1d2e3f4a5b6c\",\n  \"status\": \"approved\",\n  \"risk_band\": \"low\",\n  \"aml_decision\": \"approved\",\n  \"submitted_at\": \"2026-07-20T12:30:00Z\",\n  \"updated_at\": \"2026-07-21T09:15:00Z\",\n  \"decided_at\": \"2026-07-21T09:15:00Z\",\n  \"documents_received\": [\n    \"certificateOfIncorporation\",\n    \"proofOfAddress\",\n    \"uboIdentity:0\"\n  ],\n  \"subject\": {\n    \"type\": \"company\",\n    \"name\": \"JVA SpA\",\n    \"company\": {\n      \"legal_name\": \"JVA SpA\",\n      \"trade_name\": \"JVA\",\n      \"registration_number\": \"77123456-7\",\n      \"business_type\": \"corporation\",\n      \"company_status\": \"active\",\n      \"incorporation_date\": \"2019-04-12\",\n      \"incorporation_country\": \"CHL\",\n      \"website\": \"https://jva.example\",\n      \"countries_of_operation\": [\n        \"CHL\",\n        \"PER\"\n      ]\n    },\n    \"address\": {\n      \"line1\": \"Av. Apoquindo 1234\",\n      \"city\": \"Santiago\",\n      \"state\": \"RM\",\n      \"postal_code\": \"7550000\",\n      \"country\": \"CL\"\n    },\n    \"registered_address\": {\n      \"line1\": \"Av. Apoquindo 1234\",\n      \"city\": \"Santiago\",\n      \"country\": \"CL\"\n    },\n    \"industry\": {\n      \"code\": \"K64\",\n      \"label\": \"Financial service activities\"\n    },\n    \"economic_profile\": {\n      \"source_of_funds\": \"business_revenue\",\n      \"primary_purpose\": \"payments\",\n      \"annual_revenue_usd\": \"250000\",\n      \"monthly_payments_usd\": \"40000\",\n      \"monthly_transaction_count\": \"120\",\n      \"average_transaction_usd\": \"330\",\n      \"expected_chains\": [\n        \"tron\",\n        \"ethereum\"\n      ],\n      \"customer_funds_description\": \"Collections from merchants in CL and PE.\"\n    },\n    \"attestations\": [\n      {\n        \"key\": \"att_money_services\",\n        \"value\": false\n      },\n      {\n        \"key\": \"att_third_party_funds\",\n        \"value\": true,\n        \"detail\": \"Settlement on behalf of merchants.\"\n      },\n      {\n        \"key\": \"att_high_risk_activities\",\n        \"items\": [\n          \"none\"\n        ]\n      }\n    ],\n    \"bank_account\": {\n      \"bank_name\": \"Banco de Chile\",\n      \"account_holder\": \"JVA SpA\",\n      \"account_masked\": \"****4321\",\n      \"country\": \"CL\",\n      \"currency\": \"CLP\",\n      \"third_party_account\": false\n    },\n    \"fields\": {\n      \"operatingName\": \"JVA Payments\"\n    }\n  },\n  \"parties\": [\n    {\n      \"source\": \"ubo\",\n      \"index\": 0,\n      \"kind\": \"ubo\",\n      \"roles\": [\n        \"beneficial_owner\",\n        \"control_person\"\n      ],\n      \"name\": \"Javier Andres Villablanca\",\n      \"person\": {\n        \"first_name\": \"Javier\",\n        \"middle_name\": \"Andres\",\n        \"last_name\": \"Villablanca\",\n        \"date_of_birth\": \"1985-03-04\",\n        \"nationality\": \"CL\",\n        \"tax_residence_country\": \"CL\",\n        \"id_type\": \"national_id\",\n        \"id_number\": \"12345678-9\",\n        \"id_issuing_country\": \"CL\",\n        \"id_expires_at\": \"2030-01-31\",\n        \"occupation\": \"Director\"\n      },\n      \"address\": {\n        \"line1\": \"Av. Siempre Viva 742\",\n        \"city\": \"Santiago\",\n        \"state\": \"RM\",\n        \"country\": \"CL\"\n      },\n      \"ownership_percent\": \"60\",\n      \"has_ownership\": true,\n      \"has_control\": true,\n      \"is_signer\": false,\n      \"documents\": [\n        {\n          \"category\": \"uboIdentity:0\",\n          \"filename\": \"cedula.pdf\",\n          \"status\": \"validated\",\n          \"outcome\": \"MATCH\",\n          \"score\": \"0.97\",\n          \"validated_at\": \"2026-07-21T09:12:00Z\",\n          \"party_index\": 0\n        }\n      ],\n      \"liveness\": {\n        \"role\": \"ubo:0\",\n        \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n        \"purpose\": \"gate\",\n        \"status\": \"completed\",\n        \"outcome\": \"PASS\",\n        \"passed_gate\": true,\n        \"face_verdict\": \"match\",\n        \"face_reason\": \"ok\",\n        \"face_doc_ref\": \"doc-identity-front\",\n        \"face_doc_category\": \"identity_front\",\n        \"face_docs_tried\": 1,\n        \"antispoof_engine\": \"fitted_v1\",\n        \"spoof_score\": 0.05,\n        \"scorer_rev\": \"2026-11-12.1\",\n        \"scored_at\": \"2026-11-12T15:00:00Z\",\n        \"scored\": true,\n        \"liveness_score\": \"0.99\",\n        \"antispoof_score\": \"0.97\",\n        \"face_similarity\": \"0.95\",\n        \"gestures_expected\": 3,\n        \"gestures_passed\": 3,\n        \"updated_at\": \"2026-07-20T09:05:00Z\",\n        \"media\": {\n          \"has_selfie\": true,\n          \"has_video\": false,\n          \"expires_in_sec\": 900,\n          \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n        }\n      },\n      \"liveness_sessions\": [\n        {\n          \"role\": \"ubo:0\",\n          \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n          \"purpose\": \"gate\",\n          \"status\": \"completed\",\n          \"outcome\": \"PASS\",\n          \"passed_gate\": true,\n          \"face_verdict\": \"match\",\n          \"face_reason\": \"ok\",\n          \"face_doc_ref\": \"doc-identity-front\",\n          \"face_doc_category\": \"identity_front\",\n          \"face_docs_tried\": 1,\n          \"antispoof_engine\": \"fitted_v1\",\n          \"spoof_score\": 0.05,\n          \"scorer_rev\": \"2026-11-12.1\",\n          \"scored_at\": \"2026-11-12T15:00:00Z\",\n          \"scored\": true,\n          \"liveness_score\": \"0.99\",\n          \"antispoof_score\": \"0.97\",\n          \"face_similarity\": \"0.95\",\n          \"gestures_expected\": 3,\n          \"gestures_passed\": 3,\n          \"updated_at\": \"2026-07-20T09:05:00Z\",\n          \"media\": {\n            \"has_selfie\": true,\n            \"has_video\": false,\n            \"expires_in_sec\": 900,\n            \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n          }\n        },\n        {\n          \"role\": \"ubo:0\",\n          \"session_id\": \"lv_4cdd3a82903940cebd8cc95a77cdacb3\",\n          \"purpose\": \"media_recapture\",\n          \"status\": \"completed\",\n          \"outcome\": \"FAIL\",\n          \"passed_gate\": false,\n          \"face_verdict\": \"review\",\n          \"face_reason\": \"no_face_in_document\",\n          \"face_doc_ref\": \"doc-identity-front\",\n          \"face_doc_category\": \"identity_front\",\n          \"face_docs_tried\": 2,\n          \"antispoof_engine\": \"fitted_v1\",\n          \"spoof_score\": 0.42,\n          \"scorer_rev\": \"2026-11-12.1\",\n          \"scored_at\": \"2026-11-12T15:00:00Z\",\n          \"scored\": true,\n          \"liveness_score\": \"0.98\",\n          \"antispoof_score\": \"0.59\",\n          \"face_similarity\": \"0.55\",\n          \"gestures_expected\": 3,\n          \"gestures_passed\": 2,\n          \"reasons\": [\n            \"Smile was not detected.\"\n          ],\n          \"updated_at\": \"2026-07-31T22:29:32Z\",\n          \"media\": {\n            \"has_selfie\": true,\n            \"has_video\": true,\n            \"frame_gestures\": [\n              \"center\",\n              \"turn_right\",\n              \"smile\"\n            ],\n            \"video_mime_type\": \"video/mp4\",\n            \"expires_in_sec\": 900,\n            \"selfie_sha256\": \"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9\",\n            \"frame_sha256\": [\n              \"c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2\",\n              \"d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2c3\"\n            ]\n          }\n        }\n      ],\n      \"aml\": {\n        \"screening_id\": \"7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f\",\n        \"risk_level\": \"medium\",\n        \"status\": \"under_review\",\n        \"monitor\": true,\n        \"screened_at\": \"2026-07-21T09:13:00Z\",\n        \"sanctions\": \"clear\",\n        \"pep\": \"under_review\",\n        \"adverse_media\": \"clear\",\n        \"screening_result\": \"has_hits\",\n        \"indicators\": [\n          {\n            \"key\": \"ind_sanctions\",\n            \"hit\": false\n          },\n          {\n            \"key\": \"ind_pep\",\n            \"hit\": true\n          },\n          {\n            \"key\": \"ind_adverse_media\",\n            \"hit\": false\n          }\n        ],\n        \"matches_total\": 1,\n        \"matches\": [\n          {\n            \"name\": \"Javier Villablanca\",\n            \"score\": 0.91,\n            \"match_types\": [\n              \"name_exact\"\n            ],\n            \"risk_kinds\": [\n              \"pep\"\n            ],\n            \"aliases\": [\n              \"J. Villablanca\"\n            ],\n            \"identity\": [\n              {\n                \"key\": \"date_of_birth\",\n                \"value\": \"1985-03-04\"\n              },\n              {\n                \"key\": \"nationality\",\n                \"value\": \"CL\"\n              }\n            ],\n            \"peps\": [\n              {\n                \"name\": \"Municipal council member\",\n                \"country\": \"CL\",\n                \"since\": \"2016\",\n                \"until\": \"2020\",\n                \"info\": \"Former local office holder.\"\n              }\n            ],\n            \"associates\": [\n              {\n                \"name\": \"Ana Soto\",\n                \"relation\": \"business_partner\"\n              }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"source\": \"signer\",\n      \"index\": 0,\n      \"kind\": \"signer\",\n      \"name\": \"Pedro Ruiz\",\n      \"business_title\": \"CFO\",\n      \"is_signer\": true,\n      \"person\": {\n        \"first_name\": \"Pedro\",\n        \"last_name\": \"Ruiz\"\n      },\n      \"aml\": {\n        \"screening_id\": \"8d2e3f4a-5b6c-4d7e-9f0a-1b2c3d4e5f6a\",\n        \"risk_level\": \"low\",\n        \"status\": \"clear\",\n        \"monitor\": true,\n        \"sanctions\": \"clear\",\n        \"pep\": \"clear\",\n        \"adverse_media\": \"clear\",\n        \"screening_result\": \"no_hits\",\n        \"matches_total\": 0\n      }\n    }\n  ],\n  \"documents\": [\n    {\n      \"category\": \"certificateOfIncorporation\",\n      \"filename\": \"escritura.pdf\",\n      \"status\": \"validated\",\n      \"outcome\": \"MATCH\",\n      \"score\": \"0.98\",\n      \"summary\": \"Company name and registration number match the verified profile.\",\n      \"validated_at\": \"2026-07-21T09:10:00Z\"\n    },\n    {\n      \"category\": \"proofOfAddress\",\n      \"filename\": \"cartola.pdf\",\n      \"status\": \"rejected\",\n      \"outcome\": \"NO_MATCH\",\n      \"error\": \"Document older than 90 days.\",\n      \"validated_at\": \"2026-07-21T09:11:00Z\"\n    }\n  ],\n  \"liveness\": [\n    {\n      \"role\": \"ubo:0\",\n      \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n      \"purpose\": \"gate\",\n      \"status\": \"completed\",\n      \"outcome\": \"PASS\",\n      \"passed_gate\": true,\n      \"face_verdict\": \"match\",\n      \"face_reason\": \"ok\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 1,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.05,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.99\",\n      \"antispoof_score\": \"0.97\",\n      \"face_similarity\": \"0.95\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 3,\n      \"updated_at\": \"2026-07-20T09:05:00Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": false,\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n      }\n    },\n    {\n      \"role\": \"ubo:0\",\n      \"session_id\": \"lv_4cdd3a82903940cebd8cc95a77cdacb3\",\n      \"purpose\": \"media_recapture\",\n      \"status\": \"completed\",\n      \"outcome\": \"FAIL\",\n      \"passed_gate\": false,\n      \"face_verdict\": \"review\",\n      \"face_reason\": \"no_face_in_document\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 2,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.42,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.98\",\n      \"antispoof_score\": \"0.59\",\n      \"face_similarity\": \"0.55\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 2,\n      \"reasons\": [\n        \"Smile was not detected.\"\n      ],\n      \"updated_at\": \"2026-07-31T22:29:32Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": true,\n        \"frame_gestures\": [\n          \"center\",\n          \"turn_right\",\n          \"smile\"\n        ],\n        \"video_mime_type\": \"video/mp4\",\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9\",\n        \"frame_sha256\": [\n          \"c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2\",\n          \"d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2c3\"\n        ]\n      }\n    }\n  ],\n  \"aml\": {\n    \"screening_id\": \"5f0e1d2c-b4a5-4968-8776-5a4b3c2d1e0f\",\n    \"risk_level\": \"low\",\n    \"status\": \"clear\",\n    \"monitor\": true,\n    \"screened_at\": \"2026-07-21T09:14:00Z\",\n    \"sanctions\": \"clear\",\n    \"pep\": \"clear\",\n    \"adverse_media\": \"clear\",\n    \"screening_result\": \"no_hits\",\n    \"rationale\": \"No profiles matched the declared identity.\",\n    \"indicators\": [\n      {\n        \"key\": \"ind_sanctions\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_pep\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_adverse_media\",\n        \"hit\": false\n      }\n    ],\n    \"subject_rows\": [\n      {\n        \"key\": \"legal_name\",\n        \"value\": \"JVA SpA\"\n      },\n      {\n        \"key\": \"registration_number\",\n        \"value\": \"77123456-7\"\n      }\n    ],\n    \"matches_total\": 0\n  },\n  \"partial\": [\n    \"party_aml_unavailable\"\n  ],\n  \"content_sha256\": \"4f2c1de0a9b83b7d6c5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c\",\n  \"verification_code\": \"B9b2c41a0d3e54f6a8b7c1d2e3f4a5b6c0a1b2c3d4e5f6a7b8c9\",\n  \"verification_url\": \"https://api.example.com/verify/reports/B9b2c41a0d3e54f6a8b7c1d2e3f4a5b6c0a1b2c3d4e5f6a7b8c9\"\n}"
+              "body": "{\n  \"report_id\": \"IDR-9B2C41A0D3E5\",\n  \"kind\": \"kyb\",\n  \"scope\": \"third_party\",\n  \"generated_at\": \"2026-07-28T15:04:05Z\",\n  \"generated_by\": \"CBPay\",\n  \"language\": \"en\",\n  \"aml_detail\": true,\n  \"model_breakdown\": [\n    {\n      \"category\": \"COUNTRY\",\n      \"level\": \"prohibited\",\n      \"score\": 1140,\n      \"weight\": 5,\n      \"attributes\": [\n        {\n          \"name\": \"nationality\",\n          \"parameter\": \"RU\",\n          \"score\": 100\n        },\n        {\n          \"name\": \"personalIdentificationIssuingCountry\",\n          \"parameter\": \"RU\",\n          \"score\": 520\n        },\n        {\n          \"name\": \"residentialInformation.countryOfResidence\",\n          \"parameter\": \"RU\",\n          \"score\": 520\n        }\n      ]\n    },\n    {\n      \"category\": \"BASIC_INFORMATION\",\n      \"level\": \"low\",\n      \"score\": 10,\n      \"weight\": 5,\n      \"attributes\": [\n        {\n          \"name\": \"age\",\n          \"parameter\": \"40\",\n          \"score\": 10\n        }\n      ]\n    }\n  ],\n  \"submission_id\": \"9b2c41a0-d3e5-4f6a-8b7c-1d2e3f4a5b6c\",\n  \"status\": \"approved\",\n  \"risk_band\": \"low\",\n  \"aml_decision\": \"approved\",\n  \"submitted_at\": \"2026-07-20T12:30:00Z\",\n  \"updated_at\": \"2026-07-21T09:15:00Z\",\n  \"decided_at\": \"2026-07-21T09:15:00Z\",\n  \"documents_received\": [\n    \"certificateOfIncorporation\",\n    \"proofOfAddress\",\n    \"uboIdentity:0\"\n  ],\n  \"subject\": {\n    \"type\": \"company\",\n    \"name\": \"JVA SpA\",\n    \"company\": {\n      \"legal_name\": \"JVA SpA\",\n      \"trade_name\": \"JVA\",\n      \"registration_number\": \"77123456-7\",\n      \"business_type\": \"corporation\",\n      \"company_status\": \"active\",\n      \"incorporation_date\": \"2019-04-12\",\n      \"incorporation_country\": \"CHL\",\n      \"website\": \"https://jva.example\",\n      \"countries_of_operation\": [\n        \"CHL\",\n        \"PER\"\n      ]\n    },\n    \"address\": {\n      \"line1\": \"Av. Apoquindo 1234\",\n      \"city\": \"Santiago\",\n      \"state\": \"RM\",\n      \"postal_code\": \"7550000\",\n      \"country\": \"CL\"\n    },\n    \"registered_address\": {\n      \"line1\": \"Av. Apoquindo 1234\",\n      \"city\": \"Santiago\",\n      \"country\": \"CL\"\n    },\n    \"industry\": {\n      \"code\": \"K64\",\n      \"label\": \"Financial service activities\"\n    },\n    \"economic_profile\": {\n      \"source_of_funds\": \"business_revenue\",\n      \"primary_purpose\": \"payments\",\n      \"annual_revenue_usd\": \"250000\",\n      \"monthly_payments_usd\": \"40000\",\n      \"monthly_transaction_count\": \"120\",\n      \"average_transaction_usd\": \"330\",\n      \"expected_chains\": [\n        \"tron\",\n        \"ethereum\"\n      ],\n      \"customer_funds_description\": \"Collections from merchants in CL and PE.\"\n    },\n    \"attestations\": [\n      {\n        \"key\": \"att_money_services\",\n        \"value\": false\n      },\n      {\n        \"key\": \"att_third_party_funds\",\n        \"value\": true,\n        \"detail\": \"Settlement on behalf of merchants.\"\n      },\n      {\n        \"key\": \"att_high_risk_activities\",\n        \"items\": [\n          \"none\"\n        ]\n      }\n    ],\n    \"bank_account\": {\n      \"bank_name\": \"Banco de Chile\",\n      \"account_holder\": \"JVA SpA\",\n      \"account_masked\": \"****4321\",\n      \"country\": \"CL\",\n      \"currency\": \"CLP\",\n      \"third_party_account\": false\n    },\n    \"fields\": {\n      \"operatingName\": \"JVA Payments\"\n    }\n  },\n  \"parties\": [\n    {\n      \"source\": \"ubo\",\n      \"index\": 0,\n      \"kind\": \"ubo\",\n      \"roles\": [\n        \"beneficial_owner\",\n        \"control_person\"\n      ],\n      \"name\": \"Javier Andres Villablanca\",\n      \"person\": {\n        \"first_name\": \"Javier\",\n        \"middle_name\": \"Andres\",\n        \"last_name\": \"Villablanca\",\n        \"date_of_birth\": \"1985-03-04\",\n        \"nationality\": \"CL\",\n        \"tax_residence_country\": \"CL\",\n        \"id_type\": \"national_id\",\n        \"id_number\": \"12345678-9\",\n        \"id_issuing_country\": \"CL\",\n        \"id_expires_at\": \"2030-01-31\",\n        \"occupation\": \"Director\"\n      },\n      \"address\": {\n        \"line1\": \"Av. Siempre Viva 742\",\n        \"city\": \"Santiago\",\n        \"state\": \"RM\",\n        \"country\": \"CL\"\n      },\n      \"ownership_percent\": \"60\",\n      \"has_ownership\": true,\n      \"has_control\": true,\n      \"is_signer\": false,\n      \"documents\": [\n        {\n          \"category\": \"uboIdentity:0\",\n          \"filename\": \"cedula.pdf\",\n          \"status\": \"validated\",\n          \"outcome\": \"MATCH\",\n          \"score\": \"0.97\",\n          \"validated_at\": \"2026-07-21T09:12:00Z\",\n          \"party_index\": 0\n        }\n      ],\n      \"liveness\": {\n        \"role\": \"ubo:0\",\n        \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n        \"purpose\": \"gate\",\n        \"status\": \"completed\",\n        \"outcome\": \"PASS\",\n        \"passed_gate\": true,\n        \"face_verdict\": \"match\",\n        \"face_reason\": \"ok\",\n        \"face_doc_ref\": \"doc-identity-front\",\n        \"face_doc_category\": \"identity_front\",\n        \"face_docs_tried\": 1,\n        \"antispoof_engine\": \"fitted_v1\",\n        \"spoof_score\": 0.05,\n        \"scorer_rev\": \"2026-11-12.1\",\n        \"scored_at\": \"2026-11-12T15:00:00Z\",\n        \"scored\": true,\n        \"liveness_score\": \"0.99\",\n        \"antispoof_score\": \"0.97\",\n        \"face_similarity\": \"0.95\",\n        \"gestures_expected\": 3,\n        \"gestures_passed\": 3,\n        \"updated_at\": \"2026-07-20T09:05:00Z\",\n        \"media\": {\n          \"has_selfie\": true,\n          \"has_video\": false,\n          \"expires_in_sec\": 900,\n          \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n        }\n      },\n      \"liveness_sessions\": [\n        {\n          \"role\": \"ubo:0\",\n          \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n          \"purpose\": \"gate\",\n          \"status\": \"completed\",\n          \"outcome\": \"PASS\",\n          \"passed_gate\": true,\n          \"face_verdict\": \"match\",\n          \"face_reason\": \"ok\",\n          \"face_doc_ref\": \"doc-identity-front\",\n          \"face_doc_category\": \"identity_front\",\n          \"face_docs_tried\": 1,\n          \"antispoof_engine\": \"fitted_v1\",\n          \"spoof_score\": 0.05,\n          \"scorer_rev\": \"2026-11-12.1\",\n          \"scored_at\": \"2026-11-12T15:00:00Z\",\n          \"scored\": true,\n          \"liveness_score\": \"0.99\",\n          \"antispoof_score\": \"0.97\",\n          \"face_similarity\": \"0.95\",\n          \"gestures_expected\": 3,\n          \"gestures_passed\": 3,\n          \"updated_at\": \"2026-07-20T09:05:00Z\",\n          \"media\": {\n            \"has_selfie\": true,\n            \"has_video\": false,\n            \"expires_in_sec\": 900,\n            \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n          }\n        },\n        {\n          \"role\": \"ubo:0\",\n          \"session_id\": \"lv_4cdd3a82903940cebd8cc95a77cdacb3\",\n          \"purpose\": \"media_recapture\",\n          \"status\": \"completed\",\n          \"outcome\": \"FAIL\",\n          \"passed_gate\": false,\n          \"face_verdict\": \"review\",\n          \"face_reason\": \"no_face_in_document\",\n          \"face_doc_ref\": \"doc-identity-front\",\n          \"face_doc_category\": \"identity_front\",\n          \"face_docs_tried\": 2,\n          \"antispoof_engine\": \"fitted_v1\",\n          \"spoof_score\": 0.42,\n          \"scorer_rev\": \"2026-11-12.1\",\n          \"scored_at\": \"2026-11-12T15:00:00Z\",\n          \"scored\": true,\n          \"liveness_score\": \"0.98\",\n          \"antispoof_score\": \"0.59\",\n          \"face_similarity\": \"0.55\",\n          \"gestures_expected\": 3,\n          \"gestures_passed\": 2,\n          \"reasons\": [\n            \"Smile was not detected.\"\n          ],\n          \"updated_at\": \"2026-07-31T22:29:32Z\",\n          \"media\": {\n            \"has_selfie\": true,\n            \"has_video\": true,\n            \"frame_gestures\": [\n              \"center\",\n              \"turn_right\",\n              \"smile\"\n            ],\n            \"video_mime_type\": \"video/mp4\",\n            \"expires_in_sec\": 900,\n            \"selfie_sha256\": \"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9\",\n            \"frame_sha256\": [\n              \"c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2\",\n              \"d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2c3\"\n            ]\n          }\n        }\n      ],\n      \"aml\": {\n        \"screening_id\": \"7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f\",\n        \"risk_level\": \"medium\",\n        \"status\": \"under_review\",\n        \"monitor\": true,\n        \"screened_at\": \"2026-07-21T09:13:00Z\",\n        \"sanctions\": \"clear\",\n        \"pep\": \"under_review\",\n        \"adverse_media\": \"clear\",\n        \"screening_result\": \"has_hits\",\n        \"indicators\": [\n          {\n            \"key\": \"ind_sanctions\",\n            \"hit\": false\n          },\n          {\n            \"key\": \"ind_pep\",\n            \"hit\": true\n          },\n          {\n            \"key\": \"ind_adverse_media\",\n            \"hit\": false\n          }\n        ],\n        \"matches_total\": 1,\n        \"matches\": [\n          {\n            \"name\": \"Javier Villablanca\",\n            \"score\": 0.91,\n            \"match_types\": [\n              \"name_exact\"\n            ],\n            \"risk_kinds\": [\n              \"pep\"\n            ],\n            \"aliases\": [\n              \"J. Villablanca\"\n            ],\n            \"identity\": [\n              {\n                \"key\": \"date_of_birth\",\n                \"value\": \"1985-03-04\"\n              },\n              {\n                \"key\": \"nationality\",\n                \"value\": \"CL\"\n              }\n            ],\n            \"peps\": [\n              {\n                \"name\": \"Municipal council member\",\n                \"country\": \"CL\",\n                \"since\": \"2016\",\n                \"until\": \"2020\",\n                \"info\": \"Former local office holder.\"\n              }\n            ],\n            \"associates\": [\n              {\n                \"name\": \"Ana Soto\",\n                \"relation\": \"business_partner\"\n              }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"source\": \"signer\",\n      \"index\": 0,\n      \"kind\": \"signer\",\n      \"name\": \"Pedro Ruiz\",\n      \"business_title\": \"CFO\",\n      \"is_signer\": true,\n      \"person\": {\n        \"first_name\": \"Pedro\",\n        \"last_name\": \"Ruiz\"\n      },\n      \"aml\": {\n        \"screening_id\": \"8d2e3f4a-5b6c-4d7e-9f0a-1b2c3d4e5f6a\",\n        \"risk_level\": \"low\",\n        \"status\": \"clear\",\n        \"monitor\": true,\n        \"sanctions\": \"clear\",\n        \"pep\": \"clear\",\n        \"adverse_media\": \"clear\",\n        \"screening_result\": \"no_hits\",\n        \"matches_total\": 0\n      }\n    }\n  ],\n  \"documents\": [\n    {\n      \"category\": \"certificateOfIncorporation\",\n      \"filename\": \"escritura.pdf\",\n      \"status\": \"validated\",\n      \"outcome\": \"MATCH\",\n      \"score\": \"0.98\",\n      \"summary\": \"Company name and registration number match the verified profile.\",\n      \"validated_at\": \"2026-07-21T09:10:00Z\"\n    },\n    {\n      \"category\": \"proofOfAddress\",\n      \"filename\": \"cartola.pdf\",\n      \"status\": \"rejected\",\n      \"outcome\": \"NO_MATCH\",\n      \"error\": \"Document older than 90 days.\",\n      \"validated_at\": \"2026-07-21T09:11:00Z\"\n    }\n  ],\n  \"liveness\": [\n    {\n      \"role\": \"ubo:0\",\n      \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n      \"purpose\": \"gate\",\n      \"status\": \"completed\",\n      \"outcome\": \"PASS\",\n      \"passed_gate\": true,\n      \"face_verdict\": \"match\",\n      \"face_reason\": \"ok\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 1,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.05,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.99\",\n      \"antispoof_score\": \"0.97\",\n      \"face_similarity\": \"0.95\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 3,\n      \"updated_at\": \"2026-07-20T09:05:00Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": false,\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n      }\n    },\n    {\n      \"role\": \"ubo:0\",\n      \"session_id\": \"lv_4cdd3a82903940cebd8cc95a77cdacb3\",\n      \"purpose\": \"media_recapture\",\n      \"status\": \"completed\",\n      \"outcome\": \"FAIL\",\n      \"passed_gate\": false,\n      \"face_verdict\": \"review\",\n      \"face_reason\": \"no_face_in_document\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 2,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.42,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.98\",\n      \"antispoof_score\": \"0.59\",\n      \"face_similarity\": \"0.55\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 2,\n      \"reasons\": [\n        \"Smile was not detected.\"\n      ],\n      \"updated_at\": \"2026-07-31T22:29:32Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": true,\n        \"frame_gestures\": [\n          \"center\",\n          \"turn_right\",\n          \"smile\"\n        ],\n        \"video_mime_type\": \"video/mp4\",\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9\",\n        \"frame_sha256\": [\n          \"c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2\",\n          \"d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2c3\"\n        ]\n      }\n    }\n  ],\n  \"aml\": {\n    \"screening_id\": \"5f0e1d2c-b4a5-4968-8776-5a4b3c2d1e0f\",\n    \"risk_level\": \"low\",\n    \"status\": \"clear\",\n    \"monitor\": true,\n    \"screened_at\": \"2026-07-21T09:14:00Z\",\n    \"sanctions\": \"clear\",\n    \"pep\": \"clear\",\n    \"adverse_media\": \"clear\",\n    \"screening_result\": \"no_hits\",\n    \"rationale\": \"No profiles matched the declared identity.\",\n    \"indicators\": [\n      {\n        \"key\": \"ind_sanctions\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_pep\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_adverse_media\",\n        \"hit\": false\n      }\n    ],\n    \"subject_rows\": [\n      {\n        \"key\": \"legal_name\",\n        \"value\": \"JVA SpA\"\n      },\n      {\n        \"key\": \"registration_number\",\n        \"value\": \"77123456-7\"\n      }\n    ],\n    \"matches_total\": 0\n  },\n  \"partial\": [\n    \"party_aml_unavailable\"\n  ],\n  \"content_sha256\": \"4f2c1de0a9b83b7d6c5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c\",\n  \"verification_code\": \"B9b2c41a0d3e54f6a8b7c1d2e3f4a5b6c0a1b2c3d4e5f6a7b8c9\",\n  \"verification_url\": \"https://api.example.com/verify/reports/B9b2c41a0d3e54f6a8b7c1d2e3f4a5b6c0a1b2c3d4e5f6a7b8c9\"\n}"
             }
           ]
         },
@@ -16803,7 +17508,7 @@
                 "links"
               ]
             },
-            "description": "Company accounts only: generates a hosted KYC link for one of YOUR end customers. The wizard covers form, documents and video liveness. Bills the fixed `kyc_verification` fee when configured (refunded if creation fails); `idempotency_key` is required — a retry with the same key returns the original link and never double-charges.",
+            "description": "Company accounts only: generates a hosted KYC link for one of YOUR end customers. The wizard covers form, documents and video liveness. Bills the fixed `kyc_verification` fee when configured (refunded if creation fails); `idempotency_key` is required — a retry with the same key returns the original link and never double-charges. Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_123\",\n  \"label\": \"Ana Perez\",\n  \"expires_in_days\": 90,\n  \"idempotency_key\": \"kyc-link-cust-123-1\"\n}",
@@ -17035,7 +17740,7 @@
                 "submissions"
               ]
             },
-            "description": "Company accounts only: verifies one of YOUR end customers sending the data directly (no wizard). Countries in ISO alpha-3, dates YYYY-MM-DD, id_type passport | id_card | drivers_license. Documents are optional at creation (upload them via the presign flow); no liveness is required at creation — the submission carries liveness_pending: true, close it with a liveness link. Re-sending with the same external_customer_id while the submission is open updates it without charging again. Bills the fixed `kyc_verification` fee; `idempotency_key` required.",
+            "description": "Company accounts only: verifies one of YOUR end customers sending the data directly (no wizard). Countries in ISO alpha-3, dates YYYY-MM-DD, id_type passport | id_card | drivers_license. Documents are optional at creation (upload them via the presign flow); no liveness is required at creation — the submission carries liveness_pending: true, close it with a liveness link. Re-sending with the same external_customer_id while the submission is open updates it without charging again. Bills the fixed `kyc_verification` fee; `idempotency_key` required. Keys beginning with the case-sensitive prefix `self:` are reserved for admin self-links; merchant requests using them return 400 `invalid_payload` with message `reserved namespace`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"external_customer_id\": \"cust_789\",\n  \"idempotency_key\": \"kyc-sub-cust-789-1\",\n  \"person\": {\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Perez\",\n    \"email\": \"ana@example.com\",\n    \"phone\": \"+56912345678\",\n    \"nationality\": \"CHL\",\n    \"date_of_birth\": \"1990-04-12\",\n    \"tax_id\": \"12.345.678-5\",\n    \"id_type\": \"id_card\",\n    \"id_number\": \"12345678\",\n    \"address\": {\n      \"line1\": \"Av. Siempre Viva 123\",\n      \"city\": \"Santiago\",\n      \"state\": \"RM\",\n      \"postal_code\": \"8320000\",\n      \"country\": \"CHL\"\n    },\n    \"primary_purpose\": \"personal_or_living_expenses\",\n    \"most_recent_occupation\": \"Engineer\",\n    \"source_of_funds\": \"salary\"\n  }\n}",
@@ -17672,7 +18377,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"report_id\": \"IDR-3C4D5E6F7A8B\",\n  \"kind\": \"kyc\",\n  \"scope\": \"third_party\",\n  \"generated_at\": \"2026-07-28T15:04:05Z\",\n  \"generated_by\": \"CBPay\",\n  \"language\": \"en\",\n  \"aml_detail\": true,\n  \"submission_id\": \"3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f\",\n  \"external_customer_id\": \"customer-1042\",\n  \"status\": \"approved\",\n  \"risk_band\": \"medium\",\n  \"aml_decision\": \"approved\",\n  \"submitted_at\": \"2026-07-19T14:00:00Z\",\n  \"updated_at\": \"2026-07-19T14:52:00Z\",\n  \"decided_at\": \"2026-07-19T14:52:00Z\",\n  \"documents_received\": [\n    \"identity\",\n    \"proofOfAddress\"\n  ],\n  \"subject\": {\n    \"type\": \"person\",\n    \"name\": \"Maria Fernanda Rojas\",\n    \"person\": {\n      \"first_name\": \"Maria\",\n      \"middle_name\": \"Fernanda\",\n      \"last_name\": \"Rojas\",\n      \"date_of_birth\": \"1988-11-02\",\n      \"country_of_birth\": \"PE\",\n      \"nationality\": \"PE\",\n      \"tax_residence_country\": \"PE\",\n      \"id_type\": \"national_id\",\n      \"id_number\": \"45678912\",\n      \"id_issuing_country\": \"PE\",\n      \"id_expires_at\": \"2029-05-20\",\n      \"occupation\": \"Regional sales manager\",\n      \"email\": \"maria.rojas@example.com\",\n      \"phone\": \"+51 9 8765 4321\"\n    },\n    \"address\": {\n      \"line1\": \"Av. Arequipa 1200\",\n      \"city\": \"Lima\",\n      \"state\": \"Lima\",\n      \"postal_code\": \"15046\",\n      \"country\": \"PE\"\n    },\n    \"economic_profile\": {\n      \"source_of_funds\": \"salary\",\n      \"primary_purpose\": \"personal_payments\",\n      \"monthly_payments_usd\": \"5000\",\n      \"monthly_transaction_count\": \"20\",\n      \"employment_status\": \"employed\",\n      \"employer_name\": \"Andes Retail SAC\",\n      \"expected_chains\": [\n        \"tron\"\n      ]\n    },\n    \"attestations\": [\n      {\n        \"key\": \"att_money_services\",\n        \"value\": false\n      },\n      {\n        \"key\": \"att_prohibited_countries\",\n        \"value\": false\n      }\n    ],\n    \"bank_account\": {\n      \"bank_name\": \"BCP\",\n      \"account_holder\": \"Maria Fernanda Rojas\",\n      \"account_masked\": \"****9911\",\n      \"country\": \"PE\",\n      \"currency\": \"PEN\",\n      \"third_party_account\": false\n    }\n  },\n  \"documents\": [\n    {\n      \"category\": \"identity\",\n      \"filename\": \"dni.pdf\",\n      \"status\": \"validated\",\n      \"outcome\": \"MATCH\",\n      \"score\": \"0.99\",\n      \"summary\": \"Name, document number and date of birth match the verified profile.\",\n      \"validated_at\": \"2026-07-19T14:40:00Z\"\n    },\n    {\n      \"category\": \"proofOfAddress\",\n      \"filename\": \"recibo-luz.pdf\",\n      \"status\": \"validated\",\n      \"outcome\": \"REVIEW\",\n      \"score\": \"0.72\",\n      \"error\": \"Address line partially legible.\",\n      \"validated_at\": \"2026-07-19T14:41:00Z\"\n    }\n  ],\n  \"liveness\": [\n    {\n      \"role\": \"subject\",\n      \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n      \"purpose\": \"gate\",\n      \"status\": \"completed\",\n      \"outcome\": \"PASS\",\n      \"passed_gate\": true,\n      \"face_verdict\": \"match\",\n      \"face_reason\": \"ok\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 1,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.05,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.98\",\n      \"antispoof_score\": \"0.96\",\n      \"face_similarity\": \"0.94\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 3,\n      \"updated_at\": \"2026-07-19T14:35:00Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": false,\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n      }\n    },\n    {\n      \"role\": \"subject\",\n      \"session_id\": \"lv_4cdd3a82903940cebd8cc95a77cdacb3\",\n      \"purpose\": \"media_recapture\",\n      \"status\": \"completed\",\n      \"outcome\": \"FAIL\",\n      \"passed_gate\": false,\n      \"face_verdict\": \"review\",\n      \"face_reason\": \"no_face_in_document\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 2,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.42,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.98\",\n      \"antispoof_score\": \"0.59\",\n      \"face_similarity\": \"0.55\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 2,\n      \"reasons\": [\n        \"Smile was not detected.\"\n      ],\n      \"updated_at\": \"2026-07-19T14:38:00Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": true,\n        \"frame_gestures\": [\n          \"center\",\n          \"turn_right\",\n          \"smile\"\n        ],\n        \"video_mime_type\": \"video/mp4\",\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9\",\n        \"frame_sha256\": [\n          \"c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2\",\n          \"d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2c3\"\n        ]\n      }\n    }\n  ],\n  \"aml\": {\n    \"screening_id\": \"6b7c8d9e-0f1a-4b2c-9d3e-4f5a6b7c8d9e\",\n    \"risk_level\": \"medium\",\n    \"status\": \"under_review\",\n    \"monitor\": true,\n    \"screened_at\": \"2026-07-19T14:50:00Z\",\n    \"sanctions\": \"clear\",\n    \"pep\": \"under_review\",\n    \"adverse_media\": \"under_review\",\n    \"screening_result\": \"has_hits\",\n    \"rationale\": \"One PEP profile and one adverse media article matched the declared identity.\",\n    \"indicators\": [\n      {\n        \"key\": \"ind_sanctions\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_pep\",\n        \"hit\": true\n      },\n      {\n        \"key\": \"ind_adverse_media\",\n        \"hit\": true\n      },\n      {\n        \"key\": \"ind_warning\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_fitness_probity\",\n        \"hit\": false\n      }\n    ],\n    \"subject_rows\": [\n      {\n        \"key\": \"full_name\",\n        \"value\": \"Maria Fernanda Rojas\"\n      },\n      {\n        \"key\": \"date_of_birth\",\n        \"value\": \"1988-11-02\"\n      },\n      {\n        \"key\": \"nationality\",\n        \"value\": \"PE\"\n      }\n    ],\n    \"matches_total\": 1,\n    \"matches\": [\n      {\n        \"name\": \"Maria F. Rojas\",\n        \"score\": 0.88,\n        \"match_types\": [\n          \"name_fuzzy\",\n          \"year_of_birth\"\n        ],\n        \"risk_kinds\": [\n          \"pep\",\n          \"adverse_media\"\n        ],\n        \"aliases\": [\n          \"M. Rojas\",\n          \"Maria Rojas Vega\"\n        ],\n        \"identity\": [\n          {\n            \"key\": \"date_of_birth\",\n            \"value\": \"1988\"\n          },\n          {\n            \"key\": \"nationality\",\n            \"value\": \"PE\"\n          },\n          {\n            \"key\": \"national_id\",\n            \"value\": \"4567****\"\n          }\n        ],\n        \"peps\": [\n          {\n            \"name\": \"Advisor, regional government\",\n            \"country\": \"PE\",\n            \"since\": \"2018\",\n            \"until\": \"2021\",\n            \"info\": \"Non-elected advisory role.\"\n          }\n        ],\n        \"adverse_media\": [\n          {\n            \"title\": \"Local outlet reports contract review\",\n            \"published_at\": \"2020-09-14\",\n            \"source\": \"Diario Local\",\n            \"snippet\": \"Regional contract under administrative review.\"\n          }\n        ],\n        \"associates\": [\n          {\n            \"name\": \"Luis Rojas\",\n            \"relation\": \"relative\"\n          }\n        ]\n      }\n    ],\n    \"cases\": [\n      {\n        \"case_id\": \"CASE-4821\",\n        \"status\": \"closed\",\n        \"decision\": \"no_action\",\n        \"opened_at\": \"2026-07-19T14:51:00Z\",\n        \"closed_at\": \"2026-07-19T15:20:00Z\"\n      }\n    ]\n  },\n  \"content_sha256\": \"1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c\",\n  \"verification_code\": \"K3c4d5e6f7a8b4c9d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5\",\n  \"verification_url\": \"https://api.example.com/verify/reports/K3c4d5e6f7a8b4c9d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5\"\n}"
+              "body": "{\n  \"report_id\": \"IDR-3C4D5E6F7A8B\",\n  \"kind\": \"kyc\",\n  \"scope\": \"third_party\",\n  \"generated_at\": \"2026-07-28T15:04:05Z\",\n  \"generated_by\": \"CBPay\",\n  \"language\": \"en\",\n  \"aml_detail\": true,\n  \"model_breakdown\": [\n    {\n      \"category\": \"COUNTRY\",\n      \"level\": \"prohibited\",\n      \"score\": 1140,\n      \"weight\": 5,\n      \"attributes\": [\n        {\n          \"name\": \"nationality\",\n          \"parameter\": \"RU\",\n          \"score\": 100\n        },\n        {\n          \"name\": \"personalIdentificationIssuingCountry\",\n          \"parameter\": \"RU\",\n          \"score\": 520\n        },\n        {\n          \"name\": \"residentialInformation.countryOfResidence\",\n          \"parameter\": \"RU\",\n          \"score\": 520\n        }\n      ]\n    },\n    {\n      \"category\": \"BASIC_INFORMATION\",\n      \"level\": \"low\",\n      \"score\": 10,\n      \"weight\": 5,\n      \"attributes\": [\n        {\n          \"name\": \"age\",\n          \"parameter\": \"40\",\n          \"score\": 10\n        }\n      ]\n    }\n  ],\n  \"submission_id\": \"3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f\",\n  \"external_customer_id\": \"customer-1042\",\n  \"status\": \"approved\",\n  \"risk_band\": \"medium\",\n  \"aml_decision\": \"approved\",\n  \"submitted_at\": \"2026-07-19T14:00:00Z\",\n  \"updated_at\": \"2026-07-19T14:52:00Z\",\n  \"decided_at\": \"2026-07-19T14:52:00Z\",\n  \"documents_received\": [\n    \"identity\",\n    \"proofOfAddress\"\n  ],\n  \"subject\": {\n    \"type\": \"person\",\n    \"name\": \"Maria Fernanda Rojas\",\n    \"person\": {\n      \"first_name\": \"Maria\",\n      \"middle_name\": \"Fernanda\",\n      \"last_name\": \"Rojas\",\n      \"date_of_birth\": \"1988-11-02\",\n      \"country_of_birth\": \"PE\",\n      \"nationality\": \"PE\",\n      \"tax_residence_country\": \"PE\",\n      \"id_type\": \"national_id\",\n      \"id_number\": \"45678912\",\n      \"id_issuing_country\": \"PE\",\n      \"id_expires_at\": \"2029-05-20\",\n      \"occupation\": \"Regional sales manager\",\n      \"email\": \"maria.rojas@example.com\",\n      \"phone\": \"+51 9 8765 4321\"\n    },\n    \"address\": {\n      \"line1\": \"Av. Arequipa 1200\",\n      \"city\": \"Lima\",\n      \"state\": \"Lima\",\n      \"postal_code\": \"15046\",\n      \"country\": \"PE\"\n    },\n    \"economic_profile\": {\n      \"source_of_funds\": \"salary\",\n      \"primary_purpose\": \"personal_payments\",\n      \"monthly_payments_usd\": \"5000\",\n      \"monthly_transaction_count\": \"20\",\n      \"employment_status\": \"employed\",\n      \"employer_name\": \"Andes Retail SAC\",\n      \"expected_chains\": [\n        \"tron\"\n      ]\n    },\n    \"attestations\": [\n      {\n        \"key\": \"att_money_services\",\n        \"value\": false\n      },\n      {\n        \"key\": \"att_prohibited_countries\",\n        \"value\": false\n      }\n    ],\n    \"bank_account\": {\n      \"bank_name\": \"BCP\",\n      \"account_holder\": \"Maria Fernanda Rojas\",\n      \"account_masked\": \"****9911\",\n      \"country\": \"PE\",\n      \"currency\": \"PEN\",\n      \"third_party_account\": false\n    }\n  },\n  \"documents\": [\n    {\n      \"category\": \"identity\",\n      \"filename\": \"dni.pdf\",\n      \"status\": \"validated\",\n      \"outcome\": \"MATCH\",\n      \"score\": \"0.99\",\n      \"summary\": \"Name, document number and date of birth match the verified profile.\",\n      \"validated_at\": \"2026-07-19T14:40:00Z\"\n    },\n    {\n      \"category\": \"proofOfAddress\",\n      \"filename\": \"recibo-luz.pdf\",\n      \"status\": \"validated\",\n      \"outcome\": \"REVIEW\",\n      \"score\": \"0.72\",\n      \"error\": \"Address line partially legible.\",\n      \"validated_at\": \"2026-07-19T14:41:00Z\"\n    }\n  ],\n  \"liveness\": [\n    {\n      \"role\": \"subject\",\n      \"session_id\": \"lv_e763e3465bf34f1dab826a263c1eaaaa\",\n      \"purpose\": \"gate\",\n      \"status\": \"completed\",\n      \"outcome\": \"PASS\",\n      \"passed_gate\": true,\n      \"face_verdict\": \"match\",\n      \"face_reason\": \"ok\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 1,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.05,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.98\",\n      \"antispoof_score\": \"0.96\",\n      \"face_similarity\": \"0.94\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 3,\n      \"updated_at\": \"2026-07-19T14:35:00Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": false,\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"6f8a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e\"\n      }\n    },\n    {\n      \"role\": \"subject\",\n      \"session_id\": \"lv_4cdd3a82903940cebd8cc95a77cdacb3\",\n      \"purpose\": \"media_recapture\",\n      \"status\": \"completed\",\n      \"outcome\": \"FAIL\",\n      \"passed_gate\": false,\n      \"face_verdict\": \"review\",\n      \"face_reason\": \"no_face_in_document\",\n      \"face_doc_ref\": \"doc-identity-front\",\n      \"face_doc_category\": \"identity_front\",\n      \"face_docs_tried\": 2,\n      \"antispoof_engine\": \"fitted_v1\",\n      \"spoof_score\": 0.42,\n      \"scorer_rev\": \"2026-11-12.1\",\n      \"scored_at\": \"2026-11-12T15:00:00Z\",\n      \"scored\": true,\n      \"liveness_score\": \"0.98\",\n      \"antispoof_score\": \"0.59\",\n      \"face_similarity\": \"0.55\",\n      \"gestures_expected\": 3,\n      \"gestures_passed\": 2,\n      \"reasons\": [\n        \"Smile was not detected.\"\n      ],\n      \"updated_at\": \"2026-07-19T14:38:00Z\",\n      \"media\": {\n        \"has_selfie\": true,\n        \"has_video\": true,\n        \"frame_gestures\": [\n          \"center\",\n          \"turn_right\",\n          \"smile\"\n        ],\n        \"video_mime_type\": \"video/mp4\",\n        \"expires_in_sec\": 900,\n        \"selfie_sha256\": \"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9\",\n        \"frame_sha256\": [\n          \"c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2\",\n          \"d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9a1b2c3\"\n        ]\n      }\n    }\n  ],\n  \"aml\": {\n    \"screening_id\": \"6b7c8d9e-0f1a-4b2c-9d3e-4f5a6b7c8d9e\",\n    \"risk_level\": \"medium\",\n    \"status\": \"under_review\",\n    \"monitor\": true,\n    \"screened_at\": \"2026-07-19T14:50:00Z\",\n    \"sanctions\": \"clear\",\n    \"pep\": \"under_review\",\n    \"adverse_media\": \"under_review\",\n    \"screening_result\": \"has_hits\",\n    \"rationale\": \"One PEP profile and one adverse media article matched the declared identity.\",\n    \"indicators\": [\n      {\n        \"key\": \"ind_sanctions\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_pep\",\n        \"hit\": true\n      },\n      {\n        \"key\": \"ind_adverse_media\",\n        \"hit\": true\n      },\n      {\n        \"key\": \"ind_warning\",\n        \"hit\": false\n      },\n      {\n        \"key\": \"ind_fitness_probity\",\n        \"hit\": false\n      }\n    ],\n    \"subject_rows\": [\n      {\n        \"key\": \"full_name\",\n        \"value\": \"Maria Fernanda Rojas\"\n      },\n      {\n        \"key\": \"date_of_birth\",\n        \"value\": \"1988-11-02\"\n      },\n      {\n        \"key\": \"nationality\",\n        \"value\": \"PE\"\n      }\n    ],\n    \"matches_total\": 1,\n    \"matches\": [\n      {\n        \"name\": \"Maria F. Rojas\",\n        \"score\": 0.88,\n        \"match_types\": [\n          \"name_fuzzy\",\n          \"year_of_birth\"\n        ],\n        \"risk_kinds\": [\n          \"pep\",\n          \"adverse_media\"\n        ],\n        \"aliases\": [\n          \"M. Rojas\",\n          \"Maria Rojas Vega\"\n        ],\n        \"identity\": [\n          {\n            \"key\": \"date_of_birth\",\n            \"value\": \"1988\"\n          },\n          {\n            \"key\": \"nationality\",\n            \"value\": \"PE\"\n          },\n          {\n            \"key\": \"national_id\",\n            \"value\": \"4567****\"\n          }\n        ],\n        \"peps\": [\n          {\n            \"name\": \"Advisor, regional government\",\n            \"country\": \"PE\",\n            \"since\": \"2018\",\n            \"until\": \"2021\",\n            \"info\": \"Non-elected advisory role.\"\n          }\n        ],\n        \"adverse_media\": [\n          {\n            \"title\": \"Local outlet reports contract review\",\n            \"published_at\": \"2020-09-14\",\n            \"source\": \"Diario Local\",\n            \"snippet\": \"Regional contract under administrative review.\"\n          }\n        ],\n        \"associates\": [\n          {\n            \"name\": \"Luis Rojas\",\n            \"relation\": \"relative\"\n          }\n        ]\n      }\n    ],\n    \"cases\": [\n      {\n        \"case_id\": \"CASE-4821\",\n        \"status\": \"closed\",\n        \"decision\": \"no_action\",\n        \"opened_at\": \"2026-07-19T14:51:00Z\",\n        \"closed_at\": \"2026-07-19T15:20:00Z\"\n      }\n    ]\n  },\n  \"content_sha256\": \"1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c\",\n  \"verification_code\": \"K3c4d5e6f7a8b4c9d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5\",\n  \"verification_url\": \"https://api.example.com/verify/reports/K3c4d5e6f7a8b4c9d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5\"\n}"
             }
           ]
         },
@@ -18898,11 +19603,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "X-OTP-Token",
-                "value": "",
-                "disabled": false
               }
             ],
             "url": {
@@ -18925,10 +19625,10 @@
                 }
               ]
             },
-            "description": "Requires a human owner/operator session, consent and a fresh OTP in `X-OTP-Token`.",
+            "description": "Requires a human owner/operator session, signer name, consent and signature. No OTP (simple signing).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"signer_title\": \"Chief Executive Officer\",\n  \"consent\": true,\n  \"signature_png\": \"<PNG_BASE64_SIGNATURE>\"\n}",
+              "raw": "{\n  \"signer_name\": \"Jordan Lee\",\n  \"consent\": true,\n  \"signature_png\": \"<PNG_BASE64_SIGNATURE>\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -20754,6 +21454,71 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"card\",\n  \"amount\": \"49.90\",\n  \"description\": \"Pro plan\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Ana\",\n    \"last_name\": \"Rojas\",\n    \"country\": \"CL\",\n    \"document_type\": \"RUT\",\n    \"document_number\": \"11.111.111-1\"\n  },\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"save_card\": true,\n  \"payer_reference\": \"customer-7719\",\n  \"idempotency_key\": \"pro-plan-7719\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Idempotent replay of a QR or announced transfer (`bank_trans",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payins",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payins"
+                  ]
+                }
+              },
+              "status": "Idempotent replay of a QR or announced transfer (`bank_trans",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payin_id\": \"4f81c1d0-aaaa-bbbb-cccc-ddddeeeeffff\",\n  \"status\": \"pending\",\n  \"reference\": \"CBJ6T3W9M2K5\",\n  \"note\": \"include the reference in the transfer description so the deposit is credited automatically\",\n  \"payer_source\": \"declared\",\n  \"payer_document\": \"17438319-7\",\n  \"idempotency_hit\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create a payin (top-up charge) — International cards — checkout settling to a segregated wallet (US/USD)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payins"
+              ]
+            },
+            "description": "Requires an approved account identity; person accounts need approved KYC and company accounts need approved KYB before this authenticated operation can create or charge a payin. Creates a fiat top-up. For `method: \"bank_transfer\"`, the platform rejects an amount below the account-specific fee minimum before creating the announcement; the 422 message includes the current local minimum when the account rate is available. With `method: \"qr\"` (default) an active QR charge is generated through the processor — in Bolivia the local interoperable QR, in Brazil a dynamic PIX QR whose `charge` is denominated in BOB, carries the PNG QR image and exposes the payer-facing BRL conversion (Brazil does not return a copy-and-paste EMV payload). With `method: \"bank_transfer\"` the deposit is announced and the response carries the reference the sender must include so the arriving transfer is matched and credited automatically — a short 12-character alphanumeric code that fits any bank concept field (some rails cap it at 20 characters with no special characters). With `method: \"fintoc\"` (Chile) the response carries a hosted `payment_url`: the payer opens it and transfers from any Chilean bank or wallet; the deposit is detected, validated and credited automatically. With `method: \"card\"` the response carries a hosted `payment_url` for a 3-D Secure card checkout branded with your organization — Bolivia (BOB) and international cards in USD (`country: \"US\"`, Visa, Mastercard, American Express, Discover and Diners issued anywhere); card data never touches your integration. When `stored_card_id` is absent, an open pending/challenge card session can be reused for the same account, country, currency, amount and `payer_reference` (falling back to `customer.email`), returning HTTP 200 with `session_reused: true` and the existing `payment_url`. Card sessions default to 60 minutes and accept explicit expiries up to 48 hours. The account cap is 50 open sessions; if unused zero-attempt pending sessions cannot be evicted, the response is `429 too_many_open_card_sessions`. With `method: \"checkout\"` the response carries a public `checkout_url` — a branded universal checkout link denominated in the virtual balance of your choice (`settlement_asset`: USD, USDT, USDC, BTC, GOLD, SILVER or PLATINUM; fiat BOB/MXN/ARS/CLP/UF are rejected). The payer picks any country with a live payin corridor (quoted local amount), any of the 4 crypto options (exclusive deposit address with a scannable QR), or pays instantly from the CBPay app via the merchant QR/alias; every payment is auto-converted to the settlement asset unless paid in the same asset. The first method that completes the payment wins. Charging is free; the payin fee applies when the deposit is credited. The live catalog may also expose PY/PYG, CO/COP, EC/USD and BR/BOB QR plus BR/BRL hosted PIX corridors. COP is integer-only; PYG, USD and BRL accept at most two decimals. BR/BRL/pix is a hosted redirect and requires payer name and document; its minimum is 1 BRL. `wallet` may be hosted or collect-only depending on the corridor.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"US\",\n  \"currency\": \"USD\",\n  \"method\": \"card\",\n  \"amount\": \"100.00\",\n  \"description\": \"User wallet top-up\",\n  \"customer\": {\n    \"email\": \"payer@example.com\",\n    \"first_name\": \"Juan\",\n    \"last_name\": \"Perez\"\n  },\n  \"payer_reference\": \"customer-123\",\n  \"segregated_mode\": \"get_or_create\",\n  \"segregated_chain\": \"tron\",\n  \"segregated_asset\": \"USDT\",\n  \"segregated_key\": \"kontigo:user:123\",\n  \"segregated_label\": \"Billetera Juan\",\n  \"segregated_owner\": {\n    \"external_id\": \"user-123\",\n    \"name\": \"Juan Perez\",\n    \"document_type\": \"CI\",\n    \"document_number\": \"12345678\",\n    \"country\": \"CL\",\n    \"email\": \"payer@example.com\",\n    \"kyc_level\": \"intermediate\",\n    \"kyc_verified_at\": \"2026-11-18T15:04:05Z\",\n    \"order_id\": \"kontigo-order-789\"\n  },\n  \"success_url\": \"https://your-app.com/payment/ok\",\n  \"failure_url\": \"https://your-app.com/payment/error\",\n  \"idempotency_key\": \"kontigo-pay-001\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -24308,10 +25073,22 @@
                   "description": ""
                 },
                 {
+                  "key": "currency",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional ISO currency used with `country` and `method` to resolve the organization's effective payout route server-side. Use the returned codes for creation selectors; do not send an internal route identifier."
+                },
+                {
                   "key": "method",
                   "value": "",
                   "disabled": true,
                   "description": "Optional payout method to scope the catalog (see GET /v1/payouts/methods)."
+                },
+                {
+                  "key": "variant",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional route variant. Requires an explicit method and returns only that variant's catalog; it is intended for creation-safe selectors."
                 },
                 {
                   "key": "include_variants",
@@ -24321,7 +25098,7 @@
                 }
               ]
             },
-            "description": "Bank catalog for a country's payouts. Without `method` it returns the union of every payout method's banks for the country (deduplicated by code); pass `method` to get a single channel's catalog. Some methods have no bank catalog (e.g. QR) and contribute no entries. Pass `include_variants=true` (also `1` or `yes`) to add the internal variants' bank catalogs for display-only resolution of codes saved from a non-default rail. The default catalog remains first, so duplicate codes keep the default's name; without the flag, behavior is unchanged. This flag is not for payout creation selectors, which must continue validating against the default rail."
+            "description": "Bank catalog for a country's payouts. Without `method` it returns the union of every payout method's banks for the country (deduplicated by code); pass `method` to get a single channel's catalog. Some methods have no bank catalog (e.g. QR) and contribute no entries. For a labeled country/currency/method corridor, pass the full tuple so the platform can resolve the organization's effective route server-side and return the matching creation catalog; clients do not send the internal route value. Pass `variant` together with an explicit `method` to receive only that route variant's catalog; this is creation-safe and never unions catalogs. Without `variant` or `currency`, legacy behavior is preserved. Pass `include_variants=true` (also `1` or `yes`) only for display-only resolution of codes saved from a non-default rail."
           },
           "response": [
             {
@@ -24346,10 +25123,22 @@
                       "description": ""
                     },
                     {
+                      "key": "currency",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Optional ISO currency used with `country` and `method` to resolve the organization's effective payout route server-side. Use the returned codes for creation selectors; do not send an internal route identifier."
+                    },
+                    {
                       "key": "method",
                       "value": "",
                       "disabled": true,
                       "description": "Optional payout method to scope the catalog (see GET /v1/payouts/methods)."
+                    },
+                    {
+                      "key": "variant",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Optional route variant. Requires an explicit method and returns only that variant's catalog; it is intended for creation-safe selectors."
                     },
                     {
                       "key": "include_variants",
@@ -24369,7 +25158,95 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"code\": \"0001\",\n      \"name\": \"Banco de Chile\"\n    },\n    {\n      \"code\": \"0012\",\n      \"name\": \"BancoEstado\"\n    },\n    {\n      \"code\": \"0037\",\n      \"name\": \"Santander\"\n    },\n    {\n      \"code\": \"0051\",\n      \"name\": \"Banco Falabella\"\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"code\": \"0001\",\n      \"name\": \"Example Bank\"\n    },\n    {\n      \"code\": \"0012\",\n      \"name\": \"Another Example Bank\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Beneficiary form schema for a payout corridor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/payouts/beneficiary-schema",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "payouts",
+                "beneficiary-schema"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Destination country (ISO alpha-2)."
+                },
+                {
+                  "key": "method",
+                  "value": "",
+                  "disabled": false,
+                  "description": "Rail method (bank_transfer, yape, pix, swift, sepa...)."
+                },
+                {
+                  "key": "lang",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Locale for labels, placeholders, hints and errors."
+                }
+              ]
+            },
+            "description": "Data-only field descriptors for the beneficiary form of one corridor (country + method), in render order. Labels, placeholders, hints and error texts are served in the requested locale (?lang=en|es|zh, default en). `validator` / `validator_with_values` name the closed client-side validator set each frontend implements — the backend never ships executable validation, and conditional fields (show_if, required_if, validate_fn_when) are evaluated against the live form. Static catalog proxied from the processing core. Global methods (swift/sepa) resolve for any country via wildcard; the requested country is echoed back."
+          },
+          "response": [
+            {
+              "name": "200 Field descriptors.",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/v1/payouts/beneficiary-schema",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "payouts",
+                    "beneficiary-schema"
+                  ],
+                  "query": [
+                    {
+                      "key": "country",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Destination country (ISO alpha-2)."
+                    },
+                    {
+                      "key": "method",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Rail method (bank_transfer, yape, pix, swift, sepa...)."
+                    },
+                    {
+                      "key": "lang",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Locale for labels, placeholders, hints and errors."
+                    }
+                  ]
+                }
+              },
+              "status": "Field descriptors.",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"country\": \"CL\",\n  \"method\": \"fintoc\",\n  \"lang\": \"en\",\n  \"fields\": [\n    {\n      \"key\": \"name\",\n      \"label\": \"Beneficiary name\",\n      \"kind\": \"text\",\n      \"placeholder\": \"Pedro Soto Fuentes\"\n    },\n    {\n      \"key\": \"tax_id\",\n      \"label\": \"RUT\",\n      \"kind\": \"text\",\n      \"placeholder\": \"12.345.678-5\",\n      \"hint\": \"The check digit is validated\",\n      \"validator\": \"chilean_rut\",\n      \"error\": \"Invalid RUT: check the verification digit\"\n    },\n    {\n      \"key\": \"bank_code\",\n      \"label\": \"Bank\",\n      \"kind\": \"bank\"\n    },\n    {\n      \"key\": \"account_type\",\n      \"label\": \"Account type\",\n      \"kind\": \"select\",\n      \"hint\": \"Cuenta RUT counts as a sight account\",\n      \"options\": [\n        {\n          \"value\": \"checking\",\n          \"label\": \"Checking account\"\n        },\n        {\n          \"value\": \"vista\",\n          \"label\": \"Sight account\"\n        }\n      ]\n    },\n    {\n      \"key\": \"account_number\",\n      \"label\": \"Account number\",\n      \"kind\": \"text\",\n      \"hint\": \"Digits only\",\n      \"validator\": \"cl_account_number\",\n      \"error\": \"Invalid account number: digits only (max 20)\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -33344,6 +34221,12 @@
                   "value": "",
                   "disabled": true,
                   "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                },
+                {
+                  "key": "coverage_exempt",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by BTC coverage-floor exemption (treasury visibility)."
                 }
               ]
             },
@@ -33391,6 +34274,12 @@
                       "value": "",
                       "disabled": true,
                       "description": "Filter up to this date (YYYY-MM-DD, organization timezone, inclusive)."
+                    },
+                    {
+                      "key": "coverage_exempt",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Filter by BTC coverage-floor exemption (treasury visibility)."
                     }
                   ]
                 }
@@ -33404,7 +34293,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"swaps\": [\n    {\n      \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"from_asset\": \"USD\",\n      \"to_asset\": \"BTC\",\n      \"from_amount\": \"1000.00\",\n      \"to_amount\": \"0.01568419\",\n      \"rate\": \"0.00001568\",\n      \"status\": \"completed\",\n      \"idempotency_key\": \"swap-2026-07-10-a\",\n      \"created_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
+              "body": "{\n  \"page\": 1,\n  \"page_size\": 50,\n  \"swaps\": [\n    {\n      \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n      \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n      \"from_asset\": \"USD\",\n      \"to_asset\": \"BTC\",\n      \"from_amount\": \"1000.00\",\n      \"to_amount\": \"0.01568419\",\n      \"rate\": \"0.00001568\",\n      \"coverage_exempt\": false,\n      \"status\": \"completed\",\n      \"idempotency_key\": \"swap-2026-07-10-a\",\n      \"created_at\": \"2026-07-10T15:00:00Z\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -33469,7 +34358,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -33534,7 +34423,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -33599,7 +34488,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-a\",\n  \"created_at\": \"2026-07-10T15:00:00Z\",\n  \"idempotency_hit\": true\n}"
             }
           ]
         },
@@ -33687,7 +34576,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"indicative\": true\n}"
+              "body": "{\n  \"from_asset\": \"USD\",\n  \"to_asset\": \"BTC\",\n  \"from_amount\": \"1000.00\",\n  \"to_amount\": \"0.01568419\",\n  \"rate\": \"0.00001568\",\n  \"fees\": [\n    {\n      \"leg\": \"from\",\n      \"asset\": \"USD\",\n      \"percent\": \"0.20\"\n    },\n    {\n      \"leg\": \"to\",\n      \"asset\": \"BTC\",\n      \"percent\": \"0.15\"\n    }\n  ],\n  \"fee_total_pct\": \"0.3500\",\n  \"fee_note\": \"included_in_rate\",\n  \"indicative\": true,\n  \"coverage_exempt\": false\n}"
             }
           ]
         },
@@ -33747,7 +34636,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"BTC\",\n  \"to_asset\": \"GOLD\",\n  \"from_amount\": \"0.01000000\",\n  \"to_amount\": \"4.900990\",\n  \"rate\": \"490.09900990\",\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-b\",\n  \"created_at\": \"2026-07-10T15:05:00Z\"\n}"
+              "body": "{\n  \"swap_id\": \"8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n  \"account_id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n  \"from_asset\": \"BTC\",\n  \"to_asset\": \"GOLD\",\n  \"from_amount\": \"0.01000000\",\n  \"to_amount\": \"4.900990\",\n  \"rate\": \"490.09900990\",\n  \"coverage_exempt\": false,\n  \"status\": \"completed\",\n  \"idempotency_key\": \"swap-2026-07-10-b\",\n  \"created_at\": \"2026-07-10T15:05:00Z\"\n}"
             }
           ]
         }

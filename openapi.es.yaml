@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.325'
+  version: '2.326'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -13456,13 +13456,12 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `approved_unfunded`, `released`, `rejected`, `dispatch_failed` o `all` (vacío = open: `in_review` + `info_requested` + `approved_unfunded` + approvals con un fallo de dispatch vigente, marcadas `needs_action`). `approved_unfunded` significa que compliance aprobó un retiro crypto, pero el fondeo sigue pendiente; la cobertura lo libera sin otra aprobación.'
+        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
         schema:
           type: string
           enum:
           - in_review
           - info_requested
-          - approved_unfunded
           - released
           - rejected
           - dispatch_failed
@@ -13535,7 +13534,7 @@ paths:
                   summary: Unknown status
                   value:
                     error: invalid_status
-                    message: status must be one of in_review, info_requested, approved_unfunded, released, rejected, dispatch_failed, all
+                    message: status must be one of in_review, info_requested, released, rejected, dispatch_failed, all
                 invalid_kind:
                   summary: Unknown kind
                   value:
@@ -13607,7 +13606,7 @@ paths:
       - Account
       operationId: submitMyTxnReviewFields
       summary: Enviar los datos solicitados en un pedido de información
-      description: Envía los datos pedidos por un request-info mapeado (`requested_fields`, vocabulario cerrado de claves de requisito) para una solicitud banking o de tarjeta. Solo se aceptan las claves que el equipo pidió — cualquier otra responde `400 field_not_requested`. Cada valor se valida por tipo (texto, email, teléfono, país ISO, fecha `YYYY-MM-DD`, salario USD positivo, sí/no, objeto de dirección, moneda de 3 letras, propósito, códigos de catálogo del emisor); un valor con mal tipo responde `400 invalid_field_value` nombrando la clave. Los valores viven solo en la revisión y se fusionan al checklist y al despacho de la aprobación — el expediente KYC/KYB jamás se toca. Como con un archivo, el primer envío devuelve la revisión a `in_review` y avisa al revisor; los siguientes solo agregan evidencia. Acepta `info_requested`, o `in_review` tras un `request-info` previo.
+      description: Envía los datos pedidos por un request-info mapeado (`requested_fields`, vocabulario cerrado de claves de requisito) para una solicitud banking o de tarjeta. Solo se aceptan las claves que el equipo pidió — cualquier otra responde `400 field_not_requested`. Cada valor se valida por tipo (texto, email, teléfono, país ISO, fecha `YYYY-MM-DD`, salario USD positivo, sí/no, objeto de dirección, moneda de 3 letras, propósito, códigos de catálogo del emisor, prosa de motivo); un valor con mal tipo responde `400 invalid_field_value` nombrando la clave. Un valor `*_na_reason` (20-500 caracteres explicando por qué el documento no existe) satisface su requisito cuando no se aportó el documento y se reenvía al proveedor como carta de no disponibilidad. Los valores viven solo en la revisión y se fusionan al checklist y al despacho de la aprobación — el expediente KYC/KYB jamás se toca. Como con un archivo, el primer envío devuelve la revisión a `in_review` y avisa al revisor; los siguientes solo agregan evidencia. Acepta `info_requested`, o `in_review` tras un `request-info` previo.
       parameters:
       - name: reviewID
         in: path
@@ -32593,6 +32592,10 @@ components:
         instrument:
           $ref: '#/components/schemas/PayinInstrument'
           description: Metadatos del instrumento dedicado, presentes cuando existe la fila del instrumento.
+        virtual_iban_id:
+          type: string
+          format: uuid
+          description: Solo payins banking funding — el IBAN virtual que recibió el depósito; se omite en otros rieles y payins legacy.
         account_id:
           type: string
         kind:
@@ -33617,6 +33620,10 @@ webhooks:
                   description: Instrumento de depósito dedicado que recibió el payin; se omite cuando no aplica.
                 instrument:
                   $ref: '#/components/schemas/PayinInstrument'
+                virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: Solo payins banking funding — el IBAN virtual que recibió el depósito; se omite en otros rieles y payins legacy.
                 payer:
                   type: object
                   description: Identidad del pagador reportada por el banco para créditos nuevos, cuando está disponible.

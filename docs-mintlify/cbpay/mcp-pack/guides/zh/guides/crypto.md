@@ -220,11 +220,24 @@ Bitcoin 地址为**原生 bech32** 格式（`bc1q…`）：任何现代钱包或
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TX9a…",
+  "deposit_id": "dep_8813…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt"
 }
 ```
 
+`tx_id` 标识链上交易。一笔批量交易可能包含多笔转账，因此充值的完整
+身份是 `tx_id:event_index`；每笔转账都会产生自己的 webhook 和账本分录。
+`event_index` 是转账在交易中的索引（EVM 网络上的 ERC-20 log index）。
+`from_address` 标识发送方，`deposit_id` 标识已入账的账本分录，
+`receipt_url` 是该充值的品牌化回单。
+
+> **重要**
+不要只按 `tx_id` 对账：同一交易中的两笔转账可能属于不同账户或金额不同。
+请持久化 `tx_id` + `event_index`，并使用 `X-Webhook-Event-ID` 对 webhook 去重。
 > **重要**
 **只能通过钱包所属网络发送该钱包的资产**（USDT 发到 USDT 钱包，
 USDC 发到 USDC 钱包，USDC.e 发到 USDC.e 钱包，BTC 发到 Bitcoin 钱包）。
@@ -475,9 +488,11 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
       "chain": "tron",
       "asset": "USDT",
       "tx_id": "b1946ac9…",
+      "reference": "b1946ac9…:0",
       "from_address": "TX9a…",
       "amount": "499.000000",
-      "reference": "dep_8813…",
+      "deposit_id": "dep_8813…",
+      "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/dep_8813…/receipt",
       "created_at": "2026-07-07T12:10:00Z"
     }
   ],
@@ -497,6 +512,28 @@ curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=20
   ]
 }
 ```
+
+如需对账同一链上交易中的每笔转账，请使用完整交易哈希进行精确筛选。
+充值同时匹配裸交易哈希和 `tx_id:event_index` 引用，因此批量交易会按每笔
+转账返回一行：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/crypto/transactions?from=2026-07-01&to=2026-07-08&tx_id=b1946ac92492d2347c6235b4d2611184e0f0f8c9d3a1e2b3c4d5e6f708192a3b&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+被冻结的充值不会出现在 `GET /v1/crypto/transactions` 中，因为它尚未入账。
+请从持久化事件日志恢复通知：
+
+```bash
+curl "https://api.qbank.cl/platform/v1/events/history?from=2026-07-01&to=2026-07-08&event_type=crypto_deposit_held&page=1&page_size=50" \
+  -H "Authorization: Bearer <token>"
+```
+
+held 事件包含相同的 `tx_id` 和 `event_index`，用于定位具体转账。若合规团队
+放行，后续 `crypto_deposit_credited` 事件会携带相同的 `hold_id`；若拒绝，
+则不会创建入账记录。事件日志保留 90 天；充值入账后，财务对账应以不可变
+的 movement 和回单资源为准。
 
 ```bash
 # 当前余额（可用 + 冻结）

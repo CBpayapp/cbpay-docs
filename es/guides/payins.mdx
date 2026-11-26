@@ -1167,7 +1167,7 @@ Los pushes acreditados en una cuenta de depósito dedicada exponen
 `instrument_id`, un bloque `instrument` y el bloque `payer` del banco — forma
 completa en la [guía de Fondeo](/es/guides/funding#campos-de-instrumento-y-pagador-en-pushes-acreditados).
 Filtra el historial con `?instrument_id=<uuid>`.
-
+En payins `banking_funding` recibidos mediante un IBAN virtual, `GET /v1/payins/{id}` y `payin_credited` incluyen el `virtual_iban_id` receptor para atribución sin otra consulta; si no se resuelve, o es otro riel o legacy, se omite, y detalle y webhook llevan el mismo valor.
 ## 3. Recibe el abono
 
 Cuando el pago llega (por cualquiera de las modalidades), tu cuenta se
