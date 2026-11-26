@@ -5,14 +5,22 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.323 · 5 versiones - 25 de noviembre de 2026
-### v2.323
+## v2.325 · 6 versiones - 25 de noviembre de 2026
+### v2.325
 **Agregado**
-- Se agregó `approved_unfunded` a los filtros de revisiones y se documentó que
-  los retiros crypto aprobados esperan cobertura y se liberan sin otra
-  aprobación.
-- Se agregó la guía para respuestas `409`, polling y reintentos idempotentes
-  con la misma key.
+
+- Las solicitudes de información en altas banking y tarjetas ahora llegan
+  como campos y documentos mapeados, no texto libre: responde cada ítem con
+  `POST /v1/me/txn-reviews/{reviewID}/fields` (validación tipada por ítem)
+  o subiendo el archivo pedido. Los avisos llegan en el idioma de tu perfil
+  y el portal muestra un input por cada ítem.
+### v2.324
+**Cambiado**
+
+- Las altas banking ya no piden licencia, AML/CFT, Wolfsberg ni MLRO a
+  empresas fuera de rubros financieros. En personas, la cartola o la
+  evidencia de origen de fondos cubren el mismo requisito: basta un
+  documento.
 ### v2.322
 **Cambiado**
 

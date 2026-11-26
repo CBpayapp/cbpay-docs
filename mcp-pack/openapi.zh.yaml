@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.323'
+  version: '2.325'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -13434,13 +13434,12 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`、`info_requested`、`approved_unfunded`、`released`、`rejected`、`dispatch_failed` 或 `all`（空值 = open：`in_review` + `info_requested` + `approved_unfunded` + 当前 dispatch 失败且标记为 `needs_action` 的批准）。`approved_unfunded` 表示合规已批准加密提现，但资金仍在等待；覆盖资金到位后会自动放行，无需再次批准。'
+        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
         schema:
           type: string
           enum:
           - in_review
           - info_requested
-          - approved_unfunded
           - released
           - rejected
           - dispatch_failed
@@ -13513,7 +13512,7 @@ paths:
                   summary: Unknown status
                   value:
                     error: invalid_status
-                    message: status must be one of in_review, info_requested, approved_unfunded, released, rejected, dispatch_failed, all
+                    message: status must be one of in_review, info_requested, released, rejected, dispatch_failed, all
                 invalid_kind:
                   summary: Unknown kind
                   value:
@@ -13700,6 +13699,18 @@ paths:
           - shareholderRegister
           - directorsRegister
           - swornDeclaration
+          - identity_front
+          - identity_back
+          - ubo_gov_id_front
+          - ubo_gov_id_back
+          - uboIdentityBack
+          - ubo_bank_statement
+          - ubo_proof_of_address
+          - ubo_source_of_wealth
+          - certificateOfGoodStanding
+          - registerShareholder
+          - idShareholders
+          - addressVerificationShareholders
       requestBody:
         required: true
         content:

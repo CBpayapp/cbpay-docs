@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.323'
+  version: '2.325'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -13456,13 +13456,12 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `approved_unfunded`, `released`, `rejected`, `dispatch_failed` o `all` (vacío = open: `in_review` + `info_requested` + `approved_unfunded` + approvals con un fallo de dispatch vigente, marcadas `needs_action`). `approved_unfunded` significa que compliance aprobó un retiro crypto, pero el fondeo sigue pendiente; la cobertura lo libera sin otra aprobación.'
+        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
         schema:
           type: string
           enum:
           - in_review
           - info_requested
-          - approved_unfunded
           - released
           - rejected
           - dispatch_failed
@@ -13535,7 +13534,7 @@ paths:
                   summary: Unknown status
                   value:
                     error: invalid_status
-                    message: status must be one of in_review, info_requested, approved_unfunded, released, rejected, dispatch_failed, all
+                    message: status must be one of in_review, info_requested, released, rejected, dispatch_failed, all
                 invalid_kind:
                   summary: Unknown kind
                   value:
@@ -13722,6 +13721,18 @@ paths:
           - shareholderRegister
           - directorsRegister
           - swornDeclaration
+          - identity_front
+          - identity_back
+          - ubo_gov_id_front
+          - ubo_gov_id_back
+          - uboIdentityBack
+          - ubo_bank_statement
+          - ubo_proof_of_address
+          - ubo_source_of_wealth
+          - certificateOfGoodStanding
+          - registerShareholder
+          - idShareholders
+          - addressVerificationShareholders
       requestBody:
         required: true
         content:

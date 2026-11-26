@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.323'
+  version: '2.325'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -13722,6 +13722,18 @@ paths:
           - shareholderRegister
           - directorsRegister
           - swornDeclaration
+          - identity_front
+          - identity_back
+          - ubo_gov_id_front
+          - ubo_gov_id_back
+          - uboIdentityBack
+          - ubo_bank_statement
+          - ubo_proof_of_address
+          - ubo_source_of_wealth
+          - certificateOfGoodStanding
+          - registerShareholder
+          - idShareholders
+          - addressVerificationShareholders
       requestBody:
         required: true
         content:

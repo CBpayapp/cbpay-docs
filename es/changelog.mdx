@@ -4,7 +4,22 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="25 de noviembre de 2026" description="v2.323 · 5 versiones">
+<Update label="25 de noviembre de 2026" description="v2.325 · 7 versiones">
+### v2.325
+**Agregado**
+
+- Las solicitudes de información en altas banking y tarjetas ahora llegan
+  como campos y documentos mapeados, no texto libre: responde cada ítem con
+  `POST /v1/me/txn-reviews/{reviewID}/fields` (validación tipada por ítem)
+  o subiendo el archivo pedido. Los avisos llegan en el idioma de tu perfil
+  y el portal muestra un input por cada ítem.
+### v2.324
+**Cambiado**
+
+- Las altas banking ya no piden licencia, AML/CFT, Wolfsberg ni MLRO a
+  empresas fuera de rubros financieros. En personas, la cartola o la
+  evidencia de origen de fondos cubren el mismo requisito: basta un
+  documento.
 ### v2.323
 **Agregado**
 - Se agregó `approved_unfunded` a los filtros de revisiones y se documentó que

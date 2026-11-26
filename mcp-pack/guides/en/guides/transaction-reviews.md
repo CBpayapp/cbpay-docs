@@ -207,6 +207,54 @@ requested category has been covered, additional files with any valid banking
 category are accepted. `bankStatement` means a bank statement (extracto
 bancario); it is not relabeled.
 
+## Submit requested data
+
+For a banking or card application, an administrator can request typed data in
+addition to documents. The review detail returns the closed
+`requested_fields` list. Complete only those keys; the portal validates each
+value before sending it:
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000000000001/fields" \
+  -H "Authorization: Bearer pk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fields": {
+      "first_name": "Juan",
+      "nationality": "CL",
+      "address": {
+        "line1": "Avenida Siempre Viva 123",
+        "city": "Santiago",
+        "country": "CL"
+      }
+    }
+  }'
+```
+
+The response lists both `fields_submitted` and `fields_remaining`:
+
+```json
+{
+  "fields_submitted": ["first_name", "nationality", "address"],
+  "fields_remaining": [],
+  "status": "in_review"
+}
+```
+
+The first submission moves the review from `info_requested` back to
+`in_review`; later submissions add evidence. The values are stored only on
+this review and are merged into its application checklist and approval
+request. They never modify the account's KYC/KYB record. A value outside
+`requested_fields` returns `400 field_not_requested`; a value with the wrong
+type returns `400 invalid_field_value`. Supported types include text, email,
+phone, ISO country, `YYYY-MM-DD` date, positive USD amount, yes/no, address,
+three-letter currency, vIBAN purpose, and card catalog codes. For cards,
+`occupation` and `kind_of_business` must be catalog codes, not display labels.
+
+You can submit data while the review is `info_requested`, or while it is
+`in_review` after a previous request for information. If the review does not
+belong to your account, the API returns `404 not_found`.
+
 ## Download your own files
 
 ```bash
@@ -257,38 +305,6 @@ For application reviews (`kind`: `banking_application` / `card_application`) the
 
 Full catalog in [Errors](https://docs.cbpayapp.com/en/errors).
 
-## Approved but awaiting funds
-
-A crypto withdrawal can reach `approved_unfunded` when compliance has already
-approved it but the hot wallet does not yet cover the amount. This is not a
-new compliance hold: coverage funds the shortfall and releases the withdrawal
-without asking for approval again.
-
-```bash
-curl "https://api.qbank.cl/platform/v1/me/txn-reviews?status=approved_unfunded&from=2026-11-25&to=2026-11-25" \
-  -H "Authorization: Bearer pk_..."
-```
-
-Treat `approved_unfunded` as open and keep polling the review or consuming
-`txn_review_status_changed`. Once coverage succeeds, the review becomes
-`released`. If coverage is rejected, the review does not receive another
-automatic coverage proposal; contact the organization so it can fund the
-wallet manually or reject the withdrawal.
-
-| Status | Meaning | Integrator action |
-|---|---|---|
-| `in_review` | Compliance decision pending | Wait for the webhook or poll |
-| `approved_unfunded` | Approved, but the hot wallet shortfall is being covered | Wait; do not re-approve or create a replacement withdrawal |
-| `released` | The withdrawal was released | Reconcile the normal withdrawal status |
-| `rejected` | The withdrawal was rejected | Stop processing and show the final outcome |
-
-#### Do I need to approve or retry an approved-unfunded withdrawal?
-No. Compliance is already approved. Coverage releases it automatically. If
-you retry the original request, use the same idempotency key; never create a
-replacement withdrawal while the original review is unresolved.
-#### What does a 409 coverage response mean?
-The withdrawal remains safely held while coverage is pending. Read the
-`coverage_proposal` reference in the response and keep polling the review.
 ## Frequently asked questions
 
 #### Why was my operation held?
@@ -305,3 +321,13 @@ For security and to avoid compromising compliance investigations, the internal r
 The application was approved, but activation failed after approval. The card or banking profile is not ready yet. Do not submit a new application: inspect `dispatch_error` and retry the original approve operation with the same idempotency key.
 #### I created a banking profile or a card and got a 202 — what happened?
 Your organization enabled application review: the request was held before processing. Nothing is created yet — when compliance approves the review, the profile or card is created automatically and you receive the webhook `txn_review_status_changed` with `status: released`. The application fee was charged at hold time; if the review is rejected, the fee is refunded to your balance automatically.
+#### Why did I receive a request for data instead of only documents?
+For some banking and card applications, the reviewer can ask for specific
+typed fields as well as files. The review detail lists the exact
+`requested_fields`; submit those fields from the portal with their expected
+format. The data is used only for this application and does not overwrite
+your KYC/KYB profile.
+#### Why did my submission return to in_review?
+Submitting requested data or uploading a requested file returns the review to
+`in_review` so the reviewer can evaluate the new evidence. It does not create
+a second application or restart the application fee.
