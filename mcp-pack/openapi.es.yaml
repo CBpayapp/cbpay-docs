@@ -13456,12 +13456,13 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
+        description: '`in_review`, `info_requested`, `approved_unfunded`, `released`, `rejected`, `dispatch_failed` o `all` (vacío = open: `in_review` + `info_requested` + `approved_unfunded` + approvals con un fallo de dispatch vigente, marcadas `needs_action`). `approved_unfunded` significa que compliance aprobó un retiro crypto, pero el fondeo sigue pendiente; la cobertura lo libera sin otra aprobación.'
         schema:
           type: string
           enum:
           - in_review
           - info_requested
+          - approved_unfunded
           - released
           - rejected
           - dispatch_failed
@@ -13534,7 +13535,7 @@ paths:
                   summary: Unknown status
                   value:
                     error: invalid_status
-                    message: status must be one of in_review, info_requested, released, rejected, dispatch_failed, all
+                    message: status must be one of in_review, info_requested, approved_unfunded, released, rejected, dispatch_failed, all
                 invalid_kind:
                   summary: Unknown kind
                   value:
@@ -13600,6 +13601,77 @@ paths:
               example:
                 error: not_found
                 message: review not found
+  /v1/me/txn-reviews/{reviewID}/fields:
+    post:
+      tags:
+      - Account
+      operationId: submitMyTxnReviewFields
+      summary: Enviar los datos solicitados en un pedido de información
+      description: Envía los datos pedidos por un request-info mapeado (`requested_fields`, vocabulario cerrado de claves de requisito) para una solicitud banking o de tarjeta. Solo se aceptan las claves que el equipo pidió — cualquier otra responde `400 field_not_requested`. Cada valor se valida por tipo (texto, email, teléfono, país ISO, fecha `YYYY-MM-DD`, salario USD positivo, sí/no, objeto de dirección, moneda de 3 letras, propósito, códigos de catálogo del emisor); un valor con mal tipo responde `400 invalid_field_value` nombrando la clave. Los valores viven solo en la revisión y se fusionan al checklist y al despacho de la aprobación — el expediente KYC/KYB jamás se toca. Como con un archivo, el primer envío devuelve la revisión a `in_review` y avisa al revisor; los siguientes solo agregan evidencia. Acepta `info_requested`, o `in_review` tras un `request-info` previo.
+      parameters:
+      - name: reviewID
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              fields:
+                first_name: Juan
+                nationality: CL
+      responses:
+        '200':
+          description: Datos guardados; incluye las claves pedidas restantes.
+          content:
+            application/json:
+              example:
+                fields_submitted:
+                - first_name
+                - nationality
+                fields_remaining: []
+                status: in_review
+        '400':
+          description: Error de validación.
+          content:
+            application/json:
+              examples:
+                invalid_field:
+                  summary: Campo pedido desconocido
+                  value:
+                    error: invalid_field
+                    message: unknown requested field
+                field_not_requested:
+                  summary: Campo no pedido
+                  value:
+                    error: field_not_requested
+                    message: 'field was not requested for this review: last_name'
+                invalid_field_value:
+                  summary: Valor con mal tipo para el campo
+                  value:
+                    error: invalid_field_value
+                    message: 'field nationality: invalid country'
+                fields_not_supported:
+                  summary: No es una revisión de solicitud
+                  value:
+                    error: fields_not_supported
+                    message: field submission is only supported for banking and card applications
+        '404':
+          description: La revisión no pertenece a la cuenta.
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: review not found
+        '409':
+          description: La revisión no está esperando información.
+          content:
+            application/json:
+              example:
+                error: not_awaiting_info
+                message: this review is not waiting for additional information
   /v1/me/txn-reviews/{reviewID}/files:
     post:
       tags:

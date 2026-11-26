@@ -13434,12 +13434,13 @@ paths:
       parameters:
       - name: status
         in: query
-        description: '`in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested` + approvals with a vigente dispatch failure, flagged `needs_action`).'
+        description: '`in_review`、`info_requested`、`approved_unfunded`、`released`、`rejected`、`dispatch_failed` 或 `all`（空值 = open：`in_review` + `info_requested` + `approved_unfunded` + 当前 dispatch 失败且标记为 `needs_action` 的批准）。`approved_unfunded` 表示合规已批准加密提现，但资金仍在等待；覆盖资金到位后会自动放行，无需再次批准。'
         schema:
           type: string
           enum:
           - in_review
           - info_requested
+          - approved_unfunded
           - released
           - rejected
           - dispatch_failed
@@ -13512,7 +13513,7 @@ paths:
                   summary: Unknown status
                   value:
                     error: invalid_status
-                    message: status must be one of in_review, info_requested, released, rejected, dispatch_failed, all
+                    message: status must be one of in_review, info_requested, approved_unfunded, released, rejected, dispatch_failed, all
                 invalid_kind:
                   summary: Unknown kind
                   value:
@@ -13578,6 +13579,77 @@ paths:
               example:
                 error: not_found
                 message: review not found
+  /v1/me/txn-reviews/{reviewID}/fields:
+    post:
+      tags:
+      - Account
+      operationId: submitMyTxnReviewFields
+      summary: 提交信息请求中所要求的数据
+      description: 提交映射信息请求（`requested_fields`，需求键封闭词汇）中要求的银行或卡申请数据。仅接受团队要求过的键——其他一律返回 `400 field_not_requested`。每个值按类型校验（文本、邮箱、电话、ISO 国家、`YYYY-MM-DD` 日期、正数美元工资、是/否、地址对象、3 字母货币、用途、发卡方目录代码）；类型不符返回 `400 invalid_field_value` 并指明键名。所提交的值仅保存在本次审核中，并合并到检查表和批准分发中——KYC/KYB 档案绝不改动。与上传文件一样，首次提交将审核退回 `in_review` 并通知审核员；后续提交仅追加证据。接受 `info_requested`，或此前已有 `request-info` 的 `in_review`。
+      parameters:
+      - name: reviewID
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              fields:
+                first_name: Juan
+                nationality: CL
+      responses:
+        '200':
+          description: 数据已保存；包含剩余的要求键。
+          content:
+            application/json:
+              example:
+                fields_submitted:
+                - first_name
+                - nationality
+                fields_remaining: []
+                status: in_review
+        '400':
+          description: 校验错误。
+          content:
+            application/json:
+              examples:
+                invalid_field:
+                  summary: 未知的要求字段
+                  value:
+                    error: invalid_field
+                    message: unknown requested field
+                field_not_requested:
+                  summary: 未被要求的字段
+                  value:
+                    error: field_not_requested
+                    message: 'field was not requested for this review: last_name'
+                invalid_field_value:
+                  summary: 值与字段类型不符
+                  value:
+                    error: invalid_field_value
+                    message: 'field nationality: invalid country'
+                fields_not_supported:
+                  summary: 非申请类审核
+                  value:
+                    error: fields_not_supported
+                    message: field submission is only supported for banking and card applications
+        '404':
+          description: 该审核不属于此账户。
+          content:
+            application/json:
+              example:
+                error: not_found
+                message: review not found
+        '409':
+          description: 该审核未在等待信息。
+          content:
+            application/json:
+              example:
+                error: not_awaiting_info
+                message: this review is not waiting for additional information
   /v1/me/txn-reviews/{reviewID}/files:
     post:
       tags:

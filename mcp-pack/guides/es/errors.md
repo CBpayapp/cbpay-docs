@@ -346,6 +346,10 @@ Errores de la revisión de operaciones retenidas por el firewall transaccional (
 | 400 | `invalid_range` | Fechas `from`/`to` inválidas — formato `YYYY-MM-DD` (zona horaria de tu organización) |
 | 400 | `invalid_name` | Falta el nombre del archivo en el query param `name` (máx. 200 caracteres, sin separadores de ruta) |
 | 400 | `empty_file` | El body del archivo llegó vacío |
+| 400 | `fields_not_supported` | El envío de datos solo funciona en revisiones de solicitud banking o de tarjeta |
+| 400 | `invalid_field` | Campo pedido desconocido — usa el vocabulario cerrado de claves de requisito |
+| 400 | `field_not_requested` | El campo no fue pedido para esta revisión — solo se aceptan claves de `requested_fields` |
+| 400 | `invalid_field_value` | El valor no calza con el tipo del campo — el mensaje nombra la clave |
 | 404 | `not_found` | La revisión o el archivo no pertenecen a tu cuenta — por diseño nunca se responde 403 |
 | 409 | `not_awaiting_info` | La revisión no está esperando información (ya volvió a `in_review` o tiene decisión final) — consulta su estado actual |
 | 413 | `file_too_large` | El archivo supera el límite de 50 MB — comprímelo o divídelo |
