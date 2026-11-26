@@ -5,14 +5,22 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.323 · 5 versions - November 25, 2026
-### v2.323
+## v2.325 · 6 versions - November 25, 2026
+### v2.325
 **Added**
-- Added `approved_unfunded` to transaction review status filters and
-  documented that approved crypto withdrawals wait for coverage and release
-  without another approval.
-- Added integrator guidance for `409` coverage responses, polling and
-  same-key idempotent retries.
+
+- Information requests on banking and card applications now arrive as mapped
+  fields and documents instead of free text: submit each item with
+  `POST /v1/me/txn-reviews/{reviewID}/fields` (typed validation per item)
+  or by uploading the requested file. Request emails arrive in your profile
+  language, and the portal renders one input per requested item.
+### v2.324
+**Changed**
+
+- Banking applications no longer ask companies outside financial sectors for
+  license, AML/CFT, Wolfsberg or MLRO evidence. Person applications accept
+  either a bank statement or source-of-wealth evidence for the same
+  requirement, so one document is enough.
 ### v2.322
 **Changed**
 
