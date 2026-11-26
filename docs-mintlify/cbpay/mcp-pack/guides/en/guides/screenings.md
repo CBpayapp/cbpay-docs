@@ -170,6 +170,84 @@ curl https://api.qbank.cl/platform/v1/screenings/addresses/7a2c4e6f-8b1d-4c3a-9e
   -H "Authorization: Bearer <token>"
 ```
 
+## Read the wallet detail in the portal
+
+After a scan finishes, open **Wallet screening** from the account's
+compliance activity and select the scan. The detail view is a readable
+presentation of the stored `assessment`; it is not a second screening and
+does not expose the upstream intelligence provider.
+
+The panel sections are:
+
+- **Risk level and verdict**: `Low`, `Medium`, `High`, `Severe`, or
+  `Unknown`. `Unknown` is fail-safe: treat it as high until compliance
+  reviews it.
+- **What this means**: explains the level in plain language. A clean result
+  is a snapshot, not a permanent guarantee.
+- **Recommended action**: normal operation for Low; enhanced checks for
+  Medium; pause and seek compliance review for High; block the counterparty
+  and escalate immediately for Severe or Unknown.
+- **Risk triggers**: each rule shows its percentage (`Share`), configured
+  range (`Rule range`) and rule risk. A trigger can fire even when the
+  reference exposure is small.
+- **Main exposures**: indicative USD reference amounts, separated into
+  `Direct` and `Indirect` links. These are not exact balances.
+- **Known entity and identifications**: the category, reference, cluster and
+  address-level identifications when available.
+
+### Main on-chain risk categories
+
+The category labels are normalized for the portal. They describe on-chain
+risk or a sanctions-list classification, not a provider brand.
+
+| Category | Meaning |
+|---|---|
+| Sanctioned entity / sanctions | Entity or activity associated with a sanctions list |
+| Sanctioned jurisdiction / EU 20th sanctions package | Jurisdiction or package-specific sanctions exposure |
+| Special measures | Activity subject to a targeted restrictive measure |
+| Terrorist financing | Signals associated with terrorist-financing activity |
+| Darknet market / service | Exposure to a darknet marketplace or service |
+| Ransomware | Exposure to ransomware proceeds or infrastructure |
+| Stolen funds | Funds associated with theft or compromise |
+| Scam / fraud shop | Scam activity or a service used to facilitate fraud |
+| Child abuse material | Exposure to prohibited child-abuse material activity |
+| Illicit actor organization | Organization associated with illicit activity |
+| Hacking group / malware | Exposure to hacking infrastructure or malware activity |
+| Drug trafficking / human trafficking | Exposure to trafficking proceeds or activity |
+| Mixing service / CoinJoin | Privacy-pooling activity that obscures fund flows |
+| Privacy wallet | Wallet designed to reduce transaction traceability |
+| High-risk exchange / P2P exchange | Exchange activity with elevated risk signals |
+| High-risk jurisdiction | Activity linked to a higher-risk jurisdiction |
+| Unnamed service | Service identified without a stable public name |
+| Gambling | Gambling-related activity |
+| Unlicensed money transmitter | Money-transmission activity without an identified license |
+| Exchange / decentralized exchange | Centralized or decentralized exchange activity |
+| DeFi / lending | Decentralized-finance or lending activity |
+| Cross-chain bridge | Bridge or cross-chain transfer activity |
+| Mining | Mining-related activity |
+| Merchant services / payment processor | Merchant or payment-processing activity |
+| NFT marketplace | NFT marketplace activity |
+| Stablecoin issuer / token contract | Issuer or token-contract activity |
+| Crypto ATM | Crypto-ATM activity |
+| Hosted wallet | Custodial or hosted-wallet activity |
+| Seized assets | Assets identified as seized |
+| Hosting infrastructure | Hosting or infrastructure activity |
+
+### Why a tiny exposure can still be Severe
+
+The risk level is not a percentage of the amount scanned. It reflects the
+classification and strength of the signal. A direct sanctioned-entity
+identification or a hard trigger can therefore produce **Severe** even when
+the indicative exposure is USD 0.001. Do not downgrade the result because the
+amount is small: stop the transaction, preserve the screening ID and escalate
+to compliance.
+
+If the result is **High**, pause sending or receiving and provide the report
+to compliance for enhanced review. If it is **Severe**, do not operate with
+the address, block it under your approved process and escalate immediately.
+For **Unknown**, use the same fail-safe path as High until the review is
+complete.
+
 ## Risk levels
 
 | `risk` | What it means | What to do |
@@ -202,7 +280,8 @@ automatically and for free**:
 A held deposit is NOT lost: your operator's compliance team reviews it and
 decides to release it (it is credited with its normal funding fee) or
 reject it. If you receive a `crypto_deposit_held`, contact your operator
-with the `tx_id`.
+with the `tx_id` and `event_index`. Together they identify the transfer even
+when several transfers share one transaction.
 ## Webhooks
 
 | Event | When |
@@ -217,12 +296,20 @@ with the `tx_id`.
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
 ```
 
 Subscribe just like the rest of the events (see [Webhooks](https://docs.cbpayapp.com/en/webhooks)).
+Held deposits are not returned by `GET /v1/crypto/transactions`. Use
+`GET /v1/events/history?from=…&to=…&event_type=crypto_deposit_held` to
+recover the notification. If the hold is released, the paired
+`crypto_deposit_credited` event has the same `hold_id` and includes the
+credited deposit's `deposit_id` and `receipt_url`.
 
 ## Errors
 

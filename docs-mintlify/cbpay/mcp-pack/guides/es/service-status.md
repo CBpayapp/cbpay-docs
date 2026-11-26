@@ -138,7 +138,9 @@ riesgos.
 La página pública solo lista los corredores habilitados para tu organización:
 los desactivados por el operador no aparecen en las filas ni en el historial de
 incidentes, mientras que un corredor habilitado pero caído sí aparece en rojo
-y afecta el estado general.
+y afecta el estado general. Un apagado global de plataforma se sana en silencio
+desde el espejo de estado del core; al re-habilitarlo, verifica primero el
+semáforo del core y la próxima transición vuelve a sincronizar el corredor.
 
 El `orgToken` es un token opaco que tu operador te comparte (los org admins
 pueden leerlo como `status_page_url` en `GET /v1/org/branding`).
@@ -173,6 +175,19 @@ curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
       "reason": "consecutive infrastructure failures",
       "at": "2026-07-24T22:10:00Z"
     }
+  ],
+  "incidents_total_90d": 3,
+  "mttr_mins_90d": 18,
+  "incidents_daily": [
+    {
+      "date": "2026-07-24",
+      "degraded": 0,
+      "down": 1,
+      "down_minutes": 13,
+      "degraded_minutes": 0,
+      "corridors_affected": 1,
+      "worst": "down"
+    }
   ]
 }
 ```
@@ -181,7 +196,10 @@ curl "https://api.qbank.cl/platform/v1/status/{orgToken}"
 |---|---|
 | `status` | Estado global de la página: el peor estado entre todos los corredores. |
 | `corridors[]` | Estado actual por corredor más `uptime_90d_pct` (porcentaje de los últimos 90 días en `operational`). |
-| `incidents[]` | Transiciones más recientes (caídas y recuperaciones), la más nueva primero. |
+| `incidents[]` | Transiciones más recientes (caídas y recuperaciones), la más nueva primero. En un incidente abierto, `updates` siempre es un arreglo, nunca `null`. |
+| `incidents_total_90d` | Cantidad de incidentes agrupados en los últimos 90 días. |
+| `mttr_mins_90d` | Duración promedio en minutos de los incidentes de los últimos 90 días. |
+| `incidents_daily[]` | Un punto diario del heatmap de los últimos 90 días: cantidad de incidentes, minutos de impacto, corredores afectados distintos y peor severidad activa (`operational`, `degraded` o `down`). |
 
 Un token desconocido o mal formado responde `404` — el token no revela si
 una organización existe. El endpoint tiene rate limit por IP.

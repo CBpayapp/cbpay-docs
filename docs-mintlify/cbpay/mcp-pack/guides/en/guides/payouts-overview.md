@@ -69,9 +69,9 @@ Available corridors and methods:
 | Peru | PEN | `bank_transfer`, `yape` |
 | Mexico | MXN | `bank_transfer` (SPEI: CLABE or debit card) |
 | Venezuela | VES | `bank_transfer`, `pago_movil` |
-| Bolivia | BOB / USD | `bank_transfer`, `qr` (see [QR payout](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)) |
+| Bolivia | BOB | `bank_transfer`, `qr` (see [QR payout](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)) |
 | Brazil | BRL | `pix` (by key or to account), `qr` (PIX QR — see [QR payout](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)) |
-| Ecuador | USD | `bank_transfer`, `deuna`, `cash_pickup`, `cnb` |
+| Ecuador | USD | `bank_transfer` |
 | Paraguay | PYG | `bank_transfer` |
 | Argentina | ARS / USD | `bank_transfer` (CBU or CVU) |
 | Colombia | COP | `bank_transfer` (integer amounts, no decimals), `breb` |
@@ -80,6 +80,11 @@ Available corridors and methods:
 Availability may vary; the catalog (`GET /v1/payouts/methods`) is always
 the source of truth. If a country has a single method, `method` is
 optional. Every method is charged the same way: your rate + fixed fee.
+
+After the user chooses a country and method, call the
+[beneficiary schema endpoint](https://docs.cbpayapp.com/en/guides/beneficiary-schema) to render the
+current `beneficiary` fields and their conditions. Do not hardcode a
+country-specific form.
 
 For bank transfers you also need the banks catalog (that is where the
 beneficiary's `bank_code` comes from):
@@ -162,73 +167,6 @@ Response `202 Accepted`:
 At that moment your balance already reflects the debit: `total_debit` moved
 from `available` into `held` (on the `settlement_asset` balance).
 
-### US/USD remittance payouts
-
-For a `wire` or `swift` payout in USD to the United States, set
-`options.is_remittance` to the string `"true"` when you are paying on behalf
-of a third party. This option is only supported on US/USD `wire` and `swift`;
-it is rejected on `ach` and ignored on other rails.
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "US",
-    "currency": "USD",
-    "method": "wire",
-    "amount": "1000.00",
-    "beneficiary": {
-      "name": "John Carter",
-      "email": "john.carter@example.com",
-      "account_number": "123456789012",
-      "country_code": "US",
-      "address": "1200 Brickell Ave",
-      "city": "Miami",
-      "state": "FL",
-      "postal_code": "33131",
-      "bank_name": "Example Bank",
-      "bank_code": "021000089",
-      "bank_address": "500 Main Street",
-      "bank_city": "New York",
-      "bank_state": "NY",
-      "bank_postal_code": "10001",
-      "bank_country": "US",
-      "bank_phone": "+12125550100"
-    },
-    "description": "Family support",
-    "options": {
-      "purpose": "Remittance",
-      "is_remittance": "true"
-    },
-    "idempotency_key": "us-remittance-2211"
-  }'
-```
-
-Response `202 Accepted`:
-
-```json
-{
-  "payout_id": "7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f",
-  "country": "US",
-  "currency": "USD",
-  "method": "wire",
-  "local_amount": "1000.00",
-  "status": "processing",
-  "bank_reference": "CBF-20261117-2211"
-}
-```
-
-The operator selects the Ultimate Debtor from the live bank list before
-release. If no debtor is selected, the payout returns to the queue instead
-of being released without that information. The debtor is selected by the
-operator; it is not supplied by the integrator. Do not resend the payout to
-change it: read the existing payout and keep the same idempotency key.
-
-> **Important**
-Do not send `is_remittance` as a JSON boolean. The accepted value is the
-string `"true"`. An `ach` payout with this option returns `400`; the option
-is ignored on rails other than US/USD `wire` and `swift`.
 > **Note**
 **`bank_reference` — the bank's own id for the transfer.** On US ACH, wire
 and SWIFT it is the CBF reference returned **immediately** at create (the

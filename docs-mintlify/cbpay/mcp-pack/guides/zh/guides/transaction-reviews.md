@@ -43,10 +43,8 @@ curl "https://api.qbank.cl/platform/v1/me/txn-reviews?from=2026-07-01&to=2026-08
       "country": "MX",
       "method": "spei",
       "counterparty": "Juan Pérez",
-      "info_request": {
-        "message": "Please upload the invoice that justifies this payment",
-        "requested_at": "2026-08-06T15:20:00Z"
-      },
+      "info_request": "Please upload the invoice that justifies this payment",
+      "info_requested_at": "2026-08-06T15:20:00Z",
       "created_at": "2026-08-06T14:32:00Z",
       "updated_at": "2026-08-06T15:20:00Z"
     }
@@ -56,6 +54,11 @@ curl "https://api.qbank.cl/platform/v1/me/txn-reviews?from=2026-07-01&to=2026-08
   "total": 1
 }
 ```
+
+当 `status` 为 `info_requested` 时，门户会在审核卡片中显示
+`info_requested_at` 的请求日期。补正期限从该时间开始计算 24 小时：
+期限内卡片显示剩余时间，超过期限后标记为已过期。如果没有有效的信息
+请求，则省略 `info_requested_at`，不会伪造日期。
 
 ### 过滤条件
 
@@ -84,10 +87,8 @@ curl https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000
     "country": "MX",
     "method": "spei",
     "counterparty": "Juan Pérez",
-    "info_request": {
-      "message": "Please upload the invoice that justifies this payment",
-      "requested_at": "2026-08-06T15:20:00Z"
-    },
+    "info_request": "Please upload the invoice that justifies this payment",
+    "info_requested_at": "2026-08-06T15:20:00Z",
     "files": [
       {
         "id": "f1e2d3c4-0000-4000-8000-0000000000aa",
@@ -104,6 +105,10 @@ curl https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000
   }
 }
 ```
+
+详情使用与审核列表相同的 `info_requested_at` 时间戳。它是最新信息请求的
+RFC 3339 时间；没有有效请求时不会返回。新的请求会重置 24 小时补正期限；
+上传证据后，审核会回到 `in_review`。
 
 属于其他账户的审核将返回 `404 not_found`（绝不返回 `403`，以避免泄露存在性）。审核被拒绝时，详情会包含 `decision_note`（与拒绝邮件相同的文本）和 `decided_at`。
 
@@ -197,6 +202,41 @@ curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000
 有效 banking 类别的额外文件。`bankStatement` 表示银行对账单（extracto
 bancario），不会被重新命名。
 
+## 提交所要求的数据
+
+对于银行账户或卡片申请，管理员除了文件外还可以要求类型化数据。
+审核详情会返回封闭列表 `requested_fields`。只填写这些键；账户门户会在
+发送前验证每个值：
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000000000001/fields" \
+  -H "Authorization: Bearer pk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"fields":{"first_name":"Juan","nationality":"CL","address":{"line1":"Avenida Siempre Viva 123","city":"Santiago","country":"CL"}}}'
+```
+
+响应会同时返回 `fields_submitted` 和 `fields_remaining`：
+
+```json
+{
+  "fields_submitted": ["first_name", "nationality", "address"],
+  "fields_remaining": [],
+  "status": "in_review"
+}
+```
+
+首次提交会将审核从 `info_requested` 返回到 `in_review`；后续提交会继续
+补充证据。数据只保存在本次审核中，并合并到申请清单和批准请求中，绝不会
+修改账户的 KYC/KYB 档案。提交不在 `requested_fields` 中的键会返回
+`400 field_not_requested`；类型不正确会返回 `400 invalid_field_value`。
+支持的类型包括文本、电子邮件、电话、ISO 国家代码、`YYYY-MM-DD` 日期、
+正数 USD 金额、是/否、地址、三字母货币、vIBAN 用途和卡片目录代码。
+对于卡片，`occupation` 和 `kind_of_business` 必须是目录代码，而不是显示
+标签。
+
+审核处于 `info_requested` 时可以提交数据；在之前请求过信息后处于
+`in_review` 时也可以提交。审核不属于账户时，API 返回 `404 not_found`。
+
 ## 下载您自己的文件
 
 ```bash
@@ -261,3 +301,10 @@ webhook 负载刻意保持**中性**：只携带状态和操作摘要，绝不�
 出于安全考虑且不损害合规调查，内部原因绝不向最终用户暴露。只有在被要求提供文件时，您才会看到信息请求消息。
 #### 我创建了银行资料或卡片，却收到了 202——发生了什么？
 您的组织启用了申请审核：请求在处理前被挂起。此时尚未创建任何内容——合规团队批准审核后，银行资料或卡片会自动创建，您会收到带有 `status: released` 的 webhook `txn_review_status_changed`。申请费用在挂起时已收取；如果审核被拒绝，费用将自动退回到您的余额。
+#### 为什么我收到的是数据请求，而不只是文件请求？
+对于部分银行和卡片申请，审核员除了文件还可以要求类型化字段。详情会列出
+准确的 `requested_fields`；请从门户按要求的格式提交。数据只用于本次申请，
+不会覆盖您的 KYC/KYB 档案。
+#### 为什么我的提交让审核回到 in_review？
+提交所要求的数据或上传所要求的文件后，审核会回到 `in_review`，以便审核员
+检查新证据。这不会创建第二个申请，也不会再次收取申请费用。

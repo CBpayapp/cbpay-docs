@@ -131,6 +131,7 @@ Verifica la firma y deduplica por `X-Webhook-Event-ID`. El webhook notifica; no 
 | `crypto_deposit_credited` | Un depósito on-chain fue confirmado y abonado |
 | `crypto_deposit_held` | Un depósito entrante quedó retenido por riesgo del remitente ([screening](https://docs.cbpayapp.com/es/guides/screenings)) |
 | `crypto_deposit_alert` | Un depósito se acreditó pero el remitente presenta riesgo alto (informativo) |
+| `crypto_deposit_under_review` | Un depósito entró a revisión de compliance (`held` o `credited`); espejo redactado sin el veredicto de riesgo — suscríbelo para operar retenidos |
 | `crypto_withdrawal_status_changed` | Un retiro on-chain cambió de estado |
 | `banking_customer_status_changed` | Cambió la verificación de un perfil bancario (propio o de un tercero registrado — `customer_kind` lo distingue) |
 | `banking_operation_status_changed` | Un pago bancario cambió de estado |
@@ -300,8 +301,12 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "chain": "tron",
   "asset": "USDT",
   "tx_id": "b1946ac9…",
+  "event_index": 0,
   "amount": "499.000000",
-  "fee": "1.000000"
+  "fee": "1.000000",
+  "from_address": "TDonor…",
+  "deposit_id": "a1b2…",
+  "receipt_url": "https://api.qbank.cl/platform/v1/crypto/deposits/a1b2…/receipt"
 }
 ```
 ```json crypto_deposit_held
@@ -311,6 +316,9 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
   "risk": "Severe",
   "status": "held"
 }
@@ -321,8 +329,22 @@ los campos normales del comprobante; un payout fallido devuelve el débito exact
   "chain": "tron",
   "asset": "usdt",
   "tx_id": "9c6d4e…",
+  "event_index": 0,
   "risk": "High",
   "status": "credited"
+}
+```
+```json crypto_deposit_under_review
+{
+  "account_id": "ae8c…",
+  "hold_id": "c1d2e3f4…",
+  "chain": "tron",
+  "asset": "usdt",
+  "tx_id": "8a5b3c…",
+  "event_index": 1,
+  "amount": "250.000000",
+  "from_address": "TDonor…",
+  "status": "held"
 }
 ```
 ```json crypto_withdrawal_status_changed

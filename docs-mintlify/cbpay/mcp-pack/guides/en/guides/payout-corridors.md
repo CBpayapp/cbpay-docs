@@ -16,6 +16,11 @@ the fixed fee (when configured; `0.30` here).
 
 ### Beneficiary fields per corridor
 
+For a dynamic form, call the
+[beneficiary schema endpoint](https://docs.cbpayapp.com/en/guides/beneficiary-schema) after selecting
+the corridor. Its response is the render-order source of truth; this table
+remains the business reference for the same fields.
+
 | Country | Method | `beneficiary` fields |
 |---|---|---|
 | CL | `bank_transfer` | `name`, `tax_id` (RUT), `bank_code`, `account_type`, `account_number` |
@@ -28,8 +33,6 @@ the fixed fee (when configured; `0.30` here).
 | CO | `breb` | `name`, `tax_id`/`document_value`, `document_type`, `phone`, `address`, `breb_key`, `breb_key_type` |
 | BR | `pix` | `name`, `tax_id` + (`pix_key` and `pix_key_type`) or (`bank_code` ISPB, `branch_code`, `account_number`) |
 | EC | `bank_transfer` | `name`, `document_value` (cédula), `sender_name`, `account_number` (+ `bank_code` and `account_type` for other banks) |
-| EC | `deuna` | `name`, `document_value`, `sender_name`, `phone` (wallet mobile number) |
-| EC | `cash_pickup` / `cnb` | `name`, `document_value`, `sender_name` — the beneficiary withdraws with their ID |
 | PY | `bank_transfer` | `name` (max 35 chars), `tax_id`, `bank_code`, `account_number` |
 | AR | `bank_transfer` | `name`, `tax_id` (11-digit CUIT/CUIL), `account_number` (22-digit CBU/CVU or bank alias; USD is CBU-only) |
 | US | `ach` / `wire` / `swift` | `name`, `account_number`, `email`, `country_code` (any country), `address`, `city`, `postal_code` (+ `state` if `country_code` is `US`), `bank_name`, `bank_country` (`US` on `ach`/`wire`), `bank_code` (ABA routing for `ach`/`wire`, SWIFT BIC for `swift`; + `account_type` `CHECKING`/`SAVING` for `ach`) |
@@ -266,7 +269,7 @@ account's first 4 digits.
 
 #### Bolivia
 
-ACH transfer in BOB or USD (besides the [QR](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)):
+Bank transfer in BOB (besides the [QR](https://docs.cbpayapp.com/en/guides/payout-special-cases#qr-payout)):
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/payouts \
@@ -283,7 +286,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
       "bank_code": "1016",
       "account_number": "1234567890"
     },
-    "idempotency_key": "bo-ach-2204"
+    "idempotency_key": "bo-bank-2204"
   }'
 ```
 
@@ -306,8 +309,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
   "bank_reference": ""
 }
 ```
-
-For USD send `currency: "USD"` with the same structure. The organization's rail configuration decides which internal version handles Bolivia payouts; the choice is saved on the operation so later polling keeps using the right version, and responses and webhooks stay provider-agnostic.
 
 #### Brazil
 
@@ -388,10 +389,8 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 
 #### Ecuador
 
-Remittances in **USD** (1 to 100,000 per operation, up to 2 decimals) with
-four methods: bank transfer, the **DE UNA** wallet (by mobile number),
-**cash pickup** at a branch (`cash_pickup`) and cash at a **non-bank
-correspondent** (`cnb`). This is a remittance corridor: besides the
+Remittances in **USD** (1 to 100,000 per operation, up to 2 decimals) via
+bank transfer. This is a remittance corridor: besides the
 beneficiary, the rail requires the **sender's** data (who originates the
 payment), sent flat inside the same `beneficiary` object with the
 `sender_*` prefix.
@@ -414,61 +413,6 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
       "sender_country": "US"
     },
     "idempotency_key": "ec-bank-4471"
-  }'
-```
-
-```bash deuna (wallet)
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "deuna",
-    "amount": "80.00",
-    "beneficiary": {
-      "name": "Lucia Paredes Mora",
-      "document_value": "0923456781",
-      "phone": "0998765432",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-deuna-5520"
-  }'
-```
-
-```bash cash_pickup (branch)
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "cash_pickup",
-    "amount": "120.00",
-    "beneficiary": {
-      "name": "Miguel Zambrano Loor",
-      "document_value": "1309876543",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-cash-6612"
-  }'
-```
-
-```bash cnb (correspondent)
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "EC",
-    "currency": "USD",
-    "method": "cnb",
-    "amount": "60.00",
-    "beneficiary": {
-      "name": "Rosa Cedeño Vera",
-      "document_value": "0801234567",
-      "sender_name": "Ana Torres Silva"
-    },
-    "idempotency_key": "ec-cnb-7703"
   }'
 ```
 

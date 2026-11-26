@@ -1,5 +1,5 @@
 {
-  "docs_version": "v2.297",
+  "docs_version": "v2.326",
   "questions": [
     {
       "id": "g01-checkout-en",
@@ -128,7 +128,7 @@
       "id": "g12-whats-new",
       "lang": "en",
       "must_contain": [
-        "v2.297"
+        "v2.326"
       ],
       "must_not_contain": [],
       "question": "What is the latest published docs version?",

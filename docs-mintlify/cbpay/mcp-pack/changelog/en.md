@@ -5,6 +5,176 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.326 · 1 version - November 26, 2026
+### v2.326
+**Added**
+- Banking funding payins now expose the receiving `virtual_iban_id` in the payin detail response and `payin_credited` webhook for customer-level attribution.
+## v2.325 · 6 versions - November 25, 2026
+### v2.325
+**Added**
+
+- Information requests on banking and card applications now arrive as mapped
+  fields and documents instead of free text: submit each item with
+  `POST /v1/me/txn-reviews/{reviewID}/fields` (typed validation per item)
+  or by uploading the requested file. Request emails arrive in your profile
+  language, and the portal renders one input per requested item.
+### v2.324
+**Changed**
+
+- Banking applications no longer ask companies outside financial sectors for
+  license, AML/CFT, Wolfsberg or MLRO evidence. Person applications accept
+  either a bank statement or source-of-wealth evidence for the same
+  requirement, so one document is enough.
+### v2.322
+**Changed**
+
+- Your default review list (`GET /v1/me/txn-reviews` with empty `status`)
+  now also includes requests with a vigente dispatch failure, flagged
+  `needs_action: true` with their `dispatch_error`: an approved card or
+  banking request that could not be dispatched stays visible instead of
+  disappearing from the list. Explicit filters keep their exact semantics.
+### v2.321
+**Changed**
+
+- Bolivia payouts and QR collections run on a single fixed rail in BOB.
+  `BO/USD` payouts and QR payins are no longer offered; send BOB for
+  Bolivia.
+- Ecuador payouts offer `bank_transfer` only. The `deuna`, `cash_pickup`
+  and `cnb` methods were retired with their rail; stored contacts keep
+  working for `bank_transfer`.
+- Chile payouts batch automatically under the global payroll-batch flag.
+  There is no per-organization dispatch mode anymore.
+- `PUT /v1/corridor-variants` accepts only the neutral labeled aliases
+  `rail_a`/`rail_b` for PY/PYG, EC/USD and BR/BRL. `BO/BOB` and `CL/CLP`
+  are rejected with `400 invalid_rail_variant`.
+### v2.320
+**Added**
+
+- Company owners can now invite an existing account of the organization as
+  operator or viewer (`POST /v1/members/invite`, OTP-protected and
+  idempotent). The invitee reviews pending invitations at
+  `GET /v1/me/invites` and accepts with the email token
+  (`POST /v1/me/invites/{inviteID}/accept`); on accept a linked login is
+  created that signs in with the same credential and holds a
+  company-scoped role.
+- Account switcher for multi-account logins: `GET /v1/me/accounts` lists
+  the live accounts of the login and `POST /v1/me/switch` issues a fresh
+  audited session for another one.
+- Member listings now expose `linked` for logins managed by a primary
+  account; credentials (password, email, 2FA, passkeys, social links) are
+  managed from the primary account only.
+### v2.319
+**Changed**
+
+- Breaking: the native network-moves endpoints (`POST/GET /v1/crypto/network-moves*`) are retired and answer 410 `network_moves_removed`; use convert instead. Withdrawal history is untouched (funds always lived in withdrawals) and past moves keep working through it.
+## v2.318 · 1 version - November 24, 2026
+### v2.318
+**Changed**
+
+- The public status page now measures daily impact with incident counts,
+  downtime/degraded minutes, affected-corridor count and the worst active
+  severity; resolved periods render green.
+- Platform-disabled corridors stay out of organization mirrors, alerts,
+  announcements and the public page, while retired core rails can be excluded
+  from health probes through the operator skip-list.
+
+**Fixed**
+
+- Open incidents now always expose an `updates` array, including when the
+  incident has no completed recovery yet.
+## v2.317 · 5 versions - November 23, 2026
+### v2.317
+**Changed**
+
+- Nested SEPA sends no longer require a funding vIBAN: the ordering
+  identity now comes from the verified KYC/KYB profile, with a fail-closed
+  `422 registrant_incomplete` when the address is missing. Legacy sends are
+  unchanged. The virtual-IBAN list now includes `nested_routing`, telling
+  whether the account's SEPA sends route via nested.
+### v2.316
+**Changed**
+
+- SEPA sends now route via nested for all accounts (verified-identity
+  ordering, no funding vIBAN required). Accounts without a complete
+  verified address get an honest `422 registrant_incomplete`.
+### v2.315
+**Changed**
+
+- Fixed nested ordering country handling: text (`Chile`) and alpha-3
+  (`CHL`) profile countries now normalize to alpha-2 with account
+  fallback, instead of failing with `cj_ultimate_country must be a ISO
+  alpha-2 country code`.
+### v2.314
+**Changed**
+
+- `GET /v1/payouts/banks` accepts `currency` for a complete
+  country/currency/method lookup. For labeled corridors, the platform returns
+  the organization’s effective creation catalog without exposing an internal
+  route identifier.
+### v2.313
+**Changed**
+
+- Saved payout destinations now follow the beneficiary name: paying a saved IBAN or account under a different name moves the destination to the matching contact instead of refreshing the old entry. Re-sends under the same name, unnamed sends and ambiguous duplicate names keep the previous refresh behavior.
+- Payouts created while compliance verification is deferred now save the beneficiary to contacts once approved (previously only payouts approved synchronously were saved). QR payouts are still never auto-saved.
+## v2.312 · 4 versions - November 22, 2026
+### v2.312
+**Added**
+- New `GET /v1/payouts/beneficiary-schema?country=&method=&lang=`: data-only field descriptors for the beneficiary form of any payout corridor (20 corridors plus global swift/sepa wildcards), in render order, with labels, placeholders, hints and errors in `en`/`es`/`zh`. Conditional fields (`show_if`, `required_if`, `validate_fn_when`) evaluate against the live form; `validator` names the closed client-side validator set.
+### v2.311
+**Changed**
+- Signing the Grupo CB framework agreement no longer asks for a one-time code: `POST /v1/me/contracts/envelopes/{envelopeID}/sign` takes the signer name, explicit consent and the handwritten mark, with no `X-OTP-Token` header. The signer title is optional and falls back to the member role; new signatures return an empty `otp_channel`. Envelopes signed earlier keep their original channel and title.
+### v2.310
+**Added**
+
+- Swap quote, detail and list responses now include `coverage_exempt` (true when the conversion quoted or executed under a BTC coverage-floor exemption), and `GET /v1/swaps` accepts a `coverage_exempt` filter. No behavior change for non-exempt accounts.
+### v2.309
+**Changed**
+
+- Payout pre-insert validation now returns specific, provider-neutral errors across all supported payout corridors instead of opaque `400 invalid_payload`. Malformed beneficiary data returns `400 invalid_beneficiary` with the field to correct, while an amount outside a corridor limit returns `422 amount_below_minimum` or `422 amount_above_maximum`. Invalid currency and rail options return `400 invalid_currency` and `400 invalid_options`; acceptance decisions are unchanged.
+- A server configuration failure is fail-closed as `500 internal_error` with a generic message. Do not retry a corrected request unchanged; after an ambiguous transport failure, retry with the same idempotency key.
+## v2.308 · 2 versions - November 21, 2026
+### v2.308
+**Changed**
+- Branded receipts for completed EC/USD manual payouts now include the bank order, bank approval, bank reference and settlement date when those real bank values are available. Payout rows without those values keep the existing receipt layout.
+### v2.307
+**Added**
+
+- Added the optional `variant` query parameter to `GET /v1/payouts/banks`. It requires an explicit `method` and returns only the selected route variant's catalog, so creation selectors never combine incompatible catalogs. Requests without `variant` keep the historical response.
+## v2.306 · 1 version - November 20, 2026
+### v2.306
+**Added**
+
+- Added the `crypto_deposit_under_review` webhook event. It gives the account a redacted, provider-neutral notification when a crypto deposit enters compliance review, without exposing the risk verdict. Subscribe to it to react to held deposits while keeping account-facing data limited to the verified event contract.
+## v2.305 · 5 versions - November 19, 2026
+### v2.305
+**Changed**
+- Crypto deposit webhooks now identify each transfer in a batch with `tx_id` plus `event_index`, and include the sender, credited deposit, receipt URL and hold linkage needed for reconciliation. Use the exact `tx_id` filter for on-chain history; held deposits are recoverable through `GET /v1/events/history`.
+### v2.304
+**Changed**
+- The segregated card payin wallet-provisioning limit is 50 wallets per account per day by default and can be raised for an organization by its operator. Requests over the configured limit return `too_many_segregated_wallets`.
+### v2.303
+**Added**
+- Card payins can direct their net amount to an owned, existing, reusable, or per-payin segregated wallet, with on-chain funding status and transaction evidence.
+### v2.302
+**Fixed**
+- Organization admins can now recover stuck `BO/BOB/bank_transfer` deposit-account claims via `POST /v1/org/payins/deposit-accounts/{instrumentID}/reconcile`: the core looks the merchant account up by reference instead of failing with `422 deposit_account_not_recoverable`. Ambiguous states still fail closed — retry with the same key only after the recovery completes.
+### v2.301
+**Changed**
+- AML and verification reports now explain model-only risk decisions with the `model_breakdown` JSON key and the Risk model breakdown PDF section; legacy overall-only mirrors remain compatible.
+## v2.300 · 3 versions - November 18, 2026
+### v2.300
+**Added**
+
+- Added the trilingual wallet-screening detail guidance: risk verdicts,
+  trigger ranges, direct and indirect reference exposures, normalized
+  on-chain risk categories, and the recommended response for Low, Medium,
+  High, Severe and Unknown results.
+### v2.299
+**Changed**
+- The transaction-review portal now exposes the information-request date as the RFC 3339 `info_requested_at` field in both the review list and detail. The portal shows the 24-hour remediation countdown and marks the request as expired after the deadline; the field is omitted when there is no active request.
+### v2.298
+**Changed**
+- Merchant verification requests now reject `idempotency_key` values with the case-sensitive `self:` prefix, reserved for admin self-links. The API returns `400 invalid_payload` with the message `reserved namespace`; `SELF:` and other prefixes remain valid.
 ## v2.297 · 2 versions - November 17, 2026
 ### v2.297
 **Added**

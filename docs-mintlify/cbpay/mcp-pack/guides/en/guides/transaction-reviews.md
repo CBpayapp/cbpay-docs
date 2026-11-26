@@ -43,10 +43,8 @@ Response:
       "country": "MX",
       "method": "spei",
       "counterparty": "Juan Pérez",
-      "info_request": {
-        "message": "Please upload the invoice that justifies this payment",
-        "requested_at": "2026-08-06T15:20:00Z"
-      },
+      "info_request": "Please upload the invoice that justifies this payment",
+      "info_requested_at": "2026-08-06T15:20:00Z",
       "created_at": "2026-08-06T14:32:00Z",
       "updated_at": "2026-08-06T15:20:00Z"
     }
@@ -56,6 +54,12 @@ Response:
   "total": 1
 }
 ```
+
+When `status` is `info_requested`, the portal shows the request date from
+`info_requested_at` in the review card. The remediation window is 24 hours
+from that timestamp: the card shows the remaining time while it is open and
+marks it as expired after the deadline. If no information request is active,
+`info_requested_at` is omitted rather than reported with a fabricated date.
 
 ### Filters
 
@@ -84,10 +88,8 @@ Response:
     "country": "MX",
     "method": "spei",
     "counterparty": "Juan Pérez",
-    "info_request": {
-      "message": "Please upload the invoice that justifies this payment",
-      "requested_at": "2026-08-06T15:20:00Z"
-    },
+    "info_request": "Please upload the invoice that justifies this payment",
+    "info_requested_at": "2026-08-06T15:20:00Z",
     "files": [
       {
         "id": "f1e2d3c4-0000-4000-8000-0000000000aa",
@@ -104,6 +106,11 @@ Response:
   }
 }
 ```
+
+The detail uses the same `info_requested_at` timestamp shown in the review
+list. It is an RFC 3339 timestamp for the latest information request and is
+absent when there is no active request. A new request resets the 24-hour
+remediation window; uploading evidence returns the review to `in_review`.
 
 A review belonging to another account answers `404 not_found` (never `403`, so existence is not leaked). When the review was rejected, the detail includes `decision_note` (the same text as the rejection email) and `decided_at`.
 
@@ -200,6 +207,54 @@ requested category has been covered, additional files with any valid banking
 category are accepted. `bankStatement` means a bank statement (extracto
 bancario); it is not relabeled.
 
+## Submit requested data
+
+For a banking or card application, an administrator can request typed data in
+addition to documents. The review detail returns the closed
+`requested_fields` list. Complete only those keys; the portal validates each
+value before sending it:
+
+```bash
+curl -X POST "https://api.qbank.cl/platform/v1/me/txn-reviews/7a3f2b1c-0000-4000-8000-000000000001/fields" \
+  -H "Authorization: Bearer pk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fields": {
+      "first_name": "Juan",
+      "nationality": "CL",
+      "address": {
+        "line1": "Avenida Siempre Viva 123",
+        "city": "Santiago",
+        "country": "CL"
+      }
+    }
+  }'
+```
+
+The response lists both `fields_submitted` and `fields_remaining`:
+
+```json
+{
+  "fields_submitted": ["first_name", "nationality", "address"],
+  "fields_remaining": [],
+  "status": "in_review"
+}
+```
+
+The first submission moves the review from `info_requested` back to
+`in_review`; later submissions add evidence. The values are stored only on
+this review and are merged into its application checklist and approval
+request. They never modify the account's KYC/KYB record. A value outside
+`requested_fields` returns `400 field_not_requested`; a value with the wrong
+type returns `400 invalid_field_value`. Supported types include text, email,
+phone, ISO country, `YYYY-MM-DD` date, positive USD amount, yes/no, address,
+three-letter currency, vIBAN purpose, and card catalog codes. For cards,
+`occupation` and `kind_of_business` must be catalog codes, not display labels.
+
+You can submit data while the review is `info_requested`, or while it is
+`in_review` after a previous request for information. If the review does not
+belong to your account, the API returns `404 not_found`.
+
 ## Download your own files
 
 ```bash
@@ -266,3 +321,13 @@ For security and to avoid compromising compliance investigations, the internal r
 The application was approved, but activation failed after approval. The card or banking profile is not ready yet. Do not submit a new application: inspect `dispatch_error` and retry the original approve operation with the same idempotency key.
 #### I created a banking profile or a card and got a 202 — what happened?
 Your organization enabled application review: the request was held before processing. Nothing is created yet — when compliance approves the review, the profile or card is created automatically and you receive the webhook `txn_review_status_changed` with `status: released`. The application fee was charged at hold time; if the review is rejected, the fee is refunded to your balance automatically.
+#### Why did I receive a request for data instead of only documents?
+For some banking and card applications, the reviewer can ask for specific
+typed fields as well as files. The review detail lists the exact
+`requested_fields`; submit those fields from the portal with their expected
+format. The data is used only for this application and does not overwrite
+your KYC/KYB profile.
+#### Why did my submission return to in_review?
+Submitting requested data or uploading a requested file returns the review to
+`in_review` so the reviewer can evaluate the new evidence. It does not create
+a second application or restart the application fee.

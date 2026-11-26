@@ -68,9 +68,9 @@ Corredores y métodos disponibles:
 | Perú | PEN | `bank_transfer`, `yape` |
 | México | MXN | `bank_transfer` (SPEI: CLABE o tarjeta de débito) |
 | Venezuela | VES | `bank_transfer`, `pago_movil` |
-| Bolivia | BOB / USD | `bank_transfer`, `qr` (ver [Payout QR](https://docs.cbpayapp.com/es/guides/payout-special-cases#payout-qr)) |
+| Bolivia | BOB | `bank_transfer`, `qr` (ver [Payout QR](https://docs.cbpayapp.com/es/guides/payout-special-cases#payout-qr)) |
 | Brasil | BRL | `pix` (por llave o a cuenta), `qr` (QR PIX — ver [Payout QR](https://docs.cbpayapp.com/es/guides/payout-special-cases#payout-qr)) |
-| Ecuador | USD | `bank_transfer`, `deuna`, `cash_pickup`, `cnb` |
+| Ecuador | USD | `bank_transfer` |
 | Paraguay | PYG | `bank_transfer` |
 | Argentina | ARS / USD | `bank_transfer` (CBU o CVU) |
 | Colombia | COP | `bank_transfer` (montos enteros, sin decimales), `breb` |
@@ -79,6 +79,11 @@ Corredores y métodos disponibles:
 La disponibilidad puede variar; el catálogo (`GET /v1/payouts/methods`) es
 siempre la fuente de verdad. Si un país tiene un solo método, `method` es
 opcional. Todos los métodos se cobran igual: tu tasa + fijo.
+
+Después de elegir país y método, llama al
+[endpoint de schema del beneficiario](https://docs.cbpayapp.com/es/guides/beneficiary-schema) para
+renderizar los campos `beneficiary` y sus condiciones actuales. No mantengas
+un formulario hardcodeado por país.
 
 Para transferencias bancarias necesitas además el catálogo de bancos (de
 ahí sale el `bank_code` del beneficiario):
@@ -162,73 +167,6 @@ Respuesta `202 Accepted`:
 En ese momento tu saldo ya refleja el débito: `total_debit` pasó de
 `available` a `held` (en el saldo del `settlement_asset`).
 
-### Payouts de remesa US/USD
-
-Para un payout `wire` o `swift` en USD hacia Estados Unidos, configura
-`options.is_remittance` con el string `"true"` cuando pagas a nombre de un
-tercero. Esta opción solo se admite en US/USD `wire` y `swift`; se rechaza en
-`ach` y se ignora en los demás rieles.
-
-```bash
-curl -X POST https://api.qbank.cl/platform/v1/payouts \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "US",
-    "currency": "USD",
-    "method": "wire",
-    "amount": "1000.00",
-    "beneficiary": {
-      "name": "John Carter",
-      "email": "john.carter@example.com",
-      "account_number": "123456789012",
-      "country_code": "US",
-      "address": "1200 Brickell Ave",
-      "city": "Miami",
-      "state": "FL",
-      "postal_code": "33131",
-      "bank_name": "Example Bank",
-      "bank_code": "021000089",
-      "bank_address": "500 Main Street",
-      "bank_city": "New York",
-      "bank_state": "NY",
-      "bank_postal_code": "10001",
-      "bank_country": "US",
-      "bank_phone": "+12125550100"
-    },
-    "description": "Apoyo familiar",
-    "options": {
-      "purpose": "Remittance",
-      "is_remittance": "true"
-    },
-    "idempotency_key": "us-remittance-2211"
-  }'
-```
-
-Respuesta `202 Accepted`:
-
-```json
-{
-  "payout_id": "7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f",
-  "country": "US",
-  "currency": "USD",
-  "method": "wire",
-  "local_amount": "1000.00",
-  "status": "processing",
-  "bank_reference": "CBF-20261117-2211"
-}
-```
-
-El operador selecciona el Ultimate Debtor desde la lista bancaria viva antes
-de liberar el payout. Si no se selecciona un debtor, el payout vuelve a la
-cola en vez de liberarse sin esa información. El debtor lo elige el operador;
-el integrador no lo envía. No reenvíes el payout para cambiarlo: lee el
-recurso existente y conserva la misma idempotency key.
-
-> **Importante**
-No envíes `is_remittance` como booleano JSON. El valor aceptado es el string
-`"true"`. Un payout `ach` con esta opción devuelve `400`; la opción se ignora
-en rieles distintos de US/USD `wire` y `swift`.
 > **Nota**
 **`bank_reference` — el id propio del banco para la transferencia.** En US ACH,
 wire y SWIFT es la referencia CBF que vuelve **de inmediato** al crear (el

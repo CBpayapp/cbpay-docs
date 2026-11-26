@@ -832,7 +832,7 @@ source, each with its own purpose:
 
 | Outbound path | Source purpose | Debit |
 |---|---|---|
-| Customer payout (`POST /v1/payouts`, `EU`/`EUR`/`sepa`) — full method contract in [SEPA Instant payouts](https://docs.cbpayapp.com/en/guides/sepa-instant-payouts) | `funding_usdt` | The account's normal settlement balance (`BANK_EUR` is never touched). |
+| Customer payout (`POST /v1/payouts`, `EU`/`EUR`/`sepa`) — full method contract in [SEPA Instant payouts](https://docs.cbpayapp.com/en/guides/sepa-instant-payouts) | Nested GA uses verified KYC/KYB identity; legacy rollback uses `funding_usdt` | The account's normal settlement balance (`BANK_EUR` is never touched). |
 | Banking operation (`POST /v1/banking/operations`, EUR `WITHDRAW` with `paymentType: "SEPA_CT"`) | `banking_eur` | The account's `BANK_EUR` balance. |
 
 Select the source with `source_virtual_iban_id` at the top level:
