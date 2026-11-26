@@ -1,14 +1,14 @@
 {
-  "content_sha256": "d49d0a0e48e5625203544a152ad299c9f0b4dba9ab66bcea533bc5c387dbe6b4",
+  "content_sha256": "ee22029c06a836ce10cdc9c117033c06a9d4d749f2f96caf247351f8a3a892a3",
   "counts": {
-    "chunks": 5825,
+    "chunks": 5867,
     "errors": 485,
     "languages": [
       "en",
       "es",
       "zh"
     ],
-    "pages": 252,
+    "pages": 255,
     "webhook_events": 64
   },
   "docs_version": "v2.327",
@@ -27,16 +27,16 @@
       "sha256": "4b1ac3cc1c778e1847ec1fe01ab7e05bb1f310a08f08f1a24bf61f43bca03460"
     },
     "chunks/en.json": {
-      "bytes": 1967586,
-      "sha256": "c8c6998f51725eb94e7cc445f77cbf1ab5230df224b407f686c6125346b98a81"
+      "bytes": 1978741,
+      "sha256": "699027bff7f67e8e637ccd696424265c93d95a968b495468121d9484b7d52129"
     },
     "chunks/es.json": {
-      "bytes": 1998492,
-      "sha256": "70564e83008b32178a8eb114a4525bbe1bf2ef2e7b66b2f9ba7d9a02bc289255"
+      "bytes": 2010203,
+      "sha256": "853eb6273822db2d54e35fb6514955d0f9234a699267898267a081b9f8b90e87"
     },
     "chunks/zh.json": {
-      "bytes": 1857880,
-      "sha256": "a8b12fc163eb3d0df1a75f6fe9f0d4195ee20ea4cb02e49357f6bbc4ee65020a"
+      "bytes": 1868302,
+      "sha256": "c1d2a2264c3cf4a5b9c8d773b361d340fe7d134bed8ec998dfcc5b749e5227e1"
     },
     "errors.json": {
       "bytes": 280643,
@@ -111,8 +111,8 @@
       "sha256": "eb3d40f9aa682a6af89d46b5aee72ca553fce591498c6ea36b6f3aab5c31087a"
     },
     "guides/en/guides/banking.md": {
-      "bytes": 46965,
-      "sha256": "dc747d5381f2a5a702a7513f9fa8cc57081916de80f452482870ec1c39bb980c"
+      "bytes": 47167,
+      "sha256": "4375f24b20b1c12670fa3ceef335d8b278d725906997cccc5bb251c1c046dff3"
     },
     "guides/en/guides/beneficiary-schema.md": {
       "bytes": 6792,
@@ -135,8 +135,8 @@
       "sha256": "64efec75397963c0b40ab6c445eba0f82639aea822cb53b6bfcaf09671387246"
     },
     "guides/en/guides/checkout.md": {
-      "bytes": 20582,
-      "sha256": "879bb4f6d59c74d8caba7fb8d33c8210534d485e2241c90ed9c10c6425f246d4"
+      "bytes": 23228,
+      "sha256": "cb2d79ff94f5ffb818a3c0818c47e9a30a1321b9eb74d301d90e8cd1fc70b633"
     },
     "guides/en/guides/contacts.md": {
       "bytes": 10778,
@@ -346,6 +346,10 @@
       "bytes": 8020,
       "sha256": "7ee619661af98f416b70dc84f7e57e1a7d1f1b25bcce5256501244f792a756fc"
     },
+    "guides/en/guides/viban-banking-eur.md": {
+      "bytes": 4755,
+      "sha256": "a82f47ecd40cf55a4e6f2576db1089e6a7d19aac84adc5b2fa589541d22300a1"
+    },
     "guides/en/guides/wolfsberg-cbddq.md": {
       "bytes": 1662,
       "sha256": "abeee7a6251ebac168b031429cee6005296a73e5884f3ac5513d1b2b369e3081"
@@ -447,8 +451,8 @@
       "sha256": "301822fc5a1dfc7a11853d9d56a7234438f5fc8770b7834799461133d45d87e0"
     },
     "guides/es/guides/banking.md": {
-      "bytes": 47084,
-      "sha256": "06d01de08929c3a3a6d8820104c2263bad33540f283cbee742119a9158a7e5bc"
+      "bytes": 47305,
+      "sha256": "de906f29106a5673bf39e1915257beb9b8247bd58a8c63edd540cfcf09188df2"
     },
     "guides/es/guides/beneficiary-schema.md": {
       "bytes": 6231,
@@ -471,8 +475,8 @@
       "sha256": "db1ba1b2640a5b3ff6cc0d7fd954f16be6324ef4469b30bf563059003d7e2418"
     },
     "guides/es/guides/checkout.md": {
-      "bytes": 20912,
-      "sha256": "818c8ebe531845b1907f5c3cb3af324f02901d3c9cbbeb4112ab1c20e173a97d"
+      "bytes": 23800,
+      "sha256": "258703fa35c00ba0a2b109c22902c49f191c930b37f171705d73f7efcdf890a2"
     },
     "guides/es/guides/contacts.md": {
       "bytes": 10326,
@@ -682,6 +686,10 @@
       "bytes": 7794,
       "sha256": "22664fdfdf8b7ca150e2673486a4dbb3133df7947e77faa1ae8e1f202b132493"
     },
+    "guides/es/guides/viban-banking-eur.md": {
+      "bytes": 4849,
+      "sha256": "c22c01e30548c47dc30a278880d9055638e3501c6c8c384597e544180f9946b6"
+    },
     "guides/es/guides/wolfsberg-cbddq.md": {
       "bytes": 1723,
       "sha256": "8c1f59ce174429c730698bdcc931dfd83552096870289daaa62982d0baf0a715"
@@ -783,8 +791,8 @@
       "sha256": "2d6adff5fa6b5582169561c8bb23322f85fd36ede94ac32872f2e8c5fefb404b"
     },
     "guides/zh/guides/banking.md": {
-      "bytes": 43783,
-      "sha256": "01f7595bc9a64ef963fd7aa09598d57cd5ca3facc2a229b18c09364c05d13493"
+      "bytes": 43985,
+      "sha256": "c32125f4e7e8320471ebba23abce2a9a5d74cd9261b03705050452e702ecb742"
     },
     "guides/zh/guides/beneficiary-schema.md": {
       "bytes": 5692,
@@ -807,8 +815,8 @@
       "sha256": "f31e53f410723feb56be6e27973b80fc6d2700866111a1ed2dbc95821edf1a9e"
     },
     "guides/zh/guides/checkout.md": {
-      "bytes": 19340,
-      "sha256": "f5c46666879e106ea52e060a35bbde11dc4136d51ae02d1b5a0e23503a1d1cfa"
+      "bytes": 21780,
+      "sha256": "66946f867fbc2fab0e616dc9754c15106d27fa5e77a0d5a81d21b25ad9582f3e"
     },
     "guides/zh/guides/contacts.md": {
       "bytes": 9736,
@@ -1018,6 +1026,10 @@
       "bytes": 7064,
       "sha256": "721d9653c7334d3a1683b1cc1b0d0f054d0bd4436467770477c49e14fff55ce5"
     },
+    "guides/zh/guides/viban-banking-eur.md": {
+      "bytes": 4142,
+      "sha256": "d8cf58802f8e0b19b33de1511ffdf601d2413af8d264723004b84daf5e3662ef"
+    },
     "guides/zh/guides/wolfsberg-cbddq.md": {
       "bytes": 1522,
       "sha256": "fd8d669e5546d570a7bf4f901fc25a3f71412384b2f0cff6414c982ed0269604"
@@ -1067,8 +1079,8 @@
       "sha256": "ae0bcc165ca6c48355ce9a03152ca3bddc8f8b856384c49d4ed05da151cf7c29"
     },
     "recipes/en/checkout.md": {
-      "bytes": 20460,
-      "sha256": "e82e30cebdf3aeb970c132c93e1437bd3cff8b0e235e0f780e3baf23cf9ebc9e"
+      "bytes": 23106,
+      "sha256": "a01504cd9ce81b6a9312e0e3f09a4d7cacd0d233320b9620a915a6e28c9701d8"
     },
     "recipes/en/crypto-withdrawals.md": {
       "bytes": 25504,
@@ -1095,8 +1107,8 @@
       "sha256": "b7af7428c3e8553486d3587fb824e39b790101236b5753695e2632a860599ff7"
     },
     "recipes/es/checkout.md": {
-      "bytes": 20773,
-      "sha256": "3379a074729cada39f2c82c1cc85f16fc4e117ec610e871e272a2a5eb4f4d2da"
+      "bytes": 23661,
+      "sha256": "67ed16726f57d08ea3afc2df01327663c2f661eccd7fbf046f74d3d8ee283a83"
     },
     "recipes/es/crypto-withdrawals.md": {
       "bytes": 25576,
@@ -1123,8 +1135,8 @@
       "sha256": "cca9d55c16941af488613a6a4c9cffe5ab9f1639a9d1685f4bb58d00ea7ada9b"
     },
     "recipes/zh/checkout.md": {
-      "bytes": 19197,
-      "sha256": "478fc291cc9e0188aceeeeded2e102292f6d469e6cfdbcde4222fdb74046f442"
+      "bytes": 21637,
+      "sha256": "9a0530f254d20c8a7533e2ecb0ce7165f6b5940afc82a1bf88590c2480d4b769"
     },
     "recipes/zh/crypto-withdrawals.md": {
       "bytes": 23909,
@@ -1159,7 +1171,7 @@
       "sha256": "1efd2ea87b406fabb81f93165b0cfc8861e74e79170f4de49bc66882291f2052"
     }
   },
-  "generated_at": "2026-11-26T15:41:35Z",
+  "generated_at": "2026-11-26T21:00:12Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"

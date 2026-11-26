@@ -526,6 +526,9 @@ curl "https://api.qbank.cl/platform/v1/banking/virtual-ibans?page=1&page_size=50
 
 列表形状为 `{page, page_size, virtual_ibans}`。支持的状态是 `pending_approval`、`pending`、`active`、`rejected`、`failed`、`disabled` 和 `closed`。账户读取在已有 IBAN 时显示完整值；组织管理员读取会将其掩码。
 
+如需查看完整生命周期、费用政策、真实时间预期和调用通道前的验证规则，
+请参阅[EUR 虚拟 IBAN 专题指南](https://docs.cbpayapp.com/zh/guides/viban-banking-eur)。
+
 > **重要**
 银行通道可能要求运营审批和已验证 customer，之后 EUR 虚拟 IBAN 才会 active。生产主机、证书/mTLS、限额、商业费用和启用信息属于配置，不是本 provider-agnostic 合同的一部分。不要从示例推断这些信息。
 ### 按地址读取、关闭与查询操作

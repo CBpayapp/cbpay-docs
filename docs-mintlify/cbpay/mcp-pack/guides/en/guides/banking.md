@@ -767,6 +767,10 @@ The list shape is `{page, page_size, virtual_ibans}`. Supported statuses are
 `closed`. Account-level responses show the full IBAN when one has been
 assigned; the organization-admin read surface masks it.
 
+For the complete lifecycle, fee policy, honest timing expectations and
+pre-provider validation rules, see the dedicated
+[EUR virtual IBAN guide](https://docs.cbpayapp.com/en/guides/viban-banking-eur).
+
 > **Important**
 The banking corridor may require operations approval and a verified customer
 profile before a virtual IBAN can become active. Production host,

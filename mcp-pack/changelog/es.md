@@ -5,7 +5,15 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.326 · 1 versión - 26 de noviembre de 2026
+## v2.327 · 2 versiones - 26 de noviembre de 2026
+### v2.327
+**Cambiado**
+
+- `US/USD/bank_transfer` sigue disponible como fallback manual anunciado-only
+  cuando el polling automático está apagado o en modo `ManualOnly`. Los
+  anuncios congelan las instrucciones doméstica y SWIFT junto con la
+  referencia, y la confirmación usa maker-checker tanto para `EC/USD` como
+  `US/USD`.
 ### v2.326
 **Agregado**
 - Los payins de fondeo Banking ahora exponen el `virtual_iban_id` receptor en el detalle del payin y en el webhook `payin_credited`, para atribuir el depósito al cliente.

@@ -605,6 +605,10 @@ La lista responde `{page, page_size, virtual_ibans}`. Los estados soportados son
 `disabled` y `closed`. La cuenta ve el IBAN completo cuando fue asignado; la
 lectura de organización lo muestra enmascarado.
 
+Para ver el ciclo completo, la política de comisiones, los tiempos honestos y
+las validaciones antes del proveedor, revisa la
+[guía dedicada de IBAN virtual EUR](https://docs.cbpayapp.com/es/guides/viban-banking-eur).
+
 > **Importante**
 El corredor bancario puede requerir aprobación de operaciones y un customer
 verificado antes de activar un vIBAN EUR. Host productivo,
