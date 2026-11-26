@@ -4,7 +4,14 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
-<Update label="2026年11月26日" description="v2.326 · 1 个版本">
+<Update label="2026年11月26日" description="v2.327 · 2 个版本">
+### v2.327
+**变更**
+
+- 当自动 polling 已关闭或处于 `ManualOnly` 模式时，
+  `US/USD/bank_transfer` 仍作为 announced-only 人工 fallback 保留。
+  预告会冻结境内与 SWIFT 入金说明及 reference，且 `EC/USD` 与 `US/USD`
+  都使用 maker-checker 确认收款。
 ### v2.326
 **新增**
 - Banking funding payin 现在会在 payin 详情响应和 `payin_credited` webhook 中返回接收方 `virtual_iban_id`，便于按客户归因存款。

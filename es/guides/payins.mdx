@@ -826,7 +826,7 @@ corredor: si tu organización todavía no las configuró, el anuncio responde
 `422 deposit_instructions_unavailable` y no se crea nada (ver
 [errores comunes](#errores-comunes)). Puedes previsualizar ambas cuentas de
 destino sin anunciar con
-`GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`.
+`GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`. Con el polling apagado o en `ManualOnly` sigue anunciado-only: el anuncio congela ambas instrucciones y `reference`; `confirm-received` registra evidencia sin abonar, otro god nombrado aprueba y cancelar nunca abona; admite `EC/USD` o `US/USD`.
 
 </Tab>
 </Tabs>
