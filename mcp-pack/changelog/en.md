@@ -5,7 +5,14 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.322 · 4 versions - November 25, 2026
+## v2.323 · 5 versions - November 25, 2026
+### v2.323
+**Added**
+- Added `approved_unfunded` to transaction review status filters and
+  documented that approved crypto withdrawals wait for coverage and release
+  without another approval.
+- Added integrator guidance for `409` coverage responses, polling and
+  same-key idempotent retries.
 ### v2.322
 **Changed**
 

@@ -1,5 +1,5 @@
 {
-  "count": 481,
+  "count": 485,
   "errors": [
     {
       "category": {
@@ -3457,6 +3457,62 @@
         "en": "The file body arrived empty",
         "es": "El body del archivo llegó vacío",
         "zh": "文件请求体为空"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "fields_not_supported",
+      "http": 400,
+      "meaning": {
+        "en": "Field submission only works on banking and card application reviews",
+        "es": "El envío de datos solo funciona en revisiones de solicitud banking o de tarjeta",
+        "zh": "数据提交仅适用于银行或卡申请类审核"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "invalid_field",
+      "http": 400,
+      "meaning": {
+        "en": "Unknown requested field — use the closed requirement-key vocabulary",
+        "es": "Campo pedido desconocido — usa el vocabulario cerrado de claves de requisito",
+        "zh": "未知的要求字段——请使用需求键封闭词汇"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "field_not_requested",
+      "http": 400,
+      "meaning": {
+        "en": "The field was not requested for this review — only `requested_fields` keys are accepted",
+        "es": "El campo no fue pedido para esta revisión — solo se aceptan claves de `requested_fields`",
+        "zh": "该字段未被本次审核要求——仅接受 `requested_fields` 中的键"
+      }
+    },
+    {
+      "category": {
+        "en": "Transactional firewall",
+        "es": "Firewall transaccional",
+        "zh": "交易防火墙"
+      },
+      "code": "invalid_field_value",
+      "http": 400,
+      "meaning": {
+        "en": "The value does not match the field type — the message names the key",
+        "es": "El valor no calza con el tipo del campo — el mensaje nombra la clave",
+        "zh": "值与字段类型不符——消息中会指明键名"
       }
     },
     {
