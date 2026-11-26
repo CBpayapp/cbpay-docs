@@ -1,5 +1,5 @@
 {
-  "content_sha256": "ce7f004c6ffa9a82f40288fca206977ceacc1e04f3ba9f073b87368b080d1c0a",
+  "content_sha256": "1a5b9806c6fdfeb0f5cb3fde2afb13168cf30b4a38d3f470ca98a3d50bc69850",
   "counts": {
     "chunks": 5812,
     "errors": 485,
@@ -1056,15 +1056,15 @@
     },
     "openapi.es.yaml": {
       "bytes": 1366279,
-      "sha256": "7d3001646f176cc8fdb7ee64eb04c2deaedd6f9483088335021001e140dc8461"
+      "sha256": "027a8a52fba3a5e883e4828512c3af7811abf81949f7685cf8b5455c6541a946"
     },
     "openapi.yaml": {
       "bytes": 1360566,
-      "sha256": "162dc93ecc4998dd955a50133c28bfd4d904e681397a7704a24e83dfeef3a4aa"
+      "sha256": "917c920ada6ae01a96790e221fc78295a7a8373069ed72b0e6b7be48e84a953a"
     },
     "openapi.zh.yaml": {
       "bytes": 1317784,
-      "sha256": "de6b6daf684e4309fc051d19f37e9ffec327c81926707a8ddcb390ccf662ad33"
+      "sha256": "a3a74f1b697eff5372a39ba77dc4c330ee9a0c6e00483720d3469ada910b17e5"
     },
     "recipes/en/checkout.md": {
       "bytes": 20460,
@@ -1159,7 +1159,7 @@
       "sha256": "1efd2ea87b406fabb81f93165b0cfc8861e74e79170f4de49bc66882291f2052"
     }
   },
-  "generated_at": "2026-11-26T00:15:32Z",
+  "generated_at": "2026-11-26T00:21:47Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
