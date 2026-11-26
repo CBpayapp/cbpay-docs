@@ -72,7 +72,6 @@ asset (USD is the principal balance); `banking` retains BOB for local
 payouts. See [Funding](https://docs.cbpayapp.com/en/guides/funding) for the funding flow.
 
 For BO/BOB payouts, send `source_instrument_id` only to select an active `purpose: "banking"` instrument with effective `BOB` settlement. With USD (or another non-BOB asset), it returns `422 invalid_source_instrument` before debit; omit it to use the mother account even with several active sources. See the [QR payout guide](https://docs.cbpayapp.com/en/guides/qr-payout#selecting-a-bob-banking-source).
-
 ### 🇲🇽 MXN — Mexican peso
 
 Receive pesos through [deposit accounts](https://docs.cbpayapp.com/en/guides/payins) with a

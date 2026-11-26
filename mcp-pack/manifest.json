@@ -1,5 +1,5 @@
 {
-  "content_sha256": "dfa5cd2e616544754599048981ff0755567e0b168c132df5ba08a4aded97f71c",
+  "content_sha256": "27bad2801822aba10e767db3a47dee6806051ff35ab9bdb95209db53c9c2f23c",
   "counts": {
     "chunks": 5879,
     "errors": 485,
@@ -111,8 +111,8 @@
       "sha256": "eb3d40f9aa682a6af89d46b5aee72ca553fce591498c6ea36b6f3aab5c31087a"
     },
     "guides/en/guides/banking.md": {
-      "bytes": 47573,
-      "sha256": "d4abce451d9eaa56d16a7dbec1a6b016185c80e8cbe5c9af8c9620d9131886f1"
+      "bytes": 47572,
+      "sha256": "6301805f3424cd4ecc2fb3b06e9f6b71d46c3da086f639991f918d4dad9651b6"
     },
     "guides/en/guides/beneficiary-schema.md": {
       "bytes": 6792,
@@ -1171,7 +1171,7 @@
       "sha256": "1efd2ea87b406fabb81f93165b0cfc8861e74e79170f4de49bc66882291f2052"
     }
   },
-  "generated_at": "2026-11-26T21:37:40Z",
+  "generated_at": "2026-11-26T21:40:55Z",
   "pack": "cbpay-docs-knowledge-pack",
   "schema_version": 1,
   "site_url": "https://docs.cbpayapp.com"
