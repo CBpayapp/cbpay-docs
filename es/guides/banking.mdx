@@ -1,4 +1,4 @@
----
+﻿---
 title: "Banking"
 icon: "building-columns"
 description: "Cuentas bancarias reales para tu cuenta: recibe, mantén y envía dinero por rieles bancarios internacionales"
@@ -627,6 +627,10 @@ La lista responde `{page, page_size, virtual_ibans}`. Los estados soportados son
 `disabled` y `closed`. La cuenta ve el IBAN completo cuando fue asignado; la
 lectura de organización lo muestra enmascarado.
 
+Para ver el ciclo completo, la política de comisiones, los tiempos honestos y
+las validaciones antes del proveedor, revisa la
+[guía dedicada de IBAN virtual EUR](/es/guides/viban-banking-eur).
+
 <Warning>
 El corredor bancario puede requerir aprobación de operaciones y un customer
 verificado antes de activar un vIBAN EUR. Host productivo,
@@ -1074,3 +1078,4 @@ The core admin route
 account and finalizes the local mirror. The org-admin routes list claims,
 reconcile customer claims, and retry refunds. These operations are locked so
 concurrent reconciliation cannot originate duplicate money movement.
+
