@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.325'
+  version: '2.326'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -13584,7 +13584,7 @@ paths:
       - Account
       operationId: submitMyTxnReviewFields
       summary: 提交信息请求中所要求的数据
-      description: 提交映射信息请求（`requested_fields`，需求键封闭词汇）中要求的银行或卡申请数据。仅接受团队要求过的键——其他一律返回 `400 field_not_requested`。每个值按类型校验（文本、邮箱、电话、ISO 国家、`YYYY-MM-DD` 日期、正数美元工资、是/否、地址对象、3 字母货币、用途、发卡方目录代码）；类型不符返回 `400 invalid_field_value` 并指明键名。所提交的值仅保存在本次审核中，并合并到检查表和批准分发中——KYC/KYB 档案绝不改动。与上传文件一样，首次提交将审核退回 `in_review` 并通知审核员；后续提交仅追加证据。接受 `info_requested`，或此前已有 `request-info` 的 `in_review`。
+      description: 提交映射信息请求（`requested_fields`，需求键封闭词汇）中要求的银行或卡申请数据。仅接受团队要求过的键——其他一律返回 `400 field_not_requested`。每个值按类型校验（文本、邮箱、电话、ISO 国家、`YYYY-MM-DD` 日期、正数美元工资、是/否、地址对象、3 字母货币、用途、发卡方目录代码、原因陈述）；类型不符返回 `400 invalid_field_value` 并指明键名。`*_na_reason` 值（20-500 字，说明文件缺失原因）在未提供文件时满足其要求，并作为缺失声明函转发给服务商。所提交的值仅保存在本次审核中，并合并到检查表和批准分发中——KYC/KYB 档案绝不改动。与上传文件一样，首次提交将审核退回 `in_review` 并通知审核员；后续提交仅追加证据。接受 `info_requested`，或此前已有 `request-info` 的 `in_review`。
       parameters:
       - name: reviewID
         in: path
@@ -32631,6 +32631,10 @@ components:
         instrument:
           $ref: '#/components/schemas/PayinInstrument'
           description: 工具记录存在时返回的专用工具元数据。
+        virtual_iban_id:
+          type: string
+          format: uuid
+          description: 仅 banking funding payin —— 收到该笔存款的虚拟 IBAN；其他通道及历史 payin 省略。
         account_id:
           type: string
         kind:
@@ -33448,6 +33452,10 @@ webhooks:
                   description: 收到 payin 的专用收款工具；不适用时省略。
                 instrument:
                   $ref: '#/components/schemas/PayinInstrument'
+                virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: 仅 banking funding payin —— 收到该笔存款的虚拟 IBAN；其他通道及历史 payin 省略。
                 payer:
                   type: object
                   description: 银行在新入账 push 中报告的付款人身份（有数据时返回）。
