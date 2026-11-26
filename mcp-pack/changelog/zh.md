@@ -5,7 +5,16 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.327 · 2 个版本 - 2026年11月26日
+## v2.328 · 4 个版本 - 2026年11月26日
+### v2.328
+**修复**
+
+- BO/BOB payout 与 QR 确认在未配 BOB 结算却发送 `source_instrument_id` 时，不再静默从母账户扣款：请求会在扣款前被 `422 invalid_source_instrument` 拒绝。以 USD（或任何非 BOB）结算时请省略该字段——payout 从母账户扣除你的结算余额。
+- `POST /v1/payouts/qr/confirm` 现已记录 `source_instrument_id` 与修正后的 `settlement_asset` 契约（法币返回 400）。
+
+**变更**
+
+- 拥有多个活跃 BO/BOB banking 来源的账户，在 USD 结算 payout 中不再需要发送 `source_instrument_id`：仅当来源真正决定付款账户（BOB 结算）时才强制消除歧义。
 ### v2.327
 **变更**
 
@@ -16,6 +25,12 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 ### v2.326
 **新增**
 - Banking funding payin 现在会在 payin 详情响应和 `payin_credited` webhook 中返回接收方 `virtual_iban_id`，便于按客户归因存款。
+### v2.323
+**变更**
+- Checkout 链接现在会在通用页面和托管银行卡页面显示所属企业账户配置的
+  品牌，并按账户 → 组织 → CBPay 回退；固定的“由 CBPay 提供支持”披露仍会显示。
+- 银行卡页面已改版，提供更清晰的支付提示、国家搜索与国旗，以及在部署启用
+  时可选的 Places API (New) 地址建议。
 ## v2.325 · 6 个版本 - 2026年11月25日
 ### v2.325
 **新增**
