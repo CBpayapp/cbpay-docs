@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
-<Update label="November 26, 2026" description="v2.327 · 2 versions">
+<Update label="November 26, 2026" description="v2.328 · 4 versions">
+### v2.328
+**Fixed**
+
+- BO/BOB payouts and QR confirmations no longer debit the mother account in silence when `source_instrument_id` is sent without BOB settlement: the request is now rejected with `422 invalid_source_instrument` before any debit. With USD (or any non-BOB) settlement, omit the field — the payout debits your settlement balance from the mother account.
+- `POST /v1/payouts/qr/confirm` now documents `source_instrument_id` and the corrected `settlement_asset` contract (fiat returns 400).
+
+**Changed**
+
+- Accounts with several active BO/BOB banking sources no longer need to send `source_instrument_id` for USD-settled payouts: ambiguity is only enforced when the source actually selects the origin (BOB settlement).
 ### v2.327
 **Changed**
 
@@ -15,6 +24,14 @@ description: "History of API and documentation changes"
 ### v2.326
 **Added**
 - Banking funding payins now expose the receiving `virtual_iban_id` in the payin detail response and `payin_credited` webhook for customer-level attribution.
+### v2.323
+**Changed**
+- Checkout links now show the owning company account's configured brand on
+  the universal and hosted card pages, with account → organization → CBPay
+  fallback and a fixed Powered by CBPay disclosure.
+- The card page was refreshed with clearer payment cues, country search and
+  flags, and optional Places API (New) address suggestions when enabled by
+  the deployment.
 </Update>
 <Update label="November 25, 2026" description="v2.325 · 6 versions">
 ### v2.325

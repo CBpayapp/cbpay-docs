@@ -159,6 +159,40 @@ confirm 请求还接受 `settlement_asset`（`USDT`、`USDC`、`BTC`、`GOLD`、
 默认结算资产。支付的内部标识由服务端生成：集成方只发送 `scan` 返回
 的 reference，以及保留两位小数的金额。
 
+### 选择 BO/BOB Banking 来源
+
+对于 BO/BOB payout，`source_instrument_id` 是活跃
+`purpose: "banking"` 充值工具的显式来源选择器。只有在实际结算为
+`BOB` 时才可发送。如果 payout 以 `USD`（或其他非 BOB 资产）结算时仍
+发送该字段，API 会在**任何扣款前**返回
+`422 invalid_source_instrument`；不会静默改从母账户扣款。
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider_reference": "<来自 BO scan>",
+    "amount": "700.00",
+    "currency": "BOB",
+    "settlement_asset": "USD",
+    "source_instrument_id": "a1d4b7c0-1234-5678-9abc-def012345678",
+    "idempotency_key": "qr-bo-source-usd-001"
+  }'
+```
+
+```json
+{
+  "error": "invalid_source_instrument",
+  "message": "source_instrument_id requires settlement in BOB"
+}
+```
+
+当 `settlement_asset` 为 `USD` 且省略 `source_instrument_id` 时，即使账户
+有多个活跃 BO/BOB Banking 工具，payout 也会使用母账户的结算余额。响应
+仍是正常 payout 资源，包含 `settlement_asset: "USD"` 和最终 `status`；
+不会返回歧义错误。只有 BOB 结算时才显式选择 Banking 来源。
+
 ### 状态对账
 
 如果同步响应还不能证明终态，payout 会保持 `processing`。读取已有资源：
@@ -206,6 +240,8 @@ core_rejected`，并提示使用收款人证件重新确认。与 `tax_id` 密�
 | 400 | `idempotency_key_required` | 可复用的静态 QR 在 confirm 时必须显式提供 `idempotency_key` |
 | 402 | `insufficient_funds` | 充值余额后用相同的 key 重试 |
 | 403 | `compliance_hold` | payout 被保留审核且未被处理：没有资金移动，`idempotency_key` 也未被消耗。门户会显示一行可复制的参考信息，包含 UTC 时间、错误代码和短请求 ID；不会披露具体的合规原因 |
+| 422 | `invalid_source_instrument` | 发送了 `source_instrument_id`，但实际结算不是 BOB；删除该字段以从母账户扣款，或在选择 Banking 来源时使用 BOB 结算。请求会在扣款前被拒绝 |
+| 422 | `ambiguous_source_instrument` | 存在多个活跃 BO/BOB Banking 工具且需要选择来源；在 `source_instrument_id` 中发送选定的 UUID |
 | 422 | payout `failed` + 退款 | 金额与固定金额 QR 不符，或通道拒绝了付款 —— 扣款自动退回 |
 | 503 | `channel_unavailable` | 通道暂时不可用；稍后用相同的 key 重试 |
 
@@ -232,6 +268,12 @@ core_rejected`，并提示使用收款人证件重新确认。与 `tax_id` 密�
 <Accordion title="扫描出的金额与我想支付的不一致怎么办？">
 固定金额 QR 必须精确支付；不匹配会使 payout 失败并自动退款。开放金额
 QR 接受你在 confirm 时传入的金额。
+</Accordion>
+<Accordion title="为什么使用 USD 时带 source 的 payout 失败？">
+`source_instrument_id` 只在 BOB settlement 时选择 BO/BOB Banking 来源。
+使用 `settlement_asset: "USD"` 时会在扣款前返回
+`422 invalid_source_instrument`。删除该字段即可从母账户支付；即使有多个
+活跃 BO/BOB Banking 工具，USD 省略 source 也不会产生歧义错误。
 </Accordion>
 <Accordion title="confirm 失败后如何安全重试？">
 用**相同**的 `idempotency_key` 重试 —— QR 绝不会因验证错误而"作废"：

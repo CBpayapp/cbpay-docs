@@ -18608,7 +18608,7 @@ paths:
                 source_instrument_id:
                   type: string
                   format: uuid
-                  description: 可选的活跃 BO/BOB banking 工具；其他通道拒绝此字段，多个来源时必须发送 UUID。
+                  description: BO/BOB banking 来源选择器。仅在 payout 以 BOB 结算时发送——以其他资产结算时请求会被 422 invalid_source_instrument 拒绝（fail-closed，而非从母账户扣款）。其他通道拒绝此字段。BOB 结算目前不可用（法币余额仅限 Banking），请省略该字段；payout 从母账户扣除你的结算余额。
                 idempotency_key:
                   type: string
                 options:
@@ -19900,7 +19900,11 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产。
+                  description: 此操作要扣款的虚拟余额。必须是 USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM；法币返回 400。省略则使用账户的默认结算资产(USD 为主资产)。
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: BO/BOB banking 来源选择器。仅在 payout 以 BOB 结算时发送——以其他资产结算时请求会被 422 invalid_source_instrument 拒绝（fail-closed，而非从母账户扣款）。BOB 结算目前不可用（法币余额仅限 Banking），请省略该字段；payout 从母账户扣除你的结算余额。
                 idempotency_key:
                   type: string
             example:
@@ -20000,34 +20004,43 @@ paths:
                 error: idempotency_conflict
                 message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: 处理方拒绝(`core_rejected`)，包括非 tax ID 的巴西 PIX QR 未同时提供两个证件字段；创建 payout 后扣款会退回。
+          description: '扣款前拒绝——以 `Error` 返回——`source_instrument_id` 未配 BOB 结算时发送（`invalid_source_instrument`），或存在多个 banking 来源却未选择（`ambiguous_source_instrument`）；或处理方拒绝（`core_rejected`），包括非 tax ID 的巴西 PIX QR 未同时提供两个证件字段——以 `status: failed` 的 `Payout` 返回且扣款已退回。'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Payout'
-              example:
-                payout_id: 8e2a1b0c-9d8e-7f60-5a4b-3c2d1e0f9a8b
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                idempotency_key: qr-2026-07-07-a
-                country: BO
-                currency: BOB
-                method: qr
-                local_amount: '700.00'
-                fx_rate: '6.91'
-                usdt_amount: '101.302460'
-                fee: '0.300000'
-                total_debit: '101.602460'
-                settlement_asset: USD
-                settlement_amount: '101.61'
-                settlement_rate: '1'
-                beneficiary: *id010
-                description: QR 午餐付款
-                status: failed
-                status_code: core_rejected
-                status_message: QR already paid
-                bank_reference: ''
-                created_at: '2026-07-07T12:00:00Z'
-                updated_at: '2026-07-07T12:00:01Z'
+                oneOf:
+                - $ref: '#/components/schemas/Error'
+                - $ref: '#/components/schemas/Payout'
+              examples:
+                invalid_source_instrument:
+                  summary: 未配 BOB 结算却发送了 banking 来源
+                  value:
+                    error: invalid_source_instrument
+                    message: source_instrument_id requires settlement in BOB
+                payout_failed:
+                  value:
+                    payout_id: 8e2a1b0c-9d8e-7f60-5a4b-3c2d1e0f9a8b
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: qr-2026-07-07-a
+                    country: BO
+                    currency: BOB
+                    method: qr
+                    local_amount: '700.00'
+                    fx_rate: '6.91'
+                    usdt_amount: '101.302460'
+                    fee: '0.300000'
+                    total_debit: '101.602460'
+                    settlement_asset: USD
+                    settlement_amount: '101.61'
+                    settlement_rate: '1'
+                    beneficiary: *id010
+                    description: QR 午餐付款
+                    status: failed
+                    status_code: core_rejected
+                    status_message: QR already paid
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:01Z'
   /v1/payouts/qr/scan:
     post:
       tags:

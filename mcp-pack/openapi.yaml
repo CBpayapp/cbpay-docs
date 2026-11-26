@@ -18553,7 +18553,7 @@ paths:
                 source_instrument_id:
                   type: string
                   format: uuid
-                  description: 'Optional active `purpose: banking` BO/BOB deposit instrument used as the payout source. Outside BO/BOB this field is rejected. Omit when the mother account should be used; multiple active BO sources require this UUID.'
+                  description: BO/BOB banking origin selector. Only send it when the payout settles in BOB — with any other settlement asset the request is rejected with 422 invalid_source_instrument (fail-closed instead of debiting the mother account). Outside BO/BOB this field is rejected. BOB settlement is currently unavailable (fiat balances are Banking-only), so omit this field; the payout debits your settlement balance from the mother account.
                 idempotency_key:
                   type: string
                 options:
@@ -19850,7 +19850,11 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: "Virtual balance to debit for this operation. Accepted values are USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM, BOB, MXN, ARS, CLP. Fiat execution currently returns 503 pricing_unavailable. Omit to use your account's default settlement asset."
+                  description: "Virtual balance to debit for this operation. Must be one of USD, USDT, USDC, BTC, GOLD, SILVER, PLATINUM; fiat returns 400. Omit to use your account's default settlement asset (USD is the principal balance)."
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: BO/BOB banking origin selector. Only send it when the payout settles in BOB — with any other settlement asset the request is rejected with 422 invalid_source_instrument (fail-closed instead of debiting the mother account). BOB settlement is currently unavailable (fiat balances are Banking-only), so omit this field; the payout debits your settlement balance from the mother account.
                 idempotency_key:
                   type: string
             example:
@@ -19950,34 +19954,43 @@ paths:
                 error: idempotency_conflict
                 message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: Rejected by the processor (`core_rejected`), including a non-tax-ID Brazil PIX QR confirmed without both document fields; the debit was refunded when a payout was created.
+          description: 'Rejected before any debit — returned as an `Error` — when `source_instrument_id` is sent without BOB settlement (`invalid_source_instrument`) or several banking sources exist without choosing one (`ambiguous_source_instrument`); or rejected by the processor (`core_rejected`), including a non-tax-ID Brazil PIX QR confirmed without both document fields — returned as a `Payout` with `status: failed` and the debit already refunded.'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Payout'
-              example:
-                payout_id: 8e2a1b0c-9d8e-7f60-5a4b-3c2d1e0f9a8b
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                idempotency_key: qr-2026-07-07-a
-                country: BO
-                currency: BOB
-                method: qr
-                local_amount: '700.00'
-                fx_rate: '6.91'
-                usdt_amount: '101.302460'
-                fee: '0.300000'
-                total_debit: '101.602460'
-                settlement_asset: USD
-                settlement_amount: '101.61'
-                settlement_rate: '1'
-                beneficiary: *id010
-                description: QR lunch payment
-                status: failed
-                status_code: core_rejected
-                status_message: QR already paid
-                bank_reference: ''
-                created_at: '2026-07-07T12:00:00Z'
-                updated_at: '2026-07-07T12:00:01Z'
+                oneOf:
+                - $ref: '#/components/schemas/Error'
+                - $ref: '#/components/schemas/Payout'
+              examples:
+                invalid_source_instrument:
+                  summary: Banking source sent without BOB settlement
+                  value:
+                    error: invalid_source_instrument
+                    message: source_instrument_id requires settlement in BOB
+                payout_failed:
+                  value:
+                    payout_id: 8e2a1b0c-9d8e-7f60-5a4b-3c2d1e0f9a8b
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: qr-2026-07-07-a
+                    country: BO
+                    currency: BOB
+                    method: qr
+                    local_amount: '700.00'
+                    fx_rate: '6.91'
+                    usdt_amount: '101.302460'
+                    fee: '0.300000'
+                    total_debit: '101.602460'
+                    settlement_asset: USD
+                    settlement_amount: '101.61'
+                    settlement_rate: '1'
+                    beneficiary: *id010
+                    description: QR lunch payment
+                    status: failed
+                    status_code: core_rejected
+                    status_message: QR already paid
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:01Z'
   /v1/payouts/qr/scan:
     post:
       tags:

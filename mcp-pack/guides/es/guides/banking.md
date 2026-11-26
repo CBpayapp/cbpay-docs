@@ -137,11 +137,16 @@ El saldo devuelve `currency`, `funds_model` (`retained` en BO,
 de payins y payouts; `from` y `to` son obligatorios.
 
 Para payouts BO/BOB puedes enviar `source_instrument_id` (UUID) en
-`POST /v1/payouts` o `POST /v1/payouts/qr/confirm`. Fuera de BO/BOB responde
-`400`; un instrumento ajeno responde `404 not_found`; uno no bancario o
-inactivo responde `422 invalid_source_instrument`. Sin UUID, varias fuentes
-activas responden `422 ambiguous_source_instrument`. MX/AR siguen usando la
-madre/centralizador.
+`POST /v1/payouts` o `POST /v1/payouts/qr/confirm` para seleccionar un
+instrumento `purpose: "banking"` activo. Solo debes enviarlo cuando el
+settlement efectivo sea `BOB`: con `settlement_asset: "USD"` (o cualquier
+activo distinto de BOB) responde `422 invalid_source_instrument` antes de
+cualquier débito, sin caer en silencio a la madre. Si omites el UUID y el
+settlement es USD, paga desde el saldo de settlement de la madre aunque haya
+varias fuentes banking activas; no hay error de ambigüedad. Fuera de BO/BOB el
+campo responde `400`; un instrumento ajeno responde `404 not_found`; uno no
+bancario o inactivo responde `422 invalid_source_instrument`. MX/AR siguen
+usando la madre/centralizador.
 
 ### 🇦🇷 ARS — peso argentino
 

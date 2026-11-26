@@ -5,7 +5,16 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.327 · 2 versiones - 26 de noviembre de 2026
+## v2.328 · 4 versiones - 26 de noviembre de 2026
+### v2.328
+**Corregido**
+
+- Los payouts y confirmaciones QR BO/BOB ya no debitan la madre en silencio cuando se envía `source_instrument_id` sin settlement BOB: el request ahora se rechaza con `422 invalid_source_instrument` antes de cualquier débito. Con settlement USD (o cualquier no-BOB), omite el campo — el payout debita tu saldo de settlement desde la madre.
+- `POST /v1/payouts/qr/confirm` ahora documenta `source_instrument_id` y el contrato corregido de `settlement_asset` (fiat devuelve 400).
+
+**Cambiado**
+
+- Las cuentas con varias fuentes banking BO/BOB activas ya no necesitan enviar `source_instrument_id` en payouts con settlement USD: la ambigüedad solo se exige cuando el source realmente elige el origen (settlement BOB).
 ### v2.327
 **Cambiado**
 
@@ -17,6 +26,15 @@ source_url: https://docs.cbpayapp.com/es/changelog
 ### v2.326
 **Agregado**
 - Los payins de fondeo Banking ahora exponen el `virtual_iban_id` receptor en el detalle del payin y en el webhook `payin_credited`, para atribuir el depósito al cliente.
+### v2.323
+**Cambiado**
+- Los links de checkout ahora muestran la marca configurada por la cuenta
+  empresa dueña, tanto en la página universal como en la página hosted de
+  tarjeta, con fallback cuenta → organización → CBPay y divulgación fija
+  Impulsado por CBPay.
+- La página de tarjeta fue renovada con señales de pago más claras, búsqueda
+  y banderas de país, y sugerencias opcionales de dirección mediante Places
+  API (New) cuando el despliegue las habilita.
 ## v2.325 · 6 versiones - 25 de noviembre de 2026
 ### v2.325
 **Agregado**

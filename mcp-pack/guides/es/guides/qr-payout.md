@@ -155,6 +155,43 @@ se usa el activo predeterminado de la cuenta. El servidor genera los
 identificadores internos del pago: el integrador solo envía la referencia
 devuelta por `scan` y el monto con dos decimales.
 
+### Seleccionar una fuente bancaria BO/BOB
+
+En un payout BO/BOB, `source_instrument_id` es el selector explícito del
+origen para un instrumento de depósito activo con `purpose: "banking"`. Solo
+es válido cuando el settlement efectivo es `BOB`. Si envías el campo mientras
+el payout liquida en `USD` (u otro activo distinto de BOB), la API responde
+`422 invalid_source_instrument` **antes de cualquier débito**; nunca vuelve en
+silencio a la cuenta madre.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/payouts/qr/confirm \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider_reference": "<del scan BO>",
+    "amount": "700.00",
+    "currency": "BOB",
+    "settlement_asset": "USD",
+    "source_instrument_id": "a1d4b7c0-1234-5678-9abc-def012345678",
+    "idempotency_key": "qr-bo-source-usd-001"
+  }'
+```
+
+```json
+{
+  "error": "invalid_source_instrument",
+  "message": "source_instrument_id requires settlement in BOB"
+}
+```
+
+Cuando `settlement_asset` es `USD` y omites `source_instrument_id`, el payout
+usa el saldo de settlement de la cuenta madre aunque existan varios
+instrumentos banking BO/BOB activos. La respuesta es el payout normal, con
+`settlement_asset: "USD"` y su `status` final; no aparece un error de
+ambigüedad. Selecciona una fuente bancaria explícitamente solo para un payout
+con settlement BOB.
+
 ### Reconciliación del estado
 
 Si la respuesta síncrona no puede demostrar un estado terminal, el payout
@@ -205,6 +242,8 @@ originales al reconciliar una respuesta ambigua.
 | 400 | `idempotency_key_required` | Los QR estáticos reusables exigen `idempotency_key` explícita en el confirm |
 | 402 | `insufficient_funds` | Fondea tu saldo y reintenta con la misma clave |
 | 403 | `compliance_hold` | El payout quedó retenido para revisión y no fue procesado: no se movieron fondos y tu `idempotency_key` no se consumió. El portal muestra una línea de referencia copiable con hora UTC, código del error y request ID corto; la razón exacta de compliance no se informa |
+| 422 | `invalid_source_instrument` | Enviaste `source_instrument_id`, pero el settlement efectivo no es BOB; elimina el campo para debitar la cuenta madre o usa settlement BOB al seleccionar una fuente bancaria. El rechazo ocurre antes del débito |
+| 422 | `ambiguous_source_instrument` | Hay varios instrumentos banking BO/BOB activos cuando se debe elegir una fuente; envía el UUID seleccionado en `source_instrument_id` |
 | 422 | payout `failed` + refund | El monto no calza con un QR de monto fijo, o el riel rechazó el pago — el débito se reembolsa automáticamente |
 | 503 | `channel_unavailable` | Riel temporalmente no disponible; reintenta más tarde con la misma clave |
 
@@ -229,6 +268,12 @@ para esa operación, con tu spread ya incluido.
 Los QR de monto fijo se pagan exacto; un descalce falla el payout con
 reembolso automático. Los QR de monto abierto aceptan el monto que pases en
 el confirm.
+#### ¿Por qué falló mi payout con source al usar USD?
+`source_instrument_id` selecciona un origen bancario BO/BOB solo para
+settlement BOB. Con `settlement_asset: "USD"` se rechaza con
+`422 invalid_source_instrument` antes de cualquier débito. Elimina el campo
+para pagar desde la cuenta madre; aunque existan varios instrumentos banking
+BO/BOB activos, omitir el source no genera ambigüedad para USD.
 #### ¿Cómo reintento un confirm fallido sin riesgo?
 Reintenta con la **misma** `idempotency_key` — el QR jamás se "quema" por
 errores de validación: nada se crea hasta que el payload valida.
