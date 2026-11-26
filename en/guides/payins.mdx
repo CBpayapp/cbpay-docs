@@ -817,7 +817,7 @@ organization has not configured them yet, the announcement responds
 `422 deposit_instructions_unavailable` and nothing is created (see
 [common errors](#common-errors)). You can preview both destination accounts
 without announcing with
-`GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`.
+`GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`. With bank polling disabled or `ManualOnly`, this remains announced-only: the announcement freezes both instruction variants and `reference`, while `confirm-received` records evidence without crediting, a different named god approves, and cancel never credits; the same scope accepts `EC/USD` or `US/USD`.
 
 </Tab>
 </Tabs>

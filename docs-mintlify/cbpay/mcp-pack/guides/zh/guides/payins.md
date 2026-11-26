@@ -716,6 +716,22 @@ SWIFT 电汇。`notes` 字段携带汇款银行正确填写表单所需的操作
 [常见错误](#常见错误)）。您也可以在未预告的情况下预览两个收款账户：
 `GET /v1/payins/deposit-instructions?country=US&currency=USD&method=bank_transfer`。
 
+### US 人工 fallback
+
+当自动银行 polling 已关闭或处于 `ManualOnly` 模式时，目录仍会保留
+`US/USD/bank_transfer`。此时流程为 announced-only：预告会冻结境内和
+SWIFT 两种入金说明以及 `reference`，不会通过 bank push 或 polling 确认。
+两种说明都必须存在；缺少任何一种时，API 返回
+`422 deposit_instructions_unavailable`，不会创建 payin。
+
+银行报告到账后，授权 maker 调用
+`POST /v1/payins/{payinID}/confirm-received`，提交 `bank_reference` 和精确
+的 `received_amount`。这一步只记录证据，不会入账。另一位具名 god checker
+调用 `POST /v1/payins/{payinID}/confirm-approve`；只有这一步才会入账。
+maker 或 god 可以调用 `POST /v1/payins/{payinID}/confirm-cancel`，取消永不
+入账。同一 maker-checker 流程支持 `EC/USD` 与 `US/USD`；其他 scope 返回
+`422 invalid_payload`。
+
 ## 主动扣款（pull）
 
 部分通道支持由付款人授权的 pull 扣款。账户必须先完成身份审核并获批，
