@@ -1024,6 +1024,12 @@ CBPay 运营方之后更新了登记的账户，已经存在的通报仍会指�
 上报的 `payer` 区块——完整结构见 [资金账户指南](https://docs.cbpayapp.com/zh/guides/funding)。
 可使用 `?instrument_id=<uuid>` 筛选历史。
 
+对于通过虚拟 IBAN 接收的 `banking_funding` payin，`GET
+/v1/payins/{id}` 和 `payin_credited` webhook 都会返回接收方 UUID
+`virtual_iban_id`。可使用它将存款归因到该 vIBAN 所代表的客户或充值账户，
+无需额外查询。无法解析 vIBAN、其他收款通道及历史记录会省略此字段；详情
+响应和对应 webhook 中的值保持一致。
+
 ## 3. 接收入账
 
 当付款到达（无论通过哪种模式），您的账户会自动入账，并触发

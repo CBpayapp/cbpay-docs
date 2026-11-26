@@ -5,6 +5,10 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
+## v2.326 · 1 versión - 26 de noviembre de 2026
+### v2.326
+**Agregado**
+- Los payins de fondeo Banking ahora exponen el `virtual_iban_id` receptor en el detalle del payin y en el webhook `payin_credited`, para atribuir el depósito al cliente.
 ## v2.325 · 6 versiones - 25 de noviembre de 2026
 ### v2.325
 **Agregado**

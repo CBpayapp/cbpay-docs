@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.325'
+  version: '2.326'
   description: "CBPay is a multi-currency payment platform: fiat payouts and collections\nacross Latin America, internal transfers, on-chain funding and\nwithdrawals, and KYC screening. Every account holds independent\nvirtual balances — USD (the principal currency), USDT, USDC, USDCE, BTC, GOLD, SILVER and PLATINUM (grams of fine metal), plus BOB, MXN, ARS, CLP (local fiat; BOB/MXN/ARS use two decimals, CLP uses zero decimals) — convertible on demand with swaps.\nPayouts and service fees can be paid from any of the seven platform settlement balances\n(`PUT /v1/settlement` or per-payout `settlement_asset`), and payins\ncan auto-convert to the asset of your choice (`default_payin_asset`).\n\nAll amounts are decimal strings in each currency's precision (2 decimals\nfor USD/BOB/MXN/ARS, 0 for CLP, 6 for USDT/USDC/USDCE/GOLD/SILVER/PLATINUM, and 8 for BTC). Errors always return\n`{\"error\": \"<code>\", \"message\": \"<detail>\"}`.\nBreaking change (2026-11-13): BOB, MXN, ARS and CLP settlement assets and BANK_* mirrors are Banking-only. Platform fiat settlement is rejected with HTTP 400; existing fiat defaults migrate automatically to USDT (legacy accounts keep USDT; new accounts default to USD). Use Banking for fiat operations.\n"
 servers:
 - url: https://api.qbank.cl/platform
@@ -13599,7 +13599,7 @@ paths:
       - Account
       operationId: submitMyTxnReviewFields
       summary: Submit requested data for an information request
-      description: Submits the data asked by a mapped information request (`requested_fields`, closed requirement-key vocabulary) for a banking or card application. Only keys the team requested are accepted — anything else answers `400 field_not_requested`. Each value is validated by type (text, email, phone, ISO country, `YYYY-MM-DD` date, positive USD salary, yes/no, address object, 3-letter currency, purpose, issuer catalog codes); a mistyped value answers `400 invalid_field_value` naming the key. Values live only on the review and merge into the checklist and the approval dispatch — the KYC/KYB record is never touched. Like a file upload, the first submission moves the review back to `in_review` and notifies the reviewer; later submissions only add evidence. Accepts `info_requested`, or `in_review` after a previous `request-info`.
+      description: Submits the data asked by a mapped information request (`requested_fields`, closed requirement-key vocabulary) for a banking or card application. Only keys the team requested are accepted — anything else answers `400 field_not_requested`. Each value is validated by type (text, email, phone, ISO country, `YYYY-MM-DD` date, positive USD salary, yes/no, address object, 3-letter currency, purpose, issuer catalog codes, reason prose); a mistyped value answers `400 invalid_field_value` naming the key. A `*_na_reason` value (20-500 characters explaining why the document is unavailable) satisfies its requirement when no document was provided and is forwarded to the provider as an unavailability letter. Values live only on the review and merge into the checklist and the approval dispatch — the KYC/KYB record is never touched. Like a file upload, the first submission moves the review back to `in_review` and notifies the reviewer; later submissions only add evidence. Accepts `info_requested`, or `in_review` after a previous `request-info`.
       parameters:
       - name: reviewID
         in: path
@@ -32710,6 +32710,10 @@ components:
         instrument:
           $ref: '#/components/schemas/PayinInstrument'
           description: Dedicated instrument metadata, returned when the instrument row is available.
+        virtual_iban_id:
+          type: string
+          format: uuid
+          description: Banking funding payins only — the virtual IBAN that received the deposit; omitted for other rails and legacy payins.
         account_id:
           type: string
         kind:
@@ -33735,6 +33739,10 @@ webhooks:
                   description: Dedicated deposit instrument that received the payin; omitted when not applicable.
                 instrument:
                   $ref: '#/components/schemas/PayinInstrument'
+                virtual_iban_id:
+                  type: string
+                  format: uuid
+                  description: Banking funding payins only — the virtual IBAN that received the deposit; omitted for other rails and legacy payins.
                 payer:
                   type: object
                   description: Bank-reported payer identity for new credited pushes, when available.

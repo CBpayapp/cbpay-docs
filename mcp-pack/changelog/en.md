@@ -5,6 +5,10 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
+## v2.326 · 1 version - November 26, 2026
+### v2.326
+**Added**
+- Banking funding payins now expose the receiving `virtual_iban_id` in the payin detail response and `payin_credited` webhook for customer-level attribution.
 ## v2.325 · 6 versions - November 25, 2026
 ### v2.325
 **Added**

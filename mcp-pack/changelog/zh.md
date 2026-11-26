@@ -5,6 +5,10 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
+## v2.326 · 1 个版本 - 2026年11月26日
+### v2.326
+**新增**
+- Banking funding payin 现在会在 payin 详情响应和 `payin_credited` webhook 中返回接收方 `virtual_iban_id`，便于按客户归因存款。
 ## v2.325 · 6 个版本 - 2026年11月25日
 ### v2.325
 **新增**
