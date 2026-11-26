@@ -1,4 +1,4 @@
----
+﻿---
 title: "Banking"
 icon: "building-columns"
 description: "Real bank accounts for your account: receive, hold and send money over international banking rails"
@@ -792,6 +792,10 @@ The list shape is `{page, page_size, virtual_ibans}`. Supported statuses are
 `closed`. Account-level responses show the full IBAN when one has been
 assigned; the organization-admin read surface masks it.
 
+For the complete lifecycle, fee policy, honest timing expectations and
+pre-provider validation rules, see the dedicated
+[EUR virtual IBAN guide](/en/guides/viban-banking-eur).
+
 <Warning>
 The banking corridor may require operations approval and a verified customer
 profile before a virtual IBAN can become active. Production host,
@@ -1092,3 +1096,4 @@ The core admin route
 account and finalizes the local mirror. The org-admin routes list claims,
 reconcile customer claims, and retry refunds. These operations are locked so
 concurrent reconciliation cannot originate duplicate money movement.
+
