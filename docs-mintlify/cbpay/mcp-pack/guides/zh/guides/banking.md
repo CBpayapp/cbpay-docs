@@ -126,11 +126,14 @@ curl "https://api.qbank.cl/platform/v1/payins/deposit-accounts/<instrumentID>/mo
 可用流水，但仍按页返回。需要限定报表期间时，建议使用上面的日期示例。
 
 BO/BOB payout 可在 `POST /v1/payouts` 或
-`POST /v1/payouts/qr/confirm` 发送 UUID 字段 `source_instrument_id`。
-在其他通道发送会返回 `400`；不属于账户返回 `404 not_found`；非活跃
-或非 banking 工具返回 `422 invalid_source_instrument`。省略 UUID 时，
-多个活跃来源返回 `422 ambiguous_source_instrument`。MX/AR 继续从母账户
-或 centralizer 付款。
+`POST /v1/payouts/qr/confirm` 发送 UUID 字段 `source_instrument_id`，
+以选择活跃的 `purpose: "banking"` 工具。只有实际结算为 `BOB` 时才应
+发送该字段：使用 `settlement_asset: "USD"`（或其他非 BOB 资产）会在
+扣款前返回 `422 invalid_source_instrument`，不会静默改从母账户扣款。
+省略 UUID 且使用 USD 结算时，即使有多个活跃来源，也会从母账户的结算
+余额付款，不会返回歧义错误。在其他通道发送该字段会返回 `400`；不属于
+账户返回 `404 not_found`；非活跃或非 banking 工具返回
+`422 invalid_source_instrument`。MX/AR 继续从母账户或 centralizer 付款。
 
 > **注**
 银行服务费用有两种形式。**独立固定费用**（`banking_customer`、`banking_account`、`banking_operation`）在每笔操作执行时从您的**默认结算资产余额**(USD 为主资产)扣除，若操作失败则**自动退款**。**按通道的交易费用**（`banking_deposit`、`banking_transfer_ach`、`banking_transfer_swift`、`banking_transfer_wire`、`banking_transfer_sepa`）为百分比加固定金额，**以操作货币**（您的 `BANK_USD` / `BANK_EUR` 余额）计收——参见下文「通道费用（存款与转账）」一节。费用为 0（默认值）时服务免费。每个响应中的 `banking_fee` 和 `banking_fee_asset` 字段显示实际扣费金额及币种。
@@ -331,7 +334,7 @@ flowchart LR
 
 ### 登记第三方
 
-登记需要该第三方一条[**已批准**的 KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)的 `verification_id`——这是其在 CBPay 内的唯一身份。类型由验证种类决定（KYC ⇒ `INDIVIDUAL`，KYB ⇒ `COMPANY`），数据（姓名、邮箱、地址）会从已验证的档案自动填充（您显式提供的内容优先），并且**已校验的证件会自动重新递交**给银行服务提供方。此时计收银行客户档案费用（登记失败则退款）：
+登记需要该第三方一条[**已批准**的 KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)的 `verification_id`——这是其在 CBPay 内的唯一身份。类型由验证种类决定（KYC ⇒ `INDIVIDUAL`，KYB ⇒ `COMPANY`），数据（姓名、邮箱、地址）会从已验证的档案自动填充（您显式提供的内容优先），并且**已校验的证件会自动重新递交**给银行服务提供方。此时计收银行客户档案费用（登记失败则退款）：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties \
@@ -802,7 +805,7 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 | 409 | `no_banking_customer` | 请先创建您的档案（`POST /v1/banking/customer`） |
 | 409 | `banking_account_limit` | 个人账户最多持有 1 个银行账户 |
 | 403 | `company_required` | 第三方用户仅对企业账户开放 |
-| 422 | `verification_required` | 登记第三方需要一条已批准验证的 `verification_id`（[先完成验证](https://docs.cbpayapp.com/zh/guides/kyc)） |
+| 422 | `verification_required` | 登记第三方需要一条已批准验证的 `verification_id`（[先完成验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)） |
 | 422 | `verification_not_approved` | 所引用的验证尚未批准；请等待批准 |
 | 422 | `verification_kind_mismatch` | 发送的 `type` 与验证种类不匹配（KYC ⇒ INDIVIDUAL，KYB ⇒ COMPANY） |
 | 422 | `verification_invalid` | 您引用了自己的入驻验证；第三方需要其自己的验证 |

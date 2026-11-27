@@ -5,7 +5,25 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.327 · 2 个版本 - 2026年11月26日
+## v2.330 · 1 个版本 - 2026年11月27日
+### v2.330
+**变更**
+- 经典 KYC/KYB OCR 现已记录规范化类别别名、TD1 MRZ 规范化、
+  结构化 `failed_checks` 以及 wealth/KYB v0 文档类别。活体证据继续
+  fail-closed：antispoof 失败会保留在人工作台审核。
+## v2.329 · 5 个版本 - 2026年11月26日
+### v2.329
+**修复**
+
+- BO/BOB payout 与 QR 确认在未配 BOB 结算却发送 `source_instrument_id` 时，不再静默从母账户扣款：请求会在扣款前被 `422 invalid_source_instrument` 拒绝。以 USD（或任何非 BOB）结算时请省略该字段——payout 从母账户扣除你的结算余额。
+- `POST /v1/payouts/qr/confirm` 现已记录 `source_instrument_id` 与修正后的 `settlement_asset` 契约（法币返回 400）。
+
+**变更**
+
+- 拥有多个活跃 BO/BOB banking 来源的账户，在 USD 结算 payout 中不再需要发送 `source_instrument_id`：仅当来源真正决定付款账户（BOB 结算）时才强制消除歧义。
+### v2.328
+**变更**
+- 当底层 payout、payin 或加密货币提现已经处于终态时，账户 review 队列不再将后续派发失败标记为可操作。该 review 会从默认队列和相关计数中移除，而 `status=all` 仍保留历史。
 ### v2.327
 **变更**
 
@@ -16,6 +34,12 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 ### v2.326
 **新增**
 - Banking funding payin 现在会在 payin 详情响应和 `payin_credited` webhook 中返回接收方 `virtual_iban_id`，便于按客户归因存款。
+### v2.323
+**变更**
+- Checkout 链接现在会在通用页面和托管银行卡页面显示所属企业账户配置的
+  品牌，并按账户 → 组织 → CBPay 回退；固定的“由 CBPay 提供支持”披露仍会显示。
+- 银行卡页面已改版，提供更清晰的支付提示、国家搜索与国旗，以及在部署启用
+  时可选的 Places API (New) 地址建议。
 ## v2.325 · 6 个版本 - 2026年11月25日
 ### v2.325
 **新增**
@@ -1959,7 +1983,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **修复**
 
-- **`verifications_unavailable` 的提示不再声称已退还费用。** 身份验证返回 503 并不意味着退款：验证文档接口从不收费，自助入驻也不收取任何费用。该提示现在仅建议稍后重试。参考：[错误](https://docs.cbpayapp.com/zh/errors) 与 [KYC 指南](https://docs.cbpayapp.com/zh/guides/kyc)。
+- **`verifications_unavailable` 的提示不再声称已退还费用。** 身份验证返回 503 并不意味着退款：验证文档接口从不收费，自助入驻也不收取任何费用。该提示现在仅建议稍后重试。参考：[错误](https://docs.cbpayapp.com/zh/errors) 与 [KYC 指南](https://docs.cbpayapp.com/zh/guides/kyc-overview)。
 
 ## v2.62 - 2026年8月19日
 
@@ -2432,7 +2456,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
   一律交给**人工审核员**,而明显无效的档案(已确认的严重制裁、伪造或过期文件)会被**自动
   拒绝**。最终决定现在在 `kyc_verification_status_changed` 和 `kyb_verification_status_changed`
   webhook 中携带 `decision_source`(`auto` 或 `admin`),让你知道每份档案是如何决定的。
-  详见 [KYC 和 KYB](https://docs.cbpayapp.com/zh/guides/kyc)。
+  详见 [KYC 和 KYB](https://docs.cbpayapp.com/zh/guides/kyc-overview)。
 - **测试环境新增 `HOLDREVIEW` 魔法值**:主体姓名包含 `HOLDREVIEW` 的 KYC/KYB submission 会保留
   在人工审核中,而不会被自动决定,方便你端到端地演练人工队列。配套的
   `MANUALREVIEW` 魔法值让所有信号保持干净,但绝不会自行了结 submission,
@@ -2551,7 +2575,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 **变更**
 
 - **活体检测现支持同一主体多个会话**
-  ([身份验证](https://docs.cbpayapp.com/zh/guides/kyc))：验证报告的 `liveness[]` 数组可为同一人携带多条
+  ([身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview))：验证报告的 `liveness[]` 数组可为同一人携带多条
   记录——开通门槛检测 `gate` 加上一次或多次后续证据补录
   `media_recapture`。每个会话现在都带有各自的 `session_id` 与 `purpose`
   （`gate` 或 `media_recapture`）。在 KYB 中，`parties[].liveness`（单数）
@@ -2566,7 +2590,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 **变更**
 
 - **验证报告封面可导航**
-  ([身份验证](https://docs.cbpayapp.com/zh/guides/kyc))：PDF 首页为**可点击**的索引卡片（图标、标题与
+  ([身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview))：PDF 首页为**可点击**的索引卡片（图标、标题与
   页码），点击即可跳转到对应章节。每个章节都带有图标与强调条，与 AML 报告保持
   一致的视觉语言。
 - **可点击链接**：AML 附录中的负面媒体条目带有“查看来源”标签，结尾处的公开
@@ -2583,7 +2607,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **验证报告中的视觉证据**（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc)）：当提供商发布活体
+- **验证报告中的视觉证据**（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)）：当提供商发布活体
   媒体（自拍 / 手势帧）或身份证件照片时，**PDF 会尽力嵌入照片**。若无媒体
   或链接已过期，则省略照片区块。报告 JSON 仅声明元数据（`has_selfie`、
   手势、`has_video`、哈希）— **绝不包含已签名 URL**。
@@ -2595,7 +2619,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **完整的验证报告，不丢弃任何数据**（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc)）：KYC/KYB
+- **完整的验证报告，不丢弃任何数据**（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)）：KYC/KYB
   报告由摘要升级为完整档案。在原有内容之外，JSON 与 PDF 现在还包含
   **申报的经济画像**（资金来源、关系目的、预期交易量与收入、预期链），
   **风险声明**（货币服务、第三方资金、高风险活动、禁止国家），
@@ -2633,7 +2657,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 **新增**
 
-- **可下载的 KYC/KYB 验证报告**（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc)）：每个 KYC/KYB
+- **可下载的 KYC/KYB 验证报告**（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)）：每个 KYC/KYB
   提交现在都有由平台生成的验证报告，支持 `?format=pdf|json` 与
   `?lang=en|es|zh`。第三方：`GET
   /v1/kyc/submissions/{submissionID}/verification-report` 与 `GET
@@ -3288,7 +3312,7 @@ CBPay API 及本文档的每一次变更，最新的排在最前。
 
 - **已验证身份成为档案数据的最终来源**：KYC/KYB 入驻获批后，
   `display_name`（个人 = 名 + 姓；企业 = 法定名称）、`tax_id` 和
-  `country` 会自动由已验证的身份回填。详见 [KYC 指南](https://docs.cbpayapp.com/zh/guides/kyc)
+  `country` 会自动由已验证的身份回填。详见 [KYC 指南](https://docs.cbpayapp.com/zh/guides/kyc-overview)
   与[档案指南](https://docs.cbpayapp.com/zh/guides/profile)。
 
 **变更**
@@ -3806,7 +3830,7 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
 
 - 客户已通过的 KYC/KYB 验证成为其在 CBPay 内的**唯一身份**：其数据
   与文件可在其他产品中复用，无需重复填写或重复上传。指南：
-  [可复用身份](https://docs.cbpayapp.com/zh/guides/kyc#one-verification-for-everything-reusable-identity)。
+  [可复用身份](https://docs.cbpayapp.com/zh/guides/kyc-overview#one-verification-for-everything-reusable-identity)。
 - **卡片**：你账户的首次发卡会**从你已通过的验证中**自动填充持卡人
   身份与文件 —— 你只需发送 `occupation` 和 `salary_usd`。显式提供的
   字段仍然优先。
@@ -3907,7 +3931,7 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
 - 7 个新 webhook：`kyc/kyb_verification_status_changed`、
   `kyc/kyb_link_completed`、`kyc/kyb_document_validated`、
   `kyc_liveness_completed`。完整指南见
-  [KYC 与 KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)。
+  [KYC 与 KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)。
 
 **变更（BREAKING）— 名单筛查更名为 AML**
 
@@ -4157,7 +4181,7 @@ curl -o movements.xlsx "https://api.qbank.cl/platform/v1/movements?from=2026-07-
 - **KYC/KYB：完整的身份字段参考。** `customer` 对象一直接受比示例
   更多的可选字段（出生日期、国籍、带签发国的证件、别名、居住地、
   公司注册数据……），提供它们能让筛查更精确。
-  [KYC 指南](https://docs.cbpayapp.com/zh/guides/kyc) 现在记录了每个字段，附完整身份示例
+  [KYC 指南](https://docs.cbpayapp.com/zh/guides/kyc-overview) 现在记录了每个字段，附完整身份示例
   与去重规则。
 
 ### v1.20

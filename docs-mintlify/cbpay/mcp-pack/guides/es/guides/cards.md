@@ -260,7 +260,7 @@ como `card_application`.
 Una cuenta persona emite tarjetas **para sí misma** (máximo 1 tarjeta viva total; la emisión física nueva está temporalmente no disponible).
 El límite de una tarjeta se aplica de forma atómica. Si dos solicitudes compiten, la perdedora responde `409 card_limit_reached` y el fee recién cobrado se reembolsa automáticamente; repetir la misma solicitud con la misma idempotency key devuelve la review `202` existente sin volver a cobrar.
 **Tu primera tarjeta** crea y verifica tu titular en el emisor. Como tu
-cuenta ya aprobó su [verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc), tus datos y
+cuenta ya aprobó su [verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc-overview), tus datos y
 documentos se **completan solos desde tu verificación** — solo agregas los
 campos propios del emisor (`occupation`, `salary_usd`); cualquier campo que
 envíes explícito gana sobre el autofill:
@@ -349,7 +349,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 
 **B. Para una persona designada** (ej. un empleado): agrega
 `cardholder.kind: "person"` con el `verification_id` del [KYC
-**aprobado**](https://docs.cbpayapp.com/es/guides/kyc) de ESA persona — su identidad y documentos
+**aprobado**](https://docs.cbpayapp.com/es/guides/kyc-overview) de ESA persona — su identidad y documentos
 salen de la verificación; tú solo agregas los campos del emisor:
 
 ```bash
@@ -691,7 +691,7 @@ La tarjeta se congela automáticamente (evento `card_status_changed` con
 pide descongelarla con `PATCH { "frozen": false }`.
 #### ¿Puedo emitir una tarjeta para alguien que no es de mi empresa?
 Las cuentas empresa pueden emitir para cualquier persona designada. Esa
-persona debe tener su [verificación KYC aprobada](https://docs.cbpayapp.com/es/guides/kyc) — pasas su
+persona debe tener su [verificación KYC aprobada](https://docs.cbpayapp.com/es/guides/kyc-overview) — pasas su
 `verification_id` en el `cardholder` y sus datos y documentos se completan
 solos. La tarjeta gasta siempre del saldo de la cuenta empresa que la
 emitió.

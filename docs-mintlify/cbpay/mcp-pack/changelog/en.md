@@ -5,7 +5,26 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.327 · 2 versions - November 26, 2026
+## v2.330 · 1 version - November 27, 2026
+### v2.330
+**Changed**
+- Classic KYC/KYB OCR now documents canonical category aliases, TD1 MRZ
+  normalization, structured MRZ `failed_checks`, and the v0 wealth/KYB
+  document schemas. Liveness evidence remains fail-closed: failed antispoof
+  evidence stays in human review.
+## v2.329 · 5 versions - November 26, 2026
+### v2.329
+**Fixed**
+
+- BO/BOB payouts and QR confirmations no longer debit the mother account in silence when `source_instrument_id` is sent without BOB settlement: the request is now rejected with `422 invalid_source_instrument` before any debit. With USD (or any non-BOB) settlement, omit the field — the payout debits your settlement balance from the mother account.
+- `POST /v1/payouts/qr/confirm` now documents `source_instrument_id` and the corrected `settlement_asset` contract (fiat returns 400).
+
+**Changed**
+
+- Accounts with several active BO/BOB banking sources no longer need to send `source_instrument_id` for USD-settled payouts: ambiguity is only enforced when the source actually selects the origin (BOB settlement).
+### v2.328
+**Changed**
+- Account review queues no longer mark a failed post-approval dispatch as actionable when the underlying payout, payin, or crypto withdrawal is already terminal. The review leaves the default queue and related counts, while `status=all` preserves history.
 ### v2.327
 **Changed**
 
@@ -16,6 +35,14 @@ source_url: https://docs.cbpayapp.com/en/changelog
 ### v2.326
 **Added**
 - Banking funding payins now expose the receiving `virtual_iban_id` in the payin detail response and `payin_credited` webhook for customer-level attribution.
+### v2.323
+**Changed**
+- Checkout links now show the owning company account's configured brand on
+  the universal and hosted card pages, with account → organization → CBPay
+  fallback and a fixed Powered by CBPay disclosure.
+- The card page was refreshed with clearer payment cues, country search and
+  flags, and optional Places API (New) address suggestions when enabled by
+  the deployment.
 ## v2.325 · 6 versions - November 25, 2026
 ### v2.325
 **Added**
@@ -2213,7 +2240,7 @@ instrument. Company creation is idempotent: a new key returns
 
 **Fixed**
 
-- **The `verifications_unavailable` error no longer claims a fee was refunded.** A 503 from identity verification does not imply any refund: the verification documents endpoint never charges a fee and self-onboarding carries no fee. The copy now only asks you to retry later. Reference: [Errors](https://docs.cbpayapp.com/en/errors) and the [KYC guide](https://docs.cbpayapp.com/en/guides/kyc).
+- **The `verifications_unavailable` error no longer claims a fee was refunded.** A 503 from identity verification does not imply any refund: the verification documents endpoint never charges a fee and self-onboarding carries no fee. The copy now only asks you to retry later. Reference: [Errors](https://docs.cbpayapp.com/en/errors) and the [KYC guide](https://docs.cbpayapp.com/en/guides/kyc-overview).
 
 ## v2.62 - August 19, 2026
 
@@ -2769,7 +2796,7 @@ instrument. Company creation is idempotent: a new key returns
   `decision_source` (`auto` or `admin`) in the
   `kyc_verification_status_changed` and `kyb_verification_status_changed`
   webhooks so you can tell how each file was decided. Details in
-  [KYC and KYB](https://docs.cbpayapp.com/en/guides/kyc).
+  [KYC and KYB](https://docs.cbpayapp.com/en/guides/kyc-overview).
 - **New `HOLDREVIEW` magic value in the testing environment**: a KYC/KYB
   submission whose subject name contains `HOLDREVIEW` stays in human
   review instead of being auto-decided, so you can exercise the manual
@@ -2914,7 +2941,7 @@ instrument. Company creation is idempotent: a new key returns
 **Changed**
 
 - **Liveness now supports multiple sessions per subject**
-  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc)): the verification report's
+  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc-overview)): the verification report's
   `liveness[]` array can carry more than one entry per person — the
   onboarding `gate` check plus one or more later evidence
   `media_recapture`s. Each session now carries its own `session_id` and
@@ -2932,7 +2959,7 @@ instrument. Company creation is idempotent: a new key returns
 **Changed**
 
 - **Verification report with a navigable cover**
-  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc)): the PDF opens with an index of
+  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc-overview)): the PDF opens with an index of
   **clickable** cards (icon, title and page number) that jump to their
   section. Every section carries its icon and accent bar, matching the visual
   language of the AML report.
@@ -2954,7 +2981,7 @@ instrument. Company creation is idempotent: a new key returns
 **Added**
 
 - **Visual evidence in the verification report**
-  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc)): when the provider publishes
+  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc-overview)): when the provider publishes
   liveness media (selfie / frames) or identity document photos, the **PDF
   embeds the photos** best-effort. If media is missing or the link expired,
   the photo section is omitted. The report JSON only declares metadata
@@ -2969,7 +2996,7 @@ instrument. Company creation is idempotent: a new key returns
 **Added**
 
 - **Complete verification report, nothing discarded**
-  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc)): the KYC/KYB report went from
+  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc-overview)): the KYC/KYB report went from
   summary to full file. On top of what it already carried, the JSON and the
   PDF now include the **declared economic profile** (source of funds,
   purpose of the relationship, expected volumes and income, expected
@@ -3022,7 +3049,7 @@ instrument. Company creation is idempotent: a new key returns
 **Added**
 
 - **Downloadable KYC/KYB verification report**
-  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc)): every KYC/KYB submission now
+  ([identity verification](https://docs.cbpayapp.com/en/guides/kyc-overview)): every KYC/KYB submission now
   has a platform-generated verification report, with `?format=pdf|json`
   and `?lang=en|es|zh`. Third parties: `GET
   /v1/kyc/submissions/{submissionID}/verification-report` and `GET
@@ -3779,7 +3806,7 @@ instrument. Company creation is idempotent: a new key returns
   KYC/KYB onboarding is approved, `display_name` (person = first + last
   name; company = legal name), `tax_id` and `country` are backfilled
   automatically from the verified identity. Documented in the
-  [KYC guide](https://docs.cbpayapp.com/en/guides/kyc) and the [profile guide](https://docs.cbpayapp.com/en/guides/profile).
+  [KYC guide](https://docs.cbpayapp.com/en/guides/kyc-overview) and the [profile guide](https://docs.cbpayapp.com/en/guides/profile).
 
 **Changed**
 
@@ -4368,7 +4395,7 @@ Full guide at [segregated wallets](https://docs.cbpayapp.com/en/guides/segregate
 - A customer's approved KYC/KYB verification becomes their **single
   identity** inside CBPay: their data and documents are reused across the
   other products without re-typing or re-uploading. Guide:
-  [reusable identity](https://docs.cbpayapp.com/en/guides/kyc#one-verification-for-everything-reusable-identity).
+  [reusable identity](https://docs.cbpayapp.com/en/guides/kyc-overview#one-verification-for-everything-reusable-identity).
 - **Cards**: your account's first issuance auto-fills the cardholder's
   identity and documents **from your approved verification** — you only
   send `occupation` and `salary_usd`. Explicit fields still win.
@@ -4477,7 +4504,7 @@ Full guide at [segregated wallets](https://docs.cbpayapp.com/en/guides/segregate
 - 7 new webhooks: `kyc/kyb_verification_status_changed`,
   `kyc/kyb_link_completed`, `kyc/kyb_document_validated`,
   `kyc_liveness_completed`. Full guide at
-  [KYC and KYB verification](https://docs.cbpayapp.com/en/guides/kyc).
+  [KYC and KYB verification](https://docs.cbpayapp.com/en/guides/kyc-overview).
 
 **Changed (BREAKING) — Screening becomes AML**
 
@@ -4753,7 +4780,7 @@ Full guide at [segregated wallets](https://docs.cbpayapp.com/en/guides/segregate
   always accepted many more optional fields than the examples showed
   (date of birth, nationalities, documents with issuing country, aliases,
   residences, company registry data…) and sending them makes the screening
-  more precise. The [KYC guide](https://docs.cbpayapp.com/en/guides/kyc) now documents every field,
+  more precise. The [KYC guide](https://docs.cbpayapp.com/en/guides/kyc-overview) now documents every field,
   with full-identity examples and the deduplication rule.
 
 ### v1.20

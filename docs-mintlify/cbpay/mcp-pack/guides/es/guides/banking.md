@@ -137,11 +137,16 @@ El saldo devuelve `currency`, `funds_model` (`retained` en BO,
 de payins y payouts; `from` y `to` son obligatorios.
 
 Para payouts BO/BOB puedes enviar `source_instrument_id` (UUID) en
-`POST /v1/payouts` o `POST /v1/payouts/qr/confirm`. Fuera de BO/BOB responde
-`400`; un instrumento ajeno responde `404 not_found`; uno no bancario o
-inactivo responde `422 invalid_source_instrument`. Sin UUID, varias fuentes
-activas responden `422 ambiguous_source_instrument`. MX/AR siguen usando la
-madre/centralizador.
+`POST /v1/payouts` o `POST /v1/payouts/qr/confirm` para seleccionar un
+instrumento `purpose: "banking"` activo. Solo debes enviarlo cuando el
+settlement efectivo sea `BOB`: con `settlement_asset: "USD"` (o cualquier
+activo distinto de BOB) responde `422 invalid_source_instrument` antes de
+cualquier débito, sin caer en silencio a la madre. Si omites el UUID y el
+settlement es USD, paga desde el saldo de settlement de la madre aunque haya
+varias fuentes banking activas; no hay error de ambigüedad. Fuera de BO/BOB el
+campo responde `400`; un instrumento ajeno responde `404 not_found`; uno no
+bancario o inactivo responde `422 invalid_source_instrument`. MX/AR siguen
+usando la madre/centralizador.
 
 ### 🇦🇷 ARS — peso argentino
 
@@ -375,7 +380,7 @@ flowchart LR
 ### Alta del tercero
 
 El alta exige el `verification_id` de una [verificación KYC/KYB
-**aprobada**](https://docs.cbpayapp.com/es/guides/kyc) del tercero — su identidad única en CBPay. El
+**aprobada**](https://docs.cbpayapp.com/es/guides/kyc-overview) del tercero — su identidad única en CBPay. El
 tipo sale del kind de la verificación (KYC ⇒ `INDIVIDUAL`, KYB ⇒
 `COMPANY`), los datos (nombre, email, dirección) se completan solos desde
 el perfil verificado (lo que envíes explícito gana) y los **documentos ya
@@ -956,7 +961,7 @@ fallback.
 | 409 | `no_banking_customer` | Crea primero tu perfil (`POST /v1/banking/customer`) |
 | 409 | `banking_account_limit` | Las cuentas persona tienen máximo 1 cuenta bancaria |
 | 403 | `company_required` | Los usuarios de terceros solo están disponibles para cuentas empresa |
-| 422 | `verification_required` | El alta de terceros exige `verification_id` de una verificación aprobada ([verifica primero](https://docs.cbpayapp.com/es/guides/kyc)) |
+| 422 | `verification_required` | El alta de terceros exige `verification_id` de una verificación aprobada ([verifica primero](https://docs.cbpayapp.com/es/guides/kyc-overview)) |
 | 422 | `verification_not_approved` | La verificación referenciada aún no está aprobada; espera la aprobación |
 | 422 | `verification_kind_mismatch` | El `type` enviado no calza con el kind de la verificación (KYC ⇒ INDIVIDUAL, KYB ⇒ COMPANY) |
 | 422 | `verification_invalid` | Referenciaste tu verificación de onboarding; el tercero necesita la suya propia |

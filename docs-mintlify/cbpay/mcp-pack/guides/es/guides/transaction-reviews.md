@@ -64,7 +64,8 @@ inventa una fecha.
 
 ### Filtros
 
-- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` o `all` (vacío = abiertas: `in_review` + `info_requested`). `dispatch_failed` lista solicitudes aprobadas cuyo despacho posterior falló; sin `kind`, la vista de cuenta solo incluye `banking_application` y `card_application`. Otro valor ⇒ `400 invalid_status`.
+- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` o `all` (vacío = abiertas: `in_review` + `info_requested`). `dispatch_failed` lista reviews liberadas cuyo despacho posterior falló mientras el recurso subyacente sigue siendo accionable; sin `kind`, la vista de cuenta solo incluye `banking_application` y `card_application`. Otro valor ⇒ `400 invalid_status`.
+- Un payout, payin o retiro cripto liberado cuyo recurso subyacente ya está en estado terminal (`completed`, `failed`, `credited`, `rejected` o `expired`) no es accionable: queda fuera de la cola por defecto, de los resultados `dispatch_failed` y de los contadores, con `needs_action` y `dispatch_failed` en `false`. Usa `status=all` para conservar la historia completa. Las reviews de banking y de solicitudes siguen siendo accionables.
 - `?from=` / `?to=` — rango de fechas (`YYYY-MM-DD`, zona horaria de tu organización, ambos inclusive). Fecha inválida ⇒ `400 invalid_range`.
 - `?page=` / `?page_size=` — paginación (default 50, máximo 200).
 
@@ -296,6 +297,38 @@ Para revisiones de solicitudes (`kind`: `banking_application` / `card_applicatio
 
 Catálogo completo en [Errores](https://docs.cbpayapp.com/es/errors).
 
+## Aprobado, pero esperando fondos
+
+Un retiro crypto puede llegar a `approved_unfunded` cuando compliance ya lo
+aprobó, pero la hot todavía no cubre el monto. No es una nueva retención de
+compliance: una cobertura fondea el faltante y libera el retiro sin pedir otra
+aprobación.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/txn-reviews?status=approved_unfunded&from=2026-11-25&to=2026-11-25" \
+  -H "Authorization: Bearer pk_..."
+```
+
+Trata `approved_unfunded` como abierto y sigue consultando la revisión o
+consumiendo `txn_review_status_changed`. Cuando la cobertura termina, la
+revisión pasa a `released`. Si un god rechaza la cobertura, no se crea otra
+propuesta automática; coordina fondeo manual o rechaza el retiro.
+
+| Estado | Significado | Acción del integrador |
+|---|---|---|
+| `in_review` | Falta la decisión de compliance | Espera el webhook o consulta |
+| `approved_unfunded` | Aprobado, pero falta cubrir la hot | Espera; no re-apruebes ni crees otro retiro |
+| `released` | El retiro fue liberado | Concilia el estado normal del retiro |
+| `rejected` | El retiro fue rechazado | Detén el procesamiento y muestra el resultado final |
+
+#### ¿Debo aprobar o reintentar un retiro approved_unfunded?
+No. Compliance ya lo aprobó. La cobertura lo libera automáticamente. Si
+reintentas la solicitud original, usa la misma idempotency key; nunca crees
+otro retiro mientras la revisión original siga abierta.
+#### ¿Qué significa una respuesta 409 de cobertura?
+El retiro sigue retenido de forma segura mientras la cobertura está pendiente.
+Lee la referencia `coverage_proposal` de la respuesta y sigue consultando la
+revisión.
 ## Preguntas frecuentes
 
 #### ¿Por qué mi operación quedó retenida?

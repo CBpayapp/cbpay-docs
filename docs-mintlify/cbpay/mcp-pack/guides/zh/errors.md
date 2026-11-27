@@ -832,3 +832,9 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `final_blocked` | 最终赎回前先结清待处理活动 | 清理分红、桥接、parked 与要约 |
 | 409 | `final_not_frozen` | 项目须经最终提议冻结 | 先提议最终赎回再批准 |
 | 422 | `burner_blocked` | Burner 未通过制裁筛查 | 该 burn 保持 parked 待合规处理 |
+
+## Manual proposal errors
+
+| HTTP | Code | Fix |
+|---|---|---|
+| 409 | `invalid_proposal` | The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context. |

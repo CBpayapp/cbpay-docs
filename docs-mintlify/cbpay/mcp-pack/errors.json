@@ -1,5 +1,5 @@
 {
-  "count": 485,
+  "count": 486,
   "errors": [
     {
       "category": {
@@ -6747,6 +6747,20 @@
         "en": "The burner failed sanctions screening — Fix: The burn stays parked for compliance",
         "es": "El burner falló el screening de sanciones — Fix: El burn queda parkeado para compliance",
         "zh": "Burner 未通过制裁筛查 — Fix: 该 burn 保持 parked 待合规处理"
+      }
+    },
+    {
+      "category": {
+        "en": "Trust Center & NDA",
+        "es": "Enrolamiento 2FA del registro",
+        "zh": "注册 2FA 错误"
+      },
+      "code": "invalid_proposal",
+      "http": 409,
+      "meaning": {
+        "en": "The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context.",
+        "es": "The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context.",
+        "zh": "The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context."
       }
     }
   ]
