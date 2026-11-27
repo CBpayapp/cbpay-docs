@@ -270,7 +270,7 @@ A person account issues cards **for itself** (at most 1 live card total; new phy
 The one-card limit is enforced atomically. If two requests race, the losing request returns `409 card_limit_reached` and its newly charged application fee is refunded automatically; retrying the same request with the same idempotency key returns the existing `202` review instead of charging again.
 **Your first card** creates and verifies your holder at the issuer. Since
 your account already approved its
-[identity verification](https://docs.cbpayapp.com/en/guides/kyc), your data and documents
+[identity verification](https://docs.cbpayapp.com/en/guides/kyc-overview), your data and documents
 **auto-fill from your verification** — you only add the issuer-specific
 fields (`occupation`, `salary_usd`); any field you send explicitly wins
 over the autofill:
@@ -358,7 +358,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
 
 **B. For a designated person** (e.g. an employee): add
 `cardholder.kind: "person"` with the `verification_id` of THAT person's
-[**approved** KYC](https://docs.cbpayapp.com/en/guides/kyc) — their identity and documents come
+[**approved** KYC](https://docs.cbpayapp.com/en/guides/kyc-overview) — their identity and documents come
 from the verification; you only add the issuer fields:
 
 ```bash
@@ -713,7 +713,7 @@ The card is frozen automatically (`card_status_changed` event with
 up, unfreeze it with `PATCH { "frozen": false }`.
 #### Can I issue a card for someone outside my company?
 Company accounts can issue for any designated person. That person must
-have an [approved KYC verification](https://docs.cbpayapp.com/en/guides/kyc) — you pass their
+have an [approved KYC verification](https://docs.cbpayapp.com/en/guides/kyc-overview) — you pass their
 `verification_id` in the `cardholder` and their data and documents
 auto-fill. The card always spends from the balance of the issuing company
 account.

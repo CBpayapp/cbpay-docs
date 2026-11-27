@@ -340,7 +340,7 @@ curl -X POST https://api.qbank.cl/platform/v1/segregated-wallets/{walletID}/auto
 |---|---|---|
 | 422 | `wallet_limit_reached` | A person account already holds its segregated wallet for that network+asset pair (companies have no limit) |
 | 403 | `human_session_required` | Import and export require a signed-in user session with 2FA (no API keys) |
-| 403 | `verification_required` | Complete your account onboarding ([verification](/en/guides/kyc)) |
+| 403 | `verification_required` | Complete your account onboarding ([verification](/en/guides/kyc-overview)) |
 | 403 | `service_disabled` | The `wallets` service is not enabled; contact your operator |
 | 400 | `idempotency_key_required` | Send `idempotency_key` (body or `Idempotency-Key` header) |
 | 400 | `invalid_asset` / `invalid_chain` | Check the supported chain/asset pair |

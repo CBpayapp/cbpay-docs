@@ -38,7 +38,7 @@ CBPay 有两种账户类型 — **个人**（`type: "person"`）和**企业**
   （或由您的运营方创建）。
 - 验证：通过 `POST /v1/me/verification/link` 获取您的 KYC 链接并
   完成向导 — 在通过之前您只能进行入金
-  （[指南](https://docs.cbpayapp.com/zh/guides/kyc)）。
+  （[指南](https://docs.cbpayapp.com/zh/guides/kyc-overview)）。
 - 加密货币：您的**充值钱包随账户自动创建**（每个网络+资产组合
   一个；仅用于接收）。需要拥有独立余额的钱包？您可以持有
   **每个网络+资产组合 1 个隔离钱包**。
@@ -51,7 +51,7 @@ CBPay 有两种账户类型 — **个人**（`type: "person"`）和**企业**
 - 注册：`type: "company"`，最好附带 `tax_id`。
 - 验证：通过 `POST /v1/me/verification/link` 获取您的 KYB 链接并
   用企业资料完成向导；通过后您还可以为自己的客户做验证
-  （[指南](https://docs.cbpayapp.com/zh/guides/kyc)）。
+  （[指南](https://docs.cbpayapp.com/zh/guides/kyc-overview)）。
 - 加密货币：您的**充值钱包随账户自动创建**（每个网络+资产组合
   一个；仅用于接收）。如需分开的链上余额，可创建**不限数量的
   隔离钱包**（可按分支机构、按产品、按供应商各建一个……），并使用

@@ -30,7 +30,7 @@ flowchart LR
 `address_screening` 服务费（固定，按次扫描）在
 执行时扣除，如果筛查失败会**自动退还**。费用
 为 0 时，该服务对你免费。它需要你自己的
-[身份验证已通过](/zh/guides/kyc#your-own-verification-onboarding)，
+[身份验证已通过](/zh/guides/kyc-overview#your-own-verification-onboarding)，
 并且你的账户已启用 `screenings` 服务。
 </Note>
 
@@ -323,7 +323,7 @@ curl https://api.qbank.cl/platform/v1/screenings/addresses/7a2c4e6f-8b1d-4c3a-9e
 | 400 | `invalid_payload` | 缺少 `address` 或其长度过长 | 检查 `address` 字段 |
 | 400 | `invalid_range` | 列表接口缺少或提供了无效的 `from`/`to` | 两者均使用 `YYYY-MM-DD` 格式 |
 | 402 | `insufficient_funds` | 余额不足以支付费用 | 为账户充值后用相同的 key 重试 |
-| 403 | `verification_required` | 你的账户尚未通过验证 | 完成你的[入驻验证](/zh/guides/kyc#your-own-verification-onboarding) |
+| 403 | `verification_required` | 你的账户尚未通过验证 | 完成你的[入驻验证](/zh/guides/kyc-overview#your-own-verification-onboarding) |
 | 403 | `service_disabled` | 你的账户未启用 `screenings` 服务 | 联系你的运营方 |
 | 404 | `not_found` | `screening_id` 不存在或不属于你 | 检查该 id |
 | 422 | `invalid_address` | 该地址无法被筛查（格式问题） | 检查地址格式 |

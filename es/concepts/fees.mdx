@@ -53,7 +53,7 @@ de las tasas de tu cuenta para ese país. Cotizado = cobrado, siempre.
 | `compliance_company` | Fijo por llamada | Al screenear una empresa por AML/CFT |
 | `compliance_rescreen` | Fijo por llamada | Al re-ejecutar un screening AML/CFT |
 | `compliance_monitoring` | Fijo por activación | Al activar monitoreo AML/CFT continuo (desactivar es gratis) |
-| `kyc_verification` | Fijo por verificación | Al crear un link o submission KYC de un tercero ([verificación](/es/guides/kyc)); tu propio onboarding es gratis |
+| `kyc_verification` | Fijo por verificación | Al crear un link o submission KYC de un tercero ([verificación](/es/guides/kyc-overview)); tu propio onboarding es gratis |
 | `kyb_verification` | Fijo por verificación | Al crear un link o submission KYB de un tercero |
 | `address_screening` | Fijo por scan | Al evaluar el riesgo de una dirección blockchain ([screening de wallets](/es/guides/screenings)); la protección automática de retiros/depósitos es gratis |
 | `banking_customer` | Fijo por perfil | Al crear tu perfil bancario ([banking](/es/guides/banking)) |
@@ -245,6 +245,13 @@ equivalente a tu `payin_rate` menos el fijo.
 ## Score de fraude e identidad
 
 | `risk_fraud_score` | Fee fijo por cada informe de fraude e identidad; se reembolsa si falla la generación |
+
+## Tokens RWA de regalías
+
+| `rwa_subscription` | Porcentaje + fijo sobre el USDT suscrito (se cobra encima, los tokens se calculan del neto) |
+| `rwa_distribution` | Porcentaje + fijo sobre cada distribución USDT acreditada (topeado a la participación) |
+| `rwa_bridge` | Fee fijo por movimiento bridge on-chain (bloqueo + mint, o burn + desbloqueo) *(F2 — flujo bridge pendiente)* |
+| `rwa_secondary` | Porcentaje + fijo sobre el total del taker por cada fill secundario interno (capado al total) |
 
 ## EUR banking fee services
 

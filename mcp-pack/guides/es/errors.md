@@ -796,6 +796,7 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 409 | `payment_in_flight` | Hay un pago de nómina en proceso de dispersión | Espera la reconciliación; no lo dupliques. |
 | 409 | `invalid_state` | El recurso no acepta esta operación en su estado actual | Lee el estado actual y sigue la transición permitida. |
 | 400 | `reason_required` | Se requiere un motivo | Envía un motivo significativo en el cuerpo. |
+| 409 | `not_ghost_terminal` | El vIBAN no es fantasma (estado proveedor vivo, muy reciente o nunca aprobado) | Solo califican ítems aprobados en pending 7+ días sin orden ni IBAN. |
 | 500 | `receipt_render_failed` | No se pudo generar el PDF de la liquidación | Reintenta la lectura y entrega el id de solicitud si persiste. |
 | 503 | `valuation_unavailable` | No se pudo valorizar el monto en USD | Reintenta más tarde; la aprobación permanece fail-closed. |
 | 500 | `store_error` | La plataforma no pudo leer o guardar el registro | Reintenta después de confirmar el estado del recurso. |
@@ -855,3 +856,11 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 409 | `final_blocked` | Liquida la actividad pendiente antes del rescate final | Limpia distribuciones, moves, parked y ofertas |
 | 409 | `final_not_frozen` | El proyecto debe estar congelado por el propose final | Propón final primero, luego aprueba |
 | 422 | `burner_blocked` | El burner falló el screening de sanciones | El burn queda parkeado para compliance |
+
+## Errores de recarga manual de tesorería
+
+| HTTP | `error` | Significado | Solución |
+|---|---|---|---|
+| 409 | `invalid_proposal` | El payload de la recarga manual no es válido (rancio o alterado) | Descártala y propone de nuevo desde el panel |
+| 409 | `conflict_live` | El corredor tiene un fondeo vivo | Espera a que liquide y reintenta |
+| 409 | `conflict_pending` | El corredor ya tiene una manual pendiente | Aprueba, rechaza o espera la pendiente |

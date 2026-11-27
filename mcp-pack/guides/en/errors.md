@@ -804,6 +804,7 @@ These codes are used by organization payroll and recurring-expense series operat
 | 409 | `payment_in_flight` | A payroll payment is currently being dispatched | Wait for reconciliation; do not duplicate it. |
 | 409 | `invalid_state` | The resource does not accept this operation in its current state | Read the current state and follow the allowed transition. |
 | 400 | `reason_required` | A reason is required | Send a meaningful reason in the request body. |
+| 409 | `not_ghost_terminal` | The virtual IBAN is not a ghost (live provider state, too fresh, or never approved) | Only approved items pending 7+ days without order or IBAN qualify for mark-terminal. |
 | 500 | `receipt_render_failed` | The pay-slip PDF could not be rendered | Retry the read and provide the request id if it persists. |
 | 503 | `valuation_unavailable` | The amount could not be valued in USD | Retry later; approval remains fail-closed. |
 | 500 | `store_error` | The platform could not read or persist the record | Retry after confirming the resource state. |
@@ -863,3 +864,11 @@ These codes are used by organization payroll and recurring-expense series operat
 | 409 | `final_blocked` | Settle pending activity before the final redemption | Clear distributions, moves, parked burns and offers |
 | 409 | `final_not_frozen` | The project must be frozen by the final propose | Propose final first, then approve |
 | 422 | `burner_blocked` | The burner failed sanctions screening | The burn stays parked for compliance |
+
+## Manual treasury refill errors
+
+| HTTP | `error` | Meaning | Fix |
+|---|---|---|---|
+| 409 | `invalid_proposal` | The manual refill payload is not valid (stale or tampered) | Discard it and propose again from the panel |
+| 409 | `conflict_live` | The corridor has a live funding | Wait for it to settle, then retry |
+| 409 | `conflict_pending` | The corridor already has a pending manual refill | Approve, reject or wait for the pending one |

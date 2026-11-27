@@ -33,7 +33,7 @@ empresa = KYB) antes de mover dinero hacia afuera. Mientras tanto puedes
 **fondear** (payins, depósitos crypto, transferencias entrantes) y leer;
 las demás acciones responden `403 verification_required`. Pide tu link con
 `POST /v1/me/verification/link` y completa el wizard —
-[guía completa](https://docs.cbpayapp.com/es/guides/kyc). Si algo te responde `403 account_blocked`,
+[guía completa](https://docs.cbpayapp.com/es/guides/kyc-overview). Si algo te responde `403 account_blocked`,
 contacta al equipo de CBPay.
 #### ¿Por qué una operación me responde 403 service_disabled?
 Ese servicio no está habilitado para tu cuenta (los servicios se activan por

@@ -129,7 +129,7 @@ curl https://api.qbank.cl/platform/v1/swaps/{swap_id} \
 - `USDT`、`USDC`、`BTC` 和 `GOLD` 之间的**任意币对**（源 ≠ 目标）。
 - **按当下的执行汇率**：BTC 和 GOLD 使用实时执行价格；如果价格不可用或已过期，兑换会被拒绝并返回 `503 pricing_unavailable`（绝不按旧价格执行）。
 - **波动性货币限额**（BTC/GOLD/SILVER/PLATINUM，与出款和银行卡消费共享）：每笔操作上限和每账户 24 小时滚动交易量上限（`GET /v1/settlement` 可查看你的限额）。USDT ↔ USDC 没有限额。
-- 需要你已通过的[身份核验](https://docs.cbpayapp.com/zh/guides/kyc)且已启用 `swaps` 服务。
+- 需要你已通过的[身份核验](https://docs.cbpayapp.com/zh/guides/kyc-overview)且已启用 `swaps` 服务。
 
 ### BTC 价格保护
 

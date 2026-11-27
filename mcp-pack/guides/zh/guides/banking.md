@@ -76,9 +76,6 @@ SWIFT 约需 24–48 个工作小时，且可能因收款银行而延长。**这
 `fondeo`（默认）将入账自动转换为您的主资产（USD 为主资产）；`banking`
 保留 ARS 用于本地付款（[payouts](https://docs.cbpayapp.com/zh/guides/payouts-overview)）。
 
-请参阅[从 Banking 余额转出本地法币](https://docs.cbpayapp.com/zh/guides/banking-fiat-transfers)，
-了解接口、支持的走廊和 settlement 规则。
-
 ## 企业多银行：运营账户
 
 企业账户可以在启用的本地通道中创建多个 `purpose: "banking"` 充值
@@ -337,7 +334,7 @@ flowchart LR
 
 ### 登记第三方
 
-登记需要该第三方一条[**已批准**的 KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)的 `verification_id`——这是其在 CBPay 内的唯一身份。类型由验证种类决定（KYC ⇒ `INDIVIDUAL`，KYB ⇒ `COMPANY`），数据（姓名、邮箱、地址）会从已验证的档案自动填充（您显式提供的内容优先），并且**已校验的证件会自动重新递交**给银行服务提供方。此时计收银行客户档案费用（登记失败则退款）：
+登记需要该第三方一条[**已批准**的 KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)的 `verification_id`——这是其在 CBPay 内的唯一身份。类型由验证种类决定（KYC ⇒ `INDIVIDUAL`，KYB ⇒ `COMPANY`），数据（姓名、邮箱、地址）会从已验证的档案自动填充（您显式提供的内容优先），并且**已校验的证件会自动重新递交**给银行服务提供方。此时计收银行客户档案费用（登记失败则退款）：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/banking/third-parties \
@@ -808,7 +805,7 @@ curl "https://api.qbank.cl/platform/v1/banking/operations?from=2026-07-01&to=202
 | 409 | `no_banking_customer` | 请先创建您的档案（`POST /v1/banking/customer`） |
 | 409 | `banking_account_limit` | 个人账户最多持有 1 个银行账户 |
 | 403 | `company_required` | 第三方用户仅对企业账户开放 |
-| 422 | `verification_required` | 登记第三方需要一条已批准验证的 `verification_id`（[先完成验证](https://docs.cbpayapp.com/zh/guides/kyc)） |
+| 422 | `verification_required` | 登记第三方需要一条已批准验证的 `verification_id`（[先完成验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)） |
 | 422 | `verification_not_approved` | 所引用的验证尚未批准；请等待批准 |
 | 422 | `verification_kind_mismatch` | 发送的 `type` 与验证种类不匹配（KYC ⇒ INDIVIDUAL，KYB ⇒ COMPANY） |
 | 422 | `verification_invalid` | 您引用了自己的入驻验证；第三方需要其自己的验证 |
