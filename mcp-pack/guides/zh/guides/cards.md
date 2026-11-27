@@ -218,7 +218,7 @@ idempotency key 重试会返回同一申请，绝不会重复收费。
 
 个人账户**为自己**发卡（最多 1 张有效卡；新实体卡发行暂时不可用）。
 
-**您的第一张卡**会在发卡方创建并验证您的持卡人。由于您的账户已通过[身份验证](https://docs.cbpayapp.com/zh/guides/kyc)，您的数据和证件会**从验证中自动填充**——您只需补充发卡方专属字段（`occupation`、`salary_usd`）；任何显式提供的字段都优先于自动填充：
+**您的第一张卡**会在发卡方创建并验证您的持卡人。由于您的账户已通过[身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)，您的数据和证件会**从验证中自动填充**——您只需补充发卡方专属字段（`occupation`、`salary_usd`）；任何显式提供的字段都优先于自动填充：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/cards \
@@ -292,7 +292,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards \
   }'
 ```
 
-**B. 为指定人员发卡**（例如员工）：添加 `cardholder.kind: "person"`，并附上该人员[**已批准** KYC](https://docs.cbpayapp.com/zh/guides/kyc) 的 `verification_id`——其身份和证件来自该验证；您只需补充发卡方字段：
+**B. 为指定人员发卡**（例如员工）：添加 `cardholder.kind: "person"`，并附上该人员[**已批准** KYC](https://docs.cbpayapp.com/zh/guides/kyc-overview) 的 `verification_id`——其身份和证件来自该验证；您只需补充发卡方字段：
 
 ```bash
 curl -X POST https://api.qbank.cl/platform/v1/cards \
@@ -582,7 +582,7 @@ curl -X POST https://api.qbank.cl/platform/v1/cards/{card_id}/cancel \
 #### 如果月费扣款时没有余额会怎样？
 卡片会被自动冻结（`card_status_changed` 事件，`reason: monthly_fee_unpaid`）。不会产生欠款；余额补足后，用 `PATCH { "frozen": false }` 解冻即可。
 #### 我可以为公司以外的人发卡吗？
-企业账户可以为任何指定人员发卡。该人员必须拥有[已批准的 KYC 验证](https://docs.cbpayapp.com/zh/guides/kyc)——您在 `cardholder` 中传入其 `verification_id`，其数据和证件会自动填充。卡片始终从发卡企业账户的余额消费。
+企业账户可以为任何指定人员发卡。该人员必须拥有[已批准的 KYC 验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)——您在 `cardholder` 中传入其 `verification_id`，其数据和证件会自动填充。卡片始终从发卡企业账户的余额消费。
 #### 为什么向导要求我的职业或公司的经营活动？
 这些是发卡方和 AML/CFT 字段，不会替代已批准的 KYC/KYB。请从实时目录
 选择代码：个人使用 `occupation`，企业使用 `kind_of_business`。发卡方用
