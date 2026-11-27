@@ -4,8 +4,8 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="26 de noviembre de 2026" description="v2.328 · 4 versiones">
-### v2.328
+<Update label="26 de noviembre de 2026" description="v2.329 · 5 versiones">
+### v2.329
 **Corregido**
 
 - Los payouts y confirmaciones QR BO/BOB ya no debitan la madre en silencio cuando se envía `source_instrument_id` sin settlement BOB: el request ahora se rechaza con `422 invalid_source_instrument` antes de cualquier débito. Con settlement USD (o cualquier no-BOB), omite el campo — el payout debita tu saldo de settlement desde la madre.
@@ -14,6 +14,9 @@ description: "Historial de cambios de la API y de esta documentación"
 **Cambiado**
 
 - Las cuentas con varias fuentes banking BO/BOB activas ya no necesitan enviar `source_instrument_id` en payouts con settlement USD: la ambigüedad solo se exige cuando el source realmente elige el origen (settlement BOB).
+### v2.328
+**Cambiado**
+- Las colas de reviews de cuenta ya no marcan como accionable un despacho posterior fallido cuando el payout, payin o retiro cripto subyacente ya está en estado terminal. La review sale de la cola por defecto y de los contadores relacionados, mientras `status=all` conserva la historia.
 ### v2.327
 **Cambiado**
 

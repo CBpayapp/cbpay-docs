@@ -66,7 +66,8 @@ marks it as expired after the deadline. If no information request is active,
 
 ### Filters
 
-- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`). `dispatch_failed` lists released applications whose post-approval dispatch failed. For account-scoped requests without `kind`, it applies only to `banking_application` and `card_application`. Any other value ⇒ `400 invalid_status`.
+- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`). `dispatch_failed` lists released reviews whose post-approval dispatch failed while the underlying resource remains actionable. For account-scoped requests without `kind`, it applies only to `banking_application` and `card_application`. Any other value ⇒ `400 invalid_status`.
+- A released payout, payin or crypto withdrawal whose underlying resource is already terminal (`completed`, `failed`, `credited`, `rejected` or `expired`) is not actionable: it is excluded from the default queue, `dispatch_failed` results and queue counts, with `needs_action` and `dispatch_failed` set to `false`. Use `status=all` to keep the full history. Banking and application reviews remain actionable.
 - `?from=` / `?to=` — date range (`YYYY-MM-DD`, organization timezone, both inclusive). Invalid date ⇒ `400 invalid_range`.
 - `?page=` / `?page_size=` — pagination (default 50, max 200).
 
