@@ -7739,7 +7739,7 @@ paths:
       - Corridors
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports labeled payout aliases (`rail_a`/`rail_b`) for PY/PYG, EC/USD and BR/BRL, and platform-only route values for CL/CLP `bank_transfer` payouts. BO/BOB uses a fixed rail. Payin routing uses corridor controls.
+      description: Returns the organization-scoped payout variant configuration. The selector supports labeled payout aliases (`rail_a`/`rail_b`) for PY/PYG, EC/USD and BR/BRL. BO/BOB and CL/CLP use fixed rails with no per-org selection. Payin routing uses corridor controls.
       security:
       - bearerAuth: []
       responses:
@@ -7784,11 +7784,11 @@ paths:
               $ref: '#/components/schemas/OrgRailVariantRequest'
             example:
               direction: payout
-              country: CL
-              currency: CLP
+              country: PY
+              currency: PYG
               method: bank_transfer
-              variant: platform_alternate
-              reason: Use the configured Chile payout rail
+              variant: rail_b
+              reason: Use the fallback rail for future Paraguay payouts
       responses:
         '200':
           description: Updated variant
@@ -7799,10 +7799,10 @@ paths:
               example:
                 org_id: org_123
                 direction: payout
-                country: CL
-                currency: CLP
+                country: PY
+                currency: PYG
                 method: bank_transfer
-                variant: fintoc
+                variant: rail_b
         '400':
           description: Invalid variant request
           content:
@@ -7811,7 +7811,7 @@ paths:
                 invalid_variant:
                   value:
                     error: invalid_rail_variant
-                    message: variant must be one of the supported corridor variants
+                    message: variant must be one of the corridor rail aliases (rail_a/rail_b)
         '403':
           description: Source routing requires platform administration
           content:
@@ -9634,7 +9634,7 @@ paths:
       - KYC / KYB
       operationId: presignKybDocument
       summary: Presign a KYB document upload
-      description: 'Same 3-step flow as KYC documents. Categories: legalPresence, ownershipStructure, controlStructure, companyDetails.'
+      description: 'Same 3-step flow as KYC documents. Categories: legalPresence, ownershipStructure, controlStructure, companyDetails, sourceOfWealth, certificateOfGoodStanding, registerShareholder, dividendEvidence, financialStatements, compliance_report, amlPolicy and mlroCV. OCR canonicalizes equivalent aliases and indexed UBO categories.'
       parameters:
       - name: submissionID
         in: path
@@ -9679,7 +9679,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: invalid_category
-                message: category must be one of legalPresence, ownershipStructure, controlStructure, companyDetails
+                message: category must be one of the documented KYB categories
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
@@ -32258,6 +32258,46 @@ components:
           description: 'KYC: identity, proofOfResidence. KYB: legalPresence, ownershipStructure, controlStructure, companyDetails.'
         filename:
           type: string
+        ocr:
+          type: object
+          description: Provider-neutral OCR evidence. It is informational and never approves a verification by itself.
+          properties:
+            fields:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  value:
+                    type: string
+                  confidence:
+                    type: number
+            mrz:
+              type: object
+              properties:
+                line1:
+                  type: string
+                line2:
+                  type: string
+                line3:
+                  type: string
+                valid_checksum:
+                  type: boolean
+            failed_checks:
+              type: array
+              items:
+                type: string
+            expires_at_detected:
+              type: string
+              format: date
+            issued_at_detected:
+              type: string
+              format: date
+            fraud_signals:
+              type: array
+              items:
+                type: string
+            engine_summary:
+              type: string
         content_type:
           type: string
           enum:

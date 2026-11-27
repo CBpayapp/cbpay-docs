@@ -53,7 +53,7 @@ depends on your account's rates for that country. Quoted = charged, always.
 | `compliance_company` | Fixed per call | When AML/CFT-screening a company |
 | `compliance_rescreen` | Fixed per call | When re-running an AML/CFT screening |
 | `compliance_monitoring` | Fixed per activation | When enabling continuous AML/CFT monitoring (disabling is free) |
-| `kyc_verification` | Fixed per verification | When creating a third-party KYC link or submission ([verification](/en/guides/kyc)); your own onboarding is free |
+| `kyc_verification` | Fixed per verification | When creating a third-party KYC link or submission ([verification](/en/guides/kyc-overview)); your own onboarding is free |
 | `kyb_verification` | Fixed per verification | When creating a third-party KYB link or submission |
 | `address_screening` | Fixed per scan | When assessing a blockchain address' risk ([wallet screening](/en/guides/screenings)); the automatic withdrawal/deposit protection is free |
 | `banking_customer` | Fixed per profile | When creating your banking profile ([banking](/en/guides/banking)) |
@@ -241,6 +241,13 @@ equivalent at your `payin_rate` minus the fixed fee.
 ## Fraud and identity score
 
 | `risk_fraud_score` | Fixed-only fee for each fraud and identity report; refunded if generation fails |
+
+## RWA royalty tokens
+
+| `rwa_subscription` | Percent + fixed over the USDT subscribed (charged on top, tokens computed from the net) |
+| `rwa_distribution` | Percent + fixed over each USDT distribution credited (capped at the share) |
+| `rwa_bridge` | Fixed-only fee per on-chain bridge move (ledger lock + mint, or burn + unlock) *(F2 — bridge flow pending)* |
+| `rwa_secondary` | Percent + fixed over the taker total of each internal secondary fill (capped at the total) |
 
 ## EUR banking fee services
 

@@ -327,7 +327,7 @@ curl -X POST https://api.qbank.cl/platform/v1/segregated-wallets/{walletID}/auto
 |---|---|---|
 | 422 | `wallet_limit_reached` | 个人账户在该网络+资产组合下已持有隔离钱包（企业账户无限制） |
 | 403 | `human_session_required` | 导入和导出要求已登录的用户会话并启用 2FA（不允许使用 API key） |
-| 403 | `verification_required` | 完成您的账户开户流程（[验证](/zh/guides/kyc)） |
+| 403 | `verification_required` | 完成您的账户开户流程（[验证](/zh/guides/kyc-overview)） |
 | 403 | `service_disabled` | `wallets` 服务未启用；请联系您的运营方 |
 | 400 | `idempotency_key_required` | 请发送 `idempotency_key`（请求体或 `Idempotency-Key` 请求头） |
 | 400 | `invalid_asset` / `invalid_chain` | 请检查支持的链/资产组合 |

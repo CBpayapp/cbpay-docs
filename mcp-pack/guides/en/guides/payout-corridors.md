@@ -82,20 +82,7 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 }
 ```
 
-The banks catalog (`GET /v1/payouts/banks?country=CL`) lists the current `bank_code` values. Chile has one public payout corridor: `CL`/`CLP`/`bank_transfer`. Its effective platform rail is selected by the organization configuration and is not sent by the integrator:
-
-| Organization setting | Effective rail |
-|---|---|
-| `platform-default` | `bank_transfer` |
-| `fintoc` | `bank_transfer` |
-
-Use the organization administration surface to select the platform-default
-route or the platform-only alternate route; never put an internal route value
-in the public payout `method`. The payout contract, beneficiary schema and
-bank catalog remain `bank_transfer`. `CL`/`CLP`/`bank_transfer` may be
-dispatched in grouped five-minute windows; `POST /v1/payouts` still returns
-`202` with `status: "processing"` and each payout keeps its final status and
-`payout_status_changed` webhook.
+The banks catalog (`GET /v1/payouts/banks?country=CL`) lists the current `bank_code` values. `CL`/`CLP`/`bank_transfer` may be dispatched in grouped five-minute windows; `POST /v1/payouts` still returns `202` with `status: "processing"` and each payout keeps its final status and `payout_status_changed` webhook.
 
 #### Peru
 
