@@ -81,6 +81,9 @@ Recibe pesos por [cuentas de depósito](https://docs.cbpayapp.com/es/guides/payi
 (USD es el saldo principal); `banking` conserva MXN para payouts locales
 ([payouts](https://docs.cbpayapp.com/es/guides/payouts-overview)).
 
+Consulta [Transferir fiat local desde un saldo Banking](https://docs.cbpayapp.com/es/guides/banking-fiat-transfers)
+para el endpoint, los corredores admitidos y las reglas de settlement.
+
 ## Multi-banking para empresas: cuentas operativas
 
 En `CL/CLP/fintoc`, una cuenta `purpose: "banking"` recibe, retiene y

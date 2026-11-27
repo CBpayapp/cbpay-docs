@@ -89,6 +89,7 @@ payouts ([payouts](https://docs.cbpayapp.com/en/guides/payouts-overview)).
 ### 🇨🇱 CLP — Chilean peso
 
 Receive CLP through the dedicated `CL/CLP/fintoc` deposit account. With `purpose: "banking"`, it retains inbound CLP and exposes derived balance/movements; it only receives and holds, while CL payouts originate from root.
+See [Transfer local fiat from a Banking balance](https://docs.cbpayapp.com/en/guides/banking-fiat-transfers) for the endpoint, supported corridors and settlement rules.
 ## Company multi-banking: operating accounts
 
 Company accounts can create multiple `purpose: "banking"` destinations in `BO/BOB`, `MX/MXN`, `AR/ARS` (`bank_transfer`) and `CL/CLP/fintoc`; use a distinct `Idempotency-Key` per destination. Replay returns the same instrument. The soft limit is **50 per company and corridor** (`422 deposit_account_limit_reached`); persons retain one per corridor and can create the second virtual Banking slot in `CL/CLP/fintoc`.

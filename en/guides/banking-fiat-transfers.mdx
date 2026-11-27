@@ -1,0 +1,74 @@
+---
+title: "Transfer local fiat from a Banking balance"
+icon: "money-bill-transfer"
+description: "Create local-fiat payouts from retained Banking balances"
+---
+
+import { EnvUrls } from "/snippets/env-urls.jsx";
+
+<EnvUrls lang="en" />
+
+Use `POST /v1/banking/fiat-transfers` to create a local-fiat payout from a
+retained Banking balance. The request and response use the same beneficiary
+and Payout shape as `POST /v1/payouts`. Read the created resource with
+`GET /v1/payouts/{payoutID}`, list it with `GET /v1/payouts`, and subscribe to
+`payout_status_changed`.
+
+## Supported corridors
+
+| Country / currency | Method | Settlement |
+|---|---|---|
+| `BO/BOB` | `bank_transfer` | `BOB` |
+| `MX/MXN` | `bank_transfer` | `MXN` |
+| `AR/ARS` | `bank_transfer` | `ARS` |
+| `CL/CLP` | `fintoc` | `CLP` |
+
+Settlement is always **identity**: the local balance is debited in the
+corridor currency. `settlement_asset` must be omitted or equal that currency;
+the route never debits USDT. Send an idempotency key in the body or
+`Idempotency-Key` header. A replay returns the original payout without a
+second debit.
+
+```bash
+curl -X POST https://api.qbank.cl/platform/v1/banking/fiat-transfers \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: banking-cl-0001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "CL",
+    "currency": "CLP",
+    "method": "fintoc",
+    "amount": "2000",
+    "beneficiary": {
+      "name": "Nicolas Merino",
+      "tax_id": "17.629.916-9",
+      "bank_code": "016",
+      "account_type": "checking",
+      "account_number": "72815742"
+    },
+    "settlement_asset": "CLP"
+  }'
+```
+
+The response is a normal `Payout` with `settlement_asset: "CLP"` and
+`settlement_rate: "1"`. Invalid assets return `400 invalid_settlement_asset`;
+unsupported corridors return `422 banking_corridor_unsupported`. Compliance
+pending can return `202` with `funds_debited: false`; keep the same key and
+wait for reconciliation.
+
+## Statuses and errors
+
+| Status | Meaning |
+|---|---|
+| `pending` | Compliance or rail processing is still pending |
+| `processing` | The payout was accepted and is being dispatched |
+| `completed` / `failed` | Final outcome; inspect the payout and webhook |
+
+See [Errors](/en/errors) for the full error catalog.
+
+<AccordionGroup>
+<Accordion title="Does this route debit USDT?">
+No. It debits the retained local Banking balance and settles identity in the
+corridor currency.
+</Accordion>
+</AccordionGroup>

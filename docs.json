@@ -145,6 +145,7 @@
                       "en/guides/members-roles",
                       "en/guides/segregated-wallets",
                       "en/guides/banking",
+                      "en/guides/banking-fiat-transfers",
                       "en/guides/viban-banking-eur",
                       "en/guides/fiat-ledger-assets"
                     ]
@@ -304,6 +305,7 @@
                       "es/guides/members-roles",
                       "es/guides/segregated-wallets",
                       "es/guides/banking",
+                      "es/guides/banking-fiat-transfers",
                       "es/guides/viban-banking-eur",
                       "es/guides/fiat-ledger-assets"
                     ]
@@ -463,6 +465,7 @@
                       "zh/guides/members-roles",
                       "zh/guides/segregated-wallets",
                       "zh/guides/banking",
+                      "zh/guides/banking-fiat-transfers",
                       "zh/guides/viban-banking-eur",
                       "zh/guides/fiat-ledger-assets"
                     ]
@@ -835,4 +838,3 @@
     }
   ]
 }
-

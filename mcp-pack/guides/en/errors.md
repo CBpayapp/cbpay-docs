@@ -444,6 +444,7 @@ Codes from message signing with wallets (EIP-191 on EVM, TIP-191 on TRON): serve
 |---|---|---|
 | 409 | `corridor_disabled` | The selected corridor is administratively disabled. Use another enabled method or contact the organization operator. |
 | 409 | `banking_corridor_disabled` | The selected banking country or rail is administratively disabled. Use another enabled rail or contact the organization operator. |
+| 422 | `banking_corridor_unsupported` | Banking fiat transfers only support BO/BOB, MX/MXN and AR/ARS bank_transfer and CL/CLP/fintoc. Use one of those corridors. |
 | 409 | `crypto_disabled` | The selected crypto network or pair is administratively disabled. Use another enabled pair or contact the organization operator. |
 | 400 | `same_chain` | A network move needs two different chains for the same asset. Send a `to_chain` that differs from `from_chain`. |
 | 409 | `move_conflict` | The `idempotency_key` already exists with a different payload (asset, chains, amount or explicit address compared by value). Replay only with the identical payload. |

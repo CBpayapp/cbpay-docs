@@ -4,6 +4,17 @@ icon: "clock-rotate-left"
 description: "API and documentation change history"
 ---
 
+<Update label="2026年11月27日" description="v2.330 · 1 个版本">
+### v2.330
+**新增**
+
+- 记录智利统一 payout 走廊（`CL/CLP/bank_transfer`）及其按组织配置的
+  平台轨道选择器（默认或平台专用备用路由）。
+- 记录四个受支持本地法币走廊的
+  `POST /v1/banking/fiat-transfers`。该接口创建与
+  `POST /v1/payouts` 相同的 Payout 资源，并以走廊货币进行 identity
+  settlement。
+</Update>
 <Update label="2026年11月26日" description="v2.329 · 5 个版本">
 ### v2.329
 **修复**

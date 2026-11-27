@@ -420,6 +420,7 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 |---|---|---|
 | 409 | `corridor_disabled` | 所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。 |
 | 409 | `banking_corridor_disabled` | 所选 banking 国家或通道被管理员禁用。请选择其他启用的通道或联系组织运营人员。 |
+| 422 | `banking_corridor_unsupported` | Banking 法币转账仅支持 BO/BOB、MX/MXN 和 AR/ARS bank_transfer 以及 CL/CLP/fintoc。请使用其中之一。 |
 | 409 | `crypto_disabled` | 所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。 |
 | 400 | `same_chain` | 跨链转账的同一资产需要两条不同的链。请发送与 `from_chain` 不同的 `to_chain`。 |
 | 409 | `move_conflict` | 该 `idempotency_key` 已存在且载荷不同（按值比较资产、链、金额或显式地址）。请仅以完全相同的载荷重放。 |
