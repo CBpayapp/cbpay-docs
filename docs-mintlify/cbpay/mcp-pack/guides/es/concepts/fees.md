@@ -50,7 +50,7 @@ de las tasas de tu cuenta para ese país. Cotizado = cobrado, siempre.
 | `compliance_company` | Fijo por llamada | Al screenear una empresa por AML/CFT |
 | `compliance_rescreen` | Fijo por llamada | Al re-ejecutar un screening AML/CFT |
 | `compliance_monitoring` | Fijo por activación | Al activar monitoreo AML/CFT continuo (desactivar es gratis) |
-| `kyc_verification` | Fijo por verificación | Al crear un link o submission KYC de un tercero ([verificación](https://docs.cbpayapp.com/es/guides/kyc)); tu propio onboarding es gratis |
+| `kyc_verification` | Fijo por verificación | Al crear un link o submission KYC de un tercero ([verificación](https://docs.cbpayapp.com/es/guides/kyc-overview)); tu propio onboarding es gratis |
 | `kyb_verification` | Fijo por verificación | Al crear un link o submission KYB de un tercero |
 | `address_screening` | Fijo por scan | Al evaluar el riesgo de una dirección blockchain ([screening de wallets](https://docs.cbpayapp.com/es/guides/screenings)); la protección automática de retiros/depósitos es gratis |
 | `banking_customer` | Fijo por perfil | Al crear tu perfil bancario ([banking](https://docs.cbpayapp.com/es/guides/banking)) |

@@ -8,7 +8,7 @@ source_url: https://docs.cbpayapp.com/zh/guides/aml
 > **环境：** 测试 `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - 正式 `https://api.qbank.cl/platform` (`pk_...`).
 
 **AML/CFT 筛查**将个人或企业的身份与全球名单进行比对——制裁名单、PEP（政治公众人物）、负面媒体——并返回带有风险等级的分析结果。它是纯粹的合规产品：它**不**通过证件或活体检测来验证身份（那是
-[KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)的职责）；它分析的是该身份是否存在名单风险。
+[KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)的职责）；它分析的是该身份是否存在名单风险。
 
 ```mermaid
 flowchart LR
@@ -25,12 +25,12 @@ flowchart LR
 **移除**，现在为 `POST /v1/aml/screenings`、`POST /v1/aml/rescreen`
 和 `PATCH /v1/aml/monitoring`（语义相同，费用相同）。
 `/v1/kyc/...` 路由现在属于
-[身份验证](https://docs.cbpayapp.com/zh/guides/kyc)，这是一个不同的产品。
+[身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)，这是一个不同的产品。
 > **注**
 如果 CBPay 配置了合规费用，该费用会在调用**之前**扣除
 （你会在响应中看到 `compliance_fee`），并且在筛查失败时**自动
 退还**。费用为 0 时，该服务对你免费。需要你自己的
-[身份验证已通过](https://docs.cbpayapp.com/zh/guides/kyc#your-own-verification-onboarding)。
+[身份验证已通过](https://docs.cbpayapp.com/zh/guides/kyc-overview#your-own-verification-onboarding)。
 ## 用于构建表单的目录数据
 
 在构建筛查（或验证）表单之前，先通过 `GET /v1/aml/catalogs` 获取官方
@@ -362,7 +362,7 @@ curl "https://api.qbank.cl/platform/v1/aml/screenings/a1b2c3d4-e5f6-7890-abcd-ef
 |---|---|---|---|
 | 400 | `invalid_language` | PDF 报告的 `lang` 不是 `en`、`es` 或 `zh` | 使用三种受支持语言之一 |
 | 402 | `insufficient_funds` | 余额不足以支付合规费用 | 为账户充值后重试 |
-| 403 | `verification_required` | 你的账户尚未通过身份验证 | 完成你的[入驻验证](https://docs.cbpayapp.com/zh/guides/kyc#your-own-verification-onboarding) |
+| 403 | `verification_required` | 你的账户尚未通过身份验证 | 完成你的[入驻验证](https://docs.cbpayapp.com/zh/guides/kyc-overview#your-own-verification-onboarding) |
 | 403 | `service_disabled` | 你的账户未启用 `aml` 服务 | 联系你的运营方 |
 | 409 | `no_screening` | 在没有先前筛查的情况下执行重新筛查/监控 | 先发送 `POST /v1/aml/screenings` |
 | 502 | `compliance_unavailable` | 服务暂时不可用（费用已退还） | 稍后重试 |
@@ -371,7 +371,7 @@ curl "https://api.qbank.cl/platform/v1/aml/screenings/a1b2c3d4-e5f6-7890-abcd-ef
 
 #### AML/CFT 筛查与 KYC/KYB 验证有什么区别？
 筛查将身份与名单进行比对（制裁名单、PEP、负面媒体）
-——不涉及证件。[KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)则通过表单、证件和视频
+——不涉及证件。[KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)则通过表单、证件和视频
 活体检测来证明个人/企业确实是其声称的身份。两者互为补充：用 KYC/KYB 验证身份，
 用 AML/CFT 监控其风险。
 #### 我可以筛查我自己的客户吗？

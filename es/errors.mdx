@@ -861,3 +861,9 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 409 | `final_blocked` | Liquida la actividad pendiente antes del rescate final | Limpia distribuciones, moves, parked y ofertas |
 | 409 | `final_not_frozen` | El proyecto debe estar congelado por el propose final | Propón final primero, luego aprueba |
 | 422 | `burner_blocked` | El burner falló el screening de sanciones | El burn queda parkeado para compliance |
+
+## Manual proposal errors
+
+| HTTP | Code | Fix |
+|---|---|---|
+| 409 | `invalid_proposal` | The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context. |

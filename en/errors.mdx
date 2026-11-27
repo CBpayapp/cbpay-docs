@@ -871,3 +871,9 @@ These codes are used by organization payroll and recurring-expense series operat
 | 409 | `final_blocked` | Settle pending activity before the final redemption | Clear distributions, moves, parked burns and offers |
 | 409 | `final_not_frozen` | The project must be frozen by the final propose | Propose final first, then approve |
 | 422 | `burner_blocked` | The burner failed sanctions screening | The burn stays parked for compliance |
+
+## Manual proposal errors
+
+| HTTP | Code | Fix |
+|---|---|---|
+| 409 | `invalid_proposal` | The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context. |

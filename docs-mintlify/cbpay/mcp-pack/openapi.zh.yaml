@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.327'
+  version: '2.330'
   description: 'CBPay 是一个多币种支付平台:覆盖拉美的法币付款(payout)与收款(payin)、内部转账、链上充值与提现,以及 KYC 筛查。每个账户持有十二个相互独立的虚拟余额——USD(主资产,可随时更改默认值)、USDT、USDC、USDCE、BTC、 GOLD(纯金克数)、SILVER(纯银克数)、PLATINUM(纯铂金克数)和 BOB、MXN、ARS、CLP(法币账本; BOB/MXN/ARS 为 2 位小数, CLP 为 0 位)——其中七个可兑换资产可通过兑换(swap)按需转换。法币余额(BOB/MXN/ARS/CLP)仅累积带 `fiat_hold_local` 标记的留存 payin 与同币种直接扣款;不可 swap。
 
     payout 和服务费可从八个结算余额中的任意一个支付(用 `PUT /v1/settlement`
@@ -4695,6 +4695,241 @@ paths:
                 error:
                   code: banking_request_failed
                   message: request rejected
+  /v1/banking/fiat-transfers:
+    post:
+      tags:
+      - Banking
+      operationId: createBankingFiatTransfer
+      summary: 从 Banking 余额转出本地法币
+      description: '发送一笔按走廊货币 1:1 结算的出金，扣减账户的本地法币余额（绝不扣 USDT）。仅支持以下走廊：`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和 `CL/CLP/fintoc` —— 其他一律返回 `422 banking_corridor_unsupported`。这是唯一可支出本地法币的路由（`POST /v1/payouts` 拒绝法币结算）；创建的资源就是 payout，可通过 `GET /v1/payouts(/:id)` 查询，具有相同的生命周期、webhook 和回单。
+
+
+        需要幂等键（body 字段或 `Idempotency-Key` 请求头）。使用相同键重试会返回原始 payout（`200` 附 `idempotency_hit: true`）。若合规筛查暂时不可用，返回 `202`，payout 为 `status: pending`、`status_code: compliance_pending`、`compliance_pending: true` 且 `funds_debited: false`，尚未扣款；请保留相同的键等待对账。'
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - country
+              - currency
+              - method
+              - amount
+              properties:
+                country:
+                  type: string
+                  description: Banking 法币国家 ISO 3166-1 alpha-2：BO、MX、AR 或 CL。
+                currency:
+                  type: string
+                  description: 对应本地货币：BOB、MXN、ARS 或 CLP。
+                method:
+                  type: string
+                  description: Banking 法币方式：`bank_transfer`（BO/MX/AR）或 `fintoc`（仅 CL）。
+                amount:
+                  type: string
+                  description: 本地货币金额，正数小数字符串（CLP 没有辅币：仅限整数）。
+                  example: '2000'
+                beneficiary:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: 收款账户信息。必填字段取决于走廊；见 `GET /v1/payouts/beneficiary-schema`。智利：`name` + `tax_id`（有效 RUT）+ `bank_code` + `account_type` + `account_number`。
+                beneficiary_contact_id:
+                  type: string
+                  format: uuid
+                  description: 使用该联系人在此国家的最近一次收款信息，代替填写 `beneficiary`。显式 `beneficiary` 优先；联系人无记录时返回 422 no_saved_destination。
+                save_contact:
+                  type: boolean
+                  default: true
+                  description: 收款人默认自动存为联系人；传 false 可跳过。
+                description:
+                  type: string
+                  description: 可选付款附言。
+                settlement_asset:
+                  type: string
+                  enum:
+                  - BOB
+                  - MXN
+                  - ARS
+                  - CLP
+                  description: 必须省略或与走廊货币一致（identity 结算自动生效）。其他值返回 400。
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: BO/BOB banking 来源选择器（多 Banking 账户下的“当前操作”账户）。仅限 BO/BOB，其他走廊会被拒绝。
+                idempotency_key:
+                  type: string
+                options:
+                  type: object
+                  description: 可选通道参数。在智利银行近期拒付后刻意重试时，将 destination_retry_ack 设为最近的先前案例 ID。
+                  additionalProperties:
+                    type: string
+            examples:
+              cl_fintoc:
+                summary: 智利 — 经 Fintoc 银行转账（CLP）
+                value:
+                  country: CL
+                  currency: CLP
+                  method: fintoc
+                  amount: '2000'
+                  beneficiary:
+                    name: Nicolas Merino
+                    tax_id: 17.629.916-9
+                    bank_code: '016'
+                    account_type: checking
+                    account_number: '72815742'
+                  settlement_asset: CLP
+                  idempotency_key: fiat-cl-0001
+              bo_bank_transfer:
+                summary: 玻利维亚 — ACH 转账（BOB）
+                value:
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  amount: '500.00'
+                  beneficiary:
+                    name: Ana Morales
+                    tax_id: '1234567'
+                    bank_code: '001'
+                    account_number: '123456789'
+                  idempotency_key: fiat-bo-0001
+      responses:
+        '200':
+          description: 已有转账的幂等重放....
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payout'
+              example:
+                payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                idempotency_key: fiat-cl-0001
+                country: CL
+                currency: CLP
+                method: fintoc
+                local_amount: '2000'
+                fx_rate: '950.00'
+                usdt_amount: '2.105263'
+                fee: '0.010000'
+                total_debit: '2.115263'
+                settlement_asset: CLP
+                settlement_amount: '2009'
+                settlement_rate: '1'
+                beneficiary:
+                  name: Nicolas Merino
+                  tax_id: 17.629.916-9
+                  bank_code: '016'
+                  account_type: checking
+                  account_number: '72815742'
+                description: ''
+                status: completed
+                status_code: ''
+                status_message: ''
+                bank_reference: tr_01J9ZQK6F7
+                created_at: '2026-11-26T12:00:00Z'
+                updated_at: '2026-11-26T12:01:00Z'
+                idempotency_hit: true
+        '202':
+          description: 已受理进入合规筛查（`compliance_pending`，尚未扣款）或已创建处理中。与 `POST /v1/payouts` 相同的 Payout 结构。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payout'
+              example:
+                payout_id: 8e6d3f1b-2f0c-5b7e-90ad-1c3b2e0f9d80
+                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                idempotency_key: fiat-bo-0001
+                country: BO
+                currency: BOB
+                method: bank_transfer
+                local_amount: '500.00'
+                fx_rate: '6.96'
+                usdt_amount: '71.839080'
+                fee: '0.300000'
+                total_debit: '72.139080'
+                settlement_asset: BOB
+                settlement_amount: '502.09'
+                settlement_rate: '1'
+                beneficiary:
+                  name: Ana Morales
+                  tax_id: '1234567'
+                  bank_code: '001'
+                  account_number: '123456789'
+                description: ''
+                status: processing
+                status_code: ''
+                status_message: ''
+                bank_reference: ''
+                created_at: '2026-11-26T12:00:00Z'
+                updated_at: '2026-11-26T12:00:00Z'
+        '400':
+          description: 非法请求（`idempotency_key_required`、`beneficiary_required`、`invalid_beneficiary`、`invalid_amount`、`invalid_settlement_asset`，或方法为空/`source_instrument_id` 位置错误时的 `invalid_request`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_settlement_asset:
+                  summary: 超出走廊货币的结算
+                  value:
+                    error: invalid_settlement_asset
+                    message: banking transfers always settle in the corridor currency
+        '402':
+          $ref: '#/components/responses/InsufficientFunds'
+        '403':
+          description: 账户未激活（`account_blocked`）、缺少账户凭证，或设备证明过期（`integrity_required`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
+        '409':
+          description: 走廊被管理员禁用（`corridor_disabled`，由统一 payout 开关控制）或同一键被用于不同 payload（`idempotency_conflict`）。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                corridor_disabled:
+                  value:
+                    error: corridor_disabled
+                    message: this payout corridor is currently unavailable
+        '422':
+          description: '走廊不在目录内（`banking_corridor_unsupported`）、金额上下限（`amount_below_minimum`、`amount_above_maximum`），或通道前置拒绝（响应为 `status: failed` 的 payout 对象，扣款已退还）。'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/Error'
+                - $ref: '#/components/schemas/Payout'
+              examples:
+                banking_corridor_unsupported:
+                  summary: 非 Banking 法币走廊
+                  value:
+                    error: banking_corridor_unsupported
+                    message: banking fiat transfers are only supported for BO/BOB, MX/MXN and AR/ARS bank_transfer and CL/CLP/fintoc
+          x-money-out-errors:
+          - amount_below_minimum
+          - amount_above_maximum
+          - velocity_limit_exceeded
+        '503':
+          description: 出金通道暂时不可用（`channel_unavailable`）；请稍后使用相同幂等键重试。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: channel_unavailable
+                message: the payout channel is temporarily unavailable, please retry later
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/banking/operations:
     post:
       tags:
@@ -9393,7 +9628,7 @@ paths:
       - KYC / KYB
       operationId: presignKybDocument
       summary: 预签名 KYB 文件上传
-      description: 与 KYC 文件相同的 3 步流程。类别:legalPresence、ownershipStructure、controlStructure、companyDetails。
+      description: 与 KYC 文件相同的 3 步流程。类别:legalPresence、ownershipStructure、controlStructure、companyDetails、sourceOfWealth、certificateOfGoodStanding、registerShareholder、dividendEvidence、financialStatements、compliance_report、amlPolicy 和 mlroCV。OCR 会规范化等价别名和带索引的 UBO 类别。
       parameters:
       - name: submissionID
         in: path
@@ -9438,7 +9673,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: invalid_category
-                message: category must be one of legalPresence, ownershipStructure, controlStructure, companyDetails
+                message: category must be one of the documented KYB categories
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
@@ -18608,7 +18843,7 @@ paths:
                 source_instrument_id:
                   type: string
                   format: uuid
-                  description: 可选的活跃 BO/BOB banking 工具；其他通道拒绝此字段，多个来源时必须发送 UUID。
+                  description: BO/BOB banking 来源选择器。仅在 payout 以 BOB 结算时发送——以其他资产结算时请求会被 422 invalid_source_instrument 拒绝（fail-closed，而非从母账户扣款）。其他通道拒绝此字段。BOB 结算目前不可用（法币余额仅限 Banking），请省略该字段；payout 从母账户扣除你的结算余额。
                 idempotency_key:
                   type: string
                 options:
@@ -19900,7 +20135,11 @@ paths:
                   - GOLD
                   - SILVER
                   - PLATINUM
-                  description: 此操作要扣款的虚拟余额。省略则使用账户的默认结算资产。
+                  description: 此操作要扣款的虚拟余额。必须是 USD、USDT、USDC、BTC、GOLD、SILVER 或 PLATINUM；法币返回 400。省略则使用账户的默认结算资产(USD 为主资产)。
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: BO/BOB banking 来源选择器。仅在 payout 以 BOB 结算时发送——以其他资产结算时请求会被 422 invalid_source_instrument 拒绝（fail-closed，而非从母账户扣款）。BOB 结算目前不可用（法币余额仅限 Banking），请省略该字段；payout 从母账户扣除你的结算余额。
                 idempotency_key:
                   type: string
             example:
@@ -20000,34 +20239,43 @@ paths:
                 error: idempotency_conflict
                 message: this idempotency key was used with a different QR confirmation document
         '422':
-          description: 处理方拒绝(`core_rejected`)，包括非 tax ID 的巴西 PIX QR 未同时提供两个证件字段；创建 payout 后扣款会退回。
+          description: '扣款前拒绝——以 `Error` 返回——`source_instrument_id` 未配 BOB 结算时发送（`invalid_source_instrument`），或存在多个 banking 来源却未选择（`ambiguous_source_instrument`）；或处理方拒绝（`core_rejected`），包括非 tax ID 的巴西 PIX QR 未同时提供两个证件字段——以 `status: failed` 的 `Payout` 返回且扣款已退回。'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Payout'
-              example:
-                payout_id: 8e2a1b0c-9d8e-7f60-5a4b-3c2d1e0f9a8b
-                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-                idempotency_key: qr-2026-07-07-a
-                country: BO
-                currency: BOB
-                method: qr
-                local_amount: '700.00'
-                fx_rate: '6.91'
-                usdt_amount: '101.302460'
-                fee: '0.300000'
-                total_debit: '101.602460'
-                settlement_asset: USD
-                settlement_amount: '101.61'
-                settlement_rate: '1'
-                beneficiary: *id010
-                description: QR 午餐付款
-                status: failed
-                status_code: core_rejected
-                status_message: QR already paid
-                bank_reference: ''
-                created_at: '2026-07-07T12:00:00Z'
-                updated_at: '2026-07-07T12:00:01Z'
+                oneOf:
+                - $ref: '#/components/schemas/Error'
+                - $ref: '#/components/schemas/Payout'
+              examples:
+                invalid_source_instrument:
+                  summary: 未配 BOB 结算却发送了 banking 来源
+                  value:
+                    error: invalid_source_instrument
+                    message: source_instrument_id requires settlement in BOB
+                payout_failed:
+                  value:
+                    payout_id: 8e2a1b0c-9d8e-7f60-5a4b-3c2d1e0f9a8b
+                    account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    idempotency_key: qr-2026-07-07-a
+                    country: BO
+                    currency: BOB
+                    method: qr
+                    local_amount: '700.00'
+                    fx_rate: '6.91'
+                    usdt_amount: '101.302460'
+                    fee: '0.300000'
+                    total_debit: '101.602460'
+                    settlement_asset: USD
+                    settlement_amount: '101.61'
+                    settlement_rate: '1'
+                    beneficiary: *id010
+                    description: QR 午餐付款
+                    status: failed
+                    status_code: core_rejected
+                    status_message: QR already paid
+                    bank_reference: ''
+                    created_at: '2026-07-07T12:00:00Z'
+                    updated_at: '2026-07-07T12:00:01Z'
   /v1/payouts/qr/scan:
     post:
       tags:
@@ -31934,6 +32182,46 @@ components:
           description: KYC:identity、proofOfResidence。KYB:legalPresence、ownershipStructure、controlStructure、companyDetails。
         filename:
           type: string
+        ocr:
+          type: object
+          description: 与提供方无关的 OCR 证据。该字段仅供参考，不能单独批准验证。
+          properties:
+            fields:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  value:
+                    type: string
+                  confidence:
+                    type: number
+            mrz:
+              type: object
+              properties:
+                line1:
+                  type: string
+                line2:
+                  type: string
+                line3:
+                  type: string
+                valid_checksum:
+                  type: boolean
+            failed_checks:
+              type: array
+              items:
+                type: string
+            expires_at_detected:
+              type: string
+              format: date
+            issued_at_detected:
+              type: string
+              format: date
+            fraud_signals:
+              type: array
+              items:
+                type: string
+            engine_summary:
+              type: string
         content_type:
           type: string
           enum:

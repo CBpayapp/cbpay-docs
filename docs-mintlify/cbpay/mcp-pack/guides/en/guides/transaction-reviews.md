@@ -63,7 +63,8 @@ marks it as expired after the deadline. If no information request is active,
 
 ### Filters
 
-- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`). `dispatch_failed` lists released applications whose post-approval dispatch failed. For account-scoped requests without `kind`, it applies only to `banking_application` and `card_application`. Any other value ⇒ `400 invalid_status`.
+- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` or `all` (empty = open: `in_review` + `info_requested`). `dispatch_failed` lists released reviews whose post-approval dispatch failed while the underlying resource remains actionable. For account-scoped requests without `kind`, it applies only to `banking_application` and `card_application`. Any other value ⇒ `400 invalid_status`.
+- A released payout, payin or crypto withdrawal whose underlying resource is already terminal (`completed`, `failed`, `credited`, `rejected` or `expired`) is not actionable: it is excluded from the default queue, `dispatch_failed` results and queue counts, with `needs_action` and `dispatch_failed` set to `false`. Use `status=all` to keep the full history. Banking and application reviews remain actionable.
 - `?from=` / `?to=` — date range (`YYYY-MM-DD`, organization timezone, both inclusive). Invalid date ⇒ `400 invalid_range`.
 - `?page=` / `?page_size=` — pagination (default 50, max 200).
 
@@ -305,6 +306,38 @@ For application reviews (`kind`: `banking_application` / `card_application`) the
 
 Full catalog in [Errors](https://docs.cbpayapp.com/en/errors).
 
+## Approved but awaiting funds
+
+A crypto withdrawal can reach `approved_unfunded` when compliance has already
+approved it but the hot wallet does not yet cover the amount. This is not a
+new compliance hold: coverage funds the shortfall and releases the withdrawal
+without asking for approval again.
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/txn-reviews?status=approved_unfunded&from=2026-11-25&to=2026-11-25" \
+  -H "Authorization: Bearer pk_..."
+```
+
+Treat `approved_unfunded` as open and keep polling the review or consuming
+`txn_review_status_changed`. Once coverage succeeds, the review becomes
+`released`. If coverage is rejected, the review does not receive another
+automatic coverage proposal; contact the organization so it can fund the
+wallet manually or reject the withdrawal.
+
+| Status | Meaning | Integrator action |
+|---|---|---|
+| `in_review` | Compliance decision pending | Wait for the webhook or poll |
+| `approved_unfunded` | Approved, but the hot wallet shortfall is being covered | Wait; do not re-approve or create a replacement withdrawal |
+| `released` | The withdrawal was released | Reconcile the normal withdrawal status |
+| `rejected` | The withdrawal was rejected | Stop processing and show the final outcome |
+
+#### Do I need to approve or retry an approved-unfunded withdrawal?
+No. Compliance is already approved. Coverage releases it automatically. If
+you retry the original request, use the same idempotency key; never create a
+replacement withdrawal while the original review is unresolved.
+#### What does a 409 coverage response mean?
+The withdrawal remains safely held while coverage is pending. Read the
+`coverage_proposal` reference in the response and keep polling the review.
 ## Frequently asked questions
 
 #### Why was my operation held?

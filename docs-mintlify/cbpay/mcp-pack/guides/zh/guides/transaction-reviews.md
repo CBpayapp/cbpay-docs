@@ -62,7 +62,8 @@ curl "https://api.qbank.cl/platform/v1/me/txn-reviews?from=2026-07-01&to=2026-08
 
 ### 过滤条件
 
-- `?status=` —— `in_review`、`info_requested`、`released`、`rejected`、`dispatch_failed` 或 `all`（为空 = 未决：`in_review` + `info_requested`）。`dispatch_failed` 列出已批准但后续派发失败的申请；账户级请求不带 `kind` 时仅包含 `banking_application` 和 `card_application`。其他值 ⇒ `400 invalid_status`。
+- `?status=` —— `in_review`、`info_requested`、`released`、`rejected`、`dispatch_failed` 或 `all`（为空 = 未决：`in_review` + `info_requested`）。`dispatch_failed` 列出后续派发失败且底层资源仍可操作的已释放 review；账户级请求不带 `kind` 时仅包含 `banking_application` 和 `card_application`。其他值 ⇒ `400 invalid_status`。
+- 如果已释放的 payout、payin 或加密货币提现底层资源已经处于终态（`completed`、`failed`、`credited`、`rejected` 或 `expired`），则不再需要操作：它不会出现在默认队列、`dispatch_failed` 结果或队列计数中，`needs_action` 和 `dispatch_failed` 均为 `false`。使用 `status=all` 可保留完整历史。银行和申请 review 仍可操作。
 - `?from=` / `?to=` —— 日期范围（`YYYY-MM-DD`，组织时区，均含边界）。日期无效 ⇒ `400 invalid_range`。
 - `?page=` / `?page_size=` —— 分页（默认 50，最大 200）。
 
@@ -287,6 +288,34 @@ webhook 负载刻意保持**中性**：只携带状态和操作摘要，绝不�
 
 完整目录见[错误](https://docs.cbpayapp.com/zh/errors)。
 
+## 已批准但等待资金
+
+加密提现可能进入 `approved_unfunded`：合规已经批准，但热钱包暂时
+无法覆盖金额。这不是新的合规审核；覆盖提案会补足短缺，资金到位后
+无需再次批准即可自动放行。
+
+```bash
+curl "https://api.qbank.cl/platform/v1/me/txn-reviews?status=approved_unfunded&from=2026-11-25&to=2026-11-25" \
+  -H "Authorization: Bearer pk_..."
+```
+
+请将 `approved_unfunded` 视为开放状态，持续轮询审核或消费
+`txn_review_status_changed`。覆盖完成后状态变为 `released`。如果 god
+拒绝覆盖，不会自动再次提出覆盖提案；请联系组织手动注资或拒绝提现。
+
+| 状态 | 含义 | 集成方动作 |
+|---|---|---|
+| `in_review` | 等待合规决定 | 等待 webhook 或轮询 |
+| `approved_unfunded` | 已批准，但热钱包资金不足 | 等待；不要再次批准或创建替代提现 |
+| `released` | 提现已放行 | 按正常提现状态对账 |
+| `rejected` | 提现已拒绝 | 停止处理并展示最终结果 |
+
+#### approved_unfunded 的提现需要我批准或重试吗？
+不需要。合规已经批准，覆盖完成后会自动放行。重试原始请求时必须使用
+同一个幂等键；原审核未结束前不要创建替代提现。
+#### 覆盖响应中的 409 表示什么？
+资金覆盖完成前，提现会安全地保持暂留。读取响应中的
+`coverage_proposal` 引用并继续轮询审核。
 ## 常见问题
 
 #### 为什么我的操作被挂起？
