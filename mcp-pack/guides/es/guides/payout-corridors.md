@@ -82,7 +82,21 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 }
 ```
 
-El catálogo de bancos (`GET /v1/payouts/banks?country=CL`) da los `bank_code` vigentes. `CL`/`CLP`/`bank_transfer` puede despacharse en ventanas agrupadas de cinco minutos; `POST /v1/payouts` sigue respondiendo `202` con `status: "processing"` y cada payout conserva su estado final y su webhook `payout_status_changed`.
+El catálogo de bancos (`GET /v1/payouts/banks?country=CL`) da los `bank_code` vigentes. Chile tiene un solo corredor público de payouts: `CL`/`CLP`/`bank_transfer`. El riel efectivo lo selecciona la configuración de la organización y no lo envía el integrador:
+
+| Configuración de la organización | Riel efectivo |
+|---|---|
+| `platform-default` | `bank_transfer` |
+| `fintoc` | `bank_transfer` |
+
+Usa la superficie de administración de la organización para seleccionar la
+ruta predeterminada o la ruta alternativa exclusiva de plataforma; nunca
+pongas un valor de ruteo interno en el `method` público del payout. El contrato
+del payout, el schema del beneficiario y el catálogo de bancos siguen usando
+`bank_transfer`. `CL`/`CLP`/`bank_transfer` puede despacharse en ventanas
+agrupadas de cinco minutos; `POST /v1/payouts` sigue respondiendo `202` con
+`status: "processing"` y cada payout conserva su estado final y su webhook
+`payout_status_changed`.
 
 #### Perú
 

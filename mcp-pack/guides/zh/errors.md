@@ -420,7 +420,6 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 |---|---|---|
 | 409 | `corridor_disabled` | 所选走廊被管理员禁用。请选择其他启用的 method 或联系组织运营人员。 |
 | 409 | `banking_corridor_disabled` | 所选 banking 国家或通道被管理员禁用。请选择其他启用的通道或联系组织运营人员。 |
-| 422 | `banking_corridor_unsupported` | Banking 法币转账仅支持 BO/BOB、MX/MXN 和 AR/ARS bank_transfer 以及 CL/CLP/fintoc。请使用其中之一。 |
 | 409 | `crypto_disabled` | 所选 crypto 网络或交易对被管理员禁用。请选择其他启用的交易对或联系组织运营人员。 |
 | 400 | `same_chain` | 跨链转账的同一资产需要两条不同的链。请发送与 `from_chain` 不同的 `to_chain`。 |
 | 409 | `move_conflict` | 该 `idempotency_key` 已存在且载荷不同（按值比较资产、链、金额或显式地址）。请仅以完全相同的载荷重放。 |
@@ -774,7 +773,6 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `payment_in_flight` | 工资付款正在发放中 | 等待对账；不要重复操作。 |
 | 409 | `invalid_state` | 资源当前状态不接受此操作 | 读取当前状态并遵循允许的状态转换。 |
 | 400 | `reason_required` | 需要填写原因 | 在请求正文中发送明确原因。 |
-| 409 | `not_ghost_terminal` | 该虚拟 IBAN 不是幽灵（存在服务商状态、时间太短或从未批准） | 仅已批准、pending 超过 7 天且无订单、无 IBAN 的项目符合 mark-terminal。 |
 | 500 | `receipt_render_failed` | 无法生成工资单 PDF | 重试读取；若仍失败，请提供请求 ID。 |
 | 503 | `valuation_unavailable` | 无法将金额估值为美元 | 稍后重试；批准过程保持失败关闭。 |
 | 500 | `store_error` | 平台无法读取或保存记录 | 确认资源状态后重试。 |
@@ -835,10 +833,8 @@ body 中的值为准。key 最多 256 个字符，且不能包含 CR/LF。平台
 | 409 | `final_not_frozen` | 项目须经最终提议冻结 | 先提议最终赎回再批准 |
 | 422 | `burner_blocked` | Burner 未通过制裁筛查 | 该 burn 保持 parked 待合规处理 |
 
-## 手工国库充值错误
+## Manual proposal errors
 
-| HTTP | `error` | 含义 | 处理 |
-|---|---|---|---|
-| 409 | `invalid_proposal` | 手工充值 payload 非法（过期或被篡改） | 废弃并从面板重新提议 |
-| 409 | `conflict_live` | 该走廊有 live funding | 等其结算后重试 |
-| 409 | `conflict_pending` | 该走廊已有待决策手工单 | 批准、拒绝或等待该手工单 |
+| HTTP | Code | Fix |
+|---|---|---|
+| 409 | `invalid_proposal` | The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context. |

@@ -1,5 +1,5 @@
 {
-  "count": 490,
+  "count": 486,
   "errors": [
     {
       "category": {
@@ -4039,20 +4039,6 @@
         "es": "Servicio (5xx)",
         "zh": "服务端（5xx）"
       },
-      "code": "banking_corridor_unsupported",
-      "http": 422,
-      "meaning": {
-        "en": "Banking fiat transfers only support BO/BOB, MX/MXN and AR/ARS bank_transfer and CL/CLP/fintoc. Use one of those corridors.",
-        "es": "Las transferencias fiat de Banking solo admiten BO/BOB, MX/MXN y AR/ARS bank_transfer y CL/CLP/fintoc. Usa uno de esos corredores.",
-        "zh": "Banking 法币转账仅支持 BO/BOB、MX/MXN 和 AR/ARS bank_transfer 以及 CL/CLP/fintoc。请使用其中之一。"
-      }
-    },
-    {
-      "category": {
-        "en": "Service (5xx)",
-        "es": "Servicio (5xx)",
-        "zh": "服务端（5xx）"
-      },
       "code": "crypto_disabled",
       "http": 409,
       "meaning": {
@@ -6083,20 +6069,6 @@
         "es": "Enrolamiento 2FA del registro",
         "zh": "注册 2FA 错误"
       },
-      "code": "not_ghost_terminal",
-      "http": 409,
-      "meaning": {
-        "en": "The virtual IBAN is not a ghost (live provider state, too fresh, or never approved) — Fix: Only approved items pending 7+ days without order or IBAN qualify for mark-terminal.",
-        "es": "El vIBAN no es fantasma (estado proveedor vivo, muy reciente o nunca aprobado) — Fix: Solo califican ítems aprobados en pending 7+ días sin orden ni IBAN.",
-        "zh": "该虚拟 IBAN 不是幽灵（存在服务商状态、时间太短或从未批准） — Fix: 仅已批准、pending 超过 7 天且无订单、无 IBAN 的项目符合 mark-terminal。"
-      }
-    },
-    {
-      "category": {
-        "en": "Trust Center & NDA",
-        "es": "Enrolamiento 2FA del registro",
-        "zh": "注册 2FA 错误"
-      },
       "code": "valuation_unavailable",
       "http": 503,
       "meaning": {
@@ -6786,37 +6758,9 @@
       "code": "invalid_proposal",
       "http": 409,
       "meaning": {
-        "en": "The manual refill payload is not valid (stale or tampered) — Fix: Discard it and propose again from the panel",
-        "es": "El payload de la recarga manual no es válido (rancio o alterado) — Fix: Descártala y propone de nuevo desde el panel",
-        "zh": "手工充值 payload 非法（过期或被篡改） — Fix: 废弃并从面板重新提议"
-      }
-    },
-    {
-      "category": {
-        "en": "Trust Center & NDA",
-        "es": "Enrolamiento 2FA del registro",
-        "zh": "注册 2FA 错误"
-      },
-      "code": "conflict_live",
-      "http": 409,
-      "meaning": {
-        "en": "The corridor has a live funding — Fix: Wait for it to settle, then retry",
-        "es": "El corredor tiene un fondeo vivo — Fix: Espera a que liquide y reintenta",
-        "zh": "该走廊有 live funding — Fix: 等其结算后重试"
-      }
-    },
-    {
-      "category": {
-        "en": "Trust Center & NDA",
-        "es": "Enrolamiento 2FA del registro",
-        "zh": "注册 2FA 错误"
-      },
-      "code": "conflict_pending",
-      "http": 409,
-      "meaning": {
-        "en": "The corridor already has a pending manual refill — Fix: Approve, reject or wait for the pending one",
-        "es": "El corredor ya tiene una manual pendiente — Fix: Aprueba, rechaza o espera la pendiente",
-        "zh": "该走廊已有待决策手工单 — Fix: 批准、拒绝或等待该手工单"
+        "en": "The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context.",
+        "es": "The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context.",
+        "zh": "The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context."
       }
     }
   ]

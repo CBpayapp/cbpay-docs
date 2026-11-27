@@ -29,7 +29,7 @@ flowchart LR
 La comisión del servicio `address_screening` (fija, por scan) se debita al
 ejecutar y se **reembolsa automáticamente** si el screening falla. Con
 comisión 0 el servicio es gratuito para ti. Requiere tener tu propia
-[verificación de identidad aprobada](https://docs.cbpayapp.com/es/guides/kyc#tu-propia-verificacion-onboarding)
+[verificación de identidad aprobada](https://docs.cbpayapp.com/es/guides/kyc-overview#tu-propia-verificacion-onboarding)
 y el servicio `screenings` habilitado en tu cuenta.
 ## Ejecutar un screening
 
@@ -318,7 +318,7 @@ para recuperar la notificación. Si se libera el hold, el evento emparejado
 | 400 | `invalid_payload` | Falta `address` o es demasiado larga | Revisa el campo `address` |
 | 400 | `invalid_range` | `from`/`to` faltantes o inválidos en el listado | Usa `YYYY-MM-DD` en ambos |
 | 402 | `insufficient_funds` | Saldo insuficiente para la comisión | Fondea la cuenta y reintenta con la MISMA clave |
-| 403 | `verification_required` | Tu cuenta aún no aprobó su verificación | Completa tu [onboarding](https://docs.cbpayapp.com/es/guides/kyc#tu-propia-verificacion-onboarding) |
+| 403 | `verification_required` | Tu cuenta aún no aprobó su verificación | Completa tu [onboarding](https://docs.cbpayapp.com/es/guides/kyc-overview#tu-propia-verificacion-onboarding) |
 | 403 | `service_disabled` | El servicio `screenings` está deshabilitado para tu cuenta | Contacta a tu operador |
 | 404 | `not_found` | El `screening_id` no existe o no es tuyo | Verifica el id |
 | 422 | `invalid_address` | La dirección no pudo evaluarse (formato) | Revisa el formato de la dirección |

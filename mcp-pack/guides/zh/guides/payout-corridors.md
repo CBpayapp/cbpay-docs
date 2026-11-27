@@ -81,9 +81,19 @@ curl -X POST https://api.qbank.cl/platform/v1/payouts \
 ```
 
 银行目录（`GET /v1/payouts/banks?country=CL`）列出当前有效的
-`bank_code` 值。对于 `CL`/`CLP`/`bank_transfer`，payout 可能在约五分钟
-的短窗口内批量派发；`POST /v1/payouts` 仍返回 `202` 与
-`status: "processing"`，每笔 payout 仍保留自己的最终状态和
+`bank_code` 值。智利只有一个公共 payout 走廊：`CL`/`CLP`/`bank_transfer`。
+有效的内部轨道由组织配置选择，集成方不需要发送该值：
+
+| 组织设置 | 有效轨道 |
+|---|---|
+| `platform-default`（默认） | `bank_transfer` |
+| `fintoc` | `bank_transfer` |
+
+只能从组织管理界面选择平台默认路由或平台专用备用路由；不要把内部
+路由值放进公共 payout 的 `method`。Payout 合约、收款人 schema 和银行目录
+仍使用 `bank_transfer`。`CL`/`CLP`/`bank_transfer`
+payout 可能在约五分钟的短窗口内批量派发；`POST /v1/payouts` 仍返回
+`202` 与 `status: "processing"`，每笔 payout 仍保留自己的最终状态和
 `payout_status_changed` webhook。
 
 #### 秘鲁
