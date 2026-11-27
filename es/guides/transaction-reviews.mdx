@@ -67,7 +67,8 @@ inventa una fecha.
 
 ### Filtros
 
-- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` o `all` (vacío = abiertas: `in_review` + `info_requested`). `dispatch_failed` lista solicitudes aprobadas cuyo despacho posterior falló; sin `kind`, la vista de cuenta solo incluye `banking_application` y `card_application`. Otro valor ⇒ `400 invalid_status`.
+- `?status=` — `in_review`, `info_requested`, `released`, `rejected`, `dispatch_failed` o `all` (vacío = abiertas: `in_review` + `info_requested`). `dispatch_failed` lista reviews liberadas cuyo despacho posterior falló mientras el recurso subyacente sigue siendo accionable; sin `kind`, la vista de cuenta solo incluye `banking_application` y `card_application`. Otro valor ⇒ `400 invalid_status`.
+- Un payout, payin o retiro cripto liberado cuyo recurso subyacente ya está en estado terminal (`completed`, `failed`, `credited`, `rejected` o `expired`) no es accionable: queda fuera de la cola por defecto, de los resultados `dispatch_failed` y de los contadores, con `needs_action` y `dispatch_failed` en `false`. Usa `status=all` para conservar la historia completa. Las reviews de banking y de solicitudes siguen siendo accionables.
 - `?from=` / `?to=` — rango de fechas (`YYYY-MM-DD`, zona horaria de tu organización, ambos inclusive). Fecha inválida ⇒ `400 invalid_range`.
 - `?page=` / `?page_size=` — paginación (default 50, máximo 200).
 
