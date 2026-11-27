@@ -39,7 +39,7 @@ límites de gasto por tarjeta, servicios habilitados — funciona idéntico.
   operador).
 - Verificación: pide tu link KYC con `POST /v1/me/verification/link` y
   completa el wizard — hasta aprobar solo puedes fondear
-  ([guía](https://docs.cbpayapp.com/es/guides/kyc-overview)).
+  ([guía](https://docs.cbpayapp.com/es/guides/kyc)).
 - Crypto: tus **wallets de depósito nacen con la cuenta** (una por
   red+activo; solo reciben). ¿Necesitas una wallet con saldo propio?
   Puedes tener **1 wallet segregada por red+activo**.
@@ -52,7 +52,7 @@ límites de gasto por tarjeta, servicios habilitados — funciona idéntico.
 - Registro: `type: "company"`, idealmente con `tax_id`.
 - Verificación: pide tu link KYB con `POST /v1/me/verification/link` y
   completa el wizard con los datos societarios; aprobada, puedes además
-  verificar a tus propios clientes ([guía](https://docs.cbpayapp.com/es/guides/kyc-overview)).
+  verificar a tus propios clientes ([guía](https://docs.cbpayapp.com/es/guides/kyc)).
 - Crypto: tus **wallets de depósito nacen con la cuenta** (una por
   red+activo; solo reciben). Para saldos separados on-chain crea
   **wallets segregadas ilimitadas** (una por sucursal, por producto, por

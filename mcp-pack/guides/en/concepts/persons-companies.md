@@ -39,7 +39,7 @@ per-card spending limits, enabled services — works identically.
   operator creates it).
 - Verification: request your KYC link with `POST /v1/me/verification/link`
   and complete the wizard — until approved you can only fund
-  ([guide](https://docs.cbpayapp.com/en/guides/kyc-overview)).
+  ([guide](https://docs.cbpayapp.com/en/guides/kyc)).
 - Crypto: your **deposit wallets are born with the account** (one per
   network+asset pair; receive only). Need a wallet with its own balance?
   You can hold **1 segregated wallet per network+asset pair**.
@@ -52,7 +52,7 @@ per-card spending limits, enabled services — works identically.
 - Registration: `type: "company"`, ideally with `tax_id`.
 - Verification: request your KYB link with `POST /v1/me/verification/link`
   and complete the wizard with the corporate data; once approved you can
-  also verify your own customers ([guide](https://docs.cbpayapp.com/en/guides/kyc-overview)).
+  also verify your own customers ([guide](https://docs.cbpayapp.com/en/guides/kyc)).
 - Crypto: your **deposit wallets are born with the account** (one per
   network+asset pair; receive only). For separate on-chain balances create
   **unlimited segregated wallets** (one per branch, per product, per

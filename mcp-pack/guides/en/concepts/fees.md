@@ -50,7 +50,7 @@ depends on your account's rates for that country. Quoted = charged, always.
 | `compliance_company` | Fixed per call | When AML/CFT-screening a company |
 | `compliance_rescreen` | Fixed per call | When re-running an AML/CFT screening |
 | `compliance_monitoring` | Fixed per activation | When enabling continuous AML/CFT monitoring (disabling is free) |
-| `kyc_verification` | Fixed per verification | When creating a third-party KYC link or submission ([verification](https://docs.cbpayapp.com/en/guides/kyc-overview)); your own onboarding is free |
+| `kyc_verification` | Fixed per verification | When creating a third-party KYC link or submission ([verification](https://docs.cbpayapp.com/en/guides/kyc)); your own onboarding is free |
 | `kyb_verification` | Fixed per verification | When creating a third-party KYB link or submission |
 | `address_screening` | Fixed per scan | When assessing a blockchain address' risk ([wallet screening](https://docs.cbpayapp.com/en/guides/screenings)); the automatic withdrawal/deposit protection is free |
 | `banking_customer` | Fixed per profile | When creating your banking profile ([banking](https://docs.cbpayapp.com/en/guides/banking)) |

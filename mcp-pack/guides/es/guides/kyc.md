@@ -1,24 +1,19 @@
 ---
-title: "Verificación KYC y KYB"
-description: "Elige la guía general para verificar cuentas y clientes."
+title: "Índice KYC"
+description: "Documentation index"
 slug: es/guides/kyc
 lang: es
 source_url: https://docs.cbpayapp.com/es/guides/kyc
 ---
-Elige la guía general para verificar cuentas y clientes.
+> **Ambientes:** Test `https://cryptobank.qbank.cl/platform` (`pk_test_...`) - Live `https://api.qbank.cl/platform` (`pk_...`).
+
+- [Overview](https://docs.cbpayapp.com/es/guides/kyc-overview)
+- [OCR and liveness](https://docs.cbpayapp.com/es/guides/kyc-ocr)
+- [Errors](https://docs.cbpayapp.com/es/errors)
 
 ```mermaid
 flowchart LR
-  A[Start] --> B[Account verification]
-  A --> C[Customer verification]
-  B --> D[Approved or review]
-  C --> D
+ A[Start] --> B[Verification] --> C[Decision]
 ```
 
-## Flujo de verificación
-
-- [Resumen KYC](https://docs.cbpayapp.com/es/guides/kyc-overview)
-- [Evidencia OCR y prueba de vida](https://docs.cbpayapp.com/es/guides/kyc-ocr)
-- [Errores](https://docs.cbpayapp.com/es/errors)
-
-#### Which page should I start with?Start with the overview, then use the OCR page for evidence details.
+#### Where do I start?Start with the overview.
