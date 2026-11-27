@@ -5,8 +5,18 @@ slug: zh/changelog
 lang: zh
 source_url: https://docs.cbpayapp.com/zh/changelog
 ---
-## v2.328 · 4 个版本 - 2026年11月26日
-### v2.328
+## v2.330 · 1 个版本 - 2026年11月27日
+### v2.330
+**新增**
+
+- 记录智利统一 payout 走廊（`CL/CLP/bank_transfer`）及其按组织配置的
+  平台轨道选择器（默认或平台专用备用路由）。
+- 记录四个受支持本地法币走廊的
+  `POST /v1/banking/fiat-transfers`。该接口创建与
+  `POST /v1/payouts` 相同的 Payout 资源，并以走廊货币进行 identity
+  settlement。
+## v2.329 · 5 个版本 - 2026年11月26日
+### v2.329
 **修复**
 
 - BO/BOB payout 与 QR 确认在未配 BOB 结算却发送 `source_instrument_id` 时，不再静默从母账户扣款：请求会在扣款前被 `422 invalid_source_instrument` 拒绝。以 USD（或任何非 BOB）结算时请省略该字段——payout 从母账户扣除你的结算余额。
@@ -15,6 +25,9 @@ source_url: https://docs.cbpayapp.com/zh/changelog
 **变更**
 
 - 拥有多个活跃 BO/BOB banking 来源的账户，在 USD 结算 payout 中不再需要发送 `source_instrument_id`：仅当来源真正决定付款账户（BOB 结算）时才强制消除歧义。
+### v2.328
+**变更**
+- 当底层 payout、payin 或加密货币提现已经处于终态时，账户 review 队列不再将后续派发失败标记为可操作。该 review 会从默认队列和相关计数中移除，而 `status=all` 仍保留历史。
 ### v2.327
 **变更**
 

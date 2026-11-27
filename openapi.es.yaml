@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CBPay API
-  version: '2.329'
+  version: '2.330'
   description: 'CBPay es una plataforma de pagos multimoneda: payouts y cobros fiat
 
     en toda América Latina, transferencias internas, fondeo y retiros
@@ -4717,6 +4717,241 @@ paths:
                 error:
                   code: banking_request_failed
                   message: request rejected
+  /v1/banking/fiat-transfers:
+    post:
+      tags:
+      - Banking
+      operationId: createBankingFiatTransfer
+      summary: Transfiere fiat local desde un saldo Banking
+      description: 'Envía un payout que liquida 1:1 en la moneda del corredor, debitando el saldo fiat local de la cuenta (nunca USDT). Solo corredores soportados: `BO/BOB/bank_transfer`, `MX/MXN/bank_transfer`, `AR/ARS/bank_transfer` y `CL/CLP/fintoc` — cualquier otro devuelve `422 banking_corridor_unsupported`. Es la única ruta que gasta fiat local (`POST /v1/payouts` rechaza settlement fiat); el recurso creado ES un payout, legible en `GET /v1/payouts(/:id)` con el mismo ciclo de vida, webhooks y comprobante.
+
+
+        Requiere llave de idempotencia (campo del body o header `Idempotency-Key`). Reintentar con la misma llave devuelve el payout original (`200` con `idempotency_hit: true`). Si el screening de compliance no está disponible temporalmente la respuesta es `202` con un payout en `status: pending`, `status_code: compliance_pending`, `compliance_pending: true` y `funds_debited: false`, antes de cualquier débito; conserva la misma llave y espera la reconciliación.'
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - country
+              - currency
+              - method
+              - amount
+              properties:
+                country:
+                  type: string
+                  description: 'País fiat Banking ISO 3166-1 alpha-2: BO, MX, AR o CL.'
+                currency:
+                  type: string
+                  description: 'Moneda local del país: BOB, MXN, ARS o CLP.'
+                method:
+                  type: string
+                  description: 'Método fiat Banking: bank_transfer (BO/MX/AR) o fintoc (solo CL).'
+                amount:
+                  type: string
+                  description: 'Monto en moneda local como string decimal positivo (CLP no tiene centavos: solo enteros).'
+                  example: '2000'
+                beneficiary:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: 'Datos de la cuenta destino. Las llaves requeridas dependen del corredor; ver `GET /v1/payouts/beneficiary-schema`. Chile: `name` + `tax_id` (RUT válido) + `bank_code` + `account_type` + `account_number`.'
+                beneficiary_contact_id:
+                  type: string
+                  format: uuid
+                  description: Usa el beneficiario guardado más reciente del contacto para este país en vez de escribir `beneficiary`. Un `beneficiary` explícito siempre gana; 422 no_saved_destination si el contacto no tiene.
+                save_contact:
+                  type: boolean
+                  default: true
+                  description: El beneficiario se guarda como contacto automáticamente; envía false para omitirlo.
+                description:
+                  type: string
+                  description: Narrativa opcional del pago.
+                settlement_asset:
+                  type: string
+                  enum:
+                  - BOB
+                  - MXN
+                  - ARS
+                  - CLP
+                  description: Debe omitirse o ser igual a la moneda del corredor (el settlement identity es automático). Cualquier otro valor devuelve 400.
+                source_instrument_id:
+                  type: string
+                  format: uuid
+                  description: Selector de origen banking BO/BOB (la cuenta "en operación" con varias cuentas Banking). Solo BO/BOB; se rechaza en otros corredores.
+                idempotency_key:
+                  type: string
+                options:
+                  type: object
+                  description: Opciones opcionales del riel. Para un reintento deliberado tras un rechazo bancario reciente en Chile, setea destination_retry_ack con el caso previo más reciente.
+                  additionalProperties:
+                    type: string
+            examples:
+              cl_fintoc:
+                summary: Chile — transferencia bancaria vía Fintoc (CLP)
+                value:
+                  country: CL
+                  currency: CLP
+                  method: fintoc
+                  amount: '2000'
+                  beneficiary:
+                    name: Nicolas Merino
+                    tax_id: 17.629.916-9
+                    bank_code: '016'
+                    account_type: checking
+                    account_number: '72815742'
+                  settlement_asset: CLP
+                  idempotency_key: fiat-cl-0001
+              bo_bank_transfer:
+                summary: Bolivia — transferencia ACH (BOB)
+                value:
+                  country: BO
+                  currency: BOB
+                  method: bank_transfer
+                  amount: '500.00'
+                  beneficiary:
+                    name: Ana Morales
+                    tax_id: '1234567'
+                    bank_code: '001'
+                    account_number: '123456789'
+                  idempotency_key: fiat-bo-0001
+      responses:
+        '200':
+          description: Replay de idempotencia de una transferencia existente....
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payout'
+              example:
+                payout_id: 7d5c2f0a-1e9b-4a6d-8f3c-0b2a1d9e8c7f
+                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                idempotency_key: fiat-cl-0001
+                country: CL
+                currency: CLP
+                method: fintoc
+                local_amount: '2000'
+                fx_rate: '950.00'
+                usdt_amount: '2.105263'
+                fee: '0.010000'
+                total_debit: '2.115263'
+                settlement_asset: CLP
+                settlement_amount: '2009'
+                settlement_rate: '1'
+                beneficiary:
+                  name: Nicolas Merino
+                  tax_id: 17.629.916-9
+                  bank_code: '016'
+                  account_type: checking
+                  account_number: '72815742'
+                description: ''
+                status: completed
+                status_code: ''
+                status_message: ''
+                bank_reference: tr_01J9ZQK6F7
+                created_at: '2026-11-26T12:00:00Z'
+                updated_at: '2026-11-26T12:01:00Z'
+                idempotency_hit: true
+        '202':
+          description: Aceptado para screening de compliance (`compliance_pending`, sin débito aún) o creado en processing. Misma forma Payout que `POST /v1/payouts`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payout'
+              example:
+                payout_id: 8e6d3f1b-2f0c-5b7e-90ad-1c3b2e0f9d80
+                account_id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                idempotency_key: fiat-bo-0001
+                country: BO
+                currency: BOB
+                method: bank_transfer
+                local_amount: '500.00'
+                fx_rate: '6.96'
+                usdt_amount: '71.839080'
+                fee: '0.300000'
+                total_debit: '72.139080'
+                settlement_asset: BOB
+                settlement_amount: '502.09'
+                settlement_rate: '1'
+                beneficiary:
+                  name: Ana Morales
+                  tax_id: '1234567'
+                  bank_code: '001'
+                  account_number: '123456789'
+                description: ''
+                status: processing
+                status_code: ''
+                status_message: ''
+                bank_reference: ''
+                created_at: '2026-11-26T12:00:00Z'
+                updated_at: '2026-11-26T12:00:00Z'
+        '400':
+          description: Request inválido (`idempotency_key_required`, `beneficiary_required`, `invalid_beneficiary`, `invalid_amount`, `invalid_settlement_asset`, o `invalid_request` por método vacío o `source_instrument_id` fuera de lugar).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_settlement_asset:
+                  summary: Settlement fuera de la moneda del corredor
+                  value:
+                    error: invalid_settlement_asset
+                    message: banking transfers always settle in the corridor currency
+        '402':
+          $ref: '#/components/responses/InsufficientFunds'
+        '403':
+          description: Cuenta no activa (`account_blocked`), credencial de cuenta ausente, o attestation de dispositivo vencida (`integrity_required`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                account_blocked:
+                  value:
+                    error: account_blocked
+                    message: account is not active
+        '409':
+          description: El corredor está deshabilitado administrativamente (`corridor_disabled`, gobernado por el toggle unificado de payout) o la llave se reusó con otro payload (`idempotency_conflict`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                corridor_disabled:
+                  value:
+                    error: corridor_disabled
+                    message: this payout corridor is currently unavailable
+        '422':
+          description: 'Corredor fuera de catálogo (`banking_corridor_unsupported`), topes de monto (`amount_below_minimum`, `amount_above_maximum`), o rechazo inicial del riel (la respuesta es el objeto payout con `status: failed` y el débito ya reembolsado).'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/Error'
+                - $ref: '#/components/schemas/Payout'
+              examples:
+                banking_corridor_unsupported:
+                  summary: Corredor fuera de Banking fiat
+                  value:
+                    error: banking_corridor_unsupported
+                    message: banking fiat transfers are only supported for BO/BOB, MX/MXN and AR/ARS bank_transfer and CL/CLP/fintoc
+          x-money-out-errors:
+          - amount_below_minimum
+          - amount_above_maximum
+          - velocity_limit_exceeded
+        '503':
+          description: El canal de payout no está disponible temporalmente (`channel_unavailable`); reintenta más tarde con la MISMA llave de idempotencia.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: channel_unavailable
+                message: the payout channel is temporarily unavailable, please retry later
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/banking/operations:
     post:
       tags:
@@ -7534,7 +7769,7 @@ paths:
       - Corridors
       operationId: listCorridorVariants
       summary: List organization rail variants
-      description: Returns the organization-scoped payout variant configuration. The selector supports labeled payout aliases (`rail_a`/`rail_b`) for PY/PYG, EC/USD and BR/BRL. BO/BOB and CL/CLP use fixed rails with no per-org selection. Payin routing uses corridor controls.
+      description: Devuelve la configuración de variantes de payout con alcance de organización. El selector admite los aliases neutros (`rail_a`/`rail_b`) para PY/PYG, EC/USD y BR/BRL, y valores de ruteo exclusivos de plataforma para payouts `bank_transfer` de CL/CLP. BO/BOB usa un riel fijo. El ruteo de payins usa controles del corredor.
       security:
       - bearerAuth: []
       responses:
@@ -7579,11 +7814,11 @@ paths:
               $ref: '#/components/schemas/OrgRailVariantRequest'
             example:
               direction: payout
-              country: PY
-              currency: PYG
+              country: CL
+              currency: CLP
               method: bank_transfer
-              variant: rail_b
-              reason: Use the fallback rail for future Paraguay payouts
+              variant: fintoc
+              reason: Usar el riel configurado para payouts de Chile
       responses:
         '200':
           description: Updated variant
@@ -7594,10 +7829,10 @@ paths:
               example:
                 org_id: org_123
                 direction: payout
-                country: PY
-                currency: PYG
+                country: CL
+                currency: CLP
                 method: bank_transfer
-                variant: rail_b
+                variant: fintoc
         '400':
           description: Invalid variant request
           content:
@@ -7606,7 +7841,7 @@ paths:
                 invalid_variant:
                   value:
                     error: invalid_rail_variant
-                    message: variant must be one of the corridor rail aliases (rail_a/rail_b)
+                    message: variant must be one of the supported corridor variants
         '403':
           description: Source routing requires platform administration
           content:

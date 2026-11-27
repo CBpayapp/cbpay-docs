@@ -62,7 +62,8 @@ curl "https://api.qbank.cl/platform/v1/me/txn-reviews?from=2026-07-01&to=2026-08
 
 ### 过滤条件
 
-- `?status=` —— `in_review`、`info_requested`、`released`、`rejected`、`dispatch_failed` 或 `all`（为空 = 未决：`in_review` + `info_requested`）。`dispatch_failed` 列出已批准但后续派发失败的申请；账户级请求不带 `kind` 时仅包含 `banking_application` 和 `card_application`。其他值 ⇒ `400 invalid_status`。
+- `?status=` —— `in_review`、`info_requested`、`released`、`rejected`、`dispatch_failed` 或 `all`（为空 = 未决：`in_review` + `info_requested`）。`dispatch_failed` 列出后续派发失败且底层资源仍可操作的已释放 review；账户级请求不带 `kind` 时仅包含 `banking_application` 和 `card_application`。其他值 ⇒ `400 invalid_status`。
+- 如果已释放的 payout、payin 或加密货币提现底层资源已经处于终态（`completed`、`failed`、`credited`、`rejected` 或 `expired`），则不再需要操作：它不会出现在默认队列、`dispatch_failed` 结果或队列计数中，`needs_action` 和 `dispatch_failed` 均为 `false`。使用 `status=all` 可保留完整历史。银行和申请 review 仍可操作。
 - `?from=` / `?to=` —— 日期范围（`YYYY-MM-DD`，组织时区，均含边界）。日期无效 ⇒ `400 invalid_range`。
 - `?page=` / `?page_size=` —— 分页（默认 50，最大 200）。
 

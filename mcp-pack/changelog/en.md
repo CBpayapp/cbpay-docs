@@ -5,8 +5,18 @@ slug: en/changelog
 lang: en
 source_url: https://docs.cbpayapp.com/en/changelog
 ---
-## v2.328 · 4 versions - November 26, 2026
-### v2.328
+## v2.330 · 1 version - November 27, 2026
+### v2.330
+**Added**
+
+- Documented the unified Chile payout corridor (`CL/CLP/bank_transfer`) and
+  its organization-level platform rail selector (platform-default or
+  platform-only alternate).
+- Documented `POST /v1/banking/fiat-transfers` for the four supported local
+  fiat corridors. It creates the same Payout resource as `POST /v1/payouts`
+  and uses identity settlement in the corridor currency.
+## v2.329 · 5 versions - November 26, 2026
+### v2.329
 **Fixed**
 
 - BO/BOB payouts and QR confirmations no longer debit the mother account in silence when `source_instrument_id` is sent without BOB settlement: the request is now rejected with `422 invalid_source_instrument` before any debit. With USD (or any non-BOB) settlement, omit the field — the payout debits your settlement balance from the mother account.
@@ -15,6 +25,9 @@ source_url: https://docs.cbpayapp.com/en/changelog
 **Changed**
 
 - Accounts with several active BO/BOB banking sources no longer need to send `source_instrument_id` for USD-settled payouts: ambiguity is only enforced when the source actually selects the origin (BOB settlement).
+### v2.328
+**Changed**
+- Account review queues no longer mark a failed post-approval dispatch as actionable when the underlying payout, payin, or crypto withdrawal is already terminal. The review leaves the default queue and related counts, while `status=all` preserves history.
 ### v2.327
 **Changed**
 

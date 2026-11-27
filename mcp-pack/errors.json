@@ -1,5 +1,5 @@
 {
-  "count": 485,
+  "count": 486,
   "errors": [
     {
       "category": {
@@ -4031,6 +4031,20 @@
         "en": "The selected banking country or rail is administratively disabled. Use another enabled rail or contact the organization operator.",
         "es": "El país o riel banking seleccionado está deshabilitado administrativamente. Usa otro riel habilitado o contacta al operador de la organización.",
         "zh": "所选 banking 国家或通道被管理员禁用。请选择其他启用的通道或联系组织运营人员。"
+      }
+    },
+    {
+      "category": {
+        "en": "Service (5xx)",
+        "es": "Servicio (5xx)",
+        "zh": "服务端（5xx）"
+      },
+      "code": "banking_corridor_unsupported",
+      "http": 422,
+      "meaning": {
+        "en": "Banking fiat transfers only support BO/BOB, MX/MXN and AR/ARS bank_transfer and CL/CLP/fintoc. Use one of those corridors.",
+        "es": "Las transferencias fiat de Banking solo admiten BO/BOB, MX/MXN y AR/ARS bank_transfer y CL/CLP/fintoc. Usa uno de esos corredores.",
+        "zh": "Banking 法币转账仅支持 BO/BOB、MX/MXN 和 AR/ARS bank_transfer 以及 CL/CLP/fintoc。请使用其中之一。"
       }
     },
     {

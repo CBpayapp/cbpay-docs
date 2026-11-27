@@ -4,6 +4,17 @@ icon: "clock-rotate-left"
 description: "History of API and documentation changes"
 ---
 
+<Update label="November 27, 2026" description="v2.330 · 1 version">
+### v2.330
+**Added**
+
+- Documented the unified Chile payout corridor (`CL/CLP/bank_transfer`) and
+  its organization-level platform rail selector (platform-default or
+  platform-only alternate).
+- Documented `POST /v1/banking/fiat-transfers` for the four supported local
+  fiat corridors. It creates the same Payout resource as `POST /v1/payouts`
+  and uses identity settlement in the corridor currency.
+</Update>
 <Update label="November 26, 2026" description="v2.329 · 5 versions">
 ### v2.329
 **Fixed**

@@ -5,8 +5,18 @@ slug: es/changelog
 lang: es
 source_url: https://docs.cbpayapp.com/es/changelog
 ---
-## v2.328 · 4 versiones - 26 de noviembre de 2026
-### v2.328
+## v2.330 · 1 versión - 27 de noviembre de 2026
+### v2.330
+**Agregado**
+
+- Se documentó el corredor unificado de payouts de Chile
+  (`CL/CLP/bank_transfer`) y su selector de riel de plataforma por
+  organización (predeterminado o alternativo exclusivo de plataforma).
+- Se documentó `POST /v1/banking/fiat-transfers` para los cuatro corredores
+  fiat locales admitidos. Crea el mismo recurso Payout que
+  `POST /v1/payouts` y usa settlement identity en la moneda del corredor.
+## v2.329 · 5 versiones - 26 de noviembre de 2026
+### v2.329
 **Corregido**
 
 - Los payouts y confirmaciones QR BO/BOB ya no debitan la madre en silencio cuando se envía `source_instrument_id` sin settlement BOB: el request ahora se rechaza con `422 invalid_source_instrument` antes de cualquier débito. Con settlement USD (o cualquier no-BOB), omite el campo — el payout debita tu saldo de settlement desde la madre.
@@ -15,6 +25,9 @@ source_url: https://docs.cbpayapp.com/es/changelog
 **Cambiado**
 
 - Las cuentas con varias fuentes banking BO/BOB activas ya no necesitan enviar `source_instrument_id` en payouts con settlement USD: la ambigüedad solo se exige cuando el source realmente elige el origen (settlement BOB).
+### v2.328
+**Cambiado**
+- Las colas de reviews de cuenta ya no marcan como accionable un despacho posterior fallido cuando el payout, payin o retiro cripto subyacente ya está en estado terminal. La review sale de la cola por defecto y de los contadores relacionados, mientras `status=all` conserva la historia.
 ### v2.327
 **Cambiado**
 
