@@ -427,7 +427,6 @@ Códigos de la firma de mensajes con wallets (EIP-191 en EVM, TIP-191 en TRON): 
 |---|---|---|
 | 409 | `corridor_disabled` | El corredor seleccionado está deshabilitado administrativamente. Usa otro método habilitado o contacta al operador de la organización. |
 | 409 | `banking_corridor_disabled` | El país o riel banking seleccionado está deshabilitado administrativamente. Usa otro riel habilitado o contacta al operador de la organización. |
-| 422 | `banking_corridor_unsupported` | Las transferencias fiat de Banking solo admiten BO/BOB, MX/MXN y AR/ARS bank_transfer y CL/CLP/fintoc. Usa uno de esos corredores. |
 | 409 | `crypto_disabled` | La red o par crypto seleccionado está deshabilitado administrativamente. Usa otro par habilitado o contacta al operador de la organización. |
 | 400 | `same_chain` | Un cambio de red necesita dos cadenas distintas para el mismo activo. Envía un `to_chain` distinto de `from_chain`. |
 | 409 | `move_conflict` | El `idempotency_key` ya existe con otro payload (activo, cadenas, monto o dirección explícita comparados por valor). Repite solo con el payload idéntico. |
@@ -796,7 +795,6 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 409 | `payment_in_flight` | Hay un pago de nómina en proceso de dispersión | Espera la reconciliación; no lo dupliques. |
 | 409 | `invalid_state` | El recurso no acepta esta operación en su estado actual | Lee el estado actual y sigue la transición permitida. |
 | 400 | `reason_required` | Se requiere un motivo | Envía un motivo significativo en el cuerpo. |
-| 409 | `not_ghost_terminal` | El vIBAN no es fantasma (estado proveedor vivo, muy reciente o nunca aprobado) | Solo califican ítems aprobados en pending 7+ días sin orden ni IBAN. |
 | 500 | `receipt_render_failed` | No se pudo generar el PDF de la liquidación | Reintenta la lectura y entrega el id de solicitud si persiste. |
 | 503 | `valuation_unavailable` | No se pudo valorizar el monto en USD | Reintenta más tarde; la aprobación permanece fail-closed. |
 | 500 | `store_error` | La plataforma no pudo leer o guardar el registro | Reintenta después de confirmar el estado del recurso. |
@@ -857,10 +855,8 @@ Estos códigos se usan en las operaciones de nómina y en la gestión de series 
 | 409 | `final_not_frozen` | El proyecto debe estar congelado por el propose final | Propón final primero, luego aprueba |
 | 422 | `burner_blocked` | El burner falló el screening de sanciones | El burn queda parkeado para compliance |
 
-## Errores de recarga manual de tesorería
+## Manual proposal errors
 
-| HTTP | `error` | Significado | Solución |
-|---|---|---|---|
-| 409 | `invalid_proposal` | El payload de la recarga manual no es válido (rancio o alterado) | Descártala y propone de nuevo desde el panel |
-| 409 | `conflict_live` | El corredor tiene un fondeo vivo | Espera a que liquide y reintenta |
-| 409 | `conflict_pending` | El corredor ya tiene una manual pendiente | Aprueba, rechaza o espera la pendiente |
+| HTTP | Code | Fix |
+|---|---|---|
+| 409 | `invalid_proposal` | The manual refill proposal is not valid. Send the required payload with a new idempotency key after checking the amount, account and authorization context. |

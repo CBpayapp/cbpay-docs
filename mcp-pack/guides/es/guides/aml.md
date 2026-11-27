@@ -11,7 +11,7 @@ El **AML/CFT screening** contrasta la identidad de una persona o empresa contra
 listas globales — sanciones, PEP, prensa adversa — y devuelve el resultado
 del análisis con su nivel de riesgo. Es un producto de compliance puro:
 **no** verifica la identidad con documentos ni prueba de vida (eso es la
-[verificación KYC/KYB](https://docs.cbpayapp.com/es/guides/kyc)); analiza si la identidad presenta
+[verificación KYC/KYB](https://docs.cbpayapp.com/es/guides/kyc-overview)); analiza si la identidad presenta
 riesgo en listas.
 
 ```mermaid
@@ -29,13 +29,13 @@ flowchart LR
 y ahora son `POST /v1/aml/screenings`, `POST /v1/aml/rescreen` y
 `PATCH /v1/aml/monitoring` (misma semántica y mismas comisiones). Las rutas
 `/v1/kyc/...` ahora pertenecen a la
-[verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc), que es otro producto.
+[verificación de identidad](https://docs.cbpayapp.com/es/guides/kyc-overview), que es otro producto.
 > **Nota**
 Si CBPay configuró una comisión de compliance, se debita **antes** de la
 llamada (verás `compliance_fee` en la respuesta) y se **reembolsa
 automáticamente** si el screening falla. Con comisión 0 el servicio es
 gratuito para ti. Requiere tener tu propia
-[verificación de identidad aprobada](https://docs.cbpayapp.com/es/guides/kyc#tu-propia-verificacion-onboarding).
+[verificación de identidad aprobada](https://docs.cbpayapp.com/es/guides/kyc-overview#tu-propia-verificacion-onboarding).
 ## Catálogos para construir el formulario
 
 Antes de armar el formulario de screening (o de verificación), obtén los
@@ -382,7 +382,7 @@ Suscríbete igual que al resto de eventos (ver [Webhooks](https://docs.cbpayapp.
 |---|---|---|---|
 | 400 | `invalid_language` | `lang` del informe PDF no es `en`, `es` ni `zh` | Usa uno de los tres idiomas soportados |
 | 402 | `insufficient_funds` | Saldo insuficiente para la comisión de compliance | Fondea la cuenta y reintenta |
-| 403 | `verification_required` | Tu cuenta aún no aprobó su verificación de identidad | Completa tu [onboarding](https://docs.cbpayapp.com/es/guides/kyc#tu-propia-verificacion-onboarding) |
+| 403 | `verification_required` | Tu cuenta aún no aprobó su verificación de identidad | Completa tu [onboarding](https://docs.cbpayapp.com/es/guides/kyc-overview#tu-propia-verificacion-onboarding) |
 | 403 | `service_disabled` | El servicio `aml` está deshabilitado para tu cuenta | Contacta a tu operador |
 | 409 | `no_screening` | Rescreen/monitoreo sin un screening previo | Envía primero `POST /v1/aml/screenings` |
 | 502 | `compliance_unavailable` | Servicio temporalmente no disponible (la comisión se reembolsó) | Reintenta más tarde |
@@ -391,7 +391,7 @@ Suscríbete igual que al resto de eventos (ver [Webhooks](https://docs.cbpayapp.
 
 #### ¿Cuál es la diferencia entre AML/CFT screening y la verificación KYC/KYB?
 El screening contrasta una identidad contra listas (sanciones, PEP, prensa
-adversa) — no pide documentos. La [verificación KYC/KYB](https://docs.cbpayapp.com/es/guides/kyc)
+adversa) — no pide documentos. La [verificación KYC/KYB](https://docs.cbpayapp.com/es/guides/kyc-overview)
 comprueba que la persona/empresa es quien dice ser, con formulario,
 documentos y prueba de vida en video. Se complementan: verifica la identidad
 con KYC/KYB y vigila su riesgo con AML/CFT.
