@@ -4704,7 +4704,7 @@ paths:
       description: '发送一笔按走廊货币 1:1 结算的出金，扣减账户的本地法币余额（绝不扣 USDT）。仅支持以下走廊：`BO/BOB/bank_transfer`、`MX/MXN/bank_transfer`、`AR/ARS/bank_transfer` 和 `CL/CLP/fintoc` —— 其他一律返回 `422 banking_corridor_unsupported`。这是唯一可支出本地法币的路由（`POST /v1/payouts` 拒绝法币结算）；创建的资源就是 payout，可通过 `GET /v1/payouts(/:id)` 查询，具有相同的生命周期、webhook 和回单。
 
 
-        需要幂等键（body 字段或 `Idempotency-Key` 请求头）。使用相同键重试会返回原始 payout（`200` 附 `idempotency_hit: true`）。若合规筛查暂时不可用，返回 `202`，payout 为 `status: pending`、`status_code: compliance_pending`、`compliance_pending: true` 且 `funds_debited: false`，尚未扣款；请保留相同的键等待对账。'
+        需要幂等键（body 字段或 `Idempotency-Key` 请求头）。使用相同键重试会返回原始 payout（`200` 附 `idempotency_hit: true`）。若合规筛查暂时不可用，返回 `202`，payout 为 `status: pending`、`status_code: compliance_pending`、`compliance_pending: true` 且 `funds_debited: false`，尚未扣款；请保留相同的键等待对账。计价时优先使用该走廊已配置的 `purpose: banking` 的 `payout` 费率，否则回退到通用 `payout` 费率——Banking 转账可拥有独立于全局 payout 的费率。'
       parameters:
       - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
