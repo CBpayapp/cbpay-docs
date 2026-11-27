@@ -150,7 +150,7 @@ own section.
 - **Volatile-currency limits** (BTC/GOLD/SILVER/PLATINUM, shared with payouts and card
   purchases): per-operation cap and 24h rolling volume cap per account
   (`GET /v1/settlement` shows yours). USDT ↔ USDC has no limit.
-- Requires your approved [identity verification](https://docs.cbpayapp.com/en/guides/kyc-overview) and the
+- Requires your approved [identity verification](https://docs.cbpayapp.com/en/guides/kyc) and the
   `swaps` service enabled.
 
 ### BTC price protection

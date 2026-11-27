@@ -21,7 +21,7 @@ URL 和密钥。完整指南见[环境与测试](https://docs.cbpayapp.com/zh/en
 #### 如何为账户充值以便开始使用？
 两种方式：（1）**链上充值 USDT**——通过 `POST /v1/crypto/wallets` 创建钱包，并向该地址发送 USDT（TRON 或 Ethereum）；（2）通过[代收（payin）](https://docs.cbpayapp.com/zh/guides/payins)**收取法币**（QR 码、预告转账等）。无论哪种方式，余额都会自动入账并通过 webhook 通知您。
 #### 操作之前需要先通过 KYC/KYB 吗？
-是的：每个账户在向外转移资金之前，都必须先通过身份验证（个人 = KYC，企业 = KYB）。在此期间您可以**入金**（代收、加密充值、收到转账）和读取数据；其他操作会返回 `403 verification_required`。通过 `POST /v1/me/verification/link` 申请您的链接并完成向导——[完整指南](https://docs.cbpayapp.com/zh/guides/kyc-overview)。如有任何操作返回 `403 account_blocked`，请联系 CBPay 团队。
+是的：每个账户在向外转移资金之前，都必须先通过身份验证（个人 = KYC，企业 = KYB）。在此期间您可以**入金**（代收、加密充值、收到转账）和读取数据；其他操作会返回 `403 verification_required`。通过 `POST /v1/me/verification/link` 申请您的链接并完成向导——[完整指南](https://docs.cbpayapp.com/zh/guides/kyc)。如有任何操作返回 `403 account_blocked`，请联系 CBPay 团队。
 #### 为什么某个操作返回 403 service_disabled？
 该服务未对您的账户启用（服务按照您的商务协议逐账户开通）。查看 `GET /v1/services` 获取您可用功能的完整清单——它也便于您决定在 UI 中展示什么——如需开通某项服务，请联系 CBPay 团队。读取操作和已在途的资金绝不会被阻断。
 #### 我应该使用哪种凭证：JWT 会话还是 API 密钥？

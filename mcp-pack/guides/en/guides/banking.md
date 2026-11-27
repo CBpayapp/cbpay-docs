@@ -395,7 +395,7 @@ flowchart LR
 ### Registering the third party
 
 Registration requires the `verification_id` of an [**approved** KYC/KYB
-verification](https://docs.cbpayapp.com/en/guides/kyc-overview) of the third party — their single identity
+verification](https://docs.cbpayapp.com/en/guides/kyc) of the third party — their single identity
 inside CBPay. The type comes from the verification kind (KYC ⇒
 `INDIVIDUAL`, KYB ⇒ `COMPANY`), the data (name, email, address) auto-fills
 from the verified profile (whatever you send explicitly wins), and the
@@ -983,7 +983,7 @@ does *not* fall back to the default fee.
 | 409 | `no_banking_customer` | Create your profile first (`POST /v1/banking/customer`) |
 | 409 | `banking_account_limit` | Person accounts can hold at most 1 bank account |
 | 403 | `company_required` | Third-party users are available for company accounts only |
-| 422 | `verification_required` | Third-party registration requires the `verification_id` of an approved verification ([verify first](https://docs.cbpayapp.com/en/guides/kyc-overview)) |
+| 422 | `verification_required` | Third-party registration requires the `verification_id` of an approved verification ([verify first](https://docs.cbpayapp.com/en/guides/kyc)) |
 | 422 | `verification_not_approved` | The referenced verification is not approved yet; wait for approval |
 | 422 | `verification_kind_mismatch` | The `type` sent does not match the verification kind (KYC ⇒ INDIVIDUAL, KYB ⇒ COMPANY) |
 | 422 | `verification_invalid` | You referenced your onboarding verification; the third party needs their own |

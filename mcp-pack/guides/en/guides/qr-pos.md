@@ -49,7 +49,7 @@ sequenceDiagram
 ## 1. Register the merchant (once per client)
 
 Every merchant is bound to an **approved** [third-party KYC/KYB
-verification](https://docs.cbpayapp.com/en/guides/kyc-overview) — the merchant identity comes from there, never
+verification](https://docs.cbpayapp.com/en/guides/kyc) — the merchant identity comes from there, never
 hand-declared. You can set an **informative commission** (`fee_percent` +
 `fee_fixed`): it moves no money, but the API computes it on every paid
 charge and the summary tells you the net to distribute.

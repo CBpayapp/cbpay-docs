@@ -48,7 +48,7 @@ payin:   usdt_gross    = local_amount / payin_rate
 | `compliance_company` | 每次调用固定费用 | 对企业进行 AML/CFT 筛查时 |
 | `compliance_rescreen` | 每次调用固定费用 | 重新执行 AML/CFT 筛查时 |
 | `compliance_monitoring` | 每次启用固定费用 | 启用持续 AML/CFT 监控时（停用免费） |
-| `kyc_verification` | 每次验证固定费用 | 为第三方创建 KYC 链接或提交时（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)）；您自己的开户验证免费 |
+| `kyc_verification` | 每次验证固定费用 | 为第三方创建 KYC 链接或提交时（[身份验证](https://docs.cbpayapp.com/zh/guides/kyc)）；您自己的开户验证免费 |
 | `kyb_verification` | 每次验证固定费用 | 为第三方创建 KYB 链接或提交时 |
 | `address_screening` | 每次扫描固定费用 | 评估区块链地址风险时（[钱包筛查](https://docs.cbpayapp.com/zh/guides/screenings)）；自动的提现/充值防护免费 |
 | `banking_customer` | 每个档案固定费用 | 创建您的银行档案时（[银行服务](https://docs.cbpayapp.com/zh/guides/banking)） |

@@ -29,7 +29,7 @@ flowchart LR
 The `address_screening` service fee (fixed, per scan) is debited on
 execution and **automatically refunded** if the screening fails. With a fee
 of 0 the service is free for you. It requires your own
-[identity verification approved](https://docs.cbpayapp.com/en/guides/kyc-overview#your-own-verification-onboarding)
+[identity verification approved](https://docs.cbpayapp.com/en/guides/kyc#your-own-verification-onboarding)
 and the `screenings` service enabled on your account.
 ## Run a screening
 
@@ -319,7 +319,7 @@ credited deposit's `deposit_id` and `receipt_url`.
 | 400 | `invalid_payload` | Missing `address` or it is too long | Check the `address` field |
 | 400 | `invalid_range` | Missing or invalid `from`/`to` on the list | Use `YYYY-MM-DD` for both |
 | 402 | `insufficient_funds` | Insufficient balance for the fee | Fund the account and retry with the SAME key |
-| 403 | `verification_required` | Your account has not passed verification yet | Complete your [onboarding](https://docs.cbpayapp.com/en/guides/kyc-overview#your-own-verification-onboarding) |
+| 403 | `verification_required` | Your account has not passed verification yet | Complete your [onboarding](https://docs.cbpayapp.com/en/guides/kyc#your-own-verification-onboarding) |
 | 403 | `service_disabled` | The `screenings` service is disabled for your account | Contact your operator |
 | 404 | `not_found` | The `screening_id` does not exist or is not yours | Check the id |
 | 422 | `invalid_address` | The address could not be screened (format) | Check the address format |

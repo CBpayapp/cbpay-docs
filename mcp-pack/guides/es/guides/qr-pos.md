@@ -48,7 +48,7 @@ sequenceDiagram
 
 ## 1. Registra el merchant (una vez por comercio)
 
-Cada merchant nace amarrado a una [verificación KYC/KYB de terceros](https://docs.cbpayapp.com/es/guides/kyc-overview)
+Cada merchant nace amarrado a una [verificación KYC/KYB de terceros](https://docs.cbpayapp.com/es/guides/kyc)
 **aprobada** — la identidad del comercio sale de ahí, no se declara a mano.
 Puedes fijarle una **comisión informativa** (`fee_percent` + `fee_fixed`):
 no mueve dinero, pero la API la calcula en cada cobro pagado y el resumen te

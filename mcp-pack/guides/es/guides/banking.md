@@ -380,7 +380,7 @@ flowchart LR
 ### Alta del tercero
 
 El alta exige el `verification_id` de una [verificación KYC/KYB
-**aprobada**](https://docs.cbpayapp.com/es/guides/kyc-overview) del tercero — su identidad única en CBPay. El
+**aprobada**](https://docs.cbpayapp.com/es/guides/kyc) del tercero — su identidad única en CBPay. El
 tipo sale del kind de la verificación (KYC ⇒ `INDIVIDUAL`, KYB ⇒
 `COMPANY`), los datos (nombre, email, dirección) se completan solos desde
 el perfil verificado (lo que envíes explícito gana) y los **documentos ya
@@ -961,7 +961,7 @@ fallback.
 | 409 | `no_banking_customer` | Crea primero tu perfil (`POST /v1/banking/customer`) |
 | 409 | `banking_account_limit` | Las cuentas persona tienen máximo 1 cuenta bancaria |
 | 403 | `company_required` | Los usuarios de terceros solo están disponibles para cuentas empresa |
-| 422 | `verification_required` | El alta de terceros exige `verification_id` de una verificación aprobada ([verifica primero](https://docs.cbpayapp.com/es/guides/kyc-overview)) |
+| 422 | `verification_required` | El alta de terceros exige `verification_id` de una verificación aprobada ([verifica primero](https://docs.cbpayapp.com/es/guides/kyc)) |
 | 422 | `verification_not_approved` | La verificación referenciada aún no está aprobada; espera la aprobación |
 | 422 | `verification_kind_mismatch` | El `type` enviado no calza con el kind de la verificación (KYC ⇒ INDIVIDUAL, KYB ⇒ COMPANY) |
 | 422 | `verification_invalid` | Referenciaste tu verificación de onboarding; el tercero necesita la suya propia |

@@ -45,7 +45,7 @@ sequenceDiagram
 
 ## 1. 注册商户（每个客户一次）
 
-每个商户都必须绑定一份**已批准**的[第三方 KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc-overview)
+每个商户都必须绑定一份**已批准**的[第三方 KYC/KYB 验证](https://docs.cbpayapp.com/zh/guides/kyc)
 — 商户身份来自验证，绝不手工申报。可以为商户配置**信息性佣金**
 （`fee_percent` + `fee_fixed`）：不移动资金，但 API 会在每笔已支付收款上
 计算，汇总接口告诉你应分配的净额。
