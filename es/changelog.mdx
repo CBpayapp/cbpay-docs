@@ -4,7 +4,16 @@ icon: "clock-rotate-left"
 description: "Historial de cambios de la API y de esta documentación"
 ---
 
-<Update label="27 de noviembre de 2026" description="v2.330 · 1 versión">
+<Update label="27 de noviembre de 2026" description="v2.332 · 3 versiones">
+### v2.332
+**Cambiado**
+- Las transferencias Banking fiat ahora resuelven el fee `payout` con `purpose: "banking"` para BO/BOB, MX/MXN, AR/ARS y CL/CLP. Una fila específica de Banking puede tener un precio distinto al payout genérico; sin ella, la fila genérica sigue siendo el fallback.
+### v2.331
+**Corregido**
+
+- `GET /v1/payouts/banks?country=BO` vuelve a devolver el catálogo de
+  bancos destino: el paso Beneficiario de Transferir Bolivia lista los
+  bancos en vez de mostrar el reintento de catálogo no disponible.
 ### v2.330
 **Cambiado**
 - El OCR clásico KYC/KYB documenta aliases de categorías canónicas,
@@ -2417,7 +2426,7 @@ destino. La creación es idempotente: una clave nueva responde
 
 **Corregido**
 
-- **El mensaje de `verifications_unavailable` ya no afirma que se reembolsó una comisión.** Un 503 de verificación de identidad no implica reembolso: el endpoint de documentos de verificación nunca cobra comisión y el onboarding propio no tiene fee. El copy ahora solo pide reintentar más tarde. Referencia: [Errores](/es/errors) y la [guía KYC](/es/guides/kyc-overview).
+- **El mensaje de `verifications_unavailable` ya no afirma que se reembolsó una comisión.** Un 503 de verificación de identidad no implica reembolso: el endpoint de documentos de verificación nunca cobra comisión y el onboarding propio no tiene fee. El copy ahora solo pide reintentar más tarde. Referencia: [Errores](/es/errors) y la [guía KYC](/es/guides/kyc).
 
 </Update>
 
@@ -3020,7 +3029,7 @@ destino. La creación es idempotente: una clave nueva responde
   `decision_source` (`auto` o `admin`) en los webhooks
   `kyc_verification_status_changed` y `kyb_verification_status_changed`
   para que sepas cómo se decidió cada expediente. Detalle en
-  [KYC y KYB](/es/guides/kyc-overview).
+  [KYC y KYB](/es/guides/kyc).
 - **Nuevo valor mágico `HOLDREVIEW` en el entorno de pruebas**: una
   submission KYC/KYB cuyo nombre del sujeto contiene `HOLDREVIEW` queda en
   revisión humana en vez de ser decidida automáticamente, para que puedas
@@ -3179,7 +3188,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **La prueba de vida ahora admite varias sesiones por sujeto**
-  ([verificación de identidad](/es/guides/kyc-overview)): el array `liveness[]` del
+  ([verificación de identidad](/es/guides/kyc)): el array `liveness[]` del
   informe de verificación puede traer más de una entrada por persona — el
   check de onboarding `gate` más una o más recapturas de evidencia
   `media_recapture` posteriores. Cada sesión ahora trae su propio
@@ -3199,7 +3208,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Cambiado**
 
 - **Informe de verificación con portada navegable**
-  ([verificación de identidad](/es/guides/kyc-overview)): el PDF abre con un índice de
+  ([verificación de identidad](/es/guides/kyc)): el PDF abre con un índice de
   tarjetas **clicables** (icono, título y número de página) que saltan a su
   sección. Cada sección lleva su icono y su barra de acento, con el mismo
   lenguaje visual del informe AML.
@@ -3224,7 +3233,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Evidencia visual en el informe de verificación**
-  ([verificación de identidad](/es/guides/kyc-overview)): cuando el proveedor publica
+  ([verificación de identidad](/es/guides/kyc)): cuando el proveedor publica
   media de liveness (selfie / frames) o fotos del documento de identidad, el
   **PDF embebe las fotos** best-effort. Si no hay media o el enlace expiró,
   la sección de fotos se omite. El JSON del informe solo declara metadata
@@ -3239,7 +3248,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Informe de verificación completo, sin datos descartados**
-  ([verificación de identidad](/es/guides/kyc-overview)): el informe KYC/KYB pasó de
+  ([verificación de identidad](/es/guides/kyc)): el informe KYC/KYB pasó de
   resumen a expediente. Además de lo que ya traía, el JSON y el PDF ahora
   incluyen el **perfil económico declarado** (origen de fondos, propósito de
   la relación, volúmenes e ingresos esperados, cadenas esperadas), las
@@ -3294,7 +3303,7 @@ destino. La creación es idempotente: una clave nueva responde
 **Agregado**
 
 - **Informe de verificación KYC/KYB descargable**
-  ([verificación de identidad](/es/guides/kyc-overview)): cada submission de KYC/KYB
+  ([verificación de identidad](/es/guides/kyc)): cada submission de KYC/KYB
   tiene ahora su informe de verificación generado por la plataforma, en
   `?format=pdf|json` y `?lang=en|es|zh`. Terceros: `GET
   /v1/kyc/submissions/{submissionID}/verification-report` y `GET
@@ -4083,7 +4092,7 @@ destino. La creación es idempotente: una clave nueva responde
   tu onboarding KYC/KYB, `display_name` (persona = nombre + apellido;
   empresa = razón social), `tax_id` y `country` se rellenan
   automáticamente desde la identidad verificada. Documentado en la
-  [guía de KYC](/es/guides/kyc-overview) y la [guía de perfil](/es/guides/profile).
+  [guía de KYC](/es/guides/kyc) y la [guía de perfil](/es/guides/profile).
 
 **Cambiado**
 
@@ -4688,7 +4697,7 @@ Guía completa en [wallets segregadas](/es/guides/segregated-wallets).
 - La verificación KYC/KYB aprobada de un cliente pasa a ser su **identidad
   única** dentro de CBPay: sus datos y documentos se reutilizan en los
   demás productos sin volver a tipearlos ni re-subirlos. Guía:
-  [identidad reutilizable](/es/guides/kyc-overview#una-sola-verificacion-para-todo-identidad-reutilizable).
+  [identidad reutilizable](/es/guides/kyc#una-sola-verificacion-para-todo-identidad-reutilizable).
 - **Tarjetas**: la primera emisión de tu cuenta completa la identidad y los
   documentos del titular **desde tu verificación aprobada** — solo envías
   `occupation` y `salary_usd`. Los campos explícitos siguen ganando.
@@ -4798,7 +4807,7 @@ Guía completa en [wallets segregadas](/es/guides/segregated-wallets).
 - 7 webhooks nuevos: `kyc/kyb_verification_status_changed`,
   `kyc/kyb_link_completed`, `kyc/kyb_document_validated`,
   `kyc_liveness_completed`. Guía completa en
-  [Verificación KYC y KYB](/es/guides/kyc-overview).
+  [Verificación KYC y KYB](/es/guides/kyc).
 
 **Cambiado (BREAKING) — El screening pasa a AML**
 
@@ -5084,7 +5093,7 @@ Guía completa en [wallets segregadas](/es/guides/segregated-wallets).
   mostraban los ejemplos (fecha de nacimiento, nacionalidades, documentos
   con país emisor, alias, domicilios, datos registrales de empresa…) y
   enviarlos hace el screening más preciso. La
-  [guía de KYC](/es/guides/kyc-overview) ahora documenta todos los campos, con
+  [guía de KYC](/es/guides/kyc) ahora documenta todos los campos, con
   ejemplos de identidad completa y la regla de deduplicación.
 
 ### v1.20
